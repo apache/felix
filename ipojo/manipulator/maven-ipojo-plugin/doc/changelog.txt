@@ -1,3 +1,13 @@
+Changes from the 1.8.2 to 1.8.4
+-------------------------------
+
+** Bug
+    * [FELIX-3297] - iPOJO Manipulator throws ClassNotFoundException
+    * [FELIX-3359] - Turn around to avoid to use the split verifier on Java 7
+
+** Improvement
+    * [FELIX-3384] - Ensure maven-ipojo-plugin is thread-safe for parallel maven builds
+
 Changes from the 1.8.0 to 1.8.2
 -------------------------------
 
