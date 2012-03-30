@@ -725,7 +725,6 @@ public abstract class AbstractComponentManager implements Component
                     log( LogService.LOG_DEBUG, "No permission to get optional dependency: {0}; assuming satisfied",
                         new Object[]
                             { dm.getName() }, null );
-                    satisfied = true;
                 }
                 else
                 {
