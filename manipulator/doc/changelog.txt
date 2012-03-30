@@ -1,3 +1,14 @@
+
+
+** Bug
+    * [FELIX-3297] - iPOJO Manipulator throws ClassNotFoundException
+    * [FELIX-3359] - Turn around to avoid to use the split verifier on Java 7
+    * [FELIX-3389] - Bnd iPOJO Plugin ignores annotated components
+    * [FELIX-3391] - Unexpected warning when using bnd-ipojo-plugin
+
+** Improvement
+    * [FELIX-3384] - Ensure maven-ipojo-plugin is thread-safe for parallel maven builds
+
 Changes from the 1.8.0 to 1.8.2
 -------------------------------
 

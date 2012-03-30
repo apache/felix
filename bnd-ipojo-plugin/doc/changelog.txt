@@ -1,3 +1,12 @@
+Changes from the 1.8.2 to 1.8.4
+-------------------------------
+
+** Bug
+    * [FELIX-3297] - iPOJO Manipulator throws ClassNotFoundException
+    * [FELIX-3359] - Turn around to avoid to use the split verifier on Java 7
+    * [FELIX-3389] - Bnd iPOJO Plugin ignores annotated components
+    * [FELIX-3391] - Unexpected warning when using bnd-ipojo-plugin
+
 Changes in the 1.8.2
 --------------------
 
