@@ -19,6 +19,7 @@
 package org.apache.felix.webconsole.internal.misc;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -30,7 +31,7 @@ public class ThreadPrinter extends AbstractConfigurationPrinter
     private static final String TITLE = "Threads";
 
     private static final String LABEL = "_threads";
-
+    
     public String getTitle()
     {
         return TITLE;
@@ -45,16 +46,76 @@ public class ThreadPrinter extends AbstractConfigurationPrinter
             rootGroup = rootGroup.getParent();
         }
 
-        printThreadGroup(pw, rootGroup);
-
         int numGroups = rootGroup.activeGroupCount();
         ThreadGroup[] groups = new ThreadGroup[2 * numGroups];
         rootGroup.enumerate(groups);
         Arrays.sort(groups, ThreadGroupComparator.getInstance());
+
+        printStatusLine(pw, rootGroup, groups);
+        printThreadGroup(pw, rootGroup);
+
         for (int i = 0; i < groups.length; i++)
         {
             printThreadGroup(pw, groups[i]);
         }
+    }
+
+    private void printStatusLine(PrintWriter pw, ThreadGroup rootGroup,
+        ThreadGroup[] groups)
+    {
+        int alive = 0;
+        int daemon = 0;
+        int interrupted = 0;
+
+        int threadCount = 0;
+        int threadGroupCount = 0;
+        int threadGroupDestroyed = 0;
+
+        ArrayList/*<ThreadGroup>*/list = new ArrayList(groups.length + 1);
+        list.add(rootGroup);
+        list.addAll(Arrays.asList(groups));
+        for (int j = 0; j < list.size(); j++)
+        {
+            ThreadGroup group = (ThreadGroup) list.get(j);
+            if (null == group)
+            {
+                continue;
+            }
+            threadGroupCount++;
+            if (group.isDestroyed())
+            {
+                threadGroupDestroyed++;
+            }
+
+            Thread[] threads = new Thread[group.activeCount()];
+            group.enumerate(threads);
+            for (int i = 0, size = threads.length; i < size; i++)
+            {
+                Thread thread = threads[i];
+                if (null != thread)
+                {
+                    if (thread.isAlive())
+                    {
+                        alive++;
+                    }
+                    if (thread.isDaemon())
+                    {
+                        daemon++;
+                    }
+                    if (thread.isInterrupted())
+                    {
+                        interrupted++;
+                    }
+                    threadCount++;
+                }
+            }
+        }
+
+        ConfigurationRender.infoLine(pw, "", null, "Status: " + threadCount
+            + " threads (" + alive + " alive/" + daemon + " daemon/" + interrupted
+            + " interrupted) in " + threadGroupCount + " groups ("
+            + threadGroupDestroyed + " destroyed).");
+        pw.println();
     }
 
     private static final void printThreadGroup(PrintWriter pw, ThreadGroup group)
@@ -131,7 +192,8 @@ final class ThreadComparator implements Comparator
 
     public int compare(Object thread1, Object thread2)
     {
-        if (null == thread1 || null == thread2) return -1;
+        if (null == thread1 || null == thread2)
+            return -1;
         String t1 = ((Thread) thread1).getName();
         String t2 = ((Thread) thread2).getName();
         if (null == t1)
@@ -165,7 +227,8 @@ final class ThreadGroupComparator implements Comparator
 
     public int compare(Object thread1, Object thread2)
     {
-        if (null == thread1 || null == thread2) return -1;
+        if (null == thread1 || null == thread2)
+            return -1;
         String t1 = ((ThreadGroup) thread1).getName();
         String t2 = ((ThreadGroup) thread2).getName();
         if (null == t1)

@@ -16,11 +16,12 @@
  */
 package org.apache.felix.webconsole.internal.compendium;
 
-
 import java.io.PrintWriter;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -32,7 +33,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
-
 /**
  * ConfigurationAdminConfigurationPrinter uses the {@link ConfigurationAdmin} service
  * to print the available configurations.
@@ -42,7 +42,6 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
 
     private static final String TITLE = "Configurations";
 
-
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
      */
@@ -51,79 +50,97 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
         return TITLE;
     }
 
-
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
      */
-    public void printConfiguration( PrintWriter pw )
+    public void printConfiguration(PrintWriter pw)
     {
-        ServiceReference sr = getBundleContext().getServiceReference( ConfigurationAdmin.class.getName() );
-        if ( sr == null )
+        ServiceReference sr = getBundleContext().getServiceReference(
+            ConfigurationAdmin.class.getName());
+        if (sr == null)
         {
-            pw.println( "  Configuration Admin Service not registered" );
+            pw.println("Status: Configuration Admin Service not available");
         }
         else
         {
 
-            ConfigurationAdmin ca = ( ConfigurationAdmin ) getBundleContext().getService( sr );
+            ConfigurationAdmin ca = (ConfigurationAdmin) getBundleContext().getService(sr);
             try
             {
-                Configuration[] configs = ca.listConfigurations( null );
-                if ( configs != null && configs.length > 0 )
-                {
-                    SortedMap sm = new TreeMap();
-                    for ( int i = 0; i < configs.length; i++ )
-                    {
-                        sm.put( configs[i].getPid(), configs[i] );
-                    }
+                Configuration[] configs = ca.listConfigurations(null);
 
-                    for ( Iterator mi = sm.values().iterator(); mi.hasNext(); )
+                if (configs != null && configs.length > 0)
+                {
+                    Set factories = new HashSet();
+                    SortedMap sm = new TreeMap();
+                    for (int i = 0; i < configs.length; i++)
                     {
-                        this.printConfiguration( pw, ( Configuration ) mi.next() );
+                        sm.put(configs[i].getPid(), configs[i]);
+                        String fpid = configs[i].getFactoryPid();
+                        if (null != fpid)
+                        {
+                            factories.add(fpid);
+                        }
+                    }
+                    if (factories.isEmpty())
+                    {
+                        pw.println("Status: " + configs.length
+                            + " configurations available");
+                    }
+                    else
+                    {
+                        pw.println("Status: " + configs.length + " configurations and "
+                            + factories.size() + " factories available");
+                    }
+                    pw.println();
+
+                    for (Iterator mi = sm.values().iterator(); mi.hasNext();)
+                    {
+                        this.printConfiguration(pw, (Configuration) mi.next());
                     }
                 }
                 else
                 {
-                    pw.println( "  No Configurations available" );
+                    pw.println("Status: No Configurations available");
                 }
             }
-            catch ( Exception e )
+            catch (Exception e)
             {
-                // todo or not :-)
+                pw.println("Status: Configuration Admin Service not accessible");
             }
             finally
             {
-                getBundleContext().ungetService( sr );
+                getBundleContext().ungetService(sr);
             }
         }
     }
 
-
-    private void printConfiguration( PrintWriter pw, Configuration config )
+    private void printConfiguration(PrintWriter pw, Configuration config)
     {
-        ConfigurationRender.infoLine( pw, "", "PID", config.getPid() );
+        ConfigurationRender.infoLine(pw, "", "PID", config.getPid());
 
-        if ( config.getFactoryPid() != null )
+        if (config.getFactoryPid() != null)
         {
-            ConfigurationRender.infoLine( pw, "  ", "Factory PID", config.getFactoryPid() );
+            ConfigurationRender.infoLine(pw, "  ", "Factory PID", config.getFactoryPid());
         }
 
-        String loc = ( config.getBundleLocation() != null ) ? config.getBundleLocation() : "Unbound";
-        ConfigurationRender.infoLine( pw, "  ", "BundleLocation", loc );
+        String loc = (config.getBundleLocation() != null) ? config.getBundleLocation()
+            : "Unbound";
+        ConfigurationRender.infoLine(pw, "  ", "BundleLocation", loc);
 
         Dictionary props = config.getProperties();
-        if ( props != null )
+        if (props != null)
         {
             SortedSet keys = new TreeSet();
-            for ( Enumeration ke = props.keys(); ke.hasMoreElements(); )
+            for (Enumeration ke = props.keys(); ke.hasMoreElements();)
             {
-                keys.add( ke.nextElement() );
+                keys.add(ke.nextElement());
             }
 
-            for ( Iterator ki = keys.iterator(); ki.hasNext(); )
+            for (Iterator ki = keys.iterator(); ki.hasNext();)
             {
-                String key = ( String ) ki.next();
-                ConfigurationRender.infoLine( pw, "  ", key, props.get( key ) );
+                String key = (String) ki.next();
+                ConfigurationRender.infoLine(pw, "  ", key, props.get(key));
             }
         }
 

@@ -170,7 +170,6 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     {
         final int count = services.length;
         final StringBuffer buffer = new StringBuffer();
-        buffer.append( "Services information: " );
         buffer.append( count );
         buffer.append( " service" );
         if ( count != 1 )

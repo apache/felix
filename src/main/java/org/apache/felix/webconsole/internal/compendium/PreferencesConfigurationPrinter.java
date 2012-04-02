@@ -16,7 +16,6 @@
  */
 package org.apache.felix.webconsole.internal.compendium;
 
-
 import java.io.PrintWriter;
 
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
@@ -25,7 +24,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 import org.osgi.service.prefs.PreferencesService;
-
 
 /**
  * PreferencesConfigurationPrinter uses the {@link Preferences} service
@@ -36,7 +34,6 @@ public class PreferencesConfigurationPrinter extends AbstractConfigurationPrinte
 
     private static final String TITLE = "Preferences";
 
-
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#getTitle()
      */
@@ -45,64 +42,64 @@ public class PreferencesConfigurationPrinter extends AbstractConfigurationPrinte
         return TITLE;
     }
 
-
     /**
      * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
      */
-    public void printConfiguration( PrintWriter printWriter )
+    public void printConfiguration(PrintWriter printWriter)
     {
-        ServiceReference sr = getBundleContext().getServiceReference( PreferencesService.class.getName() );
-        if ( sr == null )
+        ServiceReference sr = getBundleContext().getServiceReference(
+            PreferencesService.class.getName());
+        if (sr == null)
         {
-            printWriter.println( "  Preferences Service not registered" );
+            printWriter.println("Status: Preferences Service not available");
         }
         else
         {
-            PreferencesService ps = ( PreferencesService ) getBundleContext().getService( sr );
+            PreferencesService ps = (PreferencesService) getBundleContext().getService(sr);
             try
             {
-                printPreferences( printWriter, ps.getSystemPreferences() );
+                printPreferences(printWriter, ps.getSystemPreferences());
 
                 String[] users = ps.getUsers();
-                for ( int i = 0; users != null && i < users.length; i++ )
+                for (int i = 0; users != null && i < users.length; i++)
                 {
-                    printWriter.println( "*** User Preferences " + users[i] + ":" );
-                    printPreferences( printWriter, ps.getUserPreferences( users[i] ) );
+                    printWriter.println("*** User Preferences " + users[i] + ":");
+                    printPreferences(printWriter, ps.getUserPreferences(users[i]));
                 }
             }
-            catch ( BackingStoreException bse )
+            catch (BackingStoreException bse)
             {
                 // todo or not :-)
             }
             finally
             {
-                getBundleContext().ungetService( sr );
+                getBundleContext().ungetService(sr);
             }
         }
     }
 
-
-    private static final void printPreferences( PrintWriter pw, Preferences prefs ) throws BackingStoreException
+    private static final void printPreferences(PrintWriter pw, Preferences prefs)
+        throws BackingStoreException
     {
 
         final String[] children = prefs.childrenNames();
         final String[] keys = prefs.keys();
 
-        if ( children.length == 0 && keys.length == 0 )
+        if (children.length == 0 && keys.length == 0)
         {
-            pw.println( "No Preferences available" );
+            pw.println("Status: No Preferences available");
         }
         else
         {
-            for ( int i = 0; i < children.length; i++ )
+            for (int i = 0; i < children.length; i++)
             {
-                printPreferences( pw, prefs.node( children[i] ) );
+                printPreferences(pw, prefs.node(children[i]));
             }
 
-            for ( int i = 0; i < keys.length; i++ )
+            for (int i = 0; i < keys.length; i++)
             {
-                ConfigurationRender
-                    .infoLine( pw, null, prefs.absolutePath() + "/" + keys[i], prefs.get( keys[i], null ) );
+                ConfigurationRender.infoLine(pw, null, prefs.absolutePath() + "/"
+                    + keys[i], prefs.get(keys[i], null));
             }
         }
 

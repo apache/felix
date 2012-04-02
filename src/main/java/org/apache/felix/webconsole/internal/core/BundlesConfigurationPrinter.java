@@ -144,7 +144,7 @@ public class BundlesConfigurationPrinter
 
         }
         final StringBuffer buffer = new StringBuffer();
-        buffer.append("Bundlelist: ");
+        buffer.append("Status: ");
         appendBundleInfoCount(buffer, "in total", bundles.length);
         if ( active == bundles.length || active + fragments == bundles.length )
         {
@@ -175,7 +175,7 @@ public class BundlesConfigurationPrinter
             }
         }
         pw.println(buffer.toString());
-        pw.println("-----------------------------------------------------------------------------");
+        pw.println();
         final Iterator i = bundlesMap.entrySet().iterator();
         while ( i.hasNext() )
         {
