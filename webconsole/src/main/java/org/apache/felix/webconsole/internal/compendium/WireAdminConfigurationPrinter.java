@@ -64,7 +64,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
             final Object service = ref != null ? bc.getService(ref) : null;
             if (service == null)
             {
-                pw.println("No Wire Admin service available");
+                pw.println("Status: Wire Admin service not available");
             }
             else
             {
@@ -73,7 +73,7 @@ public final class WireAdminConfigurationPrinter extends AbstractConfigurationPr
 
                 if (null == wires || 0 == wires.length)
                 {
-                    pw.println("No wires available");
+                    pw.println("Status: No wires available");
                 }
                 else
                 {
