@@ -94,6 +94,12 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                     // enable caching
                     response.setDateHeader("Last-Modified", LAST_MODIFIED); //$NON-NLS-1$
 
+                    InputStream in = icon.getInputStream();
+                    if (null == in) { // this is buggy implementations
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        return;
+                    }
+
                     String mime = icon.getMimeType();
                     if (mime != null)
                         response.setContentType(mime);
@@ -103,7 +109,6 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                     if (size > 0)
                         response.setContentLength(size);
 
-                    InputStream in = icon.getInputStream();
                     // can't use buffer, because it's might block if reading byte[]
                     int read;
                     while (-1 != (read = in.read()))
