@@ -40,6 +40,7 @@ import org.apache.felix.dm.impl.dependencies.ServiceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.TemporalServiceDependencyImpl;
 import org.apache.felix.dm.impl.index.AspectFilterIndex;
 import org.apache.felix.dm.impl.index.MultiPropertyExactFilter;
+import org.apache.felix.dm.impl.index.AdapterFilterIndex;
 import org.apache.felix.dm.impl.index.ServiceRegistryCache;
 import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
 import org.osgi.framework.Bundle;
@@ -104,6 +105,8 @@ public class DependencyManager {
                 for (int i = 0; i < props.length; i++) {
                     if (props[i].equals("*aspect*")) {
                         m_serviceRegistryCache.addFilterIndex(new AspectFilterIndex());
+                    } else if (props[i].equals("*adapter*")) {
+                    	m_serviceRegistryCache.addFilterIndex(new AdapterFilterIndex());
                     }
                     else {
                         String[] propList = props[i].split(",");
@@ -264,7 +267,7 @@ public class DependencyManager {
      * @return a service that acts as a factory for generating aspects
      */
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String autoConfig) {
-        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, autoConfig, null, null, null);
+        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, autoConfig, null, null, null, null);
     }
     /**
      * Creates a new aspect. The aspect will be applied to any service that
@@ -289,7 +292,7 @@ public class DependencyManager {
      * @return a service that acts as a factory for generating aspects
      */
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking) {
-        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, null, null, null);
+        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, null, null, null, null);
     }
     /**
      * Creates a new aspect. The aspect will be applied to any service that
@@ -317,7 +320,37 @@ public class DependencyManager {
      * @return a service that acts as a factory for generating aspects
      */
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove) {
-        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, add, change, remove);
+        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, add, change, remove, null);
+    }
+    
+    /**
+     * Creates a new aspect. The aspect will be applied to any service that
+     * matches the specified interface and filter. For each matching service
+     * an aspect will be created based on the aspect implementation class.
+     * The aspect will be registered with the same interface and properties
+     * as the original service, plus any extra properties you supply here.
+     * It will also inherit all dependencies, and if you declare the original
+     * service as a member it will be injected.
+     * 
+     * <h3>Usage Example</h3>
+     * 
+     * <blockquote><pre>
+     * manager.createAspectService(ExistingService.class, "(foo=bar)", 10, "add", "change", "remove")
+     *     .setImplementation(ExistingServiceAspect.class)
+     * );
+     * </pre></blockquote>
+     * 
+     * @param serviceInterface the service interface to apply the aspect to
+     * @param serviceFilter the filter condition to use with the service interface
+     * @param ranking the level used to organize the aspect chain ordering
+     * @param add name of the callback method to invoke on add
+     * @param change name of the callback method to invoke on change
+     * @param remove name of the callback method to invoke on remove
+     * @param swap name of the callback method to invoke on swap
+     * @return a service that acts as a factory for generating aspects
+     */    
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove, String swap) {
+        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, add, change, remove, swap);
     }
     
     /**
