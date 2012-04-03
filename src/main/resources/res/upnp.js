@@ -250,13 +250,25 @@ function invokeAction(udn, urn, action) {
 	}, 'json');
 }
 
+function sortNm(a) {
+	if (typeof a != 'undefined' && typeof a.props != undefined) {
+		var nm = a.props['UPnP.device.friendlyName'];
+		if (typeof nm != 'undefined') return nm.toLowerCase();
+	}
+	return '';
+}
+
+function sortFn(a,b) {
+	return sortNm(a) > sortNm(b) ? 1 : -1;
+}
+
 function listDevices() {
 	browser.empty().addClass('ui-helper-hidden');
 	searching.removeClass('ui-helper-hidden');
-	
+
 	$.post(pluginRoot, { 'action': 'listDevices' }, function(data) {
 		if (data && data.devices) {
-			data.devices.sort(function(a,b){ return a.props['UPnP.device.friendlyName'] > b.props['UPnP.device.friendlyName']});
+			data.devices.sort(sortFn);
 			$.each(data.devices, function(index) {
 				var html = addDevice(this);
 				browser.treeview( { add: html.appendTo(browser) } );
