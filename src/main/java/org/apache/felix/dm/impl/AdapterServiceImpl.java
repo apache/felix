@@ -94,7 +94,7 @@ public class AdapterServiceImpl extends FilterService {
                 	// if we're handed an aspect fetch the aspect property as the service id to track, but do not copy it
                 	serviceIdToTrack = ref.getProperty(key).toString();
                 }
-                if (key.equals(Constants.SERVICE_ID) || key.equals(Constants.SERVICE_RANKING) || key.equals(Constants.OBJECTCLASS)) {
+                if (key.equals(DependencyManager.ASPECT) || key.equals(Constants.SERVICE_ID) || key.equals(Constants.SERVICE_RANKING) || key.equals(Constants.OBJECTCLASS)) {
                     // do not copy these either
                 }
                 else {
