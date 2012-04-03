@@ -38,10 +38,10 @@ import org.osgi.framework.ServiceReference;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AspectServiceImpl extends FilterService {
-    public AspectServiceImpl(DependencyManager dm, Class aspectInterface, String aspectFilter, int ranking, String autoConfig, String add, String change, String remove)
+    public AspectServiceImpl(DependencyManager dm, Class aspectInterface, String aspectFilter, int ranking, String autoConfig, String add, String change, String remove, String swap)
     { 
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
-        m_component.setImplementation(new AspectImpl(aspectInterface, aspectFilter, ranking, autoConfig, add, change, remove))
+        m_component.setImplementation(new AspectImpl(aspectInterface, aspectFilter, ranking, autoConfig, add, change, remove, swap))
              .add(dm.createServiceDependency()
                   .setService(aspectInterface, createDependencyFilterForAspect(aspectFilter))
                   .setAutoConfig(false)
@@ -70,8 +70,9 @@ public class AspectServiceImpl extends FilterService {
         private final String m_add;
         private final String m_change;
         private final String m_remove;
+        private final String m_swap;
       
-        public AspectImpl(Class aspectInterface, String aspectFilter, int ranking, String autoConfig, String add, String change, String remove) {
+        public AspectImpl(Class aspectInterface, String aspectFilter, int ranking, String autoConfig, String add, String change, String remove, String swap) {
             m_aspectInterface = aspectInterface;
             m_aspectFilter = aspectFilter;
             m_ranking = ranking;
@@ -79,6 +80,7 @@ public class AspectServiceImpl extends FilterService {
             m_add = add;
             m_change = change;
             m_remove = remove;
+            m_swap = swap;
         }
         
         public Component createService(Object[] params) {
@@ -93,8 +95,8 @@ public class AspectServiceImpl extends FilterService {
             if (m_autoConfig != null) {
                 dependency.setAutoConfig(m_autoConfig);
             }
-            if (m_add != null || m_change != null || m_remove != null) {
-                dependency.setCallbacks(m_add, m_change, m_remove);
+            if (m_add != null || m_change != null || m_remove != null || m_swap != null) {
+                dependency.setCallbacks(m_add, m_change, m_remove, m_swap);
             }
             Component service = m_manager.createComponent()
                 .setInterface(serviceInterfaces, serviceProperties)
