@@ -69,7 +69,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
     /**
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
      */
-    public final Object addingService(ServiceReference reference)
+    public final synchronized Object addingService(ServiceReference reference)
     {
         SimpleWebConsolePlugin plugin = this.plugin;
         if (plugin == null)
@@ -88,7 +88,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
      *      java.lang.Object)
      */
-    public final void removedService(ServiceReference reference, Object service)
+    public final synchronized void removedService(ServiceReference reference, Object service)
     {
         SimpleWebConsolePlugin plugin = this.plugin;
 
@@ -99,7 +99,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
                 controller.removedService(reference, service);
         }
 
-        if (tracker.getTrackingCount() == 0 && plugin != null)
+        if (tracker.size() == 0 && plugin != null)
         {
             plugin.unregister();
             this.plugin = null;
