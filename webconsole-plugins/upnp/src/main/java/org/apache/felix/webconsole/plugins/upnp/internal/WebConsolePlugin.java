@@ -64,7 +64,7 @@ public class WebConsolePlugin extends SimpleWebConsolePlugin
     public void activate(BundleContext bundleContext)
     {
         super.activate(bundleContext);
-        controller = new ControlServlet(bundleContext, tracker);
+        controller = new ControlServlet(bundleContext, tracker, this);
     }
 
     /**
