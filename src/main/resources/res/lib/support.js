@@ -70,10 +70,16 @@ $(document).ready(function() {
 	);
 
 	// register global ajax error handler
-	$(document).ajaxError( function(event, req) {
-		var text = req.responseXML ? x = req.responseXML :
-				(req.responseText ? x = req.responseText : req.statusText);
-		Xalert('The request failed: <br/><pre>' + text + '</pre>', 'AJAX Error');
+	$(document).ajaxError( function(xevent, req) {
+		var _t = '';
+		if (req.responseText) {
+			_t = req.responseText;
+		} else if (req.statusText) {
+			_t = req.statusText;
+		} else if (req.responseXML) {
+			_t = req.responseXML;
+		}
+		Xalert('The request failed: <br/><pre>' + _t + '</pre>', 'AJAX Error');
 	});
 
 	initStaticWidgets();
