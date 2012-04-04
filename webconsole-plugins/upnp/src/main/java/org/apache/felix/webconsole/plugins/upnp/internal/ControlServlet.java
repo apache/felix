@@ -180,12 +180,17 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         }
         catch (ServletException e)
         {
-            throw e;
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.setContentType("text/plain"); //$NON-NLS-1$
+            e.printStackTrace(response.getWriter());
+            response.flushBuffer();
         }
         catch (Exception e)
         {
-            e.printStackTrace();
-            throw new ServletException(e.toString());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.setContentType("text/plain"); //$NON-NLS-1$
+            e.printStackTrace(response.getWriter());
+            response.flushBuffer();
         }
     }
 
