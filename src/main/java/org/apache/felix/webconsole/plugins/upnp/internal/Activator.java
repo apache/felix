@@ -16,10 +16,12 @@
  */
 package org.apache.felix.webconsole.plugins.upnp.internal;
 
+import org.apache.felix.webconsole.ConfigurationPrinter;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.upnp.UPnPDevice;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -34,6 +36,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
     private BundleContext context;
 
     private SimpleWebConsolePlugin plugin;
+    private ServiceRegistration printerRegistration;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -75,7 +78,10 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
         if (plugin == null)
         {
             this.plugin = plugin = new WebConsolePlugin(tracker).register(context);
+            printerRegistration = context.registerService(ConfigurationPrinter.SERVICE,
+                new ConfigurationPrinterImpl(tracker), null);
         }
+
         // delegate event
         ControlServlet controller = ((WebConsolePlugin) plugin).controller;
         if (controller != null)
@@ -88,7 +94,8 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
      *      java.lang.Object)
      */
-    public final synchronized void removedService(ServiceReference reference, Object service)
+    public final synchronized void removedService(ServiceReference reference,
+        Object service)
     {
         SimpleWebConsolePlugin plugin = this.plugin;
 
@@ -103,6 +110,14 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
         {
             plugin.unregister();
             this.plugin = null;
+
+            // unregister configuration printer too
+            ServiceRegistration reg = printerRegistration;
+            if (reg != null)
+            {
+                reg.unregister();
+                printerRegistration = null;
+            }
         }
 
     }
