@@ -67,7 +67,7 @@ class ConfigurationPrinterImpl implements ConfigurationPrinter, Constants
             if (null != ref.getProperty(UPnPDevice.UDN)) // make sure device is valid
             {
                 // order components by friendly name
-                componentMap.put(nameOf(ref), ref);
+                componentMap.put(nameOf(ref).toString() + ref.getProperty(SERVICE_ID), ref);
             }
         }
 
