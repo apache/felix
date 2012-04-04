@@ -121,8 +121,11 @@ function addDevice(device) {
 	return node;
 }
 /* fills in the list of state variables */
+function sortVarNm(a) { return typeof a != 'undefined' && typeof a.name != undefined ? a.name.toLowerCase() : '' }
+function namedObjectSorter(a,b) { return sortVarNm(a) > sortVarNm(b) ? 1 : -1 }
 function renderVars(data) {
 	serviceDataVars.empty();
+	data.variables.sort(namedObjectSorter);
 	for(i in data.variables) {
 		var _var = data.variables[i];
 		var _tr = tr(null, null, [
@@ -141,8 +144,17 @@ var selectedDevice = false; // the LI element of the selected device, reset on l
 function renderDevice(device) {
 	// generate content
 	var table = '';
-	for(var key in device.props) {
-		table += '<tr><td class="ui-priority-primary">' + key + '</td><td>' + _val(device.props[key]) + '</td></tr>';
+	var sortedKeys = [];
+	for(var key in device.props) sortedKeys.push(key);
+	sortedKeys.sort();
+	for(var x in sortedKeys) {
+		var key = sortedKeys[x];
+		var xvalue = _val(device.props[key]);
+		if ('objectClass' == key) continue;
+		if ('service.id'  == key) {
+			xvalue = '<a href="' + appRoot + '/services/' + key + '">' + xvalue + '</a>';
+		}
+		table += '<tr><td class="ui-priority-primary">' + key + '</td><td>' + xvalue + '</td></tr>';
 	}
 
 	// update the UI
@@ -175,6 +187,7 @@ function renderService(udn, urn, data) {
 	if (data.actions) {
 		var html = '';
 		var x = data.actions;
+		x.sort(namedObjectSorter);
 		for (var a in x) html += '<option value="' + a + '">' + x[a].name + '</option>';
 		actionsSelect.html(html).unbind('change').change(function() {
 			var index = $(this).val();
