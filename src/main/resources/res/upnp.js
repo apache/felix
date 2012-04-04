@@ -273,8 +273,10 @@ function listDevices() {
 				var html = addDevice(this);
 				browser.treeview( { add: html.appendTo(browser) } );
 			});
+			$('.statline').text(i18n.status_devs.msgFormat(data.devices.length));
 		} else {
-			browser.append('','No devices available', '');
+			$('.statline').text(i18n.status_none);
+			browser.append('', i18n.status_none, '');
 		}
 
 		// update selected items
