@@ -37,6 +37,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.log.LogService;
 import org.osgi.service.upnp.UPnPAction;
 import org.osgi.service.upnp.UPnPDevice;
 import org.osgi.service.upnp.UPnPIcon;
@@ -95,7 +96,8 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                     response.setDateHeader("Last-Modified", LAST_MODIFIED); //$NON-NLS-1$
 
                     InputStream in = icon.getInputStream();
-                    if (null == in) { // this is buggy implementations
+                    if (null == in)
+                    { // this is buggy implementations
                         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                         return;
                     }
@@ -142,7 +144,11 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                     if (refs[i] != null
                         && refs[i].getProperty(UPnPDevice.PARENT_UDN) == null)
                     {
-                        json.append("devices", deviceTreeToJSON(refs[i])); //$NON-NLS-1$
+                        JSONObject deviceJSON = deviceTreeToJSON(refs[i]);
+                        if (null != deviceJSON)
+                        {
+                            json.append("devices", deviceJSON); //$NON-NLS-1$
+                        }
                     }
                 }
             }
@@ -159,8 +165,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                 UPnPService service = requireService(request);
                 UPnPAction action = service.getAction(require("actionID", request)); //$NON-NLS-1$
 
-                json = invoke(
-                    action, //
+                json = invoke(action, //
                     request.getParameterValues("names"), //$NON-NLS-1$
                     request.getParameterValues("vals")); //$NON-NLS-1$
             }
@@ -221,6 +226,13 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         Object[] refs = tracker.getServiceReferences();
 
         Object parentUdn = ref.getProperty(UPnPDevice.UDN);
+        if (parentUdn == null)
+        {
+            plugin.log(LogService.LOG_ERROR,
+                "Invalid device, no UDN property specified for " + device);
+            return null;
+        }
+
         JSONObject json = deviceToJSON(ref, device);
 
         // add child devices
@@ -241,7 +253,11 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
             else if (parentUdn.equals(parent))
             {
                 device = (UPnPDevice) tracker.getService(ref);
-                json.append("children", deviceTreeToJSON(ref)); //$NON-NLS-1$
+                JSONObject deviceJSON = deviceTreeToJSON(ref);
+                if (null != deviceJSON)
+                {
+                    json.append("children", deviceJSON); //$NON-NLS-1$
+                }
             }
         }
         return json;
@@ -296,14 +312,14 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                 value = "---"; //$NON-NLS-1$
 
             json.append("variables", new JSONObject() // //$NON-NLS-1$
-                .put("name", vars[i].getName()) // //$NON-NLS-1$
-                .put("value", value) // //$NON-NLS-1$
-                .put("defalt", vars[i].getDefaultValue()) // //$NON-NLS-1$
-                .put("min", vars[i].getMinimum()) // //$NON-NLS-1$
-                .put("max", vars[i].getMaximum()) // //$NON-NLS-1$
-                .put("step", vars[i].getStep()) // //$NON-NLS-1$
-                .put("allowed", vars[i].getAllowedValues()) // //$NON-NLS-1$
-                .put("sendsEvents", vars[i].sendsEvents()) // //$NON-NLS-1$
+            .put("name", vars[i].getName()) // //$NON-NLS-1$
+            .put("value", value) // //$NON-NLS-1$
+            .put("defalt", vars[i].getDefaultValue()) // //$NON-NLS-1$
+            .put("min", vars[i].getMinimum()) // //$NON-NLS-1$
+            .put("max", vars[i].getMaximum()) // //$NON-NLS-1$
+            .put("step", vars[i].getStep()) // //$NON-NLS-1$
+            .put("allowed", vars[i].getAllowedValues()) // //$NON-NLS-1$
+            .put("sendsEvents", vars[i].sendsEvents()) // //$NON-NLS-1$
             );
         }
 
@@ -350,15 +366,24 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                 final UPnPStateVariable var = action.getStateVariable(names[i]);
                 final String upnpType = var.getUPnPDataType();
                 final Object argObj;
-                if (UPnPStateVariable.TYPE_STRING.equals(upnpType)) {
+                if (UPnPStateVariable.TYPE_STRING.equals(upnpType))
+                {
                     argObj = vals[i];
-                } else if (UPnPStateVariable.TYPE_CHAR.equals(upnpType)) {
+                }
+                else if (UPnPStateVariable.TYPE_CHAR.equals(upnpType))
+                {
                     argObj = new Character(vals[i].charAt(0));
-                } else if (UPnPStateVariable.TYPE_BIN_BASE64.equals(upnpType)) {
-                    argObj = Base64.decodeBase64(vals[i]); 
-                } else if (UPnPStateVariable.TYPE_BIN_HEX.equals(upnpType)) {
+                }
+                else if (UPnPStateVariable.TYPE_BIN_BASE64.equals(upnpType))
+                {
+                    argObj = Base64.decodeBase64(vals[i]);
+                }
+                else if (UPnPStateVariable.TYPE_BIN_HEX.equals(upnpType))
+                {
                     argObj = Hex.decode(vals[i]);
-                } else {
+                }
+                else
+                {
                     Class javaType = var.getJavaDataType();
                     Constructor constructor = javaType.getConstructor(new Class[] { String.class });
                     argObj = constructor.newInstance(new Object[] { vals[i] });
@@ -393,9 +418,9 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                 }
 
                 json.append("output", new JSONObject() // //$NON-NLS-1$
-                    .put("name", key)// //$NON-NLS-1$
-                    .put("type", var.getUPnPDataType()) // //$NON-NLS-1$
-                    .put("value", value)); //$NON-NLS-1$
+                .put("name", key)// //$NON-NLS-1$
+                .put("type", var.getUPnPDataType()) // //$NON-NLS-1$
+                .put("value", value)); //$NON-NLS-1$
             }
         }
         return json;
@@ -447,16 +472,19 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         throw new IllegalArgumentException("Service '" + urn + "' not found!");
     }
 
+    private final WebConsolePlugin plugin;
+
     /**
      * Creates new XML-RPC handler.
      * 
      * @param bc the bundle context
      * @param iconServlet the icon servlet.
      */
-    ControlServlet(BundleContext bc, ServiceTracker tracker)
+    ControlServlet(BundleContext bc, ServiceTracker tracker, WebConsolePlugin plugin)
     {
         this.bc = bc;
         this.tracker = tracker;
+        this.plugin = plugin;
     }
 
     /**
