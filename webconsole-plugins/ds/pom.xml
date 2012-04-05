@@ -35,6 +35,20 @@
     </scm>
 
     <build>
+		<!-- add UTF-8-to-ISO translated resources -->
+		<resources>
+			<resource>
+				<directory>${basedir}/src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>target/classes</directory>
+				<includes>
+					<include>OSGI-INF/**</include>
+				</includes>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+    
         <plugins>
             <!-- translate UTF-8 encoded properties files to ISO-8859-1 -->
             <plugin>
