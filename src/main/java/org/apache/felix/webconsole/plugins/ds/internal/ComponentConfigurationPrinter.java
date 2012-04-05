@@ -68,7 +68,7 @@ class ComponentConfigurationPrinter implements ConfigurationPrinter
     {
         if (components == null || components.length == 0)
         {
-            pw.println("  No Components Registered");
+            pw.println("Status: No Components Registered");
         }
         else
         {
