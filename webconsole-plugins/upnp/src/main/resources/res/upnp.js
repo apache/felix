@@ -125,6 +125,8 @@ function sortVarNm(a) { return typeof a != 'undefined' && typeof a.name != undef
 function namedObjectSorter(a,b) { return sortVarNm(a) > sortVarNm(b) ? 1 : -1 }
 function renderVars(data) {
 	serviceDataVars.empty();
+	if (typeof data.variables == 'undefined') return;
+
 	data.variables.sort(namedObjectSorter);
 	for(i in data.variables) {
 		var _var = data.variables[i];
