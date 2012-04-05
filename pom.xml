@@ -141,7 +141,7 @@
                             org.osgi.service.wireadmin;version="[1.0,2)"
                         </DynamicImport-Package>
                         <Include-Resource>
-                            {maven-resources},META-INF=src/main/bare-resources
+                            {maven-resources},OSGI-INF=target/classes/OSGI-INF
                         </Include-Resource>
                         <Embed-Dependency>
                             org.apache.felix.utils;inline=org/apache/felix/utils/manifest/**,
