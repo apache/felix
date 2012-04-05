@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,10 +63,10 @@ public class DependencyFinderPlugin extends HttpServlet
     private void drawForm(final PrintWriter pw, String findField)
     {
         titleHtml(pw, "Dependency Finder", "Enter a list of package or class names");
-        pw.println("<tr class='content'>");
-        pw.println("<td class='content'>Packages/Classes</td>");
-        pw.print("<td class='content' colspan='2'>");
-        pw.print("<form method='get'>");
+        pw.println("<tr>");
+        pw.println("<td>Packages/Classes</td>");
+        pw.print("<td colspan='2'>");
+        pw.print("<form method='GET'>");
         pw.println("<textarea rows='10' cols='80' name='" + PARAM_FIND + "'>" + (findField != null ? findField : "")
             + "</textarea>");
         pw.println("&nbsp;&nbsp;<input type='submit' name='" + PARAM_SUBMIT + "' value='Find' class='submit'>");
@@ -83,19 +82,19 @@ public class DependencyFinderPlugin extends HttpServlet
 
     private void startTable(final PrintWriter pw)
     {
-        pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
+        pw.println("<table class='nicetable'>");
     }
 
     private void titleHtml(PrintWriter pw, String title, String description)
     {
-        pw.println("<tr class='content'>");
-        pw.println("<th colspan='3'class='content container'>" + title + "</th>");
+        pw.println("<tr>");
+        pw.println("<th colspan='3'>" + title + "</th>");
         pw.println("</tr>");
 
         if (description != null)
         {
-            pw.println("<tr class='content'>");
-            pw.println("<td colspan='3'class='content'>" + description + "</th>");
+            pw.println("<tr>");
+            pw.println("<td colspan='3'>" + description + "</th>");
             pw.println("</tr>");
         }
     }
@@ -107,7 +106,7 @@ public class DependencyFinderPlugin extends HttpServlet
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
     {
         final PrintWriter pw = resp.getWriter();
 
@@ -117,6 +116,8 @@ public class DependencyFinderPlugin extends HttpServlet
             printStatLine(pw, "PackageAdmin Service not registered");
             return;
         }
+
+        printStatLine(pw, "Find exported packages and classes");
 
         startTable(pw);
         String findField = req.getParameter(PARAM_FIND);
@@ -130,12 +131,12 @@ public class DependencyFinderPlugin extends HttpServlet
                 titleHtml(pw, "Packages", "Here are the packages you entered and by which bundle they are exported.");
                 for (String packageName : packageNames)
                 {
-                    pw.println("<tr class='content'>");
-                    pw.print("<td class='content'>");
+                    pw.println("<tr>");
+                    pw.print("<td>");
                     pw.print(packageName);
                     pw.print("</td>");
 
-                    pw.print("<td class='content' colspan='2'>");
+                    pw.print("<td colspan='2'>");
                     ExportedPackage[] exports = pa.getExportedPackages(packageName);
                     ExportedPackage export = pa.getExportedPackage(packageName);
                     if (export == null)
@@ -162,8 +163,8 @@ public class DependencyFinderPlugin extends HttpServlet
                 }
 
                 titleHtml(pw, "Maven Dependencies", "Here are the bundles listed above as Maven dependencies");
-                pw.println("<tr class='content'>");
-                pw.print("<td class='content' colspan='3'>");
+                pw.println("<tr>");
+                pw.print("<td colspan='3'>");
                 pw.println("<pre>");
                 for (Bundle bundle : exportingBundles)
                 {
