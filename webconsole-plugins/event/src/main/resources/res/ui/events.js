@@ -104,10 +104,10 @@ $(document).ready(function(){
 		if (topicOk) {
 			sendTopic.removeClass('ui-state-error');
 		} else {
-			addTopic.removeClass('ui-state-error');
+			sendTopic.addClass('ui-state-error');
 		}
 		var data = sendProperties.propeditor('serialize');
-		if (topicOk && data != false) {
+		if (topicOk && typeof data != 'boolean') {
 			$.post(pluginRoot,
 				data.concat([
 					{name : 'action', value : action},
@@ -125,6 +125,9 @@ $(document).ready(function(){
 	sendButtons[i18n.close] = function() {
 		$(this).dialog("close");
 	}
+	sendButtons[i18n.reset] = function() {
+		sendProperties.propeditor('reset');
+	}
 	sendButtons[i18n.send] = function() {
 		sendData('send');
 	}
@@ -137,8 +140,8 @@ $(document).ready(function(){
 		width   : '40%',
 		buttons : sendButtons,
 		open    : function() {
-			sendTopic.val('');
-			sendProperties.propeditor('reset');
+			//sendTopic.val('');
+			//sendProperties.propeditor('reset');
 		}
 	});
 	var sendTopic = $('#sendTopic');
