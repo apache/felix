@@ -126,6 +126,7 @@ $(document).ready(function(){
 		$(this).dialog("close");
 	}
 	sendButtons[i18n.reset] = function() {
+		sendTopic.val('');
 		sendProperties.propeditor('reset');
 	}
 	sendButtons[i18n.send] = function() {
