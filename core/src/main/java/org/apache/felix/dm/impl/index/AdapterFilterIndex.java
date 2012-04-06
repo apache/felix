@@ -39,11 +39,13 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
+import quicktime.std.music.ToneDescription;
+
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class AdapterFilterIndex implements FilterIndex, ServiceTrackerCustomizer {
-	// (&(objectClass=com.beinformed.product.platform.interfaces.Resource)(|(service.id=18233)(org.apache.felix.dependencymanager.aspect=18233)))
+	// (&(objectClass=foo.Bar)(|(service.id=18233)(org.apache.felix.dependencymanager.aspect=18233)))
     private static final String FILTER_START = "(&(" + Constants.OBJECTCLASS + "=";
     private static final String FILTER_SUBSTRING_0 = ")(|(" + Constants.SERVICE_ID + "=";
     private static final String FILTER_SUBSTRING_1 = ")(" + DependencyManager.ASPECT + "=";
@@ -91,7 +93,7 @@ public class AdapterFilterIndex implements FilterIndex, ServiceTrackerCustomizer
     /** Returns a value object with the relevant filter data, or <code>null</code> if this filter was not valid. */
     private FilterData getFilterData(String clazz, String filter) {
         // something like:
-    	// (&(objectClass=com.beinformed.product.platform.interfaces.Resource)(|(service.id=18233)(org.apache.felix.dependencymanager.aspect=18233)))    	
+    	// (&(objectClass=foo.Bar)(|(service.id=18233)(org.apache.felix.dependencymanager.aspect=18233)))    	
         if ((filter != null)
             && (filter.startsWith(FILTER_START))
             && (filter.endsWith(FILTER_END))
@@ -125,13 +127,13 @@ public class AdapterFilterIndex implements FilterIndex, ServiceTrackerCustomizer
         	SortedSet /* <ServiceReference> */ list = null;
         	synchronized (m_sidToServiceReferencesMap) {
         		list = (SortedSet) m_sidToServiceReferencesMap.get(Long.valueOf(data.serviceId));
+        		if (list != null) {
+        			Iterator iterator = list.iterator();
+        			while (iterator.hasNext()) {
+        				result.add((ServiceReference) iterator.next());
+        			}
+        		}
 			}
-            if (list != null) {
-                Iterator iterator = list.iterator();
-                while (iterator.hasNext()) {
-                    result.add((ServiceReference) iterator.next());
-                }
-            }
         }
         return result;
     }
@@ -139,15 +141,18 @@ public class AdapterFilterIndex implements FilterIndex, ServiceTrackerCustomizer
     public void serviceChanged(ServiceEvent event) {
         ServiceReference reference = event.getServiceReference();
         Long sid = ServiceUtil.getServiceIdObject(reference);
+        List /* <ServiceListener> */ notificationList = new ArrayList();
         synchronized (m_sidToListenersMap) {
-            List /* <Integer, ServiceListener> */ list = (ArrayList) m_sidToListenersMap.get(sid);
+            List /* <ServiceListener> */ list = (ArrayList) m_sidToListenersMap.get(sid);
             if (list != null) {
-                Iterator iterator = list.iterator();
-                while (iterator.hasNext()) {
-                    ServiceListener listener = (ServiceListener) iterator.next();
-                    listener.serviceChanged(event);
-                }
+                notificationList.addAll(list);
             }
+        }
+        // notify
+        Iterator iterator = notificationList.iterator();
+        while (iterator.hasNext()) {
+        	ServiceListener listener = (ServiceListener) iterator.next();
+        	listener.serviceChanged(event);
         }
     }
 
