@@ -101,6 +101,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String ENABLE_CONFIG_SAVE = "felix.fileinstall.enableConfigSave";
     public final static String START_LEVEL = "felix.fileinstall.start.level";
     public final static String ACTIVE_LEVEL = "felix.fileinstall.active.level";
+    public final static String UPDATE_WITH_LISTENERS = "felix.fileinstall.bundles.updateWithListeners";
 
     static final SecureRandom random = new SecureRandom();
 
@@ -120,6 +121,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     boolean noInitialDelay;
     int startLevel;
     int activeLevel;
+    boolean updateWithListeners;
 
     // Map of all installed artifacts
     Map/* <File, Artifact> */ currentManagedArtifacts = new HashMap/* <File, Artifact> */();
@@ -155,6 +157,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         noInitialDelay = getBoolean(properties, NO_INITIAL_DELAY, false);
         startLevel = getInt(properties, START_LEVEL, 0);    // by default, do not touch start level
         activeLevel = getInt(properties, ACTIVE_LEVEL, 0);    // by default, always scan
+        updateWithListeners = getBoolean(properties, UPDATE_WITH_LISTENERS, false); // Do not update bundles when listeners are updated
         this.context.addBundleListener(this);
 
         FilenameFilter flt;
@@ -338,8 +341,11 @@ public class DirectoryWatcher extends Thread implements BundleListener
         List/*<Artifact>*/ created = new ArrayList/*<Artifact>*/();
 
         // Try to process again files that could not be processed
-        files.addAll(processingFailures);
-        processingFailures.clear();
+        synchronized (processingFailures)
+        {
+            files.addAll(processingFailures);
+            processingFailures.clear();
+        }
 
         for (Iterator it = files.iterator(); it.hasNext(); )
         {
@@ -401,7 +407,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
                         // processing for this artifact until one is found
                         if (listener == null)
                         {
-                            processingFailures.add(file);
+                            synchronized (processingFailures)
+                            {
+                                processingFailures.add(file);
+                            }
                             continue;
                         }
                         artifact.setListener(listener);
@@ -440,7 +449,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     // processing for this artifact until one is found
                     if (listener == null)
                     {
-                        processingFailures.add(file);
+                        synchronized (processingFailures)
+                        {
+                            processingFailures.add(file);
+                        }
                         continue;
                     }
                     // Create the artifact
@@ -1353,6 +1365,52 @@ public class DirectoryWatcher extends Thread implements BundleListener
             }
         }
         return result;
+    }
+
+    public void addListener(ArtifactListener listener, long stamp)
+    {
+        if (updateWithListeners)
+        {
+            for (Iterator it = currentManagedArtifacts.values().iterator(); it.hasNext(); )
+            {
+                Artifact artifact = (Artifact) it.next();
+                if (artifact.getListener() == null && artifact.getBundleId() > 0)
+                {
+                    Bundle bundle = context.getBundle(artifact.getBundleId());
+                    if (bundle != null && bundle.getLastModified() < stamp)
+                    {
+                        File path = artifact.getPath();
+                        if (listener.canHandle(path))
+                        {
+                            synchronized (processingFailures)
+                            {
+                                processingFailures.add(path);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        synchronized (this)
+        {
+            this.notifyAll();
+        }
+    }
+
+    public void removeListener(ArtifactListener listener)
+    {
+        for (Iterator it = currentManagedArtifacts.values().iterator(); it.hasNext(); )
+        {
+            Artifact artifact = (Artifact) it.next();
+            if (artifact.getListener() == listener)
+            {
+                artifact.setListener(null);
+            }
+        }
+        synchronized (this)
+        {
+            this.notifyAll();
+        }
     }
 
 }

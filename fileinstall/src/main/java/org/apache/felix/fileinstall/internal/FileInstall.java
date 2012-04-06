@@ -48,6 +48,7 @@ import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * This clever little bundle watches a directory and will install any jar file
@@ -55,7 +56,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * fragment).
  *
  */
-public class FileInstall implements BundleActivator
+public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
 {
     static ServiceTracker padmin;
     static ServiceTracker startLevel;
@@ -80,28 +81,11 @@ public class FileInstall implements BundleActivator
         padmin.open();
         startLevel = new ServiceTracker(context, StartLevel.class.getName(), null);
         startLevel.open();
+
         String flt = "(|(" + Constants.OBJECTCLASS + "=" + ArtifactInstaller.class.getName() + ")"
                      + "(" + Constants.OBJECTCLASS + "=" + ArtifactTransformer.class.getName() + ")"
                      + "(" + Constants.OBJECTCLASS + "=" + ArtifactUrlTransformer.class.getName() + "))";
-        listenersTracker = new ServiceTracker(context, FrameworkUtil.createFilter(flt), null)
-        {
-            public Object addingService(ServiceReference serviceReference)
-            {
-                ArtifactListener listener = (ArtifactListener) super.addingService(serviceReference);
-                addListener(serviceReference, listener);
-                return listener;
-            }
-            public void modifiedService(ServiceReference reference, Object service)
-            {
-                super.modifiedService(reference, service);
-                removeListener(reference);
-                addListener(reference, (ArtifactListener) service);
-            }
-            public void removedService(ServiceReference serviceReference, Object o)
-            {
-                removeListener(serviceReference);
-            }
-        };
+        listenersTracker = new ServiceTracker(context, FrameworkUtil.createFilter(flt), this);
         listenersTracker.open();
 
         try
@@ -155,6 +139,22 @@ public class FileInstall implements BundleActivator
             initialized = true;
             barrier.notifyAll();
         }
+    }
+
+    public Object addingService(ServiceReference serviceReference)
+    {
+        ArtifactListener listener = (ArtifactListener) context.getService(serviceReference);
+        addListener(serviceReference, listener);
+        return listener;
+    }
+    public void modifiedService(ServiceReference reference, Object service)
+    {
+        removeListener(reference, (ArtifactListener) service);
+        addListener(reference, (ArtifactListener) service);
+    }
+    public void removedService(ServiceReference serviceReference, Object service)
+    {
+        removeListener(serviceReference, (ArtifactListener) service);
     }
 
     // Adapted for FELIX-524
@@ -267,20 +267,9 @@ public class FileInstall implements BundleActivator
         {
             listeners.put(reference, listener);
         }
-        notifyWatchers();
-    }
+        
+        long currentStamp = reference.getBundle().getLastModified();
 
-    private void removeListener(ServiceReference reference)
-    {
-        synchronized (listeners)
-        {
-            listeners.remove(reference);
-        }
-        notifyWatchers();
-    }
-
-    private void notifyWatchers()
-    {
         List /*<DirectoryWatcher>*/ toNotify = new ArrayList /*<DirectoryWatcher>*/();
         synchronized (watchers)
         {
@@ -289,10 +278,25 @@ public class FileInstall implements BundleActivator
         for (Iterator w = toNotify.iterator(); w.hasNext();)
         {
             DirectoryWatcher dir = (DirectoryWatcher) w.next();
-            synchronized (dir)
-            {
-                dir.notifyAll();
-            }
+            dir.addListener( listener, currentStamp );
+        }
+    }
+
+    private void removeListener(ServiceReference reference, ArtifactListener listener)
+    {
+        synchronized (listeners)
+        {
+            listeners.remove(reference);
+        }
+        List /*<DirectoryWatcher>*/ toNotify = new ArrayList /*<DirectoryWatcher>*/();
+        synchronized (watchers)
+        {
+            toNotify.addAll(watchers.values());
+        }
+        for (Iterator w = toNotify.iterator(); w.hasNext();)
+        {
+            DirectoryWatcher dir = (DirectoryWatcher) w.next();
+            dir.removeListener( listener );
         }
     }
 
