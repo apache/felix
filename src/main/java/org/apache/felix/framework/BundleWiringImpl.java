@@ -447,6 +447,12 @@ public class BundleWiringImpl implements BundleWiring
         return filters;
     }
 
+    @Override
+    public String toString()
+    {
+        return m_revision.getBundle().toString();
+    }
+
     public synchronized void dispose()
     {
         if (m_fragmentContents != null)
