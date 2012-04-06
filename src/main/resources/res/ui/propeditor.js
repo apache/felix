@@ -21,22 +21,22 @@
 	
 	Options:
 	validator : function(keyInputField, valInputField, type)
+	types     : ['byte', 'int', 'long', 'float', 'double', 'string', 'char', 'hex', 'base64', 'sha1']
 */
 (function( $ ){
-	var TYPES = ['byte', 'int', 'long', 'float', 'double', 'string', 'char', 'hex', 'base64', 'sha1'];
-
 	var methods = {
 		init : function(options) {
 			return this.each( function() {
 				// If options exist, lets merge them with our default settings
 				var settings = {
 					validator  : false,
+					types      : ['byte', 'int', 'long', 'float', 'double', 'string', 'char', 'hex', 'base64', 'sha1']
 				};
 				if (options) settings = $.extend(settings, options);
 
 				var _this = $(this);
 				_this.data('propeditor_settings', settings);
-				_this.append(_entry());
+				_this.append(_entry(settings.types));
 				_this.addremove(settings);
 			})
 		},
@@ -56,15 +56,13 @@
 			if (entries.size() == 1) {
 				var k = entries.find('.key').removeClass('ui-state-error').val();
 				var v = entries.find('.val').removeClass('ui-state-error').val();
-				if (k != '' || v != '') {
+				if (k || v) {
 					var data = _check_entry( entries, validator );
-					//if ( data == false ) ok = false; else result.push(data);
 					if ( data == false ) ok = false; else result = data;
 				}
 			} else {
 				entries.each(function() {
 					var data = _check_entry( $(this), validator );
-					//if ( data == false ) ok = false; else result.push(data);
 					if ( data == false ) ok = false; else result = result.concat(data);
 				});
 			}
@@ -102,7 +100,7 @@
 		return ret;
 	}
 
-	var _entry = function() {
+	var _entry = function(TYPES) {
 		var sel = _el('select', 'typ');
 		for(var i in TYPES) {
 			sel.append( _el('option').text( TYPES[i] ) );

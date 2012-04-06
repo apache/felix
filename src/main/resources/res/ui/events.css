@@ -31,6 +31,6 @@ td.time { white-space: nowrap }
 .addremove button { width: 16px; height: 16px; line-height: 10px; font-size: 10px; margin: 2px 2px }
 .addremove_inner { display: inline }
 .propeditor_entry select {	margin-left: 4px }
-#sendTopic { width: 100% }
+#sendTopic { width: 100%; margin-bottom: 1em }
 #sendDialog table { margin-left: auto; margin-right: auto }
 #sendDialog table th { text-align: right; font-weight: bold; padding-right: .5em }
