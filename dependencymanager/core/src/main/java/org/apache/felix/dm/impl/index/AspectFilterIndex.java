@@ -94,7 +94,7 @@ public class AspectFilterIndex implements FilterIndex, ServiceTrackerCustomizer 
     /** Returns a value object with the relevant filter data, or <code>null</code> if this filter was not valid. */
     private FilterData getFilterData(String clazz, String filter) {
         // something like:
-        // (&(objectClass=com.beinformed.wiringtest.Model)(&(|(!(service.ranking=*))(service.ranking<=9))(|(service.id=37)(org.apache.felix.dependencymanager.aspect=37))))
+        // (&(objectClass=foo.Bar)(&(|(!(service.ranking=*))(service.ranking<=9))(|(service.id=37)(org.apache.felix.dependencymanager.aspect=37))))
         if ((filter != null)
             && (filter.startsWith(FILTER_START))
             && (filter.endsWith(FILTER_END))
@@ -132,16 +132,16 @@ public class AspectFilterIndex implements FilterIndex, ServiceTrackerCustomizer 
         	SortedSet /* <ServiceReference> */ list = null;
         	synchronized (m_sidToServiceReferencesMap) {
         		list = (SortedSet) m_sidToServiceReferencesMap.get(Long.valueOf(data.serviceId));
+        		if (list != null) {
+        			Iterator iterator = list.iterator();
+        			while (iterator.hasNext()) {
+        				ServiceReference reference = (ServiceReference) iterator.next();
+        				if (ServiceUtil.getRanking(reference) <= data.ranking) {
+        					result.add(reference);
+        				}
+        			}
+        		}
 			}
-            if (list != null) {
-                Iterator iterator = list.iterator();
-                while (iterator.hasNext()) {
-                    ServiceReference reference = (ServiceReference) iterator.next();
-                    if (ServiceUtil.getRanking(reference) <= data.ranking) {
-                        result.add(reference);
-                    }
-                }
-            }
         }
         return result;
     }
