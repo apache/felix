@@ -1,3 +1,9 @@
+Version 3.2.2
+-------------
+** Improvement
+    * [FELIX-3398] - Track new versions of artifact listener and optionally update all bundles when a new version is detected
+    * [FELIX-3448] Small optimization when using file name filters
+
 Version 3.2.0
 -------------
 ** Bug
@@ -20,7 +26,6 @@ Version 3.2.0
     * [FELIX-2848] - Saving config file to original location shouldn't add system properties
     * [FELIX-3294] - file install dependencies on osgi artifacts should have "provided" scope
     * [FELIX-3386] - File install tests use deprecated EasyMock API and fail on BundleContext.getProperty
-    * [FELIX-3398] - Track new versions of artifact listener and optionally update all bundles when a new version is detected
 
 Version 3.1.10
 --------------
