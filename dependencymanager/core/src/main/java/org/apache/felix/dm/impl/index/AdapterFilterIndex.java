@@ -39,8 +39,6 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
-import quicktime.std.music.ToneDescription;
-
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
