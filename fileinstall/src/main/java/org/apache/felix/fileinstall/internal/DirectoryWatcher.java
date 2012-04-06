@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.regex.Pattern;
 
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.ArtifactListener;
@@ -165,9 +166,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
         {
             flt = new FilenameFilter()
             {
+                Pattern pattern = Pattern.compile(filter);
                 public boolean accept(File dir, String name)
                 {
-                    return name.matches(filter);
+                    return pattern.matcher(name).matches();
                 }
             };
         }
