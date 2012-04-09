@@ -18,14 +18,11 @@
  */
 package org.apache.felix.framework.wiring;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.framework.util.VersionRange;
+import org.apache.felix.framework.util.ImmutableMap;
 import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
@@ -46,8 +43,8 @@ public class BundleRequirementImpl implements BundleRequirement
     {
         m_revision = revision;
         m_namespace = namespace;
-        m_dirs = Collections.unmodifiableMap(dirs);
-        m_attrs = Collections.unmodifiableMap(attrs);
+        m_dirs = ImmutableMap.newInstance(dirs);
+        m_attrs = ImmutableMap.newInstance(attrs);
         m_filter = filter;
 
         // Find resolution import directives.
@@ -102,6 +99,7 @@ public class BundleRequirementImpl implements BundleRequirement
         return m_filter;
     }
 
+    @Override
     public String toString()
     {
         return "[" + m_revision + "] " + m_namespace + "; " + getFilter().toString();

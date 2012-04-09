@@ -21,14 +21,12 @@ package org.apache.felix.framework;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
-import org.apache.felix.framework.util.manifestparser.ParsedHeaderClause;
 import org.osgi.framework.AdminPermission;
-import org.osgi.framework.Constants;
 import org.osgi.framework.hooks.weaving.WovenClass;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleWiring;
@@ -55,8 +53,8 @@ class WovenClassImpl implements WovenClass, List<String>
         m_definedClass = definedClass;
         m_bytes = (bytes == null) ? m_bytes : bytes;
         m_imports = (imports == null)
-            ? Collections.unmodifiableList(m_imports)
-            : Collections.unmodifiableList(imports);
+            ? ImmutableList.newInstance(m_imports)
+            : ImmutableList.newInstance(imports);
     }
 
     public synchronized byte[] getBytes()
@@ -365,7 +363,7 @@ class WovenClassImpl implements WovenClass, List<String>
         return m_imports.subList(i, i1);
     }
 
-    byte[] _getBytes() 
+    byte[] _getBytes()
     {
         byte[] bytes = m_bytes;
         if (m_isComplete)

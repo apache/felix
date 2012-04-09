@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.StringTokenizer;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
+import org.apache.felix.framework.util.ImmutableMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.Constants;
@@ -50,8 +51,8 @@ public class BundleCapabilityImpl implements BundleCapability
     {
         m_namespace = namespace;
         m_revision = revision;
-        m_dirs = Collections.unmodifiableMap(dirs);
-        m_attrs = Collections.unmodifiableMap(attrs);
+        m_dirs = ImmutableMap.newInstance(dirs);
+        m_attrs = ImmutableMap.newInstance(attrs);
 
         // Find all export directives: uses, mandatory, include, and exclude.
 
@@ -187,6 +188,7 @@ public class BundleCapabilityImpl implements BundleCapability
         return included && !excluded;
     }
 
+    @Override
     public String toString()
     {
         if (m_revision == null)
