@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.security.AccessControlException;
 import java.security.AllPermission;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,8 +36,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
 import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.ManifestParser;
@@ -494,7 +493,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             new ArrayList<BundleCapability>(m_capabilities.size() + caps.size());
         newCaps.addAll(m_capabilities);
         newCaps.addAll(caps);
-        m_capabilities = Collections.unmodifiableList(newCaps);
+        m_capabilities = ImmutableList.newInstance(newCaps);
         m_headerMap.put(Constants.EXPORT_PACKAGE, convertCapabilitiesToHeaders(m_headerMap));
     }
 
@@ -598,6 +597,7 @@ class ExtensionManager extends URLStreamHandler implements Content
             };
     }
 
+    @Override
     protected InetAddress getHostAddress(URL u)
     {
         // the extension URLs do not address real hosts

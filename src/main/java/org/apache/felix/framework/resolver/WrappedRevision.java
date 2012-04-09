@@ -19,8 +19,8 @@
 package org.apache.felix.framework.resolver;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import org.apache.felix.framework.util.ImmutableList;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.Bundle;
@@ -88,7 +88,7 @@ class WrappedRevision implements BundleRevision
                     }
                 }
             }
-            m_cachedCapabilities = Collections.unmodifiableList(caps);
+            m_cachedCapabilities = ImmutableList.newInstance(caps);
         }
         return m_cachedCapabilities;
     }
@@ -119,7 +119,7 @@ class WrappedRevision implements BundleRevision
                     }
                 }
             }
-            m_cachedRequirements = Collections.unmodifiableList(reqs);
+            m_cachedRequirements = ImmutableList.newInstance(reqs);
         }
         return m_cachedRequirements;
     }
@@ -139,6 +139,7 @@ class WrappedRevision implements BundleRevision
         return m_host.getBundle();
     }
 
+    @Override
     public String toString()
     {
         return m_host.toString();
