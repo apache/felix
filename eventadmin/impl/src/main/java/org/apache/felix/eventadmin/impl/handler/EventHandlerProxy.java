@@ -136,7 +136,7 @@ public class EventHandlerProxy {
         }
         // Second check filter (but only if topics is valid)
         Filter handlerFilter = null;
-        if ( this.topics != null )
+        if ( valid )
         {
             final Object filterObj = reference.getProperty(EventConstants.EVENT_FILTER);
             if (filterObj instanceof String)
