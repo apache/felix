@@ -75,8 +75,7 @@ public class Util
     public static boolean isOptional(Requirement req)
     {
         String resolution = req.getDirectives().get(Namespace.REQUIREMENT_RESOLUTION_DIRECTIVE);
-        return ((resolution == null)
-            || resolution.equalsIgnoreCase(Namespace.RESOLUTION_OPTIONAL));
+        return Namespace.RESOLUTION_OPTIONAL.equalsIgnoreCase(resolution);
     }
 
     public static List<Requirement> getDynamicRequirements(List<Requirement> reqs)
