@@ -141,6 +141,48 @@ public class Property implements FieldInterceptor, ConstructorInjector {
         }
     }
 
+    /**
+     * Creates a property.
+     * At least the method or the field need
+     * to be specified.
+     * @param name the name of the property (optional)
+     * @param field the name of the field
+     * @param method the method name
+     * @param value the initial value of the property (optional)
+     * @param manager the instance manager
+     * @param handler the handler object which manage this property.
+     * @throws ConfigurationException if the property value cannot be set.
+     */
+    public Property(String name, String field, String method, Object value, InstanceManager manager, Handler handler) throws ConfigurationException {
+        m_handler = handler;
+        m_manager = manager;
+        m_field = field;
+
+        if (value == null) {
+            throw new ConfigurationException("Cannot create properties without a value");
+        }
+
+        if (name == null) {
+            if (m_field == null) {
+                m_name = method;
+            } else {
+                m_name = field;
+            }
+        } else {
+            m_name = name;
+        }
+
+        m_type = value.getClass();
+        m_value = value;
+        m_defaultValue = m_value;
+
+        if (method != null) {
+            m_method = new Callback(method, new String[] { m_type.getName() }, false, manager);
+        } else {
+            m_method = null;
+        }
+    }
+
     public Property(String name, String field, String method, int index,
             String value, String type, InstanceManager manager, Handler handler) throws ConfigurationException {
         this(name, field, method, value, type, manager, handler);

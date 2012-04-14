@@ -17,7 +17,7 @@ public class MockBundle implements Bundle {
     private final ClassLoader m_classloader;
 
     /**
-     * @param classloader the Classloader to load classes and resources.
+     * @param cl the Classloader to load classes and resources.
      */
     public MockBundle(ClassLoader cl) {
         m_classloader = cl;

@@ -3,9 +3,7 @@ package org.apache.felix.ipojo.handlers.providedservice;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-import org.apache.felix.ipojo.ComponentFactory;
-import org.apache.felix.ipojo.ConfigurationException;
-import org.apache.felix.ipojo.InstanceManager;
+import org.apache.felix.ipojo.*;
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
 import org.apache.felix.ipojo.handlers.dependency.DependencyHandler;
 import org.apache.felix.ipojo.metadata.Attribute;
@@ -16,6 +14,11 @@ import org.apache.felix.ipojo.util.Logger;
 import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Dictionary;
+import java.util.Properties;
+
 public class ProvidedServiceHandlerTest extends TestCase {
 
     BundleContext context;
@@ -23,8 +26,9 @@ public class ProvidedServiceHandlerTest extends TestCase {
     InstanceManager im;
     ComponentTypeDescription desc;
     ProvidedServiceHandler handler;
+    Logger logger;
 
-    public void setUp() {
+    public void setUp() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         context = (BundleContext) Mockito.mock(BundleContext.class);
         Mockito.when(context.getProperty(DependencyHandler.PROXY_TYPE_PROPERTY)).thenReturn(null);
         Mockito.when(context.getProperty(Logger.IPOJO_LOG_LEVEL_PROP)).thenReturn(null);
@@ -32,11 +36,14 @@ public class ProvidedServiceHandlerTest extends TestCase {
 
         factory = (ComponentFactory) Mockito.mock(ComponentFactory.class);
         Mockito.when(factory.getBundleClassLoader()).thenReturn(ProvidedServiceHandler.class.getClassLoader());
-        Mockito.when(factory.getLogger()).thenReturn(new Logger(context, "TEST", Logger.INFO));
+        logger = Mockito.spy(new Logger(context, "TEST", Logger.INFO));
+        Mockito.when(factory.getLogger()).thenReturn(logger);
 
         im = (InstanceManager) Mockito.mock(InstanceManager.class);
         Mockito.when(im.getContext()).thenReturn(context);
+        Mockito.when(im.getGlobalContext()).thenReturn(context);
         Mockito.when(im.getFactory()).thenReturn(factory);
+        Mockito.when(im.getInstanceName()).thenReturn("an.instance");
 
         desc = (ComponentTypeDescription) Mockito.mock(ComponentTypeDescription.class);
         Mockito.when(desc.getFactory()).thenReturn(factory);
@@ -44,6 +51,12 @@ public class ProvidedServiceHandlerTest extends TestCase {
 
         handler = new ProvidedServiceHandler();
         handler.setFactory(factory);
+
+        // Attach the handler
+        Method method = PrimitiveHandler.class.getDeclaredMethod("attach", new Class[]{ComponentInstance.class});
+        method.setAccessible(true);
+        method.invoke(handler, new Object[]{im});
+
     }
 
     public void testServiceDetectionNoInterface() throws ConfigurationException {
@@ -128,6 +141,20 @@ public class ProvidedServiceHandlerTest extends TestCase {
 
         System.out.println(metadata);
 
+    }
+
+    public void testWhenRequiresFilterIsPropagated() throws Exception {
+        Dictionary dictionary = new Properties();
+        Dictionary requiresfilter = new Properties();
+        requiresfilter.put("id1", "(filter1)");
+        dictionary.put("requires.filter", requiresfilter);
+
+
+        ProvidedService providedService = new ProvidedService(handler, new String[] {Runnable.class.getName()}, ProvidedService.SINGLETON_STRATEGY, null, new Properties());
+        Assert.assertEquals(2, providedService.getProperties().length); // instance.name, service.pid
+        providedService.addProperties(dictionary);
+
+        Assert.assertEquals(2 + 1, providedService.getProperties().length);
     }
 
 }

@@ -518,6 +518,7 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      */
     public void addProperties(Dictionary dict) {
         for (int i = 0; i < m_providedServices.length; i++) {
+            System.out.println("adding properties " + dict);
             m_providedServices[i].addProperties(dict);
             m_providedServices[i].update();
         }

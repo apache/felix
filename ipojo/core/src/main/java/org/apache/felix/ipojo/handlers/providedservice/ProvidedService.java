@@ -549,7 +549,7 @@ public class ProvidedService implements ServiceFactory {
 
             if (! alreadyExisting) {
                 try {
-                    Property prop = new Property(key, null, null, value.toString(), value.getClass().getName(), getInstanceManager(), m_handler);
+                    Property prop = new Property(key, null, null, value, getInstanceManager(), m_handler);
                     addProperty(prop);
                     updated = true;
                 } catch (ConfigurationException e) {
