@@ -25,7 +25,7 @@ public class SmartProxyTest extends TestCase {
     /**
      * Check that we don't create smart proxies for concrete and abstract classes.
      */
-    public void testCannotProxyAbstractAndContreteClasses() {
+    public void testCannotProxyAbstractAndConcreteClasses() {
         Bundle bundle = new MockBundle(Dependency.class.getClassLoader());
 
         BundleContext context = (BundleContext) Mockito.mock(BundleContext.class);
