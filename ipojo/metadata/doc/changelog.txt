@@ -1,3 +1,9 @@
+Changes from 1.6.0 to 1.6.1
+---------------------------
+** Improvement
+    * [FELIX-3131] - Elements and attributes should conserve the insertion order
+
+
 Changes from 1.4.0 to 1.6.0
 ---------------------------
 ** Improvement
