@@ -132,7 +132,11 @@
             <Private-Package>
               org.apache.felix.ipojo.handlers.architecture,
               org.apache.felix.ipojo.handlers.lifecycle.callback,
-              org.apache.felix.ipojo.handlers.lifecycle.controller
+              org.apache.felix.ipojo.handlers.lifecycle.controller,
+              <!-- ASM (Manipulator dependencies) -->
+              org.objectweb.asm.commons,
+              org.objectweb.asm.signature,
+              org.objectweb.asm
             </Private-Package>
             <Export-Package>
               org.apache.felix.ipojo; version="${ipojo.package.version}",
@@ -151,10 +155,6 @@
               <!-- Compendium packages -->
               org.osgi.service.cm,
               org.osgi.service.log,
-              <!-- ASM (Manipulator dependencies -->
-              org.objectweb.asm.commons;version=3.3.1,
-              org.objectweb.asm.signature;version=3.3.1,
-              org.objectweb.asm;version=3.3.1
             </Export-Package>
             <Include-Resource>
               META-INF/LICENSE=LICENSE,
