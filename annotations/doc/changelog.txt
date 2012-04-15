@@ -1,0 +1,74 @@
+Changes from the 1.6.4 to 1.8.0
+-------------------------------
+** Bug
+    * [FELIX-2568] - Rename Transactionnal to Transactional
+
+** Improvement
+    * [FELIX-1428] - Constructor injection of Configuration properties
+    * [FELIX-2620] - Change iPojo annotation parameters to follow java naming conventions
+    * [FELIX-2621] - Rename annotations to remove collisions
+    * [FELIX-2622] - Support static service properties that are not mirrored into fields
+    * [FELIX-2624] - Support multiple whiteboards using annotations
+    * [FELIX-2630] - Rename @Component attributes to follow the java naming conventions
+    * [FELIX-2631] - Rename @Publisher and @Subscriber attributes to follow the java naming conventions
+    * [FELIX-2633] - Rename JMX annotations
+    * [FELIX-2634] - Rename the @Publisher annotation into @Publishes annotation to avoid collision
+    * [FELIX-2666] - Rename the temporal handler annotation to avoid collision
+    * [FELIX-2742] - Constructor injection of service dependencies
+
+Changes from the 1.6.2 to 1.6.4
+-------------------------------
+** Improvement
+    * [FELIX-2420] - Enum support for @Property annotation
+    * [FELIX-2461] - Allow specifying the targeted service interface in the @ServiceController
+
+Changes from the 1.6.0 to 1.6.2
+-------------------------------
+** Improvement
+    * [FELIX-2296] - Access to ServiceReference in iPOJO service.
+
+Changes from the 1.4.0 to 1.6.0
+-------------------------------
+** Bug
+    * [FELIX-1557] - Cosmetic change of the Bundle-Name and Bundle-SymbolicName in iPOJO annotations.
+
+** Improvement
+    * [FELIX-1426] - Service injection with Dynamic Proxies
+    * [FELIX-1427] - Service injection with Smart Proxies
+    * [FELIX-1906] - Allow calling a method when service properties of an already injected service are modified
+
+** New Feature
+    * [FELIX-2132] - Provides a way to control service exposition from the implementation class
+
+** Wish
+    * [FELIX-1940] - Add @Instance annotation to declare instances without metadata.xml
+
+Changes from 1.2.0 to 1.4.0
+---------------------------
+** Bug
+    * [FELIX-1319] - Issue in the metadata overriding analysis in iPOJO annotations
+
+** Improvement
+    * Update parent pom
+
+
+Changes from 1.0.0 to 1.2.0
+---------------------------
+** Improvement
+    * [FELIX-825] - Provide annotation for iPojo JMX Handler
+    * [FELIX-834] - Provide Annotations for the extender, whiteboard and event admin handlers
+
+** Bug
+    * [FELIX-867] - iPOJO @ServiceProperty can target method
+    * [FELIX-868] - iPOJO @Component don't support factory methods
+
+
+Changes from 0.8.0 to 1.0.0
+---------------------------
+** Improvement
+    * [FELIX-627] - Temporal dependency annotation
+
+
+Version 0.8.0
+-------------
+    * Initial release
