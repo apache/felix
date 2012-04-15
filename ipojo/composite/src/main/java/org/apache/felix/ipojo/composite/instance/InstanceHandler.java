@@ -258,7 +258,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
             }
 
             Properties instanceConfiguration = new Properties();
-             instanceConfiguration.putAll(conf);
+            instanceConfiguration.putAll(conf);
             instanceConfiguration.putAll(toAppend);
             m_configurations[i] = new ManagedConfiguration(instanceConfiguration);
         }
@@ -276,7 +276,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
         Properties dict = new Properties();
         String name = instance.getAttribute("name");
         if (name != null) {
-            dict.put("name", name);
+            dict.put("instance.name", name);
         }
 
         String comp = instance.getAttribute("component");
