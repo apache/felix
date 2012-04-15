@@ -34,64 +34,34 @@
     <modules>
     <module>metadata</module>
     <module>manipulator</module>
-    <module>core</module>
-    <module>composite</module>
+    <module>runtime</module>
     <module>arch</module>
     <module>handler/extender</module>
     <module>handler/temporal</module>
     <module>handler/eventadmin</module>
     <module>handler/whiteboard</module>
+    <module>handler/jmx</module>
+    <module>handler/transaction</module>
     <module>api</module>
+	<module>arch-gogo</module>
+    <module>webconsole-plugin</module>
     <!-- remove junit4osgi during the release process
     <module>junit4osgi</module> -->
   </modules>
 
-
   <profiles>
-  <profile>
-    <id>junit4osgi</id>
-    <modules>
-      <module>junit4osgi</module>
-    </modules>
-  </profile>
-  <profile>
-    <id>java5</id>
-    <activation>
-      <jdk>1.5</jdk>
-    </activation>
-    <modules>
-      <module>annotations</module>
-      <module>arch-gogo</module>
-      <module>handler/jmx</module>
-      <module>webconsole-plugin</module>
-      <module>handler/transaction</module>
-    </modules>
-  </profile>
-  <profile>
-    <id>java6</id>
-    <activation>
-      <jdk>1.6</jdk>
-    </activation>
-    <modules>
-      <module>annotations</module>
-      <module>arch-gogo</module>
-      <module>handler/jmx</module>
-      <module>webconsole-plugin</module>
-      <module>handler/transaction</module>
-    </modules>
-  </profile>
-  <profile>
-    <id>examples</id>
-    <modules>
-      <module>examples</module>
-    </modules>
-  </profile>
-  <profile>
-    <id>tests</id>
-    <modules>
-      <module>tests</module>
-    </modules>
-  </profile>
+      <profile>
+        <id>examples</id>
+        <modules>
+          <module>examples</module>
+        </modules>
+      </profile>
+      <profile>
+        <id>tests</id>
+        <modules>
+          <module>tests</module>
+        </modules>
+      </profile>
   </profiles>
 
     <build>
