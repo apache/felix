@@ -1,9 +1,7 @@
 package org.apache.felix.ipojo.handlers.dependency;
 
-import java.awt.Window;
+import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.Action;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -47,8 +45,7 @@ public class SmartProxyTest extends TestCase {
 
         Mockito.when(handler.getLogger()).thenReturn(logger);
 
-        // Try with java.List
-        Dependency dependency = new Dependency(handler, "a_field", Window.class, null, false, false, false,
+        Dependency dependency = new Dependency(handler, "a_field", ArrayList.class, null, false, false, false,
                 true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null);
         dependency.start();
 
@@ -57,7 +54,7 @@ public class SmartProxyTest extends TestCase {
 
         dependency.stop();
 
-        // Try with javax.swing.Action
+        // Try with an Object.
         dependency = new Dependency(handler, "a_field", Object.class, null, false, false, false,
                 true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null);
         dependency.start();
@@ -106,13 +103,13 @@ public class SmartProxyTest extends TestCase {
 
         dependency.stop();
 
-        // Try with javax.swing.Action
-        dependency = new Dependency(handler, "a_field", Action.class, null, false, false, false,
+        // Try with javax.sql.CommonDataSource
+        dependency = new Dependency(handler, "a_field", javax.sql.CommonDataSource.class, null, false, false, false,
                 true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null);
         dependency.start();
         // OK
         Assert.assertNotNull(dependency.onGet(new Object(), "a_field", null));
-        Assert.assertTrue(dependency.onGet(new Object(), "a_field", null) instanceof Action);
+        Assert.assertTrue(dependency.onGet(new Object(), "a_field", null) instanceof javax.sql.CommonDataSource);
     }
 
 }
