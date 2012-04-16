@@ -1082,6 +1082,7 @@ class BundleImpl implements Bundle, BundleRevisions
         return (thisBundleId < thatBundleId ? -1 : (thisBundleId == thatBundleId ? 0 : 1));
     }
 
+    @Override
     public String toString()
     {
         String sym = getSymbolicName();
