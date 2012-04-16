@@ -509,6 +509,12 @@ public class ResolverImpl implements Resolver
         }
         cycle.add(revision);
 
+        // Make sure package space hasn't already been calculated.
+        if (revisionPkgMap.containsKey(revision))
+        {
+            return;
+        }
+
         // Create parallel arrays for requirement and proposed candidate
         // capability or actual capability if revision is resolved or not.
         List<BundleRequirement> reqs = new ArrayList();
