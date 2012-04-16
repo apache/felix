@@ -225,7 +225,8 @@ public class BundleRevisionImpl implements BundleRevision
 
     public int getTypes()
     {
-        if (getHeaders().containsKey(Constants.FRAGMENT_HOST))
+        if ((getManifestVersion() == "2")
+            && getHeaders().containsKey(Constants.FRAGMENT_HOST))
         {
             return BundleRevision.TYPE_FRAGMENT;
         }
