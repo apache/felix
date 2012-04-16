@@ -522,6 +522,12 @@ public class ResolverImpl implements Resolver
         }
         cycle.add(resource);
 
+        // Make sure package space hasn't already been calculated.
+        if (resourcePkgMap.containsKey(resource))
+        {
+            return;
+        }
+
         // Create parallel arrays for requirement and proposed candidate
         // capability or actual capability if resource is resolved or not.
         List<Requirement> reqs = new ArrayList();
