@@ -757,13 +757,16 @@ class Candidates
                             {
                                 List<Capability> original = ((ShadowList) cands).getOriginal();
                                 int removeIdx = original.indexOf(origCap);
-                                original.remove(removeIdx);
+                                if (removeIdx != -1)
+                                {
+                                    original.remove(removeIdx);
+                                    cands.remove(removeIdx);
+                                }
                                 int insertIdx = rc.insertHostedCapability(
                                     original,
                                     new SimpleHostedCapability(
                                         hostResource.getDeclaredResource(),
                                         origCap));
-                                cands.remove(removeIdx);
                                 cands.add(insertIdx, c);
                             }
                             // If the original capability is from the host, then
