@@ -1,5 +1,8 @@
 Version 3.2.2
 -------------
+** Bug
+    * [FELIX-3467] - Configuration is not flush back to the file
+
 ** Improvement
     * [FELIX-3398] - Track new versions of artifact listener and optionally update all bundles when a new version is detected
     * [FELIX-3448] Small optimization when using file name filters
