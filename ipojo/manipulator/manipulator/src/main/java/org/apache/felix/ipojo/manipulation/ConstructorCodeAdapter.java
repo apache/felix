@@ -20,10 +20,14 @@ package org.apache.felix.ipojo.manipulation;
 
 import java.util.Set;
 
+import org.apache.felix.ipojo.manipulation.ClassChecker.AnnotationDescriptor;
+import org.apache.felix.ipojo.manipulation.annotations.CustomAnnotationVisitor;
+import org.apache.felix.ipojo.manipulation.annotations.MetadataCollector;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 
@@ -32,6 +36,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
  * This class adds an instance manager argument (so switch variable index).
  * Moreover, it adapts field accesses to delegate accesses to the instance
  * manager if needed.
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes {
@@ -61,12 +66,13 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
     /**
      * PropertyCodeAdapter constructor.
      * A new FiledCodeAdapter should be create for each method visit.
-     * @param mv the MethodVisitor
-     * @param owner the name of the class
+     *
+     * @param mv     the MethodVisitor
+     * @param owner  the name of the class
      * @param fields the list of contained fields
      * @param access the constructor access
-     * @param desc the constructor descriptor
-     * @param name the name
+     * @param desc   the constructor descriptor
+     * @param name   the name
      */
     public ConstructorCodeAdapter(final MethodVisitor mv, final String owner, Set<String> fields, int access, String name, String desc, String superClass) {
         super(mv, access, name, desc);
@@ -81,10 +87,11 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
      * If the annotation is visible, the annotation is removed. In fact
      * the annotation was already moved to the method replacing this one.
      * If the annotation is not visible, this annotation is kept on this method.
-     * @param name the name of the annotation
+     *
+     * @param name    the name of the annotation
      * @param visible the annotation visibility
      * @return the <code>null</code> if the annotation is visible, otherwise returns
-     * {@link GeneratorAdapter#visitAnnotation(String, boolean)}
+     *         {@link GeneratorAdapter#visitAnnotation(String, boolean)}
      * @see org.objectweb.asm.MethodAdapter#visitAnnotation(java.lang.String, boolean)
      */
     public AnnotationVisitor visitAnnotation(String name, boolean visible) {
@@ -96,6 +103,37 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
         }
     }
 
+    /**
+     * Visits a parameter annotation.
+     * Parameter annotations are moved to replacing constructor except
+     * they are injection annotations(-@Property and -@Requires).
+     * Because injection annotations shouldn't be copied to generated one
+     * in case of re-manipulation, since this is caused to wrong type resolution
+     * of injected parameters.
+     *
+     * @param parameter parameter index
+     * @param desc      annotation description(annotation name)
+     * @param visible   is parameter annotation visible
+     * @return @AnnotationVisitor
+     */
+    public AnnotationVisitor visitParameterAnnotation(
+            final int parameter,
+            final String desc,
+            final boolean visible) {
+
+        /*
+         * Generated constructor shouldn't inherit injection annotations
+         */
+        if (desc.equals("Lorg/apache/felix/ipojo/annotations/Property;")
+                || desc.equals("Lorg/apache/felix/ipojo/annotations/Requires;")
+                || CustomAnnotationVisitor.isCustomAnnotation(desc)) {
+            return null;
+        } else {
+            return super.visitParameterAnnotation(parameter, desc, visible);
+        }
+
+    }
+
 
     /**
      * Adapts field accesses.
@@ -104,11 +142,12 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
      * <li><code>GETFIELD</code> are changed to a <code>__getX</code> invocation.</li>
      * <li><code>SETFIELD</code> are changed to a <code>__setX</code> invocation.</li>
      * </ul>
-     * @see org.objectweb.asm.MethodVisitor#visitFieldInsn(int, String, String, String)
+     *
      * @param opcode the visited operation code
-     * @param owner the owner of the field
-     * @param name the name of the field
-     * @param desc the descriptor of the field
+     * @param owner  the owner of the field
+     * @param name   the name of the field
+     * @param desc   the descriptor of the field
+     * @see org.objectweb.asm.MethodVisitor#visitFieldInsn(int, String, String, String)
      */
     public void visitFieldInsn(
             final int opcode,
@@ -120,12 +159,11 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
                 String gDesc = "()" + desc;
                 mv.visitMethodInsn(INVOKEVIRTUAL, owner, "__get" + name, gDesc);
                 return;
-            } else
-                if (opcode == PUTFIELD) {
-                    String sDesc = "(" + desc + ")V";
-                    mv.visitMethodInsn(INVOKEVIRTUAL, owner, "__set" + name, sDesc);
-                    return;
-                }
+            } else if (opcode == PUTFIELD) {
+                String sDesc = "(" + desc + ")V";
+                mv.visitMethodInsn(INVOKEVIRTUAL, owner, "__set" + name, sDesc);
+                return;
+            }
         }
         super.visitFieldInsn(opcode, owner, name, desc);
     }
@@ -134,23 +172,24 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
      * Visits a method invocation instruction.
      * After the super constructor invocation, insert the _setComponentManager invocation.
      * Otherwise, the method invocation doesn't change
+     *
      * @param opcode the opcode
-     * @param owner the class owning the invoked method
-     * @param name the method name
-     * @param desc the method descriptor
+     * @param owner  the class owning the invoked method
+     * @param name   the method name
+     * @param desc   the method descriptor
      * @see org.objectweb.asm.MethodAdapter#visitMethodInsn(int, java.lang.String, java.lang.String, java.lang.String)
      */
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
 
         // A method call is detected, check if it is the super call :
         // the first init is not necessary the super call, so check that it is really the super class.
-        if (!m_superDetected && name.equals("<init>")  && owner.equals(m_superClass)) {
+        if (!m_superDetected && name.equals("<init>") && owner.equals(m_superClass)) {
             m_superDetected = true;
             // The first invocation is the super call
             // 1) Visit the super constructor :
 
             //mv.visitVarInsn(ALOAD, 0); The ALOAD 0 was already visited. This previous visit allows
-                                         // Super constructor parameters.
+            // Super constructor parameters.
             mv.visitMethodInsn(opcode, owner, name, desc); // Super constructor invocation
 
             // 2) Load the object and the component manager argument
@@ -171,8 +210,9 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
      * it is not <code>this</code> (i.e. 0). This increment
      * is due to the instance manager parameter added in the method
      * signature.
+     *
      * @param opcode the opcode
-     * @param var the variable index
+     * @param var    the variable index
      * @see org.objectweb.asm.MethodAdapter#visitVarInsn(int, int)
      */
     public void visitVarInsn(int opcode, int var) {
@@ -180,7 +220,7 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
             mv.visitVarInsn(opcode, var); // ALOAD 0 (THIS)
         } else {
             mv.visitVarInsn(opcode, var + 1); // All other variable index must be incremented (due to
-                                              // the instance manager argument
+            // the instance manager argument
         }
 
     }
@@ -191,7 +231,8 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
      * it is not <code>this</code> (i.e. 0). This increment
      * is due to the instance manager parameter added in the method
      * signature.
-     * @param var the variable index
+     *
+     * @param var       the variable index
      * @param increment the increment
      * @see org.objectweb.asm.MethodAdapter#visitIincInsn(int, int)
      */
@@ -208,12 +249,13 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
      * Adds _manager and increment others variable indexes.
      * This variable has the same scope than <code>this</code> and
      * has the <code>1</code> index.
-     * @param name the variable name
-     * @param desc the variable descriptor
+     *
+     * @param name      the variable name
+     * @param desc      the variable descriptor
      * @param signature the variable signature
-     * @param start the beginning label
-     * @param end the ending label
-     * @param index the variable index
+     * @param start     the beginning label
+     * @param end       the ending label
+     * @param index     the variable index
      * @see org.objectweb.asm.MethodAdapter#visitLocalVariable(java.lang.String, java.lang.String, java.lang.String, org.objectweb.asm.Label, org.objectweb.asm.Label, int)
      */
     public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
@@ -228,7 +270,8 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
      * Visit max method.
      * The stack size is incremented of 1. The
      * local variable count is incremented of 2.
-     * @param maxStack the stack size.
+     *
+     * @param maxStack  the stack size.
      * @param maxLocals the local variable count.
      * @see org.objectweb.asm.MethodAdapter#visitMaxs(int, int)
      */

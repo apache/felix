@@ -100,7 +100,7 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
      * @param root is the annotation a root
      * @param clazz the annotation is a class annotation.
      * @param index the index of the argument
-     * @param the descriptor of the method
+     * @param descriptor the descriptor of the method
      */
     public CustomAnnotationVisitor(Element elem, MetadataCollector collector, boolean root, boolean clazz, int index, String descriptor) {
         m_elem = elem;

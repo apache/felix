@@ -29,7 +29,6 @@ import junit.framework.TestCase;
 
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.Pojo;
-import org.apache.felix.ipojo.manipulation.annotations.MetadataCollector;
 import org.mockito.Mockito;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.util.CheckClassAdapter;
@@ -39,7 +38,7 @@ public class ManipulatorTest extends TestCase {
     public void testClusterDaemon() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/ClusterDaemon.class")));
-        TestClassLoader classloader = new TestClassLoader("test.ClusterDaemon", clazz);
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.ClusterDaemon", clazz);
 
         //Assert.assertNotNull(manipulator.getManipulationMetadata());
 
@@ -62,7 +61,7 @@ public class ManipulatorTest extends TestCase {
     public void testManipulatingTheSimplePojo() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/SimplePojo.class")));
-        TestClassLoader classloader = new TestClassLoader("test.SimplePojo", clazz);
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.SimplePojo", clazz);
         Class cl = classloader.findClass("test.SimplePojo");
         Assert.assertNotNull(cl);
         Assert.assertNotNull(manipulator.getManipulationMetadata());
@@ -113,7 +112,7 @@ public class ManipulatorTest extends TestCase {
     public void testManipulatingChild() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/Child.class")));
-        TestClassLoader classloader = new TestClassLoader("test.Child", clazz);
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.Child", clazz);
         Class cl = classloader.findClass("test.Child");
         Assert.assertNotNull(cl);
         Assert.assertNotNull(manipulator.getManipulationMetadata());
@@ -160,7 +159,7 @@ public class ManipulatorTest extends TestCase {
     public void _testManipulatingTheInner() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/PojoWithInner.class")));
-        TestClassLoader classloader = new TestClassLoader("test.PojoWithInner", clazz);
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.PojoWithInner", clazz);
         Class cl = classloader.findClass("test.PojoWithInner");
         Assert.assertNotNull(cl);
         Assert.assertNotNull(manipulator.getManipulationMetadata());
@@ -214,7 +213,7 @@ public class ManipulatorTest extends TestCase {
     public void testManipulatingWithConstructorModification() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/Child.class")));
-        TestClassLoader classloader = new TestClassLoader("test.Child", clazz);
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.Child", clazz);
         Class cl = classloader.findClass("test.Child");
         Assert.assertNotNull(cl);
         Assert.assertNotNull(manipulator.getManipulationMetadata());
@@ -279,7 +278,7 @@ public class ManipulatorTest extends TestCase {
     public void testManipulatingWithNoValidConstructor() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/NoValidConstructor.class")));
-        TestClassLoader classloader = new TestClassLoader("test.NoValidConstructor", clazz);
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.NoValidConstructor", clazz);
         Class cl = classloader.findClass("test.NoValidConstructor");
         Assert.assertNotNull(cl);
         Assert.assertNotNull(manipulator.getManipulationMetadata());
@@ -322,7 +321,7 @@ public class ManipulatorTest extends TestCase {
 //        fos.write(clazz);
 //        fos.close();
 
-        TestClassLoader classloader = new TestClassLoader("test.ConstructorCheck", clazz);
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.ConstructorCheck", clazz);
         Class cl = classloader.findClass("test.ConstructorCheck");
         Assert.assertNotNull(cl);
         Assert.assertNotNull(manipulator.getManipulationMetadata());
@@ -336,6 +335,8 @@ public class ManipulatorTest extends TestCase {
         Field f = o.getClass().getField("m_foo");
         Assert.assertEquals("toto", f.get(o));
      }
+
+
 
     public static byte[] getBytesFromFile(File file) throws IOException {
         InputStream is = new FileInputStream(file);
@@ -360,29 +361,6 @@ public class ManipulatorTest extends TestCase {
         return bytes;
     }
 
-    class TestClassLoader extends ClassLoader {
 
-        private String name;
-        private byte[] clazz;
-
-        public TestClassLoader(String name, byte[] clazz) {
-            this.name = name;
-            this.clazz = clazz;
-        }
-
-        public Class findClass(String name) throws ClassNotFoundException {
-            if (name.equals(this.name)) {
-                return defineClass(name, clazz, 0, clazz.length);
-            }
-            return super.findClass(name);
-        }
-
-        public Class loadClass(String arg0) throws ClassNotFoundException {
-            return super.loadClass(arg0);
-        }
-
-
-
-    }
 
 }
