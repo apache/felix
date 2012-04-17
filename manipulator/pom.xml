@@ -55,12 +55,18 @@
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
             <version>1.8.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.8.5</version>
-            <scope>test</scope>
-        </dependency>
+      <dependency>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-all</artifactId>
+          <version>1.8.5</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.osgi</groupId>
+          <artifactId>org.osgi.core</artifactId>
+          <version>4.2.0</version>
+          <scope>test</scope>
+      </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -140,9 +146,10 @@
                 <directory>.</directory>
                 <targetPath>META-INF</targetPath>
                 <includes>
-                    <include>LICENSE*</include>
-                    <include>NOTICE*</include>
-                    <include>DEPENDENCIES*</include>
+                    <include>LICENSE</include>
+                    <include>LICENSE.asm</include>
+                    <include>NOTICE</include>
+                    <include>DEPENDENCIES</include>
                 </includes>
             </resource>
         </resources>

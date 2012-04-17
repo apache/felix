@@ -59,12 +59,12 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     /**
      * Filed flag prefix.
      */
-    private static final  String FIELD_FLAG_PREFIX = "__F";
+    public static final  String FIELD_FLAG_PREFIX = "__F";
 
     /**
      * Method flag prefix.
      */
-    private static final  String METHOD_FLAG_PREFIX = "__M";
+    public static final  String METHOD_FLAG_PREFIX = "__M";
 
     /**
      * onEntry method name.

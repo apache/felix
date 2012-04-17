@@ -18,6 +18,7 @@
  */
 package org.apache.felix.ipojo.manipulation.annotations;
 
+import org.apache.felix.ipojo.manipulation.MethodCreator;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
@@ -26,6 +27,7 @@ import org.objectweb.asm.commons.EmptyVisitor;
 
 /**
  * This class collects method annotations, and give them to the metadata collector.
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class MethodCollector extends EmptyVisitor {
@@ -47,7 +49,8 @@ public class MethodCollector extends EmptyVisitor {
 
     /**
      * Constructor.
-     * @param name : name of the method.
+     *
+     * @param name      : name of the method.
      * @param collector : parent collector.
      */
     public MethodCollector(String name, String descriptor, MetadataCollector collector) {
@@ -58,10 +61,11 @@ public class MethodCollector extends EmptyVisitor {
 
     /**
      * Visit a parameter annotation.
+     *
      * @see org.objectweb.asm.commons.EmptyVisitor#visitParameterAnnotation(int, java.lang.String, boolean)
      */
     public AnnotationVisitor visitParameterAnnotation(int index, String annotation,
-            boolean visible) {
+                                                      boolean visible) {
         if (m_name.equals("<init>")) {
             if (annotation.equals("Lorg/apache/felix/ipojo/annotations/Property;")) {
                 return processProperty(true, index);
@@ -80,9 +84,9 @@ public class MethodCollector extends EmptyVisitor {
     }
 
 
-
     /**
      * Visit method annotations.
+     *
      * @param arg0 : annotation name.
      * @param arg1 : is the annotation visible at runtime.
      * @return the visitor paring the visited annotation.
@@ -119,7 +123,7 @@ public class MethodCollector extends EmptyVisitor {
 
         if (CustomAnnotationVisitor.isCustomAnnotation(arg0)) {
             Element elem = CustomAnnotationVisitor.buildElement(arg0);
-            elem.addAttribute(new Attribute("method", m_name));
+            elem.addAttribute(new Attribute("method", computeEffectiveMethodName(m_name)));
             return new CustomAnnotationVisitor(elem, m_collector, true, false);
         }
 
@@ -128,11 +132,12 @@ public class MethodCollector extends EmptyVisitor {
 
     /**
      * Process @Updated annotation.
+     *
      * @return null.
      */
     private AnnotationVisitor processUpdated() {
         Element parent = null;
-        if (! m_collector.getIds().containsKey("properties")) {
+        if (!m_collector.getIds().containsKey("properties")) {
             parent = new Element("Properties", "");
             m_collector.getIds().put("properties", parent);
             m_collector.getElements().put(parent, null);
@@ -147,6 +152,7 @@ public class MethodCollector extends EmptyVisitor {
 
     /**
      * Process @PostRegistration annotation.
+     *
      * @return null.
      */
     private AnnotationVisitor processPostRegistration() {
@@ -163,6 +169,7 @@ public class MethodCollector extends EmptyVisitor {
 
     /**
      * Process @PostRegistration annotation.
+     *
      * @return null.
      */
     private AnnotationVisitor processPostUnregistration() {
@@ -179,6 +186,7 @@ public class MethodCollector extends EmptyVisitor {
 
     /**
      * Process @bind, @modified, @unbind.
+     *
      * @param type : bind or unbind
      * @return the visitor parsing @bind & @unbind annotations.
      */
@@ -188,37 +196,40 @@ public class MethodCollector extends EmptyVisitor {
 
     /**
      * Process @validate annotation.
+     *
      * @return null.
      */
     private AnnotationVisitor processValidate() {
         Element cb = new Element("callback", "");
         cb.addAttribute(new org.apache.felix.ipojo.metadata.Attribute("transition", "validate"));
-        cb.addAttribute(new org.apache.felix.ipojo.metadata.Attribute("method", m_name));
+        cb.addAttribute(new org.apache.felix.ipojo.metadata.Attribute("method", computeEffectiveMethodName(m_name)));
         m_collector.getElements().put(cb, null);
         return null;
     }
 
     /**
      * Process @invalidate annotation.
+     *
      * @return null.
      */
     private AnnotationVisitor processInvalidate() {
         Element cb = new Element("callback", "");
         cb.addAttribute(new org.apache.felix.ipojo.metadata.Attribute("transition", "invalidate"));
-        cb.addAttribute(new org.apache.felix.ipojo.metadata.Attribute("method", m_name));
+        cb.addAttribute(new org.apache.felix.ipojo.metadata.Attribute("method", computeEffectiveMethodName(m_name)));
         m_collector.getElements().put(cb, null);
         return null;
     }
 
     /**
      * Process @property annotation.
+     *
      * @param parameter true if we're processing a parameter
-     * @param index the index, meaningful only if parameter is true
+     * @param index     the index, meaningful only if parameter is true
      * @return the visitor parsing the visited annotation.
      */
     private AnnotationVisitor processProperty(boolean parameter, int index) {
         Element prop = null;
-        if (! m_collector.getIds().containsKey("properties")) {
+        if (!m_collector.getIds().containsKey("properties")) {
             prop = new Element("Properties", "");
             m_collector.getIds().put("properties", prop);
             m_collector.getElements().put(prop, null);
@@ -291,6 +302,7 @@ public class MethodCollector extends EmptyVisitor {
 
         /**
          * Constructor.
+         *
          * @param bind : method name.
          * @param type : is the callback a bind or an unbind method.
          */
@@ -305,6 +317,7 @@ public class MethodCollector extends EmptyVisitor {
 
         /**
          * Visit annotation attribute.
+         *
          * @param arg0 : annotation name
          * @param arg1 : annotation value
          * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
@@ -349,20 +362,23 @@ public class MethodCollector extends EmptyVisitor {
         /**
          * End of the visit.
          * Create or append the requirement info to a created or already existing "requires" element.
+         *
          * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
          */
         public void visitEnd() {
             if (m_id == null) {
-                if (m_name != null  && m_name.startsWith("bind")) {
-                    m_id = m_name.substring("bind".length());
-                } else if (m_name != null  && m_name.startsWith("unbind")) {
-                    m_id = m_name.substring("unbind".length());
-                } else if (m_name != null  && m_name.startsWith("modified")) {
-                    m_id = m_name.substring("modified".length());
+                String effectiveName = computeEffectiveMethodName(m_name);
+
+                if (effectiveName != null && effectiveName.startsWith("bind")) {
+                    m_id = effectiveName.substring("bind".length());
+                } else if (effectiveName != null && effectiveName.startsWith("unbind")) {
+                    m_id = effectiveName.substring("unbind".length());
+                } else if (effectiveName != null && effectiveName.startsWith("modified")) {
+                    m_id = effectiveName.substring("modified".length());
                 } else if (m_index != -1) {
                     m_id = "" + m_index;
                 } else {
-                    System.err.println("Cannot determine the id of the " + m_type + " method : " + m_name);
+                    System.err.println("Cannot determine the id of the " + m_type + " method : " + effectiveName);
                     return;
                 }
             }
@@ -407,7 +423,7 @@ public class MethodCollector extends EmptyVisitor {
                 if (m_specification != null) {
                     if (itf == null) {
                         req.addAttribute(new Attribute("specification", m_specification));
-                    } else if (! m_specification.equals(itf)) {
+                    } else if (!m_specification.equals(itf)) {
                         System.err.println("The required specification is not the same as previouly : " + m_specification + " & " + itf);
                         return;
                     }
@@ -416,7 +432,7 @@ public class MethodCollector extends EmptyVisitor {
                 if (m_optional != null) {
                     if (optional == null) {
                         req.addAttribute(new Attribute("optional", m_optional));
-                    } else if (! m_optional.equals(optional)) {
+                    } else if (!m_optional.equals(optional)) {
                         System.err.println("The optional attribute is not always the same");
                         return;
                     }
@@ -425,7 +441,7 @@ public class MethodCollector extends EmptyVisitor {
                 if (m_aggregate != null) {
                     if (aggregate == null) {
                         req.addAttribute(new Attribute("aggregate", m_aggregate));
-                    } else if (! m_aggregate.equals(aggregate)) {
+                    } else if (!m_aggregate.equals(aggregate)) {
                         System.err.println("The aggregate attribute is not always the same");
                         return;
                     }
@@ -434,7 +450,7 @@ public class MethodCollector extends EmptyVisitor {
                 if (m_filter != null) {
                     if (filter == null) {
                         req.addAttribute(new Attribute("filter", m_filter));
-                    } else if (! m_filter.equals(filter)) {
+                    } else if (!m_filter.equals(filter)) {
                         System.err.println("The filter attribute is not always the same");
                         return;
                     }
@@ -443,7 +459,7 @@ public class MethodCollector extends EmptyVisitor {
                 if (m_policy != null) {
                     if (policy == null) {
                         req.addAttribute(new Attribute("policy", m_policy));
-                    } else if (! m_policy.equals(policy)) {
+                    } else if (!m_policy.equals(policy)) {
                         System.err.println("The policy attribute is not always the same");
                         return;
                     }
@@ -452,7 +468,7 @@ public class MethodCollector extends EmptyVisitor {
                 if (m_comparator != null) {
                     if (comparator == null) {
                         req.addAttribute(new Attribute("comparator", m_comparator));
-                    } else if (! m_comparator.equals(comparator)) {
+                    } else if (!m_comparator.equals(comparator)) {
                         System.err.println("The comparator attribute is not always the same");
                         return;
                     }
@@ -461,7 +477,7 @@ public class MethodCollector extends EmptyVisitor {
                 if (m_from != null) {
                     if (from == null) {
                         req.addAttribute(new Attribute("from", m_from));
-                    } else if (! m_from.equals(from)) {
+                    } else if (!m_from.equals(from)) {
                         System.err.println("The from attribute is not always the same");
                         return;
                     }
@@ -470,7 +486,7 @@ public class MethodCollector extends EmptyVisitor {
             }
             if (m_name != null) {
                 Element method = new Element("callback", "");
-                method.addAttribute(new Attribute("method", m_name));
+                method.addAttribute(new Attribute("method", computeEffectiveMethodName(m_name)));
                 method.addAttribute(new Attribute("type", m_type));
                 req.addElement(method);
             } else {
@@ -527,10 +543,11 @@ public class MethodCollector extends EmptyVisitor {
 
         /**
          * Constructor.
+         *
          * @param parent : parent element.
          * @param method : attached method.
-         * @param param : we're processing a parameter
-         * @param index : the parameter index
+         * @param param  : we're processing a parameter
+         * @param index  : the parameter index
          */
         private PropertyAnnotationParser(Element parent, String method, boolean param, int index) {
             m_parent = parent;
@@ -541,6 +558,7 @@ public class MethodCollector extends EmptyVisitor {
 
         /**
          * Visit annotation attributes.
+         *
          * @param arg0 : annotation name
          * @param arg1 : annotation value
          * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
@@ -567,17 +585,20 @@ public class MethodCollector extends EmptyVisitor {
         /**
          * End of the visit.
          * Append the computed element to the parent element.
+         *
          * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
          */
         public void visitEnd() {
+            m_method = computeEffectiveMethodName(m_method);
+
             // If neither name not id, try to extract the name
-            if (m_name == null && m_id == null  && m_method.startsWith("set")) {
+            if (m_name == null && m_id == null && m_method.startsWith("set")) {
                 m_name = m_method.substring("set".length());
                 m_id = m_name;
-            // Else align the two values
-            } else if (m_name != null  && m_id == null) {
+                // Else align the two values
+            } else if (m_name != null && m_id == null) {
                 m_id = m_name;
-            } else if (m_id != null  && m_name == null) {
+            } else if (m_id != null && m_name == null) {
                 m_name = m_id;
             }
 
@@ -613,6 +634,21 @@ public class MethodCollector extends EmptyVisitor {
                 prop.addAttribute(new Attribute("method", m_method));
             }
 
+        }
+    }
+
+    /**
+     * Computes the real method name. This method is useful when the annotation is collected on an manipulated method
+     * (prefixed by <code>__M_</code>). This method just removes the prefix if found.
+     * @param name the collected method name
+     * @return the effective method name, can be the collected method name if the method name does not start with
+     * the prefix.
+     */
+    public static String computeEffectiveMethodName(String name) {
+        if (name != null && name.startsWith(MethodCreator.PREFIX)) {
+            return name.substring(MethodCreator.PREFIX.length());
+        } else {
+            return name;
         }
     }
 }

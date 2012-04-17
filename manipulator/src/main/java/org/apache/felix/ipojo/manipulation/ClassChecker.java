@@ -102,6 +102,10 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
             return null;
         }
 
+        if (isManipulatedField(name)) {
+            return null;
+        }
+
         Type type = Type.getType(desc);
         if (type.getSort() == Type.ARRAY) {
             if (type.getInternalName().startsWith("L")) {
@@ -118,6 +122,12 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         }
 
         return null;
+    }
+
+    private boolean isManipulatedField(String name) {
+        return ((MethodCreator.IM_FIELD.equals(name))
+                || (name.startsWith(MethodCreator.FIELD_FLAG_PREFIX))
+                || (name.startsWith(MethodCreator.METHOD_FLAG_PREFIX)));
     }
 
     /**
@@ -189,17 +199,16 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         if (!name.equals("<clinit>")) {
 
             if (name.equals("<init>")) {
-                final MethodDescriptor md = new MethodDescriptor("$init", desc);
-                m_methods.add(md);
-                if (m_supportAnnotation) {
-                    return new AnnotationCollector(md);
+                if (!isGeneratedConstructor(name, desc)) {
+                    final MethodDescriptor md = new MethodDescriptor("$init", desc);
+                    m_methods.add(md);
+                    if (m_supportAnnotation) {
+                        return new AnnotationCollector(md);
+                    }
                 }
             } else {
                 // no constructors.
-                if (!(name.startsWith("_get") || // Avoid getter method
-                        name.startsWith("_set") || // Avoid setter method
-                        name.equals("_setComponentManager") || // Avoid the set method
-                        name.equals("getComponentInstance"))) { // Avoid the getComponentInstance method
+                if (!isGeneratedMethod(name, desc)) {
                     final MethodDescriptor md = new MethodDescriptor(name, desc);
                     m_methods.add(md);
                     if (m_supportAnnotation) {
@@ -211,6 +220,56 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         }
 
         return null;
+    }
+
+    private boolean isGeneratedConstructor(String name, String desc) {
+        return ("<init>".equals(name) && isFirstArgumentInstanceManager(desc));
+    }
+
+    private boolean isFirstArgumentInstanceManager(String desc) {
+        Type[] types = Type.getArgumentTypes(desc);
+        if (types != null && (types.length >= 1)) {
+            return Type.getType("Lorg/apache/felix/ipojo/InstanceManager;")
+                            .equals(types[0]);
+        }
+        return false;
+    }
+
+    private boolean isGeneratedMethod(String name, String desc) {
+        return isGetterMethod(name, desc)
+                || isSetterMethod(name, desc)
+                || isSetInstanceManagerMethod(name)
+                || isGetComponentInstanceMethod(name, desc)
+                || isManipulatedMethod(name);
+    }
+
+    private boolean isGetterMethod(String name, String desc) {
+        // TYPE __getXXX()
+        Type[] arguments = Type.getArgumentTypes(desc);
+        return (name.startsWith("__get")
+                && (arguments.length == 0)
+                && !Type.VOID_TYPE.equals(Type.getReturnType(desc)));
+    }
+
+    private boolean isSetterMethod(String name, String desc) {
+        // void __setXXX(TYPE)
+        Type[] arguments = Type.getArgumentTypes(desc);
+        return (name.startsWith("__set")
+                && (arguments.length == 1)
+                && Type.VOID_TYPE.equals(Type.getReturnType(desc)));
+    }
+
+    private boolean isSetInstanceManagerMethod(String name) {
+        return name.startsWith("_setInstanceManager");
+    }
+
+    private boolean isGetComponentInstanceMethod(String name, String desc) {
+        return (name.startsWith("getComponentInstance")
+                && Type.getType("Lorg/apache/felix/ipojo/ComponentInstance;").equals(Type.getReturnType(desc)));
+    }
+
+    private boolean isManipulatedMethod(String name) {
+        return (name.startsWith(MethodCreator.PREFIX));
     }
 
     /**
@@ -293,6 +352,18 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
                 m_method.addParameterAnnotation(id, ann);
                 return ann;
             }
+            
+            /*
+             * It is harmless to keep injected parameter annotations on original constructor
+             * for correct property resolution in case of re-manipulation
+             */
+            if(m_method.getName().equals("$init"))
+            {
+            	AnnotationDescriptor ann = new AnnotationDescriptor(name, visible);
+                m_method.addParameterAnnotation(id, ann);
+                return ann;
+            }
+            
             return null;
         }
 

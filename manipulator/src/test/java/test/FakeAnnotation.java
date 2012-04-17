@@ -16,23 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package test;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.osgi.framework.BundleContext;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@Component
-public class AnnotatedComponent {
-
-    @Property
-    private String prop;
-
-    public AnnotatedComponent(BundleContext bundleContext) {}
-
-    @FakeAnnotation
-    public void annotatedMethod() {
-
-    }
+/**
+ * A {@code FakeAnnotation} is ...
+ *
+ * @author Guillaume Sauthier
+ */
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface FakeAnnotation {
 }
