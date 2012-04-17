@@ -98,7 +98,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     {
         // Check if writing back configurations has been disabled.
         {
-            if (shouldSaveConfig())
+            if (!shouldSaveConfig())
             {
                 return;
             }
