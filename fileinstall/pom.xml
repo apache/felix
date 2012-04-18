@@ -31,6 +31,11 @@
   <url>http://felix.apache.org/site/apache-felix-file-install.html</url>
   <version>3.2.1-SNAPSHOT</version>
   <artifactId>org.apache.felix.fileinstall</artifactId>
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/fileinstall</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/fileinstall</developerConnection>
+    <url>http://svn.apache.org/repos/asf/felix/fileinstall</url>
+  </scm>
   <dependencies>
     <dependency>
       <groupId>org.osgi</groupId>
