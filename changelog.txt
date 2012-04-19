@@ -21,6 +21,12 @@ Changes from 3.1.8 to 3.4.0
     * [FELIX-3285] - Wrong vector and array handling in Configuration Admin plugin
     * [FELIX-3311] - Cookie handling seems not to work anymore
     * [FELIX-3320] - WebConsole UX: actions and status on bundle details don't update properly
+    * [FELIX-3404] - Web Admin Log Plugin stops listing of log entries if message is null.
+    * [FELIX-3405] - NPE in Web Console
+    * [FELIX-3406] - Localization in Web Console doesn't work anymore
+    * [FELIX-3408] - Web Console date chooser shows garbage text
+    * [FELIX-3433] - WebConsole default ajax error handlers doesn't work with IE
+    * [FELIX-3469] - Type mismatch JS error using the memoryusage plugin
 
 ** Improvement
     * [FELIX-2117] - Use DynamicImport instead of Optional Packages
@@ -42,6 +48,8 @@ Changes from 3.1.8 to 3.4.0
     * [FELIX-3298] - Add animal sniffer plugin to ensure no using any non-Java 1.4 API
     * [FELIX-3315] - Log plugin does not show the bundle that has logged the event
     * [FELIX-3316] - Log plugin should provide more detailed exception column
+    * [FELIX-3417] - Web Console Inconsistent status text
+    * [FELIX-3418] - Sort threads by name in Configuration Status -> Threads
 
 ** New Feature
     * [FELIX-2709] - Allow webconsole context root be obtained from framework properties
