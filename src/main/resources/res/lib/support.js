@@ -264,7 +264,9 @@ function Xdialog(text) {
 
 	if (children && children.length) {
 		for (var i=0; i < children.length; i++) {
-			element.appendChild( children[i] );
+		    if (children[i]) {
+		        element.appendChild( children[i] );
+		    }
 		}
 	}
 
