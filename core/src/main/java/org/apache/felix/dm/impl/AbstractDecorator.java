@@ -221,7 +221,11 @@ public abstract class AbstractDecorator  {
     public void swapped(ServiceReference oldRef, Object oldService, ServiceReference newRef, Object newService) {
         synchronized (m_services) {
         	Component service = (Component) m_services.remove(oldRef);
-        	m_services.put(newRef, service);
+            if (service == null) {
+                throw new IllegalStateException("Service should not be null here.");
+            }
+        	Component newComponent = createService(new Object[] { newRef, newService });
+        	m_services.put(newRef, newComponent);
         }
     }
     
