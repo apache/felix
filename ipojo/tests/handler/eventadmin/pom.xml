@@ -36,6 +36,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo</artifactId>
+      <version>${ipojo.core.snapshot}</version>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
@@ -87,6 +88,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-ipojo-plugin</artifactId>
+                <version>1.8.4</version>
                 <executions>
                     <execution>
                         <goals>
@@ -110,10 +112,6 @@
                 </goals>
                 <configuration>
                   <hideOutputs>false</hideOutputs>
-                  <logService>false</logService>
-                  <configuration>
-                  <org.osgi.http.port>8083</org.osgi.http.port>
-                  </configuration>
                 </configuration>
               </execution>
             </executions>

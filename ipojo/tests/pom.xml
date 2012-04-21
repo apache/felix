@@ -44,7 +44,7 @@
     <ipojo.api.release>1.6.0</ipojo.api.release>
     <ipojo.api.snapshot>1.7.0-SNAPSHOT</ipojo.api.snapshot>
 
-    <ipojo.composite.release>1.6.0</ipojo.composite.release>
+    <ipojo.composite.release>1.8.0</ipojo.composite.release>
     <ipojo.composite.snapshot>1.9.0-SNAPSHOT</ipojo.composite.snapshot>
 
     <ipojo.eah.release>1.6.0</ipojo.eah.release>
@@ -68,12 +68,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>${ipojo.core.release}</version>
+            <version>${ipojo.core.snapshot}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>${ipojo.core.release}</version>
+            <version>${ipojo.core.snapshot}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -83,12 +83,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.composite</artifactId>
-            <version>${ipojo.composite.release}</version>
+            <version>${ipojo.composite.snapshot}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-            <version>${ipojo.core.release}</version>
+            <version>1.8.4</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>

@@ -36,7 +36,6 @@
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo</artifactId>
       <version>${ipojo.core.snapshot}</version>
-      <scope></scope>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
