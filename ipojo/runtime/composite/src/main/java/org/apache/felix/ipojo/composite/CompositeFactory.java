@@ -77,8 +77,7 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
     }
     
     public String getClassName() { return "composite"; }
-        
-    
+
     /**
      * Compute required handlers.
      * @return the list of required handler.

@@ -174,4 +174,8 @@ public class FactoryProxy implements Factory {
         return m_delegate.getVersion();
     }
 
+    public Element getComponentMetadata() {
+        return m_delegate.getComponentMetadata();
+    }
+
 }

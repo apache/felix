@@ -31,14 +31,14 @@
 
   <properties>
     <!--
-        1.8.1:
+        1.8.2:
         * change in the MethodInterceptor interface (FELIX-3144)
         * change in the Factory interface (FELIX-3190)
      -->
-    <ipojo.package.version>1.8.1</ipojo.package.version>
+    <ipojo.package.version>1.8.2</ipojo.package.version>
 
     <!-- Embedded manipulator version -->
-    <ipojo.manipulator.version>1.8.0</ipojo.manipulator.version>
+    <ipojo.manipulator.version>1.8.4</ipojo.manipulator.version>
   </properties>
 
   <description>
@@ -62,7 +62,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo.metadata</artifactId>
-      <version>1.5.0-SNAPSHOT</version>
+      <version>1.6.0</version>
     </dependency>
      <dependency>
       <groupId>org.apache.felix</groupId>
@@ -168,7 +168,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-ipojo-plugin</artifactId>
-        <version>1.8.0</version>
+        <version>1.8.4</version>
         <executions>
           <execution>
             <goals>
