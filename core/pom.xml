@@ -38,7 +38,7 @@
     <ipojo.package.version>1.8.2</ipojo.package.version>
 
     <!-- Embedded manipulator version -->
-    <ipojo.manipulator.version>1.8.4</ipojo.manipulator.version>
+    <ipojo.manipulator.version>1.8.0</ipojo.manipulator.version>
   </properties>
 
   <description>
@@ -67,7 +67,7 @@
      <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-      <version>${ipojo.manipulator.version}</version>
+      <version>${ipojo.manipulator.version}</version><!-- Switching to 1.8.2 breaks the junit4osgi tests...-->
     </dependency>
     <dependency>
       <groupId>asm</groupId>
@@ -154,7 +154,7 @@
               org.apache.felix.ipojo.*; version="${ipojo.manipulator.version}",
               <!-- Compendium packages -->
               org.osgi.service.cm,
-              org.osgi.service.log,
+              org.osgi.service.log
             </Export-Package>
             <Include-Resource>
               META-INF/LICENSE=LICENSE,
