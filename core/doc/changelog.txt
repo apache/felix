@@ -1,3 +1,33 @@
+Changes from the 1.8.0 to 1.8.2
+-------------------------------
+** Bug
+    * [FELIX-2893] - Properties are not propagate to service by default
+    * [FELIX-2902] - Service properties added by propagation overrides already existing properties
+    * [FELIX-2907] - Problem calling _setInstanceManager on guice enhanced classe
+    * [FELIX-2981] - Unable to remove configuration properties using iPOJO's configuration handler
+    * [FELIX-2989] - Using a Service Controller set to true can trigger a service registration-unregistration-registration sequence
+    * [FELIX-2995] - The service properties are updated despite there is no changes
+    * [FELIX-3009] - Abstract classes as service specifications generates warnings at runtime
+    * [FELIX-3075] - Change to ServiceController status in current trunk does not re-register service
+    * [FELIX-3172] - Error when calling BundleContext.register(Class, Object, Dictionary)
+    * [FELIX-3192] - Service properties are not updated if the properties were already propagated
+    * [FELIX-3271] - On KF, the Instance singleton strategy throws an UnsupportedOperationException when stopping
+    * [FELIX-3323] - Ipojo composite throw ClassCastException when configuration is updated thru ConfigAdmin
+    * [FELIX-3356] - Objectweb ASM Clashes with IPojo
+    * [FELIX-3374] - Use of java.lang.Properties in iPOJO Core
+
+** Improvement
+    * [FELIX-3036] - Add IPOJO-Components header support
+    * [FELIX-3081] - Integrate the online-manipulator in iPOJO Core
+    * [FELIX-3144] - Method interceptors should receive Method or Constructor objects
+    * [FELIX-3155] - Allow identifying iPojo extensions by a namespace qualified name
+    * [FELIX-3190] - iPOJO Factories doesn't give access to the complete Metadata model
+    * [FELIX-3252] - Merge the online manipulator into iPOJO Core
+    * [FELIX-3326] - Accessing IPojo-Component's all inherited classes and all implemented interfaces in PrimitiveTypeDescription
+
+** New Feature
+    * [FELIX-2932] - Allows disabling the asynchronous processing in the iPOJO Extender
+
 Changes from the 1.6.8 to 1.8.0
 -------------------------------
 ** Bug
