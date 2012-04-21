@@ -44,12 +44,12 @@ public class TransactionHandler extends PrimitiveHandler implements Synchronizat
 
     private static final String NOROLLBACKFOR_ATTRIBUTE = "norollbackfor";
 
-    public static final int DEFAULT_PROPAGATION = TransactionnalMethod.REQUIRES;
+    public static final int DEFAULT_PROPAGATION = TransactionalMethod.REQUIRES;
 
 
     private TransactionManager m_transactionManager; // Service Dependency
 
-    private List<TransactionnalMethod> m_methods = new ArrayList<TransactionnalMethod>();
+    private List<TransactionalMethod> m_methods = new ArrayList<TransactionalMethod>();
 
     private Callback m_onRollback;
 
@@ -103,11 +103,11 @@ public class TransactionHandler extends PrimitiveHandler implements Synchronizat
             String eorb = sub[i].getAttribute(EXCEPTIONONROLLBACK_ATTRIBUTE);
 
             if (method == null) {
-                throw new ConfigurationException("A transactionnal element must specified the method attribute");
+                throw new ConfigurationException("A transactional element must specified the method attribute");
             }
             MethodMetadata meta = this.getPojoMetadata().getMethod(method);
             if (meta == null) {
-                throw new ConfigurationException("A transactionnal method is not in the pojo class : " + method);
+                throw new ConfigurationException("A transactional method is not in the pojo class : " + method);
             }
 
             int timeout = 0;
@@ -130,7 +130,7 @@ public class TransactionHandler extends PrimitiveHandler implements Synchronizat
                 exceptionOnRollback = new Boolean(eorb).booleanValue();
             }
 
-            TransactionnalMethod tm = new TransactionnalMethod(method, propagation, timeout, exceptions, exceptionOnRollback, this);
+            TransactionalMethod tm = new TransactionalMethod(method, propagation, timeout, exceptions, exceptionOnRollback, this);
             m_methods.add(tm);
             this.getInstanceManager().register(meta, tm);
         }
@@ -139,22 +139,22 @@ public class TransactionHandler extends PrimitiveHandler implements Synchronizat
 
     private int parsePropagation(String propa) throws ConfigurationException {
        if (propa.equalsIgnoreCase("requires")) {
-           return TransactionnalMethod.REQUIRES;
+           return TransactionalMethod.REQUIRES;
 
        } else if (propa.equalsIgnoreCase("mandatory")){
-           return TransactionnalMethod.MANDATORY;
+           return TransactionalMethod.MANDATORY;
 
        } else if (propa.equalsIgnoreCase("notsupported")) {
-           return TransactionnalMethod.NOT_SUPPORTED;
+           return TransactionalMethod.NOT_SUPPORTED;
 
        } else if (propa.equalsIgnoreCase("supported")) {
-           return TransactionnalMethod.SUPPORTED;
+           return TransactionalMethod.SUPPORTED;
 
        } else if (propa.equalsIgnoreCase("never")) {
-           return TransactionnalMethod.NEVER;
+           return TransactionalMethod.NEVER;
 
         } else if (propa.equalsIgnoreCase("requiresnew")) {
-            return TransactionnalMethod.REQUIRES_NEW;
+            return TransactionalMethod.REQUIRES_NEW;
         }
 
        throw new ConfigurationException("Unknown propgation policy : " + propa);
@@ -162,7 +162,7 @@ public class TransactionHandler extends PrimitiveHandler implements Synchronizat
 
     public void start() {
         // Set transaction managers.
-        for (TransactionnalMethod method : m_methods) {
+        for (TransactionalMethod method : m_methods) {
             method.setTransactionManager(m_transactionManager);
         }
     }
@@ -172,13 +172,13 @@ public class TransactionHandler extends PrimitiveHandler implements Synchronizat
     }
 
     public synchronized void bind(TransactionManager tm) {
-        for (TransactionnalMethod method : m_methods) {
+        for (TransactionalMethod method : m_methods) {
             method.setTransactionManager(tm);
         }
     }
 
     public synchronized void unbind(TransactionManager tm) {
-        for (TransactionnalMethod method : m_methods) {
+        for (TransactionalMethod method : m_methods) {
             method.setTransactionManager(null);
         }
     }
