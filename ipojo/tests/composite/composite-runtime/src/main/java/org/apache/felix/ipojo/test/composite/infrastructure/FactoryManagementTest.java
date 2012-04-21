@@ -64,8 +64,9 @@ public class FactoryManagementTest extends OSGiTestCase {
         public int getState() { return Factory.VALID; }
         public BundleContext getBundleContext() { return getContext(); }
         public String getVersion() { return null;  }
+        public Element getComponentMetadata() { return null; }
 
-	}
+    }
 
 	public void setUp() {
 		emptyFactory = Utils.getFactoryByName(getContext(), "composite.empty");
