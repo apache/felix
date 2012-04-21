@@ -31,7 +31,7 @@
   <version>1.9.0-SNAPSHOT</version>
 
   <properties>
-    <ipojo.package.version>1.8.0</ipojo.package.version>
+    <ipojo.package.version>1.8.2</ipojo.package.version>
   </properties>
 
   <description>
@@ -48,12 +48,12 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-      <version>1.8.0</version>
+      <version>1.8.4</version>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo</artifactId>
-      <version>1.8.0</version>
+      <version>1.9.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <build>
@@ -113,7 +113,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-ipojo-plugin</artifactId>
-        <version>1.8.0</version>
+        <version>1.8.4</version>
         <executions>
           <execution>
             <goals>
