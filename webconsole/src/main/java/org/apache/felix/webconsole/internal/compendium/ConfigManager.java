@@ -91,13 +91,6 @@ public class ConfigManager extends ConfigManagerBase
      */
     private static final String PASSWORD_PLACEHOLDER_VALUE = "unmodified";
 
-    /**
-     * A regular expression pattern to match against property names to
-     * decide whether the property is hidden or not.
-     */
-    private static final Pattern PASSWORD_PROPERTY = Pattern.compile("password", Pattern.CASE_INSENSITIVE
-        | Pattern.UNICODE_CASE);
-
     // templates
     private final String TEMPLATE;
 
@@ -1130,10 +1123,14 @@ public class ConfigManager extends ConfigManagerBase
         return new PlaceholderAttributeDefinition( id, attrType, attrCardinality );
    }
 
+    private static boolean isPasswordProperty(String name)
+    {
+        return name == null ? false : name.toLowerCase().indexOf("password") != -1; //$NON-NLS-1$
+    }
 
     private static int getAttributeType( final AttributeDefinition ad )
     {
-        if ( ad.getType() == AttributeDefinition.STRING && PASSWORD_PROPERTY.matcher( ad.getID() ).find() )
+        if ( ad.getType() == AttributeDefinition.STRING && isPasswordProperty( ad.getID() ) )
         {
             return ATTRIBUTE_TYPE_PASSWORD;
         }
