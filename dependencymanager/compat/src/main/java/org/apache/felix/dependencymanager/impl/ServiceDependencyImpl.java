@@ -100,4 +100,9 @@ public class ServiceDependencyImpl extends ServiceDependency
     {
         return m_delegate.isRequired();
     }
+    
+    public String toString()
+    {
+        return m_delegate.toString();
+    }
 }
