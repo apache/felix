@@ -48,3 +48,4 @@
 
 #waitDlg { text-align: center; padding: 2em; font-weight: bold }
 #waitDlg img { margin-right: 1em }
+.ui-tabs-panel div {word-wrap:break-word}
