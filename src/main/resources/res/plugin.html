@@ -1,0 +1,63 @@
+<script type="text/javascript" src="${pluginRoot}/res/plugin.js"></script>
+<script type="text/javascript">
+// <![CDATA[
+var i18n = {
+	statusFind : '${status.find}',
+	statusDups : '${status.dups}'
+}
+// ]]>
+</script>
+
+<!-- status line -->
+<p class="statline">${status.initial}</p>
+
+<!-- table caption -->
+<form method="post" action="${pluginRoot}">
+	<div class="ui-widget-header ui-corner-top buttonGroup">
+		<span>${find.label}</span>
+		<input type="text" id="findField" title="${find.tip}" />
+		<button id="findButton">${find.btn}</button>
+		<button id="findDups">${find.dups}</button>
+	</div>
+</form>
+
+<!-- table find results -->
+<table class="tablesorter nicetable noauto" id="findTable">
+	<thead>
+		<tr>
+			<th>${header.package.name}</th>
+			<th>${header.package.ver}</th>
+			<th>${header.exporting.bundle}</th>
+			<th>${header.maven.deps}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td class="pkg">&nbsp;</td>
+			<td class="ver">-</td>
+			<td class="bnd">${no.exporters.found}</td>
+			<td class="mvn">${no.maven.found}</td>
+		</tr>
+	</tbody>
+</table>
+
+<!-- duplicates -->
+<table class="nicetable noauto ui-helper-hidden" id="dupsTable">
+	<thead>
+		<tr>
+			<th>${header.package.name}</th>
+			<th>${header.package.ver}</th>
+			<th>${header.exporting.bundle}</th>
+			<th>${header.importing.bundle}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td class="pkg">-</td>
+			<td class="ver">-</td>
+			<td class="exp">-</td>
+			<td class="imp">&nbsp;</td>
+		</tr>
+	</tbody>
+</table>
+
