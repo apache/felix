@@ -37,6 +37,13 @@
 
     <properties>
         <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
+
+        <!-- Default Java VM and API compatibility -->
+        <felix.build.source>1.3</felix.build.source>
+        <felix.build.target>1.3</felix.build.target>
+        <felix.java.signature.groupId>org.codehaus.mojo.signature</felix.java.signature.groupId>
+        <felix.java.signature.artifactId>java13-sun</felix.java.signature.artifactId>
+        <felix.java.signature.version>1.0</felix.java.signature.version>
     </properties>
 
     <issueManagement>
@@ -144,8 +151,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.3</source>
-                    <target>1.3</target>
+                    <source>${felix.build.source}</source>
+                    <target>${felix.build.target}</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -168,6 +175,26 @@
                         <exclude>src/main/appended-resources/**</exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>animal-sniffer-maven-plugin</artifactId>
+                <version>1.7</version>
+                <configuration>
+                    <signature>
+                        <groupId>${felix.java.signature.groupId}</groupId>
+                        <artifactId>${felix.java.signature.artifactId}</artifactId>
+                        <version>${felix.java.signature.version}</version>
+                    </signature>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
