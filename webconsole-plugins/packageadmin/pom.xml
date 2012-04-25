@@ -51,28 +51,48 @@
     </scm>
 
     <build>
+		<!-- add UTF-8-to-ISO translated resources -->
+		<resources>
+			<resource>
+				<directory>${basedir}/src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>target/classes</directory>
+				<includes>
+					<include>OSGI-INF/**</include>
+				</includes>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+
         <plugins>
+			<!-- translate UTF-8 encoded properties files to ISO-8859-1 -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
-                </configuration>
-             </plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>native2ascii-maven-plugin</artifactId>
+                <version>1.0-beta-1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>native2ascii</goal>
+                        </goals>
+                        <configuration>
+                            <encoding>UTF-8</encoding>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
              <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.0.1</version>
+                <version>2.3.6</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>
                             ${project.artifactId}
                         </Bundle-SymbolicName>
-                        <Import-Package>
-                            *
-                        </Import-Package>
                         <Private-Package>
                             org.apache.felix.webconsole.plugins.packageadmin.*
                         </Private-Package>
@@ -80,6 +100,18 @@
                             org.apache.felix.webconsole.plugins.packageadmin.internal.Activator
                         </Bundle-Activator>
                     </instructions>
+                </configuration>
+            </plugin>
+			<plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>src/**</include>
+                    </includes>
+                    <excludes>
+                        <exclude>src/main/resources/res/plugin.html</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
@@ -101,6 +133,24 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+            <scope>provided</scope>
+        </dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.webconsole</artifactId>
+			<version>3.1.8</version>
+			<scope>provided</scope>
+		</dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20070829</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

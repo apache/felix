@@ -21,64 +21,106 @@ package org.apache.felix.webconsole.plugins.packageadmin.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.osgi.framework.*;
+import org.apache.felix.webconsole.ConfigurationPrinter;
+import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.WebConsoleConstants;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-public class Activator implements BundleActivator
+/**
+ * This is the main starting class of the bundle.
+ */
+public class Activator implements BundleActivator, ServiceTrackerCustomizer
 {
 
     private ServiceTracker pkgAdminTracker;
 
-    private ServiceRegistration pkgAdminPlugin;
+    private BundleContext context;
+    private SimpleWebConsolePlugin plugin;
+    private ServiceRegistration printerReg;
 
-    private ServiceRegistration depFinderPlugin;
-
+    /**
+     * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+     */
     public void start(final BundleContext context) throws Exception
     {
-        this.pkgAdminTracker = new ServiceTracker(context, "org.osgi.service.packageadmin.PackageAdmin", null);
+        this.context = context;
+        this.pkgAdminTracker = new ServiceTracker(context,
+            "org.osgi.service.packageadmin.PackageAdmin", this); //$NON-NLS-1$
         this.pkgAdminTracker.open();
 
-        registerPackageAdminPlugin(context);
-        registerDependencyFinderPlugin(context);
+        // register configuration printer
+        final Dictionary/*<String, Object>*/props = new Hashtable/*<String, Object>*/();
+        props.put(WebConsoleConstants.CONFIG_PRINTER_MODES, new String[] {
+                ConfigurationPrinter.MODE_ZIP, ConfigurationPrinter.MODE_TXT });
+        printerReg = context.registerService(
+            "org.apache.felix.webconsole.ConfigurationPrinter", //$NON-NLS-1$
+            new WebConsolePrinter(context, pkgAdminTracker), props);
     }
 
-    private void registerPackageAdminPlugin(final BundleContext context)
-    {
-        final PackageAdminPlugin plugin = new PackageAdminPlugin(context, pkgAdminTracker);
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put("felix.webconsole.label", PackageAdminPlugin.LABEL);
-        props.put("felix.webconsole.title", PackageAdminPlugin.TITLE);
-        props.put("felix.webconsole.configprinter.modes", new String[]
-            { "zip", "txt" });
-        this.pkgAdminPlugin = context.registerService("javax.servlet.Servlet", plugin, props);
-    }
-
-    private void registerDependencyFinderPlugin(final BundleContext context)
-    {
-        final DependencyFinderPlugin plugin = new DependencyFinderPlugin(context, pkgAdminTracker);
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put("felix.webconsole.label", DependencyFinderPlugin.LABEL);
-        props.put("felix.webconsole.title", DependencyFinderPlugin.TITLE);
-        this.depFinderPlugin = context.registerService("javax.servlet.Servlet", plugin, props);
-    }
-
+    /**
+     * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+     */
     public void stop(final BundleContext context) throws Exception
     {
-        if (this.pkgAdminPlugin != null)
+        if (printerReg != null)
         {
-            this.pkgAdminPlugin.unregister();
-            this.pkgAdminPlugin = null;
+            printerReg.unregister();
+            printerReg = null;
         }
-        if (this.depFinderPlugin != null)
-        {
-            this.depFinderPlugin.unregister();
-            this.depFinderPlugin = null;
-        }
+
         if (this.pkgAdminTracker != null)
         {
             this.pkgAdminTracker.close();
             this.pkgAdminTracker = null;
         }
+
+        this.context = null;
+    }
+
+    // - begin tracker
+    /**
+     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference,
+     *      java.lang.Object)
+     */
+    public final void modifiedService(ServiceReference reference, Object service)
+    {/* unused */
+    }
+
+    /**
+     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
+     */
+    public final Object addingService(ServiceReference reference)
+    {
+        SimpleWebConsolePlugin plugin = this.plugin;
+        Object ret = null;
+        if (plugin == null)
+        {
+            ret = context.getService(reference);
+            this.plugin = plugin = new WebConsolePlugin(context, ret).register(context);
+        }
+
+        return ret;
+    }
+
+    /**
+     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
+     *      java.lang.Object)
+     */
+    public final void removedService(ServiceReference reference, Object service)
+    {
+        SimpleWebConsolePlugin plugin = this.plugin;
+
+        if (pkgAdminTracker.size() <= 1 && plugin != null)
+        {
+            plugin.unregister();
+            this.plugin = null;
+        }
+
     }
 
 }
