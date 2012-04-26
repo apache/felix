@@ -20,6 +20,7 @@ var bundlesTable    = false;
 var bundlesBody     = false;
 var bundlesTemplate = false;
 var bundleOpError   = false;
+var bundleOpSuccess = false;
 
 function renderData( eventData, filter )  {
 	lastBundleData = eventData;
@@ -115,6 +116,11 @@ function changeDataEntryState(/* long */ id, /* String */ action) {
 			_tr.remove(); 
 		} else {
 			entrySetupState( b, _tr, id );
+		}
+		if ('refresh' == action || 'update' == action) {
+			bundleOpSuccess.dialog('open');
+			// TODO:
+			
 		}
 	}, 'json');
 	return false;
@@ -218,6 +224,11 @@ $(document).ready(function(){
 		width   : '80%'
 	});
 	bundleOpError.parent().addClass('ui-state-error');
+	bundleOpSuccess = $('#bundleOpSuccess').dialog({
+		autoOpen: false,
+		modal   : true,
+		width   : '80%'
+	});
 
 	// filter
 	$('.filterApply').click(function() {
