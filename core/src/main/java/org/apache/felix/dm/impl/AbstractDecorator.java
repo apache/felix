@@ -223,10 +223,9 @@ public abstract class AbstractDecorator  {
         	Component service = (Component) m_services.remove(oldRef);
             if (service == null) {
                 throw new IllegalStateException("Service should not be null here.");
-            }
-        	Component newComponent = createService(new Object[] { newRef, newService });
-        	m_services.put(newRef, newComponent);
-        }
+            }        	
+        	m_services.put(newRef, service);
+        } 
     }
     
     // callbacks for bundles
