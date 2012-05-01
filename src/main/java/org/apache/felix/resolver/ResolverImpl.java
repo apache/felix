@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import org.osgi.framework.namespace.BundleNamespace;
+import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
 import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Capability;
@@ -905,7 +906,7 @@ public class ResolverImpl implements Resolver
             for (String usedPkgName : uses)
             {
                 Packages candSourcePkgs = resourcePkgMap.get(candSourceCap.getResource());
-                List<Blame> candSourceBlames = null;
+                List<Blame> candSourceBlames;
                 // Check to see if the used package is exported.
                 Blame candExportedBlame = candSourcePkgs.m_exportedPkgs.get(usedPkgName);
                 if (candExportedBlame != null)
@@ -1534,7 +1535,6 @@ public class ResolverImpl implements Resolver
                             populateWireMap(rc, cand.getResource(),
                                 resourcePkgMap, wireMap, allCandidates);
                         }
-                        Packages candPkgs = resourcePkgMap.get(cand.getResource());
                         Wire wire = new WireImpl(
                             unwrappedResource,
                             getDeclaredRequirement(req),
@@ -1567,20 +1567,53 @@ public class ResolverImpl implements Resolver
                 List<Resource> fragments = ((WrappedResource) resource).getFragments();
                 for (Resource fragment : fragments)
                 {
-                    List<Wire> hostWires = wireMap.get(fragment);
-                    if (hostWires == null)
+                    // Get wire list for the fragment from the wire map.
+                    // If there isn't one, then create one. Note that we won't
+                    // add the wire list to the wire map until the end, so
+                    // we can determine below if this is the first time we've
+                    // seen the fragment while populating wires to avoid
+                    // creating duplicate non-payload wires if the fragment
+                    // is attached to more than one host.
+                    List<Wire> fragmentWires = wireMap.get(fragment);
+                    fragmentWires = (fragmentWires == null)
+                        ? new ArrayList<Wire>() : fragmentWires;
+
+                    // Loop through all of the fragment's requirements and create
+                    // any necessary wires for non-payload requirements.
+                    for (Requirement req : fragment.getRequirements(null))
                     {
-                        hostWires = new ArrayList<Wire>();
-                        wireMap.put(fragment, hostWires);
+                        // Only look at non-payload requirements.
+                        if (!isPayload(req))
+                        {
+                            // If this is the host requirement, then always create
+                            // a wire for it to the current resource.
+                            if (req.getNamespace().equals(HostNamespace.HOST_NAMESPACE))
+                            {
+                                fragmentWires.add(
+                                    new WireImpl(
+                                        getDeclaredResource(fragment),
+                                        req,
+                                        unwrappedResource,
+                                        unwrappedResource.getCapabilities(
+                                            HostNamespace.HOST_NAMESPACE).get(0)));
+                            }
+                            // Otherwise, if the fragment isn't already resolved and
+                            // this is the first time we are seeing it, then create
+                            // a wire for the non-payload requirement.
+                            else if (!rc.getWirings().containsKey(fragment)
+                                && !wireMap.containsKey(fragment))
+                            {
+                                Wire wire = createWire(req, allCandidates);
+                                if (wire != null)
+                                {
+                                    fragmentWires.add(wire);
+                                }
+                            }
+                        }
                     }
-                    hostWires.add(
-                        new WireImpl(
-                            getDeclaredResource(fragment),
-                            fragment.getRequirements(
-                                HostNamespace.HOST_NAMESPACE).get(0),
-                            unwrappedResource,
-                            unwrappedResource.getCapabilities(
-                                HostNamespace.HOST_NAMESPACE).get(0)));
+
+                    // Finally, add the fragment's wire list to the wire map.
+                    wireMap.put(fragment, fragmentWires);
                 }
             }
         }
@@ -1588,7 +1621,37 @@ public class ResolverImpl implements Resolver
         return wireMap;
     }
 
-    private static Map<Resource, List<Wire>> populateDynamicWireMap(
+    private static Wire createWire(Requirement requirement, Candidates allCandidates)
+    {
+        List<Capability> candidates = allCandidates.getCandidates(requirement);
+        if (candidates == null || candidates.isEmpty())
+        {
+            return null;
+        }
+        Capability cand = candidates.get(0);
+        return new WireImpl(
+                getDeclaredResource(requirement.getResource()),
+                getDeclaredRequirement(requirement),
+                getDeclaredResource(cand.getResource()),
+                getDeclaredCapability(cand));
+    }
+
+    private static boolean isPayload(Requirement fragmentReq)
+    {
+        // this is where we would add other non-payload namespaces
+        if (ExecutionEnvironmentNamespace.EXECUTION_ENVIRONMENT_NAMESPACE
+            .equals(fragmentReq.getNamespace()))
+        {
+            return false;
+        }
+        if (HostNamespace.HOST_NAMESPACE.equals(fragmentReq.getNamespace()))
+        {
+            return false;
+        }
+        return true;
+    }
+
+	private static Map<Resource, List<Wire>> populateDynamicWireMap(
         ResolveContext rc, Resource resource, Requirement dynReq,
         Map<Resource, Packages> resourcePkgMap,
         Map<Resource, List<Wire>> wireMap, Candidates allCandidates)
