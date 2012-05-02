@@ -67,4 +67,50 @@ class WireImpl implements Wire
             + " -> "
             + "[" + m_provider + "]";
     }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == null)
+        {
+            return false;
+        }
+        if (!(obj instanceof Wire))
+        {
+            return false;
+        }
+        final Wire other = (Wire) obj;
+        if (this.m_requirer != other.getRequirer()
+            && (this.m_requirer == null || !this.m_requirer.equals(other.getRequirer())))
+        {
+            return false;
+        }
+        if (this.m_req != other.getRequirement()
+            && (this.m_req == null || !this.m_req.equals(other.getRequirement())))
+        {
+            return false;
+        }
+        if (this.m_provider != other.getProvider()
+            && (this.m_provider == null || !this.m_provider.equals(other.getProvider())))
+        {
+            return false;
+        }
+        if (this.m_cap != other.getCapability()
+            && (this.m_cap == null || !this.m_cap.equals(other.getCapability())))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 5;
+        hash = 29 * hash + (this.m_requirer != null ? this.m_requirer.hashCode() : 0);
+        hash = 29 * hash + (this.m_req != null ? this.m_req.hashCode() : 0);
+        hash = 29 * hash + (this.m_provider != null ? this.m_provider.hashCode() : 0);
+        hash = 29 * hash + (this.m_cap != null ? this.m_cap.hashCode() : 0);
+        return hash;
+    }
 }

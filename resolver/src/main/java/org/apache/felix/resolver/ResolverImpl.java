@@ -67,8 +67,9 @@ public class ResolverImpl implements Resolver
         Map<Resource, Packages> resourcePkgMap =
             new HashMap<Resource, Packages>();
 
-        Collection<Resource> mandatoryResources = rc.getMandatoryResources();
-        Collection<Resource> optionalResources = rc.getOptionalResources();
+        // Make copies of arguments in case we want to modify them.
+        Collection<Resource> mandatoryResources = new ArrayList(rc.getMandatoryResources());
+        Collection<Resource> optionalResources = new ArrayList(rc.getOptionalResources());
 // TODO: RFC-112 - Need impl-specific type.
 //        Collection<Resource> ondemandFragments = (rc instanceof ResolveContextImpl)
 //            ? ((ResolveContextImpl) rc).getOndemandResources() : Collections.EMPTY_LIST;

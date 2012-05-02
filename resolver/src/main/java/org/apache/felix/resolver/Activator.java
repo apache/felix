@@ -48,6 +48,5 @@ public class Activator implements BundleActivator
 
     public void stop(BundleContext bc) throws Exception
     {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
