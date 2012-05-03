@@ -117,6 +117,11 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
         return result.toString();
     }
     
+    protected java.net.InetAddress getHostAddress(URL u)
+    {
+        return null;
+    }
+
     private boolean checkPermission(URL u)
     {
         SecurityManager sm = System.getSecurityManager();
