@@ -715,6 +715,14 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     
 	private void invokeSwappedCallback(DependencyService component, ServiceReference previousReference, Object previous, ServiceReference currentServiceReference,
 			Object current) {
+		// sanity check on the service references
+		Integer oldRank = (Integer) previousReference.getProperty(Constants.SERVICE_RANKING);
+		Integer newRank = (Integer) currentServiceReference.getProperty(Constants.SERVICE_RANKING);
+		
+		if (oldRank != null && newRank != null && oldRank.equals(newRank)) {
+			throw new IllegalStateException("Attempt to swap a service for a service with the same rank! previousReference: " + previousReference + ", currentReference: " + currentServiceReference);
+		}
+		
 		component.invokeCallbackMethod(getCallbackInstances(component), m_callbackSwapped, new Class[][] { { m_trackedServiceName, m_trackedServiceName },
 				{ Object.class, Object.class }, { ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName },
 				{ ServiceReference.class, Object.class, ServiceReference.class, Object.class } }, new Object[][] { { previous, current },
