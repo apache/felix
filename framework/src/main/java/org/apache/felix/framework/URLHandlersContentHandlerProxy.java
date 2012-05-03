@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -56,11 +56,11 @@ class URLHandlersContentHandlerProxy extends ContentHandler
 
     private static final String CONTENT_HANDLER_PACKAGE_PROP = "java.content.handler.pkgs";
     private static final String DEFAULT_CONTENT_HANDLER_PACKAGE = "sun.net.www.content|com.ibm.oti.net.www.content|gnu.java.net.content|org.apache.harmony.luni.internal.net.www.content|COM.newmonics.www.content";
-    
+
     private static final Map m_builtIn = new HashMap();
     private static final String m_pkgs;
 
-    static 
+    static
     {
         String pkgs = new SecureAction().getSystemProperty(CONTENT_HANDLER_PACKAGE_PROP, "");
         m_pkgs = (pkgs.equals(""))
@@ -73,13 +73,13 @@ class URLHandlersContentHandlerProxy extends ContentHandler
     private final String m_mimeType;
     private final SecureAction m_action;
 
-    public URLHandlersContentHandlerProxy(String mimeType, SecureAction action, 
+    public URLHandlersContentHandlerProxy(String mimeType, SecureAction action,
         ContentHandlerFactory factory)
     {
         m_mimeType = mimeType;
         m_action = action;
         m_factory = factory;
-    } 
+    }
 
     //
     // ContentHandler interface method.
@@ -111,11 +111,11 @@ class URLHandlersContentHandlerProxy extends ContentHandler
         // Get the framework instance associated with call stack.
         Object framework = URLHandlers.getFrameworkFromContext();
 
-        if (framework == null) 
+        if (framework == null)
         {
             return getBuiltIn();
         }
-        try 
+        try
         {
             ContentHandler service;
             if (framework instanceof Felix)
@@ -128,7 +128,7 @@ class URLHandlersContentHandlerProxy extends ContentHandler
                     m_action.getMethod(framework.getClass(), "getContentHandlerService", STRING_TYPES),
                     framework, new Object[]{m_mimeType});
             }
-            
+
             return (service == null) ? getBuiltIn() : service;
         }
         catch (Exception ex)
@@ -169,10 +169,10 @@ class URLHandlersContentHandlerProxy extends ContentHandler
             try
             {
                 // If a built-in handler is found then cache and return it
-                Class handler = m_action.forName(className); 
+                Class handler = m_action.forName(className, null);
                 if (handler != null)
                 {
-                    return addToCache(m_mimeType, 
+                    return addToCache(m_mimeType,
                         (ContentHandler) handler.newInstance());
                 }
             }

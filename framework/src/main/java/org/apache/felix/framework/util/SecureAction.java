@@ -171,14 +171,14 @@ public class SecureAction
         }
     }
 
-    public Class forName(String name) throws ClassNotFoundException
+    public Class forName(String name, ClassLoader classloader) throws ClassNotFoundException
     {
         if (System.getSecurityManager() != null)
         {
             try
             {
                 Actions actions = (Actions) m_actions.get();
-                actions.set(Actions.FOR_NAME_ACTION, name);
+                actions.set(Actions.FOR_NAME_ACTION, name, classloader);
                 return (Class) AccessController.doPrivileged(actions, m_acc);
             }
             catch (PrivilegedActionException ex)
@@ -189,6 +189,10 @@ public class SecureAction
                 }
                 throw (RuntimeException) ex.getException();
             }
+        }
+        else if (classloader != null)
+        {
+            return Class.forName(name, true, classloader);
         }
         else
         {
@@ -1543,7 +1547,8 @@ public class SecureAction
                 case FILE_IS_DIRECTORY_ACTION:
                     return ((File) arg1).isDirectory() ? Boolean.TRUE : Boolean.FALSE;
                 case FOR_NAME_ACTION:
-                    return Class.forName((String) arg1);
+                    return (arg2 == null) ? Class.forName((String) arg1) : Class.forName((String) arg1, true,
+                        (ClassLoader) arg2);
                 case GET_ABSOLUTE_PATH_ACTION:
                     return ((File) arg1).getAbsolutePath();
                 case GET_CONSTRUCTOR_ACTION:
