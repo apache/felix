@@ -141,7 +141,6 @@ public class ImmediateComponentManager extends AbstractComponentManager
         m_componentContext = null;
         m_properties = null;
         m_propertiesOverwrite = null;
-        m_configurationProperties = null;
     }
 
 
