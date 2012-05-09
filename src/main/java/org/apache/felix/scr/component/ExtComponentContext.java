@@ -33,47 +33,23 @@ public interface ExtComponentContext extends ComponentContext
 {
 
     /**
-     * Updates the service registration properties of the component
-     * registered as a service. The effects are:
-     * <ol>
-     * <li>The properties read from the component descriptor are updated
-     * with the values from the given dictionary</li>
-     * <li>Configuration Admin properties are applied</li>
-     * <li>The ServiceRegistration service properties are updated with the
-     * result.</li>
-     * </ol>
+     * Sets the service registration properties of the component
+     * registered as a service. If the component is not registered as
+     * a service, this method has no effect.
      * <p>
-     * Calling this method is does not cause a component reconfiguration as
-     * would be caused by a Configuration update. Particularly the
-     * configured modified method (if any) is not called as a result of
-     * calling this method.
-     * <p>
-     * Please note:
-     * <ul>
-     * <li>The provided properties may overwrite or add properties to
-     * the properties read from the component descriptor. It is not
-     * possible to remove such descriptor properties</li>
-     * <li>The provided properties are only valid for the livecycle of the
-     * component instance. After reactivation of a component (and thus
-     * creation of a new component instance) the properties are removed.
-     * </li>
-     * <li>If the component can be dynamically updated with configuration
-     * these properties will influence such configuration.</li>
-     * <li>Configuration is not updated in the Configuration Admin Service
-     * when calling service</li>
-     * <li>Properties provided with this method may still be overwriiten
-     * with configuration provided by the Configuration Admin Service.</lI>
-     * </ul>
-     * <p>
-     * If the component to which this context belongs is not registered as
-     * a service, this method
+     * The <code>component.id</code> and <code>component.name</code>
+     * property are set by the Service Component Runtime and cannot be
+     * removed or replaced.
      *
      * @param properties properties to update the default component
-     *      properties with.
+     *      properties with. If this is <code>null</code> or empty the
+     *      default set of properties as defined in Section 112.6,
+     *      Component Properties, are used as the service registration
+     *      properties.
      *
      * @throws IllegalStateException if this method is called for a
      *      Component Factory component
      */
-    void updateProperties( Dictionary properties );
+    void setServiceProperties( Dictionary properties );
 
 }

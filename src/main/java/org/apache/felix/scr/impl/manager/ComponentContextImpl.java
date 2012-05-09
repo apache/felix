@@ -27,7 +27,6 @@ import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentInstance;
 
 
@@ -135,9 +134,9 @@ public class ComponentContextImpl implements ExtComponentContext, ComponentInsta
 
     //---------- Speculative MutableProperties interface ------------------------------
 
-    public void updateProperties(Dictionary properties)
+    public void setServiceProperties(Dictionary properties)
     {
-        getComponentManager().resetComponentProperties(properties);
+        getComponentManager().setServiceProperties(properties, true);
     }
 
 }

@@ -21,7 +21,6 @@ package org.apache.felix.scr.impl.helper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
@@ -70,7 +69,7 @@ public class ActivateMethod extends BaseMethod
             {
                 if ( methods[i].getName().equals( getMethodName() ) && isSuitable( methods[i] ) )
                 {
-                    if ( accept( methods[i], acceptPrivate, acceptPackage ) )
+                    if ( accept( methods[i], acceptPrivate, acceptPackage, returnValue() ) )
                     {
                         // check modifiers etc.
                         return methods[i];
@@ -143,12 +142,20 @@ public class ActivateMethod extends BaseMethod
         return "activate";
     }
 
-
-    public boolean invoke( Object componentInstance, Object rawParameter, final boolean methodCallFailureResult )
+    protected boolean returnValue()
     {
-        return methodExists() && super.invoke( componentInstance, rawParameter, methodCallFailureResult );
+        // allow returning Map if declared as DS 1.2-Felix or newer
+        return isDS12Felix();
     }
 
+    public MethodResult invoke(Object componentInstance, Object rawParameter, final MethodResult methodCallFailureResult)
+    {
+        if (methodExists())
+        {
+            return super.invoke(componentInstance, rawParameter, methodCallFailureResult);
+        }
+        return null;
+    }
 
     /**
      * Returns a method taking a single parameter of one of the
@@ -249,7 +256,6 @@ public class ActivateMethod extends BaseMethod
     {
         private final ComponentContext m_componentContext;
         private final int m_reason;
-
 
         public ActivatorParameter( ComponentContext componentContext, int reason )
         {

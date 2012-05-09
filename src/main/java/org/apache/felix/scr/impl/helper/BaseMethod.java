@@ -24,7 +24,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Map;
-
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -55,7 +54,6 @@ abstract class BaseMethod
     private final boolean m_methodRequired;
 
     private State m_state;
-
 
     protected BaseMethod( final AbstractComponentManager componentManager, final String methodName,
         final Class componentClass )
@@ -91,6 +89,12 @@ abstract class BaseMethod
     protected final boolean isDS11()
     {
         return getComponentManager().getComponentMetadata().isDS11();
+    }
+
+
+    protected final boolean isDS12Felix()
+    {
+        return getComponentManager().getComponentMetadata().isDS12Felix();
     }
 
 
@@ -145,11 +149,6 @@ abstract class BaseMethod
      * the class hierarchy is traversed until a method is found or the root
      * of the class hierarchy is reached without finding a method.
      *
-     * @param targetClass The class in which to look for the method
-     * @param acceptPrivate <code>true</code> if private methods should be
-     *      considered.
-     * @param acceptPackage <code>true</code> if package private methods should
-     *      be considered.
      * @return The requested method or <code>null</code> if no acceptable method
      *      can be found in the target class or any super class.
      * @throws InvocationTargetException If an unexpected Throwable is caught
@@ -185,7 +184,7 @@ abstract class BaseMethod
             {
                 // log and return null
                 getComponentManager().log( LogService.LOG_ERROR,
-                    "DependencyManager : Suitable but non-accessible method found in class {0}", new Object[]
+                    "findMethod: Suitable but non-accessible method found in class {0}", new Object[]
                         { targetClass.getName() }, null );
                 break;
             }
@@ -216,15 +215,16 @@ abstract class BaseMethod
         final boolean acceptPackage ) throws SuitableMethodNotAccessibleException, InvocationTargetException;
 
 
-    private boolean invokeMethod( final Object componentInstance, final Object rawParameter )
+    private MethodResult invokeMethod( final Object componentInstance, final Object rawParameter )
         throws InvocationTargetException
     {
         try
         {
             if ( componentInstance != null )
             {
-                final Object[] params = getParameters( m_method, rawParameter );
-                m_method.invoke( componentInstance, params );
+                final Object[] params = getParameters(m_method, rawParameter);
+                Object result = m_method.invoke(componentInstance, params);
+                return new MethodResult((m_method.getReturnType() != Void.TYPE), (Map) result);
             }
             else
             {
@@ -236,7 +236,7 @@ abstract class BaseMethod
         catch ( IllegalStateException ise )
         {
             getComponentManager().log( LogService.LOG_DEBUG, ise.getMessage(), null );
-            return false;
+            return null;
         }
         catch ( IllegalAccessException ex )
         {
@@ -256,9 +256,18 @@ abstract class BaseMethod
         }
 
         // assume success (also if the mehotd is not available or accessible)
-        return true;
+        return MethodResult.VOID; // TODO: or null ??
     }
 
+    protected void processResult( Object configResults, Object result, Method method )
+    {
+        //no op
+    }
+
+    protected boolean returnValue()
+    {
+        return false;
+    }
 
     /**
      * Returns the parameter array created from the <code>rawParameter</code>
@@ -311,7 +320,7 @@ abstract class BaseMethod
             Method method = clazz.getDeclaredMethod( name, parameterTypes );
 
             // accept public and protected methods only and ensure accessibility
-            if ( accept( method, acceptPrivate, acceptPackage ) )
+            if ( accept( method, acceptPrivate, acceptPackage, returnValue() ) )
             {
                 return method;
             }
@@ -384,15 +393,16 @@ abstract class BaseMethod
      * This method is package private for unit testing purposes. It is not
      * meant to be called from client code.
      *
+     *
      * @param method The method to check
      * @param acceptPrivate Whether a private method is acceptable
      * @param acceptPackage Whether a package private method is acceptable
-     * @return
+     * @param allowReturnValue whether the method can return a value (to update service registration properties)
+     * @return whether the method is acceptable
      */
-    protected static boolean accept( Method method, boolean acceptPrivate, boolean acceptPackage )
+    static boolean accept( Method method, boolean acceptPrivate, boolean acceptPackage, boolean allowReturnValue )
     {
-        // method must be void
-        if ( Void.TYPE != method.getReturnType() )
+        if (!(Void.TYPE == method.getReturnType() || (MAP_CLASS == method.getReturnType() && allowReturnValue)))
         {
             return false;
         }
@@ -455,6 +465,8 @@ abstract class BaseMethod
      * Calls the declared method on the given component with the provided
      * method call arguments.
      *
+     *
+     *
      * @param componentInstance The component instance on which to call the
      *      method
      * @param rawParameter The parameter container providing the actual
@@ -468,8 +480,8 @@ abstract class BaseMethod
      *      <code>methodCallFailureResult</code> is returned if the method was
      *      found and called, but the method threw an exception.
      */
-    public boolean invoke( final Object componentInstance, final Object rawParameter,
-        final boolean methodCallFailureResult )
+    public MethodResult invoke( final Object componentInstance, final Object rawParameter,
+            final MethodResult methodCallFailureResult )
     {
         try
         {
@@ -493,7 +505,7 @@ abstract class BaseMethod
     private static interface State
     {
 
-        boolean invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
+        MethodResult invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
             throws InvocationTargetException;
 
 
@@ -506,9 +518,9 @@ abstract class BaseMethod
         private static final State INSTANCE = new NotApplicable();
 
 
-        public boolean invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
+        public MethodResult invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
         {
-            return true;
+            return MethodResult.VOID;
         }
 
 
@@ -545,7 +557,7 @@ abstract class BaseMethod
             }
 
 
-        public boolean invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
+        public MethodResult invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
             throws InvocationTargetException
         {
             resolve( baseMethod );
@@ -565,14 +577,14 @@ abstract class BaseMethod
         private static final State INSTANCE = new NotFound();
 
 
-        public boolean invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
+        public MethodResult invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
         {
             // 112.3.1 If the method is not found , SCR must log an error
             // message with the log service, if present, and ignore the
             // method
             baseMethod.getComponentManager().log( LogService.LOG_ERROR, "{0} method [{1}] not found", new Object[]
                 { baseMethod.getMethodNamePrefix(), baseMethod.getMethodName() }, null );
-            return false;
+            return null;
         }
 
 
@@ -587,7 +599,7 @@ abstract class BaseMethod
         private static final State INSTANCE = new Resolved();
 
 
-        public boolean invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
+        public MethodResult invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
             throws InvocationTargetException
         {
             baseMethod.getComponentManager().log( LogService.LOG_DEBUG, "invoking {0}: {1}", new Object[]

@@ -364,13 +364,35 @@ public class ComponentMetadata
 
     /**
      * Returns <code>true</code> if the metadata declaration has used the
-     * Declarative Services version 1.1-felixnamespace or a later namespace.
+     * Declarative Services version 1.1-felix namespace or a later namespace.
      *
      * @see <a href="https://issues.apache.org/jira/browse/FELIX-1893">FELIX-1893</a>
      */
     public boolean isDS11Felix()
     {
         return getNamespaceCode() >= XmlHandler.DS_VERSION_1_1_FELIX;
+    }
+
+
+    /**
+     * Returns <code>true</code> if the metadata declaration has used the
+     * Declarative Services version 1.2 namespace or a later namespace.
+     */
+    public boolean isDS12()
+    {
+        return getNamespaceCode() >= XmlHandler.DS_VERSION_1_2;
+    }
+
+
+    /**
+     * Returns <code>true</code> if the metadata declaration has used the
+     * Declarative Services version 1.2-felix namespace or a later namespace.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/FELIX-3377">FELIX-3377</a>
+     */
+    public boolean isDS12Felix()
+    {
+        return getNamespaceCode() >= XmlHandler.DS_VERSION_1_2_FELIX;
     }
 
 

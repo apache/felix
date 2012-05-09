@@ -55,7 +55,7 @@ public class ActivateMethodTest extends TestCase
     {
         super.setUp();
 
-        m_ctx = (ComponentContext) EasyMock.createNiceMock( ComponentContext.class );
+        m_ctx = (ComponentContext) EasyMock.createNiceMock(ComponentContext.class);
         EasyMock.expect( m_ctx.getProperties() ).andReturn( new Hashtable() ).anyTimes();
         EasyMock.replay( new Object[]
             { m_ctx } );
@@ -272,7 +272,7 @@ public class ActivateMethodTest extends TestCase
         };
         ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata );
         ActivateMethod am = new ActivateMethod( icm, methodName, methodName != null, obj.getClass() );
-        am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), false );
+        am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), null );
         Method m = get(am, "m_method");
         assertNotNull( m );
         assertEquals( methodName, m.getName() );
@@ -300,7 +300,7 @@ public class ActivateMethodTest extends TestCase
         };
         ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata );
         ActivateMethod am = new ActivateMethod( icm, methodName, methodName != null, obj.getClass() );
-        am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), false );
+        am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), null );
         assertNull( get( am, "m_method" ) );
         assertNull( obj.getCalledMethod() );
     }
@@ -310,7 +310,7 @@ public class ActivateMethodTest extends TestCase
         throws NoSuchMethodException
     {
         Method method = ACCEPT_METHOD_CLASS.getDeclaredMethod( methodName, null );
-        boolean accepted = BaseMethod.accept( method, acceptPrivate, acceptPackage );
+        boolean accepted = BaseMethod.accept( method, acceptPrivate, acceptPackage, false );
         assertEquals( expected, accepted );
     }
 

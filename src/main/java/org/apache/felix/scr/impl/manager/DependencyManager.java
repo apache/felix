@@ -31,6 +31,7 @@ import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.helper.BindMethod;
+import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.UnbindMethod;
 import org.apache.felix.scr.impl.helper.UpdatedMethod;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -1059,7 +1060,7 @@ public class DependencyManager implements ServiceListener, Reference
                     {
                         return getService( ref );
                     }
-                }, true );
+                }, MethodResult.VOID ) != null;
             }
 
             // Concurrency Issue: The component instance still exists but
@@ -1112,6 +1113,7 @@ public class DependencyManager implements ServiceListener, Reference
     {
         // The updated method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
+        //TODO should updated methods be able to change config properties?
         if ( m_componentInstance != null )
         {
             m_updated.invoke( m_componentInstance, new BindMethod.Service()
@@ -1126,7 +1128,7 @@ public class DependencyManager implements ServiceListener, Reference
                 {
                     return getService( ref );
                 }
-            }, true );
+            }, MethodResult.VOID );
         }
         else
         {
@@ -1167,7 +1169,7 @@ public class DependencyManager implements ServiceListener, Reference
                 {
                     return getService( ref );
                 }
-            }, true );
+            }, MethodResult.VOID );
         }
         else
         {

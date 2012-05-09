@@ -195,7 +195,7 @@ public class BindMethod extends BaseMethod
         if ( suitableMethodNotAccessible )
         {
             getComponentManager().log( LogService.LOG_ERROR,
-                "DependencyManager : Suitable but non-accessible method found in class {0}", new Object[]
+                "doFindMethod: Suitable but non-accessible method found in class {0}", new Object[]
                     { targetClass.getName() }, null );
             throw new SuitableMethodNotAccessibleException();
         }
@@ -428,7 +428,7 @@ public class BindMethod extends BaseMethod
                 // reference's interface attribute
                 if ( theParameter.isAssignableFrom( parameterClass ) )
                 {
-                    if ( accept( method, acceptPrivate, acceptPackage ) )
+                    if ( accept( method, acceptPrivate, acceptPackage, false ) )
                     {
                         return method;
                     }
@@ -521,7 +521,7 @@ public class BindMethod extends BaseMethod
                 // parameters must be refclass,map
                 if ( parameters[0].isAssignableFrom( parameterClass ) && parameters[1] == MAP_CLASS )
                 {
-                    if ( accept( method, acceptPrivate, acceptPackage ) )
+                    if ( accept( method, acceptPrivate, acceptPackage, false ) )
                     {
                         return method;
                     }
