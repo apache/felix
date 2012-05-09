@@ -54,6 +54,12 @@ public class XmlHandler implements KXml2SAXHandler
     // Namespace URI of DS 1.1-felix (see FELIX-1893)
     public static final String NAMESPACE_URI_1_1_FELIX = "http://felix.apache.org/xmlns/scr/v1.1.0-felix";
 
+    // Namespace URI of DS 1.2
+    public static final String NAMESPACE_URI_1_2 = "http://www.osgi.org/xmlns/scr/v1.2.0";
+
+    // Namespace URI of DS 1.2-felix (see FELIX-3377)
+    public static final String NAMESPACE_URI_1_2_FELIX = "http://felix.apache.org/xmlns/scr/v1.2.0-felix";
+
     // namespace code for non-DS namespace
     public static final int DS_VERSION_NONE = -1;
 
@@ -65,6 +71,12 @@ public class XmlHandler implements KXml2SAXHandler
 
     // namespace code for the DS 1.1-felix specification
     public static final int DS_VERSION_1_1_FELIX = 2;
+
+    // namespace code for the DS 1.2 specification
+    public static final int DS_VERSION_1_2 = 3;
+
+    // namespace code for the DS 1.1-felix specification
+    public static final int DS_VERSION_1_2_FELIX = 4;
 
     // mapping of namespace URI to namespace code
     private static final Map NAMESPACE_CODE_MAP;
@@ -103,6 +115,8 @@ public class XmlHandler implements KXml2SAXHandler
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI, new Integer( DS_VERSION_1_0 ) );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1, new Integer( DS_VERSION_1_1 ) );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1_FELIX, new Integer( DS_VERSION_1_1_FELIX ) );
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2, new Integer( DS_VERSION_1_2 ) );
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2_FELIX, new Integer( DS_VERSION_1_2_FELIX ) );
     }
 
 

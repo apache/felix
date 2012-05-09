@@ -30,6 +30,7 @@ import org.apache.felix.scr.integration.components.MutatingService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
 
@@ -40,20 +41,22 @@ public class MutablePropertiesTest extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-//        paxRunnerVmOption = DEBUG_VM_OPTION;
+        // paxRunnerVmOption = DEBUG_VM_OPTION;
 
         descriptorFile = "/integration_test_mutable_properties.xml";
     }
 
 
     @Test
-    public void test_mutable_properties()
+    public void test_mutable_properties() throws InvalidSyntaxException
     {
         final Component component = findComponentByName( "components.mutable.properties" );
         TestCase.assertNotNull( component );
         TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
 
-        ServiceReference serviceReference = bundleContext.getServiceReference( MutatingService.class.getName() );
+        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=components.mutable.properties)" );
+        TestCase.assertEquals( 1, serviceReferences.length );
+        ServiceReference serviceReference = serviceReferences[0];
         checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
 
         //update theValue
@@ -62,20 +65,52 @@ public class MutablePropertiesTest extends ComponentTestBase
         TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
         Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
         s.updateProperties(d);
-        checkProperties(serviceReference, 8, "anotherValue", "p1", "p2");
+        checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
 
         //configure with configAdmin
         configure( "components.mutable.properties" );
         delay();
-        checkProperties(serviceReference, 8, PROP_NAME, "p1", "p2");
+        //no change
+        checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
 
-        //check that a property from config admin can't be changed
+        //check that removing config switches back to defaults modified by config admin
+        s.updateProperties(null);
+        checkProperties( serviceReference, 8, "theValue", "p1", "p2" );
+
+        bundleContext.ungetService(serviceReference);
+    }
+
+    @Test
+    public void test_mutable_properties_returned() throws InvalidSyntaxException
+    {
+        final Component component = findComponentByName( "components.mutable.properties2" );
+        TestCase.assertNotNull( component );
+        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+
+        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=components.mutable.properties2)" );
+        TestCase.assertEquals( 1, serviceReferences.length );
+        ServiceReference serviceReference = serviceReferences[0];
+        checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
+
+        //update theValue
+        MutatingService s = ( MutatingService ) bundleContext.getService( serviceReference );
+        Assert.assertNotNull(s);
+        checkProperties( serviceReference, 8, "anotherValue1", "p1", "p2" );
+        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
         s.updateProperties(d);
-        checkProperties(serviceReference, 8, PROP_NAME, "p1", "p2");
+        checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
 
-        //check that another one can
-        s.updateProperties(new Hashtable(Collections.singletonMap( "p1", "changed" )));
-        checkProperties(serviceReference, 8, PROP_NAME, "changed", "p2");
+        //configure with configAdmin
+        configure( "components.mutable.properties2" );
+        delay();
+        delay();
+        //no change
+        checkProperties(serviceReference, 8, "anotherValue2", "p1", "p2");
+
+        //check that removing config switches back to defaults modified by config admin
+        s.updateProperties(null);
+        checkProperties( serviceReference, 8, "theValue", "p1", "p2" );
 
         bundleContext.ungetService(serviceReference);
     }
@@ -83,8 +118,10 @@ public class MutablePropertiesTest extends ComponentTestBase
     private void checkProperties(ServiceReference serviceReference, int count, String otherValue, String p1, String p2) {
         Assert.assertEquals("wrong property count", count, serviceReference.getPropertyKeys().length);
         Assert.assertEquals(otherValue, serviceReference.getProperty(PROP_NAME));
-        Assert.assertEquals(p1, serviceReference.getProperty("p1"));
-        Assert.assertEquals(p2, serviceReference.getProperty("p2"));
+        if ( count > 5 ) {
+            Assert.assertEquals(p1, serviceReference.getProperty("p1"));
+            Assert.assertEquals(p2, serviceReference.getProperty("p2"));
+        }
     }
 
 

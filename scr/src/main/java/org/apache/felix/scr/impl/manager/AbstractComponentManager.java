@@ -797,7 +797,7 @@ public abstract class AbstractComponentManager implements Component
 
     public abstract Dictionary getProperties();
 
-    public abstract void resetComponentProperties( Dictionary properties );
+    public abstract void setServiceProperties(Dictionary serviceProperties, boolean updateServiceRegistration);
 
     /**
      * Returns the subset of component properties to be used as service

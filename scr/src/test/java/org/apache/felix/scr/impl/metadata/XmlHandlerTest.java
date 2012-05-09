@@ -106,7 +106,7 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.1.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
-        assertEquals( "Expect NS 1.0.0", XmlHandler.DS_VERSION_1_1, metadata.getNamespaceCode() );
+        assertEquals( "Expect NS 1.1.0", XmlHandler.DS_VERSION_1_1, metadata.getNamespaceCode() );
     }
 
 
@@ -115,7 +115,25 @@ public class XmlHandlerTest extends TestCase
         final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://felix.apache.org/xmlns/scr/v1.1.0-felix\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
         assertEquals( "1 Descriptor expected", 1, metadataList.size() );
         final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
-        assertEquals( "Expect NS 1.0.0", XmlHandler.DS_VERSION_1_1_FELIX, metadata.getNamespaceCode() );
+        assertEquals( "Expect NS 1.1.0-felix", XmlHandler.DS_VERSION_1_1_FELIX, metadata.getNamespaceCode() );
+    }
+
+
+    public void test_namespace_1_2_0() throws Exception
+    {
+        final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.2.0\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
+        assertEquals( "1 Descriptor expected", 1, metadataList.size() );
+        final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+        assertEquals( "Expect NS 1.2.0", XmlHandler.DS_VERSION_1_2, metadata.getNamespaceCode() );
+    }
+
+
+    public void test_namespace_1_2_0_felix() throws Exception
+    {
+        final List metadataList = readMetadataFromString( "<scr:component xmlns:scr=\"http://felix.apache.org/xmlns/scr/v1.2.0-felix\" name=\"n\" ><implementation class=\"n\"/></scr:component>" );
+        assertEquals( "1 Descriptor expected", 1, metadataList.size() );
+        final ComponentMetadata metadata = ( ComponentMetadata ) metadataList.get( 0 );
+        assertEquals( "Expect NS 1.2.0-felix", XmlHandler.DS_VERSION_1_2_FELIX, metadata.getNamespaceCode() );
     }
 
 

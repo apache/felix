@@ -23,11 +23,14 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.helper.ActivateMethod;
+import org.apache.felix.scr.impl.helper.ActivateMethod.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.DeactivateMethod;
+import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ModifiedMethod;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -71,7 +74,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
 
     // properties supplied ot ExtComponentContext.updateProperties
     // null if properties are not to be overwritten
-    private Dictionary m_propertiesOverwrite;
+    private Dictionary m_serviceProperties;
 
     // the component properties from the Configuration Admin Service
     // this is null, if none exist or none are provided
@@ -140,7 +143,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
         m_implementationObject = null;
         m_componentContext = null;
         m_properties = null;
-        m_propertiesOverwrite = null;
+        m_serviceProperties = null;
     }
 
 
@@ -228,8 +231,9 @@ public class ImmediateComponentManager extends AbstractComponentManager
         }
 
         // 4. Call the activate method, if present
-        if ( !m_activateMethod.invoke( implementationObject,
-            new ActivateMethod.ActivatorParameter( componentContext, 1 ), false ) )
+        final MethodResult result = m_activateMethod.invoke(implementationObject, new ActivatorParameter(
+            componentContext, 1), null);
+        if (result == null)
         {
             // 112.5.8 If the activate method throws an exception, SCR must log an error message
             // containing the exception with the Log Service and activation fails
@@ -241,6 +245,10 @@ public class ImmediateComponentManager extends AbstractComponentManager
             }
 
             return null;
+        }
+        else if (result.hasResult())
+        {
+            setServiceProperties(result.getResult(), true);
         }
 
         return implementationObject;
@@ -262,8 +270,12 @@ public class ImmediateComponentManager extends AbstractComponentManager
         // don't care for the result, the error (acccording to 112.5.12 If the deactivate
         // method throws an exception, SCR must log an error message containing the
         // exception with the Log Service and continue) has already been logged
-        m_deactivateMethod.invoke( implementationObject, new ActivateMethod.ActivatorParameter( componentContext,
-            reason ), true );
+        final MethodResult result = m_deactivateMethod.invoke( implementationObject, new ActivatorParameter( componentContext,
+            reason ), null );
+        if (result != null && result.hasResult())
+        {
+            setServiceProperties(result.getResult(), true);
+        }
 
         // 2. Unbind any bound services
         Iterator it = getReversedDependencyManagers();
@@ -348,16 +360,13 @@ public class ImmediateComponentManager extends AbstractComponentManager
                 }
             }
 
-            // 3. overwrite as per ExtComponentContext.updateProperties
-            copyTo( props, m_propertiesOverwrite );
-
-            // 4. overlay with Configuration Admin properties
+            // 3. overlay with Configuration Admin properties
             copyTo( props, m_configurationProperties );
 
-            // 5. copy any component factory properties, not supported yet
+            // 4. copy any component factory properties, not supported yet
             copyTo( props, m_factoryProperties );
 
-            // 6. set component.name and component.id
+            // 5. set component.name and component.id
             props.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
             props.put( ComponentConstants.COMPONENT_ID, new Long( getId() ) );
 
@@ -368,17 +377,69 @@ public class ImmediateComponentManager extends AbstractComponentManager
     }
 
 
-    public void resetComponentProperties( Dictionary properties )
+    public void setServiceProperties(Map serviceProperties, boolean updateServiceRegistration)
     {
-        m_propertiesOverwrite = copyTo( null, properties );
-        m_properties = null;
-        Dictionary serviceProperties = getServiceProperties();
-        if ( getServiceRegistration() != null )
+        Dictionary serviceProps = (serviceProperties == null) ? null : new Hashtable(serviceProperties);
+        setServiceProperties(serviceProps, updateServiceRegistration);
+    }
+
+    public void setServiceProperties(Dictionary serviceProperties, boolean updateServiceRegistration)
+    {
+        if ( serviceProperties == null || serviceProperties.isEmpty() )
         {
-            getServiceRegistration().setProperties( serviceProperties );
+            m_serviceProperties = null;
+        }
+        else
+        {
+            m_serviceProperties = copyTo(null, serviceProperties);
+            // set component.name and component.id
+            m_serviceProperties.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
+            m_serviceProperties.put( ComponentConstants.COMPONENT_ID, new Long( getId() ) );
+        }
+
+        if (updateServiceRegistration)
+        {
+            updateServiceRegistration();
         }
     }
 
+    public Dictionary getServiceProperties() {
+        if ( m_serviceProperties != null )
+        {
+            return m_serviceProperties;
+        }
+        return super.getServiceProperties();
+    }
+
+    private void updateServiceRegistration()
+    {
+        ServiceRegistration sr = getServiceRegistration();
+        if (sr != null)
+        {
+            try
+            {
+                // Don't propagate if service properties did not change.
+                final Dictionary regProps = getServiceProperties();
+                if (!servicePropertiesMatches(sr, regProps))
+                {
+                    sr.setProperties(regProps);
+                }
+            }
+            catch (IllegalStateException ise)
+            {
+                // service has been unregistered asynchronously, ignore
+            }
+            catch (IllegalArgumentException iae)
+            {
+                log(LogService.LOG_ERROR,
+                    "Unexpected configuration property problem when updating service registration", iae);
+            }
+            catch (Throwable t)
+            {
+                log(LogService.LOG_ERROR, "Unexpected problem when updating service registration", t);
+            }
+        }
+    }
 
     /**
      * Called by the Configuration Admin Service to update the component with
@@ -487,14 +548,19 @@ public class ImmediateComponentManager extends AbstractComponentManager
         // invariant: modify method existing and no static bound service changes
 
         // 4. call method (nothing to do when failed, since it has already been logged)
-        if ( !m_modifyMethod.invoke( getInstance(), new ActivateMethod.ActivatorParameter( m_componentContext, -1 ),
-            true ) )
+        final MethodResult result = m_modifyMethod.invoke(getInstance(),
+            new ActivatorParameter(m_componentContext, -1), null);
+        if (result == null)
         {
             // log an error if the declared method cannot be found
             log( LogService.LOG_ERROR, "Declared modify method ''{0}'' cannot be found, configuring by reactivation",
                 new Object[]
                     { getComponentMetadata().getModified() }, null );
             return false;
+        }
+        else if (result.hasResult())
+        {
+            setServiceProperties(result.getResult(), false);
         }
 
         // 5. update the target filter on the services now, this may still
@@ -510,34 +576,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
         }
 
         // 6. update service registration properties
-        ServiceRegistration sr = getServiceRegistration();
-        if ( sr != null )
-        {
-            try
-            {
-                // Don't propagate if service properties did not change.
-                final Dictionary regProps = getServiceProperties();
-                if ( !servicePropertiesMatches( sr, regProps ) )
-                {
-                    sr.setProperties( regProps );
-                }
-            }
-            catch ( IllegalStateException ise )
-            {
-                // service has been unregistered asynchronously, ignore
-            }
-            catch ( IllegalArgumentException iae )
-            {
-                log( LogService.LOG_ERROR,
-                    "Unexpected configuration property problem when updating service registration",
-                    iae );
-            }
-            catch ( Throwable t )
-            {
-                log( LogService.LOG_ERROR, "Unexpected problem when updating service registration",
-                    t );
-            }
-        }
+        updateServiceRegistration();
 
         // 7. everything set and done, the component has been udpated
         return true;

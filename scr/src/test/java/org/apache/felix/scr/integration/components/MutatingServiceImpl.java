@@ -20,6 +20,8 @@ package org.apache.felix.scr.integration.components;
 
 
 import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
 
 import org.apache.felix.scr.component.ExtComponentContext;
 import org.osgi.service.component.ComponentContext;
@@ -39,8 +41,30 @@ public class MutatingServiceImpl implements MutatingService
 
     }
 
+    private Map activateMutate( ComponentContext activateContext )
+    {
+        this.activateContext = activateContext;
+        Map result = new Hashtable( (Map )activateContext.getProperties() );
+        result.put( "theValue", "anotherValue1");
+        return result;
+    }
+
+    private Map modifiedMutate( ComponentContext activateContext )
+    {
+        Map result = new Hashtable( (Map )activateContext.getProperties() );
+        result.put( "theValue", "anotherValue2");
+        return result;
+    }
+
+    private Map deactivateMutate( ComponentContext activateContext )
+    {
+        Map result = new Hashtable( (Map )activateContext.getProperties() );
+        result.put( "theValue", "anotherValue3");
+        return result;
+    }
+
     public void updateProperties(Dictionary changes) {
-        ((ExtComponentContext)activateContext).updateProperties(changes);
+        ((ExtComponentContext)activateContext).setServiceProperties(changes);
     }
 
 }
