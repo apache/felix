@@ -1528,8 +1528,11 @@ public class ResolverImpl implements Resolver
                 if ((cands != null) && (cands.size() > 0))
                 {
                     Capability cand = cands.get(0);
-                    // Ignore resources that import themselves.
-                    if (!resource.equals(cand.getResource()))
+                    // Do not create wires for the osgi.wiring.* namespaces
+                    // if the provider and requirer are the same resource;
+                    // allow such wires for non-OSGi wiring namespaces.
+                    if (!cand.getNamespace().startsWith("osgi.wiring.")
+                        || !resource.equals(cand.getResource()))
                     {
                         if (!rc.getWirings().containsKey(cand.getResource()))
                         {
