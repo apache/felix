@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,14 @@ package org.osgi.framework;
  * syntax.
  * 
  * <p>
- * An {@code InvalidSyntaxException} object indicates that a filter
- * string parameter has an invalid syntax and cannot be parsed. See
- * {@link Filter} for a description of the filter string syntax.
+ * An {@code InvalidSyntaxException} object indicates that a filter string
+ * parameter has an invalid syntax and cannot be parsed. See {@link Filter} for
+ * a description of the filter string syntax.
  * 
  * <p>
  * This exception conforms to the general purpose exception chaining mechanism.
  * 
- * @version $Id: adb84e3bc0b82b842e4da84542057fdf53e2ca6a $
+ * @version $Id: 8820ca2db85b557cef8da09ee861249dfb5ee914 $
  */
 
 public class InvalidSyntaxException extends Exception {
@@ -42,15 +42,14 @@ public class InvalidSyntaxException extends Exception {
 	 * Creates an exception of type {@code InvalidSyntaxException}.
 	 * 
 	 * <p>
-	 * This method creates an {@code InvalidSyntaxException} object with
-	 * the specified message and the filter string which generated the
-	 * exception.
+	 * This method creates an {@code InvalidSyntaxException} object with the
+	 * specified message and the filter string which generated the exception.
 	 * 
 	 * @param msg The message.
 	 * @param filter The invalid filter string.
 	 */
 	public InvalidSyntaxException(String msg, String filter) {
-		super(msg);
+		super(message(msg, filter));
 		this.filter = filter;
 	}
 
@@ -58,9 +57,8 @@ public class InvalidSyntaxException extends Exception {
 	 * Creates an exception of type {@code InvalidSyntaxException}.
 	 * 
 	 * <p>
-	 * This method creates an {@code InvalidSyntaxException} object with
-	 * the specified message and the filter string which generated the
-	 * exception.
+	 * This method creates an {@code InvalidSyntaxException} object with the
+	 * specified message and the filter string which generated the exception.
 	 * 
 	 * @param msg The message.
 	 * @param filter The invalid filter string.
@@ -68,8 +66,18 @@ public class InvalidSyntaxException extends Exception {
 	 * @since 1.3
 	 */
 	public InvalidSyntaxException(String msg, String filter, Throwable cause) {
-		super(msg, cause);
+		super(message(msg, filter), cause);
 		this.filter = filter;
+	}
+
+	/**
+	 * Return message string for super constructor.
+	 */
+	private static String message(String msg, String filter) {
+		if ((msg == null) || (filter == null) || msg.indexOf(filter) >= 0) {
+			return msg;
+		}
+		return msg + ": " + filter;
 	}
 
 	/**
@@ -77,7 +85,8 @@ public class InvalidSyntaxException extends Exception {
 	 * {@code InvalidSyntaxException} object.
 	 * 
 	 * @return The invalid filter string.
-	 * @see BundleContext#getServiceReferences
+	 * @see BundleContext#getServiceReferences(Class, String)
+	 * @see BundleContext#getServiceReferences(String, String)
 	 * @see BundleContext#addServiceListener(ServiceListener,String)
 	 */
 	public String getFilter() {
@@ -85,11 +94,9 @@ public class InvalidSyntaxException extends Exception {
 	}
 
 	/**
-	 * Returns the cause of this exception or {@code null} if no cause was
-	 * set.
+	 * Returns the cause of this exception or {@code null} if no cause was set.
 	 * 
-	 * @return The cause of this exception or {@code null} if no cause was
-	 *         set.
+	 * @return The cause of this exception or {@code null} if no cause was set.
 	 * @since 1.3
 	 */
 	public Throwable getCause() {

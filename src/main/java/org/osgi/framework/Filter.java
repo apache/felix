@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.osgi.framework;
 
 import java.util.Dictionary;
@@ -21,8 +22,9 @@ import java.util.Map;
 /**
  * An <a href="http://www.ietf.org/rfc/rfc1960.txt">RFC 1960</a>-based Filter.
  * <p>
- * {@code Filter}s can be created by calling {@link BundleContext#createFilter}
- * or {@link FrameworkUtil#createFilter} with a filter string.
+ * {@code Filter}s can be created by calling
+ * {@link BundleContext#createFilter(String)} or
+ * {@link FrameworkUtil#createFilter(String)} with a filter string.
  * <p>
  * A {@code Filter} can be used numerous times to determine if the match
  * argument matches the filter string that was used to create the {@code Filter}.
@@ -40,7 +42,7 @@ import java.util.Map;
  * @see "Core Specification, Filters, for a description of the filter string syntax."
  * @ThreadSafe
  * @noimplement
- * @version $Id: 4d21267f4b85d1912d73f7e2c049cc968c4237f9 $
+ * @version $Id: 807a04ac07c3230b8f4d4e0f9588a35fbdc41e18 $
  */
 public interface Filter {
 	/**
@@ -55,7 +57,7 @@ public interface Filter {
 	 * @return {@code true} if the service's properties match this
 	 *         {@code Filter}; {@code false} otherwise.
 	 */
-	boolean match(ServiceReference< ? > reference);
+	boolean match(ServiceReference<?> reference);
 
 	/**
 	 * Filter using a {@code Dictionary} with case insensitive key lookup. This
@@ -69,7 +71,7 @@ public interface Filter {
 	 * @throws IllegalArgumentException If {@code dictionary} contains case
 	 *         variants of the same key name.
 	 */
-	boolean match(Dictionary<String, ? > dictionary);
+	boolean match(Dictionary<String, ?> dictionary);
 
 	/**
 	 * Returns this {@code Filter}'s filter string.
@@ -89,9 +91,8 @@ public interface Filter {
 	 * {@code this.toString().equals(obj.toString())}.
 	 * 
 	 * @param obj The object to compare against this {@code Filter}.
-	 * @return If the other object is a {@code Filter} object, then returns
-	 *         the result of calling
-	 *         {@code this.toString().equals(obj.toString())};
+	 * @return If the other object is a {@code Filter} object, then returns the
+	 *         result of calling {@code this.toString().equals(obj.toString())};
 	 *         {@code false} otherwise.
 	 */
 	boolean equals(Object obj);
@@ -118,7 +119,7 @@ public interface Filter {
 	 *         filter; {@code false} otherwise.
 	 * @since 1.3
 	 */
-	boolean matchCase(Dictionary<String, ? > dictionary);
+	boolean matchCase(Dictionary<String, ?> dictionary);
 
 	/**
 	 * Filter using a {@code Map}. This {@code Filter} is executed using the
@@ -132,5 +133,5 @@ public interface Filter {
 	 *         {@code false} otherwise.
 	 * @since 1.6
 	 */
-	boolean matches(Map<String, ? > map);
+	boolean matches(Map<String, ?> map);
 }

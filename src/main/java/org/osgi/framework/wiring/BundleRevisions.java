@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.osgi.framework.wiring;
 
 import java.util.List;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
 
@@ -38,7 +37,7 @@ import org.osgi.framework.BundleReference;
  * 
  * @ThreadSafe
  * @noimplement
- * @version $Id: 1d95ad10f0f08b100f8ee2485bdd34120032c7af $
+ * @version $Id: 8423242078417873faf0f8979e153e3c1f3a0e4b $
  */
 public interface BundleRevisions extends BundleReference {
 	/**

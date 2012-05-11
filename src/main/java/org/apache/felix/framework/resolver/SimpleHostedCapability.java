@@ -33,6 +33,11 @@ class SimpleHostedCapability implements HostedCapability
         m_cap = cap;
     }
 
+    public BundleRevision getResource()
+    {
+        return m_host;
+    }
+
     public BundleRevision getRevision()
     {
         return m_host;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2002, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2002, 2011). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import org.osgi.framework.FrameworkListener;
  * 
  * @ThreadSafe
  * @noimplement
- * @version $Id: 2bca22671674ba50b8c6801d5d1df8e291fe2a9d $
+ * @version $Id: 12c6f60842df994c7de2cc3cfd02f791b95fc35b $
  */
 public interface FrameworkStartLevel extends BundleReference {
 	/**
@@ -126,7 +126,7 @@ public interface FrameworkStartLevel extends BundleReference {
 	 * is first installed.
 	 * 
 	 * @return The initial start level value for Bundles.
-	 * @see #setInitialBundleStartLevel
+	 * @see #setInitialBundleStartLevel(int)
 	 */
 	int getInitialBundleStartLevel();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2011). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.osgi.framework.hooks.weaving;
 
 import java.security.ProtectionDomain;
 import java.util.List;
-
 import org.osgi.framework.wiring.BundleWiring;
 
 /**
@@ -35,7 +34,7 @@ import org.osgi.framework.wiring.BundleWiring;
  * 
  * @NotThreadSafe
  * @noimplement
- * @version $Id: c689a4c27dc39af1bf5f51338f1a8eaca1dddc1a $
+ * @version $Id: 549caef41027c8f0d0fdb4deae756eae6b69d1ee $
  */
 public interface WovenClass {
 
@@ -138,15 +137,16 @@ public interface WovenClass {
 	public ProtectionDomain getProtectionDomain();
 
 	/**
-	 * Returns the class associated with this woven class. When loading a class
-	 * for the first time this method will return {@code null} until weaving is
-	 * {@link #isWeavingComplete() complete}. Once weaving is complete, this
-	 * method will return the class object.
+	 * Returns the class defined by this woven class. During weaving, this
+	 * method will return {@code null}. Once weaving is
+	 * {@link #isWeavingComplete() complete}, this method will return the class
+	 * object if this woven class was used to define the class.
 	 * 
 	 * @return The class associated with this woven class, or {@code null} if
-	 *         weaving is not complete or the class definition failed.
+	 *         weaving is not complete, the class definition failed or this
+	 *         woven class was not used to define the class.
 	 */
-	public Class< ? > getDefinedClass();
+	public Class<?> getDefinedClass();
 
 	/**
 	 * Returns the bundle wiring whose class loader will define the woven class.

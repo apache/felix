@@ -1,6 +1,6 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2011). All Rights Reserved.
- * 
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,6 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-
 import org.osgi.framework.wiring.FrameworkWiring;
 
 /**
@@ -59,9 +58,9 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * 
  * <p>
  * A bundle should only have active threads of execution when its state is one
- * of {@code STARTING},{@code ACTIVE}, or {@code STOPPING}. An {@code
- * UNINSTALLED} bundle can not be set to another state; it is a zombie and can
- * only be reached because references are kept somewhere.
+ * of {@code STARTING},{@code ACTIVE}, or {@code STOPPING}. An
+ * {@code UNINSTALLED} bundle can not be set to another state; it is a zombie
+ * and can only be reached because references are kept somewhere.
  * 
  * <p>
  * The Framework is the only entity that is allowed to create {@code Bundle}
@@ -76,7 +75,7 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * 
  * @ThreadSafe
  * @noimplement
- * @version $Id: 239108e8d54ff493587b9cdfe1688bdefc5a714c $
+ * @version $Id: 8a58ab72af389b1999b88348e4944203b7096510 $
  */
 public interface Bundle extends Comparable<Bundle> {
 	/**
@@ -139,9 +138,9 @@ public interface Bundle extends Comparable<Bundle> {
 	 * <p>
 	 * A bundle is in the {@code STARTING} state when its {@link #start(int)
 	 * start} method is active. A bundle must be in this state when the bundle's
-	 * {@link BundleActivator#start} is called. If the {@code
-	 * BundleActivator.start} method completes without exception, then the
-	 * bundle has successfully started and must move to the {@code ACTIVE}
+	 * {@link BundleActivator#start(BundleContext)} is called. If the
+	 * {@code BundleActivator.start} method completes without exception, then
+	 * the bundle has successfully started and must move to the {@code ACTIVE}
 	 * state.
 	 * <p>
 	 * If the bundle has a {@link Constants#ACTIVATION_LAZY lazy activation
@@ -158,9 +157,9 @@ public interface Bundle extends Comparable<Bundle> {
 	 * <p>
 	 * A bundle is in the {@code STOPPING} state when its {@link #stop(int)
 	 * stop} method is active. A bundle must be in this state when the bundle's
-	 * {@link BundleActivator#stop} method is called. When the {@code
-	 * BundleActivator.stop} method completes the bundle is stopped and must
-	 * move to the {@code RESOLVED} state.
+	 * {@link BundleActivator#stop(BundleContext)} method is called. When the
+	 * {@code BundleActivator.stop} method completes the bundle is stopped and
+	 * must move to the {@code RESOLVED} state.
 	 * <p>
 	 * The value of {@code STOPPING} is 0x00000010.
 	 */
@@ -312,8 +311,8 @@ public interface Bundle extends Comparable<Bundle> {
 	 * 
 	 * <li>A bundle event of type {@link BundleEvent#STARTING} is fired.
 	 * 
-	 * <li>The {@link BundleActivator#start} method of this bundle's
-	 * {@code BundleActivator}, if one is specified, is called. If the
+	 * <li>The {@link BundleActivator#start(BundleContext)} method of this
+	 * bundle's {@code BundleActivator}, if one is specified, is called. If the
 	 * {@code BundleActivator} is invalid or throws an exception then:
 	 * <ul>
 	 * <li>This bundle's state is set to {@code STOPPING}.
@@ -425,11 +424,11 @@ public interface Bundle extends Comparable<Bundle> {
 	 * <li>A bundle event of type {@link BundleEvent#STOPPING} is fired.
 	 * 
 	 * <li>If this bundle's state was {@code ACTIVE} prior to setting the state
-	 * to {@code STOPPING}, the {@link BundleActivator#stop} method of this
-	 * bundle's {@code BundleActivator}, if one is specified, is called. If that
-	 * method throws an exception, this method must continue to stop this bundle
-	 * and a {@code BundleException} must be thrown after completion of the
-	 * remaining steps.
+	 * to {@code STOPPING}, the {@link BundleActivator#stop(BundleContext)}
+	 * method of this bundle's {@code BundleActivator}, if one is specified, is
+	 * called. If that method throws an exception, this method must continue to
+	 * stop this bundle and a {@code BundleException} must be thrown after
+	 * completion of the remaining steps.
 	 * 
 	 * <li>Any services registered by this bundle must be unregistered.
 	 * <li>Any services used by this bundle must be released.
@@ -748,10 +747,10 @@ public interface Bundle extends Comparable<Bundle> {
 	 * Returns this bundle's location identifier.
 	 * 
 	 * <p>
-	 * The location identifier is the location passed to {@code
-	 * BundleContext.installBundle} when a bundle is installed. The location
-	 * identifier does not change while this bundle remains installed, even if
-	 * this bundle is updated.
+	 * The location identifier is the location passed to
+	 * {@code BundleContext.installBundle} when a bundle is installed. The
+	 * location identifier does not change while this bundle remains installed,
+	 * even if this bundle is updated.
 	 * 
 	 * <p>
 	 * This method must continue to return this bundle's location identifier
@@ -785,7 +784,7 @@ public interface Bundle extends Comparable<Bundle> {
 	 * @see ServiceReference
 	 * @see ServicePermission
 	 */
-	ServiceReference< ? >[] getRegisteredServices();
+	ServiceReference<?>[] getRegisteredServices();
 
 	/**
 	 * Returns this bundle's {@code ServiceReference} list for all services it
@@ -794,10 +793,11 @@ public interface Bundle extends Comparable<Bundle> {
 	 * for that service is greater than zero.
 	 * 
 	 * <p>
-	 * If the Java Runtime Environment supports permissions, a {@code
-	 * ServiceReference} object to a service is included in the returned list
-	 * only if the caller has the {@code ServicePermission} to get the service
-	 * using at least one of the named classes the service was registered under.
+	 * If the Java Runtime Environment supports permissions, a
+	 * {@code ServiceReference} object to a service is included in the returned
+	 * list only if the caller has the {@code ServicePermission} to get the
+	 * service using at least one of the named classes the service was
+	 * registered under.
 	 * <p>
 	 * The list is valid at the time of the call to this method, however, as the
 	 * Framework is a very dynamic environment, services can be modified or
@@ -808,7 +808,7 @@ public interface Bundle extends Comparable<Bundle> {
 	 * @see ServiceReference
 	 * @see ServicePermission
 	 */
-	ServiceReference< ? >[] getServicesInUse();
+	ServiceReference<?>[] getServicesInUse();
 
 	/**
 	 * Determines if this bundle has the specified permissions.
@@ -832,8 +832,8 @@ public interface Bundle extends Comparable<Bundle> {
 	 * @return {@code true} if this bundle has the specified permission or the
 	 *         permissions possessed by this bundle imply the specified
 	 *         permission; {@code false} if this bundle does not have the
-	 *         specified permission or {@code permission} is not an {@code
-	 *         instanceof} {@code java.security.Permission}.
+	 *         specified permission or {@code permission} is not an
+	 *         {@code instanceof} {@code java.security.Permission}.
 	 * @throws IllegalStateException If this bundle has been uninstalled.
 	 */
 	boolean hasPermission(Object permission);
@@ -857,12 +857,12 @@ public interface Bundle extends Comparable<Bundle> {
 	 *        for a description of the format of a resource name.
 	 * @return A URL to the named resource, or {@code null} if the resource
 	 *         could not be found or if this bundle is a fragment bundle or if
-	 *         the caller does not have the appropriate {@code
-	 *         AdminPermission[this,RESOURCE]}, and the Java Runtime Environment
-	 *         supports permissions.
+	 *         the caller does not have the appropriate
+	 *         {@code AdminPermission[this,RESOURCE]}, and the Java Runtime
+	 *         Environment supports permissions.
 	 * @throws IllegalStateException If this bundle has been uninstalled.
-	 * @see #getEntry
-	 * @see #findEntries
+	 * @see #getEntry(String)
+	 * @see #findEntries(String, String, boolean)
 	 * @since 1.1
 	 */
 	URL getResource(String name);
@@ -926,10 +926,10 @@ public interface Bundle extends Comparable<Bundle> {
 	Dictionary<String, String> getHeaders(String locale);
 
 	/**
-	 * Returns the symbolic name of this bundle as specified by its {@code
-	 * Bundle-SymbolicName} manifest header. The bundle symbolic name should be
-	 * based on the reverse domain name naming convention like that used for
-	 * java packages.
+	 * Returns the symbolic name of this bundle as specified by its
+	 * {@code Bundle-SymbolicName} manifest header. The bundle symbolic name
+	 * should be based on the reverse domain name naming convention like that
+	 * used for java packages.
 	 * 
 	 * <p>
 	 * This method must continue to return this bundle's symbolic name while
@@ -945,8 +945,8 @@ public interface Bundle extends Comparable<Bundle> {
 	 * Loads the specified class using this bundle's class loader.
 	 * 
 	 * <p>
-	 * If this bundle is a fragment bundle then this method must throw a {@code
-	 * ClassNotFoundException}.
+	 * If this bundle is a fragment bundle then this method must throw a
+	 * {@code ClassNotFoundException}.
 	 * 
 	 * <p>
 	 * If this bundle's state is {@code INSTALLED}, this method must attempt to
@@ -954,13 +954,13 @@ public interface Bundle extends Comparable<Bundle> {
 	 * 
 	 * <p>
 	 * If this bundle cannot be resolved, a Framework event of type
-	 * {@link FrameworkEvent#ERROR} is fired containing a {@code
-	 * BundleException} with details of the reason this bundle could not be
-	 * resolved. This method must then throw a {@code ClassNotFoundException}.
+	 * {@link FrameworkEvent#ERROR} is fired containing a
+	 * {@code BundleException} with details of the reason this bundle could not
+	 * be resolved. This method must then throw a {@code ClassNotFoundException}.
 	 * 
 	 * <p>
-	 * If this bundle's state is {@code UNINSTALLED}, then an {@code
-	 * IllegalStateException} is thrown.
+	 * If this bundle's state is {@code UNINSTALLED}, then an
+	 * {@code IllegalStateException} is thrown.
 	 * 
 	 * @param name The name of the class to load.
 	 * @return The Class object for the requested class.
@@ -971,7 +971,7 @@ public interface Bundle extends Comparable<Bundle> {
 	 * @throws IllegalStateException If this bundle has been uninstalled.
 	 * @since 1.3
 	 */
-	Class< ? > loadClass(String name) throws ClassNotFoundException;
+	Class<?> loadClass(String name) throws ClassNotFoundException;
 
 	/**
 	 * Find the specified resources from this bundle's class loader.
@@ -988,14 +988,14 @@ public interface Bundle extends Comparable<Bundle> {
 	 * URLs to directory entries will not be returned if the bundle contents do
 	 * not contain directory entries.
 	 * 
-	 * @param name The name of the resource. See {@code
-	 *        ClassLoader.getResources} for a description of the format of a
-	 *        resource name.
+	 * @param name The name of the resource. See
+	 *        {@code ClassLoader.getResources} for a description of the format
+	 *        of a resource name.
 	 * @return An enumeration of URLs to the named resources, or {@code null} if
 	 *         the resource could not be found or if this bundle is a fragment
-	 *         bundle or if the caller does not have the appropriate {@code
-	 *         AdminPermission[this,RESOURCE]}, and the Java Runtime Environment
-	 *         supports permissions.
+	 *         bundle or if the caller does not have the appropriate
+	 *         {@code AdminPermission[this,RESOURCE]}, and the Java Runtime
+	 *         Environment supports permissions.
 	 * @throws IllegalStateException If this bundle has been uninstalled.
 	 * @throws IOException If there is an I/O error.
 	 * @since 1.3
@@ -1045,9 +1045,9 @@ public interface Bundle extends Comparable<Bundle> {
 	 * 
 	 * @param path The path name of the entry.
 	 * @return A URL to the entry, or {@code null} if no entry could be found or
-	 *         if the caller does not have the appropriate {@code
-	 *         AdminPermission[this,RESOURCE]} and the Java Runtime Environment
-	 *         supports permissions.
+	 *         if the caller does not have the appropriate
+	 *         {@code AdminPermission[this,RESOURCE]} and the Java Runtime
+	 *         Environment supports permissions.
 	 * @throws IllegalStateException If this bundle has been uninstalled.
 	 * @since 1.3
 	 */
@@ -1059,7 +1059,7 @@ public interface Bundle extends Comparable<Bundle> {
 	 * 
 	 * <p>
 	 * The time value is the number of milliseconds since January 1, 1970,
-	 * 00:00:00 GMT.
+	 * 00:00:00 UTC.
 	 * 
 	 * @return The time when this bundle was last modified.
 	 * @since 1.3
@@ -1078,7 +1078,7 @@ public interface Bundle extends Comparable<Bundle> {
 	 * This method is intended to be used to obtain configuration, setup,
 	 * localization and other information from this bundle. This method takes
 	 * into account that the &quot;contents&quot; of this bundle can be extended
-	 * with fragments. This &quot;bundle space&quot; is not a name space with
+	 * with fragments. This &quot;bundle space&quot; is not a namespace with
 	 * unique members; the same entry name can be present multiple times. This
 	 * method therefore returns an enumeration of URL objects. These URLs can
 	 * come from different JARs but have the same path name. This method can
@@ -1096,12 +1096,14 @@ public interface Bundle extends Comparable<Bundle> {
 	 * Enumeration e = b.findEntries(&quot;OSGI-INF&quot;, &quot;*.xml&quot;, true);
 	 * 
 	 * // Find a specific localization file
-	 * Enumeration e = b
-	 * 		.findEntries(&quot;OSGI-INF/l10n&quot;, &quot;bundle_nl_DU.properties&quot;, false);
+	 * Enumeration e = b.findEntries(&quot;OSGI-INF/l10n&quot;,
+	 *     &quot;bundle_nl_DU.properties&quot;, false);
 	 * if (e.hasMoreElements())
-	 * 	return (URL) e.nextElement();
+	 *     return (URL) e.nextElement();
 	 * </pre>
 	 * 
+	 * <p>
+	 * URLs for directory entries must have their path end with &quot;/&quot;.
 	 * <p>
 	 * Note: Jar and zip files are not required to include directory entries.
 	 * URLs to directory entries will not be returned if the bundle contents do
@@ -1121,8 +1123,8 @@ public interface Bundle extends Comparable<Bundle> {
 	 * @param recurse If {@code true}, recurse into subdirectories. Otherwise
 	 *        only return entries from the specified path.
 	 * @return An enumeration of URL objects for each matching entry, or
-	 *         {@code null} if no matching entry could not be found or if the
-	 *         caller does not have the appropriate
+	 *         {@code null} if no matching entry could be found or if the caller
+	 *         does not have the appropriate
 	 *         {@code AdminPermission[this,RESOURCE]}, and the Java Runtime
 	 *         Environment supports permissions. The URLs are sorted such that
 	 *         entries from this bundle are returned first followed by the
@@ -1132,12 +1134,12 @@ public interface Bundle extends Comparable<Bundle> {
 	 * @throws IllegalStateException If this bundle has been uninstalled.
 	 * @since 1.3
 	 */
-	Enumeration<URL> findEntries(String path, String filePattern,
-			boolean recurse);
+	Enumeration<URL> findEntries(String path, String filePattern, boolean recurse);
 
 	/**
-	 * Returns this bundle's {@link BundleContext}. The returned {@code
-	 * BundleContext} can be used by the caller to act on behalf of this bundle.
+	 * Returns this bundle's {@link BundleContext}. The returned
+	 * {@code BundleContext} can be used by the caller to act on behalf of this
+	 * bundle.
 	 * 
 	 * <p>
 	 * If this bundle is not in the {@link #STARTING}, {@link #ACTIVE}, or
@@ -1176,13 +1178,12 @@ public interface Bundle extends Comparable<Bundle> {
 	 *         not {@link #SIGNERS_ALL} or {@link #SIGNERS_TRUSTED}.
 	 * @since 1.5
 	 */
-	Map<X509Certificate, List<X509Certificate>> getSignerCertificates(
-			int signersType);
+	Map<X509Certificate, List<X509Certificate>> getSignerCertificates(int signersType);
 
 	/**
-	 * Returns the version of this bundle as specified by its {@code
-	 * Bundle-Version} manifest header. If this bundle does not have a specified
-	 * version then {@link Version#emptyVersion} is returned.
+	 * Returns the version of this bundle as specified by its
+	 * {@code Bundle-Version} manifest header. If this bundle does not have a
+	 * specified version then {@link Version#emptyVersion} is returned.
 	 * 
 	 * <p>
 	 * This method must continue to return this bundle's version while this

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLStreamHandler;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,8 +42,11 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+import org.osgi.resource.Resource;
 
-public class BundleRevisionImpl implements BundleRevision
+public class BundleRevisionImpl implements BundleRevision, Resource
 {
     public final static int EAGER_ACTIVATION = 0;
     public final static int LAZY_ACTIVATION = 1;
@@ -189,6 +191,16 @@ public class BundleRevisionImpl implements BundleRevision
         return m_version;
     }
 
+    public List<Capability> getCapabilities(String namespace)
+    {
+        return asCapabilityList(getDeclaredCapabilities(namespace));
+    }
+
+    static List<Capability> asCapabilityList(List reqs)
+    {
+        return (List<Capability>) reqs;
+    }
+
     public List<BundleCapability> getDeclaredCapabilities(String namespace)
     {
         List<BundleCapability> result = m_declaredCaps;
@@ -204,6 +216,16 @@ public class BundleRevisionImpl implements BundleRevision
             }
         }
         return result;
+    }
+
+    public List<Requirement> getRequirements(String namespace)
+    {
+        return asRequirementList(getDeclaredRequirements(namespace));
+    }
+
+    static List<Requirement> asRequirementList(List reqs)
+    {
+        return (List<Requirement>) reqs;
     }
 
     public List<BundleRequirement> getDeclaredRequirements(String namespace)

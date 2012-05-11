@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2002, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2002, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,19 +23,17 @@ import java.net.*;
  * {@code java.net.URLStreamHandler} methods.
  * <p>
  * The important differences between this interface and the
- * {@code URLStreamHandler} class are that the {@code setURL}
- * method is absent and the {@code parseURL} method takes a
- * {@link URLStreamHandlerSetter} object as the first argument. Classes
- * implementing this interface must call the {@code setURL} method on the
- * {@code URLStreamHandlerSetter} object received in the
- * {@code parseURL} method instead of
- * {@code URLStreamHandler.setURL} to avoid a
- * {@code SecurityException}.
+ * {@code URLStreamHandler} class are that the {@code setURL} method is absent
+ * and the {@code parseURL} method takes a {@link URLStreamHandlerSetter} object
+ * as the first argument. Classes implementing this interface must call the
+ * {@code setURL} method on the {@code URLStreamHandlerSetter} object received
+ * in the {@code parseURL} method instead of {@code URLStreamHandler.setURL} to
+ * avoid a {@code SecurityException}.
  * 
  * @see AbstractURLStreamHandlerService
  * 
  * @ThreadSafe
- * @version $Id: 4982ef5b407669975afe2856a9702246d2d9c2ba $
+ * @version $Id: 4a453f61b9acdc6449df389b2a0538d0ccb33ed2 $
  */
 public interface URLStreamHandlerService {
 	/**
@@ -44,16 +42,15 @@ public interface URLStreamHandlerService {
 	public URLConnection openConnection(URL u) throws java.io.IOException;
 
 	/**
-	 * Parse a URL. This method is called by the {@code URLStreamHandler}
-	 * proxy, instead of {@code java.net.URLStreamHandler.parseURL},
-	 * passing a {@code URLStreamHandlerSetter} object.
+	 * Parse a URL. This method is called by the {@code URLStreamHandler} proxy,
+	 * instead of {@code java.net.URLStreamHandler.parseURL}, passing a
+	 * {@code URLStreamHandlerSetter} object.
 	 * 
-	 * @param realHandler The object on which {@code setURL} must be
-	 *        invoked for this URL.
+	 * @param realHandler The object on which {@code setURL} must be invoked for
+	 *        this URL.
 	 * @see "java.net.URLStreamHandler.parseURL"
 	 */
-	public void parseURL(URLStreamHandlerSetter realHandler, URL u,
-			String spec, int start, int limit);
+	public void parseURL(URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit);
 
 	/**
 	 * @see "java.net.URLStreamHandler.toExternalForm"

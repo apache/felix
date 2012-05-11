@@ -68,6 +68,9 @@ import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
+import org.osgi.resource.Wire;
 
 public class BundleWiringImpl implements BundleWiring
 {
@@ -496,6 +499,11 @@ public class BundleWiringImpl implements BundleWiring
         return !m_isDisposed;
     }
 
+    public List<Capability> getResourceCapabilities(String namespace)
+    {
+        return BundleRevisionImpl.asCapabilityList(getCapabilities(namespace));
+    }
+
     public List<BundleCapability> getCapabilities(String namespace)
     {
         if (isInUse())
@@ -515,6 +523,11 @@ public class BundleWiringImpl implements BundleWiring
             return result;
         }
         return null;
+    }
+
+    public List<Requirement> getResourceRequirements(String namespace)
+    {
+        return BundleRevisionImpl.asRequirementList(getRequirements(namespace));
     }
 
     public List<BundleRequirement> getRequirements(String namespace)
@@ -553,6 +566,16 @@ public class BundleWiringImpl implements BundleWiring
         return m_resolvedNativeLibs;
     }
 
+    private static List<Wire> asWireList(List wires)
+    {
+        return (List<Wire>) wires;
+    }
+
+    public List<Wire> getProvidedResourceWires(String namespace)
+    {
+        return asWireList(getProvidedWires(namespace));
+    }
+
     public List<BundleWire> getProvidedWires(String namespace)
     {
         if (isInUse())
@@ -561,6 +584,11 @@ public class BundleWiringImpl implements BundleWiring
                 .getFramework().getDependencies().getProvidedWires(m_revision, namespace);
         }
         return null;
+    }
+
+    public List<Wire> getRequiredResourceWires(String namespace)
+    {
+        return asWireList(getRequiredWires(namespace));
     }
 
     public List<BundleWire> getRequiredWires(String namespace)
@@ -601,6 +629,11 @@ public class BundleWiringImpl implements BundleWiring
         // to cause any issues.
         m_wires = ImmutableList.newInstance(wires);
         m_importedPkgs = importedPkgs;
+    }
+
+    public BundleRevision getResource()
+    {
+        return null;
     }
 
     public BundleRevision getRevision()
