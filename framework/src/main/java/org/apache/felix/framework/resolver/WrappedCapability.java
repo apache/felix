@@ -20,6 +20,7 @@ import java.util.Map;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.resource.Resource;
 
 public class WrappedCapability extends BundleCapabilityImpl implements HostedCapability
 {
@@ -68,6 +69,12 @@ public class WrappedCapability extends BundleCapabilityImpl implements HostedCap
     public BundleCapability getDeclaredCapability()
     {
         return m_cap;
+    }
+
+    @Override
+    public BundleRevision getResource()
+    {
+        return m_host;
     }
 
     @Override

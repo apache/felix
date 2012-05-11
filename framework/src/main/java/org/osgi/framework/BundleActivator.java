@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,20 +19,19 @@ package org.osgi.framework;
 /**
  * Customizes the starting and stopping of a bundle.
  * <p>
- * {@code BundleActivator} is an interface that may be implemented when a
- * bundle is started or stopped. The Framework can create instances of a
- * bundle's {@code BundleActivator} as required. If an instance's
- * {@code BundleActivator.start} method executes successfully, it is
- * guaranteed that the same instance's {@code BundleActivator.stop}
- * method will be called when the bundle is to be stopped. The Framework must
- * not concurrently call a {@code BundleActivator} object.
+ * {@code BundleActivator} is an interface that may be implemented when a bundle
+ * is started or stopped. The Framework can create instances of a bundle's
+ * {@code BundleActivator} as required. If an instance's
+ * {@code BundleActivator.start} method executes successfully, it is guaranteed
+ * that the same instance's {@code BundleActivator.stop} method will be called
+ * when the bundle is to be stopped. The Framework must not concurrently call a
+ * {@code BundleActivator} object.
  * 
  * <p>
- * {@code BundleActivator} is specified through the
- * {@code Bundle-Activator} Manifest header. A bundle can only specify a
- * single {@code BundleActivator} in the Manifest file. Fragment bundles
- * must not have a {@code BundleActivator}. The form of the Manifest
- * header is:
+ * {@code BundleActivator} is specified through the {@code Bundle-Activator}
+ * Manifest header. A bundle can only specify a single {@code BundleActivator}
+ * in the Manifest file. Fragment bundles must not have a
+ * {@code BundleActivator}. The form of the Manifest header is:
  * 
  * <p>
  * {@code Bundle-Activator: <i>class-name</i>}
@@ -40,12 +39,12 @@ package org.osgi.framework;
  * <p>
  * where {@code <i>class-name</i>} is a fully qualified Java classname.
  * <p>
- * The specified {@code BundleActivator} class must have a public
- * constructor that takes no parameters so that a {@code BundleActivator}
- * object can be created by {@code Class.newInstance()}.
+ * The specified {@code BundleActivator} class must have a public constructor
+ * that takes no parameters so that a {@code BundleActivator} object can be
+ * created by {@code Class.newInstance()}.
  * 
  * @NotThreadSafe
- * @version $Id: 1b73057bd270ab07f0a16430dba16e5132eea24f $
+ * @version $Id: f5b2debe0064ab60669102d0a087feaeab13dc0e $
  */
 
 public interface BundleActivator {
@@ -59,29 +58,29 @@ public interface BundleActivator {
 	 * This method must complete and return to its caller in a timely manner.
 	 * 
 	 * @param context The execution context of the bundle being started.
-	 * @throws Exception If this method throws an exception, this
-	 *         bundle is marked as stopped and the Framework will remove this
-	 *         bundle's listeners, unregister all services registered by this
-	 *         bundle, and release all services used by this bundle.
+	 * @throws Exception If this method throws an exception, this bundle is
+	 *         marked as stopped and the Framework will remove this bundle's
+	 *         listeners, unregister all services registered by this bundle, and
+	 *         release all services used by this bundle.
 	 */
 	public void start(BundleContext context) throws Exception;
 
 	/**
 	 * Called when this bundle is stopped so the Framework can perform the
 	 * bundle-specific activities necessary to stop the bundle. In general, this
-	 * method should undo the work that the {@code BundleActivator.start}
-	 * method started. There should be no active threads that were started by
-	 * this bundle when this bundle returns. A stopped bundle must not call any
+	 * method should undo the work that the {@code BundleActivator.start} method
+	 * started. There should be no active threads that were started by this
+	 * bundle when this bundle returns. A stopped bundle must not call any
 	 * Framework objects.
 	 * 
 	 * <p>
 	 * This method must complete and return to its caller in a timely manner.
 	 * 
 	 * @param context The execution context of the bundle being stopped.
-	 * @throws Exception If this method throws an exception, the
-	 *         bundle is still marked as stopped, and the Framework will remove
-	 *         the bundle's listeners, unregister all services registered by the
-	 *         bundle, and release all services used by the bundle.
+	 * @throws Exception If this method throws an exception, the bundle is still
+	 *         marked as stopped, and the Framework will remove the bundle's
+	 *         listeners, unregister all services registered by the bundle, and
+	 *         release all services used by the bundle.
 	 */
 	public void stop(BundleContext context) throws Exception;
 }

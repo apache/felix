@@ -19,11 +19,11 @@
 package org.apache.felix.framework.wiring;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Collections;
-import java.util.Set;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.util.ImmutableMap;
@@ -32,6 +32,7 @@ import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.resource.Resource;
 
 public class BundleCapabilityImpl implements BundleCapability
 {
@@ -124,6 +125,11 @@ public class BundleCapabilityImpl implements BundleCapability
             }
         }
         m_mandatory = mandatory;
+    }
+
+    public BundleRevision getResource()
+    {
+        return m_revision;
     }
 
     public BundleRevision getRevision()

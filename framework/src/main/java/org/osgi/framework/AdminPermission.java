@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2011). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,34 +41,34 @@ import java.util.Map;
  * permission are:
  * 
  * <pre>
- *  Action               Methods
- *  class                Bundle.loadClass
- *  execute              Bundle.start
- *                       Bundle.stop
- *                       BundleStartLevel.setStartLevel
- *  extensionLifecycle   BundleContext.installBundle for extension bundles
- *                       Bundle.update for extension bundles
- *                       Bundle.uninstall for extension bundles
- *  lifecycle            BundleContext.installBundle
- *                       Bundle.update
- *                       Bundle.uninstall
- *  listener             BundleContext.addBundleListener for SynchronousBundleListener
- *                       BundleContext.removeBundleListener for SynchronousBundleListener
- *  metadata             Bundle.getHeaders
- *                       Bundle.getLocation
- *  resolve              FrameworkWiring.refreshBundles
- *                       FrameworkWiring.resolveBundles
- *  resource             Bundle.getResource
- *                       Bundle.getResources
- *                       Bundle.getEntry
- *                       Bundle.getEntryPaths
- *                       Bundle.findEntries
- *                       Bundle resource/entry URL creation
- *  startlevel           FrameworkStartLevel.setStartLevel
- *                       FrameworkStartLevel.setInitialBundleStartLevel 
- *  context              Bundle.getBundleContext
- *  weave                WovenClass.setBytes
- *                       WovenClass.getDynamicImports for modification
+ * Action             Methods
+ * class              Bundle.loadClass
+ * execute            Bundle.start
+ *                    Bundle.stop
+ *                    BundleStartLevel.setStartLevel
+ * extensionLifecycle BundleContext.installBundle for extension bundles
+ *                    Bundle.update for extension bundles
+ *                    Bundle.uninstall for extension bundles
+ * lifecycle          BundleContext.installBundle
+ *                    Bundle.update
+ *                    Bundle.uninstall
+ * listener           BundleContext.addBundleListener for SynchronousBundleListener
+ *                    BundleContext.removeBundleListener for SynchronousBundleListener
+ * metadata           Bundle.getHeaders
+ *                    Bundle.getLocation
+ * resolve            FrameworkWiring.refreshBundles
+ *                    FrameworkWiring.resolveBundles
+ * resource           Bundle.getResource
+ *                    Bundle.getResources
+ *                    Bundle.getEntry
+ *                    Bundle.getEntryPaths
+ *                    Bundle.findEntries
+ *                    Bundle resource/entry URL creation
+ * startlevel         FrameworkStartLevel.setStartLevel
+ *                    FrameworkStartLevel.setInitialBundleStartLevel
+ * context            Bundle.getBundleContext
+ * weave              WovenClass.setBytes
+ *                    WovenClass.getDynamicImports for modification
  * </pre>
  * 
  * <p>
@@ -89,78 +89,77 @@ import java.util.Map;
  * Filter attribute names are processed in a case sensitive manner.
  * 
  * @ThreadSafe
- * @version $Id: 43baf9a6d7ce5e6108507834e841e340fd91c513 $
+ * @version $Id: cd883e81fde210ce8f0cabaebea377378d672818 $
  */
 
 public final class AdminPermission extends BasicPermission {
-	static final long						serialVersionUID			= 307051004521261705L;
+	static final long								serialVersionUID			= 307051004521261705L;
 
 	/**
-	 * The action string {@code class}. The {@code class} action
-	 * implies the {@code resolve} action.
+	 * The action string {@code class}. The {@code class} action implies the
+	 * {@code resolve} action.
 	 * 
 	 * @since 1.3
 	 */
-	public final static String	CLASS						= "class";
+	public final static String						CLASS						= "class";
 	/**
-	 * The action string {@code execute}. The {@code execute} action
-	 * implies the {@code resolve} action.
+	 * The action string {@code execute}. The {@code execute} action implies the
+	 * {@code resolve} action.
 	 * 
 	 * @since 1.3
 	 */
-	public final static String	EXECUTE						= "execute";
+	public final static String						EXECUTE						= "execute";
 	/**
 	 * The action string {@code extensionLifecycle}.
 	 * 
 	 * @since 1.3
 	 */
-	public final static String	EXTENSIONLIFECYCLE			= "extensionLifecycle";
+	public final static String						EXTENSIONLIFECYCLE			= "extensionLifecycle";
 	/**
 	 * The action string {@code lifecycle}.
 	 * 
 	 * @since 1.3
 	 */
-	public final static String	LIFECYCLE					= "lifecycle";
+	public final static String						LIFECYCLE					= "lifecycle";
 	/**
 	 * The action string {@code listener}.
 	 * 
 	 * @since 1.3
 	 */
-	public final static String	LISTENER					= "listener";
+	public final static String						LISTENER					= "listener";
 	/**
 	 * The action string {@code metadata}.
 	 * 
 	 * @since 1.3
 	 */
-	public final static String	METADATA					= "metadata";
+	public final static String						METADATA					= "metadata";
 	/**
-	 * The action string {@code resolve}. The {@code resolve} action
-	 * is implied by the {@code class}, {@code execute} and
-	 * {@code resource} actions.
+	 * The action string {@code resolve}. The {@code resolve} action is implied
+	 * by the {@code class}, {@code execute} and {@code resource} actions.
 	 * 
 	 * @since 1.3
 	 */
-	public final static String	RESOLVE						= "resolve";
+	public final static String						RESOLVE						= "resolve";
 	/**
-	 * The action string {@code resource}. The {@code resource} action
-	 * implies the {@code resolve} action.
+	 * The action string {@code resource}. The {@code resource} action implies
+	 * the {@code resolve} action.
 	 * 
 	 * @since 1.3
 	 */
-	public final static String	RESOURCE					= "resource";
+	public final static String						RESOURCE					= "resource";
 	/**
 	 * The action string {@code startlevel}.
 	 * 
 	 * @since 1.3
 	 */
-	public final static String	STARTLEVEL					= "startlevel";
+	public final static String						STARTLEVEL					= "startlevel";
 
 	/**
 	 * The action string {@code context}.
 	 * 
 	 * @since 1.4
 	 */
-	public final static String	CONTEXT						= "context";
+	public final static String						CONTEXT						= "context";
 
 	/**
 	 * The action string {@code weave}.
@@ -169,52 +168,43 @@ public final class AdminPermission extends BasicPermission {
 	 */
 	public final static String						WEAVE						= "weave";
 
-	private final static int	ACTION_CLASS				= 0x00000001;
-	private final static int	ACTION_EXECUTE				= 0x00000002;
-	private final static int	ACTION_LIFECYCLE			= 0x00000004;
-	private final static int	ACTION_LISTENER				= 0x00000008;
-	private final static int	ACTION_METADATA				= 0x00000010;
-	private final static int	ACTION_RESOLVE				= 0x00000040;
-	private final static int	ACTION_RESOURCE				= 0x00000080;
-	private final static int	ACTION_STARTLEVEL			= 0x00000100;
-	private final static int	ACTION_EXTENSIONLIFECYCLE	= 0x00000200;
-	private final static int	ACTION_CONTEXT				= 0x00000400;
+	private final static int						ACTION_CLASS				= 0x00000001;
+	private final static int						ACTION_EXECUTE				= 0x00000002;
+	private final static int						ACTION_LIFECYCLE			= 0x00000004;
+	private final static int						ACTION_LISTENER				= 0x00000008;
+	private final static int						ACTION_METADATA				= 0x00000010;
+	private final static int						ACTION_RESOLVE				= 0x00000040;
+	private final static int						ACTION_RESOURCE				= 0x00000080;
+	private final static int						ACTION_STARTLEVEL			= 0x00000100;
+	private final static int						ACTION_EXTENSIONLIFECYCLE	= 0x00000200;
+	private final static int						ACTION_CONTEXT				= 0x00000400;
 	private final static int						ACTION_WEAVE				= 0x00000800;
-	private final static int	ACTION_ALL					= ACTION_CLASS
-																	| ACTION_EXECUTE
-																	| ACTION_LIFECYCLE
-																	| ACTION_LISTENER
-																	| ACTION_METADATA
-																	| ACTION_RESOLVE
-																	| ACTION_RESOURCE
-																	| ACTION_STARTLEVEL
-																	| ACTION_EXTENSIONLIFECYCLE
-																						| ACTION_CONTEXT
-																						| ACTION_WEAVE;
-	final static int						ACTION_NONE					= 0;
+	private final static int						ACTION_ALL					= ACTION_CLASS | ACTION_EXECUTE | ACTION_LIFECYCLE | ACTION_LISTENER | ACTION_METADATA | ACTION_RESOLVE
+																						| ACTION_RESOURCE | ACTION_STARTLEVEL | ACTION_EXTENSIONLIFECYCLE | ACTION_CONTEXT | ACTION_WEAVE;
+	final static int								ACTION_NONE					= 0;
 
 	/**
 	 * The actions in canonical form.
 	 * 
 	 * @serial
 	 */
-	private volatile String		actions						= null;
+	private volatile String							actions						= null;
 
 	/**
 	 * The actions mask.
 	 */
-	transient int							action_mask;
+	transient int									action_mask;
 
 	/**
 	 * If this AdminPermission was constructed with a filter, this holds a
 	 * Filter matching object used to evaluate the filter in implies.
 	 */
-	transient Filter						filter;
+	transient Filter								filter;
 
 	/**
 	 * The bundle governed by this AdminPermission - only used if filter == null
 	 */
-	transient final Bundle					bundle;
+	transient final Bundle							bundle;
 
 	/**
 	 * This map holds the properties of the permission, used to match a filter
@@ -227,14 +217,14 @@ public final class AdminPermission extends BasicPermission {
 	 * ThreadLocal used to determine if we have recursively called
 	 * getProperties.
 	 */
-	private static final ThreadLocal<Bundle>	recurse						= new ThreadLocal<Bundle>();
+	private static final ThreadLocal<Bundle>		recurse						= new ThreadLocal<Bundle>();
 
 	/**
-	 * Creates a new {@code AdminPermission} object that matches all
-	 * bundles and has all actions. Equivalent to AdminPermission("*","*");
+	 * Creates a new {@code AdminPermission} object that matches all bundles and
+	 * has all actions. Equivalent to AdminPermission("*","*");
 	 */
 	public AdminPermission() {
-		this(null, ACTION_ALL); 
+		this(null, ACTION_ALL);
 	}
 
 	/**
@@ -346,29 +336,27 @@ public final class AdminPermission extends BasicPermission {
 		if ((actions == null) || actions.equals("*")) {
 			return ACTION_ALL;
 		}
-	
+
 		boolean seencomma = false;
-	
+
 		int mask = ACTION_NONE;
 
 		char[] a = actions.toCharArray();
-	
+
 		int i = a.length - 1;
 		if (i < 0)
 			return mask;
-	
+
 		while (i != -1) {
 			char c;
-	
+
 			// skip whitespace
-			while ((i != -1)
-					&& ((c = a[i]) == ' ' || c == '\r' || c == '\n'
-							|| c == '\f' || c == '\t'))
+			while ((i != -1) && ((c = a[i]) == ' ' || c == '\r' || c == '\n' || c == '\f' || c == '\t'))
 				i--;
-	
+
 			// check for the known strings
 			int matchlen;
-	
+
 			if (i >= 4 && (a[i - 4] == 'c' || a[i - 4] == 'C')
 					&& (a[i - 3] == 'l' || a[i - 3] == 'L')
 					&& (a[i - 2] == 'a' || a[i - 2] == 'A')
@@ -376,9 +364,8 @@ public final class AdminPermission extends BasicPermission {
 					&& (a[i] == 's' || a[i] == 'S')) {
 				matchlen = 5;
 				mask |= ACTION_CLASS | ACTION_RESOLVE;
-	
-			}
-			else
+
+			} else
 				if (i >= 6 && (a[i - 6] == 'e' || a[i - 6] == 'E')
 						&& (a[i - 5] == 'x' || a[i - 5] == 'X')
 						&& (a[i - 4] == 'e' || a[i - 4] == 'E')
@@ -388,9 +375,8 @@ public final class AdminPermission extends BasicPermission {
 						&& (a[i] == 'e' || a[i] == 'E')) {
 					matchlen = 7;
 					mask |= ACTION_EXECUTE | ACTION_RESOLVE;
-	
-				}
-				else
+
+				} else
 					if (i >= 17 && (a[i - 17] == 'e' || a[i - 17] == 'E')
 							&& (a[i - 16] == 'x' || a[i - 16] == 'X')
 							&& (a[i - 15] == 't' || a[i - 15] == 'T')
@@ -411,9 +397,8 @@ public final class AdminPermission extends BasicPermission {
 							&& (a[i] == 'e' || a[i] == 'E')) {
 						matchlen = 18;
 						mask |= ACTION_EXTENSIONLIFECYCLE;
-	
-					}
-					else
+
+					} else
 						if (i >= 8 && (a[i - 8] == 'l' || a[i - 8] == 'L')
 								&& (a[i - 7] == 'i' || a[i - 7] == 'I')
 								&& (a[i - 6] == 'f' || a[i - 6] == 'F')
@@ -425,9 +410,8 @@ public final class AdminPermission extends BasicPermission {
 								&& (a[i] == 'e' || a[i] == 'E')) {
 							matchlen = 9;
 							mask |= ACTION_LIFECYCLE;
-	
-						}
-						else
+
+						} else
 							if (i >= 7 && (a[i - 7] == 'l' || a[i - 7] == 'L')
 									&& (a[i - 6] == 'i' || a[i - 6] == 'I')
 									&& (a[i - 5] == 's' || a[i - 5] == 'S')
@@ -438,9 +422,8 @@ public final class AdminPermission extends BasicPermission {
 									&& (a[i] == 'r' || a[i] == 'R')) {
 								matchlen = 8;
 								mask |= ACTION_LISTENER;
-	
-							}
-							else
+
+							} else
 								if (i >= 7
 										&& (a[i - 7] == 'm' || a[i - 7] == 'M')
 										&& (a[i - 6] == 'e' || a[i - 6] == 'E')
@@ -452,9 +435,8 @@ public final class AdminPermission extends BasicPermission {
 										&& (a[i] == 'a' || a[i] == 'A')) {
 									matchlen = 8;
 									mask |= ACTION_METADATA;
-	
-								}
-								else
+
+								} else
 									if (i >= 6
 											&& (a[i - 6] == 'r' || a[i - 6] == 'R')
 											&& (a[i - 5] == 'e' || a[i - 5] == 'E')
@@ -465,9 +447,8 @@ public final class AdminPermission extends BasicPermission {
 											&& (a[i] == 'e' || a[i] == 'E')) {
 										matchlen = 7;
 										mask |= ACTION_RESOLVE;
-	
-									}
-									else
+
+									} else
 										if (i >= 7
 												&& (a[i - 7] == 'r' || a[i - 7] == 'R')
 												&& (a[i - 6] == 'e' || a[i - 6] == 'E')
@@ -480,9 +461,8 @@ public final class AdminPermission extends BasicPermission {
 											matchlen = 8;
 											mask |= ACTION_RESOURCE
 													| ACTION_RESOLVE;
-	
-										}
-										else
+
+										} else
 											if (i >= 9
 													&& (a[i - 9] == 's' || a[i - 9] == 'S')
 													&& (a[i - 8] == 't' || a[i - 8] == 'T')
@@ -496,9 +476,8 @@ public final class AdminPermission extends BasicPermission {
 													&& (a[i] == 'l' || a[i] == 'L')) {
 												matchlen = 10;
 												mask |= ACTION_STARTLEVEL;
-	
-											}
-											else
+
+											} else
 												if (i >= 6
 														&& (a[i - 6] == 'c' || a[i - 6] == 'C')
 														&& (a[i - 5] == 'o' || a[i - 5] == 'O')
@@ -509,9 +488,8 @@ public final class AdminPermission extends BasicPermission {
 														&& (a[i] == 't' || a[i] == 'T')) {
 													matchlen = 7;
 													mask |= ACTION_CONTEXT;
-	
-												}
-												else
+
+												} else
 													if (i >= 4
 															&& (a[i - 4] == 'w' || a[i - 4] == 'W')
 															&& (a[i - 3] == 'e' || a[i - 3] == 'E')
@@ -521,21 +499,16 @@ public final class AdminPermission extends BasicPermission {
 														matchlen = 5;
 														mask |= ACTION_WEAVE;
 
-													}
-													else
-														if (i >= 0
-																&& (a[i] == '*')) {
+													} else
+														if (i >= 0 && (a[i] == '*')) {
 															matchlen = 1;
 															mask |= ACTION_ALL;
 
-														}
-														else {
+														} else {
 															// parse error
-															throw new IllegalArgumentException(
-																	"invalid permission: "
-																			+ actions);
+															throw new IllegalArgumentException("invalid permission: " + actions);
 														}
-	
+
 			// make sure we didn't just match the tail of a word
 			// like "ackbarfstartlevel". Also, skip to the comma.
 			seencomma = false;
@@ -551,21 +524,19 @@ public final class AdminPermission extends BasicPermission {
 					case '\t' :
 						break;
 					default :
-						throw new IllegalArgumentException(
-								"invalid permission: " + actions); 
+						throw new IllegalArgumentException("invalid permission: " + actions);
 				}
 				i--;
 			}
-	
+
 			// point i at the location of the comma minus one (or -1).
 			i -= matchlen;
 		}
-	
+
 		if (seencomma) {
-			throw new IllegalArgumentException("invalid permission: " + 
-					actions);
+			throw new IllegalArgumentException("invalid permission: " + actions);
 		}
-	
+
 		return mask;
 	}
 
@@ -574,8 +545,8 @@ public final class AdminPermission extends BasicPermission {
 	 * 
 	 * @param filterString The filter string to parse.
 	 * @return a Filter for this bundle. If the specified filterString is
-	 *         {@code null} or equals "*", then {@code null} is
-	 *         returned to indicate a wildcard.
+	 *         {@code null} or equals "*", then {@code null} is returned to
+	 *         indicate a wildcard.
 	 * @throws IllegalArgumentException If the filter syntax is invalid.
 	 */
 	private static Filter parseFilter(String filterString) {
@@ -586,13 +557,11 @@ public final class AdminPermission extends BasicPermission {
 		if (filterString.equals("*")) {
 			return null;
 		}
-		
+
 		try {
 			return FrameworkUtil.createFilter(filterString);
-		}
-		catch (InvalidSyntaxException e) {
-			IllegalArgumentException iae = new IllegalArgumentException(
-					"invalid filter");
+		} catch (InvalidSyntaxException e) {
+			IllegalArgumentException iae = new IllegalArgumentException("invalid filter");
 			iae.initCause(e);
 			throw iae;
 		}
@@ -616,9 +585,9 @@ public final class AdminPermission extends BasicPermission {
 	 * actions.
 	 * <p>
 	 * Special case: if the specified permission was constructed with "*"
-	 * filter, then this method returns {@code true} if this object's
-	 * filter is "*" and this object's actions include all of the specified
-	 * permission's actions
+	 * filter, then this method returns {@code true} if this object's filter is
+	 * "*" and this object's actions include all of the specified permission's
+	 * actions
 	 * 
 	 * @param p The requested permission.
 	 * @return {@code true} if the specified permission is implied by this
@@ -657,7 +626,7 @@ public final class AdminPermission extends BasicPermission {
 		if ((effective & desired) != desired) {
 			return false;
 		}
-	
+
 		/* Get our filter */
 		Filter f = filter;
 		if (f == null) {
@@ -668,8 +637,7 @@ public final class AdminPermission extends BasicPermission {
 		if (requested.bundle == null) {
 			return false;
 		}
-		Map<String, Object> requestedProperties = requested
-				.getProperties();
+		Map<String, Object> requestedProperties = requested.getProperties();
 		if (requestedProperties == null) {
 			/*
 			 * If the requested properties are null, then we have detected a
@@ -699,53 +667,53 @@ public final class AdminPermission extends BasicPermission {
 		String result = actions;
 		if (result == null) {
 			StringBuffer sb = new StringBuffer();
-	
+
 			int mask = action_mask;
 			if ((mask & ACTION_CLASS) == ACTION_CLASS) {
 				sb.append(CLASS);
 				sb.append(',');
 			}
-	
+
 			if ((mask & ACTION_EXECUTE) == ACTION_EXECUTE) {
 				sb.append(EXECUTE);
 				sb.append(',');
 			}
-	
+
 			if ((mask & ACTION_EXTENSIONLIFECYCLE) == ACTION_EXTENSIONLIFECYCLE) {
 				sb.append(EXTENSIONLIFECYCLE);
 				sb.append(',');
 			}
-	
+
 			if ((mask & ACTION_LIFECYCLE) == ACTION_LIFECYCLE) {
 				sb.append(LIFECYCLE);
 				sb.append(',');
 			}
-	
+
 			if ((mask & ACTION_LISTENER) == ACTION_LISTENER) {
 				sb.append(LISTENER);
 				sb.append(',');
 			}
-	
+
 			if ((mask & ACTION_METADATA) == ACTION_METADATA) {
 				sb.append(METADATA);
 				sb.append(',');
 			}
-	
+
 			if ((mask & ACTION_RESOLVE) == ACTION_RESOLVE) {
 				sb.append(RESOLVE);
 				sb.append(',');
 			}
-	
+
 			if ((mask & ACTION_RESOURCE) == ACTION_RESOURCE) {
 				sb.append(RESOURCE);
 				sb.append(',');
 			}
-	
+
 			if ((mask & ACTION_STARTLEVEL) == ACTION_STARTLEVEL) {
 				sb.append(STARTLEVEL);
 				sb.append(',');
 			}
-	
+
 			if ((mask & ACTION_CONTEXT) == ACTION_CONTEXT) {
 				sb.append(CONTEXT);
 				sb.append(',');
@@ -755,20 +723,20 @@ public final class AdminPermission extends BasicPermission {
 				sb.append(WEAVE);
 				sb.append(',');
 			}
-	
+
 			// remove trailing comma
 			if (sb.length() > 0) {
 				sb.setLength(sb.length() - 1);
 			}
-	
+
 			actions = result = sb.toString();
 		}
 		return result;
 	}
 
 	/**
-	 * Returns a new {@code PermissionCollection} object suitable for
-	 * storing {@code AdminPermission}s.
+	 * Returns a new {@code PermissionCollection} object suitable for storing
+	 * {@code AdminPermission}s.
 	 * 
 	 * @return A new {@code PermissionCollection} object.
 	 */
@@ -794,11 +762,7 @@ public final class AdminPermission extends BasicPermission {
 
 		AdminPermission ap = (AdminPermission) obj;
 
-		return (action_mask == ap.action_mask)
-				&& ((bundle == ap.bundle) || ((bundle != null) && bundle
-						.equals(ap.bundle)))
-				&& (filter == null ? ap.filter == null : filter
-						.equals(ap.filter));
+		return (action_mask == ap.action_mask) && ((bundle == ap.bundle) || ((bundle != null) && bundle.equals(ap.bundle))) && (filter == null ? ap.filter == null : filter.equals(ap.filter));
 	}
 
 	/**
@@ -820,8 +784,7 @@ public final class AdminPermission extends BasicPermission {
 	 * stream. The actions are serialized, and the superclass takes care of the
 	 * name.
 	 */
-	private synchronized void writeObject(java.io.ObjectOutputStream s)
-			throws IOException {
+	private synchronized void writeObject(java.io.ObjectOutputStream s) throws IOException {
 		if (bundle != null) {
 			throw new NotSerializableException("cannot serialize");
 		}
@@ -836,8 +799,7 @@ public final class AdminPermission extends BasicPermission {
 	 * readObject is called to restore the state of this permission from a
 	 * stream.
 	 */
-	private synchronized void readObject(java.io.ObjectInputStream s)
-			throws IOException, ClassNotFoundException {
+	private synchronized void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		// Read in the data, then initialize the transients
 		s.defaultReadObject();
 		setTransients(parseFilter(getName()), parseActions(actions));
@@ -870,8 +832,7 @@ public final class AdminPermission extends BasicPermission {
 		}
 		recurse.set(bundle);
 		try {
-			final Map<String, Object> map = new HashMap<String, Object>(
-					4);
+			final Map<String, Object> map = new HashMap<String, Object>(4);
 			AccessController.doPrivileged(new PrivilegedAction<Object>() {
 				public Object run() {
 					map.put("id", new Long(bundle.getBundleId()));
@@ -888,8 +849,7 @@ public final class AdminPermission extends BasicPermission {
 				}
 			});
 			return properties = map;
-		}
-		finally {
+		} finally {
 			recurse.set(null);
 		}
 	}
@@ -899,7 +859,7 @@ public final class AdminPermission extends BasicPermission {
  * Stores a collection of {@code AdminPermission}s.
  */
 final class AdminPermissionCollection extends PermissionCollection {
-	private static final long	serialVersionUID	= 3906372644575328048L;
+	private static final long						serialVersionUID	= 3906372644575328048L;
 	/**
 	 * Collection of permissions.
 	 * 
@@ -913,7 +873,7 @@ final class AdminPermissionCollection extends PermissionCollection {
 	 * @serial
 	 * @GuardedBy this
 	 */
-	private boolean				all_allowed;
+	private boolean									all_allowed;
 
 	/**
 	 * Create an empty AdminPermissions object.
@@ -928,24 +888,21 @@ final class AdminPermissionCollection extends PermissionCollection {
 	 * 
 	 * @param permission The {@code AdminPermission} object to add.
 	 * @throws IllegalArgumentException If the specified permission is not an
-	 *         {@code AdminPermission} instance or was constructed with a
-	 *         Bundle object.
+	 *         {@code AdminPermission} instance or was constructed with a Bundle
+	 *         object.
 	 * @throws SecurityException If this {@code AdminPermissionCollection}
 	 *         object has been marked read-only.
 	 */
 	public void add(Permission permission) {
 		if (!(permission instanceof AdminPermission)) {
-			throw new IllegalArgumentException("invalid permission: "
-					+ permission);
+			throw new IllegalArgumentException("invalid permission: " + permission);
 		}
 		if (isReadOnly()) {
-			throw new SecurityException("attempt to add a Permission to a "
-					+ "readonly PermissionCollection"); 
+			throw new SecurityException("attempt to add a Permission to a " + "readonly PermissionCollection");
 		}
 		final AdminPermission ap = (AdminPermission) permission;
 		if (ap.bundle != null) {
-			throw new IllegalArgumentException("cannot add to collection: "
-					+ ap);
+			throw new IllegalArgumentException("cannot add to collection: " + ap);
 		}
 		final String name = ap.getName();
 		synchronized (this) {
@@ -956,11 +913,9 @@ final class AdminPermissionCollection extends PermissionCollection {
 				int newMask = ap.action_mask;
 
 				if (oldMask != newMask) {
-					pc.put(name, new AdminPermission(existing.filter, oldMask
-							| newMask));
+					pc.put(name, new AdminPermission(existing.filter, oldMask | newMask));
 				}
-			}
-			else {
+			} else {
 				pc.put(name, ap);
 			}
 			if (!all_allowed) {
@@ -978,8 +933,8 @@ final class AdminPermissionCollection extends PermissionCollection {
 	 * @param permission The Permission object to compare with the
 	 *        {@code AdminPermission} objects in this collection.
 	 * @return {@code true} if {@code permission} is implied by an
-	 *         {@code AdminPermission} in this collection,
-	 *         {@code false} otherwise.
+	 *         {@code AdminPermission} in this collection, {@code false}
+	 *         otherwise.
 	 */
 	public boolean implies(Permission permission) {
 		if (!(permission instanceof AdminPermission)) {
@@ -1028,28 +983,21 @@ final class AdminPermissionCollection extends PermissionCollection {
 		List<Permission> all = new ArrayList<Permission>(permissions.values());
 		return Collections.enumeration(all);
 	}
-	
+
 	/* serialization logic */
-    private static final ObjectStreamField[]	serialPersistentFields	= {
-			new ObjectStreamField("permissions", Hashtable.class),
-			new ObjectStreamField("all_allowed", Boolean.TYPE)			};
-    
-    private synchronized void writeObject(ObjectOutputStream out)
-			throws IOException {
-		Hashtable<String, AdminPermission> hashtable = new Hashtable<String, AdminPermission>(
-				permissions);
+	private static final ObjectStreamField[]	serialPersistentFields	= {new ObjectStreamField("permissions", Hashtable.class), new ObjectStreamField("all_allowed", Boolean.TYPE)};
+
+	private synchronized void writeObject(ObjectOutputStream out) throws IOException {
+		Hashtable<String, AdminPermission> hashtable = new Hashtable<String, AdminPermission>(permissions);
 		ObjectOutputStream.PutField pfields = out.putFields();
 		pfields.put("permissions", hashtable);
 		pfields.put("all_allowed", all_allowed);
 		out.writeFields();
 	}
-    
-	private synchronized void readObject(java.io.ObjectInputStream in)
-			throws IOException,
-			ClassNotFoundException {
+
+	private synchronized void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
-		Hashtable<String, AdminPermission> hashtable = (Hashtable<String, AdminPermission>) gfields
-				.get("permissions", null);
+		Hashtable<String, AdminPermission> hashtable = (Hashtable<String, AdminPermission>) gfields.get("permissions", null);
 		permissions = new HashMap<String, AdminPermission>(hashtable);
 		all_allowed = gfields.get("all_allowed", false);
 	}

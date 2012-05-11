@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2008, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2008, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.osgi.framework.launch;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -35,7 +34,7 @@ import org.osgi.framework.FrameworkEvent;
  * 
  * @ThreadSafe
  * @noimplement
- * @version $Id: 2be857d06f3605a04f701b59f11e127c0f8940dc $
+ * @version $Id: e76240d5de584d1666880d9bc358571a76cbd8fb $
  */
 public interface Framework extends Bundle {
 
@@ -76,13 +75,12 @@ public interface Framework extends Bundle {
 	void init() throws BundleException;
 
 	/**
-	 * Wait until this Framework has completely stopped. The {@code stop}
-	 * and {@code update} methods on a Framework performs an asynchronous
-	 * stop of the Framework. This method can be used to wait until the
-	 * asynchronous stop of this Framework has completed. This method will only
-	 * wait if called when this Framework is in the {@link #STARTING},
-	 * {@link #ACTIVE}, or {@link #STOPPING} states. Otherwise it will return
-	 * immediately.
+	 * Wait until this Framework has completely stopped. The {@code stop} and
+	 * {@code update} methods on a Framework performs an asynchronous stop of
+	 * the Framework. This method can be used to wait until the asynchronous
+	 * stop of this Framework has completed. This method will only wait if
+	 * called when this Framework is in the {@link #STARTING}, {@link #ACTIVE},
+	 * or {@link #STOPPING} states. Otherwise it will return immediately.
 	 * <p>
 	 * A Framework Event is returned to indicate why this Framework has stopped.
 	 * 
@@ -90,8 +88,8 @@ public interface Framework extends Bundle {
 	 *        Framework has completely stopped. A value of zero will wait
 	 *        indefinitely.
 	 * @return A Framework Event indicating the reason this method returned. The
-	 *         following {@code FrameworkEvent} types may be returned by
-	 *         this method.
+	 *         following {@code FrameworkEvent} types may be returned by this
+	 *         method.
 	 *         <ul>
 	 *         <li>{@link FrameworkEvent#STOPPED STOPPED} - This Framework has
 	 *         been stopped. </li>
@@ -230,8 +228,8 @@ public interface Framework extends Bundle {
 	 * 
 	 * @throws BundleException This Framework cannot be uninstalled.
 	 * @throws SecurityException If the caller does not have the appropriate
-	 *         {@code AdminPermission[this,LIFECYCLE]}, and the Java
-	 *         Runtime Environment supports permissions.
+	 *         {@code AdminPermission[this,LIFECYCLE]}, and the Java Runtime
+	 *         Environment supports permissions.
 	 */
 	void uninstall() throws BundleException;
 
@@ -251,8 +249,8 @@ public interface Framework extends Bundle {
 	 * @throws BundleException If stopping and restarting this Framework could
 	 *         not be initiated.
 	 * @throws SecurityException If the caller does not have the appropriate
-	 *         {@code AdminPermission[this,LIFECYCLE]}, and the Java
-	 *         Runtime Environment supports permissions.
+	 *         {@code AdminPermission[this,LIFECYCLE]}, and the Java Runtime
+	 *         Environment supports permissions.
 	 */
 	void update() throws BundleException;
 
@@ -268,8 +266,8 @@ public interface Framework extends Bundle {
 	 * @throws BundleException If stopping and restarting this Framework could
 	 *         not be initiated.
 	 * @throws SecurityException If the caller does not have the appropriate
-	 *         {@code AdminPermission[this,LIFECYCLE]}, and the Java
-	 *         Runtime Environment supports permissions.
+	 *         {@code AdminPermission[this,LIFECYCLE]}, and the Java Runtime
+	 *         Environment supports permissions.
 	 */
 	void update(InputStream in) throws BundleException;
 
@@ -284,8 +282,8 @@ public interface Framework extends Bundle {
 
 	/**
 	 * Returns the Framework location identifier. This Framework is assigned the
-	 * unique location &quot;{@code System Bundle}&quot; since this
-	 * Framework is also a System Bundle.
+	 * unique location &quot;{@code System Bundle}&quot; since this Framework is
+	 * also a System Bundle.
 	 * 
 	 * @return The string &quot;{@code System Bundle}&quot;.
 	 * @throws SecurityException If the caller does not have the appropriate
@@ -299,8 +297,8 @@ public interface Framework extends Bundle {
 	/**
 	 * Returns the symbolic name of this Framework. The symbolic name is unique
 	 * for the implementation of the framework. However, the symbolic name
-	 * &quot;{@code system.bundle}&quot; must be recognized as an alias to
-	 * the implementation-defined symbolic name since this Framework is also a
+	 * &quot;{@code system.bundle}&quot; must be recognized as an alias to the
+	 * implementation-defined symbolic name since this Framework is also a
 	 * System Bundle.
 	 * 
 	 * @return The symbolic name of this Framework.
@@ -310,22 +308,22 @@ public interface Framework extends Bundle {
 	String getSymbolicName();
 
 	/**
-	 * Returns {@code null} as a framework implementation does not have a
-	 * proper bundle from which to return entry paths.
+	 * Returns {@code null} as a framework implementation does not have a proper
+	 * bundle from which to return entry paths.
 	 * 
 	 * @param path Ignored.
-	 * @return {@code null} as a framework implementation does not have a
-	 *         proper bundle from which to return entry paths.
+	 * @return {@code null} as a framework implementation does not have a proper
+	 *         bundle from which to return entry paths.
 	 */
 	Enumeration<String> getEntryPaths(String path);
 
 	/**
-	 * Returns {@code null} as a framework implementation does not have a
-	 * proper bundle from which to return an entry.
+	 * Returns {@code null} as a framework implementation does not have a proper
+	 * bundle from which to return an entry.
 	 * 
 	 * @param path Ignored.
-	 * @return {@code null} as a framework implementation does not have a
-	 *         proper bundle from which to return an entry.
+	 * @return {@code null} as a framework implementation does not have a proper
+	 *         bundle from which to return an entry.
 	 */
 	URL getEntry(String path);
 
@@ -339,8 +337,7 @@ public interface Framework extends Bundle {
 	 * @return {@code null} as a framework implementation does not have a proper
 	 *         bundle from which to return entries.
 	 */
-	Enumeration<URL> findEntries(String path, String filePattern,
-			boolean recurse);
+	Enumeration<URL> findEntries(String path, String filePattern, boolean recurse);
 
 	/**
 	 * Adapt this Framework to the specified type.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2004, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2004, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.osgi.framework;
 
 import java.util.EventObject;
-
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.FrameworkWiring;
 
@@ -25,17 +24,16 @@ import org.osgi.framework.wiring.FrameworkWiring;
  * A general event from the Framework.
  * 
  * <p>
- * {@code FrameworkEvent} objects are delivered to
- * {@code FrameworkListener}s when a general event occurs within the OSGi
- * environment. A type code is used to identify the event type for future
- * extendability.
+ * {@code FrameworkEvent} objects are delivered to {@code FrameworkListener}s
+ * when a general event occurs within the OSGi environment. A type code is used
+ * to identify the event type for future extendability.
  * 
  * <p>
  * OSGi Alliance reserves the right to extend the set of event types.
  * 
  * @Immutable
  * @see FrameworkListener
- * @version $Id: e05c6ffd542fa432835961882bf6b15b0620ffb6 $
+ * @version $Id: f679c7581879a2e6006ecdd317a5dd5f735764e3 $
  */
 
 public class FrameworkEvent extends EventObject {
@@ -191,8 +189,8 @@ public class FrameworkEvent extends EventObject {
 	 * 
 	 * @param type The event type.
 	 * @param bundle The event source.
-	 * @param throwable The related exception. This argument may be
-	 *        {@code null} if there is no related exception.
+	 * @param throwable The related exception. This argument may be {@code null}
+	 *        if there is no related exception.
 	 */
 	public FrameworkEvent(int type, Bundle bundle, Throwable throwable) {
 		super(bundle);

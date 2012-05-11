@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2011). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2012). All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.osgi.framework;
 
 import java.io.IOException;
@@ -40,9 +41,9 @@ import java.util.Map;
  * {@code AdaptPermission} has one action: {@code adapt}.
  * 
  * @ThreadSafe
- * @version $Id: bc4c5d392d2534a7744f6fc00f4665502f82033c $
+ * @version $Id: 3bc095bd294db2d8ea25971a3d71991de1495b1a $
  */
-public class AdaptPermission extends BasicPermission {
+public final class AdaptPermission extends BasicPermission {
 
 	private static final long						serialVersionUID	= 1L;
 
@@ -137,8 +138,7 @@ public class AdaptPermission extends BasicPermission {
 	 *        adapted.
 	 * @param actions {@code adapt}.
 	 */
-	public AdaptPermission(String adaptClass, Bundle adaptableBundle,
-			String actions) {
+	public AdaptPermission(String adaptClass, Bundle adaptableBundle, String actions) {
 		super(adaptClass);
 		setTransients(null, parseActions(actions));
 		this.bundle = adaptableBundle;
@@ -201,9 +201,7 @@ public class AdaptPermission extends BasicPermission {
 			char c;
 
 			// skip whitespace
-			while ((i != -1)
-					&& ((c = a[i]) == ' ' || c == '\r' || c == '\n'
-							|| c == '\f' || c == '\t'))
+			while ((i != -1) && ((c = a[i]) == ' ' || c == '\r' || c == '\n' || c == '\f' || c == '\t'))
 				i--;
 
 			// check for the known strings
@@ -217,11 +215,9 @@ public class AdaptPermission extends BasicPermission {
 				matchlen = 5;
 				mask |= ACTION_ADAPT;
 
-			}
-			else {
+			} else {
 				// parse error
-				throw new IllegalArgumentException("invalid actions: "
-						+ actions);
+				throw new IllegalArgumentException("invalid actions: " + actions);
 			}
 
 			// make sure we didn't just match the tail of a word
@@ -239,8 +235,7 @@ public class AdaptPermission extends BasicPermission {
 					case '\t' :
 						break;
 					default :
-						throw new IllegalArgumentException(
-								"invalid permission: " + actions);
+						throw new IllegalArgumentException("invalid permission: " + actions);
 				}
 				i--;
 			}
@@ -270,10 +265,8 @@ public class AdaptPermission extends BasicPermission {
 		}
 		try {
 			return FrameworkUtil.createFilter(filterString);
-		}
-		catch (InvalidSyntaxException e) {
-			IllegalArgumentException iae = new IllegalArgumentException(
-					"invalid filter");
+		} catch (InvalidSyntaxException e) {
+			IllegalArgumentException iae = new IllegalArgumentException("invalid filter");
 			iae.initCause(e);
 			throw iae;
 		}
@@ -387,10 +380,7 @@ public class AdaptPermission extends BasicPermission {
 
 		AdaptPermission cp = (AdaptPermission) obj;
 
-		return (action_mask == cp.action_mask)
-				&& getName().equals(cp.getName())
-				&& ((bundle == cp.bundle) || ((bundle != null) && bundle
-						.equals(cp.bundle)));
+		return (action_mask == cp.action_mask) && getName().equals(cp.getName()) && ((bundle == cp.bundle) || ((bundle != null) && bundle.equals(cp.bundle)));
 	}
 
 	/**
@@ -412,8 +402,7 @@ public class AdaptPermission extends BasicPermission {
 	 * stream. The actions are serialized, and the superclass takes care of the
 	 * name.
 	 */
-	private synchronized void writeObject(java.io.ObjectOutputStream s)
-			throws IOException {
+	private synchronized void writeObject(java.io.ObjectOutputStream s) throws IOException {
 		if (bundle != null) {
 			throw new NotSerializableException("cannot serialize");
 		}
@@ -428,8 +417,7 @@ public class AdaptPermission extends BasicPermission {
 	 * readObject is called to restore the state of this permission from a
 	 * stream.
 	 */
-	private synchronized void readObject(java.io.ObjectInputStream s)
-			throws IOException, ClassNotFoundException {
+	private synchronized void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		// Read in the action, then initialize the rest
 		s.defaultReadObject();
 		setTransients(parseFilter(getName()), parseActions(actions));
@@ -516,18 +504,15 @@ final class AdaptPermissionCollection extends PermissionCollection {
 	 */
 	public void add(final Permission permission) {
 		if (!(permission instanceof AdaptPermission)) {
-			throw new IllegalArgumentException("invalid permission: "
-					+ permission);
+			throw new IllegalArgumentException("invalid permission: " + permission);
 		}
 		if (isReadOnly()) {
-			throw new SecurityException("attempt to add a Permission to a "
-					+ "readonly PermissionCollection");
+			throw new SecurityException("attempt to add a Permission to a " + "readonly PermissionCollection");
 		}
 
 		final AdaptPermission ap = (AdaptPermission) permission;
 		if (ap.bundle != null) {
-			throw new IllegalArgumentException("cannot add to collection: "
-					+ ap);
+			throw new IllegalArgumentException("cannot add to collection: " + ap);
 		}
 
 		final String name = ap.getName();
@@ -538,12 +523,10 @@ final class AdaptPermissionCollection extends PermissionCollection {
 				final int oldMask = existing.action_mask;
 				final int newMask = ap.action_mask;
 				if (oldMask != newMask) {
-					pc.put(name, new AdaptPermission(existing.filter, oldMask
-							| newMask));
+					pc.put(name, new AdaptPermission(existing.filter, oldMask | newMask));
 
 				}
-			}
-			else {
+			} else {
 				pc.put(name, ap);
 			}
 
@@ -613,23 +596,18 @@ final class AdaptPermissionCollection extends PermissionCollection {
 	}
 
 	/* serialization logic */
-	private static final ObjectStreamField[]	serialPersistentFields	= {
-			new ObjectStreamField("permissions", HashMap.class),
-			new ObjectStreamField("all_allowed", Boolean.TYPE)			};
+	private static final ObjectStreamField[]	serialPersistentFields	= {new ObjectStreamField("permissions", HashMap.class), new ObjectStreamField("all_allowed", Boolean.TYPE)};
 
-	private synchronized void writeObject(ObjectOutputStream out)
-			throws IOException {
+	private synchronized void writeObject(ObjectOutputStream out) throws IOException {
 		ObjectOutputStream.PutField pfields = out.putFields();
 		pfields.put("permissions", permissions);
 		pfields.put("all_allowed", all_allowed);
 		out.writeFields();
 	}
 
-	private synchronized void readObject(java.io.ObjectInputStream in)
-			throws IOException, ClassNotFoundException {
+	private synchronized void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
-		permissions = (HashMap<String, AdaptPermission>) gfields.get(
-				"permissions", null);
+		permissions = (HashMap<String, AdaptPermission>) gfields.get("permissions", null);
 		all_allowed = gfields.get("all_allowed", false);
 	}
 }

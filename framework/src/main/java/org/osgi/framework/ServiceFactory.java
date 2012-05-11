@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,9 +43,9 @@ package org.osgi.framework;
  * concurrently call a {@code ServiceFactory}.
  * 
  * @param <S> Type of Service
- * @see BundleContext#getService
+ * @see BundleContext#getService(ServiceReference)
  * @ThreadSafe
- * @version $Id: 94cd1a0127aaad9beb484f557342a8fbd0be2322 $
+ * @version $Id: 535776e702ec5ace54f577218ff8f7920741558b $
  */
 
 public interface ServiceFactory<S> {
@@ -85,7 +85,7 @@ public interface ServiceFactory<S> {
 	 *        requested service.
 	 * @return A service object that <strong>must</strong> be an instance of all
 	 *         the classes named when the service was registered.
-	 * @see BundleContext#getService
+	 * @see BundleContext#getService(ServiceReference)
 	 */
 	public S getService(Bundle bundle, ServiceRegistration<S> registration);
 
@@ -108,8 +108,7 @@ public interface ServiceFactory<S> {
 	 * @param service The service object returned by a previous call to the
 	 *        {@link #getService(Bundle, ServiceRegistration) getService}
 	 *        method.
-	 * @see BundleContext#ungetService
+	 * @see BundleContext#ungetService(ServiceReference)
 	 */
-	public void ungetService(Bundle bundle, ServiceRegistration<S> registration,
-			S service);
+	public void ungetService(Bundle bundle, ServiceRegistration<S> registration, S service);
 }
