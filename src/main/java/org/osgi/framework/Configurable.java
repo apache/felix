@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ package org.osgi.framework;
  * {@code instanceof Configurable}.
  * 
  * @deprecated As of 1.2. Please use Configuration Admin service.
- * @version $Id: 29705c0c238aa456cda1b1a13458079bf1542771 $
+ * @version $Id: 1018601ae90d2d16ec34136db4b04dca3ccf8e65 $
  */
 public interface Configurable {
 	/**
@@ -42,9 +42,8 @@ public interface Configurable {
 	 * returning the configuration object.
 	 * 
 	 * @return The configuration object for this service.
-	 * @throws SecurityException If the caller does not have an
-	 *         appropriate permission and the Java Runtime Environment supports
-	 *         permissions.
+	 * @throws SecurityException If the caller does not have an appropriate
+	 *         permission and the Java Runtime Environment supports permissions.
 	 * @deprecated As of 1.2. Please use Configuration Admin service.
 	 */
 	public Object getConfigurationObject();

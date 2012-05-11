@@ -29,6 +29,8 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.resource.Capability;
+import org.osgi.resource.Requirement;
 
 class WrappedRevision implements BundleRevision
 {
@@ -63,6 +65,16 @@ class WrappedRevision implements BundleRevision
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    public List<Capability> getCapabilities(String namespace)
+    {
+        return asCapabilityList(getDeclaredCapabilities(namespace));
+    }
+
+    private static List<Capability> asCapabilityList(List caps)
+    {
+        return (List<Capability>) caps;
+    }
+
     public List<BundleCapability> getDeclaredCapabilities(String namespace)
     {
         if (m_cachedCapabilities == null)
@@ -91,6 +103,16 @@ class WrappedRevision implements BundleRevision
             m_cachedCapabilities = ImmutableList.newInstance(caps);
         }
         return m_cachedCapabilities;
+    }
+
+    public List<Requirement> getRequirements(String namespace)
+    {
+        return asRequirementList(getDeclaredRequirements(namespace));
+    }
+
+    private static List<Requirement> asRequirementList(List reqs)
+    {
+        return (List<Requirement>) reqs;
     }
 
     public List<BundleRequirement> getDeclaredRequirements(String namespace)

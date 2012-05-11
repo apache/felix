@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2004, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2004, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,13 +52,13 @@ import java.util.Map;
  * </pre>
  * 
  * <p>
- * {@code BundlePermission} has four actions: {@code provide},
- * {@code require},{@code host}, and {@code fragment}. The
- * {@code provide} action implies the {@code require} action.
+ * {@code BundlePermission} has four actions: {@code provide}, {@code require},
+ * {@code host}, and {@code fragment}. The {@code provide} action implies the
+ * {@code require} action.
  * 
  * @since 1.3
  * @ThreadSafe
- * @version $Id: d30c9c987cc13007ed19d3a9fdd11b00739591c0 $
+ * @version $Id: ccba905e3373800dfdb080118e97145abf778da2 $
  */
 
 public final class BundlePermission extends BasicPermission {
@@ -66,14 +66,14 @@ public final class BundlePermission extends BasicPermission {
 	private static final long	serialVersionUID	= 3257846601685873716L;
 
 	/**
-	 * The action string {@code provide}. The {@code provide} action
-	 * implies the {@code require} action.
+	 * The action string {@code provide}. The {@code provide} action implies the
+	 * {@code require} action.
 	 */
 	public final static String	PROVIDE				= "provide";
 
 	/**
-	 * The action string {@code require}. The {@code require} action
-	 * is implied by the {@code provide} action.
+	 * The action string {@code require}. The {@code require} action is implied
+	 * by the {@code provide} action.
 	 */
 	public final static String	REQUIRE				= "require";
 
@@ -91,10 +91,7 @@ public final class BundlePermission extends BasicPermission {
 	private final static int	ACTION_REQUIRE		= 0x00000002;
 	private final static int	ACTION_HOST			= 0x00000004;
 	private final static int	ACTION_FRAGMENT		= 0x00000008;
-	private final static int	ACTION_ALL			= ACTION_PROVIDE
-															| ACTION_REQUIRE
-															| ACTION_HOST
-															| ACTION_FRAGMENT;
+	private final static int	ACTION_ALL			= ACTION_PROVIDE | ACTION_REQUIRE | ACTION_HOST | ACTION_FRAGMENT;
 	final static int			ACTION_NONE			= 0;
 	/**
 	 * The actions mask.
@@ -115,14 +112,14 @@ public final class BundlePermission extends BasicPermission {
 	 * Bundle Permissions are granted over all possible versions of a bundle.
 	 * 
 	 * A bundle that needs to provide a bundle must have the appropriate
-	 * {@code BundlePermission} for the symbolic name; a bundle that
-	 * requires a bundle must have the appropriate {@code BundlePermssion}
-	 * for that symbolic name; a bundle that specifies a fragment host must have
-	 * the appropriate {@code BundlePermission} for that symbolic name.
+	 * {@code BundlePermission} for the symbolic name; a bundle that requires a
+	 * bundle must have the appropriate {@code BundlePermssion} for that
+	 * symbolic name; a bundle that specifies a fragment host must have the
+	 * appropriate {@code BundlePermission} for that symbolic name.
 	 * 
 	 * @param symbolicName The bundle symbolic name.
-	 * @param actions {@code provide},{@code require},
-	 *        {@code host},{@code fragment} (canonical order).
+	 * @param actions {@code provide},{@code require}, {@code host},
+	 *        {@code fragment} (canonical order).
 	 */
 	public BundlePermission(String symbolicName, String actions) {
 		this(symbolicName, parseActions(actions));
@@ -188,9 +185,7 @@ public final class BundlePermission extends BasicPermission {
 			char c;
 
 			// skip whitespace
-			while ((i != -1)
-					&& ((c = a[i]) == ' ' || c == '\r' || c == '\n'
-							|| c == '\f' || c == '\t'))
+			while ((i != -1) && ((c = a[i]) == ' ' || c == '\r' || c == '\n' || c == '\f' || c == '\t'))
 				i--;
 
 			// check for the known strings
@@ -205,8 +200,7 @@ public final class BundlePermission extends BasicPermission {
 					&& (a[i] == 'e' || a[i] == 'E')) {
 				matchlen = 7;
 				mask |= ACTION_PROVIDE | ACTION_REQUIRE;
-			}
-			else
+			} else
 				if (i >= 6 && (a[i - 6] == 'r' || a[i - 6] == 'R')
 						&& (a[i - 5] == 'e' || a[i - 5] == 'E')
 						&& (a[i - 4] == 'q' || a[i - 4] == 'Q')
@@ -216,16 +210,14 @@ public final class BundlePermission extends BasicPermission {
 						&& (a[i] == 'e' || a[i] == 'E')) {
 					matchlen = 7;
 					mask |= ACTION_REQUIRE;
-				}
-				else
+				} else
 					if (i >= 3 && (a[i - 3] == 'h' || a[i - 3] == 'H')
 							&& (a[i - 2] == 'o' || a[i - 2] == 'O')
 							&& (a[i - 1] == 's' || a[i - 1] == 'S')
 							&& (a[i] == 't' || a[i] == 'T')) {
 						matchlen = 4;
 						mask |= ACTION_HOST;
-					}
-					else
+					} else
 						if (i >= 7 && (a[i - 7] == 'f' || a[i - 7] == 'F')
 								&& (a[i - 6] == 'r' || a[i - 6] == 'R')
 								&& (a[i - 5] == 'a' || a[i - 5] == 'A')
@@ -236,11 +228,9 @@ public final class BundlePermission extends BasicPermission {
 								&& (a[i] == 't' || a[i] == 'T')) {
 							matchlen = 8;
 							mask |= ACTION_FRAGMENT;
-						}
-						else {
+						} else {
 							// parse error
-							throw new IllegalArgumentException(
-									"invalid permission: " + actions);
+							throw new IllegalArgumentException("invalid permission: " + actions);
 						}
 
 			// make sure we didn't just match the tail of a word
@@ -258,8 +248,7 @@ public final class BundlePermission extends BasicPermission {
 					case '\t' :
 						break;
 					default :
-						throw new IllegalArgumentException(
-								"invalid permission: " + actions);
+						throw new IllegalArgumentException("invalid permission: " + actions);
 				}
 				i--;
 			}
@@ -295,8 +284,8 @@ public final class BundlePermission extends BasicPermission {
 	 * </pre>
 	 * 
 	 * @param p The requested permission.
-	 * @return {@code true} if the specified {@code BundlePermission}
-	 *         action is implied by this object; {@code false} otherwise.
+	 * @return {@code true} if the specified {@code BundlePermission} action is
+	 *         implied by this object; {@code false} otherwise.
 	 */
 	public boolean implies(Permission p) {
 		if (!(p instanceof BundlePermission)) {
@@ -306,8 +295,7 @@ public final class BundlePermission extends BasicPermission {
 
 		final int effective = getActionsMask();
 		final int desired = requested.getActionsMask();
-		return ((effective & desired) == desired)
-				&& super.implies(requested);
+		return ((effective & desired) == desired) && super.implies(requested);
 	}
 
 	/**
@@ -315,9 +303,8 @@ public final class BundlePermission extends BasicPermission {
 	 * {@code BundlePermission} actions.
 	 * 
 	 * <p>
-	 * Always returns present {@code BundlePermission} actions in the
-	 * following order: {@code provide}, {@code require},
-	 * {@code host}, {@code fragment}.
+	 * Always returns present {@code BundlePermission} actions in the following
+	 * order: {@code provide}, {@code require}, {@code host}, {@code fragment}.
 	 * 
 	 * @return Canonical string representation of the {@code BundlePermission
 	 *         } actions.
@@ -359,8 +346,8 @@ public final class BundlePermission extends BasicPermission {
 	}
 
 	/**
-	 * Returns a new {@code PermissionCollection} object suitable for
-	 * storing {@code BundlePermission} objects.
+	 * Returns a new {@code PermissionCollection} object suitable for storing
+	 * {@code BundlePermission} objects.
 	 * 
 	 * @return A new {@code PermissionCollection} object.
 	 */
@@ -377,10 +364,9 @@ public final class BundlePermission extends BasicPermission {
 	 * 
 	 * @param obj The object to test for equality with this
 	 *        {@code BundlePermission} object.
-	 * @return {@code true} if {@code obj} is a
-	 *         {@code BundlePermission}, and has the same bundle symbolic
-	 *         name and actions as this {@code BundlePermission} object;
-	 *         {@code false} otherwise.
+	 * @return {@code true} if {@code obj} is a {@code BundlePermission}, and
+	 *         has the same bundle symbolic name and actions as this
+	 *         {@code BundlePermission} object; {@code false} otherwise.
 	 */
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -393,8 +379,7 @@ public final class BundlePermission extends BasicPermission {
 
 		BundlePermission bp = (BundlePermission) obj;
 
-		return (getActionsMask() == bp.getActionsMask())
-				&& getName().equals(bp.getName());
+		return (getActionsMask() == bp.getActionsMask()) && getName().equals(bp.getName());
 	}
 
 	/**
@@ -409,12 +394,11 @@ public final class BundlePermission extends BasicPermission {
 	}
 
 	/**
-	 * WriteObject is called to save the state of the
-	 * {@code BundlePermission} object to a stream. The actions are
-	 * serialized, and the superclass takes care of the name.
+	 * WriteObject is called to save the state of the {@code BundlePermission}
+	 * object to a stream. The actions are serialized, and the superclass takes
+	 * care of the name.
 	 */
-	private synchronized void writeObject(java.io.ObjectOutputStream s)
-			throws IOException {
+	private synchronized void writeObject(java.io.ObjectOutputStream s) throws IOException {
 		// Write out the actions. The superclass takes care of the name
 		// call getActions to make sure actions field is initialized
 		if (actions == null)
@@ -426,8 +410,7 @@ public final class BundlePermission extends BasicPermission {
 	 * readObject is called to restore the state of the BundlePermission from a
 	 * stream.
 	 */
-	private synchronized void readObject(java.io.ObjectInputStream s)
-			throws IOException, ClassNotFoundException {
+	private synchronized void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		// Read in the action, then initialize the rest
 		s.defaultReadObject();
 		setTransients(parseActions(actions));
@@ -443,7 +426,7 @@ public final class BundlePermission extends BasicPermission {
  */
 
 final class BundlePermissionCollection extends PermissionCollection {
-	private static final long	serialVersionUID	= 3258407326846433079L;
+	private static final long						serialVersionUID	= 3258407326846433079L;
 
 	/**
 	 * Table of permissions.
@@ -458,7 +441,7 @@ final class BundlePermissionCollection extends PermissionCollection {
 	 * @serial
 	 * @GuardedBy this
 	 */
-	private boolean				all_allowed;
+	private boolean									all_allowed;
 
 	/**
 	 * Create an empty BundlePermissions object.
@@ -480,12 +463,10 @@ final class BundlePermissionCollection extends PermissionCollection {
 	 */
 	public void add(final Permission permission) {
 		if (!(permission instanceof BundlePermission)) {
-			throw new IllegalArgumentException("invalid permission: "
-					+ permission);
+			throw new IllegalArgumentException("invalid permission: " + permission);
 		}
 		if (isReadOnly()) {
-			throw new SecurityException("attempt to add a Permission to a "
-					+ "readonly PermissionCollection");
+			throw new SecurityException("attempt to add a Permission to a " + "readonly PermissionCollection");
 		}
 		final BundlePermission bp = (BundlePermission) permission;
 		final String name = bp.getName();
@@ -496,12 +477,10 @@ final class BundlePermissionCollection extends PermissionCollection {
 				final int oldMask = existing.getActionsMask();
 				final int newMask = bp.getActionsMask();
 				if (oldMask != newMask) {
-					pc.put(name, new BundlePermission(name, oldMask
-							| newMask));
+					pc.put(name, new BundlePermission(name, oldMask | newMask));
 
 				}
-			}
-			else {
+			} else {
 				pc.put(name, bp);
 			}
 
@@ -518,8 +497,8 @@ final class BundlePermissionCollection extends PermissionCollection {
 	 * 
 	 * @param permission The Permission object to compare with this
 	 *        {@code BundlePermission} object.
-	 * @return {@code true} if {@code permission} is a proper subset
-	 *         of a permission in the set; {@code false} otherwise.
+	 * @return {@code true} if {@code permission} is a proper subset of a
+	 *         permission in the set; {@code false} otherwise.
 	 */
 	public boolean implies(final Permission permission) {
 		if (!(permission instanceof BundlePermission)) {
@@ -575,8 +554,8 @@ final class BundlePermissionCollection extends PermissionCollection {
 	}
 
 	/**
-	 * Returns an enumeration of all {@code BundlePermission} objects in
-	 * the container.
+	 * Returns an enumeration of all {@code BundlePermission} objects in the
+	 * container.
 	 * 
 	 * @return Enumeration of all {@code BundlePermission} objects.
 	 */
@@ -584,27 +563,21 @@ final class BundlePermissionCollection extends PermissionCollection {
 		List<Permission> all = new ArrayList<Permission>(permissions.values());
 		return Collections.enumeration(all);
 	}
-	
-	/* serialization logic */
-	private static final ObjectStreamField[]	serialPersistentFields	= {
-			new ObjectStreamField("permissions", Hashtable.class),
-			new ObjectStreamField("all_allowed", Boolean.TYPE)			};
 
-	private synchronized void writeObject(ObjectOutputStream out)
-			throws IOException {
-		Hashtable<String, BundlePermission> hashtable = new Hashtable<String, BundlePermission>(
-				permissions);
+	/* serialization logic */
+	private static final ObjectStreamField[]	serialPersistentFields	= {new ObjectStreamField("permissions", Hashtable.class), new ObjectStreamField("all_allowed", Boolean.TYPE)};
+
+	private synchronized void writeObject(ObjectOutputStream out) throws IOException {
+		Hashtable<String, BundlePermission> hashtable = new Hashtable<String, BundlePermission>(permissions);
 		ObjectOutputStream.PutField pfields = out.putFields();
 		pfields.put("permissions", hashtable);
 		pfields.put("all_allowed", all_allowed);
 		out.writeFields();
 	}
 
-	private synchronized void readObject(java.io.ObjectInputStream in)
-			throws IOException, ClassNotFoundException {
+	private synchronized void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
-		Hashtable<String, BundlePermission> hashtable = (Hashtable<String, BundlePermission>) gfields
-				.get("permissions", null);
+		Hashtable<String, BundlePermission> hashtable = (Hashtable<String, BundlePermission>) gfields.get("permissions", null);
 		permissions = new HashMap<String, BundlePermission>(hashtable);
 		all_allowed = gfields.get("all_allowed", false);
 	}

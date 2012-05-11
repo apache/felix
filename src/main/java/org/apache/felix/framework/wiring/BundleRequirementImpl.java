@@ -27,6 +27,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.resource.Resource;
 
 public class BundleRequirementImpl implements BundleRequirement
 {
@@ -77,6 +78,11 @@ public class BundleRequirementImpl implements BundleRequirement
     public Map<String, Object> getAttributes()
     {
         return m_attrs;
+    }
+
+    public BundleRevision getResource()
+    {
+        return m_revision;
     }
 
     public BundleRevision getRevision()

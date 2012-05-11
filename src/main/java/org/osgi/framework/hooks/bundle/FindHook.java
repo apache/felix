@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2011). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2011, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.osgi.framework.hooks.bundle;
 
 import java.util.Collection;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -29,7 +29,7 @@ import org.osgi.framework.BundleException;
  * (get bundles) operations.
  * 
  * @ThreadSafe
- * @version $Id: 4492a677df650072fe6acaea9ea35571f31eb5a9 $
+ * @version $Id: ae6bf5fc5cf999ac39dfc195c99ef7e223e3b847 $
  */
 public interface FindHook {
 	/**
@@ -48,19 +48,16 @@ public interface FindHook {
 	 * {@link BundleException#REJECTED_BY_HOOK} exception.</li>
 	 * </ul>
 	 * 
-	 * @param context
-	 *            The bundle context of the bundle performing the find
-	 *            operation.
-	 * @param bundles
-	 *            A collection of Bundles to be returned as a result of the find
-	 *            operation. The implementation of this method may remove
-	 *            bundles from the collection to prevent the bundles from being
-	 *            returned to the bundle performing the find operation. The
-	 *            collection supports all the optional {@code Collection}
-	 *            operations except {@code add} and {@code addAll}. Attempting
-	 *            to add to the collection will result in an
-	 *            {@code UnsupportedOperationException}. The collection is not
-	 *            synchronized.
+	 * @param context The bundle context of the bundle performing the find
+	 *        operation.
+	 * @param bundles A collection of Bundles to be returned as a result of the
+	 *        find operation. The implementation of this method may remove
+	 *        bundles from the collection to prevent the bundles from being
+	 *        returned to the bundle performing the find operation. The
+	 *        collection supports all the optional {@code Collection} operations
+	 *        except {@code add} and {@code addAll}. Attempting to add to the
+	 *        collection will result in an {@code UnsupportedOperationException}
+	 *        . The collection is not synchronized.
 	 */
 	void find(BundleContext context, Collection<Bundle> bundles);
 }

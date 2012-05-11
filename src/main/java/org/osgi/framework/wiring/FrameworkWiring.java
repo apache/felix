@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.osgi.framework.wiring;
 
 import java.util.Collection;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.FrameworkListener;
@@ -34,7 +33,7 @@ import org.osgi.framework.FrameworkListener;
  * 
  * @ThreadSafe
  * @noimplement
- * @version $Id: f9f3f89b5b8d369453d645a52a482a385a2bd520 $
+ * @version $Id: bff4cdf85c632e2946e18c1640a86e80c069dd37 $
  */
 public interface FrameworkWiring extends BundleReference {
 	/**
@@ -110,8 +109,7 @@ public interface FrameworkWiring extends BundleReference {
 	 *         {@code AdminPermission[System Bundle,RESOLVE]} and the Java
 	 *         runtime environment supports permissions.
 	 */
-	void refreshBundles(Collection<Bundle> bundles,
-			FrameworkListener... listeners);
+	void refreshBundles(Collection<Bundle> bundles, FrameworkListener... listeners);
 
 	/**
 	 * Resolves the specified bundles. The Framework must attempt to resolve the

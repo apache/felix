@@ -1,6 +1,6 @@
 /*
- * Copyright (c) OSGi Alliance (2010, 2011). All Rights Reserved.
- * 
+ * Copyright (c) OSGi Alliance (2010, 2012). All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,8 @@
 package org.osgi.framework.wiring;
 
 import java.util.Map;
+import org.osgi.framework.namespace.AbstractWiringNamespace;
+import org.osgi.resource.Capability;
 
 /**
  * A capability that has been declared from a {@link BundleRevision bundle
@@ -24,18 +26,31 @@ import java.util.Map;
  * 
  * @ThreadSafe
  * @noimplement
- * @version $Id: 0fde13c3228af1aa97872b37ccf0aa6e23123b11 $
+ * @version $Id: 39086f7e6086c2b3d83fbcb976a011cf69483ad8 $
  */
-public interface BundleCapability {
+public interface BundleCapability extends Capability {
+
 	/**
-	 * Returns the name space of this capability.
+	 * Returns the bundle revision declaring this capability.
 	 * 
-	 * @return The name space of this capability.
+	 * @return The bundle revision declaring this capability.
+	 */
+	BundleRevision getRevision();
+
+	/**
+	 * Returns the namespace of this capability.
+	 * 
+	 * @return The namespace of this capability.
 	 */
 	String getNamespace();
 
 	/**
 	 * Returns the directives of this capability.
+	 * 
+	 * <p>
+	 * All capability directives not specified by the
+	 * {@link AbstractWiringNamespace wiring namespaces} have no specified
+	 * semantics and are considered extra user defined information.
 	 * 
 	 * @return An unmodifiable map of directive names to directive values for
 	 *         this capability, or an empty map if this capability has no
@@ -53,9 +68,13 @@ public interface BundleCapability {
 	Map<String, Object> getAttributes();
 
 	/**
-	 * Returns the bundle revision declaring this capability.
+	 * Returns the resource declaring this capability.
 	 * 
-	 * @return The bundle revision declaring this capability.
+	 * <p>
+	 * This method returns the same value as {@link #getRevision()}.
+	 * 
+	 * @return The resource declaring this capability.
+	 * @since 1.1
 	 */
-	BundleRevision getRevision();
+	BundleRevision getResource();
 }

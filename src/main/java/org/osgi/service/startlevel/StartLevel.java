@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2002, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2002, 2011). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ import org.osgi.framework.Bundle;
  * 
  * @ThreadSafe
  * @noimplement
- * @version $Id: bf1b71ed6c9f9d75785b26dccb34362017d93f4a $
+ * @version $Id: ec0295bdf246c0258261374b3ac0e4aef11f7315 $
  * @deprecated This service has been replaced by the
  *             <code>org.osgi.framework.startlevel</code> package.
  */
@@ -202,7 +202,7 @@ public interface StartLevel {
 	 * is first installed.
 	 * 
 	 * @return The initial start level value for Bundles.
-	 * @see #setInitialBundleStartLevel
+	 * @see #setInitialBundleStartLevel(int)
 	 */
 	public int getInitialBundleStartLevel();
 

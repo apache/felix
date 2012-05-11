@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2001, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2001, 2011). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,38 +17,37 @@
 package org.osgi.framework;
 
 /**
- * A synchronous {@code BundleEvent} listener.
- * {@code SynchronousBundleListener} is a listener interface that may be
- * implemented by a bundle developer. When a {@code BundleEvent} is fired,
- * it is synchronously delivered to a {@code SynchronousBundleListener}.
- * The Framework may deliver {@code BundleEvent} objects to a
- * {@code SynchronousBundleListener} out of order and may concurrently call
- * and/or reenter a {@code SynchronousBundleListener}.
+ * A synchronous {@code BundleEvent} listener. {@code SynchronousBundleListener}
+ * is a listener interface that may be implemented by a bundle developer. When a
+ * {@code BundleEvent} is fired, it is synchronously delivered to a
+ * {@code SynchronousBundleListener}. The Framework may deliver
+ * {@code BundleEvent} objects to a {@code SynchronousBundleListener} out of
+ * order and may concurrently call and/or reenter a
+ * {@code SynchronousBundleListener}.
  * 
  * <p>
  * For {@code BundleEvent} types {@link BundleEvent#STARTED STARTED} and
  * {@link BundleEvent#LAZY_ACTIVATION LAZY_ACTIVATION}, the Framework must not
  * hold the referenced bundle's &quot;state change&quot; lock when the
- * {@code BundleEvent} is delivered to a
- * {@code SynchronousBundleListener}. For the other
- * {@code BundleEvent} types, the Framework must hold the referenced
+ * {@code BundleEvent} is delivered to a {@code SynchronousBundleListener}. For
+ * the other {@code BundleEvent} types, the Framework must hold the referenced
  * bundle's &quot;state change&quot; lock when the {@code BundleEvent} is
  * delivered to a {@code SynchronousBundleListener}. A
- * {@code SynchronousBundleListener} cannot directly call life cycle
- * methods on the referenced bundle when the Framework is holding the referenced
- * bundle's &quot;state change&quot; lock.
+ * {@code SynchronousBundleListener} cannot directly call life cycle methods on
+ * the referenced bundle when the Framework is holding the referenced bundle's
+ * &quot;state change&quot; lock.
  * 
  * <p>
- * A {@code SynchronousBundleListener} object is registered with the
- * Framework using the {@link BundleContext#addBundleListener} method.
+ * A {@code SynchronousBundleListener} object is registered with the Framework
+ * using the {@link BundleContext#addBundleListener(BundleListener)} method.
  * {@code SynchronousBundleListener} objects are called with a
  * {@code BundleEvent} object when a bundle has been installed, resolved,
  * starting, started, stopping, stopped, updated, unresolved, or uninstalled.
  * <p>
  * Unlike normal {@code BundleListener} objects,
- * {@code SynchronousBundleListener}s are synchronously called during
- * bundle lifecycle processing. The bundle lifecycle processing will not proceed
- * until all {@code SynchronousBundleListener}s have completed.
+ * {@code SynchronousBundleListener}s are synchronously called during bundle
+ * lifecycle processing. The bundle lifecycle processing will not proceed until
+ * all {@code SynchronousBundleListener}s have completed.
  * {@code SynchronousBundleListener} objects will be called prior to
  * {@code BundleListener} objects.
  * <p>
@@ -58,7 +57,7 @@ package org.osgi.framework;
  * @since 1.1
  * @see BundleEvent
  * @ThreadSafe
- * @version $Id: b22484f48ebdcb2141da9bba9eb65f5c40e0f520 $
+ * @version $Id: 74246f4ceeba7f9a5ee198048522f93d4691c51a $
  */
 
 public interface SynchronousBundleListener extends BundleListener {

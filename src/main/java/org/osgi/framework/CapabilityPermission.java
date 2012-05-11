@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2011). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ import java.util.Set;
  * </ul>
  * 
  * @ThreadSafe
- * @version $Id: bab1ac06b46613f6cff39b291295d8b3e51d58ce $
+ * @version $Id: b17bcaec959f67c3eae4c4c80c39a0a8716b22dc $
  * @since 1.6
  */
 
@@ -64,8 +64,7 @@ public final class CapabilityPermission extends BasicPermission {
 
 	private final static int						ACTION_REQUIRE		= 0x00000001;
 	private final static int						ACTION_PROVIDE		= 0x00000002;
-	private final static int						ACTION_ALL			= ACTION_REQUIRE
-																				| ACTION_PROVIDE;
+	private final static int						ACTION_ALL			= ACTION_REQUIRE | ACTION_PROVIDE;
 	final static int								ACTION_NONE			= 0;
 
 	/**
@@ -133,7 +132,7 @@ public final class CapabilityPermission extends BasicPermission {
 	 * <li>location - The location of the bundle providing the capability.</li>
 	 * <li>id - The bundle ID of the bundle providing the capability.</li>
 	 * <li>name - The symbolic name of the bundle providing the capability.</li>
-	 * <li>capability.namespace - The name space of the required capability.</li>
+	 * <li>capability.namespace - The namespace of the required capability.</li>
 	 * </ul>
 	 * Since the above attribute names may conflict with attribute names of a
 	 * capability, you can prefix an attribute name with '@' in the filter
@@ -146,9 +145,9 @@ public final class CapabilityPermission extends BasicPermission {
 	 * {@code require} permission allows the owner of this permission to require
 	 * a capability matching the attributes. The {@code provide} permission
 	 * allows the bundle to provide a capability in the specified capability
-	 * name space.
+	 * namespace.
 	 * 
-	 * @param name The capability name space or a filter over the attributes.
+	 * @param name The capability namespace or a filter over the attributes.
 	 * @param actions {@code require},{@code provide} (canonical order)
 	 * @throws IllegalArgumentException If the specified name is a filter
 	 *         expression and either the specified action is not {@code require}
@@ -156,10 +155,8 @@ public final class CapabilityPermission extends BasicPermission {
 	 */
 	public CapabilityPermission(String name, String actions) {
 		this(name, parseActions(actions));
-		if ((this.filter != null)
-				&& ((action_mask & ACTION_ALL) != ACTION_REQUIRE)) {
-			throw new IllegalArgumentException(
-					"invalid action string for filter expression");
+		if ((this.filter != null) && ((action_mask & ACTION_ALL) != ACTION_REQUIRE)) {
+			throw new IllegalArgumentException("invalid action string for filter expression");
 		}
 	}
 
@@ -170,7 +167,7 @@ public final class CapabilityPermission extends BasicPermission {
 	 * constructor cannot be added to a {@code CapabilityPermission} permission
 	 * collection.
 	 * 
-	 * @param namespace The requested capability name space.
+	 * @param namespace The requested capability namespace.
 	 * @param attributes The requested capability attributes.
 	 * @param providingBundle The bundle providing the requested capability.
 	 * @param actions The action {@code require}.
@@ -178,8 +175,7 @@ public final class CapabilityPermission extends BasicPermission {
 	 *         {@code require} or attributes or providingBundle are {@code null}
 	 *         .
 	 */
-	public CapabilityPermission(String namespace, Map<String, ? > attributes,
-			Bundle providingBundle, String actions) {
+	public CapabilityPermission(String namespace, Map<String, ?> attributes, Bundle providingBundle, String actions) {
 		super(namespace);
 		setTransients(namespace, parseActions(actions));
 		if (attributes == null) {
@@ -246,9 +242,7 @@ public final class CapabilityPermission extends BasicPermission {
 			char c;
 
 			// skip whitespace
-			while ((i != -1)
-					&& ((c = a[i]) == ' ' || c == '\r' || c == '\n'
-							|| c == '\f' || c == '\t'))
+			while ((i != -1) && ((c = a[i]) == ' ' || c == '\r' || c == '\n' || c == '\f' || c == '\t'))
 				i--;
 
 			// check for the known strings
@@ -263,8 +257,7 @@ public final class CapabilityPermission extends BasicPermission {
 					&& (a[i] == 'e' || a[i] == 'E')) {
 				matchlen = 7;
 				mask |= ACTION_REQUIRE;
-			}
-			else
+			} else
 				if (i >= 6 && (a[i - 6] == 'p' || a[i - 6] == 'P')
 						&& (a[i - 5] == 'r' || a[i - 5] == 'R')
 						&& (a[i - 4] == 'o' || a[i - 4] == 'O')
@@ -274,11 +267,9 @@ public final class CapabilityPermission extends BasicPermission {
 						&& (a[i] == 'e' || a[i] == 'E')) {
 					matchlen = 7;
 					mask |= ACTION_PROVIDE;
-				}
-				else {
+				} else {
 					// parse error
-					throw new IllegalArgumentException("invalid permission: "
-							+ actions);
+					throw new IllegalArgumentException("invalid permission: " + actions);
 				}
 
 			// make sure we didn't just match the tail of a word
@@ -296,8 +287,7 @@ public final class CapabilityPermission extends BasicPermission {
 					case '\t' :
 						break;
 					default :
-						throw new IllegalArgumentException(
-								"invalid permission: " + actions);
+						throw new IllegalArgumentException("invalid permission: " + actions);
 				}
 				i--;
 			}
@@ -329,10 +319,8 @@ public final class CapabilityPermission extends BasicPermission {
 
 		try {
 			return FrameworkUtil.createFilter(filterString);
-		}
-		catch (InvalidSyntaxException e) {
-			IllegalArgumentException iae = new IllegalArgumentException(
-					"invalid filter");
+		} catch (InvalidSyntaxException e) {
+			IllegalArgumentException iae = new IllegalArgumentException("invalid filter");
 			iae.initCause(e);
 			throw iae;
 		}
@@ -451,12 +439,8 @@ public final class CapabilityPermission extends BasicPermission {
 
 		CapabilityPermission cp = (CapabilityPermission) obj;
 
-		return (action_mask == cp.action_mask)
-				&& getName().equals(cp.getName())
-				&& ((attributes == cp.attributes) || ((attributes != null) && (attributes
-						.equals(cp.attributes))))
-				&& ((bundle == cp.bundle) || ((bundle != null) && bundle
-						.equals(cp.bundle)));
+		return (action_mask == cp.action_mask) && getName().equals(cp.getName()) && ((attributes == cp.attributes) || ((attributes != null) && (attributes.equals(cp.attributes))))
+				&& ((bundle == cp.bundle) || ((bundle != null) && bundle.equals(cp.bundle)));
 	}
 
 	/**
@@ -480,8 +464,7 @@ public final class CapabilityPermission extends BasicPermission {
 	 * WriteObject is called to save the state of this permission to a stream.
 	 * The actions are serialized, and the superclass takes care of the name.
 	 */
-	private synchronized void writeObject(java.io.ObjectOutputStream s)
-			throws IOException {
+	private synchronized void writeObject(java.io.ObjectOutputStream s) throws IOException {
 		if (bundle != null) {
 			throw new NotSerializableException("cannot serialize");
 		}
@@ -496,8 +479,7 @@ public final class CapabilityPermission extends BasicPermission {
 	 * readObject is called to restore the state of this permission from a
 	 * stream.
 	 */
-	private synchronized void readObject(java.io.ObjectInputStream s)
-			throws IOException, ClassNotFoundException {
+	private synchronized void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		// Read in the action, then initialize the rest
 		s.defaultReadObject();
 		setTransients(getName(), parseActions(actions));
@@ -543,8 +525,7 @@ public final class CapabilityPermission extends BasicPermission {
 		private final Map<String, Object>							attributes;
 		private transient volatile Set<Map.Entry<String, Object>>	entries;
 
-		Properties(Map<String, Object> properties,
-				Map<String, Object> attributes) {
+		Properties(Map<String, Object> properties, Map<String, Object> attributes) {
 			this.properties = properties;
 			this.attributes = attributes;
 			entries = null;
@@ -569,8 +550,7 @@ public final class CapabilityPermission extends BasicPermission {
 			if (entries != null) {
 				return entries;
 			}
-			Set<Map.Entry<String, Object>> all = new HashSet<Map.Entry<String, Object>>(
-					attributes.size() + properties.size());
+			Set<Map.Entry<String, Object>> all = new HashSet<Map.Entry<String, Object>>(attributes.size() + properties.size());
 			all.addAll(attributes.entrySet());
 			all.addAll(properties.entrySet());
 			return entries = Collections.unmodifiableSet(all);
@@ -631,18 +611,15 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 	 */
 	public void add(final Permission permission) {
 		if (!(permission instanceof CapabilityPermission)) {
-			throw new IllegalArgumentException("invalid permission: "
-					+ permission);
+			throw new IllegalArgumentException("invalid permission: " + permission);
 		}
 		if (isReadOnly()) {
-			throw new SecurityException("attempt to add a Permission to a "
-					+ "readonly PermissionCollection");
+			throw new SecurityException("attempt to add a Permission to a " + "readonly PermissionCollection");
 		}
 
 		final CapabilityPermission cp = (CapabilityPermission) permission;
 		if (cp.bundle != null) {
-			throw new IllegalArgumentException("cannot add to collection: "
-					+ cp);
+			throw new IllegalArgumentException("cannot add to collection: " + cp);
 		}
 
 		final String name = cp.getName();
@@ -655,8 +632,7 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 				if (pc == null) {
 					filterPermissions = pc = new HashMap<String, CapabilityPermission>();
 				}
-			}
-			else {
+			} else {
 				pc = permissions;
 			}
 			final CapabilityPermission existing = pc.get(name);
@@ -665,11 +641,9 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 				final int oldMask = existing.action_mask;
 				final int newMask = cp.action_mask;
 				if (oldMask != newMask) {
-					pc.put(name, new CapabilityPermission(name, oldMask
-							| newMask));
+					pc.put(name, new CapabilityPermission(name, oldMask | newMask));
 				}
-			}
-			else {
+			} else {
 				pc.put(name, cp);
 			}
 
@@ -779,13 +753,10 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 	}
 
 	/* serialization logic */
-	private static final ObjectStreamField[]	serialPersistentFields	= {
-			new ObjectStreamField("permissions", HashMap.class),
-			new ObjectStreamField("all_allowed", Boolean.TYPE),
+	private static final ObjectStreamField[]	serialPersistentFields	= {new ObjectStreamField("permissions", HashMap.class), new ObjectStreamField("all_allowed", Boolean.TYPE),
 			new ObjectStreamField("filterPermissions", HashMap.class)	};
 
-	private synchronized void writeObject(ObjectOutputStream out)
-			throws IOException {
+	private synchronized void writeObject(ObjectOutputStream out) throws IOException {
 		ObjectOutputStream.PutField pfields = out.putFields();
 		pfields.put("permissions", permissions);
 		pfields.put("all_allowed", all_allowed);
@@ -793,15 +764,12 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 		out.writeFields();
 	}
 
-	private synchronized void readObject(java.io.ObjectInputStream in)
-			throws IOException, ClassNotFoundException {
+	private synchronized void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
-		HashMap<String, CapabilityPermission> p = (HashMap<String, CapabilityPermission>) gfields
-				.get("permissions", null);
+		HashMap<String, CapabilityPermission> p = (HashMap<String, CapabilityPermission>) gfields.get("permissions", null);
 		permissions = p;
 		all_allowed = gfields.get("all_allowed", false);
-		HashMap<String, CapabilityPermission> fp = (HashMap<String, CapabilityPermission>) gfields
-				.get("filterPermissions", null);
+		HashMap<String, CapabilityPermission> fp = (HashMap<String, CapabilityPermission>) gfields.get("filterPermissions", null);
 		filterPermissions = fp;
 	}
 }

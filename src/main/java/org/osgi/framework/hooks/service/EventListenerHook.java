@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2010, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.osgi.framework.hooks.service;
 
 import java.util.Collection;
 import java.util.Map;
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.hooks.service.ListenerHook.ListenerInfo;
@@ -32,7 +31,7 @@ import org.osgi.framework.hooks.service.ListenerHook.ListenerInfo;
  * 
  * @ThreadSafe
  * @since 1.1
- * @version $Id: 61c6aa7e7d4c85b3e5a6a3a340155bcda0074505 $
+ * @version $Id: b0b99b29206f272ad479fa08ffcd5ef5fda909b8 $
  */
 
 public interface EventListenerHook {
@@ -56,6 +55,5 @@ public interface EventListenerHook {
 	 *        collection will result in an {@code UnsupportedOperationException}
 	 *        . The map and the collections are not synchronized.
 	 */
-	void event(ServiceEvent event,
-			Map<BundleContext, Collection<ListenerInfo>> listeners);
+	void event(ServiceEvent event, Map<BundleContext, Collection<ListenerInfo>> listeners);
 }

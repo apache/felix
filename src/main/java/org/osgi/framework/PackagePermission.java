@@ -1,5 +1,5 @@
 /*
- * Copyright (c) OSGi Alliance (2000, 2010). All Rights Reserved.
+ * Copyright (c) OSGi Alliance (2000, 2012). All Rights Reserved.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,65 +50,64 @@ import java.util.Map;
  * 
  * <p>
  * {@code PackagePermission} has three actions: {@code exportonly},
- * {@code import} and {@code export}. The {@code export} action,
- * which is deprecated, implies the {@code import} action.
+ * {@code import} and {@code export}. The {@code export} action, which is
+ * deprecated, implies the {@code import} action.
  * 
  * @ThreadSafe
- * @version $Id: a286af94405e583f8bedc2ff5d7c818198f8caaf $
+ * @version $Id: e993fbc36b6bff84182a8594af5af3cad8c4e2a3 $
  */
 
 public final class PackagePermission extends BasicPermission {
-	static final long						serialVersionUID	= -5107705877071099135L;
+	static final long								serialVersionUID	= -5107705877071099135L;
 
 	/**
-	 * The action string {@code export}. The {@code export} action
-	 * implies the {@code import} action.
+	 * The action string {@code export}. The {@code export} action implies the
+	 * {@code import} action.
 	 * 
 	 * @deprecated Since 1.5. Use {@code exportonly} instead.
 	 */
-	public final static String				EXPORT				= "export";
+	public final static String						EXPORT				= "export";
 
 	/**
-	 * The action string {@code exportonly}. The {@code exportonly}
-	 * action does not imply the {@code import} action.
+	 * The action string {@code exportonly}. The {@code exportonly} action does
+	 * not imply the {@code import} action.
 	 * 
 	 * @since 1.5
 	 */
-	public final static String				EXPORTONLY			= "exportonly";
+	public final static String						EXPORTONLY			= "exportonly";
 
 	/**
 	 * The action string {@code import}.
 	 */
-	public final static String				IMPORT				= "import";
+	public final static String						IMPORT				= "import";
 
-	private final static int				ACTION_EXPORT		= 0x00000001;
-	private final static int				ACTION_IMPORT		= 0x00000002;
-	private final static int				ACTION_ALL			= ACTION_EXPORT
-																		| ACTION_IMPORT;
-	final static int						ACTION_NONE			= 0;
+	private final static int						ACTION_EXPORT		= 0x00000001;
+	private final static int						ACTION_IMPORT		= 0x00000002;
+	private final static int						ACTION_ALL			= ACTION_EXPORT | ACTION_IMPORT;
+	final static int								ACTION_NONE			= 0;
 
 	/**
 	 * The actions mask.
 	 */
-	transient int							action_mask;
+	transient int									action_mask;
 
 	/**
 	 * The actions in canonical form.
 	 * 
 	 * @serial
 	 */
-	private volatile String					actions				= null;
+	private volatile String							actions				= null;
 
 	/**
 	 * The bundle used by this PackagePermission.
 	 */
-	transient final Bundle					bundle;
+	transient final Bundle							bundle;
 
 	/**
 	 * If this PackagePermission was constructed with a filter, this holds a
 	 * Filter matching object used to evaluate the filter in implies.
 	 */
-	transient Filter						filter;
+	transient Filter								filter;
 
 	/**
 	 * This map holds the properties of the permission, used to match a filter
@@ -136,8 +135,8 @@ public final class PackagePermission extends BasicPermission {
 	 * *
 	 * </pre>
 	 * 
-	 * For the {@code import} action, the name can also be a filter
-	 * expression. The filter gives access to the following attributes:
+	 * For the {@code import} action, the name can also be a filter expression.
+	 * The filter gives access to the following attributes:
 	 * <ul>
 	 * <li>signer - A Distinguished Name chain used to sign the exporting
 	 * bundle. Wildcards in a DN are not matched according to the filter string
@@ -161,27 +160,23 @@ public final class PackagePermission extends BasicPermission {
 	 * 
 	 * @param name Package name or filter expression. A filter expression can
 	 *        only be specified if the specified action is {@code import}.
-	 * @param actions {@code exportonly},{@code import} (canonical
-	 *        order).
+	 * @param actions {@code exportonly},{@code import} (canonical order).
 	 * @throws IllegalArgumentException If the specified name is a filter
-	 *         expression and either the specified action is not
-	 *         {@code import} or the filter has an invalid syntax.
+	 *         expression and either the specified action is not {@code import}
+	 *         or the filter has an invalid syntax.
 	 */
 	public PackagePermission(String name, String actions) {
 		this(name, parseActions(actions));
-		if ((filter != null)
-				&& ((action_mask & ACTION_ALL) != ACTION_IMPORT)) {
-			throw new IllegalArgumentException(
-					"invalid action string for filter expression");
+		if ((filter != null) && ((action_mask & ACTION_ALL) != ACTION_IMPORT)) {
+			throw new IllegalArgumentException("invalid action string for filter expression");
 		}
 	}
 
 	/**
-	 * Creates a new requested {@code PackagePermission} object to be used
-	 * by code that must perform {@code checkPermission} for the
-	 * {@code import} action. {@code PackagePermission} objects
-	 * created with this constructor cannot be added to a
-	 * {@code PackagePermission} permission collection.
+	 * Creates a new requested {@code PackagePermission} object to be used by
+	 * code that must perform {@code checkPermission} for the {@code import}
+	 * action. {@code PackagePermission} objects created with this constructor
+	 * cannot be added to a {@code PackagePermission} permission collection.
 	 * 
 	 * @param name The name of the requested package to import.
 	 * @param exportingBundle The bundle exporting the requested package.
@@ -255,9 +250,7 @@ public final class PackagePermission extends BasicPermission {
 			char c;
 
 			// skip whitespace
-			while ((i != -1)
-					&& ((c = a[i]) == ' ' || c == '\r' || c == '\n'
-							|| c == '\f' || c == '\t'))
+			while ((i != -1) && ((c = a[i]) == ' ' || c == '\r' || c == '\n' || c == '\f' || c == '\t'))
 				i--;
 
 			// check for the known strings
@@ -272,8 +265,7 @@ public final class PackagePermission extends BasicPermission {
 				matchlen = 6;
 				mask |= ACTION_IMPORT;
 
-			}
-			else
+			} else
 				if (i >= 5 && (a[i - 5] == 'e' || a[i - 5] == 'E')
 						&& (a[i - 4] == 'x' || a[i - 4] == 'X')
 						&& (a[i - 3] == 'p' || a[i - 3] == 'P')
@@ -283,8 +275,7 @@ public final class PackagePermission extends BasicPermission {
 					matchlen = 6;
 					mask |= ACTION_EXPORT | ACTION_IMPORT;
 
-				}
-				else {
+				} else {
 					if (i >= 9 && (a[i - 9] == 'e' || a[i - 9] == 'E')
 							&& (a[i - 8] == 'x' || a[i - 8] == 'X')
 							&& (a[i - 7] == 'p' || a[i - 7] == 'P')
@@ -298,11 +289,9 @@ public final class PackagePermission extends BasicPermission {
 						matchlen = 10;
 						mask |= ACTION_EXPORT;
 
-					}
-					else {
+					} else {
 						// parse error
-						throw new IllegalArgumentException(
-								"invalid permission: " + actions);
+						throw new IllegalArgumentException("invalid permission: " + actions);
 					}
 				}
 
@@ -321,8 +310,7 @@ public final class PackagePermission extends BasicPermission {
 					case '\t' :
 						break;
 					default :
-						throw new IllegalArgumentException(
-								"invalid permission: " + actions);
+						throw new IllegalArgumentException("invalid permission: " + actions);
 				}
 				i--;
 			}
@@ -354,10 +342,8 @@ public final class PackagePermission extends BasicPermission {
 
 		try {
 			return FrameworkUtil.createFilter(filterString);
-		}
-		catch (InvalidSyntaxException e) {
-			IllegalArgumentException iae = new IllegalArgumentException(
-					"invalid filter");
+		} catch (InvalidSyntaxException e) {
+			IllegalArgumentException iae = new IllegalArgumentException("invalid filter");
 			iae.initCause(e);
 			throw iae;
 		}
@@ -432,11 +418,11 @@ public final class PackagePermission extends BasicPermission {
 	 * {@code PackagePermission} actions.
 	 * 
 	 * <p>
-	 * Always returns present {@code PackagePermission} actions in the
-	 * following order: {@code EXPORTONLY},{@code IMPORT}.
+	 * Always returns present {@code PackagePermission} actions in the following
+	 * order: {@code EXPORTONLY},{@code IMPORT}.
 	 * 
-	 * @return Canonical string representation of the
-	 *         {@code PackagePermission} actions.
+	 * @return Canonical string representation of the {@code PackagePermission}
+	 *         actions.
 	 */
 	public String getActions() {
 		String result = actions;
@@ -462,8 +448,8 @@ public final class PackagePermission extends BasicPermission {
 	}
 
 	/**
-	 * Returns a new {@code PermissionCollection} object suitable for
-	 * storing {@code PackagePermission} objects.
+	 * Returns a new {@code PermissionCollection} object suitable for storing
+	 * {@code PackagePermission} objects.
 	 * 
 	 * @return A new {@code PermissionCollection} object.
 	 */
@@ -475,15 +461,14 @@ public final class PackagePermission extends BasicPermission {
 	 * Determines the equality of two {@code PackagePermission} objects.
 	 * 
 	 * This method checks that specified package has the same package name and
-	 * {@code PackagePermission} actions as this
-	 * {@code PackagePermission} object.
+	 * {@code PackagePermission} actions as this {@code PackagePermission}
+	 * object.
 	 * 
 	 * @param obj The object to test for equality with this
 	 *        {@code PackagePermission} object.
-	 * @return {@code true} if {@code obj} is a
-	 *         {@code PackagePermission}, and has the same package name and
-	 *         actions as this {@code PackagePermission} object;
-	 *         {@code false} otherwise.
+	 * @return {@code true} if {@code obj} is a {@code PackagePermission}, and
+	 *         has the same package name and actions as this
+	 *         {@code PackagePermission} object; {@code false} otherwise.
 	 */
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -496,10 +481,7 @@ public final class PackagePermission extends BasicPermission {
 
 		PackagePermission pp = (PackagePermission) obj;
 
-		return (action_mask == pp.action_mask)
-				&& getName().equals(pp.getName())
-				&& ((bundle == pp.bundle) || ((bundle != null) && bundle
-						.equals(pp.bundle)));
+		return (action_mask == pp.action_mask) && getName().equals(pp.getName()) && ((bundle == pp.bundle) || ((bundle != null) && bundle.equals(pp.bundle)));
 	}
 
 	/**
@@ -521,8 +503,7 @@ public final class PackagePermission extends BasicPermission {
 	 * stream. The actions are serialized, and the superclass takes care of the
 	 * name.
 	 */
-	private synchronized void writeObject(java.io.ObjectOutputStream s)
-			throws IOException {
+	private synchronized void writeObject(java.io.ObjectOutputStream s) throws IOException {
 		if (bundle != null) {
 			throw new NotSerializableException("cannot serialize");
 		}
@@ -537,8 +518,7 @@ public final class PackagePermission extends BasicPermission {
 	 * readObject is called to restore the state of this permission from a
 	 * stream.
 	 */
-	private synchronized void readObject(java.io.ObjectInputStream s)
-			throws IOException, ClassNotFoundException {
+	private synchronized void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		// Read in the action, then initialize the rest
 		s.defaultReadObject();
 		setTransients(getName(), parseActions(actions));
@@ -588,7 +568,7 @@ public final class PackagePermission extends BasicPermission {
  */
 
 final class PackagePermissionCollection extends PermissionCollection {
-	static final long		serialVersionUID	= -3350758995234427603L;
+	static final long									serialVersionUID	= -3350758995234427603L;
 	/**
 	 * Table of permissions with names.
 	 * 
@@ -602,7 +582,7 @@ final class PackagePermissionCollection extends PermissionCollection {
 	 * @serial
 	 * @GuardedBy this
 	 */
-	private boolean			all_allowed;
+	private boolean										all_allowed;
 
 	/**
 	 * Table of permissions with filter expressions.
@@ -627,24 +607,20 @@ final class PackagePermissionCollection extends PermissionCollection {
 	 * @throws IllegalArgumentException If the specified permission is not a
 	 *         {@code PackagePermission} instance or was constructed with a
 	 *         Bundle object.
-	 * @throws SecurityException If this
-	 *         {@code PackagePermissionCollection} object has been marked
-	 *         read-only.
+	 * @throws SecurityException If this {@code PackagePermissionCollection}
+	 *         object has been marked read-only.
 	 */
 	public void add(final Permission permission) {
 		if (!(permission instanceof PackagePermission)) {
-			throw new IllegalArgumentException("invalid permission: "
-					+ permission);
+			throw new IllegalArgumentException("invalid permission: " + permission);
 		}
 		if (isReadOnly()) {
-			throw new SecurityException("attempt to add a Permission to a "
-					+ "readonly PermissionCollection");
+			throw new SecurityException("attempt to add a Permission to a " + "readonly PermissionCollection");
 		}
 
 		final PackagePermission pp = (PackagePermission) permission;
 		if (pp.bundle != null) {
-			throw new IllegalArgumentException("cannot add to collection: "
-					+ pp);
+			throw new IllegalArgumentException("cannot add to collection: " + pp);
 		}
 
 		final String name = pp.getName();
@@ -657,23 +633,19 @@ final class PackagePermissionCollection extends PermissionCollection {
 				if (pc == null) {
 					filterPermissions = pc = new HashMap<String, PackagePermission>();
 				}
-			}
-			else {
+			} else {
 				pc = permissions;
 			}
-			
+
 			final PackagePermission existing = pc.get(name);
 			if (existing != null) {
 				final int oldMask = existing.action_mask;
 				final int newMask = pp.action_mask;
 				if (oldMask != newMask) {
-					pc
-							.put(name, new PackagePermission(name, oldMask
-									| newMask));
+					pc.put(name, new PackagePermission(name, oldMask | newMask));
 
 				}
-			}
-			else {
+			} else {
 				pc.put(name, pp);
 			}
 
@@ -691,8 +663,8 @@ final class PackagePermissionCollection extends PermissionCollection {
 	 * 
 	 * @param permission The Permission object to compare with this
 	 *        {@code PackagePermission} object.
-	 * @return {@code true} if {@code permission} is a proper subset
-	 *         of a permission in the set; {@code false} otherwise.
+	 * @return {@code true} if {@code permission} is a proper subset of a
+	 *         permission in the set; {@code false} otherwise.
 	 */
 	public boolean implies(final Permission permission) {
 		if (!(permission instanceof PackagePermission)) {
@@ -767,8 +739,8 @@ final class PackagePermissionCollection extends PermissionCollection {
 	}
 
 	/**
-	 * Returns an enumeration of all {@code PackagePermission} objects in
-	 * the container.
+	 * Returns an enumeration of all {@code PackagePermission} objects in the
+	 * container.
 	 * 
 	 * @return Enumeration of all {@code PackagePermission} objects.
 	 */
@@ -782,15 +754,11 @@ final class PackagePermissionCollection extends PermissionCollection {
 	}
 
 	/* serialization logic */
-	private static final ObjectStreamField[]	serialPersistentFields	= {
-			new ObjectStreamField("permissions", Hashtable.class),
-			new ObjectStreamField("all_allowed", Boolean.TYPE),
+	private static final ObjectStreamField[]	serialPersistentFields	= {new ObjectStreamField("permissions", Hashtable.class), new ObjectStreamField("all_allowed", Boolean.TYPE),
 			new ObjectStreamField("filterPermissions", HashMap.class)	};
 
-	private synchronized void writeObject(ObjectOutputStream out)
-			throws IOException {
-		Hashtable<String, PackagePermission> hashtable = new Hashtable<String, PackagePermission>(
-				permissions);
+	private synchronized void writeObject(ObjectOutputStream out) throws IOException {
+		Hashtable<String, PackagePermission> hashtable = new Hashtable<String, PackagePermission>(permissions);
 		ObjectOutputStream.PutField pfields = out.putFields();
 		pfields.put("permissions", hashtable);
 		pfields.put("all_allowed", all_allowed);
@@ -798,15 +766,12 @@ final class PackagePermissionCollection extends PermissionCollection {
 		out.writeFields();
 	}
 
-	private synchronized void readObject(java.io.ObjectInputStream in)
-			throws IOException, ClassNotFoundException {
+	private synchronized void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		ObjectInputStream.GetField gfields = in.readFields();
-		Hashtable<String, PackagePermission> hashtable = (Hashtable<String, PackagePermission>) gfields
-				.get("permissions", null);
+		Hashtable<String, PackagePermission> hashtable = (Hashtable<String, PackagePermission>) gfields.get("permissions", null);
 		permissions = new HashMap<String, PackagePermission>(hashtable);
 		all_allowed = gfields.get("all_allowed", false);
-		HashMap<String, PackagePermission> fp = (HashMap<String, PackagePermission>) gfields
-				.get("filterPermissions", null);
+		HashMap<String, PackagePermission> fp = (HashMap<String, PackagePermission>) gfields.get("filterPermissions", null);
 		filterPermissions = fp;
 	}
 }
