@@ -33,7 +33,8 @@
         <property name="p1" value="p1" />
         <property name="p2" value="p2" />
     </scr:component>
-    <scr:component name="components.mutable.properties2"
+
+    <scr:component name="components.mutable.properties.return"
             xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
             enabled="true"
             configuration-policy="optional"
@@ -44,9 +45,35 @@
         <service>
             <provide interface="org.apache.felix.scr.integration.components.MutatingService" />
         </service>
-        <property name="service.pid" value="components.mutable.properties2" />
+        <property name="service.pid" value="components.mutable.properties.return" />
         <property name="theValue" value="otherValue" />
         <property name="p1" value="p1" />
         <property name="p2" value="p2" />
+    </scr:component>
+
+    <scr:component name="components.mutable.properties.bind"
+                   xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
+                   enabled="true"
+                   configuration-policy="optional"
+                   activate="activateMutate"
+                   modified="modifiedMutate"
+                   deactivate="deactivateMutate">
+        <implementation class="org.apache.felix.scr.integration.components.MutatingServiceImpl"/>
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.MutatingService"/>
+        </service>
+        <reference
+                name="simpleService"
+                interface="org.apache.felix.scr.integration.components.SimpleService"
+                cardinality="0..1"
+                policy="dynamic"
+                bind="bindSimpleService"
+                unbind="unbindSimpleService"
+                updated="updateSimpleService"
+                />
+        <property name="service.pid" value="components.mutable.properties.bind"/>
+        <property name="theValue" value="otherValue"/>
+        <property name="p1" value="p1"/>
+        <property name="p2" value="p2"/>
     </scr:component>
 </components>

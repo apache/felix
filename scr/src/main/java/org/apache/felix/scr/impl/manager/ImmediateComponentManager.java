@@ -23,7 +23,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
@@ -233,7 +232,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
         // 4. Call the activate method, if present
         final MethodResult result = m_activateMethod.invoke(implementationObject, new ActivatorParameter(
             componentContext, 1), null);
-        if (result == null)
+        if ( result == null )
         {
             // 112.5.8 If the activate method throws an exception, SCR must log an error message
             // containing the exception with the Log Service and activation fails
@@ -246,9 +245,9 @@ public class ImmediateComponentManager extends AbstractComponentManager
 
             return null;
         }
-        else if (result.hasResult())
+        else
         {
-            setServiceProperties(result.getResult(), true);
+            setServiceProperties( result );
         }
 
         return implementationObject;
@@ -272,9 +271,9 @@ public class ImmediateComponentManager extends AbstractComponentManager
         // exception with the Log Service and continue) has already been logged
         final MethodResult result = m_deactivateMethod.invoke( implementationObject, new ActivatorParameter( componentContext,
             reason ), null );
-        if (result != null && result.hasResult())
+        if ( result != null )
         {
-            setServiceProperties(result.getResult(), true);
+            setServiceProperties( result );
         }
 
         // 2. Unbind any bound services
@@ -376,14 +375,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
         return m_properties;
     }
 
-
-    public void setServiceProperties(Map serviceProperties, boolean updateServiceRegistration)
-    {
-        Dictionary serviceProps = (serviceProperties == null) ? null : new Hashtable(serviceProperties);
-        setServiceProperties(serviceProps, updateServiceRegistration);
-    }
-
-    public void setServiceProperties(Dictionary serviceProperties, boolean updateServiceRegistration)
+    public void setServiceProperties( Dictionary serviceProperties )
     {
         if ( serviceProperties == null || serviceProperties.isEmpty() )
         {
@@ -397,10 +389,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
             m_serviceProperties.put( ComponentConstants.COMPONENT_ID, new Long( getId() ) );
         }
 
-        if (updateServiceRegistration)
-        {
-            updateServiceRegistration();
-        }
+        updateServiceRegistration();
     }
 
     public Dictionary getServiceProperties() {
@@ -550,17 +539,13 @@ public class ImmediateComponentManager extends AbstractComponentManager
         // 4. call method (nothing to do when failed, since it has already been logged)
         final MethodResult result = m_modifyMethod.invoke(getInstance(),
             new ActivatorParameter(m_componentContext, -1), null);
-        if (result == null)
+        if ( result == null )
         {
             // log an error if the declared method cannot be found
             log( LogService.LOG_ERROR, "Declared modify method ''{0}'' cannot be found, configuring by reactivation",
                 new Object[]
                     { getComponentMetadata().getModified() }, null );
             return false;
-        }
-        else if (result.hasResult())
-        {
-            setServiceProperties(result.getResult(), false);
         }
 
         // 5. update the target filter on the services now, this may still
@@ -575,10 +560,17 @@ public class ImmediateComponentManager extends AbstractComponentManager
             return false;
         }
 
-        // 6. update service registration properties
-        updateServiceRegistration();
+        // 6. update service registration properties if we didn't just do it
+        if ( result.hasResult() )
+        {
+            setServiceProperties( result );
+        }
+        else
+        {
+            updateServiceRegistration();
+        }
 
-        // 7. everything set and done, the component has been udpated
+        // 7. everything set and done, the component has been updated
         return true;
     }
 

@@ -259,14 +259,10 @@ abstract class BaseMethod
         return MethodResult.VOID; // TODO: or null ??
     }
 
-    protected void processResult( Object configResults, Object result, Method method )
-    {
-        //no op
-    }
-
     protected boolean returnValue()
     {
-        return false;
+        // allow returning Map if declared as DS 1.2-Felix or newer
+        return isDS12Felix();
     }
 
     /**

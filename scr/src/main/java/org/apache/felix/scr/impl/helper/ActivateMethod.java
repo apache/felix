@@ -142,12 +142,6 @@ public class ActivateMethod extends BaseMethod
         return "activate";
     }
 
-    protected boolean returnValue()
-    {
-        // allow returning Map if declared as DS 1.2-Felix or newer
-        return isDS12Felix();
-    }
-
     public MethodResult invoke(Object componentInstance, Object rawParameter, final MethodResult methodCallFailureResult)
     {
         if (methodExists())

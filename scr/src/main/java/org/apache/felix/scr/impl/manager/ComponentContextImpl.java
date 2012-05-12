@@ -136,7 +136,7 @@ public class ComponentContextImpl implements ExtComponentContext, ComponentInsta
 
     public void setServiceProperties(Dictionary properties)
     {
-        getComponentManager().setServiceProperties(properties, true);
+        getComponentManager().setServiceProperties(properties );
     }
 
 }

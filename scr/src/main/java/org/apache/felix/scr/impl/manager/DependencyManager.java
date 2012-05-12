@@ -1047,7 +1047,7 @@ public class DependencyManager implements ServiceListener, Reference
         {
             if ( m_bind != null )
             {
-                return m_bind.invoke( m_componentInstance, new BindMethod.Service()
+                MethodResult result = m_bind.invoke( m_componentInstance, new BindMethod.Service()
                 {
                     public ServiceReference getReference()
                     {
@@ -1060,7 +1060,13 @@ public class DependencyManager implements ServiceListener, Reference
                     {
                         return getService( ref );
                     }
-                }, MethodResult.VOID ) != null;
+                }, MethodResult.VOID );
+                if ( result == null )
+                {
+                    return false;
+                }
+                m_componentManager.setServiceProperties( result );
+                return true;
             }
 
             // Concurrency Issue: The component instance still exists but
@@ -1113,10 +1119,9 @@ public class DependencyManager implements ServiceListener, Reference
     {
         // The updated method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
-        //TODO should updated methods be able to change config properties?
         if ( m_componentInstance != null )
         {
-            m_updated.invoke( m_componentInstance, new BindMethod.Service()
+            MethodResult methodResult = m_updated.invoke( m_componentInstance, new BindMethod.Service()
             {
                 public ServiceReference getReference()
                 {
@@ -1129,6 +1134,10 @@ public class DependencyManager implements ServiceListener, Reference
                     return getService( ref );
                 }
             }, MethodResult.VOID );
+            if ( methodResult != null)
+            {
+                m_componentManager.setServiceProperties( methodResult );
+            }
         }
         else
         {
@@ -1157,7 +1166,7 @@ public class DependencyManager implements ServiceListener, Reference
         // null. This is valid for both immediate and delayed components
         if ( m_componentInstance != null )
         {
-            m_unbind.invoke( m_componentInstance, new BindMethod.Service()
+            MethodResult methodResult = m_unbind.invoke( m_componentInstance, new BindMethod.Service()
             {
                 public ServiceReference getReference()
                 {
@@ -1170,6 +1179,10 @@ public class DependencyManager implements ServiceListener, Reference
                     return getService( ref );
                 }
             }, MethodResult.VOID );
+            if ( methodResult != null )
+            {
+                m_componentManager.setServiceProperties( methodResult );
+            }
         }
         else
         {

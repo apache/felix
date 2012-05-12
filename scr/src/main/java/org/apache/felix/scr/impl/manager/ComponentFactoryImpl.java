@@ -209,7 +209,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         return props;
     }
 
-    public void setServiceProperties(Dictionary serviceProperties, boolean updateServiceRegistration)
+    public void setServiceProperties( Dictionary serviceProperties )
     {
         throw new IllegalStateException( "ComponentFactory service properties are immutable" );
     }
