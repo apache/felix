@@ -27,6 +27,7 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.MutatingService;
+import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -41,7 +42,7 @@ public class MutablePropertiesTest extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-        // paxRunnerVmOption = DEBUG_VM_OPTION;
+        //paxRunnerVmOption = DEBUG_VM_OPTION;
 
         descriptorFile = "/integration_test_mutable_properties.xml";
     }
@@ -83,11 +84,11 @@ public class MutablePropertiesTest extends ComponentTestBase
     @Test
     public void test_mutable_properties_returned() throws InvalidSyntaxException
     {
-        final Component component = findComponentByName( "components.mutable.properties2" );
+        final Component component = findComponentByName( "components.mutable.properties.return" );
         TestCase.assertNotNull( component );
         TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
 
-        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=components.mutable.properties2)" );
+        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=components.mutable.properties.return)" );
         TestCase.assertEquals( 1, serviceReferences.length );
         ServiceReference serviceReference = serviceReferences[0];
         checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
@@ -102,7 +103,7 @@ public class MutablePropertiesTest extends ComponentTestBase
         checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
 
         //configure with configAdmin
-        configure( "components.mutable.properties2" );
+        configure( "components.mutable.properties.return" );
         delay();
         delay();
         //no change
@@ -114,10 +115,40 @@ public class MutablePropertiesTest extends ComponentTestBase
 
         bundleContext.ungetService(serviceReference);
     }
+    @Test
+    public void test_mutable_properties_bind_returned() throws InvalidSyntaxException
+    {
+        final Component component = findComponentByName( "components.mutable.properties.bind" );
+        TestCase.assertNotNull( component );
+        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+
+        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=components.mutable.properties.bind)" );
+        TestCase.assertEquals( 1, serviceReferences.length );
+        ServiceReference serviceReference = serviceReferences[0];
+        checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
+        MutatingService s = ( MutatingService ) bundleContext.getService( serviceReference );
+
+        SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
+        checkProperties( serviceReference, 5, null, "p1", "p2" );
+        Assert.assertEquals("bound", serviceReference.getProperty("SimpleService"));
+
+        srv1.update( "foo" );
+        checkProperties( serviceReference, 5, null, "p1", "p2" );
+        Assert.assertEquals("updated", serviceReference.getProperty("SimpleService"));
+
+        srv1.drop();
+        checkProperties( serviceReference, 5, null, "p1", "p2" );
+        Assert.assertEquals("unbound", serviceReference.getProperty("SimpleService"));
+
+        bundleContext.ungetService(serviceReference);
+    }
 
     private void checkProperties(ServiceReference serviceReference, int count, String otherValue, String p1, String p2) {
         Assert.assertEquals("wrong property count", count, serviceReference.getPropertyKeys().length);
-        Assert.assertEquals(otherValue, serviceReference.getProperty(PROP_NAME));
+        if ( otherValue != null )
+        {
+            Assert.assertEquals(otherValue, serviceReference.getProperty(PROP_NAME));
+        }
         if ( count > 5 ) {
             Assert.assertEquals(p1, serviceReference.getProperty("p1"));
             Assert.assertEquals(p2, serviceReference.getProperty("p2"));

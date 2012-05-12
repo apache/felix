@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
@@ -797,7 +798,7 @@ public abstract class AbstractComponentManager implements Component
 
     public abstract Dictionary getProperties();
 
-    public abstract void setServiceProperties(Dictionary serviceProperties, boolean updateServiceRegistration);
+    public abstract void setServiceProperties( Dictionary serviceProperties );
 
     /**
      * Returns the subset of component properties to be used as service
@@ -898,6 +899,15 @@ public abstract class AbstractComponentManager implements Component
         log( LogService.LOG_DEBUG, "State transition : {0} -> {1}", new Object[]
             { m_state, newState }, null );
         m_state = newState;
+    }
+
+    public void setServiceProperties( MethodResult methodResult )
+    {
+        if ( methodResult.hasResult() )
+        {
+            Dictionary serviceProps = ( methodResult.getResult() == null) ? null : new Hashtable( methodResult.getResult() );
+            setServiceProperties(serviceProps );
+        }
     }
 
     //--------- State classes

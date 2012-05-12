@@ -19,6 +19,7 @@
 package org.apache.felix.scr.integration.components;
 
 
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
@@ -45,26 +46,43 @@ public class MutatingServiceImpl implements MutatingService
     {
         this.activateContext = activateContext;
         Map result = new Hashtable( (Map )activateContext.getProperties() );
-        result.put( "theValue", "anotherValue1");
+        result.put( "theValue", "anotherValue1" );
         return result;
     }
 
     private Map modifiedMutate( ComponentContext activateContext )
     {
         Map result = new Hashtable( (Map )activateContext.getProperties() );
-        result.put( "theValue", "anotherValue2");
+        result.put( "theValue", "anotherValue2" );
         return result;
     }
 
     private Map deactivateMutate( ComponentContext activateContext )
     {
         Map result = new Hashtable( (Map )activateContext.getProperties() );
-        result.put( "theValue", "anotherValue3");
+        result.put( "theValue", "anotherValue3" );
         return result;
     }
 
-    public void updateProperties(Dictionary changes) {
-        ((ExtComponentContext)activateContext).setServiceProperties(changes);
+    public void updateProperties( Dictionary changes )
+    {
+        ( ( ExtComponentContext ) activateContext ).setServiceProperties( changes );
     }
+
+    private Map bindSimpleService( SimpleService ss )
+    {
+        return Collections.singletonMap( "SimpleService", "bound" );
+    }
+
+    private Map unbindSimpleService( SimpleService ss )
+    {
+        return Collections.singletonMap( "SimpleService", "unbound" );
+    }
+
+    private Map updateSimpleService( SimpleService ss )
+    {
+        return Collections.singletonMap( "SimpleService", "updated" );
+    }
+
 
 }
