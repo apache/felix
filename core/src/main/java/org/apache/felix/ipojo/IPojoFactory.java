@@ -522,6 +522,8 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
             m_sr = null;
         }
         stopping(); // Method called when holding the lock.
+        int oldState = m_state; // Create a variable to store the old state. Using a variable is important as
+                                // after the next instruction, the getState() method must return INVALID.
         m_state = INVALID; // Set here to avoid to create instances during the stops.
 
         Set col = m_componentInstances.keySet();
@@ -533,7 +535,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
             index++;
         }
 
-        if (m_state == VALID) {
+        if (oldState == VALID) { // Check if the old state was valid.
             for (int i = 0; i < m_listeners.size(); i++) {
                 ((FactoryStateListener) m_listeners.get(i)).stateChanged(this, INVALID);
             }
