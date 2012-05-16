@@ -141,21 +141,91 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
         }
     }
 
-    public static void replace(File target, File source) {
-        delete(target, true);
-        source.renameTo(target);
+    public static boolean replace(File target, File source) {
+        if (delete(target, true)) {
+            return rename(source, target);
+        }
+        return false;
+    }
+    
+    public static boolean copy(File from, File to) {
+        boolean result = true;
+        if (from.isDirectory()) {
+            if (!to.isDirectory()) {
+                if (!to.mkdirs()) {
+                    return false;
+                }
+                File[] files = from.listFiles();
+                if (files == null) {
+                    return false;
+                }
+                for (int i = 0; i < files.length; i++) {
+                    result &= copy(files[i], new File(to, files[i].getName()));
+                }
+            }
+        }
+        else {
+            InputStream input = null;
+            OutputStream output = null;
+            try {
+                input = new FileInputStream(from);
+                output = new FileOutputStream(to);
+                byte[] buffer = new byte[4096];
+                for (int i = input.read(buffer); i > -1; i = input.read(buffer)) {
+                    output.write(buffer, 0, i);
+                }
+            }
+            catch (IOException e) {
+                return false;
+            }
+            finally {
+                if (output != null) {
+                    try {
+                        output.close();
+                    }
+                    catch (IOException e) {
+                        result = false;
+                    }
+                }
+                if (input != null) {
+                    try {
+                        input.close();
+                    }
+                    catch (IOException e) {
+                        result = false;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+    
+    public static boolean rename(File from, File to) {
+        if (!from.renameTo(to)) {
+            if (copy(from, to)) {
+                if (!delete(from, true)) {
+                    return false;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+        return true;
     }
 
-    private static void delete(File root, boolean deleteRoot) {
+    private static boolean delete(File root, boolean deleteRoot) {
+        boolean result = true;
         if (root.isDirectory()) {
             File[] childs = root.listFiles();
             for (int i = 0; i < childs.length; i++) {
-                delete(childs[i], true);
+                result &= delete(childs[i], true);
             }
         }
         if (deleteRoot) {
-            root.delete();
+            result &= root.delete();
         }
+        return result;
     }
 
     public static void merge(File targetIndex, File target, File sourceIndex, File source) throws IOException {
@@ -177,13 +247,19 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
 
         for (Iterator iter = sourceFiles.iterator(); iter.hasNext();) {
             String path = (String) iter.next();
+            File from = new File(source, path);
+            File to = new File(target, path);
             if (targetFiles.contains(path)) {
-                (new File(target, path)).delete();
+                if (!to.delete()) {
+                    throw new IOException("Could not delete " + to);
+                }
             }
             else {
                 result.add(path);
             }
-            (new File(source, path)).renameTo(new File(target, path));
+            if (!rename(from, to)) {
+                throw new IOException("Could not rename " + from + " to "  + to);
+            }
         }
 
         targetFiles.removeAll(sourceFiles);
