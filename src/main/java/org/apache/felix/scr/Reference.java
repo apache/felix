@@ -85,6 +85,15 @@ public interface Reference
      */
     boolean isStatic();
 
+    /**
+     * Returns <code>true</code> if the reference is defined with reluctant
+     * policy option.  This method provides access to the <code>policy-option</code>
+     * element of the <code>reference</code> element.  <code>true</code> is
+     * returned if the policy option is defined as <em>reluctant</em>
+     *
+     * @since 1.7
+     */
+    boolean isReluctant();
 
     /**
      * Returns the value of the target property of this reference. Initially

@@ -272,6 +272,8 @@ class ScrCommand
                     out.println(refs[i].isOptional() ? "optional" : "mandatory");
                     out.print("    Policy: ");
                     out.println(refs[i].isStatic() ? "static" : "dynamic");
+                    out.print("    Policy option: ");
+                    out.println(refs[i].isReluctant() ? "reluctant" : "greedy");
                 }
             }
 

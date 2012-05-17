@@ -266,6 +266,8 @@ public class DependencyManager implements ServiceListener, Reference
      * Depending on the component state and dependency configuration, the
      * component may be activated, re-activated or the service just be provided.
      *
+     * See Compendium 4.3 table 112.1
+     *
      * @param reference The reference to the service newly registered or
      *      modified.
      */
@@ -293,9 +295,19 @@ public class DependencyManager implements ServiceListener, Reference
             // the component is reactivated for other reasons.
             if ( m_dependencyMetadata.isStatic() )
             {
-                m_componentManager.log( LogService.LOG_DEBUG,
-                    "Dependency Manager: Added service {0} is ignored for static reference", new Object[]
-                        { m_dependencyMetadata.getName() }, null );
+                if ( m_dependencyMetadata.isReluctant() )
+                {
+                    m_componentManager.log( LogService.LOG_DEBUG,
+                            "Dependency Manager: Added service {0} is ignored for static reluctant reference", new Object[]
+                            {m_dependencyMetadata.getName()}, null );
+                }
+                else if ( m_dependencyMetadata.isMultiple() ||
+                        m_bound.isEmpty() ||
+                        reference.compareTo( m_bound.keySet().iterator().next() ) > 0 )
+                {
+                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE );
+                    m_componentManager.activateInternal();
+                }
             }
 
             // otherwise bind if we have a bind method and the service needs
@@ -307,6 +319,16 @@ public class DependencyManager implements ServiceListener, Reference
                 {
                     // bind the service, getting it if required
                     invokeBindMethod( reference );
+                }
+                else if ( !isReluctant() )
+                {
+                    //dynamic greedy single: bind then unbind
+                    ServiceReference oldRef = ( ServiceReference ) m_bound.keySet().iterator().next();
+                    if ( reference.compareTo( oldRef ) > 0 )
+                    {
+                        invokeBindMethod( reference );
+                        invokeUnbindMethod( oldRef );
+                    }
                 }
             }
         }
@@ -456,6 +478,10 @@ public class DependencyManager implements ServiceListener, Reference
         return m_dependencyMetadata.isStatic();
     }
 
+    public boolean isReluctant()
+    {
+        return m_dependencyMetadata.isReluctant();
+    }
 
     public String getBindMethodName()
     {

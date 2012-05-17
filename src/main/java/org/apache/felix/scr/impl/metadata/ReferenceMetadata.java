@@ -54,6 +54,15 @@ public class ReferenceMetadata
     // set of valid policy settings
     private static final Set POLICY_VALID;
 
+    // constant for reluctant policy option
+    public static final String POLICY_OPTION_RELUCTANT = "reluctant";
+
+    // constant for greedy policy option
+    public static final String POLICY_OPTION_GREEDY = "greedy";
+
+    // set of valid policy option settings
+    private static final Set POLICY_OPTION_VALID;
+
     // Name for the reference (required)
     private String m_name = null;
 
@@ -78,6 +87,9 @@ public class ReferenceMetadata
     // Policy attribute (optional, default = static)
     private String m_policy = null;
 
+    // Policy option attribute (optional, default = reluctant)
+    private String m_policy_option = null;
+
     // Flag that is set once the component is verified (its properties cannot be changed)
     private boolean m_validated = false;
 
@@ -85,6 +97,7 @@ public class ReferenceMetadata
     private boolean m_isStatic = true;
     private boolean m_isOptional = false;
     private boolean m_isMultiple = false;
+    private boolean m_isReluctant = true;
 
     static
     {
@@ -97,6 +110,10 @@ public class ReferenceMetadata
         POLICY_VALID = new TreeSet();
         POLICY_VALID.add( POLICY_DYNAMIC );
         POLICY_VALID.add( POLICY_STATIC );
+
+        POLICY_OPTION_VALID = new TreeSet();
+        POLICY_OPTION_VALID.add( POLICY_OPTION_RELUCTANT );
+        POLICY_OPTION_VALID.add( POLICY_OPTION_GREEDY );
     }
 
 
@@ -171,6 +188,25 @@ public class ReferenceMetadata
 
         // secondary property
         m_isStatic = POLICY_STATIC.equals( policy );
+    }
+
+
+    /**
+     *	Setter for the policy option attribute
+     *
+     * @param policyOption
+     */
+    public void setPolicyOption( String policyOption )
+    {
+        if ( m_validated )
+        {
+            return;
+        }
+
+        m_policy_option = policyOption;
+
+        // secondary property
+        m_isReluctant = POLICY_OPTION_RELUCTANT.equals( policyOption );
     }
 
 
@@ -285,6 +321,17 @@ public class ReferenceMetadata
 
 
     /**
+     * Get the policy option as a string
+     *
+     * @return A string with the policy option
+    **/
+    public String getPolicyOption()
+    {
+        return m_policy_option;
+    }
+
+
+    /**
      * Returns the filter expression that further constrains the set of target services
      *
      * @return A string with a filter
@@ -367,6 +414,17 @@ public class ReferenceMetadata
 
 
     /**
+     * Test if policy option is reluctant
+     *
+     * @return true if policy option is reluctant
+     */
+    public boolean isReluctant()
+    {
+        return m_isReluctant;
+    }
+
+
+    /**
      * Returns the name of the component property referring to the {@link #getTarget() target}
      * property of this reference.
      *
@@ -418,6 +476,20 @@ public class ReferenceMetadata
         {
             throw componentMetadata.validationFailure( "Policy must be one of " + POLICY_VALID );
         }
+
+        if ( m_policy_option == null )
+        {
+            setPolicyOption( POLICY_OPTION_RELUCTANT );
+        }
+        else if ( !POLICY_OPTION_VALID.contains( m_policy_option ) )
+        {
+            throw componentMetadata.validationFailure( "Policy option must be one of " + POLICY_OPTION_VALID );
+        }
+        else if ( !componentMetadata.isDS12() && !POLICY_OPTION_RELUCTANT.equals( m_policy_option ) )
+        {
+            throw componentMetadata.validationFailure( "Policy option must be reluctant for DS < 1.2" );
+        }
+
 
         // updated method is only supported in namespace xxx and later
         if ( m_updated != null && !componentMetadata.isDS11Felix() )
