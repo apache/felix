@@ -51,6 +51,7 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
     private final File m_contentDir;
     private final File m_indexFile;
     private final PipedInputStream m_input;
+    private Exception m_exception;
 
     /**
      * Creates an instance of this class.
@@ -65,8 +66,15 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
     }
 
     public void close() throws IOException {
-        super.close();
-        waitFor();
+        try {
+            super.close();
+            if (m_exception != null) {
+                throw new IOException("Exception while processing the stream in the background: " + m_exception.getMessage(), m_exception);
+            }
+        }
+        finally {
+            waitFor();
+        }
     }
 
     private ExplodingOutputtingInputStream(InputStream inputStream, PipedOutputStream output, File index, File root) throws IOException {
@@ -121,11 +129,19 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
             }
         }
         catch (IOException ex) {
-            // TODO: review the impact of this happening and how to react
+            pushException(ex);
         }
         finally {
             if (writer != null) {
                 writer.close();
+            }
+            if (input != null) {
+                try {
+                    input.close();
+                }
+                catch (IOException e) {
+                    pushException(e);
+                }
             }
         }
         
@@ -137,15 +153,21 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
             }
         }
         catch (IOException e) {
-            e.printStackTrace();
+            pushException(e);
         }
+    }
+    
+    private void pushException(Exception e) {
+        Exception e2 = new Exception(e.getMessage());
+        e2.setStackTrace(e.getStackTrace());
+        if (m_exception != null) {
+            e2.initCause(m_exception);
+        }
+        m_exception = e2;
     }
 
     public static boolean replace(File target, File source) {
-        if (delete(target, true)) {
-            return rename(source, target);
-        }
-        return false;
+        return delete(target, true) && rename(source, target);
     }
     
     public static boolean copy(File from, File to) {
@@ -217,13 +239,20 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
     private static boolean delete(File root, boolean deleteRoot) {
         boolean result = true;
         if (root.isDirectory()) {
-            File[] childs = root.listFiles();
-            for (int i = 0; i < childs.length; i++) {
-                result &= delete(childs[i], true);
+            File[] files = root.listFiles();
+            for (int i = 0; i < files.length; i++) {
+            	if (files[i].isDirectory()) {
+            		result &= delete(files[i], true);
+            	}
+            	else {
+            		result &= files[i].delete();
+            	}
             }
         }
         if (deleteRoot) {
-            result &= root.delete();
+        	if (root.exists()) {
+        		result &= root.delete();
+        	}
         }
         return result;
     }
@@ -274,7 +303,10 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
 
         for (Iterator iter = targetFiles.iterator(); iter.hasNext();) {
             String path = (String) iter.next();
-            (new File(target, path)).delete();
+            File targetFile = new File(target, path);
+            if (!targetFile.delete()) {
+                throw new IOException("Could not delete " + targetFile);
+            }
         }
 
         GZIPOutputStream outputStream = new GZIPOutputStream(new FileOutputStream(new File(target, "META-INF/MANIFEST.MF")));
@@ -295,12 +327,7 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
         }
         finally {
             if (reader != null) {
-                try {
-                    reader.close();
-                }
-                catch (IOException e) {
-                    // Not much we can do
-                }
+                reader.close();
             }
         }
     }

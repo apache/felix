@@ -64,10 +64,10 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
 
     private static final long TIMEOUT = 10000;
 
-    private BundleContext m_context; /* will be injected by dependencymanager */
-    private PackageAdmin m_packageAdmin;    /* will be injected by dependencymanager */
-    private EventAdmin m_eventAdmin; /* will be injected by dependencymanager */
-    private LogService m_log;        /* will be injected by dependencymanager */
+    private volatile BundleContext m_context;       /* will be injected by dependencymanager */
+    private volatile PackageAdmin m_packageAdmin;   /* will be injected by dependencymanager */
+    private volatile EventAdmin m_eventAdmin;       /* will be injected by dependencymanager */
+    private volatile LogService m_log;              /* will be injected by dependencymanager */
     private DeploymentSessionImpl m_session = null;
     private final Map m_packages = new HashMap();
     private final List m_commandChain = new ArrayList();
@@ -115,7 +115,6 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
             }
         }
     }
-
 
     public void stop() {
     	cancel();
@@ -213,11 +212,14 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
                 throw de;
             }
             try {
-                jarInput.close();
+                // note that calling close on this stream will wait until asynchronous processing
+                // is done
+                input.close();
             }
             catch (IOException e) {
-                // nothing we can do
-                m_log.log(LogService.LOG_WARNING, "Could not close stream properly", e);
+                succeeded = false;
+                m_log.log(LogService.LOG_ERROR, "Could not close stream properly", e);
+                throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not close stream properly", e);
             }
 
             File targetContents = m_context.getDataFile(PACKAGE_DIR + File.separator + source.getName() + File.separator + PACKAGECONTENTS_DIR);
@@ -231,10 +233,13 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
                     m_log.log(LogService.LOG_ERROR, "Could not merge source fix package with target deployment package", e);
                     throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not merge source fix package with target deployment package", e);
                 }
-            } else {
+            }
+            else {
                 File targetPackage = m_context.getDataFile(PACKAGE_DIR + File.separator + source.getName());
                 targetPackage.mkdirs();
-                ExplodingOutputtingInputStream.replace(targetPackage, tempPackage);
+                if (!ExplodingOutputtingInputStream.replace(targetPackage, tempPackage)) {
+                	throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not replace " + targetPackage + " with " + tempPackage);
+                }
             }
             FileDeploymentPackage fileDeploymentPackage = null;
             try {
