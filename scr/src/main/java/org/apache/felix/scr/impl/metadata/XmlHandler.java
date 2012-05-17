@@ -75,7 +75,7 @@ public class XmlHandler implements KXml2SAXHandler
     // namespace code for the DS 1.2 specification
     public static final int DS_VERSION_1_2 = 3;
 
-    // namespace code for the DS 1.1-felix specification
+    // namespace code for the DS 1.2-felix specification
     public static final int DS_VERSION_1_2_FELIX = 4;
 
     // mapping of namespace URI to namespace code
@@ -329,6 +329,11 @@ public class XmlHandler implements KXml2SAXHandler
                     if ( attrib.getProperty( "policy" ) != null )
                     {
                         ref.setPolicy( attrib.getProperty( "policy" ) );
+                    }
+
+                    if ( attrib.getProperty( "policy-option" ) != null )
+                    {
+                        ref.setPolicyOption( attrib.getProperty( "policy-option" ) );
                     }
 
                     //if
