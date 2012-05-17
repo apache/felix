@@ -20,6 +20,7 @@ package org.apache.felix.deploymentadmin;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -52,9 +53,25 @@ public class FileDeploymentPackage extends AbstractDeploymentPackage {
     }
 
     private FileDeploymentPackage(List index, File packageDir, BundleContext bundleContext, DeploymentAdminImpl deploymentAdmin) throws DeploymentException, IOException {
-        super(new Manifest(new GZIPInputStream(new FileInputStream(new File(packageDir, (String) index.remove(0))))), bundleContext, deploymentAdmin);
+        super(readManifest(index, packageDir), bundleContext, deploymentAdmin);
         m_index = index;
         m_contentsDir = packageDir;
+    }
+
+    private static Manifest readManifest(List index, File packageDir) throws FileNotFoundException, IOException {
+        final File manifestFile = new File(packageDir, (String) index.remove(0));
+        InputStream is = null;
+        Manifest mf = null;
+        try {
+            is = new GZIPInputStream(new FileInputStream(manifestFile));
+            mf = new Manifest(is);
+        }
+        finally {
+            if (is != null) {
+                is.close();
+            }
+        }
+        return mf;
     }
 
     public BundleInfoImpl[] getOrderedBundleInfos() {
