@@ -302,6 +302,21 @@ public class CustomAnnotationVisitor extends EmptyVisitor implements AnnotationV
         }
 
         /**
+         * Visits an enumeration attribute.
+         * @param arg0 the attribute name
+         * @param arg1 the enumeration descriptor
+         * @param arg2 the attribute value
+         */
+        public void visitEnum(String arg0, String arg1, String arg2) {
+            if (m_acc == null) {
+                m_acc = "{" + arg2;
+            } else {
+                m_acc = m_acc + "," + arg2;
+            }
+        }
+
+
+        /**
          * Visit an annotation element of the visited array.
          * @param arg0 : null
          * @param arg1 : annotation to visit
