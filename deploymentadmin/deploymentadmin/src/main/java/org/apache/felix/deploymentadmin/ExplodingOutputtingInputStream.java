@@ -135,14 +135,6 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
             if (writer != null) {
                 writer.close();
             }
-            if (input != null) {
-                try {
-                    input.close();
-                }
-                catch (IOException e) {
-                    pushException(e);
-                }
-            }
         }
         
         try {
@@ -154,6 +146,16 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
         }
         catch (IOException e) {
             pushException(e);
+        }
+        finally {
+            if (input != null) {
+                try {
+                    input.close();
+                }
+                catch (IOException e) {
+                    pushException(e);
+                }
+            }
         }
     }
     
