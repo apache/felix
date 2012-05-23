@@ -18,10 +18,17 @@
  */
 package org.apache.felix.eventadmin.impl.handler;
 
+import java.util.Collection;
+
 import org.apache.felix.eventadmin.impl.security.PermissionsUtil;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
-import org.osgi.framework.*;
-import org.osgi.service.event.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
 
 /**
  * This is a proxy for event handlers. It gets the real event handler
@@ -55,28 +62,31 @@ public class EventHandlerProxy {
     /** Use timeout. */
     private boolean useTimeout;
 
-	/**
-	 * Create an EventHandlerProxy.
+    /** Deliver async ordered. */
+    private boolean asyncOrderedDelivery;
+
+    /**
+     * Create an EventHandlerProxy.
      *
      * @param context The handler context
-	 * @param reference Reference to the EventHandler
-	 */
-	public EventHandlerProxy(final EventHandlerTracker.HandlerContext context,
-	        final ServiceReference reference)
-	{
-	    this.handlerContext = context;
-		this.reference = reference;
-	}
+     * @param reference Reference to the EventHandler
+     */
+    public EventHandlerProxy(final EventHandlerTracker.HandlerContext context,
+                    final ServiceReference reference)
+    {
+        this.handlerContext = context;
+        this.reference = reference;
+    }
 
-	/**
-	 * Update the state with current properties from the service
-	 * @return <code>true</code> if the handler configuration is valid.
-	 */
-	public boolean update()
-	{
-	    this.blacklisted = false;
-		boolean valid = true;
-		// First check, topic
+    /**
+     * Update the state with current properties from the service
+     * @return <code>true</code> if the handler configuration is valid.
+     */
+    public boolean update()
+    {
+        this.blacklisted = false;
+        boolean valid = true;
+        // First check, topic
         final Object topicObj = reference.getProperty(EventConstants.EVENT_TOPIC);
         if (topicObj instanceof String)
         {
@@ -126,11 +136,11 @@ public class EventHandlerProxy {
                 reason = "Neither of type String nor String[] : " + topicObj.getClass().getName();
             }
             LogWrapper.getLogger().log(
-                    this.reference,
-                    LogWrapper.LOG_WARNING,
-                    "Invalid EVENT_TOPICS : " + reason + " - Ignoring ServiceReference ["
-                        + this.reference + " | Bundle("
-                        + this.reference.getBundle() + ")]");
+                            this.reference,
+                            LogWrapper.LOG_WARNING,
+                            "Invalid EVENT_TOPICS : " + reason + " - Ignoring ServiceReference ["
+                                            + this.reference + " | Bundle("
+                                            + this.reference.getBundle() + ")]");
             this.topics = null;
             valid = false;
         }
@@ -149,39 +159,90 @@ public class EventHandlerProxy {
                 {
                     valid = false;
                     LogWrapper.getLogger().log(
-                            this.reference,
-                            LogWrapper.LOG_WARNING,
-                            "Invalid EVENT_FILTER - Ignoring ServiceReference ["
-                                + this.reference + " | Bundle("
-                                + this.reference.getBundle() + ")]", e);
+                                    this.reference,
+                                    LogWrapper.LOG_WARNING,
+                                    "Invalid EVENT_FILTER - Ignoring ServiceReference ["
+                                                    + this.reference + " | Bundle("
+                                                    + this.reference.getBundle() + ")]", e);
                 }
             }
             else if ( filterObj != null )
             {
                 valid = false;
                 LogWrapper.getLogger().log(
-                        this.reference,
-                        LogWrapper.LOG_WARNING,
-                        "Invalid EVENT_FILTER - Ignoring ServiceReference ["
-                            + this.reference + " | Bundle("
-                            + this.reference.getBundle() + ")]");
+                                this.reference,
+                                LogWrapper.LOG_WARNING,
+                                "Invalid EVENT_FILTER - Ignoring ServiceReference ["
+                                                + this.reference + " | Bundle("
+                                                + this.reference.getBundle() + ")]");
             }
         }
         this.filter = handlerFilter;
 
+        // new in 1.3 - deliver
+        this.asyncOrderedDelivery = true;
+        Object delivery = reference.getProperty(EventConstants.EVENT_DELIVERY);
+        if ( delivery instanceof Collection )
+        {
+            delivery = ((Collection)delivery).toArray(new String[((Collection)delivery).size()]);
+        }
+        if ( delivery instanceof String )
+        {
+            this.asyncOrderedDelivery =  !(EventConstants.DELIVERY_ASYNC_UNORDERED.equals(delivery.toString()));
+        }
+        else if ( delivery instanceof String[] )
+        {
+            final String[] deliveryArray = (String[])delivery;
+            boolean foundOrdered = false, foundUnordered = false;
+            for(int i=0; i<deliveryArray.length; i++)
+            {
+                final String value = deliveryArray[i];
+                if ( EventConstants.DELIVERY_ASYNC_UNORDERED.equals(value) )
+                {
+                    foundUnordered = true;
+                }
+                else if ( EventConstants.DELIVERY_ASYNC_ORDERED.equals(value) )
+                {
+                    foundOrdered = true;
+                }
+                else
+                {
+                    LogWrapper.getLogger().log(
+                                    this.reference,
+                                    LogWrapper.LOG_WARNING,
+                                    "Invalid EVENT_DELIVERY - Ignoring invalid value for event delivery property " + value + " of ServiceReference ["
+                                                    + this.reference + " | Bundle("
+                                                    + this.reference.getBundle() + ")]");
+
+                }
+            }
+            if ( !foundOrdered && foundUnordered )
+            {
+                this.asyncOrderedDelivery = false;
+            }
+        }
+        else if ( delivery != null )
+        {
+            LogWrapper.getLogger().log(
+                            this.reference,
+                            LogWrapper.LOG_WARNING,
+                            "Invalid EVENT_DELIVERY - Ignoring event delivery property " + delivery + " of ServiceReference ["
+                                            + this.reference + " | Bundle("
+                                            + this.reference.getBundle() + ")]");
+        }
         // make sure to release the handler
         this.release();
 
         return valid;
-	}
+    }
 
-	/**
-	 * Dispose the proxy and release the handler
-	 */
-	public void dispose()
-	{
-	    this.release();
-	}
+    /**
+     * Dispose the proxy and release the handler
+     */
+    public void dispose()
+    {
+        this.release();
+    }
 
     /**
      * Get the event handler.
@@ -206,12 +267,12 @@ public class EventHandlerProxy {
     }
 
     /**
-	 * Release the handler
-	 */
-	private synchronized void release()
-	{
-		if ( this.handler != null )
-		{
+     * Release the handler
+     */
+    private synchronized void release()
+    {
+        if ( this.handler != null )
+        {
             try
             {
                 this.handlerContext.bundleContext.ungetService(this.reference);
@@ -221,17 +282,17 @@ public class EventHandlerProxy {
                 // event handler might be stopped - ignore
             }
             this.handler = null;
-		}
-	}
+        }
+    }
 
-	/**
-	 * Get the topics of this handler.
-	 * If this handler matches all topics <code>null</code> is returned
-	 */
-	public String[] getTopics()
-	{
-	    return this.topics;
-	}
+    /**
+     * Get the topics of this handler.
+     * If this handler matches all topics <code>null</code> is returned
+     */
+    public String[] getTopics()
+    {
+        return this.topics;
+    }
 
     /**
      * Check if this handler is allowed to receive the event
@@ -278,6 +339,14 @@ public class EventHandlerProxy {
     }
 
     /**
+     * Should async events be delivered in order?
+     */
+    public boolean isAsyncOrderedDelivery()
+    {
+        return this.asyncOrderedDelivery;
+    }
+
+    /**
      * Check the timeout configuration for this handler.
      */
     private void checkTimeout(final String className)
@@ -300,43 +369,43 @@ public class EventHandlerProxy {
     }
 
     /**
-	 * Send the event.
-	 */
-	public void sendEvent(final Event event)
-	{
-		final EventHandler handlerService = this.obtain();
-		if (handlerService == null)
-		{
-			return;
-		}
+     * Send the event.
+     */
+    public void sendEvent(final Event event)
+    {
+        final EventHandler handlerService = this.obtain();
+        if (handlerService == null)
+        {
+            return;
+        }
 
-		try
-		{
-			handlerService.handleEvent(event);
-		}
-		catch (final Throwable e)
-		{
+        try
+        {
+            handlerService.handleEvent(event);
+        }
+        catch (final Throwable e)
+        {
             // The spec says that we must catch exceptions and log them:
             LogWrapper.getLogger().log(
-                this.reference,
-                LogWrapper.LOG_WARNING,
-                "Exception during event dispatch [" + event + " | "
-                    + this.reference + " | Bundle("
-                    + this.reference.getBundle() + ")]", e);
-		}
-	}
+                            this.reference,
+                            LogWrapper.LOG_WARNING,
+                            "Exception during event dispatch [" + event + " | "
+                                            + this.reference + " | Bundle("
+                                            + this.reference.getBundle() + ")]", e);
+        }
+    }
 
-	/**
-	 * Blacklist the handler.
-	 */
-	public void blackListHandler()
-	{
+    /**
+     * Blacklist the handler.
+     */
+    public void blackListHandler()
+    {
         LogWrapper.getLogger().log(
-                LogWrapper.LOG_WARNING,
-                "Blacklisting ServiceReference [" + this.reference + " | Bundle("
-                    + this.reference.getBundle() + ")] due to timeout!");
+                        LogWrapper.LOG_WARNING,
+                        "Blacklisting ServiceReference [" + this.reference + " | Bundle("
+                                        + this.reference.getBundle() + ")] due to timeout!");
         this.blacklisted = true;
         // we can free the handler now.
         this.release();
-	}
+    }
 }
