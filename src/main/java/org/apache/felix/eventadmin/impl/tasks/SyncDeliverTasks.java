@@ -101,7 +101,7 @@ public class SyncDeliverTasks
      * @param tasks The event handler dispatch tasks to execute
      *
      */
-    public void execute(final Collection tasks, final Event event)
+    public void execute(final Collection tasks, final Event event, final boolean filterAsyncUnordered)
     {
         final Thread sleepingThread = Thread.currentThread();
         final SyncThread syncThread = sleepingThread instanceof SyncThread ? (SyncThread)sleepingThread : null;
@@ -110,62 +110,64 @@ public class SyncDeliverTasks
         while ( i.hasNext() )
         {
             final EventHandlerProxy task = (EventHandlerProxy)i.next();
-
-            if ( !useTimeout(task) )
+            if ( !filterAsyncUnordered || task.isAsyncOrderedDelivery() )
             {
-                // no timeout, we can directly execute
-                task.sendEvent(event);
-            }
-            else if ( syncThread != null )
-            {
-                // if this is a cascaded event, we directly use this thread
-                // otherwise we could end up in a starvation
-                final long startTime = System.currentTimeMillis();
-                task.sendEvent(event);
-                if ( System.currentTimeMillis() - startTime > this.timeout )
+                if ( !useTimeout(task) )
                 {
-                    task.blackListHandler();
+                    // no timeout, we can directly execute
+                    task.sendEvent(event);
                 }
-            }
-            else
-            {
-                final Rendezvous startBarrier = new Rendezvous();
-                final Rendezvous timerBarrier = new Rendezvous();
-                this.pool.executeTask(new Runnable()
+                else if ( syncThread != null )
                 {
-                    public void run()
+                    // if this is a cascaded event, we directly use this thread
+                    // otherwise we could end up in a starvation
+                    final long startTime = System.currentTimeMillis();
+                    task.sendEvent(event);
+                    if ( System.currentTimeMillis() - startTime > this.timeout )
                     {
-                        try
-                        {
-                            // notify the outer thread to start the timer
-                            startBarrier.waitForRendezvous();
-                            // execute the task
-                            task.sendEvent(event);
-                            // stop the timer
-                            timerBarrier.waitForRendezvous();
-                        }
-                        catch (final IllegalStateException ise)
-                        {
-                            // this can happen on shutdown, so we ignore it
-                        }
+                        task.blackListHandler();
                     }
-                });
-                // we wait for the inner thread to start
-                startBarrier.waitForRendezvous();
-
-                // timeout handling
-                // we sleep for the sleep time
-                // if someone wakes us up it's the finished inner task
-                try
-                {
-                    timerBarrier.waitAttemptForRendezvous(this.timeout);
                 }
-                catch (final TimeoutException ie)
+                else
                 {
-                    // if we timed out, we have to blacklist the handler
-                    task.blackListHandler();
-                }
+                    final Rendezvous startBarrier = new Rendezvous();
+                    final Rendezvous timerBarrier = new Rendezvous();
+                    this.pool.executeTask(new Runnable()
+                    {
+                        public void run()
+                        {
+                            try
+                            {
+                                // notify the outer thread to start the timer
+                                startBarrier.waitForRendezvous();
+                                // execute the task
+                                task.sendEvent(event);
+                                // stop the timer
+                                timerBarrier.waitForRendezvous();
+                            }
+                            catch (final IllegalStateException ise)
+                            {
+                                // this can happen on shutdown, so we ignore it
+                            }
+                        }
+                    });
+                    // we wait for the inner thread to start
+                    startBarrier.waitForRendezvous();
 
+                    // timeout handling
+                    // we sleep for the sleep time
+                    // if someone wakes us up it's the finished inner task
+                    try
+                    {
+                        timerBarrier.waitAttemptForRendezvous(this.timeout);
+                    }
+                    catch (final TimeoutException ie)
+                    {
+                        // if we timed out, we have to blacklist the handler
+                        task.blackListHandler();
+                    }
+
+                }
             }
         }
     }

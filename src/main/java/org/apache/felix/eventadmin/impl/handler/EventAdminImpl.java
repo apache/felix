@@ -18,7 +18,9 @@
  */
 package org.apache.felix.eventadmin.impl.handler;
 
-import org.apache.felix.eventadmin.impl.tasks.*;
+import org.apache.felix.eventadmin.impl.tasks.AsyncDeliverTasks;
+import org.apache.felix.eventadmin.impl.tasks.DefaultThreadPool;
+import org.apache.felix.eventadmin.impl.tasks.SyncDeliverTasks;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -54,12 +56,12 @@ public class EventAdminImpl implements EventAdmin
      * @param asyncPool The asynchronous thread pool
      */
     public EventAdminImpl(
-            final BundleContext bundleContext,
-            final DefaultThreadPool syncPool,
-            final DefaultThreadPool asyncPool,
-            final int timeout,
-            final String[] ignoreTimeout,
-            final boolean requireTopic)
+                    final BundleContext bundleContext,
+                    final DefaultThreadPool syncPool,
+                    final DefaultThreadPool asyncPool,
+                    final int timeout,
+                    final String[] ignoreTimeout,
+                    final boolean requireTopic)
     {
         checkNull(syncPool, "syncPool");
         checkNull(asyncPool, "asyncPool");
@@ -109,7 +111,7 @@ public class EventAdminImpl implements EventAdmin
      */
     public void sendEvent(final Event event)
     {
-        m_sendManager.execute(this.getTracker().getHandlers(event), event);
+        m_sendManager.execute(this.getTracker().getHandlers(event), event, false);
     }
 
     /**
@@ -125,8 +127,8 @@ public class EventAdminImpl implements EventAdmin
      * Update the event admin with new configuration.
      */
     public void update(final int timeout,
-            final String[] ignoreTimeout,
-            final boolean requireTopic)
+                    final String[] ignoreTimeout,
+                    final boolean requireTopic)
     {
         this.tracker.close();
         this.tracker.update(ignoreTimeout, requireTopic);
