@@ -525,9 +525,17 @@ public class ResolverImpl implements Resolver
         cycle.add(resource);
 
         // Make sure package space hasn't already been calculated.
-        if (resourcePkgMap.containsKey(resource))
+        Packages resourcePkgs = resourcePkgMap.get(resource);
+        if (resourcePkgs != null)
         {
-            return;
+            if (resourcePkgs.m_isCalculated)
+            {
+                return;
+            }
+            else
+            {
+                resourcePkgs.m_isCalculated = true;
+            }
         }
 
         // Create parallel arrays for requirement and proposed candidate
@@ -618,7 +626,7 @@ public class ResolverImpl implements Resolver
 
         // First, add all exported packages to the target resource's package space.
         calculateExportedPackages(rc, resource, allCandidates, resourcePkgMap);
-        Packages resourcePkgs = resourcePkgMap.get(resource);
+        resourcePkgs = resourcePkgMap.get(resource);
 
         // Second, add all imported packages to the target resource's package space.
         for (int i = 0; i < reqs.size(); i++)
@@ -1865,6 +1873,7 @@ public class ResolverImpl implements Resolver
         public final Map<String, List<Blame>> m_importedPkgs = new HashMap();
         public final Map<String, List<Blame>> m_requiredPkgs = new HashMap();
         public final Map<String, List<Blame>> m_usedPkgs = new HashMap();
+        public boolean m_isCalculated = false;
 
         public Packages(Resource resource)
         {
