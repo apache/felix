@@ -68,6 +68,8 @@ public class DefaultMaven2OsgiConverter implements Maven2OsgiConverter
      * org.apache.maven:maven -> org.apache.maven</li>
      * <li>if artifactId starts with last section of groupId that portion is removed. eg.
      * org.apache.maven:maven-core -> org.apache.maven.core</li>
+     * <li>if artifactId starts with groupId then the artifactId is removed. eg.
+     * org.apache:org.apache.maven.core -> org.apache.maven.core</li>
      * </ul>
      */
     public String getBundleSymbolicName( Artifact artifact )
@@ -127,6 +129,11 @@ public class DefaultMaven2OsgiConverter implements Maven2OsgiConverter
         if ( artifact.getArtifactId().equals( lastSection ) )
         {
             return artifact.getGroupId();
+        }
+        if ( artifact.getArtifactId().equals( artifact.getGroupId() )
+            || artifact.getArtifactId().startsWith( artifact.getGroupId() + "." ) )
+        {
+            return artifact.getArtifactId();
         }
         if ( artifact.getArtifactId().startsWith( lastSection ) )
         {
