@@ -51,6 +51,11 @@ public class Maven2OsgiConverterTest
         s = maven2Osgi.getBundleSymbolicName( artifact );
         assertEquals( "org.apache.commons.commons-logging", s );
 
+        artifact.setGroupId( "org.apache" );
+        artifact.setArtifactId( "org.apache.commons-logging" );
+        s = maven2Osgi.getBundleSymbolicName( artifact );
+        assertEquals( "org.apache.commons-logging", s );
+
         artifact.setFile( getTestFile( "junit-3.8.2.jar" ) );
         artifact.setGroupId( "junit" );
         artifact.setArtifactId( "junit" );
