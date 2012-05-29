@@ -419,9 +419,10 @@ function renderRepository(repo) {
     repoTable.append(_tr);
 }
 
-function renderData() {
+function renderData(data) {
     repoTable.empty();
     resTable.empty();
+	$.extend ( obrData, data );
     if ( obrData.status ) {
         $('.statline').html(i18n.status_ok);
         ifStatusOK.removeClass('ui-helper-hidden');
