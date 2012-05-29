@@ -1,5 +1,6 @@
 <script type="text/javascript" src="${pluginRoot}/res/plugin.js"></script>
 <script type="text/javascript">
+// <![CDATA[
 var i18n = {
 	status_ok : '${obr.status.ok}',
 	status_no : '${obr.status.no}',
@@ -7,6 +8,7 @@ var i18n = {
 	error : '${obr.error}'
 }
 var obrData = ${__data__};
+// ]]>
 </script>
 
 <p class="statline">${obr.status.ok}</p>
@@ -74,7 +76,7 @@ var obrData = ${__data__};
         <a href="${pluginRoot}?list=x">X</a>
         <a href="${pluginRoot}?list=y">Y</a>
         <a href="${pluginRoot}?list=z">Z</a>
-        <a href="${pluginRoot}?list=-">?</a>
+        <a href="${pluginRoot}">?</a>
     </span>
     <input type="text" id="searchField" title="${obr.action.search.description}"/>
     <button id="searchBtn">${obr.action.search}</button>
