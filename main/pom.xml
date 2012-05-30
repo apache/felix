@@ -75,7 +75,7 @@
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Embed-Dependency>*;artifactId=org.apache.felix.framework;inline=true</Embed-Dependency>
             <Private-Package>org.apache.felix.main.*</Private-Package>
-            <Export-Package>!org.osgi.service.log, !org.osgi.service.obr,org.osgi.*</Export-Package>
+            <Export-Package>!org.osgi.service.log, !org.osgi.service.obr, org.osgi.*</Export-Package>
             <Import-Package>!*</Import-Package>
           </instructions>
         </configuration>
