@@ -47,14 +47,10 @@ public class DropBundleCommand extends Command {
                 try {
                     Bundle bundle = target.getBundle(symbolicName);
                     bundle.uninstall();
-                    addRollback(new InstallBundleRunnable(bundle, target.getBundleStream(symbolicName), log));
+                    addRollback(new InstallBundleRunnable(bundle, target, log));
                 }
                 catch (BundleException be) {
                     log.log(LogService.LOG_WARNING, "Bundle '" + symbolicName + "' could not be uninstalled", be);
-                }
-                catch (IOException e) {
-                    log.log(LogService.LOG_WARNING, "Could not get bundle data stream for bundle '" + symbolicName + "'", e);
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not prepare rollback for uninstalling bundle '" + symbolicName + "'");
                 }
             }
         }
@@ -62,22 +58,36 @@ public class DropBundleCommand extends Command {
 
     private static class InstallBundleRunnable implements Runnable {
 
-        private final InputStream m_bundleStream;
+        private final AbstractDeploymentPackage m_target;
         private final Bundle m_bundle;
         private final LogService m_log;
 
-        public InstallBundleRunnable(Bundle bundle, InputStream bundleStream, LogService log) {
+        public InstallBundleRunnable(Bundle bundle, AbstractDeploymentPackage target, LogService log) {
             m_bundle = bundle;
-            m_bundleStream = bundleStream;
+            m_target = target;
             m_log = log;
         }
 
         public void run() {
+            InputStream is = null;
             try {
-                m_bundle.update(m_bundleStream);
+                is = m_target.getBundleStream(m_bundle.getSymbolicName());
+                if (is != null) {
+                    m_bundle.update(is);
+                }
+                throw new Exception("Unable to get Inputstream for bundle " + m_bundle.getSymbolicName());
             }
-            catch (BundleException e) {
-                m_log.log(LogService.LOG_WARNING, "Could not rollback uninstallation of bundle '" + m_bundle.getSymbolicName() + "'", e);
+            catch (Exception e) {
+                m_log.log(LogService.LOG_WARNING,
+                    "Could not rollback uninstallation of bundle '" + m_bundle.getSymbolicName() + "'", e);
+            }
+            finally {
+                if (is != null) {
+                    try {
+                        is.close();
+                    }
+                    catch (IOException e) {}
+                }
             }
         }
     }

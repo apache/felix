@@ -136,7 +136,7 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
                 writer.close();
             }
         }
-        
+
         try {
             byte[] buffer = new byte[1024];
             int c = m_input.read(buffer);
@@ -158,7 +158,7 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
             }
         }
     }
-    
+
     private void pushException(Exception e) {
         Exception e2 = new Exception(e.getMessage());
         e2.setStackTrace(e.getStackTrace());
@@ -171,7 +171,7 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
     public static boolean replace(File target, File source) {
         return delete(target, true) && rename(source, target);
     }
-    
+
     public static boolean copy(File from, File to) {
         boolean result = true;
         if (from.isDirectory()) {
@@ -223,7 +223,7 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
         }
         return result;
     }
-    
+
     public static boolean rename(File from, File to) {
         if (!from.renameTo(to)) {
             if (copy(from, to)) {
@@ -265,7 +265,7 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
         List result = new ArrayList(targetFiles);
 
         File manifestFile = new File(source, (String) sourceFiles.remove(0));
-        Manifest resultManifest = new Manifest(new GZIPInputStream(new FileInputStream(manifestFile)));
+        Manifest resultManifest = Utils.readManifest(manifestFile);
 
         resultManifest.getMainAttributes().remove(new Name(Constants.DEPLOYMENTPACKAGE_FIXPACK));
 
