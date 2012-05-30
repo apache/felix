@@ -195,4 +195,18 @@ public class MockBundle implements Bundle
 
     }
 
+
+    public void start( int options ) throws BundleException
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+
+    public void stop( int options ) throws BundleException
+    {
+        // TODO Auto-generated method stub
+
+    }
+
 }

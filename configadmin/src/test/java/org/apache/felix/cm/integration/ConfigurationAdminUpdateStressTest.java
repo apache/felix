@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Dictionary;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -266,7 +267,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
                 {
                     // Create factory configuration
                     org.osgi.service.cm.Configuration conf = cm.createFactoryConfiguration( _FACTORYPID, null );
-                    Properties props = new Properties();
+                    Hashtable<String, Object> props = new Hashtable<String, Object>();
                     props.put( "foo", "bar" );
                     conf.update( props );
 
@@ -279,7 +280,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
                     // Update factory configuration many times
                     for ( int i = 0; i < UPDATE_LOOP; i++ )
                     {
-                        props = new Properties();
+                        props = new Hashtable<String, Object>();
                         props.put( "foo", "bar" + i );
                         props.put( "number", new Long( UPDATE_LOOP - i ) );
                         conf.update( props );

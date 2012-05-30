@@ -252,6 +252,12 @@ public class RankingComparatorTest extends TestCase
         }
 
 
+        public int compareTo( Object reference )
+        {
+            return 0;
+        }
+
+
         public String toString()
         {
             return "ServiceReference " + getProperty( Constants.SERVICE_ID );
