@@ -32,6 +32,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Version;
 import org.osgi.service.deploymentadmin.DeploymentException;
+import org.osgi.service.log.LogService;
 
 /**
  * Command that installs all bundles described in the source deployment package of a deployment
@@ -44,6 +45,7 @@ public class UpdateCommand extends Command {
         AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
         AbstractDeploymentPackage targetPackage = session.getTargetAbstractDeploymentPackage();
         BundleContext context = session.getBundleContext();
+        LogService log = session.getLog();
 
         Map expectedBundles = new HashMap();
         AbstractInfo[] bundleInfos = (AbstractInfo[]) source.getBundleInfos();
@@ -72,14 +74,14 @@ public class UpdateCommand extends Command {
                     if (bundle == null) {
                         // new bundle, install it
                         bundle = context.installBundle(Constants.BUNDLE_LOCATION_PREFIX + bundleInfo.getSymbolicName(), new BundleInputStream(source.getCurrentEntryStream()));
-                        addRollback(new UninstallBundleRunnable(bundle));
+                        addRollback(new UninstallBundleRunnable(bundle, log));
                     } else {
                         // existing bundle, update it
                         Version sourceVersion = bundleInfo.getVersion();
                         Version targetVersion = Version.parseVersion((String) bundle.getHeaders().get(org.osgi.framework.Constants.BUNDLE_VERSION));
                         if (!sourceVersion.equals(targetVersion)) {
                             bundle.update(new BundleInputStream(source.getCurrentEntryStream()));
-                            addRollback(new UpdateBundleRunnable(bundle, targetPackage, bundleInfo.getSymbolicName()));
+                            addRollback(new UpdateBundleRunnable(bundle, targetPackage, log));
                         }
                     }
                 }
@@ -102,9 +104,11 @@ public class UpdateCommand extends Command {
     private static class UninstallBundleRunnable implements Runnable {
 
         private final Bundle m_bundle;
+        private final LogService m_log;
 
-        public UninstallBundleRunnable(Bundle bundle) {
+        public UninstallBundleRunnable(Bundle bundle, LogService log) {
             m_bundle = bundle;
+            m_log = log;
         }
 
         public void run() {
@@ -112,31 +116,43 @@ public class UpdateCommand extends Command {
                 m_bundle.uninstall();
             }
             catch (BundleException e) {
-                // TODO: log this
-                e.printStackTrace();
+                m_log.log(LogService.LOG_WARNING, "Could not rollback update of bundle '" + m_bundle.getSymbolicName() + "'", e);
             }
         }
     }
 
     private static class UpdateBundleRunnable implements Runnable {
 
-        private final Bundle m_bundle;
         private final AbstractDeploymentPackage m_targetPackage;
-        private final String m_symbolicName;
+        private final Bundle m_bundle;
+        private final LogService m_log;
 
-        public UpdateBundleRunnable(Bundle bundle, AbstractDeploymentPackage targetPackage, String symbolicName) {
+        public UpdateBundleRunnable(Bundle bundle, AbstractDeploymentPackage targetPackage, LogService log) {
             m_bundle = bundle;
             m_targetPackage = targetPackage;
-            m_symbolicName = symbolicName;
+            m_log = log;
         }
 
         public void run() {
+            InputStream is = null;
             try {
-                m_bundle.update(m_targetPackage.getBundleStream(m_symbolicName));
+                is = m_targetPackage.getBundleStream(m_bundle.getSymbolicName());
+                if(is != null){
+                    m_bundle.update(is);                    
+                }
+                throw new Exception("Unable to get Inputstream for bundle " + m_bundle.getSymbolicName());
             }
             catch (Exception e) {
-                // TODO: log this
-                e.printStackTrace();
+                m_log.log(LogService.LOG_WARNING, "Could not rollback update of bundle '" + m_bundle.getSymbolicName() + "'", e);
+            } finally {
+                if(is != null){
+                    try {
+                        is.close();
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }

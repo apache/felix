@@ -53,25 +53,9 @@ public class FileDeploymentPackage extends AbstractDeploymentPackage {
     }
 
     private FileDeploymentPackage(List index, File packageDir, BundleContext bundleContext, DeploymentAdminImpl deploymentAdmin) throws DeploymentException, IOException {
-        super(readManifest(index, packageDir), bundleContext, deploymentAdmin);
+        super(Utils.readManifest(new File(packageDir, (String) index.remove(0))), bundleContext, deploymentAdmin);
         m_index = index;
         m_contentsDir = packageDir;
-    }
-
-    private static Manifest readManifest(List index, File packageDir) throws FileNotFoundException, IOException {
-        final File manifestFile = new File(packageDir, (String) index.remove(0));
-        InputStream is = null;
-        Manifest mf = null;
-        try {
-            is = new GZIPInputStream(new FileInputStream(manifestFile));
-            mf = new Manifest(is);
-        }
-        finally {
-            if (is != null) {
-                is.close();
-            }
-        }
-        return mf;
     }
 
     public BundleInfoImpl[] getOrderedBundleInfos() {
