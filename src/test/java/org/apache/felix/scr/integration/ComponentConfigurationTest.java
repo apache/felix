@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
+import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -228,6 +229,91 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
 
     @Test
+    public void test_SimpleComponent_dynamic_configuration_with_required_service()
+    {
+        final String targetProp = "ref.target";
+        final String filterProp = "required";
+        final SimpleServiceImpl service = SimpleServiceImpl.create( bundleContext, "sample" ).setFilterProperty( filterProp );
+        try
+        {
+            final String pid = "DynamicConfigurationComponentWithRequiredReference";
+            final Component component = findComponentByName( pid );
+
+            deleteConfig( pid );
+            delay();
+
+            TestCase.assertNotNull( component );
+            TestCase.assertFalse( component.isDefaultEnabled() );
+
+            TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+            TestCase.assertNull( SimpleComponent.INSTANCE );
+
+            component.enable();
+            delay();
+
+            // mandatory ref missing --> component unsatisfied
+            TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+
+            // dynamically configure without the correct target
+            configure( pid );
+            delay();
+
+            // mandatory ref missing --> component unsatisfied
+            TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+
+            // dynamically configure with correct target
+            theConfig.put( targetProp, "(filterprop=" + filterProp + ")" );
+            configure( pid );
+            delay();
+
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertNotNull( SimpleComponent.INSTANCE );
+            TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
+            TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+
+            final SimpleComponent instance = SimpleComponent.INSTANCE;
+
+            configure( pid );
+            delay();
+
+            // same instance after reconfiguration
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
+            TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
+            TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+
+            // reconfigure without target --> unsatisifed
+            theConfig.remove( targetProp );
+            configure( pid );
+            delay();
+
+            // mandatory ref missing --> component unsatisfied
+            TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+
+            deleteConfig( pid );
+            delay();
+
+            // mandatory ref missing --> component unsatisfied
+            TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+
+            component.disable();
+            delay();
+
+            TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+            TestCase.assertNull( SimpleComponent.INSTANCE );
+        }
+        finally
+        {
+            theConfig.remove( targetProp );
+            if ( service != null )
+            {
+                service.drop();
+            }
+        }
+    }
+
+
+    @Test
     public void test_SimpleComponent_factory_configuration()
     {
         final String factoryPid = "FactoryConfigurationComponent";
@@ -392,10 +478,10 @@ public class ComponentConfigurationTest extends ComponentTestBase
         final Component[] threeConfigs21 = findComponentsByName( factoryPid );
         TestCase.assertNotNull( threeConfigs21 );
         TestCase.assertEquals( 3, threeConfigs21.length );
+        TestCase.assertEquals( 1, SimpleComponent.INSTANCES.size() );
         TestCase.assertEquals( Component.STATE_ACTIVE, threeConfigs21[0].getState() );
         TestCase.assertEquals( Component.STATE_DISABLED, threeConfigs21[1].getState() );
         TestCase.assertEquals( Component.STATE_DISABLED, threeConfigs21[2].getState() );
-        TestCase.assertEquals( 1, SimpleComponent.INSTANCES.size() );
         TestCase.assertTrue( SimpleComponent.INSTANCES.containsKey( threeConfigs21[0].getId() ) );
         TestCase.assertFalse( SimpleComponent.INSTANCES.containsKey( threeConfigs21[1].getId() ) );
         TestCase.assertFalse( SimpleComponent.INSTANCES.containsKey( threeConfigs21[2].getId() ) );
