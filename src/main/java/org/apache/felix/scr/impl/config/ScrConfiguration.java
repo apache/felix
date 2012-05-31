@@ -25,6 +25,7 @@ import java.util.Hashtable;
 import org.apache.felix.scr.impl.Activator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
 
@@ -78,19 +79,26 @@ public class ScrConfiguration
 
     private static final String PROP_SHOWERRORS = "ds.showerrors";
 
-    private final BundleContext bundleContext;
-
     private int logLevel;
 
     private boolean factoryEnabled;
 
     private boolean keepInstances;
 
-    public ScrConfiguration( BundleContext bundleContext )
+    private BundleContext bundleContext;
+
+    private ServiceRegistration managedService;
+
+    public ScrConfiguration( )
     {
+        // default configuration
+        configure( null );
+    }
+
+    public void start(final BundleContext bundleContext){
         this.bundleContext = bundleContext;
 
-        // default configuration
+        // reconfigure from bundle context properties
         configure( null );
 
         // listen for Configuration Admin configuration
@@ -102,14 +110,32 @@ public class ScrConfiguration
             props);
     }
 
+    public void stop() {
+        if (this.managedService != null) {
+            this.managedService.unregister();
+            this.managedService = null;
+        }
+
+        this.bundleContext = null;
+    }
+
     // Called from the ScrManagedService.updated method to reconfigure
     void configure( Dictionary config )
     {
         if ( config == null )
         {
-            logLevel = getDefaultLogLevel();
-            factoryEnabled = getDefaultFactoryEnabled();
-            keepInstances = getDefaultKeepInstances();
+            if ( this.bundleContext == null )
+            {
+                logLevel = LogService.LOG_ERROR;
+                factoryEnabled = false;
+                keepInstances = false;
+            }
+            else
+            {
+                logLevel = getDefaultLogLevel();
+                factoryEnabled = getDefaultFactoryEnabled();
+                keepInstances = getDefaultKeepInstances();
+            }
         }
         else
         {
