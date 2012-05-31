@@ -448,8 +448,10 @@ public class ImmediateComponentManager extends AbstractComponentManager
         // clear the current properties to force using the configuration data
         m_properties = null;
 
+        // unsatisfied component and non-ignored configuration may change targets
+        // to satisfy references
         if ( getState() == STATE_UNSATISFIED && configuration != null
-            && getComponentMetadata().isConfigurationRequired() )
+            && !getComponentMetadata().isConfigurationIgnored() )
         {
             activateInternal();
             return;

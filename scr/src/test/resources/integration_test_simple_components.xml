@@ -50,6 +50,22 @@
         <property name="service.pid" value="DynamicConfigurationComponent" />
     </scr:component>
 
+    <!-- component dynamically updates configuration with a required reference plus target-->
+    <scr:component name="DynamicConfigurationComponentWithRequiredReference"
+        enabled="false" modified="configure">
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <property name="service.pid" value="DynamicConfigurationComponentWithRequiredReference" />
+        <reference
+            name="ref"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            cardinality="1..1"
+            policy="dynamic"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+            target="(filterprop=__nothing__)"
+        />
+    </scr:component>
+
     <!-- component instances created by factory configuration -->
     <scr:component name="FactoryConfigurationComponent"
         enabled="false"
