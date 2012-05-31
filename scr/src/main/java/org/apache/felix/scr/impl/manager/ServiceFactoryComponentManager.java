@@ -100,17 +100,18 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager im
 
         // When the getServiceMethod is called, the implementation object must be created
 
-        // private ComponentContext and implementation instances
-        BundleComponentContext serviceContext = new BundleComponentContext( this, bundle );
-        Object service = createImplementationObject( serviceContext );
-
-        // register the components component context if successfull
-        if ( service != null )
+        obtainStateLock();
+        try
         {
-            serviceContext.setImplementationObject( service );
+// private ComponentContext and implementation instances
+            BundleComponentContext serviceContext = new BundleComponentContext( this, bundle );
+            Object service = createImplementationObject( serviceContext );
 
-            synchronized ( serviceContexts )
+            // register the components component context if successfull
+            if ( service != null )
             {
+                serviceContext.setImplementationObject( service );
+
                 serviceContexts.put( service, serviceContext );
 
                 // if this is the first use of this component, switch to ACTIVE state
@@ -119,15 +120,19 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager im
                     changeState( Active.getInstance() );
                 }
             }
-        }
-        else
-        {
-            // log that the service factory component cannot be created (we don't
-            // know why at this moment; this should already have been logged)
-            log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
-        }
+            else
+            {
+                // log that the service factory component cannot be created (we don't
+                // know why at this moment; this should already have been logged)
+                log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
+            }
 
-        return service;
+            return service;
+        }
+        finally
+        {
+            releaseStateLock();
+        }
     }
 
 
@@ -139,23 +144,24 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager im
         log( LogService.LOG_DEBUG, "ServiceFactory.ungetService()", null );
 
         // When the ungetServiceMethod is called, the implementation object must be deactivated
-
-        // private ComponentContext and implementation instances
-        final ComponentContext serviceContext;
-        synchronized ( serviceContexts )
+        obtainStateLock();
+        try
         {
+// private ComponentContext and implementation instances
+            final ComponentContext serviceContext;
             serviceContext = ( ComponentContext ) serviceContexts.remove( service );
-        }
 
-        disposeImplementationObject( service, serviceContext, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+            disposeImplementationObject( service, serviceContext, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
 
-        // if this was the last use of the component, go back to REGISTERED state
-        synchronized ( serviceContexts )
-        {
+            // if this was the last use of the component, go back to REGISTERED state
             if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
             {
                 changeState( Registered.getInstance() );
             }
+        }
+        finally
+        {
+            releaseStateLock();
         }
     }
 

@@ -103,8 +103,6 @@ public class DependencyManager implements ServiceListener, Reference
         m_dependencyMetadata = dependency;
         m_bound = Collections.synchronizedMap( new HashMap() );
 
-        // setup the target filter from component descriptor
-        setTargetFilter( m_dependencyMetadata.getTarget() );
 
         // dump the reference information if DEBUG is enabled
         if ( m_componentManager.isLogEnabled( LogService.LOG_DEBUG ) )
@@ -157,103 +155,110 @@ public class DependencyManager implements ServiceListener, Reference
         final ServiceReference ref = event.getServiceReference();
         final String serviceString = "Service " + m_dependencyMetadata.getInterface() + "/"
             + ref.getProperty( Constants.SERVICE_ID );
-
-        switch ( event.getType() )
+        m_componentManager.obtainStateLock();
+        try
         {
-            case ServiceEvent.REGISTERED:
-                m_componentManager.log( LogService.LOG_DEBUG, "Dependency Manager: Adding {0}", new Object[]
-                    { serviceString }, null );
+            switch ( event.getType() )
+            {
+                case ServiceEvent.REGISTERED:
+                    m_componentManager.log( LogService.LOG_DEBUG, "Dependency Manager: Adding {0}", new Object[]
+                        { serviceString }, null );
 
-                // consider the service if the filter matches
-                if ( targetFilterMatch( ref ) )
-                {
-                    m_size++;
-                    serviceAdded( ref );
-                }
-                else
-                {
-                    m_componentManager.log( LogService.LOG_DEBUG,
-                        "Dependency Manager: Ignoring added Service for {0} : does not match target filter {1}",
-                        new Object[]
-                            { m_dependencyMetadata.getName(), getTarget() }, null );
-                }
-                break;
-
-            case ServiceEvent.MODIFIED:
-                m_componentManager.log( LogService.LOG_DEBUG, "Dependency Manager: Updating {0}", new Object[]
-                    { serviceString }, null );
-
-                if ( getBoundService( ref ) == null )
-                {
-                    // service not currently bound --- what to do ?
-                    // if static
-                    //    if inactive and target match: activate
-                    // if dynamic
-                    //    if multiple and target match: bind
+                    // consider the service if the filter matches
                     if ( targetFilterMatch( ref ) )
                     {
-                        // new filter match, so increase the counter
                         m_size++;
+                        serviceAdded( ref );
+                    }
+                    else
+                    {
+                        m_componentManager.log( LogService.LOG_DEBUG,
+                            "Dependency Manager: Ignoring added Service for {0} : does not match target filter {1}",
+                            new Object[]
+                                { m_dependencyMetadata.getName(), getTarget() }, null );
+                    }
+                    break;
 
-                        if ( isStatic() )
+                case ServiceEvent.MODIFIED:
+                    m_componentManager.log( LogService.LOG_DEBUG, "Dependency Manager: Updating {0}", new Object[]
+                        { serviceString }, null );
+
+                    if ( getBoundService( ref ) == null )
+                    {
+                        // service not currently bound --- what to do ?
+                        // if static
+                        //    if inactive and target match: activate
+                        // if dynamic
+                        //    if multiple and target match: bind
+                        if ( targetFilterMatch( ref ) )
                         {
-                            // if static reference: activate if currentl unsatisifed, otherwise no influence
-                            if ( m_componentManager.getState() == AbstractComponentManager.STATE_UNSATISFIED )
-                            {
-                                m_componentManager.log( LogService.LOG_DEBUG,
-                                    "Dependency Manager: Service {0} registered, activate component", new Object[]
-                                        { m_dependencyMetadata.getName() }, null );
+                            // new filter match, so increase the counter
+                            m_size++;
 
-                                // immediately try to activate the component (FELIX-2368)
-                                m_componentManager.activateInternal();
+                            if ( isStatic() )
+                            {
+                                // if static reference: activate if currentl unsatisifed, otherwise no influence
+                                if ( m_componentManager.getState() == AbstractComponentManager.STATE_UNSATISFIED )
+                                {
+                                    m_componentManager.log( LogService.LOG_DEBUG,
+                                        "Dependency Manager: Service {0} registered, activate component", new Object[]
+                                            { m_dependencyMetadata.getName() }, null );
+
+                                    // immediately try to activate the component (FELIX-2368)
+                                    m_componentManager.activateInternal();
+                                }
+                            }
+                            else if ( isMultiple() )
+                            {
+                                // if dynamic and multiple reference, bind, otherwise ignore
+                                serviceAdded( ref );
                             }
                         }
-                        else if ( isMultiple() )
-                        {
-                            // if dynamic and multiple reference, bind, otherwise ignore
-                            serviceAdded( ref );
-                        }
                     }
-                }
-                else if ( !targetFilterMatch( ref ) )
-                {
-                    // service reference does not match target any more, remove
-                    m_size--;
+                    else if ( !targetFilterMatch( ref ) )
+                    {
+                        // service reference does not match target any more, remove
+                        m_size--;
+                        serviceRemoved( ref );
+                    }
+                    else
+                    {
+                        // update the service binding due to the new properties
+                        update( ref );
+                    }
+
+                    break;
+
+                case ServiceEvent.UNREGISTERING:
+                    m_componentManager.log( LogService.LOG_DEBUG, "Dependency Manager: Removing {0}", new Object[]
+                        { serviceString }, null );
+
+                    // manage the service counter if the filter matchs
+                    if ( targetFilterMatch( ref ) )
+                    {
+                        m_size--;
+                    }
+                    else
+                    {
+                        m_componentManager
+                            .log(
+                                LogService.LOG_DEBUG,
+                                "Dependency Manager: Not counting Service for {0} : Service {1} does not match target filter {2}",
+                                new Object[]
+                                    { m_dependencyMetadata.getName(), ref.getProperty( Constants.SERVICE_ID ), getTarget() },
+                                null );
+                    }
+
+                    // remove the service ignoring the filter match because if the
+                    // service is bound, it has to be removed no matter what
                     serviceRemoved( ref );
-                }
-                else
-                {
-                    // update the service binding due to the new properties
-                    update( ref );
-                }
 
-                break;
-
-            case ServiceEvent.UNREGISTERING:
-                m_componentManager.log( LogService.LOG_DEBUG, "Dependency Manager: Removing {0}", new Object[]
-                    { serviceString }, null );
-
-                // manage the service counter if the filter matchs
-                if ( targetFilterMatch( ref ) )
-                {
-                    m_size--;
-                }
-                else
-                {
-                    m_componentManager
-                        .log(
-                            LogService.LOG_DEBUG,
-                            "Dependency Manager: Not counting Service for {0} : Service {1} does not match target filter {2}",
-                            new Object[]
-                                { m_dependencyMetadata.getName(), ref.getProperty( Constants.SERVICE_ID ), getTarget() },
-                            null );
-                }
-
-                // remove the service ignoring the filter match because if the
-                // service is bound, it has to be removed no matter what
-                serviceRemoved( ref );
-
-                break;
+                    break;
+            }
+        }
+        finally
+        {
+            m_componentManager.releaseStateLock();
         }
     }
 
@@ -510,6 +515,9 @@ public class DependencyManager implements ServiceListener, Reference
      */
     void enable() throws InvalidSyntaxException
     {
+        // setup the target filter from component descriptor
+        setTargetFilter( m_dependencyMetadata.getTarget() );
+
         if ( hasGetPermission() )
         {
             // get the current number of registered services available
@@ -548,7 +556,10 @@ public class DependencyManager implements ServiceListener, Reference
         context.removeServiceListener( this );
 
         m_size = 0;
+    }
 
+    void deactivate()
+    {
         // unget all services we once got
         ServiceReference[] boundRefs = getBoundServiceReferences();
         if ( boundRefs != null )
@@ -558,9 +569,6 @@ public class DependencyManager implements ServiceListener, Reference
                 ungetService( boundRefs[i] );
             }
         }
-
-        // reset the target filter from component descriptor
-        setTargetFilter( m_dependencyMetadata.getTarget() );
     }
 
 
@@ -572,7 +580,7 @@ public class DependencyManager implements ServiceListener, Reference
      * manager. It is actually the maximum number of services which may be
      * bound to this dependency manager.
      *
-     * @see #isValid()
+     * @see #isSatisfied()
      */
     int size()
     {
@@ -1321,6 +1329,7 @@ public class DependencyManager implements ServiceListener, Reference
      */
     private void setTargetFilter( String target )
     {
+        m_componentManager.checkLocked();
         // do nothing if target filter does not change
         if ( ( m_target == null && target == null ) || ( m_target != null && m_target.equals( target ) ) )
         {

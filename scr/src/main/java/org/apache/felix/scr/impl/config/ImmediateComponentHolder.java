@@ -188,7 +188,15 @@ public class ImmediateComponentHolder implements ComponentHolder
         if ( pid.equals( getComponentMetadata().getName() ) )
         {
             // singleton configuration deleted
-            m_singleComponent.reconfigure( null );
+            m_singleComponent.obtainStateLock();
+            try
+            {
+                m_singleComponent.reconfigure( null );
+            }
+            finally
+            {
+                m_singleComponent.releaseStateLock();
+            }
         }
         else
         {
@@ -196,36 +204,45 @@ public class ImmediateComponentHolder implements ComponentHolder
             ImmediateComponentManager icm = removeComponentManager( pid );
             if ( icm != null )
             {
-                // special casing if the single component is deconfigured
-                if ( m_singleComponent == icm )
+                boolean dispose = true;
+                icm.obtainStateLock();
+                try
                 {
-
-                    // if the single component is the last remaining, deconfi
-                    if ( m_components.isEmpty() )
+// special casing if the single component is deconfigured
+                    if ( m_singleComponent == icm )
                     {
 
-                        // if the single component is the last remaining
-                        // deconfigure it
-                        icm.reconfigure( null );
-                        icm = null;
+                        // if the single component is the last remaining, deconfi
+                        if ( m_components.isEmpty() )
+                        {
 
+                            // if the single component is the last remaining
+                            // deconfigure it
+                            icm.reconfigure( null );
+                            dispose = false;
+
+                        }
+                        else
+                        {
+
+                            // replace the single component field with another
+                            // entry from the map
+                            m_singleComponent = ( ImmediateComponentManager ) m_components.values().iterator().next();
+
+                        }
                     }
-                    else
+
+                    // icm may be null if the last configuration deleted was the
+                    // single component's configuration. Otherwise the component
+                    // is not the "last" and has to be disposed off
+                    if ( dispose )
                     {
-
-                        // replace the single component field with another
-                        // entry from the map
-                        m_singleComponent = ( ImmediateComponentManager ) m_components.values().iterator().next();
-
+                        icm.dispose( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
                     }
                 }
-
-                // icm may be null if the last configuration deleted was the
-                // single component's configuration. Otherwise the component
-                // is not the "last" and has to be disposed off
-                if ( icm != null )
+                finally
                 {
-                    icm.dispose( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
+                    icm.releaseStateLock();
                 }
             }
         }
@@ -254,8 +271,16 @@ public class ImmediateComponentHolder implements ComponentHolder
 
         if ( pid.equals( getComponentMetadata().getName() ) )
         {
-            // singleton configuration has pid equal to component name
-            m_singleComponent.reconfigure( props );
+            m_singleComponent.obtainStateLock();
+            try
+            {
+// singleton configuration has pid equal to component name
+                m_singleComponent.reconfigure( props );
+            }
+            finally
+            {
+                m_singleComponent.releaseStateLock();
+            }
         }
         else
         {
@@ -263,8 +288,16 @@ public class ImmediateComponentHolder implements ComponentHolder
             final ImmediateComponentManager icm = getComponentManager( pid );
             if ( icm != null )
             {
-                // factory configuration updated for existing component instance
-                icm.reconfigure( props );
+                icm.obtainStateLock();
+                try
+                {
+                    // factory configuration updated for existing component instance
+                    icm.reconfigure( props );
+                }
+                finally
+                {
+                    icm.releaseStateLock();
+                }
             }
             else
             {
@@ -282,12 +315,20 @@ public class ImmediateComponentHolder implements ComponentHolder
                 }
 
                 // configure the component
-                newIcm.reconfigure( props );
+                newIcm.obtainStateLock();
+                try
+                {
+                    newIcm.reconfigure( props );
+                }
+                finally
+                {
+                    newIcm.releaseStateLock();
+                }
 
                 // enable the component if it is initially enabled
                 if ( m_enabled && getComponentMetadata().isEnabled() )
                 {
-                    newIcm.enable();
+                    newIcm.enable( false );
                 }
 
                 // store the component in the map
@@ -305,18 +346,18 @@ public class ImmediateComponentHolder implements ComponentHolder
     }
 
 
-    public void enableComponents()
+    public void enableComponents( final boolean async )
     {
         final ImmediateComponentManager[] cms = getComponentManagers( false );
         if ( cms == null )
         {
-            m_singleComponent.enable();
+            m_singleComponent.enable( async );
         }
         else
         {
             for ( int i = 0; i < cms.length; i++ )
             {
-                cms[i].enable();
+                cms[i].enable( async );
             }
         }
 
@@ -324,20 +365,20 @@ public class ImmediateComponentHolder implements ComponentHolder
     }
 
 
-    public void disableComponents()
+    public void disableComponents( final boolean async )
     {
         m_enabled = false;
 
         final ImmediateComponentManager[] cms = getComponentManagers( false );
         if ( cms == null )
         {
-            m_singleComponent.disable();
+            m_singleComponent.disable( async );
         }
         else
         {
             for ( int i = 0; i < cms.length; i++ )
             {
-                cms[i].disable();
+                cms[i].disable( async );
             }
         }
     }

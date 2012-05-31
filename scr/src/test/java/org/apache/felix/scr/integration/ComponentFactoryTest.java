@@ -649,6 +649,7 @@ public class ComponentFactoryTest extends ComponentTestBase
             }
         }
 
+        //it has already been deactivated.... this should cause an exception?
         noMatch.getRegistration().unregister();
         delay();
 
@@ -673,8 +674,9 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertNull( instanceNonMatch.getInstance() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        instanceNonMatch.dispose();
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-        TestCase.assertNull( instanceNonMatch.getInstance() ); // SCR 112.12.6.2
+        //FactoryInstance.deactivate disposes the instance.  Don't do it again
+//        instanceNonMatch.dispose();
+//        TestCase.assertNull( SimpleComponent.INSTANCE );
+//        TestCase.assertNull( instanceNonMatch.getInstance() ); // SCR 112.12.6.2
     }
 }

@@ -27,6 +27,9 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -36,13 +39,13 @@ import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogService;
+
 
 /**
  * The default ComponentManager. Objects of this class are responsible for managing
@@ -51,6 +54,23 @@ import org.osgi.service.log.LogService;
  */
 public abstract class AbstractComponentManager implements Component
 {
+
+    private static final boolean JUC_AVAILABLE;
+
+    static {
+        boolean juc_available;
+        try
+        {
+            new JLock();
+            juc_available = true;
+        }
+        catch (Throwable t)
+        {
+            juc_available = false;
+        }
+        JUC_AVAILABLE = juc_available;
+    }
+
     // the ID of this component
     private long m_componentId;
 
@@ -71,6 +91,9 @@ public abstract class AbstractComponentManager implements Component
     // The ServiceRegistration
     private volatile ServiceRegistration m_serviceRegistration;
 
+    private final LockWrapper m_stateLock;
+
+    private long m_timeout = 5000;
 
     /**
      * The constructor receives both the activator and the metadata
@@ -86,6 +109,15 @@ public abstract class AbstractComponentManager implements Component
 
         m_state = Disabled.getInstance();
         m_dependencyManagers = loadDependencyManagers( metadata );
+
+        if (JUC_AVAILABLE)
+        {
+            m_stateLock = new JLock();
+        }
+        else
+        {
+            m_stateLock = new EDULock();
+        }
 
         // dump component details
         if ( isLogEnabled( LogService.LOG_DEBUG ) )
@@ -115,8 +147,39 @@ public abstract class AbstractComponentManager implements Component
         }
     }
 
+    //ImmediateComponentHolder should be in this manager package and this should be default access.
+    public final void obtainStateLock()
+    {
+        try
+        {
+            if (!m_stateLock.tryLock(  m_timeout ) )
+            {
+                throw new IllegalStateException( "Could not obtain lock" );
+            }
+        }
+        catch ( InterruptedException e )
+        {
+            //TODO this is so wrong
+            throw new IllegalStateException( e );
+        }
+    }
 
-    //---------- Component ID management
+
+    public final void releaseStateLock()
+    {
+        m_stateLock.unlock();
+    }
+
+
+    public final void checkLocked()
+    {
+        if ( m_stateLock.getHoldCount() == 0 )
+        {
+            throw new IllegalStateException( "State lock should be held by current thread" );
+        }
+    }
+
+//---------- Component ID management
 
     void registerComponentId()
     {
@@ -143,6 +206,7 @@ public abstract class AbstractComponentManager implements Component
 
 
     //---------- Asynchronous frontend to state change methods ----------------
+
     /**
      * Enables this component and - if satisfied - also activates it. If
      * enabling the component fails for any reason, the component ends up
@@ -155,8 +219,44 @@ public abstract class AbstractComponentManager implements Component
      */
     public final void enable()
     {
-        enableInternal();
-        activateInternal();
+        enable( true );
+    }
+
+
+    public final void enable( final boolean async )
+    {
+        obtainStateLock();
+        try
+        {
+            enableInternal();
+            if ( !async )
+            {
+                activateInternal();
+            }
+        }
+        finally
+        {
+            releaseStateLock();
+        }
+
+        if ( async )
+        {
+            m_activator.schedule( new Runnable()
+            {
+                public void run()
+                {
+                    obtainStateLock();
+                    try
+                    {
+                        activateInternal();
+                    }
+                    finally
+                    {
+                        releaseStateLock();
+                    }
+                }
+            } );
+        }
     }
 
     /**
@@ -167,8 +267,44 @@ public abstract class AbstractComponentManager implements Component
      */
     public final void disable()
     {
-        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED );
-        disableInternal();
+        disable( true );
+    }
+
+
+    public final void disable( final boolean async )
+    {
+        obtainStateLock();
+        try
+        {
+            if ( !async )
+            {
+                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED );
+            }
+            disableInternal();
+        }
+        finally
+        {
+            releaseStateLock();
+        }
+
+        if ( async )
+        {
+            m_activator.schedule( new Runnable()
+            {
+                public void run()
+                {
+                    obtainStateLock();
+                    try
+                    {
+                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED );
+                    }
+                    finally
+                    {
+                        releaseStateLock();
+                    }
+                }
+            } );
+        }
     }
 
     /**
@@ -195,7 +331,15 @@ public abstract class AbstractComponentManager implements Component
      */
     public void dispose( int reason )
     {
-        disposeInternal( reason );
+        obtainStateLock();
+        try
+        {
+            disposeInternal( reason );
+        }
+        finally
+        {
+            releaseStateLock();
+        }
     }
 
     //---------- Component interface ------------------------------------------
@@ -356,8 +500,6 @@ public abstract class AbstractComponentManager implements Component
      */
     final void disposeInternal( int reason )
     {
-        m_state.deactivate( this, reason );
-        m_state.disable( this );
         m_state.dispose( this );
     }
 
@@ -388,7 +530,7 @@ public abstract class AbstractComponentManager implements Component
 
     //---------- Component handling methods ----------------------------------
     /**
-     * Method is called by {@link #activate()} in STATE_ACTIVATING or by
+     * Method is called by {@link State#activate(AbstractComponentManager)} in STATE_ACTIVATING or by
      * {@link DelayedComponentManager#getService(Bundle, ServiceRegistration)}
      * in STATE_REGISTERED.
      *
@@ -416,13 +558,12 @@ public abstract class AbstractComponentManager implements Component
     {
         if ( m_componentMetadata.isFactory() )
         {
-            if ( getInstance() != null )
+            if ( this instanceof ComponentFactoryImpl.ComponentFactoryConfiguredInstance )
             {
-                if ( this instanceof ComponentFactoryImpl.ComponentFactoryConfiguredInstance )
-                {
-                    return Active.getInstance();
-                }
-
+                return Active.getInstance();
+            }
+            else if ( this instanceof ComponentFactoryImpl.ComponentFactoryNewInstance )
+            {
                 return FactoryInstance.getInstance();
             }
 
@@ -467,98 +608,23 @@ public abstract class AbstractComponentManager implements Component
      * {@link #registerService()} method. Also records the service
      * registration for later {@link #unregisterComponentService()}.
      * <p>
-     * If the component's state changes during service registration,
-     * the service is unregistered again and a WARN message is logged.
-     * This situation may happen as described in FELIX-3317.
+     * Due to more extensive locking FELIX-3317 is no longer relevant.
      *
-     * @param preRegistrationState The component state before service
-     *      registration. This is the expected state after service
-     *      registration.
      */
-    final void registerComponentService(final State preRegistrationState)
+    final void registerComponentService()
     {
 
-        /*
-         * Problem: If the component is being activated and a configuration
-         * is updated a race condition may happen:
-         *
-         *  1-T1 Unsatisfied.activate has set the state to Active already
-         *  2-T1 registerService is called but field is not assigned yet
-         *       during registerService ServiceListeners are called
-         *  3-T2 A Configuration update comes in an Satisfied(Active).deactivate
-         *       is called
-         *  4-T2 calls unregisterComponentService; does nothing because
-         *       field is not assigned
-         *  5-T2 destroys component
-         *  6-T1 assigns field from service registration
-         *
-         * Now all consumers are bound to a service object which has been
-         * deactivated already.
-         *
-         * Simplest thing to do would be to compare the states before
-         * and after service registration: If they are equal and the
-         * field is still null, everything is fine. If they are not
-         * equal or the field is set (maybe T2 is so fast registering
-         * service that it passed by T1), the current registration must
-         * be unregistered again and the field not be assigned. This
-         * will unbind consumers from the unusable instance.
-         *
-         * See also FELIX-3317
-         */
-
-        final ServiceRegistration sr = registerService();
-        if ( sr != null )
+        if (this.m_serviceRegistration != null)
         {
-            final State currentState = state();
-
-            synchronized ( this )
-            {
-                if ( (currentState == preRegistrationState || currentState == Active.getInstance()) && this.m_serviceRegistration == null )
-                {
-                    this.m_serviceRegistration = sr;
-                    return;
-                }
-            }
-
-            // Get here if:
-            // - state changed during service registration
-            // - state is the same (again) but field is already set
-            // both situations indicate the current registration is not to
-            // be used
-
-            if ( isLogEnabled( LogService.LOG_WARNING ) )
-            {
-                StringBuffer msg = new StringBuffer();
-                msg.append( "State changed from " ).append( preRegistrationState );
-                msg.append( " to " ).append( currentState );
-                msg.append( " during service registration; unregistering service [" );
-                ServiceReference ref = sr.getReference();
-                msg.append( Arrays.asList( ( String[] ) ref.getProperty( Constants.OBJECTCLASS ) ) );
-                msg.append( ',' );
-                msg.append( ref.getProperty( Constants.SERVICE_ID ) );
-                msg.append( ']' );
-                log( LogService.LOG_WARNING, msg.toString(), null );
-            }
-
-            try
-            {
-                sr.unregister();
-            }
-            catch ( IllegalStateException ise )
-            {
-                // ignore
-            }
+            throw new IllegalStateException( "Component service already registered: " + this );
         }
+        this.m_serviceRegistration = registerService();
     }
 
     final void unregisterComponentService()
     {
-        final ServiceRegistration sr;
-        synchronized ( this )
-        {
-            sr = this.m_serviceRegistration;
-            this.m_serviceRegistration = null;
-        }
+        ServiceRegistration sr = this.m_serviceRegistration;
+        this.m_serviceRegistration = null;
 
         if ( sr != null )
         {
@@ -784,6 +850,16 @@ public abstract class AbstractComponentManager implements Component
         return null;
     }
 
+    private void deactivateDependencyManagers()
+    {
+        Iterator it = getDependencyManagers();
+        while ( it.hasNext() )
+        {
+            DependencyManager dm = (DependencyManager) it.next();
+            dm.deactivate();
+        }
+    }
+
     private void disableDependencyManagers()
     {
         Iterator it = getDependencyManagers();
@@ -959,50 +1035,58 @@ public abstract class AbstractComponentManager implements Component
 
         ServiceReference getServiceReference( AbstractComponentManager acm )
         {
-            return null;
+//            return null;
+            throw new IllegalStateException("getServiceReference" + this);
         }
 
 
         Object getService( DelayedComponentManager dcm )
         {
-            log( dcm, "getService" );
-            return null;
+//            log( dcm, "getService" );
+//            return null;
+            throw new IllegalStateException("getService" + this);
         }
 
 
         void ungetService( DelayedComponentManager dcm )
         {
-            log( dcm, "ungetService" );
+//            log( dcm, "ungetService" );
+            throw new IllegalStateException("ungetService" + this);
         }
 
 
         void enable( AbstractComponentManager acm )
         {
             log( acm, "enable" );
+//            throw new IllegalStateException("enable" + this);
         }
 
 
         void activate( AbstractComponentManager acm )
         {
             log( acm, "activate" );
+//            throw new IllegalStateException("activate" + this);
         }
 
 
         void deactivate( AbstractComponentManager acm, int reason )
         {
             log( acm, "deactivate (reason: " + reason + ")" );
+//            throw new IllegalStateException("deactivate" + this);
         }
 
 
         void disable( AbstractComponentManager acm )
         {
-            log( acm, "disable" );
+//            log( acm, "disable" );
+            throw new IllegalStateException("disable" + this);
         }
 
 
         void dispose( AbstractComponentManager acm )
         {
-            log( acm, "dispose" );
+//            log( acm, "dispose" );
+            throw new IllegalStateException("dispose" + this);
         }
 
 
@@ -1010,6 +1094,29 @@ public abstract class AbstractComponentManager implements Component
         {
             acm.log( LogService.LOG_DEBUG, "Current state: {0}, Event: {1}", new Object[]
                 { m_name, event }, null );
+        }
+
+        void doDeactivate( AbstractComponentManager acm, int reason )
+        {
+            try
+            {
+                acm.unregisterComponentService();
+                acm.deleteComponent( reason );
+                acm.deactivateDependencyManagers();
+            }
+            catch ( Throwable t )
+            {
+                acm.log( LogService.LOG_WARNING, "Component deactivation threw an exception", t );
+            }
+        }
+
+        void doDisable( AbstractComponentManager acm )
+        {
+            // dispose and recreate dependency managers
+            acm.disableDependencyManagers();
+
+            // reset the component id now (a disabled component has none)
+            acm.unregisterComponentId();
         }
     }
 
@@ -1039,7 +1146,6 @@ public abstract class AbstractComponentManager implements Component
                 return;
             }
 
-            acm.changeState( Enabling.getInstance() );
             acm.registerComponentId();
             try
             {
@@ -1057,32 +1163,18 @@ public abstract class AbstractComponentManager implements Component
             }
         }
 
+        void deactivate( AbstractComponentManager acm, int reason )
+        {
+            doDeactivate( acm, reason );
+        }
 
         void dispose( AbstractComponentManager acm )
         {
-            acm.changeState( Disposing.getInstance() );
             acm.log( LogService.LOG_DEBUG, "Disposing component", null );
             acm.clear();
             acm.changeState( Disposed.getInstance() );
 
             acm.log( LogService.LOG_DEBUG, "Component disposed", null );
-        }
-    }
-
-    protected static final class Enabling extends State
-    {
-        private static final Enabling m_inst = new Enabling();
-
-
-        private Enabling()
-        {
-            super( "Enabling", STATE_ENABLING );
-        }
-
-
-        static State getInstance()
-        {
-            return m_inst;
         }
     }
 
@@ -1112,8 +1204,6 @@ public abstract class AbstractComponentManager implements Component
                 return;
             }
 
-            acm.changeState( Activating.getInstance() );
-
             acm.log( LogService.LOG_DEBUG, "Activating component", null );
 
             // Before creating the implementation object, we are going to
@@ -1121,9 +1211,20 @@ public abstract class AbstractComponentManager implements Component
             if ( !acm.hasConfiguration() && acm.getComponentMetadata().isConfigurationRequired() )
             {
                 acm.log( LogService.LOG_DEBUG, "Missing required configuration, cannot activate", null );
-                acm.changeState( Unsatisfied.getInstance() );
                 return;
             }
+
+            // set satisifed state before registering the service because
+            // during service registration a listener may try to get the
+            // service from the service reference which may cause a
+            // delayed service object instantiation through the State
+
+            // actually since we don't have the activating state any
+            // longer, we have to set the satisfied state already
+            // before actually creating the component such that services
+            // may be accepted.
+            final State satisfiedState = acm.getSatisfiedState();
+            acm.changeState( satisfiedState );
 
             // Before creating the implementation object, we are going to
             // test if all the mandatory dependencies are satisfied
@@ -1158,51 +1259,28 @@ public abstract class AbstractComponentManager implements Component
                 return;
             }
 
-            // set satisifed state before registering the service because
-            // during service registration a listener may try to get the
-            // service from the service reference which may cause a
-            // delayed service object instantiation through the State
-            final State satisfiedState = acm.getSatisfiedState();
-            acm.changeState( satisfiedState );
-
-            acm.registerComponentService( satisfiedState );
+            acm.registerComponentService();
         }
 
 
         void disable( AbstractComponentManager acm )
         {
-            acm.changeState( Disabling.getInstance() );
-
             acm.log( LogService.LOG_DEBUG, "Disabling component", null );
-
-            // dispose and recreate dependency managers
-            acm.disableDependencyManagers();
-
-            // reset the component id now (a disabled component has none)
-            acm.unregisterComponentId();
+            doDisable( acm );
 
             // we are now disabled, ready for re-enablement or complete destroyal
             acm.changeState( Disabled.getInstance() );
 
             acm.log( LogService.LOG_DEBUG, "Component disabled", null );
         }
-    }
 
-    protected static final class Activating extends State
-    {
-        private static final Activating m_inst = new Activating();
-
-
-        private Activating()
+        void dispose( AbstractComponentManager acm )
         {
-            super( "Activating", STATE_ACTIVATING );
+            doDisable( acm );
+            acm.clear();   //content of Disabled.dispose
+            acm.changeState( Disposed.getInstance() );
         }
 
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
     }
 
     protected static abstract class Satisfied extends State
@@ -1222,25 +1300,30 @@ public abstract class AbstractComponentManager implements Component
 
         void deactivate( AbstractComponentManager acm, int reason )
         {
-            acm.changeState( Deactivating.getInstance() );
-
             acm.log( LogService.LOG_DEBUG, "Deactivating component", null );
 
             // catch any problems from deleting the component to prevent the
             // component to remain in the deactivating state !
-            try
-            {
-                acm.unregisterComponentService();
-                acm.deleteComponent( reason );
-            }
-            catch ( Throwable t )
-            {
-                acm.log( LogService.LOG_WARNING, "Component deactivation threw an exception", t );
-            }
+            doDeactivate(acm, reason);
 
             acm.changeState( Unsatisfied.getInstance() );
             acm.log( LogService.LOG_DEBUG, "Component deactivated", null );
         }
+
+        void disable( AbstractComponentManager acm )
+        {
+            doDisable( acm );
+            acm.changeState( Disabled.getInstance() );
+        }
+
+        void dispose( AbstractComponentManager acm )
+        {
+            doDeactivate( acm, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+            doDisable(acm);
+            acm.clear();   //content of Disabled.dispose
+            acm.changeState( Disposed.getInstance() );
+        }
+
     }
 
     /**
@@ -1388,57 +1471,9 @@ public abstract class AbstractComponentManager implements Component
         }
     }
 
-    protected static final class Deactivating extends State
-    {
-        private static final Deactivating m_inst = new Deactivating();
-
-
-        private Deactivating()
-        {
-            super( "Deactivating", STATE_DEACTIVATING );
-        }
-
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
-    }
-
-    protected static final class Disabling extends State
-    {
-        private static final Disabling m_inst = new Disabling();
-
-
-        private Disabling()
-        {
-            super( "Disabling", STATE_DISABLING );
-        }
-
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
-    }
-
-    protected static final class Disposing extends State
-    {
-        private static final Disposing m_inst = new Disposing();
-
-
-        private Disposing()
-        {
-            super( "Disposing", STATE_DISPOSING );
-        }
-
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
-    }
-
+    /*
+    final state.
+     */
     protected static final class Disposed extends State
     {
         private static final Disposed m_inst = new Disposed();
@@ -1453,6 +1488,78 @@ public abstract class AbstractComponentManager implements Component
         static State getInstance()
         {
             return m_inst;
+        }
+
+        void activate( AbstractComponentManager acm )
+        {
+            throw new IllegalStateException( "activate: " + this );
+        }
+
+        void deactivate( AbstractComponentManager acm, int reason )
+        {
+            throw new IllegalStateException( "deactivate: " + this );
+        }
+
+        void disable( AbstractComponentManager acm )
+        {
+            throw new IllegalStateException( "disable: " + this );
+        }
+
+        void dispose( AbstractComponentManager acm )
+        {
+            throw new IllegalStateException( "dispose: " + this );
+        }
+
+        void enable( AbstractComponentManager acm )
+        {
+            throw new IllegalStateException( "enable: " + this );
+        }
+    }
+
+    private static interface LockWrapper
+    {
+        boolean tryLock( long milliseconds ) throws InterruptedException;
+        long getHoldCount();
+        void unlock();
+    }
+
+    private static class JLock implements LockWrapper
+    {
+        private final ReentrantLock lock = new ReentrantLock( true );
+
+        public boolean tryLock( long milliseconds ) throws InterruptedException
+        {
+             return lock.tryLock( milliseconds, TimeUnit.MILLISECONDS );
+        }
+
+        public long getHoldCount()
+        {
+            return lock.getHoldCount();
+        }
+
+        public void unlock()
+        {
+            lock.unlock();
+        }
+    }
+
+    private static class EDULock implements LockWrapper
+    {
+        private final EDU.oswego.cs.dl.util.concurrent.ReentrantLock lock = new EDU.oswego.cs.dl.util.concurrent.ReentrantLock();
+
+        public boolean tryLock( long milliseconds ) throws InterruptedException
+        {
+            return lock.attempt( milliseconds );
+        }
+
+        public long getHoldCount()
+        {
+            return lock.holds();
+        }
+
+        public void unlock()
+        {
+            lock.release();
         }
     }
 }

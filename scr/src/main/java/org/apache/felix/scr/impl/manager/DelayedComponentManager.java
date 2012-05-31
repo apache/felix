@@ -34,7 +34,6 @@ public class DelayedComponentManager extends ImmediateComponentManager implement
 {
 
     // keep the using bundles as reference "counters" for instance deactivation
-    private final Object m_useCountLock;
     private int m_useCount;
 
 
@@ -46,7 +45,6 @@ public class DelayedComponentManager extends ImmediateComponentManager implement
         ComponentMetadata metadata )
     {
         super( activator, componentHolder, metadata );
-        this.m_useCountLock = new Object();
         this.m_useCount = 0;
     }
 
@@ -80,12 +78,17 @@ public class DelayedComponentManager extends ImmediateComponentManager implement
 
     //---------- ServiceFactory interface -------------------------------------
 
-    public synchronized Object getService( Bundle bundle, ServiceRegistration sr )
+    public Object getService( Bundle bundle, ServiceRegistration sr )
     {
-        synchronized ( m_useCountLock )
+        obtainStateLock();
+        try
         {
             m_useCount++;
             return state().getService( this );
+        }
+        finally
+        {
+            releaseStateLock();
         }
     }
 
@@ -98,7 +101,8 @@ public class DelayedComponentManager extends ImmediateComponentManager implement
 
     public void ungetService( Bundle bundle, ServiceRegistration sr, Object service )
     {
-        synchronized ( m_useCountLock )
+        obtainStateLock();
+        try
         {
             // the framework should not call ungetService more than it calls
             // calls getService. Still, we want to be sure to not go below zero
@@ -114,6 +118,10 @@ public class DelayedComponentManager extends ImmediateComponentManager implement
                     state().ungetService( this );
                 }
             }
+        }
+        finally
+        {
+            releaseStateLock();
         }
     }
 }
