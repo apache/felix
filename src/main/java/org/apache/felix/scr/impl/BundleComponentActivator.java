@@ -238,7 +238,7 @@ public class BundleComponentActivator implements Logger
                     // enable the component
                     if ( metadata.isEnabled() )
                     {
-                        holder.enableComponents();
+                        holder.enableComponents( false );
                     }
                 }
                 catch ( Throwable t )
@@ -365,10 +365,8 @@ public class BundleComponentActivator implements Logger
     /**
      * Implements the <code>ComponentContext.enableComponent(String)</code>
      * method by first finding the component(s) for the <code>name</code> and
-     * then starting a thread to actually enable all components found.
+     * enabling them.  The enable method will schedule activation.
      * <p>
-     * If no component matching the given name is found the thread is not
-     * started and the method does nothing.
      *
      * @param name The name of the component to enable or <code>null</code> to
      *      enable all components.
@@ -381,45 +379,26 @@ public class BundleComponentActivator implements Logger
             return;
         }
 
-		// FELIX-2368; schedule for asynchronous enablement. According to
-        //    112.5.1 the enabled state should be changed immediately but
-        //    the component(s) should be activated asynchronously. Since
-        //    we do not really handle the enabled state separately we
-        //    schedule enablement and activation for asynchronous execution.
-        schedule( new Runnable()
+        for ( int i = 0; i < holder.length; i++ )
         {
-            public void run()
+            try
             {
-                for ( int i = 0; i < holder.length; i++ )
-                {
-                    try
-                    {
-                        log( LogService.LOG_DEBUG, "Enabling Component", holder[i].getComponentMetadata(), null );
-                        holder[i].enableComponents();
-                    }
-                    catch ( Throwable t )
-                    {
-                        log( LogService.LOG_ERROR, "Cannot enable component", holder[i].getComponentMetadata(), t );
-                    }
-                }
+                log( LogService.LOG_DEBUG, "Enabling Component", holder[i].getComponentMetadata(), null );
+                holder[i].enableComponents( true );
             }
-
-
-            public String toString()
+            catch ( Throwable t )
             {
-                return "enableComponent(" + name + ")";
+                log( LogService.LOG_ERROR, "Cannot enable component", holder[i].getComponentMetadata(), t );
             }
-        } );
+        }
     }
 
 
     /**
      * Implements the <code>ComponentContext.disableComponent(String)</code>
      * method by first finding the component(s) for the <code>name</code> and
-     * then starting a thread to actually disable all components found.
+     * disabling them.  The disable method will schedule deactivation
      * <p>
-     * If no component matching the given name is found the thread is not
-     * started and the method does nothing.
      *
      * @param name The name of the component to disable or <code>null</code> to
      *      disable all components.
@@ -432,35 +411,18 @@ public class BundleComponentActivator implements Logger
             return;
         }
 
-        // FELIX-2368; schedule for asynchronous enablement. According to
-        //    112.5.1 the enabled state should be changed immediately but
-        //    the component(s) should be deactivated asynchronously. Since
-        //    we do not really handle the enabled state separately we
-        //    schedule disablement and deactivation for asynchronous execution.
-        schedule( new Runnable()
+        for ( int i = 0; i < holder.length; i++ )
         {
-            public void run()
+            try
             {
-                for ( int i = 0; i < holder.length; i++ )
-                {
-                    try
-                    {
-                        log( LogService.LOG_DEBUG, "Disabling Component", holder[i].getComponentMetadata(), null );
-                        holder[i].disableComponents();
-                    }
-                    catch ( Throwable t )
-                    {
-                        log( LogService.LOG_ERROR, "Cannot disable component", holder[i].getComponentMetadata(), t );
-                    }
-                }
+                log( LogService.LOG_DEBUG, "Disabling Component", holder[i].getComponentMetadata(), null );
+                holder[i].disableComponents( true );
             }
-
-
-            public String toString()
+            catch ( Throwable t )
             {
-                return "disableComponent(" + name + ")";
+                log( LogService.LOG_ERROR, "Cannot disable component", holder[i].getComponentMetadata(), t );
             }
-        } );
+        }
     }
 
 

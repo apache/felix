@@ -108,19 +108,28 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     {
         final ImmediateComponentManager cm = createComponentManager( true );
 
-        cm.setFactoryProperties( dictionary );
-        cm.reconfigure( m_configuration );
-
-        // enable and activate immediately
-        cm.enableInternal();
-        cm.activateInternal();
-
-        final ComponentInstance instance = cm.getComponentInstance();
-        if ( instance == null )
+        ComponentInstance instance;
+        cm.obtainStateLock();
+        try
         {
-            // activation failed, clean up component manager
-            cm.dispose();
-            throw new ComponentException( "Failed activating component" );
+            cm.setFactoryProperties( dictionary );
+            cm.reconfigure( m_configuration );
+
+            // enable and activate immediately
+            cm.enableInternal();
+            cm.activateInternal();
+
+            instance = cm.getComponentInstance();
+            if ( instance == null )
+            {
+                // activation failed, clean up component manager
+                cm.dispose();
+                throw new ComponentException( "Failed activating component" );
+            }
+        }
+        finally
+        {
+            cm.releaseStateLock();
         }
 
         synchronized ( m_componentInstances )
@@ -144,7 +153,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         ImmediateComponentManager[] cms = getComponentManagers( m_configuredServices );
         for ( int i = 0; i < cms.length; i++ )
         {
-            cms[i].enable();
+            cms[i].enable( false );
         }
 
         return true;
@@ -294,50 +303,61 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         {
             m_configuration = configuration;
         }
-        else if ( m_isConfigurationFactory )
+        else if ( m_isConfigurationFactory )  //non-spec backwards compatible
         {
-            ImmediateComponentManager cm;
-            Map configuredServices = m_configuredServices;
-            if ( configuredServices != null )
+            obtainStateLock();
+            try
             {
-                synchronized ( configuredServices )
+                ImmediateComponentManager cm;
+                Map configuredServices = m_configuredServices;
+                if ( configuredServices != null )
                 {
                     cm = ( ImmediateComponentManager ) configuredServices.get( pid );
                 }
-            }
-            else
-            {
-                m_configuredServices = new HashMap();
-                configuredServices = m_configuredServices;
-                cm = null;
-            }
-
-            if ( cm == null )
-            {
-                // create a new instance with the current configuration
-                cm = createComponentManager( false );
-
-                // this should not call component reactivation because it is
-                // not active yet
-                cm.reconfigure( configuration );
-
-                // enable asynchronously if components are already enabled
-                if ( getState() == STATE_FACTORY )
+                else
                 {
-                    cm.enable();
+                    m_configuredServices = new HashMap();
+                    configuredServices = m_configuredServices;
+                    cm = null;
                 }
 
-                // keep a reference for future updates
-                synchronized ( configuredServices )
+                if ( cm == null )
                 {
+                    // create a new instance with the current configuration
+                    cm = createComponentManager( false );
+
+                    // this should not call component reactivation because it is
+                    // not active yet
+                    cm.reconfigure( configuration );
+
+                    // enable asynchronously if components are already enabled
+                    if ( getState() == STATE_FACTORY )
+                    {
+                        cm.enable( false );
+                    }
+
+                    // keep a reference for future updates
                     configuredServices.put( pid, cm );
-                }
 
+                }
+                else
+                {
+                    // update the configuration as if called as ManagedService
+                    //TODO deadlock potential, we are holding our own state lock.
+                    cm.obtainStateLock();
+                    try
+                    {
+                        cm.reconfigure( configuration );
+                    }
+                    finally
+                    {
+                        cm.releaseStateLock();
+                    }
+                }
             }
-            else
+            finally
             {
-                // update the configuration as if called as ManagedService
-                cm.reconfigure( configuration );
+                releaseStateLock();
             }
         }
         else
@@ -372,9 +392,9 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
      * A component factory component holder enables the held components by
      * enabling itself.
      */
-    public void enableComponents()
+    public void enableComponents( boolean async )
     {
-        enable();
+        enable( async );
     }
 
 
@@ -382,9 +402,9 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
      * A component factory component holder disables the held components by
      * disabling itself.
      */
-    public void disableComponents()
+    public void disableComponents( boolean async )
     {
-        disable();
+        disable( async );
     }
 
 

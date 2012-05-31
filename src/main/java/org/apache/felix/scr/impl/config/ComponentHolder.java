@@ -76,15 +76,22 @@ public interface ComponentHolder
     Component[] getComponents();
 
     /**
-     * Enables all components of this holder.
+     * Enables all components of this holder and if satisifed activates
+     * them.
+     *
+     * @param async Whether the actual activation should take place
+     *      asynchronously or not.
      */
-    void enableComponents();
+    void enableComponents( boolean async );
 
 
     /**
      * Disables all components of this holder.
+     *
+     * @param async Whether the actual deactivation should take place
+     *      asynchronously or not.
      */
-    void disableComponents();
+    void disableComponents( boolean async );
 
 
     /**

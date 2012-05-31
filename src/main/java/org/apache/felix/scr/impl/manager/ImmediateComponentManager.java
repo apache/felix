@@ -94,13 +94,6 @@ public class ImmediateComponentManager extends AbstractComponentManager
         m_componentHolder = componentHolder;
     }
 
-
-    ComponentHolder getComponentHolder()
-    {
-        return m_componentHolder;
-    }
-
-
     void clear()
     {
         if ( m_componentHolder != null )
@@ -143,12 +136,6 @@ public class ImmediateComponentManager extends AbstractComponentManager
         m_componentContext = null;
         m_properties = null;
         m_serviceProperties = null;
-    }
-
-
-    ComponentContext getComponentContext()
-    {
-        return m_componentContext;
     }
 
 

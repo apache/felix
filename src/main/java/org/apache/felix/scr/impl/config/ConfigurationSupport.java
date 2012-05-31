@@ -226,6 +226,8 @@ public class ConfigurationSupport implements ConfigurationListener
                         catch (IllegalStateException ise)
                         {
                             // If the bundle has been stopped conurrently
+                            Activator.log(LogService.LOG_WARNING, null, "Unknown ConfigurationEvent type " + event.getType(),
+                                ise);
                         }
                     }
                     break;

@@ -220,7 +220,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
      * <i>Service-Component</i> header, this method has no effect. The
      * fragments of a bundle are not checked for the header (112.4.1).
      * <p>
-     * This method calls the {@link #getBundleContext(Bundle)} method to find
+     * This method calls the {@link Bundle#getBundleContext()} method to find
      * the <code>BundleContext</code> of the bundle. If the context cannot be
      * found, this method does not load components for the bundle.
      */
