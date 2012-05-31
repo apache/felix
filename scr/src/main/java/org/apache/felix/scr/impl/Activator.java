@@ -49,10 +49,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     static final String PACKAGEADMIN_CLASS = "org.osgi.service.packageadmin.PackageAdmin";
 
     // Our configuration from bundle context properties and Config Admin
-    private ScrConfiguration m_configuration;
-
-    // Flag that sets error messages
-    private static int m_logLevel = LogService.LOG_DEBUG;
+    private static ScrConfiguration m_configuration = new ScrConfiguration();
 
     // this bundle's context
     private static BundleContext m_context;
@@ -96,10 +93,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
         m_componentRegistry = new ComponentRegistry( context );
 
         // get the configuration
-        m_configuration = new ScrConfiguration( context );
-
-        // configure logging from context properties
-        m_logLevel = m_configuration.getLogLevel();
+        m_configuration.start( context );
 
         // log SCR startup
         log( LogService.LOG_INFO, context.getBundle(), " Version = "
@@ -386,7 +380,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
      */
     public static void log( int level, Bundle bundle, String message, Throwable ex )
     {
-        if ( m_logLevel >= level )
+        if ( m_configuration.getLogLevel() >= level )
         {
             Object logger = ( m_logService != null ) ? m_logService.getService() : null;
             if ( logger == null )
