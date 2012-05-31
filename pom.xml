@@ -311,6 +311,36 @@
             </plugin>
 
             <!--
+                Ensure not using too recent Java API
+                - for now touch base on Java 1.4
+                - Ignore some known Java 5 classes (used in JLock)
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>animal-sniffer-maven-plugin</artifactId>
+                <version>1.7</version>
+                <configuration>
+                    <signature>
+                        <groupId>org.codehaus.mojo.signature</groupId>
+                        <artifactId>java14</artifactId>
+                        <version>1.0</version>
+                    </signature>
+                    <ignores>
+                        <ignore>java.util.concurrent.locks.ReentrantLock</ignore>
+                        <ignore>java.util.concurrent.TimeUnit</ignore>
+                    </ignores>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
                 Configure default compilation for Java 1.3 and integration
                 test compilation for Java 5 (since integration tests use
                 Java Annotations for Pax Exam).

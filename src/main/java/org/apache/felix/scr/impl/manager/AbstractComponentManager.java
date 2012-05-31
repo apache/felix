@@ -160,7 +160,7 @@ public abstract class AbstractComponentManager implements Component
         catch ( InterruptedException e )
         {
             //TODO this is so wrong
-            throw new IllegalStateException( e );
+            throw new IllegalStateException( "Could not obtain lock (Reason: " + e + ")" );
         }
     }
 

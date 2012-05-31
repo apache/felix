@@ -324,7 +324,7 @@ public class PropertyMetadata {
             boolean[] array = new boolean[valueList.length];
             for ( int i = 0; i < array.length; i++ )
             {
-                array[i] = Boolean.parseBoolean( valueList[i] );
+                array[i] = Boolean.valueOf( valueList[i] ).booleanValue();
             }
             return array;
         }
