@@ -208,7 +208,7 @@ public class ImmediateComponentHolder implements ComponentHolder
                 icm.obtainStateLock();
                 try
                 {
-// special casing if the single component is deconfigured
+                    // special casing if the single component is deconfigured
                     if ( m_singleComponent == icm )
                     {
 
