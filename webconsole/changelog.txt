@@ -1,4 +1,4 @@
-Changes from 3.1.8 to 3.4.0
+Changes from 3.1.8 to 4.0.0
 ---------------------------
 
 ** Bug
@@ -27,6 +27,8 @@ Changes from 3.1.8 to 3.4.0
     * [FELIX-3408] - Web Console date chooser shows garbage text
     * [FELIX-3433] - WebConsole default ajax error handlers doesn't work with IE
     * [FELIX-3469] - Type mismatch JS error using the memoryusage plugin
+    * [FELIX-3473] - web console config manager plugin no longer works with J9
+    * [FELIX-3485] - ui-bg_glass_55_fbf9ee_1x400.png does not exist in admin_compat.css
 
 ** Improvement
     * [FELIX-2117] - Use DynamicImport instead of Optional Packages
@@ -50,6 +52,9 @@ Changes from 3.1.8 to 3.4.0
     * [FELIX-3316] - Log plugin should provide more detailed exception column
     * [FELIX-3417] - Web Console Inconsistent status text
     * [FELIX-3418] - Sort threads by name in Configuration Status -> Threads
+    * [FELIX-3482] - Text wrapping goes out of bounds in Configuration Status
+    * [FELIX-3491] - Better activity indication when pressing refresh/update bundle buttons 
+    * [FELIX-3502] - Improve Threads web console printer
 
 ** New Feature
     * [FELIX-2709] - Allow webconsole context root be obtained from framework properties
@@ -59,6 +64,7 @@ Changes from 3.1.8 to 3.4.0
     * [FELIX-3279] - Drop default build and use bare profile as the single build
     * [FELIX-3280] - Update to use parent POM 2.1
     * [FELIX-3281] - Use bundle plugin 2.3.6 and BND annotations for package export
+    * [FELIX-3490] - Notice included OSGi classes
 
 
 Changes from 3.1.6 to 3.1.8
