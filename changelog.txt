@@ -1,0 +1,12 @@
+Initial Release 1.0.0
+---------------------
+
+** Bug
+    * [FELIX-3268] - Cannot build webconsole and webconsole-plugins with JDK 7
+    * [FELIX-3503] - The obr page in the webconsole does not update on refresh
+
+** Improvement
+    * [FELIX-3111] - Separate OBR Plugin
+
+** Task
+    * [FELIX-3531] - Update to parent pom 2.1 and fix license files
