@@ -1,0 +1,11 @@
+Initial Release 1.0.0
+---------------------
+
+** Bug
+    * [FELIX-3135] - Error page on component reload
+    * [FELIX-3268] - Cannot build webconsole and webconsole-plugins with JDK 7
+    * [FELIX-3442] - native2ascii doesn't work for DS plugin
+
+** Improvement
+    * [FELIX-3100] - Separate SCR plugin
+    * [FELIX-3441] - DS plugin inconsistent status text
