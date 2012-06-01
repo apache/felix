@@ -94,6 +94,9 @@ public class ComponentMetadata
     // 112.4.3 configuration-policy (since DS 1.1)
     private String m_configurationPolicy = null;
 
+    // 112.4.4 configuration-pid (since DS 1.2)
+    private String m_configurationPid;
+
     // Associated properties (0..*)
     private Dictionary m_properties = new Hashtable();
 
@@ -127,6 +130,19 @@ public class ComponentMetadata
     }
 
     /////////////////////////////////////////// SETTERS //////////////////////////////////////
+
+    /**
+     * Setter for the configuration-pid component (since DS 1.2)
+     * @param configurationPid
+     */
+    public void setConfigirationPid(String configurationPid)
+    {
+        if ( m_validated )
+        {
+            return;
+        }
+        m_configurationPid = configurationPid;
+    }
 
     /**
      * Setter for the name
@@ -416,6 +432,20 @@ public class ComponentMetadata
 
         // return the implementation class name if the name is not set
         return getImplementationClassName();
+    }
+
+    /**
+     * Returns the configuration pid for the component. The pid is the one specified in the
+     * component's configuration-pid DS 1.2 attribute, if specified. Else the component name is used
+     * as the pid by default.
+     */
+    public String getConfigurationPid()
+    {
+        if (m_configurationPid != null) 
+        {
+            return m_configurationPid;
+        }
+        return getName();
     }
 
 
@@ -712,6 +742,12 @@ public class ComponentMetadata
         if ( m_modified != null && m_namespaceCode < XmlHandler.DS_VERSION_1_1 )
         {
             throw validationFailure( "modified method declaration requires DS 1.1 or later namespace " );
+        }
+
+        // 112.4.4 configuration-pid can be specified since DS 1.2
+        if ( m_configurationPid != null && m_namespaceCode < XmlHandler.DS_VERSION_1_2 )
+        {
+            throw validationFailure( "configuration-pid attribute requires DS 1.2 or later namespace " );
         }
 
         // Next check if the properties are valid (and extract property values)

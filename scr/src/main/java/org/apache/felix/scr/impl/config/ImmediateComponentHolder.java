@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
 import org.apache.felix.scr.impl.manager.DelayedComponentManager;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
@@ -185,7 +186,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             return;
         }
 
-        if ( pid.equals( getComponentMetadata().getName() ) )
+        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             // singleton configuration deleted
             m_singleComponent.obtainStateLock();
@@ -269,7 +270,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             return;
         }
 
-        if ( pid.equals( getComponentMetadata().getName() ) )
+        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             m_singleComponent.obtainStateLock();
             try
@@ -444,6 +445,39 @@ public class ImmediateComponentHolder implements ComponentHolder
         }
     }
 
+    /**
+     * Compares this {@code ImmediateComponentHolder} object to another object.
+     * 
+     * <p>
+     * A ImmediateComponentHolder is considered to be <b>equal to </b> another 
+     * ImmediateComponentHolder if the component names are equal(using 
+     * {@code String.equals}).
+     * 
+     * @param object The {@code ImmediateComponentHolder} object to be compared.
+     * @return {@code true} if {@code object} is a
+     *         {@code ImmediateComponentHolder} and is equal to this object;
+     *         {@code false} otherwise.
+     */
+   public boolean equals(Object object)
+    {
+        if (!(object instanceof ImmediateComponentHolder))
+        {
+            return false;
+        }
+
+        ImmediateComponentHolder other = (ImmediateComponentHolder) object;
+        return getComponentMetadata().getName().equals(other.getComponentMetadata().getName());
+    }
+    
+   /**
+    * Returns a hash code value for the object.
+    * 
+    * @return An integer which is a hash code value for this object.
+    */
+   public int hashCode()
+   {
+       return getComponentMetadata().getName().hashCode();
+   }
 
     //---------- internal
 

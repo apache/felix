@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.config;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Iterator;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -76,7 +77,7 @@ public class ConfigurationSupport implements ConfigurationListener
         {
             final BundleContext bundleContext = holder.getActivator().getBundleContext();
             final String bundleLocation = bundleContext.getBundle().getLocation();
-            final String name = holder.getComponentMetadata().getName();
+            final String confPid = holder.getComponentMetadata().getConfigurationPid();
 
             final ServiceReference caRef = bundleContext.getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
             if (caRef != null)
@@ -86,7 +87,7 @@ public class ConfigurationSupport implements ConfigurationListener
                 {
                     try
                     {
-                        final Configuration[] factory = findFactoryConfigurations(ca, name);
+                        final Configuration[] factory = findFactoryConfigurations(ca, confPid);
                         if (factory != null)
                         {
                             for (int i = 0; i < factory.length; i++)
@@ -99,11 +100,11 @@ public class ConfigurationSupport implements ConfigurationListener
                         else
                         {
                             // check for configuration and configure the holder
-                            final Configuration singleton = findSingletonConfiguration(ca, name);
+                            final Configuration singleton = findSingletonConfiguration(ca, confPid);
                             if (singleton != null)
                             {
-                                final Dictionary props = getConfiguration(ca, name, bundleLocation);
-                                holder.configurationUpdated(name, props);
+                                final Dictionary props = getConfiguration(ca, confPid, bundleLocation);
+                                holder.configurationUpdated(confPid, props);
                             }
                         }
                     }
@@ -164,24 +165,29 @@ public class ConfigurationSupport implements ConfigurationListener
         final String pid = event.getPid();
         final String factoryPid = event.getFactoryPid();
 
-        final ComponentHolder cm;
+        // iterate over all components which must be configured with this pid
+        // (since DS 1.2, components may specify a specific configuration PID (112.4.4 configuration-pid)
+        Iterator it; 
+              
         if (factoryPid == null)
         {
-            cm = this.m_registry.getComponentHolder(pid);
+            it = this.m_registry.getComponentHoldersByPid(pid);
         }
         else
         {
-            cm = this.m_registry.getComponentHolder(factoryPid);
+            it = this.m_registry.getComponentHoldersByPid(factoryPid);
         }
 
         Activator.log(LogService.LOG_DEBUG, null, "configurationEvent: Handling "
-            + ((event.getType() == ConfigurationEvent.CM_DELETED) ? "DELETE" : "UPDATE") + " of Configuration PID="
-            + pid, null);
+                + ((event.getType() == ConfigurationEvent.CM_DELETED) ? "DELETE" : "UPDATE")
+                + " of Configuration PID=" + pid, null);
 
-        if (cm != null && !cm.getComponentMetadata().isConfigurationIgnored())
+        while (it.hasNext())
         {
-            switch (event.getType())
+            final ComponentHolder cm = (ComponentHolder) it.next();
+            if (!cm.getComponentMetadata().isConfigurationIgnored())
             {
+                switch (event.getType()) {
                 case ConfigurationEvent.CM_DELETED:
                     cm.configurationDeleted(pid);
                     break;
@@ -235,6 +241,7 @@ public class ConfigurationSupport implements ConfigurationListener
                 default:
                     Activator.log(LogService.LOG_WARNING, null, "Unknown ConfigurationEvent type " + event.getType(),
                         null);
+                }
             }
         }
     }

@@ -22,8 +22,11 @@ package org.apache.felix.scr.impl;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.ScrService;
@@ -77,6 +80,25 @@ public class ComponentRegistry implements ScrService, ServiceListener
     private final Map m_componentHoldersByName;
 
     /**
+     * The map of known components indexed by component configuration pid. The values are
+     * Sets of the {@link ComponentHolder} interface. Normally, the configuration pid
+     * is the component name, but since DS 1.2 (OSGi 4.3), a component may specify a specific 
+     * pid, and it is possible that different components refer to the same pid. That's why 
+     * the values of this map are Sets of ComponentHolders, allowing to lookup all components
+     * which are using a given configuration pid.
+     * This map is used when the ConfigurationSupport detects that a CM pid is updated. When 
+     * a PID is updated, the ConfigurationSupport listener class invokes the 
+     * {@link #getComponentHoldersByPid(String)} method which returns an iterator over all 
+     * components that are using the given pid for configuration.
+     * <p>
+     *
+     * @see #registerComponentHolder(String, ComponentHolder)
+     * @see #unregisterComponentHolder(String)
+     * @see ConfigurationSupport#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
+     */
+    private final Map m_componentHoldersByPid;
+
+    /**
      * Map of components by component ID. This map indexed by the component
      * ID number (<code>java.lang.Long</code>) contains the actual
      * {@link AbstractComponentManager} instances existing in the system.
@@ -107,6 +129,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
     {
         m_bundleContext = context;
         m_componentHoldersByName = new HashMap();
+        m_componentHoldersByPid = new HashMap();
         m_componentsById = new HashMap();
         m_componentCounter = -1;
 
@@ -355,8 +378,24 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
             m_componentHoldersByName.put( name, component );
         }
-    }
 
+        synchronized (m_componentHoldersByPid)
+        {
+            // See if the component declares a specific configuration pid (112.4.4 configuration-pid)
+            String configurationPid = component.getComponentMetadata().getConfigurationPid();
+
+            // Since several components may refer to the same configuration pid, we have to
+            // store the component holder in a Set, in order to be able to lookup every
+            // components from a given pid.            
+            Set set = (Set) m_componentHoldersByPid.get(configurationPid);
+            if (set == null)
+            {
+                set = new HashSet();
+                m_componentHoldersByPid.put(configurationPid, set);
+            }
+            set.add(component);
+        }
+    }
 
     /**
      * Returns the component registered under the given name or <code>null</code>
@@ -379,6 +418,27 @@ public class ComponentRegistry implements ScrService, ServiceListener
         return null;
     }
 
+    /**
+     * Returns the list of ComponentHolder instances whose configuration pids are matching 
+     * the given pid.
+     * @param pid the pid candidate
+     * @return a iterator of ComponentHolder, or an empty iterator if no ComponentHolders 
+     * are found
+     */
+    public final Iterator getComponentHoldersByPid(String pid)
+    {
+        Set componentHoldersUsingPid = new HashSet();
+        synchronized (m_componentHoldersByPid)
+        {
+            Set set = (Set) m_componentHoldersByPid.get(pid);
+            // only return the entry if non-null and not a reservation
+            if (set != null)
+            {
+                componentHoldersUsingPid.addAll(set);
+            }
+        }
+        return componentHoldersUsingPid.iterator();
+    }
 
     /**
      * Returns an array of all values currently stored in the component holders
@@ -403,12 +463,28 @@ public class ComponentRegistry implements ScrService, ServiceListener
      */
     final void unregisterComponentHolder( String name )
     {
+        Object component;
         synchronized ( m_componentHoldersByName )
         {
-            m_componentHoldersByName.remove( name );
+            component = m_componentHoldersByName.remove(name);
+        }
+        
+        if (component instanceof ComponentHolder) {
+            synchronized (m_componentHoldersByPid)
+            {
+                String configurationPid = ((ComponentHolder) component).getComponentMetadata().getConfigurationPid();
+                Set componentsForPid = (Set) m_componentHoldersByPid.get(configurationPid);
+                if (componentsForPid != null)
+                {
+                    componentsForPid.remove(component);
+                    if (componentsForPid.size() == 0) 
+                    {
+                        m_componentHoldersByPid.remove(configurationPid);
+                    }
+                }
+            }
         }
     }
-
 
     //---------- base configuration support
 

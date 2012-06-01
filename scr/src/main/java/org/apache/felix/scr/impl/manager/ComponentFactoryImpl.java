@@ -140,6 +140,38 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         return instance;
     }
 
+    /**
+     * Compares this {@code ComponentFactoryImpl} object to another object.
+     * 
+     * <p>
+     * A component factory impl is considered to be <b>equal to </b> another component
+     * factory impl if the component names are equal(using {@code String.equals}).
+     * 
+     * @param object The {@code ComponentFactoryImpl} object to be compared.
+     * @return {@code true} if {@code object} is a
+     *         {@code ComponentFactoryImpl} and is equal to this object;
+     *         {@code false} otherwise.
+     */
+   public boolean equals(Object object)
+    {
+        if (!(object instanceof ComponentFactoryImpl))
+        {
+            return false;
+        }
+
+        ComponentFactoryImpl other = (ComponentFactoryImpl) object;
+        return getComponentMetadata().getName().equals(other.getComponentMetadata().getName());
+    }
+    
+   /**
+    * Returns a hash code value for the object.
+    * 
+    * @return An integer which is a hash code value for this object.
+    */
+   public int hashCode()
+   {
+       return getComponentMetadata().getName().hashCode();
+   }
 
     /**
      * The component factory does not have a component to create.
@@ -264,7 +296,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
 
     public void configurationDeleted( String pid )
     {
-        if ( pid.equals( getComponentMetadata().getName() ) )
+        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             // deleting configuration of a component factory is like
             // providing an empty configuration
@@ -299,7 +331,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
 
     public void configurationUpdated( String pid, Dictionary configuration )
     {
-        if ( pid.equals( getComponentMetadata().getName() ) )
+        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             m_configuration = configuration;
         }
