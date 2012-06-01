@@ -8,8 +8,7 @@
 	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
 	OF ANY KIND, either express or implied. See the License for the specific 
 	language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
@@ -21,7 +20,7 @@
 
 	<artifactId>org.apache.felix.webconsole.plugins.upnp</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.2</version>
 
 	<name>Apache Felix Web Console UPnP Plugin</name>
 	<description>
@@ -30,9 +29,9 @@
     </description>
 
 	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/upnp</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/upnp</developerConnection>
-		<url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/upnp</url>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.upnp-1.0.2</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.upnp-1.0.2</developerConnection>
+		<url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.webconsole.plugins.upnp-1.0.2</url>
 	</scm>
 
 	<build>
