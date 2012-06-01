@@ -9,27 +9,41 @@ Changes from 1.6.0 to 1.6.2
     * [FELIX-2926] - No log message on missing activate method
     * [FELIX-2944] - SCR/ spec version 1.1-felix is causing NPE in XmlHandler
     * [FELIX-2962] - SCR doesn't detect invalid XML
+    * [FELIX-2992] - scr 1.6.1-SNAPSHOT: impossible to build due to obsolete dependencies
     * [FELIX-3039] - SCR cleans up delayed service components too aggressively
     * [FELIX-3086] - IllegalArgumentException in PropertyMetadata.setValues()
     * [FELIX-3087] - Given invalid value, but the property isn't invalid.
     * [FELIX-3089] - A component without ServicePermissions cannot be registered as a service
+    * [FELIX-3090] - SCR factory components ignore reference target filters
     * [FELIX-3093] - SCR project does not build on machines with empty M2 repository
     * [FELIX-3108] - SCR doesn't cope when the DS xml is not encoded using the default platform encoding.
     * [FELIX-3126] - SCR activates a service component while the containing bundle is stopping.
+    * [FELIX-3288] - NPE when component exposed as a service with servicefactory = true
+    * [FELIX-3307] - NPE in DependencyManager.invokeBindMethod
     * [FELIX-3317] - Concurrency issue during Component Service registration
+    * [FELIX-3325] - Finding activate/deactivate/modified methods has numerous problems
+    * [FELIX-3409] - with permissions enabled, AbstractComponentManager.verifyDependencyManagers is wrong.
+    * [FELIX-3410] - ImmediateComponentManager should use any non-ignored configuration to try to activate a component.
+    * [FELIX-3456] - Component ignores required static service addition when in Activating state
 
 ** Improvement
     * [FELIX-2895] - Allow the use of a property to tell SCR to always discover Service Component files even if there's no wildcard in the name
+    * [FELIX-3016] - Activator log level cannot be changed dynamically through Configuration Admin
     * [FELIX-3232] - Re-Import SCR Service API
+    * [FELIX-3371] - update scr build to recent pax components
+    * [FELIX-3377] - Allow a component to update its own service properties
+    * [FELIX-3506] - SCR bind/unbind/update methods should be able to return a map of service properties like the activate/deactivate/modified methods.s
 
 ** New Feature
     * [FELIX-2712] - [SCR] Add Gogo command support
+    * [FELIX-3507] - scr greedy and reluctant policy options from compendium 4.3
 
 ** Task
     * [FELIX-2539] - Include DEPENDENCIES file in distributables
     * [FELIX-2553] - Reconsider logging/log levels
     * [FELIX-2903] - Inline required KXml classes
     * [FELIX-3158] - Upgrade to Felix parent POM 2.1 and use managed ant plugin version
+    * [FELIX-3527] - Add Java API usage check
 
 ** Wish
     * [FELIX-1747] - Use Remote Resources Plugin to generate the legal files
