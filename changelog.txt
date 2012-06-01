@@ -1,0 +1,17 @@
+Initial Release 1.0.0
+---------------------
+
+** Improvement
+    * [FELIX-3026] - Add PackageAdmin information to Configuration Status dump
+    * [FELIX-3444] - DependencyFinder should use JQuery UI table look
+    * [FELIX-3474] - Make package admin work with J9 and other embedded VMs
+    * [FELIX-3476] - Make package admin to use SimpleWebConsolePlugin
+    * [FELIX-3484] - Package admin plugin is missing German localization
+
+** New Feature
+    * [FELIX-2209] - Implement a PackageAdmin plugin
+    * [FELIX-3007] - Simple Package Admin plugin
+    * [FELIX-3045] - new webconsole plugin - dependency finder
+
+** Task
+    * [FELIX-3529] - Add DEPENDENCIES file
