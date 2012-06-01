@@ -1,12 +1,41 @@
+Changes from 1.0.2 to 1.0.4
+---------------------------
+
+** Bug
+    * [FELIX-3437] - native2ascii doesn't work for memory usage plugin
+    * [FELIX-3439] - Bad German localization in memory usage plugin
+
+** Improvement
+    * [FELIX-3438] - Add Bulgarian language for memory usage plugin
+
+** Sub-task
+    * [FELIX-2538] - Adapt MemoryUsage Web Console Plugin LICENSE and NOTICE files
+
+
+Changes from 1.0.0 to 1.0.2
+---------------------------
+
+** Bug
+    * [FELIX-2241] - The Memory Usage plugin does not support multipart/form-data POST requests
+    * [FELIX-2242] - Memory Usage page non-functional if no heap dumps exist
+    * [FELIX-2262] - MemoryUage plugin has incorrect symbolic name
+
+** Improvement
+    * [FELIX-2264] - Allow for lazy loading and late API binding
+    * [FELIX-2498] - Add dump interval to limit memory dumps
+    * [FELIX-2499] - Disable Memory Dump writing by default
+    * [FELIX-2512] - Web Console Memory Usage plugin also runs with Web Consoel API version 3.1
+
+
 Initial Release 1.0.0
 ---------------------
 
-** Bug
-    * [FELIX-3268] - Cannot build webconsole and webconsole-plugins with JDK 7
-    * [FELIX-3503] - The obr page in the webconsole does not update on refresh
-
 ** Improvement
-    * [FELIX-3111] - Separate OBR Plugin
+    * [FELIX-2223] - Provide German Translation for the Memory Usage Plugin
+    * [FELIX-2224] - Add support to configure the automatic Heap Dump functionality
+    * [FELIX-2225] - Format dump file sizes as scaled values like the memory sizes
+    * [FELIX-2236] - Improvements and Fixes to the Memory Usage plugin
 
 ** Task
-    * [FELIX-3531] - Update to parent pom 2.1 and fix license files
+    * [FELIX-2208] - Import memory management plugin
+    
