@@ -124,13 +124,13 @@ public abstract class AbstractComponentManager implements Component
         {
             log(
                 LogService.LOG_DEBUG,
-                "Component {0} created: DS={1}, implementation={2}, immediate={3}, default-enabled={4}, factory={5}, configuration-policy={6}, activate={7}, deactivate={8}, modified={9}",
+                "Component {0} created: DS={1}, implementation={2}, immediate={3}, default-enabled={4}, factory={5}, configuration-policy={6}, activate={7}, deactivate={8}, modified={9} configuration-pid={10}",
                 new Object[]
                     { metadata.getName(), new Integer( metadata.getNamespaceCode() ),
                         metadata.getImplementationClassName(), Boolean.valueOf( metadata.isImmediate() ),
                         Boolean.valueOf( metadata.isEnabled() ), metadata.getFactoryIdentifier(),
                         metadata.getConfigurationPolicy(), metadata.getActivate(), metadata.getDeactivate(),
-                        metadata.getModified() }, null );
+                        metadata.getModified(), metadata.getConfigurationPid() }, null );
 
             if ( metadata.getServiceMetadata() != null )
             {
