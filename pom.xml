@@ -110,6 +110,7 @@
                         <include>src/**</include>
                     </includes>
                     <excludes>
+                        <exclude>src/main/appended-resources/**</exclude>
                         <exclude>src/main/resources/res/plugin.html</exclude>
                     </excludes>
                 </configuration>
