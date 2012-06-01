@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.apache.felix</groupId>
 		<artifactId>felix-parent</artifactId>
-		<version>1.2.0</version>
+		<version>2.1</version>
 		<relativePath>../../../pom/pom.xml</relativePath>
 	</parent>
 
@@ -70,9 +70,25 @@
                             org.apache.felix.bundlerepository,
                             org.osgi.service.obr
                         </DynamicImport-Package>
+                        <Include-Resource>
+                            {maven-resources},OSGI-INF=target/classes/OSGI-INF
+                        </Include-Resource>
 					</instructions>
 				</configuration>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>src/**</include>
+                    </includes>
+                    <excludes>
+                        <exclude>src/main/appended-resources/**</exclude>
+                        <exclude>src/main/resources/res/plugin.html</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 
