@@ -78,19 +78,6 @@
 						<Bundle-Activator>
 							org.apache.felix.webconsole.plugins.gogo.impl.Activator
                         </Bundle-Activator>
-                        <Embed-Dependency>
-                            jline;inline=true
-                        </Embed-Dependency>
-                        <Bundle-NativeCode>
-                            META-INF/native/windows32/jansi.dll;osname=Win32;processor=x86,
-                            META-INF/native/windows64/jansi.dll;osname=Win32;processor=x86-64,
-                            <!--
-                            META-INF/native/linux32/libjansi.so;osname=Linux;processor=x86,
-                            META-INF/native/linux64/libjansi.so;osname=Linux;processor=x86-64,
-                            META-INF/native/osx/libjansi.jnilib;osname=MacOSX,
-                            -->
-                            *
-                        </Bundle-NativeCode>
 					</instructions>
 				</configuration>
 			</plugin>
@@ -126,12 +113,6 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.3</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.sonatype.jline</groupId>
-            <artifactId>jline</artifactId>
-            <version>2.5</version>
             <scope>provided</scope>
         </dependency>
  	</dependencies>

@@ -36,7 +36,7 @@ gogo.Terminal_ctor = function(div, width, height) {
 
    var dstat = document.createElement('pre');
    var sled = document.createElement('span');
-   var sdebug = document.createElement('span');
+   var sdebug = document.getElementById('statline');
    var dterm = document.createElement('div');
 
    function debug(s) {
@@ -45,11 +45,11 @@ gogo.Terminal_ctor = function(div, width, height) {
 
    function error() {
        sled.className = 'off';
-       debug("Connection lost timeout ts:" + ((new Date).getTime()));
+       debug("Gogo Shell Processor not available");
    }
 
    function update() {
-       if (sending == 0) {
+       if (sending == 0 /* && keybuf.length > 0 */ ) {
            sending = 1;
            sled.className = 'on';
            var r = new XMLHttpRequest();
@@ -79,8 +79,10 @@ gogo.Terminal_ctor = function(div, width, height) {
                        sending=0;
                        sled.className = 'off';
                        timeout = window.setTimeout(update, rmax);
+                   } else if (r.status == 500) {
+                       debug("Gogo Shell Processor not available")
                    } else {
-                       debug("Connection error status:" + r.status);
+                       debug("General failure with Gogo Shell: " + r.status);
                    }
                }
            }
@@ -183,11 +185,13 @@ gogo.Terminal_ctor = function(div, width, height) {
             default:    k = String.fromCharCode(kc); break;
         }
 
+        var s = encodeURIComponent(k);
+        
 //        debug("fromkeydown=" + fromkeydown + ", ev.keyCode=" + ev.keyCode + ", " +
 //              "ev.which=" + ev.which + ", ev.ctrlKey=" + ev.ctrlKey + ", " +
-//              "kc=" + kc + ", k=" + k);
+//              "kc=" + kc + ", k=" + k + ", s=" + s);
 
-        queue(encodeURIComponent(k));
+        queue(s);
 
         ev.cancelBubble = true;
         if (ev.stopPropagation) ev.stopPropagation();
@@ -203,7 +207,21 @@ gogo.Terminal_ctor = function(div, width, height) {
                  113:1, 114:1, 115:1, 116:1, 117:1, 118:1, 119:1, 120:1, 121:1, 122:1, 123:1 };
            if (o[ev.keyCode] || ev.ctrlKey || ev.altKey) {
                keypress(ev, true);
+           } else {
+               ev.cancelBubble = true;
+               if (ev.stopPropagation) ev.stopPropagation();
+               if (ev.preventDefault) ev.preventDefault();
            }
+   }
+   
+   function ignoreKey(ev) {
+       if (!ev) {
+           ev = window.event;
+       }
+       
+       ev.cancelBubble = true;
+       if (ev.stopPropagation) ev.stopPropagation();
+       if (ev.preventDefault) ev.preventDefault();
    }
 
    function init() {
@@ -220,18 +238,22 @@ gogo.Terminal_ctor = function(div, width, height) {
            throw new Error("This browser does not support XMLHttpRequest.");
          };
        }
+       
        sled.appendChild(document.createTextNode('\xb7'));
        sled.className = 'off';
        dstat.appendChild(sled);
        dstat.appendChild(document.createTextNode(' '));
-       dstat.appendChild(sdebug);
+//       dstat.appendChild(sdebug);
        dstat.className = 'stat';
+       
        div.appendChild(dstat);
        var d = document.createElement('div');
        d.appendChild(dterm);
        div.appendChild(d);
+       
        document.onkeypress = keypress;
-       document.onkeydown = keydown;
+       document.onkeydown = ignoreKey;
+       document.onkeyup = ignoreKey;
        timeout = window.setTimeout(update, 100);
    }
 

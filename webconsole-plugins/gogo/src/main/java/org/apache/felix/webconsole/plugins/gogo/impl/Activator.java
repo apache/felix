@@ -18,18 +18,18 @@
  */
 package org.apache.felix.webconsole.plugins.gogo.impl;
 
-import org.fusesource.jansi.AnsiConsole;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 public class Activator implements BundleActivator {
 
+    private SessionTerminalManager terminalManager;
+
     private GogoPlugin plugin;
 
     public void start(BundleContext context) throws Exception {
-        AnsiConsole.systemInstall();
-
-        this.plugin = new GogoPlugin();
+        this.terminalManager = new SessionTerminalManager(context);
+        this.plugin = new GogoPlugin(this.terminalManager);
         this.plugin.register(context);
     }
 
@@ -38,8 +38,10 @@ public class Activator implements BundleActivator {
             this.plugin.unregister();
             this.plugin = null;
         }
-
-        AnsiConsole.systemUninstall();
+        if (this.terminalManager != null) {
+            this.terminalManager.shutdown();
+            this.terminalManager = null;
+        }
     }
 
 }

@@ -18,51 +18,23 @@
  */
 package org.apache.felix.webconsole.plugins.gogo.impl;
 
-import java.io.CharArrayWriter;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.Reader;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import jline.Terminal;
-import jline.UnsupportedTerminal;
-import jline.console.ConsoleReader;
-import jline.console.completer.Completer;
-import jline.console.history.PersistentHistory;
 
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
-import org.apache.felix.service.command.Converter;
-import org.fusesource.jansi.Ansi;
 
 public class Console implements Runnable {
-
-    public static final String SHELL_INIT_SCRIPT = "karaf.shell.init.script";
-
-    public static final String PROMPT = "PROMPT";
-
-    public static final String DEFAULT_PROMPT = "\u001B[1m${USER}\u001B[0m@${APPLICATION}> ";
-
-    public static final String PRINT_STACK_TRACES = "karaf.printStackTraces";
-
-    public static final String LAST_EXCEPTION = "karaf.lastException";
 
     public static final String IGNORE_INTERRUPTS = "karaf.ignoreInterrupts";
 
     protected CommandSession session;
-
-    private ConsoleReader reader;
 
     private BlockingQueue<Integer> queue;
 
@@ -76,8 +48,6 @@ public class Console implements Runnable {
 
     private Runnable closeCallback;
 
-    private Terminal terminal;
-
     private InputStream consoleInput;
 
     private InputStream in;
@@ -88,28 +58,20 @@ public class Console implements Runnable {
 
     private Thread thread;
 
-    public Console(CommandProcessor processor, InputStream in, PrintStream out, PrintStream err, Terminal term,
-            Runnable closeCallback) throws Exception {
+    public Console(CommandProcessor processor, InputStream in, PrintStream out, PrintStream err,
+            Runnable closeCallback, Map<String, String> sessionProps) throws Exception {
         this.in = in;
         this.out = out;
         this.err = err;
         this.queue = new ArrayBlockingQueue<Integer>(1024);
-        this.terminal = term == null ? new UnsupportedTerminal() : term;
         this.consoleInput = new ConsoleInputStream();
         this.session = processor.createSession(this.consoleInput, this.out, this.err);
-        this.session.put("SCOPE", "shell:osgi:*");
         this.closeCallback = closeCallback;
 
-        reader = new ConsoleReader(this.consoleInput, new PrintWriter(this.out), getClass().getResourceAsStream(
-            "keybinding.properties"), this.terminal);
-
-        session.put(".jline.history", reader.getHistory());
-        Completer completer = createCompleter();
-        if (completer != null) {
-            reader.addCompleter(completer);
-        }
-        if (Boolean.getBoolean("jline.nobell")) {
-            reader.setBellEnabled(false);
+        if (sessionProps != null) {
+            for (Entry<String, String> entry: sessionProps.entrySet()) {
+                this.session.put(entry.getKey(), entry.getValue());
+            }
         }
         pipe = new Thread(new Pipe());
         pipe.setName("gogo shell pipe thread");
@@ -121,109 +83,30 @@ public class Console implements Runnable {
     }
 
     public void close() {
-        // System.err.println("Closing");
-        if (reader.getHistory() instanceof PersistentHistory) {
-            try {
-                ((PersistentHistory) reader.getHistory()).flush();
-            } catch (IOException e) {
-                // ignore
-            }
-        }
         running = false;
-        CommandSessionHolder.unset();
         pipe.interrupt();
     }
 
     public void run() {
-        ThreadLocal<CommandSessionHolder> consoleState = new ThreadLocal<CommandSessionHolder>();
         thread = Thread.currentThread();
-        CommandSessionHolder.setSession(session);
         running = true;
         pipe.start();
-        welcome();
-        setSessionProperties();
-        String scriptFileName = System.getProperty(SHELL_INIT_SCRIPT);
-        if (scriptFileName != null) {
-            Reader r = null;
-            try {
-                File scriptFile = new File(scriptFileName);
-                r = new InputStreamReader(new FileInputStream(scriptFile));
-                CharArrayWriter w = new CharArrayWriter();
-                int n;
-                char[] buf = new char[8192];
-                while ((n = r.read(buf)) > 0) {
-                    w.write(buf, 0, n);
-                }
-                session.execute(new String(w.toCharArray()));
-            } catch (Exception e) {
-                System.err.println("Error in initialization script: " + e.getMessage());
-            } finally {
-                if (r != null) {
-                    try {
-                        r.close();
-                    } catch (IOException e) {
-                        // Ignore
-                    }
-                }
-            }
+        try
+        {
+            session.execute("gosh --login --noshutdown");
         }
-        while (running) {
-            try {
-                String command = null;
-                boolean loop = true;
-                boolean first = true;
-                while (loop) {
-                    checkInterrupt();
-                    String line = reader.readLine(first ? getPrompt() : "> ");
-                    if (line == null) {
-                        break;
-                    }
-                    if (command == null) {
-                        command = line;
-                    } else {
-                        command += " " + line;
-                    }
-                    if (reader.getHistory().size() == 0) {
-                        reader.getHistory().add(command);
-                    } else {
-                        reader.getHistory().replace(command);
-                    }
-                    try {
-                        new Parser(command, 0).program();
-                        loop = false;
-                    } catch (Exception e) {
-                        loop = true;
-                        first = false;
-                    }
-                }
-                if (command == null) {
-                    break;
-                }
-                // session.getConsole().println("Executing: " + line);
-                Object result = session.execute(command);
-                if (result != null) {
-                    session.getConsole().println(session.format(result, Converter.INSPECT));
-                }
-            } catch (InterruptedIOException e) {
-                // System.err.println("^C");
-                // TODO: interrupt current thread
-            } catch (CloseShellException e) {
-                break;
-            } catch (Exception t) {
-                try {
-                    session.put(LAST_EXCEPTION, t);
-                    session.getConsole().print(Ansi.ansi().fg(Ansi.Color.RED).toString());
-                    session.getConsole().println(
-                        "Error executing command: "
-                            + (t.getMessage() != null ? t.getMessage() : t.getClass().getName()));
-                    session.getConsole().print(Ansi.ansi().fg(Ansi.Color.DEFAULT).toString());
-                } catch (Exception ignore) {
-                    // ignore
-                }
-            }
+        catch (Exception e)
+        {
+            e.printStackTrace(this.err);
+        }
+        finally
+        {
+            session.close();
+
+            this.out.println("Good Bye!");
         }
         close();
-        // System.err.println("Exiting console...");
+
         if (closeCallback != null) {
             closeCallback.run();
         }
@@ -241,90 +124,6 @@ public class Console implements Runnable {
             return (Boolean) s;
         }
         return Boolean.parseBoolean(s.toString());
-    }
-
-    protected void welcome() {
-        Properties props = loadBrandingProperties();
-        String welcome = props.getProperty("welcome");
-        if (welcome != null && welcome.length() > 0) {
-            session.getConsole().println(welcome);
-        }
-    }
-
-    protected void setSessionProperties() {
-        Properties props = loadBrandingProperties();
-        for (Map.Entry<Object, Object> entry : props.entrySet()) {
-            String key = (String) entry.getKey();
-            if (key.startsWith("session.")) {
-                session.put(key.substring("session.".length()), entry.getValue());
-            }
-        }
-    }
-
-    protected Completer createCompleter() {
-        return new CommandsCompleter(session);
-    }
-
-    protected Properties loadBrandingProperties() {
-        Properties props = new Properties();
-        loadProps(props, "org/apache/karaf/shell/console/branding.properties");
-        loadProps(props, "org/apache/karaf/branding/branding.properties");
-        return props;
-    }
-
-    protected void loadProps(Properties props, String resource) {
-        InputStream is = null;
-        try {
-            is = getClass().getClassLoader().getResourceAsStream(resource);
-            if (is != null) {
-                props.load(is);
-            }
-        } catch (IOException e) {
-            // ignore
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    // Ignore
-                }
-            }
-        }
-    }
-
-    protected String getPrompt() {
-        try {
-            String prompt;
-            try {
-                Object p = session.get(PROMPT);
-                if (p != null) {
-                    prompt = p.toString();
-                } else {
-                    Properties properties = loadBrandingProperties();
-                    if (properties.getProperty("prompt") != null) {
-                        prompt = properties.getProperty("prompt");
-                        // we put the PROMPT in ConsoleSession to avoid to read
-                        // the properties file each time.
-                        session.put(PROMPT, prompt);
-                    } else {
-                        prompt = DEFAULT_PROMPT;
-                    }
-                }
-            } catch (Throwable t) {
-                prompt = DEFAULT_PROMPT;
-            }
-            Matcher matcher = Pattern.compile("\\$\\{([^}]+)\\}").matcher(prompt);
-            while (matcher.find()) {
-                Object rep = session.get(matcher.group(1));
-                if (rep != null) {
-                    prompt = prompt.replace(matcher.group(0), rep.toString());
-                    matcher.reset(prompt);
-                }
-            }
-            return prompt;
-        } catch (Throwable t) {
-            return "$ ";
-        }
     }
 
     private void checkInterrupt() throws IOException {
@@ -408,14 +207,13 @@ public class Console implements Runnable {
             try {
                 while (running) {
                     try {
-                        int c = terminal.readCharacter(in);
+                        int c = in.read();
                         if (c == -1) {
                             return;
                         } else if (c == 4 && !getBoolean(IGNORE_INTERRUPTS)) {
                             err.println("^D");
                         } else if (c == 3 && !getBoolean(IGNORE_INTERRUPTS)) {
                             err.println("^C");
-                            reader.getCursorBuffer().clear();
                             interrupt();
                         }
                         queue.put(c);
