@@ -239,6 +239,12 @@ public class XmlHandler implements KXml2SAXHandler
                         m_currentComponent.setModified( attrib.getProperty( "modified" ) );
                     }
 
+                    // configuration-pid attribute is optional (since DS 1.2)
+                    if (attrib.getProperty("configuration-pid") != null)
+                    {
+                        m_currentComponent.setConfigirationPid( attrib.getProperty( "configuration-pid" ) );
+                    }
+
                     // Add this component to the list
                     m_components.add( m_currentComponent );
                 }
