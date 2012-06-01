@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/memoryusage
+            scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/packageadmin
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/memoryusage
+            scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/packageadmin
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/memoryusage
+            http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/packageadmin
         </url>
     </scm>
 
