@@ -1,0 +1,29 @@
+Changes from 1.0.0 to 1.0.2
+---------------------------
+
+** Bug
+    * [FELIX-2783] - UPnP Web Console plug-in expects that action arguments have a constructor with a string argument
+    * [FELIX-3268] - Cannot build webconsole and webconsole-plugins with JDK 7
+    * [FELIX-3426] - UPnP Plugin device tracking is error-prone
+    * [FELIX-3427] - NPE in UPnP Web Console Plugin
+    * [FELIX-3428] - NPE in UPnP Web Console Plugin (again)
+    * [FELIX-3435] - UPnP plugin doesn't play nice if the service doesn't have state variables
+    * [FELIX-3436] - native2ascii doesn't work for UPnP plugin
+
+** Improvement
+    * [FELIX-3314] - Sort UPnP devices in alphabetical order
+    * [FELIX-3429] - UPnP plugin should also include a configuration printer
+    * [FELIX-3431] - UPnP plugin should provide a better status line
+    * [FELIX-3432] - UPnP plugin should provide better device property representation
+    * [FELIX-3434] - UPnP plugin should give better error description when invoke action fails
+    * [FELIX-3454] - Add German language support for Event and UPnP plugins
+
+** Task
+    * [FELIX-3528] - Update to parent pom 2.1 and fix license files
+
+
+Initial Release 1.0.0
+---------------------
+
+** Improvement
+    * [FELIX-2121] - ProSyst donation of UPnP plugin for the web console
