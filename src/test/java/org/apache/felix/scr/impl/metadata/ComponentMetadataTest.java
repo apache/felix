@@ -697,6 +697,33 @@ public class ComponentMetadataTest extends TestCase
         }
     }
 
+    public void test_configuration_pid_use_ds12()
+    {
+      ComponentMetadata cm = createComponentMetadata11( null, null );
+        try
+        {
+          cm.setConfigirationPid( "configurationPid" );
+          cm.validate( logger );
+          fail( "Expect validation failure for illegal configuration-pid usage in ds 1.1 namespace" );
+        }
+        catch ( ComponentException ce )
+        {
+            // expected
+        }
+        
+        cm = createComponentMetadata12( null, null );
+        try
+        {
+          cm.setConfigirationPid( "configurationPid" );
+          cm.validate( logger );
+        }
+        catch ( ComponentException ce )
+        {
+          ce.printStackTrace();
+          fail( "Expect correct validation for legal configuration-pid usage in ds 1.2 or later namespace" );
+        }
+    }
+
 
     public void test_property_character_ds11() throws ComponentException
     {
@@ -761,6 +788,11 @@ public class ComponentMetadataTest extends TestCase
         return createComponentMetadata( XmlHandler.DS_VERSION_1_1, immediate, factory );
     }
 
+    // Creates DS 1.2 Component Metadata
+    private ComponentMetadata createComponentMetadata12( Boolean immediate, String factory )
+    {
+        return createComponentMetadata( XmlHandler.DS_VERSION_1_2, immediate, factory );
+    }
 
     private ServiceMetadata createServiceMetadata( Boolean serviceFactory )
     {
