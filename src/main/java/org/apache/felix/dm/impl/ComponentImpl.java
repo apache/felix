@@ -381,9 +381,15 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         calculateStateChanges(oldState, newState);
     }
 
-    public synchronized void start() {
-    	if (!m_isStarted) {
-    	    m_isStarted = true;
+    public void start() {
+        boolean needsStarting = false;
+        synchronized (this) {
+            if (!m_isStarted) {
+                m_isStarted = true;
+                needsStarting = true;
+            }
+        }
+        if (needsStarting) {
 	        State oldState, newState;
 	        synchronized (m_dependencies) {
 	            oldState = m_state;
@@ -394,9 +400,15 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     	}
     }
 
-    public synchronized void stop() {
-        if (m_isStarted) {
-            m_isStarted = false;
+    public void stop() {
+        boolean needsStopping = false;
+        synchronized (this) {
+            if (m_isStarted) {
+                m_isStarted = false;
+                needsStopping = true;
+            }
+        }
+        if (needsStopping) {
 	        State oldState, newState;
 	        synchronized (m_dependencies) {
 	            oldState = m_state;
@@ -479,10 +491,18 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
 	    return null;
 	}
 
-	public synchronized Component setServiceProperties(Dictionary serviceProperties) {
-	    m_serviceProperties = serviceProperties;
-	    if ((m_registration != null) && (m_serviceName != null)) {
-	        m_registration.setProperties(calculateServiceProperties());
+	public Component setServiceProperties(Dictionary serviceProperties) {
+	    boolean needsProperties = false;
+	    Dictionary properties = null;
+	    synchronized (this) {
+	        m_serviceProperties = serviceProperties;
+	        if ((m_registration != null) && (m_serviceName != null)) {
+	            properties = calculateServiceProperties();
+	            needsProperties = true;
+	        }
+	    }
+	    if (needsProperties) {
+	        m_registration.setProperties(properties);
 	    }
 	    return this;
 	}
@@ -899,9 +919,9 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     private void updateInstance(Dependency dependency) {
         if (dependency.isAutoConfig()) {
             configureImplementation(dependency.getAutoConfigType(), dependency.getAutoConfigInstance(), dependency.getAutoConfigName());
-            if (dependency.isPropagated() && m_registration != null) {
-                m_registration.setProperties(calculateServiceProperties());
-            }
+        }
+        if (dependency.isPropagated() && m_registration != null) {
+            m_registration.setProperties(calculateServiceProperties());
         }
     }
 
