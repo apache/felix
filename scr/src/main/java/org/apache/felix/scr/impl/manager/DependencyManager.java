@@ -55,7 +55,7 @@ import org.osgi.service.log.LogService;
 public class DependencyManager implements ServiceListener, Reference
 {
     // mask of states ok to send events
-    private static final int STATE_MASK = Component.STATE_UNSATISFIED | Component.STATE_ACTIVATING
+    private static final int STATE_MASK = Component.STATE_UNSATISFIED
         | Component.STATE_ACTIVE | Component.STATE_REGISTERED | Component.STATE_FACTORY;
 
     // pseudo service to mark a bound service without actual service instance
@@ -1110,35 +1110,13 @@ public class DependencyManager implements ServiceListener, Reference
                 null );
             return false;
         }
-        else if ( !m_componentManager.getComponentMetadata().isImmediate() )
-        {
-            m_componentManager.log( LogService.LOG_DEBUG,
-                "DependencyManager : Delayed component not yet created, assuming bind method call succeeded",
-                null );
-
-            return true;
-        }
-        else if ( m_componentManager.getState() == AbstractComponentManager.STATE_ACTIVATING )
-        {
-            // when activating the method, events may be handled before the
-            // open(Object) method has been called on this instance. This is
-            // not a problem, because the open(Object) method will catch up
-            // this services any way
-            m_componentManager.log( LogService.LOG_DEBUG, "DependencyManager : Not yet open for activating component",
-                null );
-
-            return true;
-        }
         else
         {
-            // this is not expected: if the component is immediate the
-            // implementationObject is not null (asserted by the caller)
-
-            m_componentManager.log( LogService.LOG_ERROR,
-                "DependencyManager : Immediate component not yet created, bind method cannot be called",
+            m_componentManager.log( LogService.LOG_DEBUG,
+                "DependencyManager : component not yet created, assuming bind method call succeeded",
                 null );
 
-            return false;
+            return true;
         }
     }
 
