@@ -153,9 +153,9 @@ public class ConfigurationSupport implements ConfigurationListener
      * This method is really only called upon configuration changes; it is not
      * called for existing configurations upon startup of the Configuration
      * Admin service. To bridge this gap, the
-     * {@link #serviceChanged(ServiceEvent)} method called when the
-     * Configuration Admin service is registered calls this method for all
-     * existing configurations to be able to foward existing configurations to
+     * {@link ComponentRegistry#serviceChanged(org.osgi.framework.ServiceEvent)} method called when the
+     * Configuration Admin service is registered calls #configureComponentHolders which calls this method for all
+     * existing configurations to be able to forward existing configurations to
      * components.
      *
      * @param event The configuration change event
@@ -231,7 +231,7 @@ public class ConfigurationSupport implements ConfigurationListener
                         }
                         catch (IllegalStateException ise)
                         {
-                            // If the bundle has been stopped conurrently
+                            // If the bundle has been stopped concurrently
                             Activator.log(LogService.LOG_WARNING, null, "Unknown ConfigurationEvent type " + event.getType(),
                                 ise);
                         }
@@ -272,9 +272,9 @@ public class ConfigurationSupport implements ConfigurationListener
      * Returns the configuration whose PID equals the given pid. If no such
      * configuration exists, <code>null</code> is returned.
      *
-     * @param ctx
-     * @param pid
-     * @return
+     * @param ca Configuration Admin service
+     * @param pid Pid for desired configuration
+     * @return configuration with the specified Pid
      */
     public Configuration findSingletonConfiguration(final ConfigurationAdmin ca, final String pid)
     {
@@ -287,9 +287,9 @@ public class ConfigurationSupport implements ConfigurationListener
      * Returns all configurations whose factory PID equals the given factory PID
      * or <code>null</code> if no such configurations exist
      *
-     * @param ctx
-     * @param factoryPid
-     * @return
+     * @param ca ConfigurationAdmin service
+     * @param factoryPid factory Pid we want the configurations for
+     * @return the configurations specifying the supplied factory Pid.
      */
     public Configuration[] findFactoryConfigurations(final ConfigurationAdmin ca, final String factoryPid)
     {
