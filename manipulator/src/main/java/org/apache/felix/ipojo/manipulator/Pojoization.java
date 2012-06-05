@@ -216,10 +216,12 @@ public class Pojoization {
         }
 
         ManifestProvider manifestProvider;
+        File selectedManifestFile;
         if (manifestFile != null) {
             if (manifestFile.isFile()) {
                 try {
                     manifestProvider = new FileManifestProvider(manifestFile);
+                    selectedManifestFile = manifestFile;
                 } catch (IOException e) {
                     m_reporter.error("Cannot read Manifest from '" + manifestFile.getAbsolutePath() + "'");
                     return;
@@ -235,6 +237,7 @@ public class Pojoization {
             if (original.isFile()) {
                 try {
                     manifestProvider = new FileManifestProvider(original);
+                    selectedManifestFile = original;
                 } catch (IOException e) {
                     m_reporter.error("Cannot read Manifest from '" + original.getAbsolutePath() + "'");
                     return;
@@ -254,6 +257,7 @@ public class Pojoization {
                 store.setResourceMapper(new WABResourceMapper());
             }
             store.setManifest(manifestProvider.getManifest());
+            store.setManifestFile(selectedManifestFile);
             DefaultManifestBuilder dmb = new DefaultManifestBuilder();
             dmb.setMetadataRenderer(new MetadataRenderer());
             store.setManifestBuilder(dmb);

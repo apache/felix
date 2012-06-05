@@ -61,6 +61,11 @@ public class DirectoryResourceStore implements ResourceStore {
      * Original manifest to be updated.
      */
     private Manifest m_manifest;
+    
+    /**
+     * Location of the manifest file to update.
+     */
+    private File m_manifest_file;
 
     /**
      * Resource Mapper.
@@ -86,6 +91,10 @@ public class DirectoryResourceStore implements ResourceStore {
 
     public void setManifest(Manifest manifest) {
         m_manifest = manifest;
+    }
+    
+    public void setManifestFile(File manifestFile){
+    	m_manifest_file = manifestFile;
     }
 
     public byte[] read(String path) throws IOException {
@@ -119,11 +128,9 @@ public class DirectoryResourceStore implements ResourceStore {
 
         // Update the manifest
         Manifest updated = m_manifestBuilder.build(m_manifest);
-
-        // Write it on disk
-        File metaInf = new File(m_target, "META-INF");
-        File resource = new File(metaInf, "MANIFEST.MF");
-        OutputStream os = new FileOutputStream(resource);
+        
+        // Write it to disk
+        OutputStream os = new FileOutputStream(m_manifest_file);
         try {
             updated.write(os);
         } finally {
