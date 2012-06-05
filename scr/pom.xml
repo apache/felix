@@ -184,9 +184,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit</groupId>
-            <artifactId>com.springsource.org.junit</artifactId>
-            <version>4.9.0</version>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.junit</artifactId>
+            <version>4.7_2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -500,12 +500,4 @@
         </profile>
     </profiles>
         
-    <repositories>
-        <!-- springsource junit wrapping -->
-        <repository>
-            <id>com.springsource.repository.bundles.external</id>
-            <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
-            <url>http://repository.springsource.com/maven/bundles/external</url>
-        </repository>
-    </repositories>
 </project>
