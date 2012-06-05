@@ -289,6 +289,10 @@ public class ImmediateComponentManager extends AbstractComponentManager
         return m_implementationObject;
     }
 
+    State getSatisfiedState()
+    {
+        return Active.getInstance();
+    }
 
     protected void setFactoryProperties( Dictionary dictionary )
     {

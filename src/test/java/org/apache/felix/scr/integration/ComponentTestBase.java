@@ -88,6 +88,8 @@ public abstract class ComponentTestBase
     // the descriptor file to use for the installed test bundle
     protected static String descriptorFile = "/integration_test_simple_components.xml";
 
+    protected static boolean NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
+
     static
     {
         theConfig = new Hashtable<String, String>();
@@ -120,7 +122,7 @@ public abstract class ComponentTestBase
                 mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", "1.0.10" )
              ),
              junitBundles(),
-             systemProperty( "ds.factory.enabled" ).value( "true" )
+             systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) )
 
         );
         final Option vmOption = ( paxRunnerVmOption != null ) ? CoreOptions.vmOption( paxRunnerVmOption ) : null;
