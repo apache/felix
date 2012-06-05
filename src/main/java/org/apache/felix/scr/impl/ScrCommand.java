@@ -384,28 +384,29 @@ class ScrCommand
         {
             case Component.STATE_DISABLED:
                 return "disabled";
-            case Component.STATE_ENABLING:
-                return "enabling";
-            case Component.STATE_ENABLED:
-                return "enabled";
             case Component.STATE_UNSATISFIED:
                 return "unsatisfied";
-            case Component.STATE_ACTIVATING:
-                return "activating";
             case Component.STATE_ACTIVE:
                 return "active";
             case Component.STATE_REGISTERED:
                 return "registered";
             case Component.STATE_FACTORY:
                 return "factory";
+            case Component.STATE_DISPOSED:
+                return "disposed";
+
+            case Component.STATE_ENABLING:
+                return "enabling";
+            case Component.STATE_ENABLED:
+                return "enabled";
+            case Component.STATE_ACTIVATING:
+                return "activating";
             case Component.STATE_DEACTIVATING:
                 return "deactivating";
             case Component.STATE_DISABLING:
                 return "disabling";
             case Component.STATE_DISPOSING:
                 return "disposing";
-            case Component.STATE_DISPOSED:
-                return "disposed";
             default:
                 return String.valueOf(state);
         }
