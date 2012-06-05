@@ -51,11 +51,12 @@ public class MutablePropertiesTest extends ComponentTestBase
     @Test
     public void test_mutable_properties() throws InvalidSyntaxException
     {
-        final Component component = findComponentByName( "components.mutable.properties" );
+        String componentName = "components.mutable.properties";
+        final Component component = findComponentByName( componentName );
         TestCase.assertNotNull( component );
         TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
 
-        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=components.mutable.properties)" );
+        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );
         ServiceReference serviceReference = serviceReferences[0];
         checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
@@ -69,7 +70,7 @@ public class MutablePropertiesTest extends ComponentTestBase
         checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
 
         //configure with configAdmin
-        configure( "components.mutable.properties" );
+        configure( componentName );
         delay();
         //no change
         checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
@@ -84,11 +85,12 @@ public class MutablePropertiesTest extends ComponentTestBase
     @Test
     public void test_mutable_properties_returned() throws InvalidSyntaxException
     {
-        final Component component = findComponentByName( "components.mutable.properties.return" );
+        String componentName = "components.mutable.properties.return";
+        final Component component = findComponentByName( componentName );
         TestCase.assertNotNull( component );
         TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
 
-        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=components.mutable.properties.return)" );
+        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );
         ServiceReference serviceReference = serviceReferences[0];
         checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
@@ -103,7 +105,7 @@ public class MutablePropertiesTest extends ComponentTestBase
         checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
 
         //configure with configAdmin
-        configure( "components.mutable.properties.return" );
+        configure( componentName );
         delay();
         delay();
         //no change
@@ -115,14 +117,52 @@ public class MutablePropertiesTest extends ComponentTestBase
 
         bundleContext.ungetService(serviceReference);
     }
+
     @Test
-    public void test_mutable_properties_bind_returned() throws InvalidSyntaxException
+    public void test_mutable_properties_returned_public() throws InvalidSyntaxException
     {
-        final Component component = findComponentByName( "components.mutable.properties.bind" );
+        String componentName = "components.mutable.properties.return.public";
+        final Component component = findComponentByName( componentName );
         TestCase.assertNotNull( component );
         TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
 
-        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=components.mutable.properties.bind)" );
+        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
+        TestCase.assertEquals( 1, serviceReferences.length );
+        ServiceReference serviceReference = serviceReferences[0];
+        checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );
+
+        //update theValue
+        MutatingService s = ( MutatingService ) bundleContext.getService( serviceReference );
+        Assert.assertNotNull(s);
+        checkProperties( serviceReference, 8, "anotherValue1", "p1", "p2" );
+        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        Dictionary d = new Hashtable(Collections.singletonMap( PROP_NAME, "anotherValue" ));
+        s.updateProperties(d);
+        checkProperties(serviceReference, 5, "anotherValue", "p1", "p2");
+
+        //configure with configAdmin
+        configure( componentName );
+        delay();
+        delay();
+        //no change
+        checkProperties(serviceReference, 8, "anotherValue2", "p1", "p2");
+
+        //check that removing config switches back to defaults modified by config admin
+        s.updateProperties(null);
+        checkProperties( serviceReference, 8, "theValue", "p1", "p2" );
+
+        bundleContext.ungetService(serviceReference);
+    }
+
+    @Test
+    public void test_mutable_properties_bind_returned() throws InvalidSyntaxException
+    {
+        String componentName = "components.mutable.properties.bind";
+        final Component component = findComponentByName( componentName );
+        TestCase.assertNotNull( component );
+        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+
+        ServiceReference[] serviceReferences = bundleContext.getServiceReferences( MutatingService.class.getName(), "(service.pid=" + componentName + ")" );
         TestCase.assertEquals( 1, serviceReferences.length );
         ServiceReference serviceReference = serviceReferences[0];
         checkProperties( serviceReference, 8, "otherValue", "p1", "p2" );

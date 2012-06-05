@@ -370,7 +370,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
         }
         else
         {
-            m_serviceProperties = copyTo(null, serviceProperties);
+            m_serviceProperties = copyTo(null, serviceProperties, false);
             // set component.name and component.id
             m_serviceProperties.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
             m_serviceProperties.put( ComponentConstants.COMPONENT_ID, new Long( getId() ) );
