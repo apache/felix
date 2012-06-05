@@ -79,14 +79,7 @@ public class ServiceMetadata {
      * @return the implemented interfaces as a string array
      */
     public String [] getProvides() {
-        String provides[] = new String[m_provides.size()];
-        Iterator it = m_provides.iterator();
-        int count = 0;
-        while (it.hasNext())
-        {
-            provides[count++] = it.next().toString();
-        }
-        return provides;
+        return (String[]) m_provides.toArray( new String[m_provides.size()] );
     }
 
     /**
@@ -100,5 +93,6 @@ public class ServiceMetadata {
             throw componentMetadata
                 .validationFailure( "At least one provided interface must be declared in the service element" );
         }
+        m_validated = true;
     }
 }
