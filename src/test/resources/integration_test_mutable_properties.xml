@@ -51,6 +51,24 @@
         <property name="p2" value="p2" />
     </scr:component>
 
+    <scr:component name="components.mutable.properties.return.public"
+            xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
+            enabled="true"
+            configuration-policy="optional"
+            activate="activateMutate"
+            modified="modifiedMutate"
+            deactivate="deactivateMutate">
+        <implementation class="org.apache.felix.scr.integration.components.MutatingServiceImpl" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.MutatingService" />
+        </service>
+        <property name="service.pid" value="components.mutable.properties.return.public" />
+        <property name="theValue" value="otherValue" />
+        <property name="p1" value="p1" />
+        <property name="p2" value="p2" />
+        <property name=".p2" value="p2" />
+    </scr:component>
+
     <scr:component name="components.mutable.properties.bind"
                    xmlns:scr="http://felix.apache.org/xmlns/scr/v1.2.0-felix"
                    enabled="true"

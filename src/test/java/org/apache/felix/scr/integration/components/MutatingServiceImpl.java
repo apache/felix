@@ -47,6 +47,10 @@ public class MutatingServiceImpl implements MutatingService
         this.activateContext = activateContext;
         Map result = new Hashtable( (Map )activateContext.getProperties() );
         result.put( "theValue", "anotherValue1" );
+        if (result.containsKey( ".p2" ))
+        {
+            result.put( ".theValue", "privateValue" );
+        }
         return result;
     }
 
