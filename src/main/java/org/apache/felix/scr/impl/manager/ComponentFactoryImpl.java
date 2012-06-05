@@ -66,6 +66,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
      * <p>
      * The map is keyed by the component manager instances. The value of each
      * entry is the same as the entry's key.
+     * This is an IdentityHashMap for speed, thus not a Set.
      */
     private final Map m_componentInstances;
 

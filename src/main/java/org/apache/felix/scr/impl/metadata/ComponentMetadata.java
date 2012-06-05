@@ -820,7 +820,6 @@ public class ComponentMetadata
         }
 
         m_validated = true;
-        // TODO: put a similar flag on the references and the services
     }
 
 

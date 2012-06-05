@@ -96,7 +96,7 @@ public class ImmediateComponentHolder implements ComponentHolder
 
     /**
      * Whether components have already been enabled by calling the
-     * {@link #enableComponents()} method. If this field is <code>true</code>
+     * {@link #enableComponents(boolean)} method. If this field is <code>true</code>
      * component instances created per configuration by the
      * {@link #configurationUpdated(String, Dictionary)} method are also
      * enabled. Otherwise they are not enabled immediately.
