@@ -554,31 +554,7 @@ public abstract class AbstractComponentManager implements Component
     protected abstract Object getService();
 
 
-    final State getSatisfiedState()
-    {
-        if ( m_componentMetadata.isFactory() )
-        {
-            if ( this instanceof ComponentFactoryImpl.ComponentFactoryConfiguredInstance )
-            {
-                return Active.getInstance();
-            }
-            else if ( this instanceof ComponentFactoryImpl.ComponentFactoryNewInstance )
-            {
-                return FactoryInstance.getInstance();
-            }
-
-            return Factory.getInstance();
-        }
-        else if ( m_componentMetadata.isImmediate() )
-        {
-            return Active.getInstance();
-        }
-        else
-        {
-            return Registered.getInstance();
-        }
-    }
-
+    abstract State getSatisfiedState();
 
     /**
      * Registers the service on behalf of the component.

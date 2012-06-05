@@ -75,6 +75,10 @@ public class DelayedComponentManager extends ImmediateComponentManager implement
         return this;
     }
 
+    State getSatisfiedState()
+    {
+        return Registered.getInstance();
+    }
 
     //---------- ServiceFactory interface -------------------------------------
 

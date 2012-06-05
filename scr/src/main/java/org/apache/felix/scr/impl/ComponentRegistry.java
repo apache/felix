@@ -35,6 +35,7 @@ import org.apache.felix.scr.impl.config.ConfigurationSupport;
 import org.apache.felix.scr.impl.config.ImmediateComponentHolder;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
+import org.apache.felix.scr.impl.manager.ConfigurationComponentFactoryImpl;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -69,7 +70,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
      * <p>
      * The {@link #checkComponentName(String)} will first add an entry to this
      * map being the name of the component to reserve the name. After setting up
-     * the component, the {@link #registerComponent(String, ComponentHolder)}
+     * the component, the {@link #registerComponentHolder(String, ComponentHolder)}
      * method replaces the value of the named entry with the actual
      * {@link ComponentHolder}.
      *
@@ -305,8 +306,8 @@ public class ComponentRegistry implements ScrService, ServiceListener
     /**
      * Checks whether the component name is "globally" unique or not. If it is
      * unique, it is reserved until the actual component is registered with
-     * {@link #registerComponent(String, AbstractComponentManager)} or until
-     * it is unreserved by calling {@link #unregisterComponent(String)}.
+     * {@link #registerComponentHolder(String, ComponentHolder)} or until
+     * it is unreserved by calling {@link #unregisterComponentHolder(String)}.
      * If a component with the same name has already been reserved or registered
      * a ComponentException is thrown with a descriptive message.
      *
@@ -501,7 +502,14 @@ public class ComponentRegistry implements ScrService, ServiceListener
             // 112.2.4 SCR must register a Component Factory
             // service on behalf ot the component
             // as soon as the component factory is satisfied
-            holder = new ComponentFactoryImpl(activator, metadata);
+            if ( !activator.getConfiguration().isFactoryEnabled() )
+            {
+                holder = new ComponentFactoryImpl(activator, metadata);
+            }
+            else
+            {
+                holder = new ConfigurationComponentFactoryImpl(activator, metadata);
+            }
         }
         else
         {
