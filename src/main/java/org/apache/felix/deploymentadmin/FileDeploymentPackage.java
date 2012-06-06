@@ -20,13 +20,11 @@ package org.apache.felix.deploymentadmin;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.jar.Manifest;
 import java.util.zip.GZIPInputStream;
 
 import org.osgi.framework.BundleContext;
@@ -49,7 +47,7 @@ public class FileDeploymentPackage extends AbstractDeploymentPackage {
      * @throws IOException Thrown if there was a problem reading the resources from disk.
      */
     public FileDeploymentPackage(File index, File packageDir, BundleContext bundleContext, DeploymentAdminImpl deploymentAdmin) throws DeploymentException, IOException {
-        this(ExplodingOutputtingInputStream.readIndex(index), packageDir, bundleContext, deploymentAdmin);
+        this(Utils.readIndex(index), packageDir, bundleContext, deploymentAdmin);
     }
 
     private FileDeploymentPackage(List index, File packageDir, BundleContext bundleContext, DeploymentAdminImpl deploymentAdmin) throws DeploymentException, IOException {

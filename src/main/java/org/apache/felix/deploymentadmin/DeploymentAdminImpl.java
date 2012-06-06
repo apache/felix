@@ -210,23 +210,29 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
             catch (DeploymentException de) {
                 succeeded = false;
                 throw de;
-            }
-            try {
-                // note that calling close on this stream will wait until asynchronous processing
-                // is done
-                input.close();
-            }
-            catch (IOException e) {
-                succeeded = false;
-                m_log.log(LogService.LOG_ERROR, "Could not close stream properly", e);
-                throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not close stream properly", e);
+            } finally {
+                try {
+                    // make sure we've read until the end-of-stream, so the explodingoutput-wrapper can process all bytes
+                    Utils.readUntilEndOfStream(input);
+
+                    // note that calling close on this stream will wait until asynchronous processing is done
+                    input.close();
+                }
+                catch (IOException e) {
+                    m_log.log(LogService.LOG_ERROR, "Could not close stream properly", e);
+                    // Do not mask out any originally thrown exceptions...
+                    if (succeeded) {
+                        succeeded = false;
+                        throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not close stream properly", e);
+                    }
+                }
             }
 
             File targetContents = m_context.getDataFile(PACKAGE_DIR + File.separator + source.getName() + File.separator + PACKAGECONTENTS_DIR);
             File targetIndex = m_context.getDataFile(PACKAGE_DIR + File.separator + source.getName() + File.separator + PACKAGEINDEX_FILE);
             if (source.isFixPackage()) {
                 try {
-                    ExplodingOutputtingInputStream.merge(targetIndex, targetContents, tempIndex, tempContents);
+                    Utils.merge(targetIndex, targetContents, tempIndex, tempContents);
                 }
                 catch (IOException e) {
                     succeeded = false;
@@ -237,7 +243,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
             else {
                 File targetPackage = m_context.getDataFile(PACKAGE_DIR + File.separator + source.getName());
                 targetPackage.mkdirs();
-                if (!ExplodingOutputtingInputStream.replace(targetPackage, tempPackage)) {
+                if (!Utils.replace(targetPackage, tempPackage)) {
                 	throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not replace " + targetPackage + " with " + tempPackage);
                 }
             }

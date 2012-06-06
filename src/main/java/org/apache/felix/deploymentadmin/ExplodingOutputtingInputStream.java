@@ -18,11 +18,8 @@
  */
 package org.apache.felix.deploymentadmin;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,13 +27,6 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.jar.Attributes;
-import java.util.jar.Attributes.Name;
-import java.util.jar.Manifest;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -45,13 +35,97 @@ import java.util.zip.ZipInputStream;
  * This class will write all entries encountered in an input stream to disk. An index of files written to disk is kept in an index file in the
  * order they were encountered. Each file is compressed using GZIP. All the work is done on a separate thread.
  */
-class ExplodingOutputtingInputStream extends OutputtingInputStream implements Runnable {
+class ExplodingOutputtingInputStream extends OutputtingInputStream {
+    
+    static class ReaderThread extends Thread {
+        
+        private final File m_contentDir;
+        private final File m_indexFile;
+        private final PipedInputStream m_input;
+        
+        private volatile Exception m_exception;
 
-    private final Thread m_task;
-    private final File m_contentDir;
-    private final File m_indexFile;
-    private final PipedInputStream m_input;
-    private Exception m_exception;
+        public ReaderThread(PipedOutputStream output, File index, File root) throws IOException {
+            super("Apache Felix DeploymentAdmin - ExplodingOutputtingInputStream");
+            
+            m_contentDir = root;
+            m_indexFile = index;
+            m_input = new PipedInputStream(output);
+        }
+        
+        public void run() {
+            byte[] buffer = new byte[4096];
+
+            ZipInputStream input = null;
+            PrintWriter writer = null;
+            try {
+                input = new ZipInputStream(m_input);
+                writer = new PrintWriter(new FileWriter(m_indexFile));
+
+                for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry()) {
+                    File current = new File(m_contentDir, entry.getName());
+                    if (entry.isDirectory()) {
+                        current.mkdirs();
+                    }
+                    else {
+                        writer.println(entry.getName());
+                        File parent = current.getParentFile();
+                        if (parent != null) {
+                            parent.mkdirs();
+                        }
+                        OutputStream output = null;
+                        try {
+                            output = new GZIPOutputStream(new FileOutputStream(current));
+                            for (int i = input.read(buffer); i > -1; i = input.read(buffer)) {
+                                output.write(buffer, 0, i);
+                            }
+                        }
+                        finally {
+                            output.close();
+                        }
+                    }
+                    input.closeEntry();
+                    writer.flush();
+                }
+            }
+            catch (IOException ex) {
+                pushException(ex);
+            }
+            finally {
+                if (writer != null) {
+                    writer.close();
+                }
+            }
+
+            try {
+                Utils.readUntilEndOfStream(m_input);
+            }
+            catch (IOException e) {
+                pushException(e);
+            }
+            finally {
+                if (input != null) {
+                    try {
+                        input.close();
+                    }
+                    catch (IOException e) {
+                        pushException(e);
+                    }
+                }
+            }
+        }
+
+        private void pushException(Exception e) {
+            Exception e2 = new Exception(e.getMessage());
+            e2.setStackTrace(e.getStackTrace());
+            if (m_exception != null) {
+                e2.initCause(m_exception);
+            }
+            m_exception = e2;
+        }
+    }
+
+    private final ReaderThread m_task;
 
     /**
      * Creates an instance of this class.
@@ -62,14 +136,22 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
      * @throws IOException If a problem occurs reading the stream resources.
      */
     public ExplodingOutputtingInputStream(InputStream inputStream, File indexFile, File contentDir) throws IOException {
-        this(inputStream, new PipedOutputStream(), indexFile,  contentDir);
+        this(inputStream, new PipedOutputStream(), indexFile, contentDir);
+    }
+
+    private ExplodingOutputtingInputStream(InputStream inputStream, PipedOutputStream output, File index, File root) throws IOException {
+        super(inputStream, output);
+        m_task = new ReaderThread(output, index, root);
+        m_task.start();
     }
 
     public void close() throws IOException {
         try {
             super.close();
-            if (m_exception != null) {
-                throw new IOException("Exception while processing the stream in the background: " + m_exception.getMessage(), m_exception);
+            
+            Exception exception = m_task.m_exception;
+            if (exception != null) {
+                throw new IOException("Exception while processing the stream in the background: " + exception.getMessage(), exception);
             }
         }
         finally {
@@ -77,275 +159,12 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream implements Ru
         }
     }
 
-    private ExplodingOutputtingInputStream(InputStream inputStream, PipedOutputStream output, File index, File root) throws IOException {
-        super(inputStream, output);
-        m_contentDir = root;
-        m_indexFile = index;
-        m_input = new PipedInputStream(output);
-        m_task = new Thread(this, "Apache Felix DeploymentAdmin - ExplodingOutputtingInputStream");
-        m_task.start();
-    }
-
-    public void waitFor() {
+    private void waitFor() {
         try {
             m_task.join();
         }
         catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-        }
-    }
-
-    public void run() {
-        ZipInputStream input = null;
-        PrintWriter writer = null;
-        try {
-            input = new ZipInputStream(m_input);
-            writer = new PrintWriter(new FileWriter(m_indexFile));
-            for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry()) {
-                File current = new File(m_contentDir, entry.getName());
-                if (entry.isDirectory()) {
-                    current.mkdirs();
-                }
-                else {
-                    writer.println(entry.getName());
-                    File parent = current.getParentFile();
-                    if (parent != null) {
-                        parent.mkdirs();
-                    }
-                    OutputStream output = null;
-                    try {
-                        output = new GZIPOutputStream(new FileOutputStream(current));
-                        byte[] buffer = new byte[4096];
-                        for (int i = input.read(buffer); i > -1; i = input.read(buffer)) {
-                            output.write(buffer, 0, i);
-                        }
-                    }
-                    finally {
-                        output.close();
-                    }
-                }
-                input.closeEntry();
-                writer.flush();
-            }
-        }
-        catch (IOException ex) {
-            pushException(ex);
-        }
-        finally {
-            if (writer != null) {
-                writer.close();
-            }
-        }
-
-        try {
-            byte[] buffer = new byte[1024];
-            int c = m_input.read(buffer);
-            while (c != -1) {
-                c = m_input.read(buffer);
-            }
-        }
-        catch (IOException e) {
-            pushException(e);
-        }
-        finally {
-            if (input != null) {
-                try {
-                    input.close();
-                }
-                catch (IOException e) {
-                    pushException(e);
-                }
-            }
-        }
-    }
-
-    private void pushException(Exception e) {
-        Exception e2 = new Exception(e.getMessage());
-        e2.setStackTrace(e.getStackTrace());
-        if (m_exception != null) {
-            e2.initCause(m_exception);
-        }
-        m_exception = e2;
-    }
-
-    public static boolean replace(File target, File source) {
-        return delete(target, true) && rename(source, target);
-    }
-
-    public static boolean copy(File from, File to) {
-        boolean result = true;
-        if (from.isDirectory()) {
-            if (!to.isDirectory()) {
-                if (!to.mkdirs()) {
-                    return false;
-                }
-                File[] files = from.listFiles();
-                if (files == null) {
-                    return false;
-                }
-                for (int i = 0; i < files.length; i++) {
-                    result &= copy(files[i], new File(to, files[i].getName()));
-                }
-            }
-        }
-        else {
-            InputStream input = null;
-            OutputStream output = null;
-            try {
-                input = new FileInputStream(from);
-                output = new FileOutputStream(to);
-                byte[] buffer = new byte[4096];
-                for (int i = input.read(buffer); i > -1; i = input.read(buffer)) {
-                    output.write(buffer, 0, i);
-                }
-            }
-            catch (IOException e) {
-                return false;
-            }
-            finally {
-                if (output != null) {
-                    try {
-                        output.close();
-                    }
-                    catch (IOException e) {
-                        result = false;
-                    }
-                }
-                if (input != null) {
-                    try {
-                        input.close();
-                    }
-                    catch (IOException e) {
-                        result = false;
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    public static boolean rename(File from, File to) {
-        if (!from.renameTo(to)) {
-            if (copy(from, to)) {
-                if (!delete(from, true)) {
-                    return false;
-                }
-            }
-            else {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean delete(File root, boolean deleteRoot) {
-        boolean result = true;
-        if (root.isDirectory()) {
-            File[] files = root.listFiles();
-            for (int i = 0; i < files.length; i++) {
-            	if (files[i].isDirectory()) {
-            		result &= delete(files[i], true);
-            	}
-            	else {
-            		result &= files[i].delete();
-            	}
-            }
-        }
-        if (deleteRoot) {
-        	if (root.exists()) {
-        		result &= root.delete();
-        	}
-        }
-        return result;
-    }
-
-    public static void merge(File targetIndex, File target, File sourceIndex, File source) throws IOException {
-        List targetFiles = readIndex(targetIndex);
-        List sourceFiles = readIndex(sourceIndex);
-        List result = new ArrayList(targetFiles);
-
-        File manifestFile = new File(source, (String) sourceFiles.remove(0));
-        Manifest resultManifest = Utils.readManifest(manifestFile);
-
-        resultManifest.getMainAttributes().remove(new Name(Constants.DEPLOYMENTPACKAGE_FIXPACK));
-
-        for (Iterator i = result.iterator(); i.hasNext();) {
-            String targetFile = (String) i.next();
-            if(!resultManifest.getEntries().containsKey(targetFile) && !targetFile.equals("META-INF/MANIFEST.MF")) {
-                i.remove();
-            }
-        }
-
-        for (Iterator iter = sourceFiles.iterator(); iter.hasNext();) {
-            String path = (String) iter.next();
-            File from = new File(source, path);
-            File to = new File(target, path);
-            if (targetFiles.contains(path)) {
-                if (!to.delete()) {
-                    throw new IOException("Could not delete " + to);
-                }
-            }
-            else {
-                result.add(path);
-            }
-            if (!rename(from, to)) {
-                throw new IOException("Could not rename " + from + " to "  + to);
-            }
-        }
-
-        targetFiles.removeAll(sourceFiles);
-
-        for (Iterator iter = resultManifest.getEntries().keySet().iterator(); iter.hasNext();) {
-            String path = (String) iter.next();
-            Attributes sourceAttribute = (Attributes) resultManifest.getEntries().get(path);
-            if ("true".equals(sourceAttribute.remove(new Name(Constants.DEPLOYMENTPACKAGE_MISSING)))) {
-                targetFiles.remove(path);
-            }
-        }
-
-        for (Iterator iter = targetFiles.iterator(); iter.hasNext();) {
-            String path = (String) iter.next();
-            File targetFile = new File(target, path);
-            if (!targetFile.delete()) {
-                throw new IOException("Could not delete " + targetFile);
-            }
-        }
-
-        GZIPOutputStream outputStream = new GZIPOutputStream(new FileOutputStream(new File(target, "META-INF/MANIFEST.MF")));
-        resultManifest.write(outputStream);
-        outputStream.close();
-        writeIndex(targetIndex, result);
-    }
-
-    public static List readIndex(File index) throws IOException {
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(index));
-            List result = new ArrayList();
-            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-                result.add(line);
-            }
-            return result;
-        }
-        finally {
-            if (reader != null) {
-                reader.close();
-            }
-        }
-    }
-
-    private static void writeIndex(File index, List input) throws IOException {
-        PrintWriter writer = null;
-        try {
-            writer = new PrintWriter(new FileWriter(index));
-            for (Iterator iterator = input.iterator(); iterator.hasNext();) {
-                writer.println(iterator.next());
-            }
-        }
-        finally {
-            if (writer != null) {
-                writer.close();
-            }
         }
     }
 }
