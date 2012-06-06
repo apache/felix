@@ -21,8 +21,10 @@ package org.apache.felix.gogo.shell;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
+import org.apache.felix.service.command.Function;
 
 public class Console implements Runnable
 {
@@ -46,13 +48,7 @@ public class Console implements Runnable
         {
             while (!quit)
             {
-                Object prompt = session.get("prompt");
-                if (prompt == null)
-                {
-                    prompt = "g! ";
-                }
-
-                CharSequence line = getLine(prompt.toString());
+                CharSequence line = getLine(getPrompt());
 
                 if (line == null)
                 {
@@ -116,6 +112,30 @@ public class Console implements Runnable
                 e.printStackTrace();
             }
         }
+    }
+
+    private String getPrompt()
+    {
+        Object prompt = session.get("prompt");
+        if (prompt instanceof Function)
+        {
+            try
+            {
+                prompt = ((Function) prompt).execute(session, null);
+            }
+            catch (Exception e)
+            {
+                out.println(prompt + ": " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                prompt = null;
+            }
+        }
+
+        if (prompt == null)
+        {
+            prompt = "g! ";
+        }
+
+        return prompt.toString();
     }
 
     private CharSequence getLine(String prompt) throws IOException
