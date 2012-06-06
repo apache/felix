@@ -724,6 +724,53 @@ public class ComponentMetadataTest extends TestCase
         }
     }
 
+    public void test_get_configuration_pid_method()
+    {
+        doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_0);
+        doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_1);
+        doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_2);
+    }
+    
+    private void doTest_get_configuration_pid_method(int specVersion)
+    {            
+        // Make sure that getConfigurationPid returns the default component name (implementation class name).
+        // We only do this kind of test if spec is greater than ds 1.0, because in ds 1.0, the component name is mandatory.
+        if (specVersion > XmlHandler.DS_VERSION_1_0)
+        {
+            ComponentMetadata cm = new ComponentMetadata( specVersion );
+            try
+            {          
+                cm.setImplementationClassName("implementation.class");
+                cm.setName( null );
+                cm.validate( logger );
+            }
+            catch ( ComponentException ce )
+            {
+                fail( "Expect correct validation for unnamed component" );
+            }
+            String pid = cm.getConfigurationPid();
+            assertNotNull( "Expect non-null configuration pid when component name is not specified", pid );
+            assertEquals( "Expect configuration-pid to be equals to component implementation", 
+                          "implementation.class", cm.getConfigurationPid() );
+        }
+        
+        // Make sure that getConfigurationPid returns the name of the component, if specified
+        ComponentMetadata cm = new ComponentMetadata( specVersion );
+        try
+        {     
+            cm.setImplementationClassName("implementation.class");
+            cm.setName("my.component.name");
+            cm.validate( logger );
+        }
+        catch ( ComponentException ce )
+        {
+            fail( "Expect correct validation for named component" );
+        }
+        String pid = cm.getConfigurationPid();
+        assertNotNull( "Expect non-null configuration pid when component name is specified", pid );
+        assertEquals( "Expect configuration-pid to be equals to component name", 
+                      "my.component.name", cm.getConfigurationPid() );
+    }
 
     public void test_property_character_ds11() throws ComponentException
     {
