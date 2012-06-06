@@ -17,10 +17,11 @@
 package org.apache.felix.http.cometd;
 
 import javax.servlet.ServletException;
-import org.cometd.Bayeux;
+
+import org.cometd.bayeux.server.BayeuxServer;
 
 public interface CometdService
 {
-    public Bayeux getBayeux()
+    public BayeuxServer getBayeuxServer()
         throws ServletException;
 }

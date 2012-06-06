@@ -16,11 +16,10 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.mortbay.log.Logger;
-import org.mortbay.log.Log;
+import java.text.MessageFormat;
+
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import java.io.PrintStream;
-import java.io.ByteArrayOutputStream;
+import org.eclipse.jetty.util.log.Logger;
 
 public final class JettyLogger
     implements Logger
@@ -30,7 +29,7 @@ public final class JettyLogger
 
     public JettyLogger()
     {
-        this("org.mortbay.log");
+        this("org.eclipse.jetty.log");
     }
 
     public JettyLogger(String name)
@@ -55,69 +54,57 @@ public final class JettyLogger
         this.debugEnabled = enabled;
     }
 
-    public void debug(String msg, Throwable cause)
-    {
-        if (this.debugEnabled) {
-            SystemLogger.debug(msg);
-        }
-    }
+	public void debug(Throwable throwable) {
+		if (this.debugEnabled) {
+			SystemLogger.debug(throwable.getMessage());
+		}
+		
+	}
 
-    public void debug(String msg, Object arg0, Object arg1)
-    {
-        if (this.debugEnabled) {
-            SystemLogger.debug(format(msg, arg0, arg1));
-        }
-    }
+	public void debug(String msg, Object... args) {
+		if (this.debugEnabled) {
+			SystemLogger.debug(MessageFormat.format(msg, args));
+		}
+	}
 
-    public void info(String msg, Object arg0, Object arg1)
-    {
-        // Classify all info messages as debug messages.
-        // Jetty uses way to much verbose info messages.
-        if (this.debugEnabled) {
-            SystemLogger.info(format(msg, arg0, arg1));
-        }
-    }
+	public void debug(String msg, Throwable throwable) {
+		if (this.debugEnabled) {
+			SystemLogger.debug(msg + ": " + throwable.getMessage());
+		}
+	}
 
-    public void warn(String msg, Throwable cause)
-    {
-        SystemLogger.warning(msg, cause);
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void warn( String msg, Object arg0, Object arg1 )
-    {
-        SystemLogger.warning(format(msg, arg0, arg1), null);
-    }
+	public void ignore(Throwable throwable) {
+		
+	}
 
-    public String toString()
-    {
-        return this.name;
-    }
+	public void info(Throwable throwable) {
+		SystemLogger.info(throwable.getMessage());
+	}
 
-    private String format(String msg, Object arg0, Object arg1)
-    {
-        int i0 = msg.indexOf("{}");
-        int i1 = i0 < 0 ? -1 : msg.indexOf("{}", i0 + 2);
+	public void info(String msg, Object... args) {
+		SystemLogger.info(MessageFormat.format(msg, args));
+		
+	}
 
-        if (arg1 != null && i1 >= 0) {
-            msg = msg.substring(0, i1) + arg1 + msg.substring(i1 + 2);
-        }
+	public void info(String msg, Throwable throwable) {
+		SystemLogger.info(msg + ": " + throwable.getMessage());
+	}
 
-        if (arg0 != null && i0 >= 0) {
-            msg = msg.substring(0, i0) + arg0 + msg.substring(i0 + 2);
-        }
+	public void warn(Throwable throwable) {
+		SystemLogger.warning(null, throwable);
+	}
 
-        return msg;
-    }
+	public void warn(String msg, Object... args) {
+		SystemLogger.warning(MessageFormat.format(msg, args), null);
+		
+	}
 
-    public static void init()
-    {
-        PrintStream out = System.err;
+	public void warn(String msg, Throwable throwable) {
+		SystemLogger.warning(msg, throwable);
+	}
 
-        try {
-            System.setErr(new PrintStream(new ByteArrayOutputStream()));
-            Log.setLog(new JettyLogger());
-        } finally {
-            System.setErr(out);
-        }
-    }
 }

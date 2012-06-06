@@ -16,23 +16,24 @@
  */
 package org.apache.felix.http.cometd.internal;
 
-import org.apache.felix.http.cometd.CometdService;
-import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.cometd.Bayeux;
-import org.mortbay.cometd.continuation.ContinuationCometdServlet;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Properties;
 
-import org.osgi.service.cm.ManagedService;
-import org.osgi.service.http.HttpService;
+import javax.servlet.http.HttpServlet;
+
+import org.apache.felix.http.base.internal.logger.SystemLogger;
+import org.apache.felix.http.cometd.CometdService;
+import org.cometd.bayeux.server.BayeuxServer;
+import org.cometd.server.CometdServlet;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ManagedService;
+import org.osgi.service.http.HttpService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-import java.util.Properties;
-import java.util.Dictionary;
-import javax.servlet.http.HttpServlet;
 
 public final class CometdServiceImpl
     extends HttpServlet
@@ -46,7 +47,7 @@ public final class CometdServiceImpl
     private ServiceRegistration configServiceReg;
     private ServiceTracker httpServiceTracker;
     private ServiceRegistration cometdServiceReg;
-    private ContinuationCometdServlet continuationCometdServlet;
+    private CometdServlet continuationCometdServlet;
 
     public CometdServiceImpl(BundleContext context)
     {
@@ -109,10 +110,12 @@ public final class CometdServiceImpl
 
     private void register(HttpService httpService) {
         if (this.continuationCometdServlet == null) {
-            this.continuationCometdServlet = new ContinuationCometdServlet();
+            this.continuationCometdServlet = new CometdServlet();
         }
         try {
-          httpService.registerServlet(this.config.getPath(), this.continuationCometdServlet, null, null);
+          Dictionary dictionary = new Hashtable();
+          dictionary.put("requestAvailable","true");
+          httpService.registerServlet(this.config.getPath(), this.continuationCometdServlet, dictionary, null);
         }
         catch (Exception e) {
           SystemLogger.error("Failed to register ContinuationCometdServlet to " + this.config.getPath(), e);
@@ -129,7 +132,7 @@ public final class CometdServiceImpl
         }
     }
 
-    public Bayeux getBayeux() {
+    public BayeuxServer getBayeuxServer() {
         return this.continuationCometdServlet.getBayeux();
     }
 }

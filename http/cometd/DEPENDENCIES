@@ -7,8 +7,12 @@ Apache software licensed under Apache License 2.0.
 
 I. Included Third-Party Software
 
+This product includes software developed at
+Eclipse (http://eclipse.org)
+Licensed under the Apache License 2.0.
+
 This product includes software developed by
-Mortbay (http://mortbay.org)
+the cometd project (http://cometd.org)
 Licensed under the Apache License 2.0.
 
 This product includes software developed at
