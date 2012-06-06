@@ -24,17 +24,17 @@ import org.apache.felix.http.base.internal.DispatcherServlet;
 import org.apache.felix.http.base.internal.EventDispatcher;
 import org.apache.felix.http.base.internal.HttpServiceController;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
-import org.mortbay.jetty.Connector;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.SessionManager;
-import org.mortbay.jetty.bio.SocketConnector;
-import org.mortbay.jetty.handler.StatisticsHandler;
-import org.mortbay.jetty.nio.SelectChannelConnector;
-import org.mortbay.jetty.security.HashUserRealm;
-import org.mortbay.jetty.security.SslSelectChannelConnector;
-import org.mortbay.jetty.security.SslSocketConnector;
-import org.mortbay.jetty.servlet.Context;
-import org.mortbay.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.SessionManager;
+import org.eclipse.jetty.server.bio.SocketConnector;
+import org.eclipse.jetty.server.handler.StatisticsHandler;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
+import org.eclipse.jetty.server.ssl.SslSocketConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -69,8 +69,6 @@ public final class JettyService
     public void start()
         throws Exception
     {
-        JettyLogger.init();
-
         Properties props = new Properties();
         props.put(Constants.SERVICE_PID, PID);
         this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService",
@@ -150,13 +148,13 @@ public final class JettyService
         if (this.config.isUseHttp() || this.config.isUseHttps())
         {
             StringBuffer message = new StringBuffer("Started jetty ").append(Server.getVersion()).append(" at port(s)");
-            HashUserRealm realm = new HashUserRealm("OSGi HTTP Service Realm");
+            HashLoginService realm = new HashLoginService("OSGi HTTP Service Realm");
             this.server = new Server();
 
             // HTTP/1.1 requires Date header if possible (it is)
             this.server.setSendDateHeader(true);
 
-            this.server.addUserRealm(realm);
+            this.server.addBean(realm);
 
             if (this.config.isUseHttp())
             {
@@ -170,7 +168,8 @@ public final class JettyService
                 message.append(" HTTPS:").append(this.config.getHttpsPort());
             }
 
-            Context context = new Context(this.server, this.config.getContextPath(), Context.SESSIONS);
+            ServletContextHandler context = new ServletContextHandler(this.server, "/", ServletContextHandler.SESSIONS);
+            
             message.append(" on context path ").append(this.config.getContextPath());
             configureSessionManager(context);
             context.addEventListener(eventDispatcher);
@@ -181,7 +180,7 @@ public final class JettyService
             {
                 this.mbeanServerTracker = new MBeanServerTracker(this.context, this.server);
                 this.mbeanServerTracker.open();
-                context.addHandler(new StatisticsHandler());
+                context.addBean(new StatisticsHandler());
             }
 
             this.server.start();
@@ -307,7 +306,6 @@ public final class JettyService
     private void configureConnector(final Connector connector)
     {
         connector.setMaxIdleTime(this.config.getHttpTimeout());
-        connector.setHeaderBufferSize(this.config.getHeaderBufferSize());
         connector.setRequestBufferSize(this.config.getRequestBufferSize());
         connector.setResponseBufferSize(this.config.getResponseBufferSize());
         connector.setHost(this.config.getHost());
@@ -318,14 +316,14 @@ public final class JettyService
         // connector.setResponseBufferSize(responseBufferSize);
     }
 
-    private void configureSessionManager(final Context context)
+    private void configureSessionManager(final ServletContextHandler context)
     {
         final SessionManager manager = context.getSessionHandler().getSessionManager();
 
         manager.setMaxInactiveInterval(this.config.getSessionTimeout() * 60);
 
         manager.setSessionCookie(this.config.getProperty(SessionManager.__SessionCookieProperty, SessionManager.__DefaultSessionCookie));
-        manager.setSessionURL(this.config.getProperty(SessionManager.__SessionURLProperty, SessionManager.__DefaultSessionURL));
+        manager.setSessionIdPathParameterName(this.config.getProperty(SessionManager.__SessionIdPathParameterNameProperty, SessionManager.__DefaultSessionIdPathParameterName));
         manager.setSessionDomain(this.config.getProperty(SessionManager.__SessionDomainProperty, SessionManager.__DefaultSessionDomain));
         manager.setSessionPath(this.config.getProperty(SessionManager.__SessionPathProperty, context.getContextPath()));
         manager.setMaxCookieAge(this.config.getIntProperty(SessionManager.__MaxAgeProperty, -1));

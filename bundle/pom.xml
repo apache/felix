@@ -42,9 +42,12 @@
                             org.apache.felix.http.bundle.internal.CombinedActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.http.api;version=2.0.4;-split-package:=merge-first,
+                            org.apache.felix.http.api;version=${project.version};-split-package:=merge-first,
+                            org.apache.felix.http.cometd;version=${project.version};-split-package:=merge-first,
                             org.osgi.service.http;version=1.2.0;-split-package:=merge-first,
-                            org.cometd;version=1.0.beta7,
+                            org.cometd.bayeux;version=2.4.2;-split-package:=merge-first,
+                            org.cometd.bayeux.client;version=2.4.2;-split-package:=merge-first,
+                            org.cometd.bayeux.server;version=2.4.2;-split-package:=merge-first,
                             javax.servlet.*;version=2.5;-split-package:=merge-first
                         </Export-Package>
                         <Private-Package>
@@ -54,11 +57,15 @@
                             org.apache.felix.http.cometd.*,
                             org.apache.felix.http.jetty.*,
                             org.apache.felix.http.whiteboard.*,
-                            org.mortbay.*;-split-package:=merge-first
+                            org.eclipse.jetty.*;-split-package:=merge-first,
+                            org.cometd.server.*;-split-package:=merge-first,
+                            org.cometd.common.*;-split-package:=merge-first
                         </Private-Package>
                         <Import-Package>
                             javax.servlet.*,
-                            org.cometd,
+                            org.cometd.bayeux,
+                            org.cometd.bayeux.client,
+                            org.cometd.bayeux.server,
                             *;resolution:=optional
                         </Import-Package>
                     </instructions>

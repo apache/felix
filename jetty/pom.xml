@@ -49,7 +49,7 @@
                         <Private-Package>
                             org.apache.felix.http.base.*,
                             org.apache.felix.http.jetty.*,
-                            org.mortbay.*;-split-package:=merge-first                            
+                            org.eclipse.*;-split-package:=merge-first        
                         </Private-Package>
                         <Import-Package>
                             javax.net.ssl; javax.security.cert;
@@ -83,24 +83,29 @@
             <artifactId>servlet-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>jetty</artifactId>
-            <version>6.1.24</version>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>7.6.3.v20120416</version>
         </dependency>
         <dependency>
-            <groupId>org.mortbay.jetty</groupId>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>7.6.3.v20120416</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-util</artifactId>
-            <version>6.1.24</version>
+            <version>7.6.3.v20120416</version>
         </dependency>
         <dependency>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>jetty-management</artifactId>
-            <version>6.1.24</version>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-jmx</artifactId>
+            <version>7.6.3.v20120416</version>
         </dependency>
         <dependency>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>jetty-sslengine</artifactId>
-            <version>6.1.24</version>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-security</artifactId>
+            <version>7.6.3.v20120416</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>

@@ -17,23 +17,28 @@
 package org.apache.felix.http.samples.cometd;
 
 
+import java.util.Hashtable;
+
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+
+import org.apache.felix.http.cometd.CometdService;
+import org.cometd.bayeux.server.BayeuxServer;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.http.HttpService;
+import org.osgi.service.http.NamespaceException;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import java.util.Hashtable;
-import org.apache.felix.http.cometd.CometdService;
-import org.cometd.Bayeux;
 
 public final class Activator
     implements BundleActivator, ServiceTrackerCustomizer
 {
     private BundleContext context;
     private ServiceTracker cometdServiceTracker;
+    private ServiceTracker httpServiceTracker;
     private ServiceRegistration reg;
     
     public void start(BundleContext context)
@@ -42,6 +47,8 @@ public final class Activator
         this.context = context;
         this.cometdServiceTracker = new ServiceTracker(this.context, CometdService.class.getName(), this);
         this.cometdServiceTracker.open();
+        this.httpServiceTracker = new ServiceTracker(this.context, HttpService.class.getName(), new HTTPServiceCustomizer());
+        this.httpServiceTracker.open();
     }
 
     public void stop(BundleContext context)
@@ -49,6 +56,9 @@ public final class Activator
     {
         if (this.cometdServiceTracker != null) {
             this.cometdServiceTracker.close();
+        }
+        if (this.httpServiceTracker != null) {
+        	this.httpServiceTracker.close();
         }
         this.unregister();
     }
@@ -73,15 +83,16 @@ public final class Activator
 
     private void register(CometdService cometdService) {
         try {
-            Bayeux bayeux = cometdService.getBayeux();
-            if (bayeux != null) {
+            BayeuxServer bayeuxServer = cometdService.getBayeuxServer();
+            if (bayeuxServer != null) {
                 Hashtable<String, String> props = new Hashtable<String, String>();
                 props.put("alias", "/system/time");
-                this.reg = context.registerService(Servlet.class.getName(), new TimeServlet(bayeux), props);
+                // whiteboard servlet registration
+                this.reg = context.registerService(Servlet.class.getName(), new TimeServlet(bayeuxServer), props);
                 doLog("Connect a browser to http://<host>:<port>/system/time to view the time.");
             }
             else {
-                doLog("Failed to get bayeux");
+                doLog("Failed to get bayeux server");
             }
         }
         catch (ServletException e) {
@@ -99,5 +110,28 @@ public final class Activator
     private void doLog(String message)
     {
         System.out.println("## Activator:   " + message);
+    }
+    
+    class HTTPServiceCustomizer implements ServiceTrackerCustomizer {
+
+		public Object addingService(ServiceReference reference) {
+			HttpService httpService = (HttpService) context.getService(reference);
+			try {
+				httpService.registerResources("/js", "/src-web", null);
+			} catch (NamespaceException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+
+		public void modifiedService(ServiceReference reference, Object service) {
+			
+		}
+
+		public void removedService(ServiceReference reference, Object service) {
+			HttpService httpService = (HttpService) context.getService(reference);
+			httpService.unregister("/js");
+		}
+    	
     }
 }

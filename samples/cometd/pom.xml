@@ -47,6 +47,10 @@
                         <Import-Package>
                             *;resolution:=optional
                         </Import-Package>
+                        <Include-Resource>
+                        	{maven-resources}, {maven-dependencies},
+                        	src-web=src-web
+                        </Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
