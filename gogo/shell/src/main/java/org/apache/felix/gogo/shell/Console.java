@@ -29,13 +29,15 @@ public class Console implements Runnable
     private final CommandSession session;
     private final InputStream in;
     private final PrintStream out;
+    private final History history;
     private boolean quit;
 
-    public Console(CommandSession session)
+    public Console(CommandSession session, History history)
     {
         this.session = session;
         in = session.getKeyboard();
         out = session.getConsole();
+        this.history = history;
     }
 
     public void run()
@@ -59,6 +61,12 @@ public class Console implements Runnable
 
                 try
                 {
+                    if (line.charAt(0) == '!' || line.charAt(0) == '^')
+                    {
+                        line = history.evaluate(line);
+                        System.out.println(line);
+                    }
+
                     Object result = session.execute(line);
                     session.put("_", result); // set $_ to last result
 
@@ -80,7 +88,7 @@ public class Console implements Runnable
                         out.println("gosh: " + e);
                         quit = true;
                     }
-                    
+
                     if (!quit)
                     {
                         session.put("exception", e);
@@ -94,6 +102,10 @@ public class Console implements Runnable
                         out.println(loc + ": " + e.getClass().getSimpleName() + ": "
                             + e.getMessage());
                     }
+                }
+                finally
+                {
+                    this.history.append(line);
                 }
             }
         }
