@@ -29,6 +29,7 @@ import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 
 /**
  * iPOJO Byte code Manipulator.
@@ -97,7 +98,11 @@ public class Manipulator {
             ClassWriter cw0 = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             //CheckClassAdapter ch = new CheckClassAdapter(cw0);
             MethodCreator preprocess = new MethodCreator(cw0, m_fields, m_methods);
-            cr0.accept(preprocess, 0);
+            if (ck.getClassVersion() >= Opcodes.V1_6) {
+                cr0.accept(preprocess, ClassReader.EXPAND_FRAMES);
+            } else {
+                cr0.accept(preprocess, 0);
+            }
             is2.close();
             finalWriter = cw0;
         }

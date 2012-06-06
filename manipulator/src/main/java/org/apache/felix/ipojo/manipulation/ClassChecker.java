@@ -80,6 +80,12 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     private boolean m_supportAnnotation = false;
 
     /**
+     * Class Version.
+     * Used to determine the frame format.
+     */
+    private int m_classVersion;
+
+    /**
      * Check if the _cm field already exists.
      * Update the field list.
      * @param access : access of the field
@@ -155,6 +161,14 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     }
 
     /**
+     * Gets the extracted class version
+     * @return the class version.
+     */
+    public int getClassVersion() {
+        return m_classVersion;
+    }
+
+    /**
      * Visit the class.
      * Update the implemented interface list.
      * @param version : version of the class
@@ -168,6 +182,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     public void visit(int version, int access, String name, String signature,
             String superName, String[] interfaces) {
 
+        m_classVersion = version;
         m_supportAnnotation = version > V1_4 && version < V1_1;
 
         if (! superName.equals("java/lang/Object")) {
