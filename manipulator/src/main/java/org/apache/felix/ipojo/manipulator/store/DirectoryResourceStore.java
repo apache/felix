@@ -130,7 +130,15 @@ public class DirectoryResourceStore implements ResourceStore {
         Manifest updated = m_manifestBuilder.build(m_manifest);
         
         // Write it to disk
-        OutputStream os = new FileOutputStream(m_manifest_file);
+        File outputFile = m_manifest_file;
+        // In case it's forgot to be set in Pojoization.
+        if(outputFile == null)
+        {
+        	outputFile = new File( m_source, "META-INF" );
+        	outputFile = new File( outputFile, "MANIFEST.MF" );
+        }
+        
+        OutputStream os = new FileOutputStream( outputFile );
         try {
             updated.write(os);
         } finally {
