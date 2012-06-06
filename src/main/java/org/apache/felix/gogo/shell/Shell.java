@@ -25,6 +25,8 @@ import java.io.Reader;
 import java.net.URI;
 import java.net.URLConnection;
 import java.nio.CharBuffer;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -37,13 +39,14 @@ import org.osgi.framework.BundleException;
 
 public class Shell
 {
-    static final String[] functions = { "gosh", "sh", "source" };
+    static final String[] functions = { "gosh", "sh", "source", "history" };
 
     private final static URI CWD = new File(".").toURI();
 
     private final URI baseURI;
     private final BundleContext context;
     private final CommandProcessor processor;
+    private final History history;
 
     public Shell(BundleContext context, CommandProcessor processor)
     {
@@ -52,6 +55,7 @@ public class Shell
         String baseDir = context.getProperty("gosh.home");
         baseDir = (baseDir == null) ? context.getProperty("user.dir") : baseDir;
         baseURI = new File(baseDir).toURI();
+        this.history = new History();
     }
 
     public Object gosh(final CommandSession session, String[] argv) throws Exception
@@ -199,7 +203,7 @@ public class Shell
 
     private Object console(CommandSession session)
     {
-        Console console = new Console(session);
+        Console console = new Console(session, history);
         console.run();
         return null;
     }
@@ -247,5 +251,14 @@ public class Shell
         {
             return CWD;
         }
+    }
+
+    public String[] history() {
+        Iterator<String> history = this.history.getHistory();
+        List<String> lines = new ArrayList<String>();
+        for (int i = 1; history.hasNext(); i++) {
+            lines.add(String.format("%5d  %s", i, history.next()));
+        }
+        return lines.toArray(new String[lines.size()]);
     }
 }
