@@ -20,8 +20,8 @@ package org.apache.felix.http.jetty.internal;
 
 import javax.management.MBeanServer;
 
-import org.mortbay.jetty.Server;
-import org.mortbay.management.MBeanContainer;
+import org.eclipse.jetty.jmx.MBeanContainer;
+import org.eclipse.jetty.server.Server;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;

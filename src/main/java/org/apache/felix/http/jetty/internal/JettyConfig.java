@@ -16,13 +16,14 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.osgi.framework.BundleContext;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Hashtable;
+
+import org.osgi.framework.BundleContext;
 
 public final class JettyConfig
 {
@@ -112,7 +113,6 @@ public final class JettyConfig
     private boolean useHttpsNio;
     private boolean registerMBeans;
     private int sessionTimeout;
-    private int headerBufferSize;
     private int requestBufferSize;
     private int responseBufferSize;
     private String contextPath;
@@ -232,11 +232,6 @@ public final class JettyConfig
         return this.sessionTimeout;
     }
 
-    public int getHeaderBufferSize()
-    {
-        return this.headerBufferSize;
-    }
-
     public int getRequestBufferSize()
     {
         return this.requestBufferSize;
@@ -280,7 +275,6 @@ public final class JettyConfig
         this.useHttpsNio = getBooleanProperty(props, FELIX_HTTPS_NIO, this.useHttpNio);
         this.registerMBeans = getBooleanProperty(props, FELIX_HTTP_MBEANS, false);
         this.sessionTimeout = getIntProperty(props, FELIX_SESSION_TIMEOUT, 0);
-        this.headerBufferSize = getIntProperty(FELIX_JETTY_HEADER_BUFFER_SIZE, 16 * 1024);
         this.requestBufferSize = getIntProperty(FELIX_JETTY_REQUEST_BUFFER_SIZE, 8 * 014);
         this.responseBufferSize = getIntProperty(FELIX_JETTY_RESPONSE_BUFFER_SIZE, 24 * 1024);
         this.contextPath = validateContextPath(getProperty(props, FELIX_HTTP_CONTEXT_PATH, null));
