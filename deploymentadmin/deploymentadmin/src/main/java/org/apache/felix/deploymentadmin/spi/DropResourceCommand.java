@@ -41,10 +41,12 @@ public class DropResourceCommand extends Command {
      */
     public DropResourceCommand(CommitResourceCommand commitCommand) {
         m_commitCommand = commitCommand;
-        addRollback(m_commitCommand);
     }
 
     public void execute(DeploymentSessionImpl session) {
+        // Allow proper rollback in case the drop fails...
+        addRollback(new RollbackCommitAction(session));
+        
         AbstractDeploymentPackage target = session.getTargetAbstractDeploymentPackage();
         AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
         BundleContext context = session.getBundleContext();
@@ -71,6 +73,18 @@ public class DropResourceCommand extends Command {
                     }
                 }
             }
+        }
+    }
+    
+    private class RollbackCommitAction implements Runnable {
+        private final DeploymentSessionImpl m_session; 
+        
+        public RollbackCommitAction(DeploymentSessionImpl session) {
+            m_session = session;
+        }
+        
+        public void run() {
+            m_commitCommand.rollback(m_session);
         }
     }
 }

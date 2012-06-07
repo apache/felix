@@ -48,9 +48,11 @@ public abstract class Command {
      * Rolls back all actions that were added through the <code>addRollback(Runnable r)</code> method (in reverse
      * adding order). It is not guaranteed that the state of everything related to the command will be as if the
      * command was never executed, a best effort should be made though.
+     * 
+     * @param session the deployment session to rollback, should be used for logging purposes.
      */
-    public void rollback() {
-        for (ListIterator i = m_rollback.listIterator(m_commit.size()); i.hasPrevious();) {
+    protected void rollback(DeploymentSessionImpl session) {
+        for (ListIterator i = m_rollback.listIterator(m_rollback.size()); i.hasPrevious();) {
             Runnable runnable = (Runnable) i.previous();
             runnable.run();
         }
@@ -59,8 +61,10 @@ public abstract class Command {
 
     /**
      * Commits all changes the command may have defined when it was executed by calling the <code>execute()</code> method.
+     * 
+     * @param session the deployment session to commit, should be used for logging purposes.
      */
-    protected void commit() {
+    protected void commit(DeploymentSessionImpl session) {
         for (ListIterator i = m_commit.listIterator(); i.hasNext();) {
             Runnable runnable = (Runnable) i.next();
             runnable.run();
@@ -110,5 +114,4 @@ public abstract class Command {
     public void cancel() {
         m_cancelled = true;
     }
-
 }

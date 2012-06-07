@@ -31,7 +31,7 @@ import org.osgi.service.log.LogService;
 /**
  * Command that commits all the resource processors that were added to the command.
  */
-public class CommitResourceCommand extends Command implements Runnable {
+public class CommitResourceCommand extends Command {
 
     private final List m_processors = new ArrayList();
 
@@ -52,23 +52,25 @@ public class CommitResourceCommand extends Command implements Runnable {
                 processor.commit();
             }
             catch (Exception e) {
+                // We cannot throw an exception, see OSGi spec.
                 session.getLog().log(LogService.LOG_ERROR, "Committing resource processor '" + processor + "' failed", e);
-                // TODO Throw exception?
             }
         }
         m_processors.clear();
     }
 
-    public void rollback() {
+    protected void rollback(DeploymentSessionImpl session) {
         for (ListIterator i = m_processors.listIterator(m_processors.size()); i.hasPrevious();) {
             ResourceProcessor processor = (ResourceProcessor) i.previous();
             try {
                 processor.rollback();
             }
             catch (Exception e) {
-                // TODO Log this?
+                // We cannot throw an exception, see OSGi spec.
+                session.getLog().log(LogService.LOG_ERROR, "Rollback of resource processor '" + processor + "' failed", e);
+            } finally {
+                i.remove();
             }
-            i.remove();
         }
     }
 
@@ -88,9 +90,4 @@ public class CommitResourceCommand extends Command implements Runnable {
         m_processors.add(processor);
         return true;
     }
-
-    public void run() {
-        rollback();
-    }
-
 }

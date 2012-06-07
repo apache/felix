@@ -32,7 +32,6 @@ import org.osgi.service.packageadmin.PackageAdmin;
  */
 public class StartBundleCommand extends Command {
     private final RefreshPackagesMonitor m_refreshMonitor = new RefreshPackagesMonitor();
-    private static final int REFRESH_TIMEOUT = 10000;
 
     public void execute(DeploymentSessionImpl session) {
         AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
@@ -81,8 +80,10 @@ public class StartBundleCommand extends Command {
     /**
      * Use this monitor when its desired to wait for the completion of the asynchronous PackageAdmin.refreshPackages() call.
      */
-    private class RefreshPackagesMonitor {
-        private boolean m_alreadyNotified = false;
+    private static class RefreshPackagesMonitor {
+        private static final int REFRESH_TIMEOUT = 10000;
+
+        private volatile boolean m_alreadyNotified = false;
 
         /**
          * Waits for the completion of the PackageAdmin.refreshPackages() call. Because
