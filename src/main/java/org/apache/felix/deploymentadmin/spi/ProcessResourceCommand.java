@@ -52,10 +52,12 @@ public class ProcessResourceCommand extends Command {
      */
     public ProcessResourceCommand(CommitResourceCommand commitCommand) {
         m_commitCommand = commitCommand;
-        addRollback(m_commitCommand);
     }
 
     public void execute(DeploymentSessionImpl session) throws DeploymentException {
+        // Allow proper rollback in case the drop fails...
+        addRollback(new RollbackCommitAction(session));
+
         AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
         BundleContext context = session.getBundleContext();
 
@@ -69,6 +71,8 @@ public class ProcessResourceCommand extends Command {
         }
 
         try {
+            String allowForeignCustomerizers = System.getProperty("org.apache.felix.deploymentadmin.allowforeigncustomizers", "false");
+
         	while (!expectedResources.isEmpty()) {
             	AbstractInfo jarEntry = source.getNextEntry();
             	if (jarEntry == null) {
@@ -85,8 +89,7 @@ public class ProcessResourceCommand extends Command {
                 ServiceReference ref = source.getResourceProcessor(name);
                 if (ref != null) {
                     String serviceOwnerSymName = ref.getBundle().getSymbolicName();
-                    String allowForeignCustomerizers = System.getProperty("org.apache.felix.deploymentadmin.allowforeigncustomizers", "false");
-                    if (source.getBundleInfoByName(serviceOwnerSymName) != null || allowForeignCustomerizers.equals("true")) {
+                    if (source.getBundleInfoByName(serviceOwnerSymName) != null || "true".equals(allowForeignCustomerizers)) {
                         ResourceProcessor resourceProcessor = (ResourceProcessor) context.getService(ref);
                         if (resourceProcessor != null) {
                             try {
@@ -121,5 +124,16 @@ public class ProcessResourceCommand extends Command {
             throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Problem while reading stream", e);
         }
     }
-
+    
+    private class RollbackCommitAction implements Runnable {
+        private final DeploymentSessionImpl m_session; 
+        
+        public RollbackCommitAction(DeploymentSessionImpl session) {
+            m_session = session;
+        }
+        
+        public void run() {
+            m_commitCommand.rollback(m_session);
+        }
+    }
 }

@@ -64,8 +64,8 @@ public class SnapshotCommand extends Command {
                     try {
                         snapshot.createNewFile();
                         store(root, snapshot);
-                        addRollback(new RestoreSnapshotRunnable(snapshot, root));
-                        addCommit(new DeleteSnapshotRunnable(snapshot));
+                        addRollback(new RestoreSnapshotRunnable(session, snapshot, root));
+                        addCommit(new DeleteSnapshotRunnable(session, snapshot));
                     }
                     catch (IOException e) {
                         snapshot.delete();
@@ -74,18 +74,6 @@ public class SnapshotCommand extends Command {
                     session.getLog().log(LogService.LOG_WARNING, "Could not retrieve storage area of bundle '" + bundle.getSymbolicName() + "', skipping it.");
                 }
             }
-        }
-    }
-
-    private void delete(File root, boolean deleteRoot) {
-        if (root.isDirectory()) {
-            File[] childs = root.listFiles();
-            for (int i = 0; i < childs.length; i++) {
-                delete(childs[i], true);
-            }
-        }
-        if (deleteRoot) {
-            root.delete();
         }
     }
 
@@ -142,68 +130,29 @@ public class SnapshotCommand extends Command {
         }
     }
 
-    private void unpack(File source, File target) throws IOException {
-        ZipInputStream input = null;
-        try {
-            input = new ZipInputStream(new FileInputStream(source));
-            for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry()) {
-                if (entry.isDirectory()) {
-                    (new File(target, entry.getName())).mkdirs();
-                }
-                else {
-                    OutputStream output = null;
-                    try {
-                        output = new FileOutputStream(target);
-                        byte[] buffer = new byte[4096];
-                        for (int i = input.read(buffer); i > -1; i = input.read(buffer)) {
-                            output.write(buffer, 0, i);
-                        }
-                    }
-                    finally {
-                        if (output != null) {
-                            try {
-                                output.close();
-                            }
-                            catch (Exception ex) {
-                                // Not much we can do
-                            }
-                        }
-                    }
-                }
-                input.closeEntry();
-            }
-        }
-        finally {
-            if (input != null) {
-                try {
-                    input.close();
-                }
-                catch (Exception ex) {
-                    // Not much we can do
-                }
-            }
-        }
-    }
-
-    class DeleteSnapshotRunnable implements Runnable {
-
+    private static class DeleteSnapshotRunnable implements Runnable {
+        private final DeploymentSessionImpl m_session;
         private final File m_snapshot;
 
-        private DeleteSnapshotRunnable(File snapshot) {
+        private DeleteSnapshotRunnable(DeploymentSessionImpl session, File snapshot) {
+            m_session = session;
             m_snapshot = snapshot;
         }
 
         public void run() {
-            m_snapshot.delete();
+            if (!m_snapshot.delete()) {
+                m_session.getLog().log(LogService.LOG_WARNING, "Failed to delete snapshot in " + m_snapshot + "!");
+            }
         }
     }
 
-    private class RestoreSnapshotRunnable implements Runnable {
-
+    private static class RestoreSnapshotRunnable implements Runnable {
+        private final DeploymentSessionImpl m_session;
         private final File m_snapshot;
         private final File m_root;
 
-        private RestoreSnapshotRunnable(File snapshot, File root) {
+        private RestoreSnapshotRunnable(DeploymentSessionImpl session, File snapshot, File root) {
+            m_session = session;
             m_snapshot = snapshot;
             m_root = root;
         }
@@ -214,11 +163,66 @@ public class SnapshotCommand extends Command {
                 unpack(m_snapshot, m_root);
             }
             catch (Exception ex) {
-                // TODO: log this
+                m_session.getLog().log(LogService.LOG_WARNING, "Failed to restore snapshot!", ex);
             }
             finally {
                 m_snapshot.delete();
             }
         }
-    }
+
+        private void delete(File root, boolean deleteRoot) {
+            if (root.isDirectory()) {
+                File[] childs = root.listFiles();
+                for (int i = 0; i < childs.length; i++) {
+                    delete(childs[i], true);
+                }
+            }
+            if (deleteRoot) {
+                root.delete();
+            }
+        }
+
+        private void unpack(File source, File target) throws IOException {
+            ZipInputStream input = null;
+            try {
+                input = new ZipInputStream(new FileInputStream(source));
+                for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry()) {
+                    if (entry.isDirectory()) {
+                        (new File(target, entry.getName())).mkdirs();
+                    }
+                    else {
+                        OutputStream output = null;
+                        try {
+                            output = new FileOutputStream(target);
+                            byte[] buffer = new byte[4096];
+                            for (int i = input.read(buffer); i > -1; i = input.read(buffer)) {
+                                output.write(buffer, 0, i);
+                            }
+                        }
+                        finally {
+                            if (output != null) {
+                                try {
+                                    output.close();
+                                }
+                                catch (Exception ex) {
+                                    // Not much we can do
+                                }
+                            }
+                        }
+                    }
+                    input.closeEntry();
+                }
+            }
+            finally {
+                if (input != null) {
+                    try {
+                        input.close();
+                    }
+                    catch (Exception ex) {
+                        // Not much we can do
+                    }
+                }
+            }
+        }
+   }
 }

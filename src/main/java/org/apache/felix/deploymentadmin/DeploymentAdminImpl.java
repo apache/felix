@@ -68,7 +68,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
     private volatile PackageAdmin m_packageAdmin;   /* will be injected by dependencymanager */
     private volatile EventAdmin m_eventAdmin;       /* will be injected by dependencymanager */
     private volatile LogService m_log;              /* will be injected by dependencymanager */
-    private DeploymentSessionImpl m_session = null;
+    private volatile DeploymentSessionImpl m_session = null;
     private final Map m_packages = new HashMap();
     private final List m_commandChain = new ArrayList();
     private final Semaphore m_semaphore = new Semaphore();
@@ -121,8 +121,9 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
     }
 
     public boolean cancel() {
-        if (m_session != null) {
-            m_session.cancel();
+        DeploymentSessionImpl session = m_session;
+        if (session != null) {
+            session.cancel();
             return true;
         }
         return false;

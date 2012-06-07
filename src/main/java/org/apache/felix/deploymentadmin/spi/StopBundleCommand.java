@@ -38,6 +38,8 @@ import org.osgi.service.log.LogService;
 public class StopBundleCommand extends Command {
 
     public void execute(DeploymentSessionImpl session) throws DeploymentException {
+        String stopUnaffectedBundle = System.getProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", "true");
+        
         AbstractDeploymentPackage target = session.getTargetAbstractDeploymentPackage();
         BundleInfo[] bundleInfos = target.getOrderedBundleInfos();
         for (int i = 0; i < bundleInfos.length; i++) {
@@ -47,11 +49,10 @@ public class StopBundleCommand extends Command {
             String symbolicName = bundleInfos[i].getSymbolicName();
 			Bundle bundle = target.getBundle(symbolicName);
             if (bundle != null) {
-            	String stopUnaffectedBundle = System.getProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", "true");
-        		if (stopUnaffectedBundle.equalsIgnoreCase("false") && omitBundleStop(session, symbolicName)) {
+        		if ("false".equalsIgnoreCase(stopUnaffectedBundle) && omitBundleStop(session, symbolicName)) {
         			continue;
         		}
-                addRollback(new StartBundleRunnable(bundle));
+                addRollback(new StartBundleRunnable(session, bundle));
                 try {
                     bundle.stop();
                 }
@@ -87,11 +88,12 @@ public class StopBundleCommand extends Command {
 		return result;
 	}
 
-	private class StartBundleRunnable implements Runnable {
-
+	private static class StartBundleRunnable implements Runnable {
+        private final DeploymentSessionImpl m_session;
         private final Bundle m_bundle;
 
-        public StartBundleRunnable(Bundle bundle) {
+        public StartBundleRunnable(DeploymentSessionImpl session, Bundle bundle) {
+            m_session = session;
             m_bundle = bundle;
         }
 
@@ -100,11 +102,9 @@ public class StopBundleCommand extends Command {
                 m_bundle.start();
             }
             catch (BundleException e) {
-                // TODO: log this
-                e.printStackTrace();
+                m_session.getLog().log(LogService.LOG_WARNING, "Failed to start bundle '" + m_bundle.getSymbolicName() + "'", e);
             }
         }
-
     }
 }
 

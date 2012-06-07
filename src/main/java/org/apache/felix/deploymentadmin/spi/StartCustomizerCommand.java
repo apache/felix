@@ -27,6 +27,7 @@ import org.apache.felix.deploymentadmin.BundleInfoImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.service.deploymentadmin.DeploymentException;
+import org.osgi.service.log.LogService;
 
 /**
  * Command that starts all customizer bundles defined in the source deployment packages of a deployment
@@ -38,11 +39,13 @@ public class StartCustomizerCommand extends Command {
     public void execute(DeploymentSessionImpl session) throws DeploymentException {
         AbstractDeploymentPackage target = session.getTargetAbstractDeploymentPackage();
         AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
+
         Set bundles = new HashSet();
         Set sourceBundlePaths = new HashSet();
+
         BundleInfoImpl[] targetInfos = target.getBundleInfoImpls();
         BundleInfoImpl[] sourceInfos = source.getBundleInfoImpls();
-        for(int i = 0; i < sourceInfos.length; i++) {
+        for (int i = 0; i < sourceInfos.length; i++) {
             if (sourceInfos[i].isCustomizer()) {
                 sourceBundlePaths.add(sourceInfos[i].getPath());
                 Bundle bundle = source.getBundle(sourceInfos[i].getSymbolicName());
@@ -51,7 +54,8 @@ public class StartCustomizerCommand extends Command {
                 }
             }
         }
-        for(int i = 0; i < targetInfos.length; i++) {
+
+        for (int i = 0; i < targetInfos.length; i++) {
             if (targetInfos[i].isCustomizer() && !sourceBundlePaths.contains(targetInfos[i].getPath())) {
                 Bundle bundle = target.getBundle(targetInfos[i].getSymbolicName());
                 if (bundle != null) {
@@ -59,7 +63,8 @@ public class StartCustomizerCommand extends Command {
                 }
             }
         }
-        for(Iterator i = bundles.iterator(); i.hasNext(); ) {
+
+        for (Iterator i = bundles.iterator(); i.hasNext();) {
             Bundle bundle = (Bundle) i.next();
             try {
                 bundle.start();
@@ -67,15 +72,16 @@ public class StartCustomizerCommand extends Command {
             catch (BundleException be) {
                 throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not start customizer bundle '" + bundle.getSymbolicName() + "'", be);
             }
-            addRollback(new StopCustomizerRunnable(bundle));
+            addRollback(new StopCustomizerRunnable(session, bundle));
         }
     }
 
     private static class StopCustomizerRunnable implements Runnable {
-
+        private final DeploymentSessionImpl m_session;
         private final Bundle m_bundle;
 
-        public StopCustomizerRunnable(Bundle bundle) {
+        public StopCustomizerRunnable(DeploymentSessionImpl session, Bundle bundle) {
+            m_session = session;
             m_bundle = bundle;
         }
 
@@ -84,10 +90,8 @@ public class StartCustomizerCommand extends Command {
                 m_bundle.stop();
             }
             catch (BundleException e) {
-                // TODO log this
-                e.printStackTrace();
+                m_session.getLog().log(LogService.LOG_WARNING, "Failed to stop bundle '" + m_bundle.getSymbolicName() + "'", e);
             }
         }
-
     }
 }

@@ -79,7 +79,7 @@ public class DeploymentSessionImpl implements DeploymentSession {
             }
         }
         for (Iterator i = m_commands.iterator(); i.hasNext();) {
-            ((Command) i.next()).commit();
+            ((Command) i.next()).commit(this);
         }
         m_currentCommand = null;
     }
@@ -87,7 +87,7 @@ public class DeploymentSessionImpl implements DeploymentSession {
     private void rollback(List executedCommands) {
         for (ListIterator i = executedCommands.listIterator(executedCommands.size()); i.hasPrevious();) {
             Command command = (Command) i.previous();
-            command.rollback();
+            command.rollback(this);
         }
     }
 
@@ -98,10 +98,13 @@ public class DeploymentSessionImpl implements DeploymentSession {
      */
     public boolean cancel() {
         m_cancelled = true;
-        if (m_currentCommand != null) {
-            m_currentCommand.cancel();
+
+        Command currentCommand = m_currentCommand;
+        if (currentCommand != null) {
+            currentCommand.cancel();
             return true;
         }
+
         return false;
     }
 

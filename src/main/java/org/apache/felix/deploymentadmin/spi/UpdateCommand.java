@@ -51,7 +51,7 @@ public class UpdateCommand extends Command {
         AbstractInfo[] bundleInfos = (AbstractInfo[]) source.getBundleInfos();
         for (int i = 0; i < bundleInfos.length; i++) {
             AbstractInfo bundleInfo = bundleInfos[i];
-            if(!bundleInfo.isMissing()) {
+            if (!bundleInfo.isMissing()) {
                 expectedBundles.put(bundleInfo.getPath(), bundleInfo);
             }
         }
@@ -91,7 +91,7 @@ public class UpdateCommand extends Command {
                     }
                     throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not install new bundle '" + name + "'", be);
                 }
-                if (!bundle.getSymbolicName().equals(bundleInfo.getSymbolicName()) || !Version.parseVersion((String)bundle.getHeaders().get(org.osgi.framework.Constants.BUNDLE_VERSION)).equals(bundleInfo.getVersion())) {
+                if (!bundle.getSymbolicName().equals(bundleInfo.getSymbolicName()) || !Version.parseVersion((String) bundle.getHeaders().get(org.osgi.framework.Constants.BUNDLE_VERSION)).equals(bundleInfo.getVersion())) {
                     throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Installed/updated bundle version and/or symbolicnames do not match what was installed/updated");
                 }
             }
@@ -102,7 +102,6 @@ public class UpdateCommand extends Command {
     }
 
     private static class UninstallBundleRunnable implements Runnable {
-
         private final Bundle m_bundle;
         private final LogService m_log;
 
@@ -122,7 +121,6 @@ public class UpdateCommand extends Command {
     }
 
     private static class UpdateBundleRunnable implements Runnable {
-
         private final AbstractDeploymentPackage m_targetPackage;
         private final Bundle m_bundle;
         private final LogService m_log;
@@ -137,15 +135,16 @@ public class UpdateCommand extends Command {
             InputStream is = null;
             try {
                 is = m_targetPackage.getBundleStream(m_bundle.getSymbolicName());
-                if(is != null){
-                    m_bundle.update(is);                    
+                if (is != null) {
+                    m_bundle.update(is);
                 }
                 throw new Exception("Unable to get Inputstream for bundle " + m_bundle.getSymbolicName());
             }
             catch (Exception e) {
                 m_log.log(LogService.LOG_WARNING, "Could not rollback update of bundle '" + m_bundle.getSymbolicName() + "'", e);
-            } finally {
-                if(is != null){
+            }
+            finally {
+                if (is != null) {
                     try {
                         is.close();
                     }
@@ -185,5 +184,4 @@ public class UpdateCommand extends Command {
             }
         }
     }
-
 }

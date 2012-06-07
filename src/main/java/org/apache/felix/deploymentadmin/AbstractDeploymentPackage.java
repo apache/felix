@@ -41,9 +41,61 @@ import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
  * deployment package data is obtained, this should be handled by extending classes.
  */
 public abstract class AbstractDeploymentPackage implements DeploymentPackage {
-    private static final String[] STRINGS = new String[] {};
-    private static final ResourceInfoImpl[] RESOURCE_INFO_IMPLS = new ResourceInfoImpl[] {};
-    private static final BundleInfoImpl[] BUNDLE_INFO_IMPLS = new BundleInfoImpl[] {};
+    /**
+     * Represents an empty deployment package.
+     */
+    private static final class EmptyDeploymentPackage extends AbstractDeploymentPackage {
+        private static final String[] STRINGS = new String[] {};
+        private static final ResourceInfoImpl[] RESOURCE_INFO_IMPLS = new ResourceInfoImpl[] {};
+        private static final BundleInfoImpl[] BUNDLE_INFO_IMPLS = new BundleInfoImpl[] {};
+
+        public String getHeader(String header) {
+            if (Constants.DEPLOYMENTPACKAGE_SYMBOLICMAME.equals(header)) { return ""; }
+            else if (Constants.DEPLOYMENTPACKAGE_VERSION.equals(header)) { return Version.emptyVersion.toString(); }
+            else { return null; }
+        }
+
+        public Bundle getBundle(String symbolicName) { return null; }
+
+        public BundleInfo[] getBundleInfos() { return BUNDLE_INFO_IMPLS; }
+
+        public BundleInfoImpl[] getBundleInfoImpls() { return BUNDLE_INFO_IMPLS; }
+
+        public ResourceInfoImpl[] getResourceInfos() { return RESOURCE_INFO_IMPLS; }
+
+        public String getName() { return ""; }
+
+        public String getResourceHeader(String resource, String header) { return null; }
+
+        public ServiceReference getResourceProcessor(String resource) { return null; }
+
+        public String[] getResources() { return STRINGS; }
+
+        public Version getVersion() { return Version.emptyVersion; }
+
+        public boolean isStale() { return true; }
+
+        public void uninstall() throws DeploymentException { throw new IllegalStateException("Can not uninstall stale DeploymentPackage"); }
+
+        public boolean uninstallForced() throws DeploymentException { throw new IllegalStateException("Can not uninstall stale DeploymentPackage"); }
+
+        public InputStream getBundleStream(String symbolicName) throws IOException { return null; }
+
+        public BundleInfoImpl[] getOrderedBundleInfos() { return BUNDLE_INFO_IMPLS; }
+
+        public ResourceInfoImpl[] getOrderedResourceInfos() { return RESOURCE_INFO_IMPLS; }
+
+        public InputStream getCurrentEntryStream() { throw new UnsupportedOperationException(); }
+
+        public AbstractInfo getNextEntry() throws IOException { throw new UnsupportedOperationException(); }
+
+        public String getDisplayName() { return ""; }
+
+        public URL getIcon() { return null; }
+    }
+
+    protected static final AbstractDeploymentPackage EMPTY_PACKAGE = new EmptyDeploymentPackage();
+
     private final BundleContext m_bundleContext;
     private final DeploymentAdminImpl m_deploymentAdmin;
     private final DeploymentPackageManifest m_manifest;
@@ -54,33 +106,7 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
     private final String[] m_resourcePaths;
     private final boolean m_isFixPackage;
     private boolean m_isStale;
-    protected static final AbstractDeploymentPackage EMPTY_PACKAGE = new AbstractDeploymentPackage() {
-        public String getHeader(String header) {
-            if (Constants.DEPLOYMENTPACKAGE_SYMBOLICMAME.equals(header)) { return ""; }
-            else if (Constants.DEPLOYMENTPACKAGE_VERSION.equals(header)) { return Version.emptyVersion.toString(); }
-            else { return null; }
-        }
-        public Bundle getBundle(String symbolicName) { return null; }
-        public BundleInfo[] getBundleInfos() { return BUNDLE_INFO_IMPLS; }
-        public BundleInfoImpl[] getBundleInfoImpls() { return BUNDLE_INFO_IMPLS; }
-        public ResourceInfoImpl[] getResourceInfos() { return RESOURCE_INFO_IMPLS; }
-        public String getName() { return ""; }
-        public String getResourceHeader(String resource, String header) { return null; }
-        public ServiceReference getResourceProcessor(String resource) { return null; }
-        public String[] getResources() { return STRINGS; }
-        public Version getVersion() { return Version.emptyVersion; }
-        public boolean isStale() { return true; }
-        public void uninstall() throws DeploymentException { throw new IllegalStateException("Can not uninstall stale DeploymentPackage"); }
-        public boolean uninstallForced() throws DeploymentException { throw new IllegalStateException("Can not uninstall stale DeploymentPackage"); }
-        public InputStream getBundleStream(String symbolicName) throws IOException { return null; }
-        public BundleInfoImpl[] getOrderedBundleInfos() { return BUNDLE_INFO_IMPLS; }
-        public ResourceInfoImpl[] getOrderedResourceInfos() { return RESOURCE_INFO_IMPLS; }
-        public InputStream getCurrentEntryStream() { throw new UnsupportedOperationException(); }
-        public AbstractInfo getNextEntry() throws IOException { throw new UnsupportedOperationException(); }
-        public String getDisplayName() { return ""; }
-        public URL getIcon() { return null; }
-    };
-
+    
     /* Constructor only for use by the emptyPackage static variable */
     private AbstractDeploymentPackage() {
         m_bundleContext = null;
@@ -215,7 +241,6 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
                     else {
                     	return null;
                     }
-                    
                 }
                 catch (InvalidSyntaxException e) {
                 	// TODO: log this
