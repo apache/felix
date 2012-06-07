@@ -26,9 +26,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class PersistencyManager {
 	
@@ -129,15 +127,5 @@ public class PersistencyManager {
 			}
 		}
 		return resources;
-	}
-	
-	/**
-	 * Loads all stored resources.
-	 * 
-	 * @return A map containing all persisted resources which is typed <String, List<AutoConfResource>>
-	 * @throws IOException If not all resources could be loaded.
-	 */
-	public Map loadAll() throws IOException {
-		return new HashMap();
 	}
 }

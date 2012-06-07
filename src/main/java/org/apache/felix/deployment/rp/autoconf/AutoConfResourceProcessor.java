@@ -216,16 +216,6 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
         		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Can not drop all resources without a Deployment Session");
         	}
         }
-    	try {
-    		Map loadAll = m_persistencyManager.loadAll();
-    		for (Iterator i = loadAll.keySet().iterator(); i.hasNext();) {
-    			String name = (String) i.next();
-    			dropped(name);
-    		}
-    	}
-    	catch (IOException ioe) {
-    		throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Unable to drop all resources.", ioe);
-    	}
 
     	File basedir = m_bc.getDataFile("");
     	if (basedir != null && basedir.isDirectory()) {
