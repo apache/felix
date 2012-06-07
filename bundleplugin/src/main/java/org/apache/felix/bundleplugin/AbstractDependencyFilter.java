@@ -66,7 +66,7 @@ public abstract class AbstractDependencyFilter
 
         public DependencyFilter( String expression, String defaultValue )
         {
-            m_instruction = Instruction.getPattern( expression );
+            m_instruction = new Instruction( expression );
             m_defaultValue = defaultValue;
         }
 

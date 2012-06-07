@@ -55,15 +55,43 @@
      <target>1.5</target>
     </configuration>
    </plugin>
+<!--
+ | vvvvvvvv TEMP vvvvvvvv
+-->
+   <plugin>
+    <groupId>org.apache.rat</groupId>
+    <artifactId>apache-rat-plugin</artifactId>
+    <configuration>
+     <excludes>
+      <exclude>src/main/java/aQute/**</exclude>
+     </excludes>
+    </configuration>
+   </plugin>
+<!--
+ | ^^^^^^^^ TEMP ^^^^^^^^
+-->
   </plugins>
  </build>
 
  <dependencies>
+<!--
   <dependency>
     <groupId>biz.aQute</groupId>
     <artifactId>bndlib</artifactId>
     <version>1.50.0</version>
   </dependency>
+-->
+<!--
+ | vvvvvvvv TEMP vvvvvvvv
+-->
+  <dependency>
+    <groupId>org.osgi</groupId>
+    <artifactId>org.osgi.compendium</artifactId>
+    <version>4.3.0</version>
+  </dependency>
+<!--
+ | ^^^^^^^^ TEMP ^^^^^^^^
+-->
   <dependency>
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.bundlerepository</artifactId>
