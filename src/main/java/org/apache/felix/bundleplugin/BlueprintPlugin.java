@@ -41,6 +41,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import aQute.bnd.service.AnalyzerPlugin;
 import aQute.lib.osgi.Analyzer;
+import aQute.lib.osgi.Descriptors.PackageRef;
 import aQute.lib.osgi.Jar;
 import aQute.lib.osgi.Processor;
 import aQute.lib.osgi.Resource;
@@ -74,7 +75,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
         Set<String> headers = Create.set();
 
         String bpHeader = analyzer.getProperty( "Bundle-Blueprint", "OSGI-INF/blueprint" );
-        Map<String, Map<String, String>> map = Processor.parseHeader( bpHeader, null );
+        Map<String, ? extends Map<String, String>> map = Processor.parseHeader( bpHeader, null );
         for ( String root : map.keySet() )
         {
             Jar jar = analyzer.getJar();
@@ -138,9 +139,10 @@ public class BlueprintPlugin implements AnalyzerPlugin
                             continue;
                         }
                     }
-                    if ( !analyzer.getReferred().containsKey( pkg ) )
+                    PackageRef pkgRef = analyzer.getPackageRef( pkg );
+                    if ( !analyzer.getReferred().containsKey( pkgRef ) )
                     {
-                        analyzer.getReferred().put( pkg, a.getProperties() );
+                        analyzer.getReferred().put( pkgRef ).putAll( a.getProperties() );
                     }
                 }
             }
