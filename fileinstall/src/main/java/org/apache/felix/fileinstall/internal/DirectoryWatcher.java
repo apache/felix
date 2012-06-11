@@ -674,11 +674,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
      */
     void refresh(Bundle[] bundles)
     {
-        PackageAdmin padmin = FileInstall.getPackageAdmin();
-        if (padmin != null)
-        {
-            padmin.refreshPackages(bundles);
-        }
+        FileInstall.refresh(bundles);
     }
 
     /**

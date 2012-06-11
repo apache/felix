@@ -37,9 +37,12 @@ import org.apache.felix.fileinstall.ArtifactUrlTransformer;
 import org.apache.felix.fileinstall.internal.Util.Logger;
 import org.apache.felix.utils.collections.DictionaryAsMap;
 import org.apache.felix.utils.properties.InterpolationHelper;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -56,7 +59,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * fragment).
  *
  */
-public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
+public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, FrameworkListener
 {
     static ServiceTracker padmin;
     static ServiceTracker startLevel;
@@ -68,10 +71,12 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
     ServiceTracker listenersTracker;
     static boolean initialized;
     static final Object barrier = new Object();
+    static final Object refreshLock = new Object();
 
     public void start(BundleContext context) throws Exception
     {
         this.context = context;
+        context.addFrameworkListener(this);
 
         Hashtable props = new Hashtable();
         props.put("url.handler.protocol", JarDirUrlHandler.PROTOCOL);
@@ -296,7 +301,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
         for (Iterator w = toNotify.iterator(); w.hasNext();)
         {
             DirectoryWatcher dir = (DirectoryWatcher) w.next();
-            dir.removeListener( listener );
+            dir.removeListener(listener);
         }
     }
 
@@ -308,6 +313,37 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
             Collections.reverse(l);
             l.add(bundleTransformer);
             return l;
+        }
+    }
+
+    /**
+     * Convenience to refresh the packages
+     */
+    static void refresh(Bundle[] bundles)
+    {
+        PackageAdmin padmin = getPackageAdmin();
+        if (padmin != null)
+        {
+            synchronized (refreshLock) {
+                padmin.refreshPackages(bundles);
+                try {
+                    refreshLock.wait(30000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+    public void frameworkEvent(FrameworkEvent event)
+    {
+        if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED
+                || event.getType() == FrameworkEvent.ERROR)
+        {
+            synchronized (refreshLock)
+            {
+                refreshLock.notifyAll();
+            }
         }
     }
 
