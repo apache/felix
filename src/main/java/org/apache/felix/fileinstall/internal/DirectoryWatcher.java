@@ -1259,6 +1259,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     }
 
     protected void findBundlesWithFragmentsToRefresh(Set toRefresh) {
+        Set fragments = new HashSet();
         for (Iterator iterator = toRefresh.iterator(); iterator.hasNext();) {
             Bundle b = (Bundle) iterator.next();
             if (b.getState() != Bundle.UNINSTALLED) {
@@ -1275,10 +1276,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
                                 if (ver != null) {
                                     VersionRange v = VersionRange.parseVersionRange(ver);
                                     if (v.contains(VersionTable.getVersion((String) hostBundle.getHeaders().get(Constants.BUNDLE_VERSION)))) {
-                                        toRefresh.add(hostBundle);
+                                        fragments.add(hostBundle);
                                     }
                                 } else {
-                                    toRefresh.add(hostBundle);
+                                    fragments.add(hostBundle);
                                 }
                             }
                         }
@@ -1286,6 +1287,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 }
             }
         }
+        toRefresh.addAll(fragments);
     }
 
     protected void findBundlesWithOptionalPackagesToRefresh(Set toRefresh) {
