@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-import junit.framework.TestCase;
-
+import org.apache.felix.cm.integration.helper.SynchronousTestListener;
+import org.apache.felix.cm.integration.helper.TestListener;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -41,13 +41,8 @@ import org.osgi.service.cm.ConfigurationListener;
 
 
 @RunWith(JUnit4TestRunner.class)
-public class FELIX2813_ConfigurationAdminStartupTest extends ConfigurationTestBase implements ServiceListener,
-    ConfigurationListener
+public class FELIX2813_ConfigurationAdminStartupTest extends ConfigurationTestBase implements ServiceListener
 {
-
-    private Object lock = new Object();
-    private boolean eventSeen;
-
 
     @Test
     public void testAddConfigurationWhenConfigurationAdminStarts() throws InvalidSyntaxException, BundleException
@@ -64,12 +59,12 @@ public class FELIX2813_ConfigurationAdminStartupTest extends ConfigurationTestBa
             }
         }
 
-        bundleContext.registerService( ConfigurationListener.class.getName(), this, null );
+        final TestListener listener = new TestListener();
+        bundleContext.registerService( ConfigurationListener.class.getName(), listener, null );
+        final TestListener syncListener = new SynchronousTestListener();
+        bundleContext.registerService( ConfigurationListener.class.getName(), syncListener, null );
         bundleContext.addServiceListener( this, "(" + Constants.OBJECTCLASS + "=" + ConfigurationAdmin.class.getName()
             + ")" );
-
-        // ensure we do not have a false positive below
-        eventSeen = false;
 
         for ( Bundle bundle : bundles )
         {
@@ -97,26 +92,9 @@ public class FELIX2813_ConfigurationAdminStartupTest extends ConfigurationTestBa
          * assumed to have failed. This will rather generate false negatives
          * (on slow machines) than false positives.
          */
-        synchronized ( lock )
-        {
-            if ( !eventSeen )
-            {
-                try
-                {
-                    lock.wait( 2000 );
-                }
-                catch ( InterruptedException ie )
-                {
-                    // don't care ...
-                }
-            }
-
-            if ( !eventSeen )
-            {
-                TestCase.fail( "ConfigurationEvent not received within 2 seconds since bundle start" );
-            }
-        }
-
+        delay();
+        listener.assertEvent( ConfigurationEvent.CM_UPDATED, "test", null, true, 1 );
+        syncListener.assertEvent( ConfigurationEvent.CM_UPDATED, "test", null, false, 1 );
     }
 
 
@@ -135,19 +113,6 @@ public class FELIX2813_ConfigurationAdminStartupTest extends ConfigurationTestBa
             }
             catch ( IOException e )
             {
-            }
-        }
-    }
-
-
-    public void configurationEvent( ConfigurationEvent event )
-    {
-        if ( "test".equals( event.getPid() ) )
-        {
-            synchronized ( lock )
-            {
-                eventSeen = true;
-                lock.notifyAll();
             }
         }
     }

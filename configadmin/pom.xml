@@ -32,7 +32,7 @@
 
     <name>Apache Felix Configuration Admin Service</name>
     <description>
-        Implementation of the OSGi Configuration Admin Service Specification 1.4
+        Implementation of the OSGi Configuration Admin Service Specification 1.5
     </description>
 
     <scm>
@@ -74,8 +74,11 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-    </properties>
 
+        <felix.build.source>5</felix.build.source>
+        <felix.build.target>5</felix.build.target>
+        <felix.java.signature.artifactId>java15</felix.java.signature.artifactId>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -156,19 +159,23 @@
                             <!-- just list, version from package-info classes -->
                             org.apache.felix.cm;
                             org.apache.felix.cm.file,
-                            org.osgi.service.cm;provide:=true
+                            org.osgi.service.cm;provide:=true;version=1.5;-split-package:=merge-first
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.cm.impl,
                             org.osgi.util.tracker
                         </Private-Package>
+                        <Import-Package>
+                            org.osgi.service.cm;version="[1.5,1.6)",
+                            *
+                        </Import-Package>
                         <DynamicImport-Package>
                             <!-- overwrite version from compendium bundle -->
                             org.osgi.service.log;version="1.3"
                         </DynamicImport-Package>
 						<Export-Service>
 							org.osgi.service.cm.ConfigurationAdmin;
-								service.description="Configuration Admin Service Specification 1.4 Implementation";
+								service.description="Configuration Admin Service Specification 1.5 Implementation";
 								service.pid="org.osgi.service.cm.ConfigurationAdmin";
 								service.vendor="Apache Software Foundation",
 							org.apache.felix.cm.PersistenceManager;
