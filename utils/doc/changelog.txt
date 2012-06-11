@@ -1,3 +1,13 @@
+Changes from 1.1.4 to 1.2.0
+---------------------------
+
+** Improvement
+    * Variables are not preserved during write-back if they are
+      defined as framework properties
+
+** New features
+    * Add a BaseManagedServiceFactory to help writing such factories
+
 Changes from 1.1.2 to 1.1.0
 ---------------------------
 
