@@ -41,6 +41,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.osgi.framework.BundleContext;
+
 /**
  * <p>
  * Enhancement of the standard <code>Properties</code>
@@ -84,12 +86,18 @@ public class Properties extends AbstractMap<String, String> {
     private List<String> header;
     private List<String> footer;
     private File location;
+    private BundleContext context;
 
     public Properties() {
     }
 
     public Properties(File location) throws IOException {
+      this(location, null);
+    }
+
+    public Properties(File location, BundleContext context) throws IOException {
         this.location = location;
+        this.context = context;
         if(location.exists())
             load(location);
     }
@@ -339,7 +347,13 @@ public class Properties extends AbstractMap<String, String> {
                                new ArrayList<String>(reader.getValueLines())));
         }
         footer = new ArrayList<String>(reader.getCommentLines());
-        InterpolationHelper.performSubstitution(storage);
+        if(context != null)
+        {
+            InterpolationHelper.performSubstitution(storage, context);
+        }
+        else {
+            InterpolationHelper.performSubstitution(storage);
+        }
     }
 
     /**
