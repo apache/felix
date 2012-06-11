@@ -117,7 +117,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 if( file != null && file.isFile()   ) {
                     if( fileName.endsWith( ".cfg" ) )
                     {
-                        org.apache.felix.utils.properties.Properties props = new org.apache.felix.utils.properties.Properties( file );
+                        org.apache.felix.utils.properties.Properties props = new org.apache.felix.utils.properties.Properties( file, context );
                         for( Enumeration e  = dict.keys(); e.hasMoreElements(); )
                         {
                             String key = e.nextElement().toString();
