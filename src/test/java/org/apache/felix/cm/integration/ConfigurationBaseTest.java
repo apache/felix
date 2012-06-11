@@ -386,6 +386,24 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
 
     @Test
+    public void test_configuration_change_counter() throws IOException
+    {
+        // 1. create config with pid and locationA
+        // 2. update config with properties
+        final String pid = "test_configuration_change_counter";
+        final Configuration config = configure( pid, null, false );
+
+        TestCase.assertEquals("Expect first version to be 1", 1, config.getChangeCount());
+
+        config.update(new Hashtable(){{put("x", "x");}});
+        TestCase.assertEquals("Expect second version to be 2", 2, config.getChangeCount());
+
+        // delete
+        config.delete();
+    }
+
+
+    @Test
     public void test_basic_configuration_configure_then_start() throws BundleException, IOException
     {
         // 1. create config with pid and locationA

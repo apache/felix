@@ -635,6 +635,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     void fireConfigurationEvent( int type, String pid, String factoryPid )
     {
         FireConfigurationEvent event = new FireConfigurationEvent( type, pid, factoryPid );
+        event.fireSynchronousEvents();
         if ( event.hasConfigurationEventListeners() )
         {
             eventThread.schedule( event );
@@ -718,7 +719,38 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     private ServiceReference getServiceReference()
     {
         ServiceRegistration reg = configurationAdminRegistration;
-        return ( reg != null ) ? reg.getReference() : null;
+        if (reg != null) {
+            return reg.getReference();
+        }
+
+        // probably called for firing an event during service registration
+        // since we didn't get the service registration yet we use the
+        // service registry to get our service reference
+        BundleContext context = bundleContext;
+        if ( context != null )
+        {
+            try
+            {
+                ServiceReference[] refs = context.getServiceReferences( ConfigurationAdmin.class.getName(), null );
+                if ( refs != null )
+                {
+                    for ( int i = 0; i < refs.length; i++ )
+                    {
+                        if ( refs[i].getBundle().getBundleId() == context.getBundle().getBundleId() )
+                        {
+                            return refs[i];
+                        }
+                    }
+                }
+            }
+            catch ( InvalidSyntaxException e )
+            {
+                // unexpected since there is no filter
+            }
+        }
+
+        // service references
+        return null;
     }
 
 
@@ -1909,6 +1941,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private final Bundle[] listenerProvider;
 
+        private ConfigurationEvent event;
 
         private FireConfigurationEvent( final int type, final String pid, final String factoryPid)
         {
@@ -1932,6 +1965,21 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 {
                     this.listeners[i] = ( ConfigurationListener ) configurationListenerTracker.getService( srs[i] );
                     this.listenerProvider[i] = srs[i].getBundle();
+                }
+            }
+        }
+
+
+        void fireSynchronousEvents()
+        {
+            if ( hasConfigurationEventListeners() && getServiceReference() != null )
+            {
+                for ( int i = 0; i < this.listeners.length; i++ )
+                {
+                    if ( this.listeners[i] instanceof SynchronousConfigurationListener )
+                    {
+                        sendEvent( i );
+                    }
                 }
             }
         }
@@ -1961,33 +2009,50 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         public void run()
         {
-            final String typeName = getTypeName();
-            final ConfigurationEvent event = new ConfigurationEvent( getServiceReference(), type, factoryPid, pid );
-
             for ( int i = 0; i < listeners.length; i++ )
             {
-                if ( listenerProvider[i].getState() == Bundle.ACTIVE )
-                {
-                    log( LogService.LOG_DEBUG, "Sending {0} event for {1} to {2}", new Object[]
-                        { typeName, pid, ConfigurationManager.toString( listenerReferences[i] ) } );
-
-                    try
-                    {
-                        listeners[i].configurationEvent( event );
-                    }
-                    catch ( Throwable t )
-                    {
-                        log( LogService.LOG_ERROR, "Unexpected problem delivering configuration event to {0}",
-                            new Object[]
-                                { ConfigurationManager.toString( listenerReferences[i] ), t } );
-                    }
-                }
+                sendEvent( i );
             }
         }
+
 
         public String toString()
         {
             return "Fire ConfigurationEvent: pid=" + pid;
+        }
+
+
+        private ConfigurationEvent getConfigurationEvent()
+        {
+            if ( event == null )
+            {
+                this.event = new ConfigurationEvent( getServiceReference(), type, factoryPid, pid );
+            }
+            return event;
+        }
+
+
+        private void sendEvent( final int serviceIndex )
+        {
+            if ( listenerProvider[serviceIndex].getState() == Bundle.ACTIVE && this.listeners[serviceIndex] != null )
+            {
+                log( LogService.LOG_DEBUG, "Sending {0} event for {1} to {2}", new Object[]
+                    { getTypeName(), pid, ConfigurationManager.toString( listenerReferences[serviceIndex] ) } );
+
+                try
+                {
+                    listeners[serviceIndex].configurationEvent( getConfigurationEvent() );
+                }
+                catch ( Throwable t )
+                {
+                    log( LogService.LOG_ERROR, "Unexpected problem delivering configuration event to {0}", new Object[]
+                        { ConfigurationManager.toString( listenerReferences[serviceIndex] ), t } );
+                }
+                finally
+                {
+                    this.listeners[serviceIndex] = null;
+                }
+            }
         }
     }
 

@@ -132,9 +132,6 @@ public class ConfigurationAdapter implements Configuration
     }
 
 
-    /**
-     * @see org.apache.felix.cm.impl.ConfigurationImpl#getProperties()
-     */
     public Dictionary getProperties()
     {
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getProperties()", ( Throwable ) null );
@@ -144,6 +141,16 @@ public class ConfigurationAdapter implements Configuration
         // return a deep copy since the spec says, that modification of
         // any value should not modify the internal, stored value
         return delegatee.getProperties( true );
+    }
+
+
+    public long getChangeCount()
+    {
+        delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getChangeCount()", ( Throwable ) null );
+
+        checkDeleted();
+
+        return delegatee.getRevision();
     }
 
 

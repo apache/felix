@@ -24,7 +24,6 @@ import java.io.StringWriter;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -259,7 +258,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
                 ConfigurationAdmin cm = ( ConfigurationAdmin ) _tracker.waitForService( 2000 );
                 setupLatches();
                 Factory factory = new Factory();
-                Properties serviceProps = new Properties();
+                Hashtable<String, Object> serviceProps = new Hashtable<String, Object>();
                 serviceProps.put( "service.pid", _FACTORYPID );
                 _bc.registerService( ManagedServiceFactory.class.getName(), factory, serviceProps );
 
