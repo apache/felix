@@ -1236,7 +1236,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
         // Bundles can only be started transient when the start level of the framework is high
         // enough. Persistent (i.e. non-transient) starts will simply make the framework start the
         // bundle when the start level is high enough.
-        if (!isFragment(bundle) && startBundles
+        if (startBundles
+                && bundle.getState() != Bundle.UNINSTALLED
+                && !isFragment(bundle)
                 && startLevelSvc.getStartLevel() >= startLevelSvc.getBundleStartLevel(bundle))
         {
             try
