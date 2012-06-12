@@ -904,17 +904,32 @@ public abstract class DependencyModel implements TrackerCustomizer {
 
     /**
      * Gets a service object for the given reference.
+     * The service object is stored to handle custom policies.
      * @param ref the wanted service reference
      * @return the service object attached to the given reference
      */
     public Object getService(ServiceReference ref) {
+        return getService(ref, true);
+    }
+
+    /**
+     * Gets a service object for the given reference.
+     * @param ref the wanted service reference
+     * @param store enables / disables the storing of the reference.
+     * @return the service object attached to the given reference
+     */
+    public Object getService(ServiceReference ref, boolean store) {
         Object svc =  m_tracker.getService(ref);
         if (svc instanceof IPOJOServiceFactory) {
             Object obj =  ((IPOJOServiceFactory) svc).getService(m_instance);
-            m_serviceObjects.put(ref, svc); // We store the factory !
+            if (store) {
+                m_serviceObjects.put(ref, svc); // We store the factory !
+            }
             return obj;
         } else {
-            m_serviceObjects.put(ref, svc);
+            if (store) {
+                m_serviceObjects.put(ref, svc);
+            }
             return svc;
         }
     }

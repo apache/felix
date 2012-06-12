@@ -277,11 +277,11 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             if (m_callbacks[j].getMethodType() == DependencyCallback.BIND) {
                 if (isAggregate()) {
                     for (int i = 0; i < refs.length; i++) {
-                        invokeCallback(m_callbacks[j], refs[i], pojo);
+                        invokeCallback(m_callbacks[j], refs[i], getService(refs[i]), pojo);
                     }
                 } else {
                     // Take the first reference.
-                    invokeCallback(m_callbacks[j], refs[0], pojo);
+                    invokeCallback(m_callbacks[j], refs[0], getService(refs[0]), pojo);
                 }
             }
         }
@@ -295,7 +295,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         if (m_handler.getInstanceManager().getState() > InstanceManager.STOPPED && m_handler.getInstanceManager().getPojoObjects() != null) {
             for (int i = 0; m_callbacks != null && i < m_callbacks.length; i++) {
                 if (m_callbacks[i].getMethodType() == DependencyCallback.UNBIND) {
-                    invokeCallback(m_callbacks[i], ref, null); // Call on each created pojo objects.
+                    invokeCallback(m_callbacks[i], ref, getService(ref, false), null); // Call on each created pojo objects.
                 }
             }
         }
@@ -305,14 +305,15 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * Helper method calling the given callback.
      * @param callback : callback to call.
      * @param ref : service reference.
+     * @param svcObject : the service object
      * @param pojo : pojo on which calling the callback, if null call on each created pojo objects.
      */
-    private void invokeCallback(DependencyCallback callback, ServiceReference ref, Object pojo) {
+    private void invokeCallback(DependencyCallback callback, ServiceReference ref, Object svcObject, Object pojo) {
         try {
             if (pojo == null) {
-                callback.call(ref, getService(ref));
+                callback.call(ref, svcObject);
             } else {
-                callback.callOnInstance(pojo, ref, getService(ref));
+                callback.callOnInstance(pojo, ref, svcObject);
             }
         } catch (NoSuchMethodException e) {
             m_handler.error("The method " + callback.getMethodName() + " does not exist in the implementation class " + m_handler.getInstanceManager().getClassName(), e);
@@ -335,7 +336,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         if (m_handler.getInstanceManager().getState() > InstanceManager.STOPPED && m_handler.getInstanceManager().getPojoObjects() != null) {
             for (int i = 0; m_callbacks != null && i < m_callbacks.length; i++) {
                 if (m_callbacks[i].getMethodType() == DependencyCallback.MODIFIED) {
-                    invokeCallback(m_callbacks[i], ref, null); // Call on each created pojo objects.
+                    invokeCallback(m_callbacks[i], ref, getService(ref), null); // Call on each created pojo objects.
                 }
             }
         }
@@ -352,7 +353,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         if (m_handler.getInstanceManager().getState() > InstanceManager.STOPPED && m_handler.getInstanceManager().getPojoObjects() != null) {
             for (int i = 0; m_callbacks != null && i < m_callbacks.length; i++) {
                 if (m_callbacks[i].getMethodType() == DependencyCallback.BIND) {
-                    invokeCallback(m_callbacks[i], ref, null);
+                    invokeCallback(m_callbacks[i], ref, getService(ref), null);
                 }
             }
         }
@@ -736,7 +737,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * @param pojo : Pojo object
      * @param method : called method
      * @param args : arguments
-     * @see org.apache.felix.ipojo.MethodInterceptor#onEntry(java.lang.Object, java.lang.reflect.Method, java.lang.Object[])
+     * @see org.apache.felix.ipojo.MethodInterceptor#onEntry(java.lang.Object, java.lang.reflect.Member, java.lang.Object[])
      */
     public void onEntry(Object pojo, Member method, Object[] args) {
         if (m_usage != null) {
@@ -755,7 +756,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * @param pojo : POJO object.
      * @param method : Method object.
      * @param throwable : thrown error
-     * @see org.apache.felix.ipojo.MethodInterceptor#onError(java.lang.Object, java.lang.reflect.Method, java.lang.Throwable)
+     * @see org.apache.felix.ipojo.MethodInterceptor#onError(java.lang.Object, java.lang.reflect.Member, java.lang.Throwable)
      */
     public void onError(Object pojo, Member method, Throwable throwable) {
         // Nothing to do  : wait onFinally
@@ -766,7 +767,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * @param pojo : POJO object.
      * @param method : Method object.
      * @param returnedObj : returned object (null for void method)
-     * @see org.apache.felix.ipojo.MethodInterceptor#onExit(java.lang.Object, java.lang.reflect.Method, java.lang.Object)
+     * @see org.apache.felix.ipojo.MethodInterceptor#onExit(java.lang.Object, java.lang.reflect.Member, java.lang.Object)
      */
     public void onExit(Object pojo, Member method, Object returnedObj) {
         // Nothing to do  : wait onFinally
@@ -776,7 +777,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * A POJO method is finished.
      * @param pojo : POJO object.
      * @param method : Method object.
-     * @see org.apache.felix.ipojo.MethodInterceptor#onFinally(java.lang.Object, java.lang.reflect.Method)
+     * @see org.apache.felix.ipojo.MethodInterceptor#onFinally(java.lang.Object, java.lang.reflect.Member)
      */
     public void onFinally(Object pojo, Member method) {
         if (m_usage != null) {
@@ -1062,7 +1063,5 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             return null;
         }
     }
-
-
 
 }
