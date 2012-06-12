@@ -63,7 +63,7 @@
     <artifactId>apache-rat-plugin</artifactId>
     <configuration>
      <excludes>
-      <exclude>src/main/java/aQute/**</exclude>
+      <exclude>src/main/*/aQute/**</exclude>
      </excludes>
     </configuration>
    </plugin>
