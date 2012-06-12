@@ -1,3 +1,13 @@
+Version 3.2.4
+-------------
+** Bug
+    * [FELIX-3414] - BundleException: Unable to acquire global lock for resolve
+    * [FELIX-3416] - ConcurrentModificationException in DirectoryWatcher.findBundlesWithFragmentsToRefresh
+    * [FELIX-3493] - PackageAdminImpl thorws NPE - File Install does not handle a bundle uninstall gracefully
+
+** Improvement
+    * [FELIX-3487] - Variables are not preserved during write-back if they are defined as framework properties
+
 Version 3.2.2
 -------------
 ** Bug
