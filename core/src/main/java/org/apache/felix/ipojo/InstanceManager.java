@@ -23,12 +23,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.felix.ipojo.architecture.InstanceDescription;
 import org.apache.felix.ipojo.metadata.Element;
@@ -152,7 +147,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * The Map storing the Method objects by ids.
      * [id=>{@link Method}].
      */
-    private Map m_methods = new HashMap();
+    private Map m_methods = new Hashtable();
 
 
     /**
@@ -1155,15 +1150,13 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @return the method object or <code>null</code> if the method cannot be found.
      */
     private Member getMethodById(String methodId) {
-        // Not necessary synchronized as recomputing the methodID will give the same Method twice.
+        // Used a synchronized map.
         Member member = (Member) m_methods.get(methodId);
         if (member == null  && m_clazz != null) {
-
             // First try on methods.
             Method[] mets = m_clazz.getDeclaredMethods();
             for (int i = 0; i < mets.length; i++) {
-                // Check if the method was not already computed. If not, compute the Id and check.
-                if (!m_methods.containsValue(mets[i]) && (MethodMetadata.computeMethodId(mets[i]).equals(methodId))) {
+                if (MethodMetadata.computeMethodId(mets[i]).equals(methodId)) {
                     // Store the new methodId
                     m_methods.put(methodId, mets[i]);
                     return mets[i];
@@ -1175,7 +1168,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 Constructor[] constructors = m_clazz.getDeclaredConstructors();
                 for (int i = 0; i < constructors.length; i++) {
                     // Check if the constructor was not already computed. If not, compute the Id and check.
-                    if (!m_methods.containsValue(constructors[i]) && (MethodMetadata.computeMethodId(constructors[i]).equals(methodId))) {
+                    if (MethodMetadata.computeMethodId(constructors[i]).equals(methodId)) {
                         // Store the new methodId
                         m_methods.put(methodId, constructors[i]);
                         return constructors[i];
@@ -1183,7 +1176,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 }
             }
 
-            // Cannot happen
+            // Should not happen
             m_logger.log(Logger.INFO, "A methodID cannot be associated with a method from the POJO class: " + methodId);
             return null;
         } else {
