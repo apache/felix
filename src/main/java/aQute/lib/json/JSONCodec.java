@@ -53,6 +53,9 @@ public class JSONCodec {
 	private static FileHandler						fh					= new FileHandler();
 	private static ByteArrayHandler					byteh				= new ByteArrayHandler();
 
+	boolean ignorenull;
+	
+
 	/**
 	 * Create a new Encoder with the state and appropriate API.
 	 * 
@@ -147,7 +150,7 @@ public class JSONCodec {
 
 			if (Enum.class.isAssignableFrom(clazz))
 				h = new EnumHandler(clazz);
-			else if (Collection.class.isAssignableFrom(clazz)) // A Non Generic
+			else if (Iterable.class.isAssignableFrom(clazz)) // A Non Generic
 																// collection
 
 				h = dch;
@@ -188,7 +191,7 @@ public class JSONCodec {
 				Type rawType = pt.getRawType();
 				if (rawType instanceof Class) {
 					Class<?> rawClass = (Class<?>) rawType;
-					if (Collection.class.isAssignableFrom(rawClass))
+					if (Iterable.class.isAssignableFrom(rawClass))
 						h = new CollectionHandler(rawClass, pt.getActualTypeArguments()[0]);
 					else if (Map.class.isAssignableFrom(rawClass))
 						h = new MapHandler(rawClass, pt.getActualTypeArguments()[0],
@@ -476,6 +479,20 @@ public class JSONCodec {
 		throw new IllegalArgumentException(
 				"Does not support generics beyond Parameterized Type  and GenericArrayType, got "
 						+ type);
+	}
+
+	/**
+	 * Ignore null values in output and input
+	 * @param ignorenull
+	 * @return
+	 */
+	public JSONCodec setIgnorenull(boolean ignorenull) {
+		this.ignorenull = ignorenull;
+		return this;
+	}
+
+	public boolean isIgnorenull() {
+		return ignorenull;
 	}
 
 }
