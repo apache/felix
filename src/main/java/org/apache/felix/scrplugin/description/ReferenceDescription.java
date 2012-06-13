@@ -20,7 +20,7 @@ package org.apache.felix.scrplugin.description;
 
 import java.lang.reflect.Field;
 
-import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
+import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 
 /**
  * A <code>ReferenceDescription</code> describes a reference

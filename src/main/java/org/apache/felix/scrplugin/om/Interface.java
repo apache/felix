@@ -19,7 +19,7 @@
 package org.apache.felix.scrplugin.om;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
-import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
+import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 
 /**
  * <code>Interface</code>

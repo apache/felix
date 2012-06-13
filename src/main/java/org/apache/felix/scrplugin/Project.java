@@ -21,8 +21,10 @@ package org.apache.felix.scrplugin;
 import java.io.File;
 import java.util.Collection;
 
-import org.apache.felix.scrplugin.scanner.Source;
 
+/**
+ * Project description for the {@link SCRDescriptorGenerator}
+ */
 public class Project {
 
     private Collection<Source> sources;

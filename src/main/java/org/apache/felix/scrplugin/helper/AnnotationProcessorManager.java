@@ -29,11 +29,11 @@ import java.util.Map;
 
 import javax.imageio.spi.ServiceRegistry;
 
-import org.apache.felix.scrplugin.AnnotationProcessor;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.SCRDescriptorFailureException;
+import org.apache.felix.scrplugin.annotations.AnnotationProcessor;
+import org.apache.felix.scrplugin.annotations.ScannedClass;
 import org.apache.felix.scrplugin.description.ClassDescription;
-import org.apache.felix.scrplugin.scanner.ScannedClass;
 
 
 /**
@@ -88,7 +88,7 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
     }
 
     /**
-     * @see org.apache.felix.scrplugin.AnnotationProcessor#process(org.apache.felix.scrplugin.scanner.ScannedClass, org.apache.felix.scrplugin.description.ClassDescription)
+     * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#process(org.apache.felix.scrplugin.annotations.ScannedClass, org.apache.felix.scrplugin.description.ClassDescription)
      */
     public void process(final ScannedClass scannedClass,
             final ClassDescription describedClass)
@@ -99,7 +99,7 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
     }
 
     /**
-     * @see org.apache.felix.scrplugin.AnnotationProcessor#getRanking()
+     * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getRanking()
      */
     public int getRanking() {
         return 0;

@@ -16,30 +16,45 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.scanner;
+package org.apache.felix.scrplugin.annotations;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 
-import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.SCRDescriptorFailureException;
 
+/**
+ * A field annotation
+ */
 public class FieldAnnotation extends ScannedAnnotation {
 
+    /**
+     * Corresponding field in the class.
+     */
     private final Field annotatedField;
 
+    /**
+     * Constructor.
+     */
     public FieldAnnotation(final String name, final Map<String, Object> values, final Field f) {
         super(name, values);
         this.annotatedField = f;
     }
 
+    /**
+     * Get the annotated field.
+     */
     public Field getAnnotatedField() {
         return this.annotatedField;
     }
 
+    /**
+     * Get the initial value of the value if this is a static field.
+     * @throws SCRDescriptorFailureException
+     */
     public Object getAnnotatedFieldValue()
-    throws SCRDescriptorFailureException, SCRDescriptorException {
+    throws SCRDescriptorFailureException {
         if ( Modifier.isStatic(annotatedField.getModifiers()) ) {
             try {
                 final Object value = annotatedField.get(null);

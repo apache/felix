@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.scanner;
+package org.apache.felix.scrplugin.annotations;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +34,11 @@ public class ScannedClass {
     /** The scanned class. */
     private final Class<?> scannedClass;
 
+    /**
+     * Constructor
+     * @param desc List of found annotations.
+     * @param scannedClass The scanned class.
+     */
     public ScannedClass(final List<ScannedAnnotation> desc, final Class<?> scannedClass) {
         this.descriptions.addAll(desc);
         this.scannedClass = scannedClass;
@@ -47,14 +52,30 @@ public class ScannedClass {
         return this.scannedClass;
     }
 
+    /**
+     * Mark an annotation as processed.
+     * A processed annotation will be removed from the list of annotations.
+     * @param desc The annotation.
+     */
     public void processed(final ScannedAnnotation desc) {
         this.descriptions.remove(desc);
     }
 
+    /**
+     * Mark several annotations as processed.
+     * A processed annotation will be removed from the list of annotations.
+     * @param desc The annotation.
+     */
     public void processed(final Collection<? extends ScannedAnnotation> desc) {
         this.descriptions.removeAll(desc);
     }
 
+    /**
+     * Get all class annotations
+     * @param name The name of the class annotation or <code>null</code>
+     * for all class annotations.
+     * @return A list of matching annotations or an empty list.
+     */
     public List<ClassAnnotation> getClassAnnotations(final String name) {
         final List<ClassAnnotation> list = new ArrayList<ClassAnnotation>();
         for(final ScannedAnnotation desc : descriptions ) {
@@ -67,6 +88,12 @@ public class ScannedClass {
         return list;
     }
 
+    /**
+     * Get all field annotations
+     * @param name The name of the field annotation or <code>null</code>
+     * for all field annotations.
+     * @return A list of matching annotations or an empty list.
+     */
     public List<FieldAnnotation> getFieldAnnotations(final String name) {
         final List<FieldAnnotation> list = new ArrayList<FieldAnnotation>();
         for(final ScannedAnnotation desc : descriptions ) {
@@ -79,6 +106,12 @@ public class ScannedClass {
         return list;
     }
 
+    /**
+     * Get all method annotations
+     * @param name The name of the method annotation or <code>null</code>
+     * for all method annotations.
+     * @return A list of matching annotations or an empty list.
+     */
     public List<MethodAnnotation> getMethodAnnotations(final String name) {
         final List<MethodAnnotation> list = new ArrayList<MethodAnnotation>();
         for(final ScannedAnnotation desc : descriptions ) {

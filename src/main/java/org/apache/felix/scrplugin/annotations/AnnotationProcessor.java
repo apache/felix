@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin;
+package org.apache.felix.scrplugin.annotations;
 
+import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.SCRDescriptorFailureException;
 import org.apache.felix.scrplugin.description.ClassDescription;
-import org.apache.felix.scrplugin.scanner.ScannedClass;
 
 /**
  * This service provides a plugin for annotation processing. Custom tags
@@ -30,13 +31,15 @@ import org.apache.felix.scrplugin.scanner.ScannedClass;
 public interface AnnotationProcessor {
 
     /**
-     * Processes annotations from the provided list and adds objects
-     * to the object model based on the read annotations.
+     * Processes annotations from the provided scanned class and adds
+     * descriptions to the object model based on the read annotations.
+     *
      * If this service processes an annotation, it should remove this
      * annotation from the provided list to avoid duplicate processing
-     * by other processors.
+     * by other processors (with higher ranking)
+     *
      * @param scannedClass The scanned class.
-     * @param describedClass The descriptions.
+     * @param describedClass The description container.
      */
     void process(final ScannedClass scannedClass,
             final ClassDescription describedClass)

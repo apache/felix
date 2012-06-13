@@ -25,10 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
 import org.apache.felix.scrplugin.description.SpecVersion;
-import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
 
 /**
  * <code>Component</code> is a described component.
@@ -47,9 +47,6 @@ public class Component extends AbstractObject {
 
     /** The factory. */
     protected String factory;
-
-    /** The implementation. */
-    protected Implementation implementation;
 
     /** All properties. */
     protected List<Property> properties = new ArrayList<Property>();
@@ -158,14 +155,6 @@ public class Component extends AbstractObject {
 
     public void setImmediate(Boolean immediate) {
         this.immediate = immediate;
-    }
-
-    public Implementation getImplementation() {
-        return this.implementation;
-    }
-
-    public void setImplementation(Implementation implementation) {
-        this.implementation = implementation;
     }
 
     public Service getService() {
@@ -521,7 +510,7 @@ public class Component extends AbstractObject {
                         + (activate != null ? ", activate=" + activate : "")
                         + (deactivate != null ? ", deactivate=" + deactivate : "")
                         + (modified != null ? ", modified=" + modified : "") + ", specVersion=" + specVersion
-                        + ", implementation=" + implementation + ", service=" + service + ", properties=" + properties
+                        + ", service=" + service + ", properties=" + properties
                         + ", references=" + references + ")";
     }
 }

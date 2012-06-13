@@ -18,7 +18,7 @@
  */
 package org.apache.felix.scrplugin.description;
 
-import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
+import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 
 /**
  * <code>ComponentDescription</code> is a described component.

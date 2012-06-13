@@ -18,28 +18,32 @@
  */
 package org.apache.felix.scrplugin.om;
 
+import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 import org.apache.felix.scrplugin.helper.IssueLog;
-import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
 
 /**
  * The <code>AbstractObject</code> is the base class for the all classes of the scr om.
  */
 public abstract class AbstractObject {
 
-    private final String annotationName;
+    private final String annotationPrefix;
 
     private final String sourceLocation;
 
     protected AbstractObject(final ScannedAnnotation annotation, final String sourceLocation) {
-        this.annotationName = (annotation != null ? annotation.getName() : "<unknown>");
+        if ( annotation == null ) {
+            this.annotationPrefix = "";
+        } else {
+            this.annotationPrefix = "@" + annotation.getSimpleName()  + " : ";
+        }
         this.sourceLocation = sourceLocation;
     }
 
     protected void logWarn(IssueLog iLog, String message) {
-        iLog.addWarning("@" + this.annotationName + ": " + message, sourceLocation);
+        iLog.addWarning(this.annotationPrefix + message, sourceLocation);
     }
 
     protected void logError(IssueLog iLog, String message) {
-        iLog.addError("@" + this.annotationName + ": " + message, sourceLocation);
+        iLog.addError(this.annotationPrefix + message, sourceLocation);
     }
 }
