@@ -41,7 +41,7 @@ import org.apache.felix.scrplugin.description.ServiceDescription;
 public class SlingAnnotationProcessor implements AnnotationProcessor {
 
     /**
-     * @see org.apache.felix.scrplugin.AnnotationProcessor#process(ScannedClass, ClassDescription)
+     * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#process(org.apache.felix.scrplugin.annotations.ScannedClass, org.apache.felix.scrplugin.description.ClassDescription)
      */
     public void process(final ScannedClass scannedClass,
                         final ClassDescription describedClass)
@@ -64,7 +64,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
     }
 
     /**
-     * @see org.apache.felix.scrplugin.AnnotationProcessor#getRanking()
+     * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getRanking()
      */
     public int getRanking() {
         return 500;

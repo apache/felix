@@ -16,9 +16,9 @@ package org.apache.felix.scrplugin.description;
 
 public enum SpecVersion {
 
-    VERSION_1_0("1.0"),              // R4.1
-    VERSION_1_1("1.1"),              // R4.2
-    VERSION_1_1_FELIX("1.1_FELIX");  // R4.2 + FELIX-1893
+    VERSION_1_0("1.0", "http://www.osgi.org/xmlns/scr/v1.0.0"),                        // R4.1
+    VERSION_1_1("1.1", "http://www.osgi.org/xmlns/scr/v1.1.0"),                        // R4.2
+    VERSION_1_1_FELIX("1.1_FELIX", "http://felix.apache.org/xmlns/scr/v1.1.0-felix");  // R4.2 + FELIX-1893
 
     /**
      * internal human readable name
@@ -26,12 +26,19 @@ public enum SpecVersion {
     private final String name;
 
     /**
+     * Namespace url
+     */
+    private final String namespaceUrl;
+
+    /**
      * Create a type
      *
-     * @param name name
+     * @param name A human readable name
+     * @param namespaceUrl The namespace URL for this spec version
      */
-    private SpecVersion(final String name) {
+    private SpecVersion(final String name, final String namespaceUrl) {
         this.name = name;
+        this.namespaceUrl = namespaceUrl;
     }
 
     /**
@@ -44,7 +51,15 @@ public enum SpecVersion {
     }
 
     /**
-     * Creates a version for the given name. if the name cannot be mapped
+     * Return the namespace url.
+     * @return The namespace url.
+     */
+    public String getNamespaceUrl() {
+        return this.namespaceUrl;
+    }
+
+    /**
+     * Creates a version for the given name. If the name cannot be mapped
      * to a enum type or if it's <code>null</code>, <code>null</code> is
      * returned.
      *
@@ -62,6 +77,26 @@ public enum SpecVersion {
         }
         for(final SpecVersion sv : SpecVersion.values() ) {
             if ( sv.getName().equals(n)) {
+                return sv;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Creates a version for the given url. If the url cannot be mapped
+     * to a enum type or if it's <code>null</code>, <code>null</code> is
+     * returned.
+     *
+     * @param n the url
+     * @return the type or <code>null</code>
+     */
+    public static SpecVersion fromNamespaceUrl(final String n) {
+        if (n == null) {
+            return null;
+        }
+        for(final SpecVersion sv : SpecVersion.values() ) {
+            if ( sv.getNamespaceUrl().equals(n)) {
                 return sv;
             }
         }
