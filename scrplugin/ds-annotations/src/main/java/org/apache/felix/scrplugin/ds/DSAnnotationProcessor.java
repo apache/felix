@@ -33,6 +33,9 @@ import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
 import org.apache.felix.scrplugin.description.ComponentDescription;
 import org.apache.felix.scrplugin.description.MethodDescription;
+import org.apache.felix.scrplugin.description.PropertyDescription;
+import org.apache.felix.scrplugin.description.PropertyType;
+import org.apache.felix.scrplugin.description.PropertyUnbounded;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
@@ -155,7 +158,30 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
             component.setEnabled(cad.getBooleanValue("immediate", false));
         }
 
-        // TODO: property/properties
+        // property
+        final String[] property = (String[])cad.getValue("property");
+        if ( property != null ) {
+            // TODO - what do we do if the value is invalid?
+            for(final String propDef : property) {
+                final int pos = propDef.indexOf('=');
+                if ( pos != -1 ) {
+                    final String prefix = propDef.substring(0, pos);
+                    final String value = propDef.substring(pos + 1);
+                    final int typeSep = prefix.indexOf(':');
+                    final String key = (typeSep == -1 ? prefix : prefix.substring(0, typeSep));
+                    final String type = (typeSep == -1 ? PropertyType.String.name() : prefix.substring(typeSep + 1));
+
+                    final PropertyType propType = PropertyType.valueOf(type);
+                    final PropertyDescription pd = new PropertyDescription(cad);
+                    describedClass.add(pd);
+                    pd.setName(key);
+                    pd.setValue(value);
+                    pd.setType(propType);
+                    pd.setUnbounded(PropertyUnbounded.DEFAULT);
+                }
+            }
+        }
+        // TODO: properties
 
         // xmlns
         if (cad.getValue("xmlns") != null) {
