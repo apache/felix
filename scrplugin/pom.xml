@@ -35,6 +35,7 @@
     <modules>
         <module>generator</module>
         <module>annotations</module>
+        <module>ds-annotations</module>
         <module>maven-scr-plugin</module>
         <module>scrtask</module>
     </modules>
