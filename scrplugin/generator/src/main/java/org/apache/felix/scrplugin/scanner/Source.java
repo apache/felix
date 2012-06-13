@@ -16,13 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.tags;
+package org.apache.felix.scrplugin.scanner;
+
+import java.io.File;
 
 /**
- * <code>JavaParameter.java</code>...
- *
+ * Description of a source to be parsed.
  */
-public interface JavaParameter {
+public interface Source {
 
-    String getType();
+    /**
+     * The main class name.
+     * @return The main class name.
+     */
+    String getClassName();
+
+    /**
+     * The file containing the class.
+     * @return The file containing the class.
+     */
+    File getFile();
 }

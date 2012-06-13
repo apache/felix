@@ -18,7 +18,9 @@
  */
 package org.apache.felix.scrplugin.helper;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.felix.scrplugin.Log;
 
@@ -44,86 +46,72 @@ public class IssueLog {
     }
 
     public boolean hasErrors() {
-        return errors.size() > 0 ||
-               (this.strictMode && (warnings.size() > 0 || this.deprecationWarnings.size() > 0));
+        return errors.size() > 0 || (this.strictMode && (warnings.size() > 0 || this.deprecationWarnings.size() > 0));
     }
 
-    public void addError(final String message, final String location, final int lineNumber) {
-        errors.add( new Entry( message, location, lineNumber ) );
+    public void addError(final String message, final String location) {
+        errors.add(new Entry(message, location));
     }
 
-    public void addWarning(final String message, final String location, final int lineNumber) {
-        warnings.add( new Entry( message, location, lineNumber ) );
+    public void addWarning(final String message, final String location) {
+        warnings.add(new Entry(message, location));
     }
 
-    public void addDeprecationWarning(final String message, final String location, final int lineNumber) {
-        deprecationWarnings.add( new Entry( message, location, lineNumber ) );
+    public void addDeprecationWarning(final String message, final String location) {
+        deprecationWarnings.add(new Entry(message, location));
     }
 
-    public void logMessages( final Log log )
-    {
+    public void logMessages(final Log log) {
         // now log warnings and errors (warnings first)
         // in strict mode everything is an error!
         final Iterator<Entry> depWarnings = this.deprecationWarnings.iterator();
-        while ( depWarnings.hasNext() )
-        {
+        while (depWarnings.hasNext()) {
             final Entry entry = depWarnings.next();
-            if ( strictMode )
-            {
-                log.error( entry.message, entry.location, entry.lineNumber);
-            }
-            else
-            {
-                log.warn( entry.message, entry.location, entry.lineNumber);
+            if (strictMode) {
+                log.error(entry.toString());
+            } else {
+                log.warn(entry.toString());
             }
         }
-        if ( this.deprecationWarnings.size() > 0 ) {
-            final String msg = "It is highly recommended to fix these problems, as future versions might not " +
-             "support these features anymore.";
-            if ( strictMode )
-            {
-                log.error( msg );
-            }
-            else
-            {
-                log.warn( msg );
+        if (this.deprecationWarnings.size() > 0) {
+            final String msg = "It is highly recommended to fix these problems, as future versions might not "
+                            + "support these features anymore.";
+            if (strictMode) {
+                log.error(msg);
+            } else {
+                log.warn(msg);
             }
         }
 
         final Iterator<Entry> warnings = this.warnings.iterator();
-        while ( warnings.hasNext() )
-        {
+        while (warnings.hasNext()) {
             final Entry entry = warnings.next();
-            if ( strictMode )
-            {
-                log.error( entry.message, entry.location, entry.lineNumber);
-            }
-            else
-            {
-                log.warn( entry.message, entry.location, entry.lineNumber);
+            if (strictMode) {
+                log.error(entry.toString());
+            } else {
+                log.warn(entry.toString());
             }
         }
 
         final Iterator<Entry> errors = this.errors.iterator();
-        while ( errors.hasNext() )
-        {
+        while (errors.hasNext()) {
             final Entry entry = errors.next();
-            log.error( entry.message, entry.location, entry.lineNumber);
+            log.error(entry.toString());
         }
     }
 
-    private static class Entry
-    {
+    private static class Entry {
         final String message;
         final String location;
-        final int lineNumber;
 
-
-        Entry( final String message, final String location, final int lineNumber )
-        {
+        Entry(final String message, final String location) {
             this.message = message;
             this.location = location;
-            this.lineNumber = lineNumber;
+        }
+
+        @Override
+        public String toString() {
+            return this.location + " : " + this.message;
         }
     }
 }

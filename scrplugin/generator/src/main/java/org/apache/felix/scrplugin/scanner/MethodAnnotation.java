@@ -16,33 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.tags;
+package org.apache.felix.scrplugin.scanner;
 
-/**
- * <code>JavaField.java</code>...
- *
- */
-public interface JavaField {
+import java.lang.reflect.Method;
+import java.util.Map;
 
-    /** The name of the field. */
-    String getName();
+public class MethodAnnotation extends ScannedAnnotation {
 
-    /** The type of the field. */
-    String getType();
+    private final Method method;
 
-    /**
-     * Return the given tag.
-     * @param name The tag name.
-     * @return The tag or null.
-     */
-    JavaTag getTagByName(String name);
+    public MethodAnnotation(final String name, final Map<String, Object> values, final Method m) {
+        super(name, values);
+        this.method = m;
+    }
 
-    /**
-     * Return the initial value if this is a static constant.
-     * If this field is not an array, an array of length 1 is
-     * returned with the value. If this field is an array,
-     * the array of values is returned.
-     * @return The initial value of the field.
-     */
-    String[] getInitializationExpression();
+    public Method getAnnotatedMethod() {
+        return this.method;
+    }
+
+    @Override
+    public String toString() {
+        return "MethodAnnotationDescription [name=" + name + ", values="
+                + values + ", method=" + method + "]";
+    }
 }

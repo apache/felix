@@ -18,20 +18,45 @@
  */
 package org.apache.felix.scrplugin;
 
-
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.apache.felix.scrplugin.helper.*;
-import org.apache.felix.scrplugin.om.*;
-import org.apache.felix.scrplugin.om.metatype.*;
-import org.apache.felix.scrplugin.tags.*;
-import org.apache.felix.scrplugin.tags.annotation.AnnotationJavaClassDescription;
-import org.apache.felix.scrplugin.tags.qdox.QDoxJavaClassDescription;
+import org.apache.felix.scrplugin.description.ClassDescription;
+import org.apache.felix.scrplugin.description.ComponentDescription;
+import org.apache.felix.scrplugin.description.PropertyDescription;
+import org.apache.felix.scrplugin.description.PropertyType;
+import org.apache.felix.scrplugin.description.PropertyUnbounded;
+import org.apache.felix.scrplugin.description.ReferenceCardinality;
+import org.apache.felix.scrplugin.description.ReferenceDescription;
+import org.apache.felix.scrplugin.description.ServiceDescription;
+import org.apache.felix.scrplugin.description.SpecVersion;
+import org.apache.felix.scrplugin.helper.AnnotationProcessorManager;
+import org.apache.felix.scrplugin.helper.ClassModifier;
+import org.apache.felix.scrplugin.helper.ClassScanner;
+import org.apache.felix.scrplugin.helper.IssueLog;
+import org.apache.felix.scrplugin.helper.StringUtils;
+import org.apache.felix.scrplugin.om.Component;
+import org.apache.felix.scrplugin.om.Components;
+import org.apache.felix.scrplugin.om.Context;
+import org.apache.felix.scrplugin.om.Implementation;
+import org.apache.felix.scrplugin.om.Interface;
+import org.apache.felix.scrplugin.om.Property;
+import org.apache.felix.scrplugin.om.Reference;
+import org.apache.felix.scrplugin.om.Service;
+import org.apache.felix.scrplugin.om.metatype.AttributeDefinition;
+import org.apache.felix.scrplugin.om.metatype.Designate;
+import org.apache.felix.scrplugin.om.metatype.MTObject;
+import org.apache.felix.scrplugin.om.metatype.MetaData;
+import org.apache.felix.scrplugin.om.metatype.OCD;
 import org.apache.felix.scrplugin.xml.ComponentDescriptorIO;
 import org.apache.felix.scrplugin.xml.MetaTypeIO;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.metatype.MetaTypeService;
-
 
 /**
  * The <code>SCRDescriptorGenerator</code> class does the hard work of
@@ -39,973 +64,639 @@ import org.osgi.service.metatype.MetaTypeService;
  * configured by clients and the {@link #execute()} method called to generate
  * the descriptor files.
  * <p>
- * When using this class carefully consider calling <i>all</i> setter methods
- * to properly configure the generator. All setter method document, which
- * default value is assumed for the respective property if the setter is
- * not called.
+ * When using this class carefully consider calling <i>all</i> setter methods to properly configure the generator. All setter
+ * method document, which default value is assumed for the respective property if the setter is not called.
  * <p>
  * Instances of this class are not thread save and should not be reused.
  */
-public class SCRDescriptorGenerator
-{
+public class SCRDescriptorGenerator {
 
     private final Log logger;
 
-    private File outputDirectory = null;
-
-    private JavaClassDescriptorManager descriptorManager;
+    private File outputDirectory;
 
     private String finalName = "serviceComponents.xml";
 
     private String metaTypeName = "metatype.xml";
 
-    private boolean generateAccessors = true;
+    /** The project. */
+    private Project project;
 
-    protected boolean strictMode = false;
+    /** The options. */
+    private Options options = new Options();
 
-    private Map<String, String> properties = new HashMap<String, String>();
+    /** The annotation scanner. */
+    private ClassScanner scanner;
 
-    private String specVersion = null;
-
+    /** The issue log. */
+    private IssueLog iLog;
 
     /**
-     * Create an instance of this generator using the given {@link Log}
-     * instance of logging.
+     * Create an instance of this generator using the given {@link Log} instance
+     * of logging.
      */
-    public SCRDescriptorGenerator( Log logger )
-    {
+    public SCRDescriptorGenerator(final Log logger) {
         this.logger = logger;
     }
 
+    /**
+     * Set the project. This is required.
+     */
+    public void setProject(final Project p) {
+        this.project = p;
+    }
+
+    /**
+     * Set the options.
+     */
+    public void setOptions(final Options p) {
+        this.options = p;
+    }
 
     /**
      * Sets the directory where the descriptor files will be created.
      * <p>
-     * This field has no default value and this setter <b>must</b> called prior
-     * to calling {@link #execute()}.
+     * This field has no default value and this setter <b>must</b> called prior to calling {@link #execute()}.
      */
-    public void setOutputDirectory( File outputDirectory )
-    {
+    public void setOutputDirectory(final File outputDirectory) {
         this.outputDirectory = outputDirectory;
     }
 
-
-    /**
-     * Sets the {@link JavaClassDescriptorManager} instance used to access
-     * existing descriptors and to parse JavaDoc tags as well as interpret
-     * the SCR annotations.
-     * <p>
-     * This field has no default value and this setter <b>must</b> called prior
-     * to calling {@link #execute()}.
-     */
-    public void setDescriptorManager( JavaClassDescriptorManager descriptorManager )
-    {
-        this.descriptorManager = descriptorManager;
-    }
-
-
     /**
      * Sets the name of the SCR declaration descriptor file. This file will be
-     * created in the <i>OSGI-INF</i> directory below the
-     * {@link #setOutputDirectory(File) output directory}.
+     * created in the <i>OSGI-INF</i> directory below the {@link #setOutputDirectory(File) output directory}.
      * <p>
-     * This file will be overwritten if already existing. If no descriptors
-     * are created the file is actually removed.
+     * This file will be overwritten if already existing. If no descriptors are created the file is actually removed.
      * <p>
      * The default value of this property is <code>serviceComponents.xml</code>.
      */
-    public void setFinalName( String finalName )
-    {
+    public void setFinalName(final String finalName) {
         this.finalName = finalName;
     }
 
-
     /**
      * Sets the name of the file taking the Metatype Service descriptors. This
-     * file will be created in the <i>OSGI-INF/metatype</i> directory below the
-     * {@link #setOutputDirectory(File) output directory}.
+     * file will be created in the <i>OSGI-INF/metatype</i> directory below the {@link #setOutputDirectory(File) output directory}
+     * .
      * <p>
-     * This file will be overwritten if already existing. If no descriptors
-     * are created the file is actually removed.
+     * This file will be overwritten if already existing. If no descriptors are created the file is actually removed.
      * <p>
      * The default value of this property is <code>metatype.xml</code>.
      */
-    public void setMetaTypeName( String metaTypeName )
-    {
+    public void setMetaTypeName(final String metaTypeName) {
         this.metaTypeName = metaTypeName;
     }
 
-
-    /**
-     * Defines whether bind and unbind methods are automatically created by
-     * the SCR descriptor generator.
-     * <p>
-     * The generator uses the ASM library to create the method byte codes
-     * directly inside the class files. If bind and unbind methods are not
-     * to be created, the generator fails if such methods are missing.
-     * <p>
-     * The default value of this property is <code>true</code>.
-     */
-    public void setGenerateAccessors( boolean generateAccessors )
-    {
-        this.generateAccessors = generateAccessors;
-    }
-
-
-    /**
-     * Defines whether warnings should be considered as errors and thus cause
-     * the generation process to fail.
-     * <p>
-     * The default value of this property is <code>false</code>.
-     */
-    public void setStrictMode( boolean strictMode )
-    {
-        this.strictMode = strictMode;
-    }
-
-
-    /**
-     * Sets global properties to be set for each descriptor. If a descriptor
-     * provides properties of the same name, the descriptor properties are preferred
-     * over the properties provided here.
-     * <p>
-     * The are no default global properties.
-     */
-    public void setProperties( Map<String, String> properties )
-    {
-        this.properties = new HashMap<String, String>( properties );
-    }
-
-
-    /**
-     * Sets the Declarative Services specification version number to be forced
-     * on the declarations.
-     * <p>
-     * Supported values for this property are <code>null</code> to autodetect
-     * the specification version, <code>1.0</code> to force 1.0 descriptors and
-     * <code>1.1</code> to force 1.1 descriptors. If 1.0 descriptors are forced
-     * the generation fails if a descriptor requires 1.1 functionality.
-     * <p>
-     * The default is to generate the descriptor version according to the
-     * capabilities used by the descriptors. If no 1.1 capabilities, such as
-     * <code>configuration-policy</code>, are used, version 1.0 is used,
-     * otherwise a 1.1 descriptor is generated.
-     */
-    public void setSpecVersion( String specVersion )
-    {
-        this.specVersion = specVersion;
-    }
-
-
     /**
      * Actually generates the Declarative Services and Metatype descriptors
-     * scanning the java sources provided by the
-     * {@link #setDescriptorManager(JavaClassDescriptorManager) descriptor manager}.
+     * scanning the java sources provided by the {@link #setProject(Project)}
      *
-     * @return <code>true</code> if descriptors have been generated.
+     * @return A list of generated file names, relative to the output directory
      *
      * @throws SCRDescriptorException
      * @throws SCRDescriptorFailureException
      */
-    public boolean execute() throws SCRDescriptorException, SCRDescriptorFailureException
-    {
-        this.logger.debug( "Starting SCRDescriptorMojo...." );
-        this.logger.debug( "..generating accessors: " + this.generateAccessors );
-        this.logger.debug( "..parsing javadocs: " + this.descriptorManager.isParseJavadocs() );
-        this.logger.debug( "..processing annotations: " + this.descriptorManager.isProcessAnnotations() );
+    public Result execute() throws SCRDescriptorException, SCRDescriptorFailureException {
+        if (this.project == null) {
+            throw new SCRDescriptorFailureException("Project has not been set!");
+        }
+        if (this.options == null) {
+            // use default options
+            this.options = new Options();
+        }
+
+        this.logger.debug("Starting SCRDescriptorMojo....");
+        this.logger.debug("..generating accessors: " + this.options.isGenerateAccessors());
 
         // check speck version configuration
-        int specVersion = toSpecVersionCode( this.specVersion, null );
-        if ( this.specVersion == null )
-        {
-            this.logger.debug( "..auto detecting spec version" );
-        }
-        else
-        {
-            this.logger.debug( "..using spec version " + this.specVersion + " (" + specVersion + ")" );
+        SpecVersion specVersion = options.getSpecVersion();
+        if (specVersion == null) {
+            this.logger.debug("..auto detecting spec version");
+        } else {
+            this.logger.debug("..using spec version " + specVersion.getName());
         }
 
-        final IssueLog iLog = new IssueLog( this.strictMode );
+        // create a log
+        this.iLog = new IssueLog(this.options.isStrictMode());
 
+        // create the annotation processor manager
+        final AnnotationProcessor aProcessor = new AnnotationProcessorManager(options.getAnnotationProcessors(),
+                        this.project.getClassLoader());
+
+        // create the class scanner - and start scanning
+        this.scanner = new ClassScanner(logger, iLog, project, aProcessor);
+        final List<ClassDescription> scannedDescriptions = scanner.scanSources();
+
+        // setup metadata
         final MetaData metaData = new MetaData();
-        metaData.setLocalization( MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype" );
+        metaData.setLocalization(MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype");
 
-        // iterate through all source classes and check for component tag
-        final JavaClassDescription[] javaSources = descriptorManager.getSourceDescriptions();
-        Arrays.sort( javaSources, new JavaClassDescriptionInheritanceComparator() );
+        final List<Component> processedComponents = new ArrayList<Component>();
+        for (final ClassDescription desc : scannedDescriptions) {
+            this.logger.debug("Processing component class " + desc.getSource());
 
-        final List<Component> scannedComponents = new ArrayList<Component>();
-        for ( int i = 0; i < javaSources.length; i++ )
-        {
-            this.logger.debug( "Testing source " + javaSources[i].getName() );
-            final JavaTag tag = javaSources[i].getTagByName( Constants.COMPONENT );
-            if ( tag != null )
-            {
-                // FELIX-2853 : Deprecate javadoc tags.
-                // This is not the most clever way of doing this, but it is the least intrusive...
-                if ( javaSources[i] instanceof QDoxJavaClassDescription
-                     && !(javaSources[i] instanceof AnnotationJavaClassDescription)) {
-                    iLog.addDeprecationWarning("Class " + javaSources[i].getName() + " is using deprecated javadoc tags ",
-                            tag.getSourceLocation(), tag.getLineNumber());
-                }
-                this.logger.debug( "Processing service class " + javaSources[i].getName() );
-                // check if there is more than one component tag!
-                if ( javaSources[i].getTagsByName( Constants.COMPONENT, false ).length > 1 )
-                {
-                    iLog.addError( "Class " + javaSources[i].getName() + " has more than one " + Constants.COMPONENT
-                        + " tag." + " Merge the tags to a single tag.", tag.getSourceLocation(), tag.getLineNumber() );
-                }
-                else
-                {
-                    try
-                    {
-                        final Component comp = this.createComponent( javaSources[i], tag, metaData, iLog );
-                        if ( comp.getSpecVersion() > specVersion )
-                        {
+            // check if there is more than one component definition
+            if (desc.getDescriptions(ComponentDescription.class).size() > 1) {
+                iLog.addError("Class has more than one component definition." +
+                             " Check the annotations and merge the definitions to a single definition.",
+                                desc.getSource());
+            } else {
+                try {
+                    final Component comp = this.createComponent(desc, metaData, iLog);
+                    if (comp.getSpecVersion() != null) {
+                        if ( specVersion == null ) {
+                            specVersion = comp.getSpecVersion();
+                            logger.debug("Setting used spec version to " + specVersion);
+                        } else if (comp.getSpecVersion().ordinal() > specVersion.ordinal() && this.options.getSpecVersion() != null) {
                             // if a spec version has been configured and a component requires a higher
                             // version, this is considered an error!
-                            if ( this.specVersion != null )
-                            {
-                                String v = Constants.COMPONENT_DS_SPEC_VERSION_10;
-                                if ( comp.getSpecVersion() == Constants.VERSION_1_1 )
-                                {
-                                    v = Constants.COMPONENT_DS_SPEC_VERSION_11;
-                                }
-                                iLog.addError( "Component " + comp + " requires spec version " + v
-                                    + " but plugin is configured to use version " + this.specVersion, tag
-                                    .getSourceLocation(), tag.getLineNumber() );
-                            }
-                            specVersion = comp.getSpecVersion();
+                            iLog.addError("Component " + comp + " requires spec version " + comp.getSpecVersion().name()
+                                            + " but plugin is configured to use version " + this.options.getSpecVersion(),
+                                            desc.getSource());
                         }
-                        scannedComponents.add( comp );
                     }
-                    catch ( SCRDescriptorException sde )
-                    {
-                        iLog.addError( sde.getMessage(), sde.getSourceLocation(), sde.getLineNumber() );
-                    }
+                    processedComponents.add(comp);
+                } catch (final SCRDescriptorException sde) {
+                    iLog.addError(sde.getMessage(), sde.getSourceLocation());
                 }
             }
         }
-        this.logger.debug( "..generating descriptor for spec version: " + this.specVersion );
+        // if spec version is still not set, we're using lowest available
+        if ( specVersion == null ) {
+            specVersion = SpecVersion.VERSION_1_0;
+            logger.debug("Using default spec version " + specVersion);
+        }
+        this.logger.debug("Generating descriptor for spec version: " + specVersion);
 
         // now check for abstract components and fill components objects
         final Components components = new Components();
-        final Components abstractComponents = new Components();
-        components.setSpecVersion( specVersion );
-        abstractComponents.setSpecVersion( specVersion );
+        components.setSpecVersion(specVersion);
 
-        for ( final Component comp : scannedComponents )
-        {
+        for (final Component comp : processedComponents) {
             final int errorCount = iLog.getNumberOfErrors();
-            // before we can validate we should check the references for bind/unbind method
-            // in order to create them if possible
 
-            for ( final Reference ref : comp.getReferences() )
-            {
-                // if this is a field with a single cardinality,
-                // we look for the bind/unbind methods
-                // and create them if they are not availabe
-                if ( this.generateAccessors && !ref.isLookupStrategy() )
-                {
-                    if ( ref.getJavaTag().getField() != null
-                        && comp.getJavaClassDescription() instanceof ModifiableJavaClassDescription )
-                    {
-                        if ( ref.getCardinality().equals( "0..1" ) || ref.getCardinality().equals( "1..1" ) )
-                        {
-                            final String bindValue = ref.getBind();
-                            final String unbindValue = ref.getUnbind();
-                            final String name = ref.getName();
-                            final String type = ref.getInterfacename();
+            final Context ctx = new Context();
+            ctx.setClassDescription(comp.getClassDescription());
+            ctx.setIssueLog(iLog);
+            ctx.setProject(project);
+            ctx.setSpecVersion(specVersion);
+            ctx.setOptions(options);
 
-                            boolean createBind = false;
-                            boolean createUnbind = false;
-                            // Only create method if no bind name has been specified
-                            if ( bindValue == null && ref.findMethod( specVersion, "bind" ) == null )
-                            {
-                                // create bind method
-                                createBind = true;
-                            }
-                            if ( unbindValue == null && ref.findMethod( specVersion, "unbind" ) == null )
-                            {
-                                // create unbind method
-                                createUnbind = true;
-                            }
-                            if ( createBind || createUnbind )
-                            {
-                                ( ( ModifiableJavaClassDescription ) comp.getJavaClassDescription() ).addMethods( name,
-                                    type, createBind, createUnbind );
-                            }
+            if ( this.options.isGenerateAccessors() ) {
+                // before we can validate we should check the references for bind/unbind method
+                // in order to create them if possible
+
+                for (final Reference ref : comp.getReferences()) {
+                    // if this is a field with a single cardinality,
+                    // we look for the bind/unbind methods
+                    // and create them if they are not availabe
+                    if (!ref.isLookupStrategy() && ref.getField() != null
+                        && (ref.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || ref.getCardinality() == ReferenceCardinality.MANDATORY_UNARY)) {
+
+                        final String bindValue = ref.getBind();
+                        final String unbindValue = ref.getUnbind();
+                        final String name = ref.getName();
+                        final String type = ref.getInterfacename();
+
+                        boolean createBind = false;
+                        boolean createUnbind = false;
+
+                        // Only create method if no bind name has been specified
+                        if (bindValue == null && ref.findMethod(ctx, "bind") == null) {
+                            // create bind method
+                            createBind = true;
+                        }
+                        if (unbindValue == null && ref.findMethod(ctx, "unbind") == null) {
+                            // create unbind method
+                            createUnbind = true;
+                        }
+                        if (createBind || createUnbind) {
+                            ClassModifier.addMethods(comp.getClassDescription().getDescribedClass().getName(),
+                                            name,
+                                            ref.getField().getName(),
+                                            type,
+                                            createBind,
+                                            createUnbind,
+                                            this.project.getClassesDirectory());
                         }
                     }
                 }
             }
-            comp.validate( specVersion, iLog );
+            comp.validate(ctx);
+
             // ignore component if it has errors
-            if ( iLog.getNumberOfErrors() == errorCount )
-            {
-                if ( !comp.isDs() )
-                {
-                    logger.debug( "Ignoring descriptor " + comp );
-                }
-                else if ( comp.isAbstract() )
-                {
-                    this.logger.debug( "Adding abstract descriptor " + comp );
-                    abstractComponents.addComponent( comp );
-                }
-                else
-                {
-                    this.logger.debug( "Adding descriptor " + comp );
-                    components.addComponent( comp );
-                    abstractComponents.addComponent( comp );
+            if (iLog.getNumberOfErrors() == errorCount) {
+                if (!comp.isDs()) {
+                    logger.debug("Ignoring descriptor for DS : " + comp);
+                } else if (!comp.isAbstract()) {
+                    this.logger.debug("Adding descriptor for DS : " + comp);
+                    components.addComponent(comp);
                 }
             }
         }
 
         // log issues
-        iLog.logMessages( logger );
+        iLog.logMessages(logger);
 
         // after checking all classes, throw if there were any failures
-        if ( iLog.hasErrors() )
-        {
-            throw new SCRDescriptorFailureException( "SCR Descriptor parsing had failures (see log)" );
+        if (iLog.hasErrors()) {
+            throw new SCRDescriptorFailureException("SCR Descriptor parsing had failures (see log)");
         }
 
-        boolean addResources = false;
+        final Result result = new Result();
         // write meta type info if there is a file name
-        if ( !StringUtils.isEmpty( this.metaTypeName ) )
-        {
-            File mtFile = new File( this.outputDirectory, "OSGI-INF" + File.separator + "metatype" + File.separator
-                + this.metaTypeName );
+        if (!StringUtils.isEmpty(this.metaTypeName)) {
+            final String path = "OSGI-INF" + File.separator + "metatype" + File.separator + this.metaTypeName;
+            final File mtFile = new File(this.outputDirectory, path);
             final int size = metaData.getOCDs().size() + metaData.getDesignates().size();
-            if ( size > 0 )
-            {
-                this.logger.info( "Generating " + size + " MetaType Descriptors to " + mtFile );
+            if (size > 0) {
+                this.logger.info("Generating " + size + " MetaType Descriptors to " + mtFile);
                 mtFile.getParentFile().mkdirs();
-                MetaTypeIO.write( metaData, mtFile );
-                addResources = true;
-            }
-            else
-            {
-                if ( mtFile.exists() )
-                {
+                MetaTypeIO.write(metaData, mtFile);
+                result.setMetatypeFiles(Collections.singletonList(path.replace(File.separatorChar, '/')));
+            } else {
+                if (mtFile.exists()) {
                     mtFile.delete();
                 }
             }
 
-        }
-        else
-        {
-            this.logger.info( "Meta type file name is not set: meta type info is not written." );
-        }
-
-        // if we have descriptors, write them in our scr private file (for component inheritance)
-        final File adFile = new File( this.outputDirectory, Constants.ABSTRACT_DESCRIPTOR_RELATIVE_PATH );
-        if ( !abstractComponents.getComponents().isEmpty() )
-        {
-            this.logger.info( "Writing abstract service descriptor " + adFile + " with "
-                + abstractComponents.getComponents().size() + " entries." );
-            adFile.getParentFile().mkdirs();
-            ComponentDescriptorIO.write( abstractComponents, adFile, true );
-            addResources = true;
-        }
-        else
-        {
-            this.logger.debug( "No abstract SCR Descriptors found in project." );
-            // remove file
-            if ( adFile.exists() )
-            {
-                this.logger.debug( "Removing obsolete abstract service descriptor " + adFile );
-                adFile.delete();
-            }
+        } else {
+            this.logger.info("Meta type file name is not set: meta type info is not written.");
         }
 
         // check descriptor file
-        final File descriptorFile = StringUtils.isEmpty( this.finalName ) ? null : new File( new File(
-            this.outputDirectory, "OSGI-INF" ), this.finalName );
+        final String descriptorPath = "OSGI-INF" + File.separator + this.finalName;
+        final File descriptorFile = StringUtils.isEmpty(this.finalName) ? null : new File(this.outputDirectory, descriptorPath);
 
         // terminate if there is nothing else to write
-        if ( components.getComponents().isEmpty() )
-        {
-            this.logger.debug( "No SCR Descriptors found in project." );
+        if (components.getComponents().isEmpty()) {
+            this.logger.debug("No Service Component Descriptors found in project.");
             // remove file if it exists
-            if ( descriptorFile != null && descriptorFile.exists() )
-            {
-                this.logger.debug( "Removing obsolete service descriptor " + descriptorFile );
+            if (descriptorFile != null && descriptorFile.exists()) {
+                this.logger.debug("Removing obsolete service descriptor " + descriptorFile);
                 descriptorFile.delete();
             }
-        }
-        else
-        {
-            if ( descriptorFile == null )
-            {
-                throw new SCRDescriptorFailureException( "Descriptor file name must not be empty." );
+        } else {
+            if (descriptorFile == null) {
+                throw new SCRDescriptorFailureException("Descriptor file name must not be empty.");
             }
 
             // finally the descriptors have to be written ....
             descriptorFile.getParentFile().mkdirs(); // ensure parent dir
 
-            this.logger.info( "Generating " + components.getComponents().size() + " Service Component Descriptors to "
-                + descriptorFile );
+            this.logger.info("Writing " + components.getComponents().size() + " Service Component Descriptors to "
+                            + descriptorFile);
 
-            ComponentDescriptorIO.write( components, descriptorFile, false );
-            addResources = true;
+            ComponentDescriptorIO.write(components, descriptorFile);
+            result.setScrFiles(Collections.singletonList(descriptorPath.replace(File.separatorChar, '/')));
         }
 
-        return addResources;
+        return result;
     }
 
-
     /**
-     * Create a component for the java class description.
-     * @param description
-     * @return The generated component descriptor or null if any error occurs.
-     * @throws SCRDescriptorException
+     * Create the SCR objects based on the descriptions
      */
-    protected Component createComponent( JavaClassDescription description, JavaTag componentTag, MetaData metaData,
-        final IssueLog iLog ) throws SCRDescriptorException
-    {
-        // create a new component
-        final Component component = new Component( componentTag );
+    private Component createComponent(final ClassDescription desc,
+                    final MetaData metaData,
+                    final IssueLog iLog)
+    throws SCRDescriptorException, SCRDescriptorFailureException {
+        final ComponentDescription componentDesc = desc.getDescription(ComponentDescription.class);
+        final Component comp = new Component(desc, componentDesc.getAnnotation(), desc.getSource());
 
-        // set implementation
-        component.setImplementation( new Implementation( description.getName() ) );
+        comp.setName(componentDesc.getName());
+        comp.setConfigurationPolicy(componentDesc.getConfigurationPolicy());
+        comp.setAbstract(componentDesc.isAbstract());
+        comp.setDs(componentDesc.isCreateDs());
+        comp.setFactory(componentDesc.getFactory());
+        comp.setSpecVersion(componentDesc.getSpecVersion());
 
-        final boolean inherited = getBoolean( componentTag, Constants.COMPONENT_INHERIT, true );
-        final OCD ocd = this.doComponent( componentTag, component, metaData,inherited,  iLog );
-
-        this.doServices( description.getTagsByName( Constants.SERVICE, inherited ), component, description );
-
-        // collect references from class tags and fields
-        final Map<String, Object[]> references = new LinkedHashMap<String, Object[]>();
-        // Utility handler for propertie
-        final PropertyHandler propertyHandler = new PropertyHandler( component, ocd );
-
-        JavaClassDescription currentDescription = description;
-        do
-        {
-            // properties
-            final JavaTag[] props = currentDescription.getTagsByName( Constants.PROPERTY, false );
-            for ( int i = 0; i < props.length; i++ )
-            {
-                propertyHandler.testProperty( props[i], null, description == currentDescription );
-            }
-
-            // references
-            final JavaTag[] refs = currentDescription.getTagsByName( Constants.REFERENCE, false );
-            for ( int i = 0; i < refs.length; i++ )
-            {
-                this.testReference( references, refs[i], null, description == currentDescription );
-            }
-
-            // fields
-            final JavaField[] fields = currentDescription.getFields();
-            for ( int i = 0; i < fields.length; i++ )
-            {
-                JavaTag tag = fields[i].getTagByName( Constants.REFERENCE );
-                if ( tag != null )
-                {
-                    this.testReference( references, tag, fields[i].getName(), description == currentDescription );
-                }
-
-                propertyHandler.handleField( fields[i], description == currentDescription );
-            }
-
-            currentDescription = currentDescription.getSuperClass();
-        }
-        while ( inherited && currentDescription != null );
-
-        // process properties
-        propertyHandler.processProperties( this.properties, iLog );
-
-        // process references
-        final Iterator<Map.Entry<String, Object[]>> refIter = references.entrySet().iterator();
-        while ( refIter.hasNext() )
-        {
-            final Map.Entry<String, Object[]> entry = refIter.next();
-            final String refName = entry.getKey();
-            final Object[] values = entry.getValue();
-            final JavaTag tag = ( JavaTag ) values[0];
-            this.doReference( tag, refName, component, values[1].toString(), ((Boolean)values[2]).booleanValue() );
-        }
-
-        // pid handling
-        final boolean createPid = getBoolean( componentTag, Constants.COMPONENT_CREATE_PID, true );
-        if ( createPid )
-        {
-            // check for an existing pid first
-            boolean found = false;
-            final Iterator<Property> iter = component.getProperties().iterator();
-            while ( !found && iter.hasNext() )
-            {
-                final Property prop = iter.next();
-                found = org.osgi.framework.Constants.SERVICE_PID.equals( prop.getName() );
-            }
-            if ( !found )
-            {
-                final Property pid = new Property();
-                component.addProperty( pid );
-                pid.setName( org.osgi.framework.Constants.SERVICE_PID );
-                pid.setValue( component.getName() );
-            }
-        }
-        return component;
-    }
-
-
-    /**
-     * Fill the component object with the information from the tag.
-     * @param tag
-     * @param component
-     */
-    protected OCD doComponent( final JavaTag tag,
-            final Component component,
-            final MetaData metaData,
-            final boolean inherit,
-            final IssueLog iLog )
-        throws SCRDescriptorException
-    {
-
-        // check if this is an abstract definition
-        final String abstractType = tag.getNamedParameter( Constants.COMPONENT_ABSTRACT );
-        if ( abstractType != null )
-        {
-            component.setAbstract( "yes".equalsIgnoreCase( abstractType ) || "true".equalsIgnoreCase( abstractType ) );
-        }
-        else
-        {
-            // default true for abstract classes, false otherwise
-            component.setAbstract( tag.getJavaClassDescription().isAbstract() );
-        }
-
-        // check if this is a definition to ignore
-        final String ds = tag.getNamedParameter( Constants.COMPONENT_DS );
-        component.setDs( ( ds == null ) ? true : ( "yes".equalsIgnoreCase( ds ) || "true".equalsIgnoreCase( ds ) ) );
-
-        String name = tag.getNamedParameter( Constants.COMPONENT_NAME );
-        component.setName( StringUtils.isEmpty( name ) ? component.getImplementation().getClassame() : name );
-
-        component.setEnabled( Boolean.valueOf( getBoolean( tag, Constants.COMPONENT_ENABLED, true ) ) );
-        component.setFactory( tag.getNamedParameter( Constants.COMPONENT_FACTORY ) );
-
-        // FELIX-1703: support explicit SCR version declaration
-        final String dsSpecVersion = tag.getNamedParameter( Constants.COMPONENT_DS_SPEC_VERSION );
-        if ( dsSpecVersion != null )
-        {
-            component.setSpecVersion( toSpecVersionCode( dsSpecVersion, tag ) );
-        }
-
-        // FELIX-593: immediate attribute does not default to true all the
-        // times hence we only set it if declared in the tag
-        if ( tag.getNamedParameter( Constants.COMPONENT_IMMEDIATE ) != null )
-        {
-            component.setImmediate( Boolean.valueOf( getBoolean( tag, Constants.COMPONENT_IMMEDIATE, true ) ) );
-        }
-
-        // check for V1.1 attributes: configuration policy
-        if ( tag.getNamedParameter( Constants.COMPONENT_CONFIG_POLICY ) != null )
-        {
-            component.setSpecVersion( Constants.VERSION_1_1 );
-            component.setConfigurationPolicy( tag.getNamedParameter( Constants.COMPONENT_CONFIG_POLICY ) );
-        }
-        // check for V1.1 attributes: activate, deactivate, modified
-        component.setActivate(this.checkLifecycleMethod(component, Constants.COMPONENT_ACTIVATE, tag, inherit));
-        component.setDeactivate(this.checkLifecycleMethod(component, Constants.COMPONENT_DEACTIVATE, tag, inherit));
-        component.setModified(this.checkLifecycleMethod(component, Constants.COMPONENT_MODIFIED, tag, inherit));
-
-        // whether metatype information is to generated for the component
-        final String metaType = tag.getNamedParameter( Constants.COMPONENT_METATYPE );
-        final boolean hasMetaType = metaType == null || "yes".equalsIgnoreCase( metaType )
-            || "true".equalsIgnoreCase( metaType );
-        if ( !component.isAbstract() && hasMetaType )
-        {
-            // ocd
-            final OCD ocd = new OCD();
+        // Create metatype (if required)
+        final OCD ocd;
+        if ( !componentDesc.isAbstract() && componentDesc.isCreateMetatype() ) {
+            // OCD
+            ocd = new OCD();
             metaData.addOCD( ocd );
-            ocd.setId( component.getName() );
-            String ocdName = tag.getNamedParameter( Constants.COMPONENT_LABEL );
-            if ( ocdName == null )
-            {
-                ocdName = "%" + component.getName() + ".name";
+            ocd.setId( componentDesc.getName() );
+            if ( componentDesc.getLabel() != null ) {
+                ocd.setName( componentDesc.getLabel() );
+            } else {
+                ocd.setName( "%" + componentDesc.getName() + ".name");
             }
-            ocd.setName( ocdName );
-            String ocdDescription = tag.getNamedParameter( Constants.COMPONENT_DESCRIPTION );
-            if ( ocdDescription == null )
-            {
-                ocdDescription = "%" + component.getName() + ".description";
+            if ( componentDesc.getDescription() != null ) {
+                ocd.setDescription( componentDesc.getDescription() );
+            } else {
+                ocd.setDescription( "%" + componentDesc.getName() + ".description");
             }
-            ocd.setDescription( ocdDescription );
-            // designate
+
+            // Designate
             final Designate designate = new Designate();
             metaData.addDesignate( designate );
-            designate.setPid( component.getName() );
+            designate.setPid( componentDesc.getName() );
 
-            // factory pid
-            final String setFactoryPidValue = tag.getNamedParameter( Constants.COMPONENT_SET_METATYPE_FACTORY_PID );
-            final boolean setFactoryPid = setFactoryPidValue != null
-                && ( "yes".equalsIgnoreCase( setFactoryPidValue ) || "true".equalsIgnoreCase( setFactoryPidValue ) );
-            if ( setFactoryPid )
-            {
-                if ( component.getFactory() == null )
-                {
-                    designate.setFactoryPid( component.getName() );
-                }
-                else
-                {
-                    iLog.addWarning( "Component factory " + component.getName()
-                        + " should not set metatype factory pid.", tag.getSourceLocation(), tag.getLineNumber() );
+            // Factory pid
+            if ( componentDesc.isSetMetatypeFactoryPid() ) {
+                if ( componentDesc.getFactory() == null ) {
+                    designate.setFactoryPid( componentDesc.getName() );
+                } else {
+                    iLog.addWarning( "Component factory " + componentDesc.getName()
+                        + " should not set metatype factory pid.", desc.getSource() );
                 }
             }
-            // designate.object
+            // MTObject
             final MTObject mtobject = new MTObject();
             designate.setObject( mtobject );
-            mtobject.setOcdref( component.getName() );
-            return ocd;
+            mtobject.setOcdref( componentDesc.getName() );
+        } else {
+            ocd = null;
         }
-        return null;
-    }
 
-    private String checkLifecycleMethod(final Component component,
-            final String methodTagName,
-            final JavaTag tag,
-            final boolean inherit)
-    throws SCRDescriptorException
-    {
-        String method = null;
-        if ( tag.getNamedParameter( methodTagName ) != null )
-        {
-            method = tag.getNamedParameter( methodTagName );
-        }
-        else if ( inherit )
-        {
-            // check if a super class has the activate method specified
-            JavaClassDescription desc = tag.getJavaClassDescription().getSuperClass();
-            while ( desc != null && method == null )
-            {
-                final JavaTag componentTag = desc.getTagByName( Constants.COMPONENT );
-                if ( componentTag != null && componentTag.getNamedParameter( methodTagName ) != null )
-                {
-                    method = componentTag.getNamedParameter( methodTagName );
+        // Create implementation object
+        final Implementation impl = new Implementation(desc.getDescribedClass().getName());
+        comp.setImplementation(impl);
+
+        final Map<String, Reference> allReferences = new HashMap<String, Reference>();
+        final Map<String, Property> allProperties = new HashMap<String, Property>();
+
+        ClassDescription current = desc;
+        boolean inherit;
+        do {
+            final ComponentDescription cd = current.getDescription(ComponentDescription.class);
+            inherit = (cd == null ? true : cd.isInherit());
+
+            if ( cd != null ) {
+                // handle enabled and immediate
+                if ( comp.isEnabled() == null ) {
+                    comp.setEnabled(cd.getEnabled());
                 }
-                desc = desc.getSuperClass();
+                if ( comp.isImmediate() == null ) {
+                    comp.setImmediate(cd.getImmediate());
+                }
+
+                // lifecycle methods
+                if ( comp.getActivate() == null && cd.getActivate() != null ) {
+                    comp.setActivate(cd.getActivate().getName());
+                }
+                if ( comp.getDeactivate() == null && cd.getDeactivate() != null ) {
+                    comp.setDeactivate(cd.getDeactivate().getName());
+                }
+                if ( comp.getModified() == null && cd.getModified() != null ) {
+                    comp.setModified(cd.getModified().getName());
+                }
+                if ( comp.getActivate() != null || comp.getDeactivate() != null || comp.getModified() != null ) {
+                    // spec version must be at least 1.1
+                    comp.setSpecVersion(SpecVersion.VERSION_1_1);
+                }
             }
+
+            // services, properties, references
+            this.processServices(current, comp);
+            this.processProperties(current, comp, ocd, allProperties);
+            this.processReferences(current, comp, allReferences);
+
+            // go up in the class hierarchy
+            if ( !inherit || current.getDescribedClass().getSuperclass() == null ) {
+                current = null;
+            } else {
+                current = this.scanner.getDescription(current.getDescribedClass().getSuperclass());
+            }
+        } while ( inherit && current != null);
+
+        // PID handling
+        if ( componentDesc.isCreatePid() && !allProperties.containsKey(org.osgi.framework.Constants.SERVICE_PID)) {
+            final Property pid = new Property(null, "scr-generator");
+            pid.setName( org.osgi.framework.Constants.SERVICE_PID );
+            pid.setValue( comp.getName() );
+
+            allProperties.put(org.osgi.framework.Constants.SERVICE_PID, pid);
+            comp.addProperty( pid );
         }
-        if ( method != null )
-        {
-            component.setSpecVersion( Constants.VERSION_1_1 );
-        }
-        return method;
+        this.processGlobalProperties(desc, comp, allProperties);
+
+        return comp;
     }
 
     /**
-     * Process the service annotations
-     * @param services
-     * @param component
-     * @param description
-     * @throws SCRDescriptorException
+     * Process service directives
      */
-    protected void doServices( JavaTag[] services, Component component, JavaClassDescription description )
-        throws SCRDescriptorException
-    {
-        // no services, hence certainly no service factory
-        if ( services == null || services.length == 0 )
-        {
-            return;
-        }
+    private void processServices(final ClassDescription current, final Component component)
+    throws SCRDescriptorException, SCRDescriptorFailureException {
 
-        final Service service = new Service();
-        component.setService( service );
-        boolean serviceFactory = false;
-        for ( int i = 0; i < services.length; i++ )
-        {
-            final String name = services[i].getNamedParameter( Constants.SERVICE_INTERFACE );
-            if ( StringUtils.isEmpty( name ) )
-            {
-
-                this.addInterfaces( service, services[i], description );
+        final ServiceDescription serviceDesc = current.getDescription(ServiceDescription.class);
+        if ( serviceDesc != null ) {
+            Service service = component.getService();
+            if ( service == null ) {
+                service = new Service();
+                service.setServiceFactory(false);
+                component.setService(service);
             }
-            else
-            {
-                String interfaceName = name;
-                // check if the value points to a class/interface
-                // and search through the imports
-                // but only for local services
-                if ( description instanceof QDoxJavaClassDescription )
-                {
-                    final JavaClassDescription serviceClass = description.getReferencedClass( name );
-                    if ( serviceClass == null )
-                    {
-                        throw new SCRDescriptorException( "Interface '" + name + "' in class " + description.getName()
-                            + " does not point to a valid class/interface.", services[i] );
+            if ( serviceDesc.isServiceFactory() ) {
+                service.setServiceFactory(true);
+            }
+            for(final String className : serviceDesc.getInterfaces()) {
+                final Interface interf = new Interface(serviceDesc.getAnnotation(), current.getSource());
+                interf.setInterfaceName(className);
+                service.addInterface(interf);
+            }
+        }
+    }
+
+    /**
+     * Process property directives
+     */
+    private void processProperties(
+                    final ClassDescription current,
+                    final Component component,
+                    final OCD ocd,
+                    final Map<String, Property> allProperties)
+    throws SCRDescriptorException, SCRDescriptorFailureException {
+        for(final PropertyDescription pd : current.getDescriptions(PropertyDescription.class)) {
+            final Property prop = new Property(pd.getAnnotation(), current.getSource());
+            prop.setName(pd.getName());
+            prop.setType(pd.getType());
+            if ( pd.getValue() != null ) {
+                prop.setValue(pd.getValue());
+            } else {
+                prop.setMultiValue(pd.getMultiValue());
+            }
+
+            // metatype - is this property private?
+            final boolean isPrivate;
+            if ( pd.isPrivate() != null ) {
+                isPrivate = pd.isPrivate();
+            } else {
+                final String name = prop.getName();
+                if (org.osgi.framework.Constants.SERVICE_RANKING.equals(name)
+                    || org.osgi.framework.Constants.SERVICE_PID.equals(name)
+                    || org.osgi.framework.Constants.SERVICE_DESCRIPTION.equals(name)
+                    || org.osgi.framework.Constants.SERVICE_ID.equals(name)
+                    || org.osgi.framework.Constants.SERVICE_VENDOR.equals(name)
+                    || ConfigurationAdmin.SERVICE_BUNDLELOCATION.equals(name)
+                    || ConfigurationAdmin.SERVICE_FACTORYPID.equals(name) ) {
+                    isPrivate = true;
+                } else {
+                    isPrivate = false;
+                }
+            }
+            if ( !isPrivate && ocd != null ) {
+                final AttributeDefinition ad = new AttributeDefinition();
+                ocd.getProperties().add(ad);
+                ad.setId(prop.getName());
+                ad.setType(prop.getType().name());
+
+                if (pd.getLabel() != null ) {
+                    ad.setName(pd.getLabel());
+                } else {
+                    ad.setName("%" + prop.getName() + ".name");
+                }
+                if (pd.getDescription() != null ) {
+                    ad.setDescription(pd.getDescription());
+                } else {
+                    ad.setDescription("%" + prop.getName() + ".description");
+                }
+
+                if ( pd.getUnbounded() == PropertyUnbounded.DEFAULT ) {
+                    ad.setCardinality(pd.getCardinality());
+                } else if ( pd.getUnbounded() == PropertyUnbounded.ARRAY ) {
+                    // unlimited array
+                    ad.setCardinality(new Integer(Integer.MAX_VALUE));
+                } else {
+                    // unlimited vector
+                    ad.setCardinality(new Integer(Integer.MIN_VALUE));
+                }
+
+                ad.setDefaultValue(prop.getValue());
+                ad.setDefaultMultiValue(prop.getMultiValue());
+
+                // check options
+                final String[] parameters = pd.getOptions();
+                if ( parameters != null && parameters.length > 0 ) {
+                    final Map<String, String> options = new LinkedHashMap<String, String>();
+                    for (int j=0; j < parameters.length; j=j+2) {
+                        final String optionLabel = parameters[j];
+                        final String optionValue = (j < parameters.length-1) ? parameters[j+1] : null;
+                        if (optionValue != null) {
+                            options.put(optionLabel, optionValue);
+                        }
                     }
-                    interfaceName = serviceClass.getName();
+                    ad.setOptions(options);
                 }
-                final Interface interf = new Interface( services[i] );
-                interf.setInterfacename( interfaceName );
-                service.addInterface( interf );
+
             }
-
-            serviceFactory |= getBoolean( services[i], Constants.SERVICE_FACTORY, false );
+            if ( this.testProperty(current, allProperties, prop, current == component.getClassDescription())) {
+                component.addProperty(prop);
+            }
         }
-
-        service.setServicefactory( serviceFactory );
     }
-
 
     /**
-     * Recursively add interfaces to the service.
+     * Add global properties (if not already defined in the component)
      */
-    protected void addInterfaces( final Service service, final JavaTag serviceTag,
-        final JavaClassDescription description ) throws SCRDescriptorException
-    {
-        if ( description != null )
-        {
-            JavaClassDescription[] interfaces = description.getImplementedInterfaces();
-            for ( int j = 0; j < interfaces.length; j++ )
-            {
-                final Interface interf = new Interface( serviceTag );
-                interf.setInterfacename( interfaces[j].getName() );
-                service.addInterface( interf );
-                // recursivly add interfaces implemented by this interface
-                this.addInterfaces( service, serviceTag, interfaces[j] );
-            }
+    private void processGlobalProperties(final ClassDescription desc,
+                    final Component component,
+                    final Map<String, Property> allProperties) {
+        // apply pre configured global properties
+        if ( this.options.getProperties() != null ) {
+            for(final Map.Entry<String, String> entry : this.options.getProperties().entrySet()) {
+                final String propName = entry.getKey();
+                final String value = entry.getValue();
+                // check if the service already provides this property
+                if ( value != null && !allProperties.containsKey(propName) ) {
 
-            // try super class
-            this.addInterfaces( service, serviceTag, description.getSuperClass() );
+                    final Property p = new Property(null, "scr-generator");
+                    p.setName(propName);
+                    p.setValue(value);
+                    p.setType(PropertyType.String);
+
+                    component.addProperty(p);
+                    allProperties.put(propName, p);
+                }
+            }
         }
     }
 
+    /**
+     * Test a newly found property
+     */
+    private boolean testProperty(final ClassDescription current,
+                    final Map<String, Property> allProperties,
+                    final Property newProperty,
+                    boolean isInspectedClass ) {
+        final String propName = newProperty.getName();
+
+        if ( !StringUtils.isEmpty(propName) ) {
+            if ( allProperties.containsKey(propName) ) {
+                // if the current class is the class we are currently inspecting, we
+                // have found a duplicate definition
+                if ( isInspectedClass ) {
+                    iLog.addError("Duplicate definition for property " + propName + " in class "
+                                    + current.getDescribedClass().getName(), current.getSource() );
+                }
+            } else {
+                allProperties.put(propName, newProperty);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Process reference directives
+     */
+    private void processReferences(final ClassDescription current,
+                    final Component component,
+                    final Map<String, Reference> allReferences)
+    throws SCRDescriptorException, SCRDescriptorFailureException {
+        for(final ReferenceDescription rd : current.getDescriptions(ReferenceDescription.class)) {
+            final Reference ref = new Reference(rd.getAnnotation(), current.getSource());
+            ref.setName(rd.getName());
+            ref.setInterfacename(rd.getInterfaceName());
+            ref.setCardinality(rd.getCardinality());
+            ref.setPolicy(rd.getPolicy());
+            ref.setStrategy(rd.getStrategy());
+            ref.setTarget(rd.getTarget());
+            ref.setField(rd.getField());
+            if ( rd.getBind() != null ) {
+                ref.setBind(rd.getBind().getName());
+            }
+            if ( rd.getUnbind() != null ) {
+                ref.setUnbind(rd.getUnbind().getName());
+            }
+            if ( rd.getUpdated() != null ) {
+                ref.setUpdated(rd.getUpdated().getName());
+            }
+
+            if ( this.testReference(current, allReferences, ref, component.getClassDescription() == current) ) {
+                component.addReference(ref);
+            }
+        }
+    }
 
     /**
      * Test a newly found reference
-     * @param references
-     * @param reference
-     * @param defaultName
-     * @param isInspectedClass
-     * @throws SCRDescriptorException
      */
-    protected void testReference( Map<String, Object[]> references, JavaTag reference, String defaultName,
-        boolean isInspectedClass ) throws SCRDescriptorException
-    {
-        String refName = this.getReferenceName( reference, defaultName );
-
-        boolean setName = refName != null;
-        if ( refName == null)
-        {
-            refName = this.getReferencedInterface(reference, isInspectedClass, null);
+    private boolean testReference(final ClassDescription current,
+                    final Map<String, Reference> allReferences,
+                    final Reference newReference,
+                    boolean isInspectedClass ) {
+        String refName = newReference.getName();
+        if ( refName == null) {
+            refName = newReference.getInterfacename();
         }
 
-        if ( refName != null )
-        {
-            if ( references.containsKey( refName ) )
-            {
+        if ( refName != null ) {
+            if ( allReferences.containsKey( refName ) ) {
                 // if the current class is the class we are currently inspecting, we
                 // have found a duplicate definition
-                if ( isInspectedClass )
-                {
-                    throw new SCRDescriptorException( "Duplicate definition for reference " + refName + " in class "
-                        + reference.getJavaClassDescription().getName(), reference );
+                if ( isInspectedClass ) {
+                    iLog.addError("Duplicate definition for reference " + refName + " in class "
+                        + current.getDescribedClass().getName(), current.getSource() );
                 }
-            }
-            else
-            {
-                // ensure interface
-                final String type = this.getReferencedInterface(reference, isInspectedClass, refName);
-                references.put( refName, new Object[]
-                    { reference, type, (setName ? Boolean.TRUE : Boolean.FALSE) } );
+            } else {
+                allReferences.put(refName, newReference);
+                return true;
             }
         }
-        else
-        {
-            throw new SCRDescriptorException( "No name detectable for reference in class "
-                    + reference.getJavaClassDescription().getName(), reference );
-        }
-    }
-
-    protected String getReferencedInterface(final JavaTag reference,
-                                            final boolean isInspectedClass,
-                                            final String refName) throws SCRDescriptorException
-    {
-        String type = reference.getNamedParameter( Constants.REFERENCE_INTERFACE );
-        if ( StringUtils.isEmpty( type ) )
-        {
-            if ( reference.getField() != null )
-            {
-                type = reference.getField().getType();
-            }
-            else
-            {
-                throw new SCRDescriptorException( "Interface missing for reference " + (refName == null ? "" : refName) + " in class "
-                    + reference.getJavaClassDescription().getName(), reference );
-            }
-        }
-        else if ( isInspectedClass )
-        {
-            // check if the value points to a class/interface
-            // and search through the imports
-            final JavaClassDescription serviceClass = reference.getJavaClassDescription().getReferencedClass(
-                type );
-            if ( serviceClass == null )
-            {
-                throw new SCRDescriptorException( "Interface '" + type + "' in class "
-                    + reference.getJavaClassDescription().getName()
-                    + " does not point to a valid class/interface.", reference );
-            }
-            type = serviceClass.getName();
-        }
-        return type;
-    }
-
-    protected String getReferenceName( final JavaTag reference,
-            final String defaultName) throws SCRDescriptorException
-    {
-        String name = reference.getNamedParameter( Constants.REFERENCE_NAME );
-        if ( !StringUtils.isEmpty( name ) )
-        {
-            return name;
-        }
-        name = reference.getNamedParameter( Constants.REFERENCE_NAME_REF );
-        if ( !StringUtils.isEmpty( name ) )
-        {
-            final JavaField refField = this.getReferencedField( reference, name );
-            final String[] values = refField.getInitializationExpression();
-            if ( values == null || values.length == 0 )
-            {
-                throw new SCRDescriptorException( "Referenced field for " + name
-                    + " has no values for a reference name.", reference );
-            }
-            if ( values.length > 1 )
-            {
-                throw new SCRDescriptorException( "Referenced field " + name
-                    + " has more than one value for a reference name.", reference );
-            }
-            return values[0];
-        }
-
-        return defaultName;
-    }
-
-
-    protected JavaField getReferencedField( final JavaTag tag, String ref ) throws SCRDescriptorException
-    {
-        int classSep = ref.lastIndexOf( '.' );
-        JavaField field = null;
-        if ( classSep == -1 )
-        {
-            // local variable
-            field = tag.getJavaClassDescription().getFieldByName( ref );
-        }
-        if ( field == null )
-        {
-            field = tag.getJavaClassDescription().getExternalFieldByName( ref );
-        }
-        if ( field == null )
-        {
-            throw new SCRDescriptorException( "Reference references unknown field " + ref + " in class "
-                + tag.getJavaClassDescription().getName(), tag );
-        }
-        return field;
-    }
-
-
-    /**
-     * Process a reference
-     * @param reference
-     * @param defaultName
-     * @param component
-     */
-    protected void doReference( JavaTag reference, String name, Component component, String type,
-            final boolean setName)
-        throws SCRDescriptorException
-    {
-        final Reference ref = new Reference( reference, component.getJavaClassDescription() );
-        if ( setName )
-        {
-            ref.setName( name );
-        }
-        ref.setInterfacename( type );
-        ref.setCardinality( reference.getNamedParameter( Constants.REFERENCE_CARDINALITY ) );
-        if ( ref.getCardinality() == null )
-        {
-            ref.setCardinality( "1..1" );
-        }
-        ref.setPolicy( reference.getNamedParameter( Constants.REFERENCE_POLICY ) );
-        if ( ref.getPolicy() == null )
-        {
-            ref.setPolicy( "static" );
-        }
-        ref.setTarget( reference.getNamedParameter( Constants.REFERENCE_TARGET ) );
-        final String bindValue = reference.getNamedParameter( Constants.REFERENCE_BIND );
-        if ( bindValue != null )
-        {
-            ref.setBind( bindValue );
-        }
-        final String unbindValue = reference.getNamedParameter( Constants.REFERENCE_UNDBIND );
-        if ( unbindValue != null )
-        {
-            ref.setUnbind( unbindValue );
-        }
-        final String updatedValue = reference.getNamedParameter( Constants.REFERENCE_UPDATED );
-        if ( updatedValue != null )
-        {
-            ref.setUpdated( updatedValue );
-        }
-        final String isChecked = reference.getNamedParameter( Constants.REFERENCE_CHECKED );
-        if ( isChecked != null )
-        {
-            ref.setChecked( Boolean.valueOf( isChecked ).booleanValue() );
-        }
-        final String strategy = reference.getNamedParameter( Constants.REFERENCE_STRATEGY );
-        if ( strategy != null )
-        {
-            ref.setStrategy( strategy );
-        }
-
-        component.addReference( ref );
-    }
-
-
-    public static boolean getBoolean( JavaTag tag, String name, boolean defaultValue )
-    {
-        String value = tag.getNamedParameter( name );
-        return ( value == null ) ? defaultValue : Boolean.valueOf( value ).booleanValue();
-    }
-
-
-
-    /**
-     * Converts the specification version string to a specification version
-     * code. Currently the following conversions are supported:
-     * <table>
-     * <tr><td><code>null</code></td><td>0</td></tr>
-     * <tr><td>1.0</td><td>0</td></tr>
-     * <tr><td>1.1</td><td>1</td></tr>
-     * <tr><td>1.1-felix</td><td>2</td></tr>
-     * </table>
-     *
-     * @param specVersion The specification version to convert. This may be
-     *      <code>null</code> to assume the default version.
-     *
-     * @return The specification version code.
-     *
-     * @throws SCRDescriptorException if the <code>specVersion</code> parameter
-     *      is not a supported value.
-     */
-    private int toSpecVersionCode( String specVersion, JavaTag tag ) throws SCRDescriptorException
-    {
-        if ( specVersion == null || specVersion.equals( Constants.COMPONENT_DS_SPEC_VERSION_10 ) )
-        {
-            return Constants.VERSION_1_0;
-        }
-        else if ( specVersion.equals( Constants.COMPONENT_DS_SPEC_VERSION_11 ) )
-        {
-            return Constants.VERSION_1_1;
-        }
-        else if ( specVersion.equals( Constants.COMPONENT_DS_SPEC_VERSION_11_FELIX ) )
-        {
-            return Constants.VERSION_1_1_FELIX;
-        }
-
-        // unknown specVersion string
-        throw new SCRDescriptorException( "Unsupported or unknown DS spec version: " + specVersion, tag );
+        return false;
     }
 }

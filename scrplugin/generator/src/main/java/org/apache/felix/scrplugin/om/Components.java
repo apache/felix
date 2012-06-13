@@ -21,6 +21,8 @@ package org.apache.felix.scrplugin.om;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.felix.scrplugin.description.SpecVersion;
+
 /**
  * <code>Components</code>...
  *
@@ -29,10 +31,10 @@ import java.util.List;
 public class Components {
 
     /** The spec version. */
-    private int specVersion;
+    private SpecVersion specVersion;
 
     /** The list of {@link Component}s. */
-    protected List<Component> components = new ArrayList<Component>();
+    private List<Component> components = new ArrayList<Component>();
 
     /**
      * Return the list of {@link Component}s.
@@ -58,14 +60,14 @@ public class Components {
     /**
      * Get the spec version.
      */
-    public int getSpecVersion() {
+    public SpecVersion getSpecVersion() {
         return this.specVersion;
     }
 
     /**
      * Set the spec version.
      */
-    public void setSpecVersion(int value) {
+    public void setSpecVersion(SpecVersion value) {
         this.specVersion = value;
     }
 }

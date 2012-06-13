@@ -18,9 +18,9 @@
  */
 package org.apache.felix.scrplugin.om;
 
-import org.apache.felix.scrplugin.Constants;
-import org.apache.felix.scrplugin.helper.IssueLog;
-import org.apache.felix.scrplugin.tags.JavaTag;
+import org.apache.felix.scrplugin.description.PropertyType;
+import org.apache.felix.scrplugin.description.SpecVersion;
+import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
 
 /**
  * <code>Property.java</code>...
@@ -30,26 +30,14 @@ public class Property extends AbstractObject {
 
     protected String name;
     protected String value;
-    protected String type;
+    protected PropertyType type;
     protected String[] multiValue;
-
-    protected boolean isPrivate;
-    protected String label;
-    protected String description;
-    protected String cardinality;
-
-    /**
-     * Default constructor.
-     */
-    public Property() {
-        this(null);
-    }
 
     /**
      * Constructor from java source.
      */
-    public Property(JavaTag t) {
-        super(t);
+    public Property(final ScannedAnnotation annotation, final String sourceLocation) {
+        super(annotation, sourceLocation);
     }
 
     public String getName() {
@@ -69,11 +57,11 @@ public class Property extends AbstractObject {
         this.multiValue = null;
     }
 
-    public String getType() {
+    public PropertyType getType() {
         return this.type;
     }
 
-    public void setType(String type) {
+    public void setType(PropertyType type) {
         this.type = type;
     }
 
@@ -91,64 +79,20 @@ public class Property extends AbstractObject {
      * If errors occur a message is added to the issues list,
      * warnings can be added to the warnings list.
      */
-    public void validate(final int specVersion, final IssueLog iLog) {
-        if ( name == null || name.trim().length() == 0 ) {
-            this.logError( iLog, "Property name can not be empty." );
+    public void validate(final Context context) {
+        if (name == null || name.trim().length() == 0) {
+            this.logError(context.getIssueLog(), "Property name can not be empty.");
         }
-        if ( type != null ) {
-            if ( !type.equals(Constants.PROPERTY_TYPE_BOOLEAN)
-                 && !type.equals(Constants.PROPERTY_TYPE_BYTE )
-                 && !type.equals(Constants.PROPERTY_TYPE_CHAR )
-                 && !type.equals(Constants.PROPERTY_TYPE_CHAR_1_1 )
-                 && !type.equals(Constants.PROPERTY_TYPE_DOUBLE )
-                 && !type.equals(Constants.PROPERTY_TYPE_FLOAT )
-                 && !type.equals(Constants.PROPERTY_TYPE_INTEGER )
-                 && !type.equals(Constants.PROPERTY_TYPE_LONG )
-                 && !type.equals(Constants.PROPERTY_TYPE_STRING )
-                 && !type.equals(Constants.PROPERTY_TYPE_SHORT ) ) {
-                this.logError( iLog, "Property " + name + " has unknown type: " + type );
-            }
+        if (type != null) {
             // now check for old and new char
-            if ( specVersion == Constants.VERSION_1_0 && type.equals(Constants.PROPERTY_TYPE_CHAR_1_1) ) {
-                type = Constants.PROPERTY_TYPE_CHAR;
+            if (context.getSpecVersion() == SpecVersion.VERSION_1_0 && type == PropertyType.Character) {
+                type = PropertyType.Char;
             }
-            if ( specVersion >= Constants.VERSION_1_1 && type.equals(Constants.PROPERTY_TYPE_CHAR) ) {
-                type = Constants.PROPERTY_TYPE_CHAR_1_1;
+            if (context.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal()
+                            && type == PropertyType.Char) {
+                type = PropertyType.Character;
             }
         }
         // TODO might want to check value
     }
-
-    public boolean isPrivate() {
-        return isPrivate;
-    }
-
-    public void setPrivate(boolean isPrivate) {
-        this.isPrivate = isPrivate;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getCardinality() {
-        return cardinality;
-    }
-
-    public void setCardinality(String cardinality) {
-        this.cardinality = cardinality;
-    }
-
 }

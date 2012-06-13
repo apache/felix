@@ -19,29 +19,27 @@
 package org.apache.felix.scrplugin.om;
 
 import org.apache.felix.scrplugin.helper.IssueLog;
-import org.apache.felix.scrplugin.tags.JavaTag;
+import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
 
 /**
- * The <code>AbstractObject</code>
- * is the base class for the all classes of the scr om.
+ * The <code>AbstractObject</code> is the base class for the all classes of the scr om.
  */
 public abstract class AbstractObject {
 
-    protected final JavaTag tag;
+    private final String annotationName;
 
-    protected AbstractObject(JavaTag tag) {
-        this.tag = tag;
+    private final String sourceLocation;
+
+    protected AbstractObject(final ScannedAnnotation annotation, final String sourceLocation) {
+        this.annotationName = (annotation != null ? annotation.getName() : "<unknown>");
+        this.sourceLocation = sourceLocation;
     }
 
     protected void logWarn(IssueLog iLog, String message) {
-        iLog.addWarning( "@" + this.tag.getSourceName() + ": " + message, tag.getSourceLocation(), tag.getLineNumber() );
+        iLog.addWarning("@" + this.annotationName + ": " + message, sourceLocation);
     }
 
     protected void logError(IssueLog iLog, String message) {
-        iLog.addError( "@" + this.tag.getSourceName() + ": " + message, tag.getSourceLocation(), tag.getLineNumber() );
-    }
-
-    public JavaTag getJavaTag() {
-        return this.tag;
+        iLog.addError("@" + this.annotationName + ": " + message, sourceLocation);
     }
 }

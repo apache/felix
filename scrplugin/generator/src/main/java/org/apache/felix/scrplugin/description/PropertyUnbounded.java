@@ -16,38 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.tags;
-
-import java.util.Map;
+package org.apache.felix.scrplugin.description;
 
 /**
- * <code>JavaTag.java</code>...
- *
+ * Options for {@link PropertyDescription#getUnbounded()}
  */
-public interface JavaTag {
+public enum PropertyUnbounded {
 
-    /**
-     * The name of the tag, e.g. scr.component etc.
-     */
-    String getName();
+    /** Property is not unbounded. This is the default. */
+    DEFAULT,
 
-    /**
-     * The name of the tag as used in the source code.
-     * For javadoc tags this is like {@link #getName()}, for annoations this is different.
-     */
-    String getSourceName();
+    /** Property is an unbounded array. */
+    ARRAY,
 
-    String[] getParameters();
-
-    String getNamedParameter(String arg0);
-
-    String getSourceLocation();
-
-    int getLineNumber();
-
-    JavaClassDescription getJavaClassDescription();
-
-    JavaField getField();
-
-    Map<String, String> getNamedParameterMap();
+    /** Property is an unbounded vector. */
+    VECTOR
 }
