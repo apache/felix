@@ -23,54 +23,53 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
-import org.apache.felix.scrplugin.helper.IssueLog;
 
 /**
- * <code>Service</code>...
- *
+ * <code>Service</code>
+ * 
+ * contains all service information of a component.
  */
 public class Service {
 
-    protected boolean isServicefactory;
+    /** Flag for the service factory. */
+    private boolean isServiceFactory;
 
     /** The list of implemented interfaces. */
-    protected final List<Interface> interfaces = new ArrayList<Interface>();
+    private final List<Interface> interfaces = new ArrayList<Interface>();
 
     /**
-     * Default constructor.
+     * Is this a service factory?
      */
-    public Service() {
-        // nothing to do
+    public boolean isServiceFactory() {
+        return this.isServiceFactory;
     }
 
-    public boolean isServicefactory() {
-        return this.isServicefactory;
+    /**
+     * Set the service factory flag.
+     */
+    public void setServiceFactory(final boolean flag) {
+        this.isServiceFactory = flag;
     }
 
-    public void setServicefactory(String servicefactory) {
-        if ( servicefactory != null ) {
-            this.isServicefactory = Boolean.valueOf(servicefactory).booleanValue();
-        }
-    }
-
-    public void setServicefactory(boolean flag) {
-        this.isServicefactory = flag;
-    }
-
+    /**
+     * Return the list of interfaces.
+     */
     public List<Interface> getInterfaces() {
         return this.interfaces;
     }
 
     /**
      * Search for an implemented interface.
-     * @param name The name of the interface.
+     * 
+     * @param name
+     *            The name of the interface.
      * @return The interface if it is implemented by this service or null.
      */
-    public Interface findInterface(String name) {
+    public Interface findInterface(final String name) {
         final Iterator<Interface> i = this.getInterfaces().iterator();
-        while ( i.hasNext() ) {
+        while (i.hasNext()) {
             final Interface current = i.next();
-            if ( current.getInterfacename().equals(name) ) {
+            if (current.getInterfaceName().equals(name)) {
                 return current;
             }
         }
@@ -79,11 +78,13 @@ public class Service {
 
     /**
      * Add an interface to the list of interfaces.
-     * @param interf The interface.
+     * 
+     * @param interf
+     *            The interface.
      */
-    public void addInterface(Interface interf) {
+    public void addInterface(final Interface interf) {
         // add interface only once
-        if ( this.findInterface(interf.getInterfacename()) == null ) {
+        if (this.findInterface(interf.getInterfaceName()) == null) {
             this.interfaces.add(interf);
         }
     }
@@ -93,11 +94,9 @@ public class Service {
      * If errors occur a message is added to the issues list,
      * warnings can be added to the warnings list.
      */
-    public void validate(final int specVersion, final IssueLog iLog)
-    throws SCRDescriptorException {
-        for(final Interface interf : this.getInterfaces()) {
-            interf.validate(specVersion, iLog);
+    public void validate(final Context context) throws SCRDescriptorException {
+        for (final Interface interf : this.getInterfaces()) {
+            interf.validate(context);
         }
     }
-
 }

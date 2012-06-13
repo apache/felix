@@ -19,38 +19,38 @@
 package org.apache.felix.scrplugin.om;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
-import org.apache.felix.scrplugin.helper.IssueLog;
-import org.apache.felix.scrplugin.tags.JavaClassDescription;
-import org.apache.felix.scrplugin.tags.JavaTag;
+import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
 
 /**
- * <code>Interface.java</code>...
+ * <code>Interface</code>
  *
+ * contains an interface name the component is implementing
+ * (the interface name can also be a class name)
  */
 public class Interface extends AbstractObject {
 
-    protected String interfacename;
-
-    /**
-     * Default constructor.
-     */
-    public Interface() {
-        this(null);
-    }
+    /** Name of the interface. */
+    private String interfaceName;
 
     /**
      * Constructor from java source.
      */
-    public Interface(JavaTag t) {
-        super(t);
+    public Interface(final ScannedAnnotation annotation, final String sourceLocation) {
+        super(annotation, sourceLocation);
     }
 
-    public String getInterfacename() {
-        return this.interfacename;
+    /**
+     * Get the interface name.
+     */
+    public String getInterfaceName() {
+        return this.interfaceName;
     }
 
-    public void setInterfacename(String name) {
-        this.interfacename = name;
+    /**
+     * Set the interface name.
+     */
+    public void setInterfaceName(final String name) {
+        this.interfaceName = name;
     }
 
     /**
@@ -58,16 +58,18 @@ public class Interface extends AbstractObject {
      * If errors occur a message is added to the issues list,
      * warnings can be added to the warnings list.
      */
-    public void validate(final int specVersion, final IssueLog iLog)
-    throws SCRDescriptorException {
-        final JavaClassDescription javaClass = this.tag.getJavaClassDescription();
-        if (javaClass == null) {
-            this.logError( iLog, "Must be declared in a Java class" );
+    public void validate(final Context context) throws SCRDescriptorException {
+        if (context.getClassDescription().getDescribedClass().isInterface()) {
+            this.logError(context.getIssueLog(), "Must be declared in a Java class - not an interface");
         } else {
-
-            if ( !javaClass.isA(this.getInterfacename()) ) {
-               // interface not implemented
-                this.logError( iLog, "Class must implement provided interface " + this.getInterfacename() );
+            try {
+                final Class<?> interfaceClass = context.getProject().getClassLoader().loadClass(this.interfaceName);
+                if (!interfaceClass.isAssignableFrom(context.getClassDescription().getDescribedClass())) {
+                    // interface not implemented
+                    this.logError(context.getIssueLog(), "Class must implement provided interface " + this.interfaceName);
+                }
+            } catch (final ClassNotFoundException cnfe) {
+                throw new SCRDescriptorException("Unable to load interface class.", cnfe);
             }
         }
     }

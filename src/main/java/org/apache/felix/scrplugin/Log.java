@@ -24,8 +24,8 @@ package org.apache.felix.scrplugin;
  * SCR descriptor generation process using whatever means is implemented. There
  * should be no big surprises here.
  */
-public interface Log
-{
+public interface Log {
+
     /**
      * @return true if the <b>debug</b> error level is enabled
      */

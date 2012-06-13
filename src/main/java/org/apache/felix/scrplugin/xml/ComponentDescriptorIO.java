@@ -18,15 +18,39 @@
  */
 package org.apache.felix.scrplugin.xml;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import javax.xml.transform.TransformerException;
 
-import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.SCRDescriptorException;
-import org.apache.felix.scrplugin.om.*;
-import org.xml.sax.*;
+import org.apache.felix.scrplugin.description.ClassDescription;
+import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
+import org.apache.felix.scrplugin.description.ComponentDescription;
+import org.apache.felix.scrplugin.description.MethodDescription;
+import org.apache.felix.scrplugin.description.PropertyDescription;
+import org.apache.felix.scrplugin.description.PropertyType;
+import org.apache.felix.scrplugin.description.ReferenceCardinality;
+import org.apache.felix.scrplugin.description.ReferenceDescription;
+import org.apache.felix.scrplugin.description.ReferencePolicy;
+import org.apache.felix.scrplugin.description.ReferenceStrategy;
+import org.apache.felix.scrplugin.description.ServiceDescription;
+import org.apache.felix.scrplugin.description.SpecVersion;
+import org.apache.felix.scrplugin.helper.IssueLog;
+import org.apache.felix.scrplugin.om.Component;
+import org.apache.felix.scrplugin.om.Components;
+import org.apache.felix.scrplugin.om.Implementation;
+import org.apache.felix.scrplugin.om.Interface;
+import org.apache.felix.scrplugin.om.Property;
+import org.apache.felix.scrplugin.om.Reference;
+import org.apache.felix.scrplugin.om.Service;
+import org.xml.sax.Attributes;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -106,27 +130,28 @@ public class ComponentDescriptorIO {
 
     private static final String INTERFACE_QNAME = INTERFACE;
 
-    public static Components read(InputStream file)
-    throws SCRDescriptorException {
+    public static List<ClassDescription> read(final InputStream file,
+                    final ClassLoader classLoader,
+                    final IssueLog iLog, final String location) throws SCRDescriptorException {
         try {
-            final XmlHandler xmlHandler = new XmlHandler();
+            final XmlHandler xmlHandler = new XmlHandler(classLoader, iLog, location);
             IOUtils.parse(file, xmlHandler);
             return xmlHandler.components;
-        } catch (TransformerException e) {
-            throw new SCRDescriptorException( "Unable to read xml", "[stream]", 0, e );
+        } catch (final TransformerException e) {
+            throw new SCRDescriptorException("Unable to read xml", "[stream]", 0, e);
         }
     }
 
     /**
      * Write the component descriptors to the file.
+     *
      * @param components
      * @param file
      * @throws SCRDescriptorException
      */
-    public static void write(Components components, File file, boolean isScrPrivateFile)
-    throws SCRDescriptorException {
+    public static void write(Components components, File file) throws SCRDescriptorException {
         try {
-            generateXML(components, IOUtils.getSerializer(file), isScrPrivateFile);
+            generateXML(components, IOUtils.getSerializer(file));
         } catch (TransformerException e) {
             throw new SCRDescriptorException("Unable to write xml", file.toString(), 0, e);
         } catch (SAXException e) {
@@ -139,17 +164,17 @@ public class ComponentDescriptorIO {
     /**
      * Generate the xml top level element and start streaming
      * the components.
+     *
      * @param components
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Components components, ContentHandler contentHandler, boolean isScrPrivateFile)
-    throws SAXException {
+    protected static void generateXML(Components components, ContentHandler contentHandler) throws SAXException {
         // detect namespace to use
         final String namespace;
-        if ( components.getSpecVersion() == Constants.VERSION_1_0 ) {
+        if (components.getSpecVersion() == SpecVersion.VERSION_1_0) {
             namespace = NAMESPACE_URI_1_0;
-        } else if ( components.getSpecVersion() == Constants.VERSION_1_1 ) {
+        } else if (components.getSpecVersion() == SpecVersion.VERSION_1_1) {
             namespace = NAMESPACE_URI_1_1;
         } else {
             namespace = NAMESPACE_URI_1_1_FELIX;
@@ -161,9 +186,9 @@ public class ComponentDescriptorIO {
         contentHandler.startElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS, new AttributesImpl());
         IOUtils.newline(contentHandler);
 
-        for(final Component component : components.getComponents()) {
-            if ( component.isDs() ) {
-                generateXML(namespace, component, contentHandler, isScrPrivateFile);
+        for (final Component component : components.getComponents()) {
+            if (component.isDs()) {
+                generateXML(namespace, component, contentHandler);
             }
         }
         // end wrapper element
@@ -175,24 +200,24 @@ public class ComponentDescriptorIO {
 
     /**
      * Write the xml for a {@link Component}.
+     *
      * @param component
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(final String namespace,
-                                      final Component component,
-                                      final ContentHandler contentHandler,
-                                      final boolean isScrPrivateFile)
-    throws SAXException {
+    protected static void generateXML(final String namespace, final Component component, final ContentHandler contentHandler)
+                    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, COMPONENT_ATTR_ENABLED, component.isEnabled());
-        IOUtils.addAttribute(ai, COMPONENT_ATTR_IMMEDIATE,component.isImmediate());
+        IOUtils.addAttribute(ai, COMPONENT_ATTR_IMMEDIATE, component.isImmediate());
         IOUtils.addAttribute(ai, COMPONENT_ATTR_NAME, component.getName());
         IOUtils.addAttribute(ai, COMPONENT_ATTR_FACTORY, component.getFactory());
 
         // attributes new in 1.1
-        if ( NAMESPACE_URI_1_1.equals( namespace ) || NAMESPACE_URI_1_1_FELIX.equals( namespace ) ) {
-            IOUtils.addAttribute(ai, COMPONENT_ATTR_POLICY, component.getConfigurationPolicy());
+        if (NAMESPACE_URI_1_1.equals(namespace) || NAMESPACE_URI_1_1_FELIX.equals(namespace)) {
+            if ( component.getConfigurationPolicy() != ComponentConfigurationPolicy.OPTIONAL ) {
+                IOUtils.addAttribute(ai, COMPONENT_ATTR_POLICY, component.getConfigurationPolicy().name());
+            }
             IOUtils.addAttribute(ai, COMPONENT_ATTR_ACTIVATE, component.getActivate());
             IOUtils.addAttribute(ai, COMPONENT_ATTR_DEACTIVATE, component.getDeactivate());
             IOUtils.addAttribute(ai, COMPONENT_ATTR_MODIFIED, component.getModified());
@@ -202,17 +227,17 @@ public class ComponentDescriptorIO {
         contentHandler.startElement(namespace, ComponentDescriptorIO.COMPONENT, ComponentDescriptorIO.COMPONENT_QNAME, ai);
         IOUtils.newline(contentHandler);
         generateXML(component.getImplementation(), contentHandler);
-        if ( component.getService() != null ) {
+        if (component.getService() != null) {
             generateXML(component.getService(), contentHandler);
         }
-        if ( component.getProperties() != null ) {
-            for(final Property property : component.getProperties()) {
-                generateXML(property, contentHandler, isScrPrivateFile);
+        if (component.getProperties() != null) {
+            for (final Property property : component.getProperties()) {
+                generateXML(property, contentHandler);
             }
         }
-        if ( component.getReferences() != null ) {
-            for(final Reference reference : component.getReferences()) {
-                generateXML(namespace, reference, contentHandler, isScrPrivateFile);
+        if (component.getReferences() != null) {
+            for (final Reference reference : component.getReferences()) {
+                generateXML(namespace, reference, contentHandler);
             }
         }
         IOUtils.indent(contentHandler, 1);
@@ -222,35 +247,37 @@ public class ComponentDescriptorIO {
 
     /**
      * Write the xml for a {@link Implementation}.
+     *
      * @param implementation
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Implementation implementation, ContentHandler contentHandler)
-    throws SAXException {
+    protected static void generateXML(Implementation implementation, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "class", implementation.getClassame());
+        IOUtils.addAttribute(ai, "class", implementation.getClassName());
         IOUtils.indent(contentHandler, 2);
-        contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.IMPLEMENTATION, ComponentDescriptorIO.IMPLEMENTATION_QNAME, ai);
-        contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.IMPLEMENTATION, ComponentDescriptorIO.IMPLEMENTATION_QNAME);
+        contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.IMPLEMENTATION,
+                        ComponentDescriptorIO.IMPLEMENTATION_QNAME, ai);
+        contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.IMPLEMENTATION,
+                        ComponentDescriptorIO.IMPLEMENTATION_QNAME);
         IOUtils.newline(contentHandler);
     }
 
     /**
      * Write the xml for a {@link Service}.
+     *
      * @param service
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Service service, ContentHandler contentHandler)
-    throws SAXException {
+    protected static void generateXML(Service service, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "servicefactory", String.valueOf(service.isServicefactory()));
+        IOUtils.addAttribute(ai, "servicefactory", String.valueOf(service.isServiceFactory()));
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.SERVICE, ComponentDescriptorIO.SERVICE_QNAME, ai);
-        if ( service.getInterfaces() != null && service.getInterfaces().size() > 0 ) {
+        if (service.getInterfaces() != null && service.getInterfaces().size() > 0) {
             IOUtils.newline(contentHandler);
-            for(final Interface interf : service.getInterfaces()) {
+            for (final Interface interf : service.getInterfaces()) {
                 generateXML(interf, contentHandler);
             }
             IOUtils.indent(contentHandler, 2);
@@ -261,51 +288,40 @@ public class ComponentDescriptorIO {
 
     /**
      * Write the xml for a {@link Interface}.
+     *
      * @param interf
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Interface interf, ContentHandler contentHandler)
-    throws SAXException {
+    protected static void generateXML(Interface interf, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "interface", interf.getInterfacename());
+        IOUtils.addAttribute(ai, "interface", interf.getInterfaceName());
         IOUtils.indent(contentHandler, 3);
-        contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME, ai);
+        contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME,
+                        ai);
         contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME);
         IOUtils.newline(contentHandler);
     }
 
     /**
      * Write the xml for a {@link Property}.
+     *
      * @param property
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Property property, ContentHandler contentHandler, boolean isScrPrivateFile)
-    throws SAXException {
+    protected static void generateXML(Property property, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "name", property.getName());
         IOUtils.addAttribute(ai, "type", property.getType());
         IOUtils.addAttribute(ai, "value", property.getValue());
-        // we have to write more information if this is our scr private file
-        if ( isScrPrivateFile ) {
-            IOUtils.addAttribute(ai, "private", String.valueOf(property.isPrivate()));
-            if ( property.getLabel() != null ) {
-                IOUtils.addAttribute(ai, "label", String.valueOf(property.getLabel()));
-            }
-            if ( property.getDescription() != null ) {
-                IOUtils.addAttribute(ai, "description", String.valueOf(property.getDescription()));
-            }
-            if ( property.getCardinality() != null ) {
-                IOUtils.addAttribute(ai, "cardinality", String.valueOf(property.getCardinality()));
-            }
-        }
+
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.PROPERTY, ComponentDescriptorIO.PROPERTY_QNAME, ai);
-        if ( property.getMultiValue() != null && property.getMultiValue().length > 0 ) {
+        if (property.getMultiValue() != null && property.getMultiValue().length > 0) {
             // generate a new line first
             IOUtils.text(contentHandler, "\n");
-            for(int i=0; i<property.getMultiValue().length; i++) {
+            for (int i = 0; i < property.getMultiValue().length; i++) {
                 IOUtils.indent(contentHandler, 3);
                 IOUtils.text(contentHandler, property.getMultiValue()[i]);
                 IOUtils.newline(contentHandler);
@@ -318,32 +334,30 @@ public class ComponentDescriptorIO {
 
     /**
      * Write the xml for a {@link Reference}.
+     *
      * @param reference
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(final String namespace,Reference reference, ContentHandler contentHandler, boolean isScrPrivateFile)
-    throws SAXException {
+    protected static void generateXML(final String namespace, Reference reference, ContentHandler contentHandler)
+                    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "name", reference.getName());
         IOUtils.addAttribute(ai, "interface", reference.getInterfacename());
-        IOUtils.addAttribute(ai, "cardinality", reference.getCardinality());
-        IOUtils.addAttribute(ai, "policy", reference.getPolicy());
+        IOUtils.addAttribute(ai, "cardinality", reference.getCardinality().getCardinalityString());
+        IOUtils.addAttribute(ai, "policy", reference.getPolicy().name());
         IOUtils.addAttribute(ai, "target", reference.getTarget());
         IOUtils.addAttribute(ai, "bind", reference.getBind());
         IOUtils.addAttribute(ai, "unbind", reference.getUnbind());
 
         // attributes new in 1.1-felix (FELIX-1893)
-        if ( NAMESPACE_URI_1_1_FELIX.equals( namespace ) ) {
+        if (NAMESPACE_URI_1_1_FELIX.equals(namespace)) {
             IOUtils.addAttribute(ai, "updated", reference.getUpdated());
         }
 
-        if ( isScrPrivateFile ) {
-            IOUtils.addAttribute(ai, "checked", String.valueOf(reference.isChecked()));
-            IOUtils.addAttribute(ai, "strategy", reference.getStrategy());
-        }
         IOUtils.indent(contentHandler, 2);
-        contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.REFERENCE, ComponentDescriptorIO.REFERENCE_QNAME, ai);
+        contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.REFERENCE, ComponentDescriptorIO.REFERENCE_QNAME,
+                        ai);
         contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.REFERENCE, ComponentDescriptorIO.REFERENCE_QNAME);
         IOUtils.newline(contentHandler);
     }
@@ -355,120 +369,169 @@ public class ComponentDescriptorIO {
     protected static final class XmlHandler extends DefaultHandler {
 
         /** The components container. */
-        protected final Components components = new Components();
+        private final List<ClassDescription> components = new ArrayList<ClassDescription>();
+
+        /** Spec version. */
+        private SpecVersion specVersion;
+
+        /** A reference to the current class. */
+        private ClassDescription currentClass;
 
         /** A reference to the current component. */
-        protected Component currentComponent;
+        private ComponentDescription currentComponent;
 
         /** The current service. */
-        protected Service currentService;
+        private ServiceDescription currentService;
 
         /** Pending property. */
-        protected Property pendingProperty;
+        private PropertyDescription pendingProperty;
 
         /** Flag for detecting the first element. */
-        protected boolean firstElement = true;
+        private boolean firstElement = true;
 
         /** Flag for elements inside a component element */
-        protected boolean isComponent = false;
+        private boolean isComponent = false;
 
         /** Override namespace. */
-        protected String overrideNamespace;
+        private String overrideNamespace;
 
-        public void startElement(String uri, String localName, String name, Attributes attributes)
+        /** The issue log. */
+        private final IssueLog iLog;
+
+        /** XML file location. */
+        private final String location;
+
+        /** Classloader. */
+        private final ClassLoader classLoader;
+
+        public XmlHandler(final ClassLoader classLoader, final IssueLog iLog, final String loc) {
+            this.iLog = iLog;
+            this.location = loc;
+            this.classLoader = classLoader;
+        }
+
+        /**
+         * @see org.xml.sax.helpers.DefaultHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
+         */
+        public void startElement(String uri, final String localName, final String name, final Attributes attributes)
         throws SAXException {
             // according to the spec, the elements should have the namespace,
             // except when the root element is the "component" element
             // So we check this for the first element, we receive.
-            if ( this.firstElement ) {
+            if (this.firstElement) {
                 this.firstElement = false;
-                if ( localName.equals(COMPONENT) && "".equals(uri) ) {
+                if (localName.equals(COMPONENT) && "".equals(uri)) {
                     this.overrideNamespace = NAMESPACE_URI_1_0;
                 }
             }
 
-            if ( this.overrideNamespace != null && "".equals(uri) ) {
+            if (this.overrideNamespace != null && "".equals(uri)) {
                 uri = this.overrideNamespace;
             }
 
             // however the spec also states that the inner elements
             // of a component are unqualified, so they don't have
             // the namespace - we allow both: with or without namespace!
-            if ( this.isComponent && "".equals(uri) )  {
+            if (this.isComponent && "".equals(uri)) {
                 uri = NAMESPACE_URI_1_0;
             }
 
             // from here on, uri has the namespace regardless of the used xml format
-            if ( NAMESPACE_URI_1_0.equals( uri ) || NAMESPACE_URI_1_1.equals( uri )
-                || NAMESPACE_URI_1_1_FELIX.equals( uri ) ) {
+            if (NAMESPACE_URI_1_0.equals(uri) || NAMESPACE_URI_1_1.equals(uri) || NAMESPACE_URI_1_1_FELIX.equals(uri)) {
 
-                if ( NAMESPACE_URI_1_1.equals(uri) ) {
-                    components.setSpecVersion(Constants.VERSION_1_1);
-                } else if ( NAMESPACE_URI_1_1_FELIX.equals(uri) ) {
-                    components.setSpecVersion(Constants.VERSION_1_1_FELIX);
+                if (NAMESPACE_URI_1_0.equals(uri)) {
+                    specVersion = SpecVersion.VERSION_1_0;
+                } else if (NAMESPACE_URI_1_1.equals(uri)) {
+                    specVersion = SpecVersion.VERSION_1_1;
+                } else if (NAMESPACE_URI_1_1_FELIX.equals(uri)) {
+                    specVersion = SpecVersion.VERSION_1_1_FELIX;
                 }
 
                 if (localName.equals(COMPONENT)) {
                     this.isComponent = true;
 
-                    this.currentComponent = new Component();
-                    this.currentComponent.setName(attributes.getValue(COMPONENT_ATTR_NAME));
+                    final ComponentDescription desc = new ComponentDescription(null);
+                    desc.setName(attributes.getValue(COMPONENT_ATTR_NAME));
 
                     // enabled attribute is optional
                     if (attributes.getValue(COMPONENT_ATTR_ENABLED) != null) {
-                        this.currentComponent.setEnabled(Boolean.valueOf(attributes.getValue(COMPONENT_ATTR_ENABLED)));
+                        desc.setEnabled(Boolean.valueOf(attributes.getValue(COMPONENT_ATTR_ENABLED)));
                     }
 
                     // immediate attribute is optional
                     if (attributes.getValue(COMPONENT_ATTR_IMMEDIATE) != null) {
-                        this.currentComponent.setImmediate(Boolean.valueOf(attributes.getValue(COMPONENT_ATTR_IMMEDIATE)));
+                        desc.setImmediate(Boolean.valueOf(attributes.getValue(COMPONENT_ATTR_IMMEDIATE)));
                     }
 
-                    this.currentComponent.setFactory(attributes.getValue(COMPONENT_ATTR_FACTORY));
+                    desc.setFactory(attributes.getValue(COMPONENT_ATTR_FACTORY));
 
+                    desc.setConfigurationPolicy(ComponentConfigurationPolicy.OPTIONAL);
                     // check for version 1.1 attributes
-                    if ( components.getSpecVersion() == Constants.VERSION_1_1 ) {
-                        this.currentComponent.setConfigurationPolicy(attributes.getValue(COMPONENT_ATTR_POLICY));
-                        this.currentComponent.setActivate(attributes.getValue(COMPONENT_ATTR_ACTIVATE));
-                        this.currentComponent.setDeactivate(attributes.getValue(COMPONENT_ATTR_DEACTIVATE));
-                        this.currentComponent.setModified(attributes.getValue(COMPONENT_ATTR_MODIFIED));
+                    if (specVersion == SpecVersion.VERSION_1_1
+                                    || specVersion == SpecVersion.VERSION_1_1_FELIX) {
+                        final String policy = attributes.getValue(COMPONENT_ATTR_POLICY);
+                        if ( policy != null ) {
+                            try {
+                                desc.setConfigurationPolicy(ComponentConfigurationPolicy.valueOf(policy));
+                            } catch (final IllegalArgumentException iae) {
+                                iLog.addWarning("Invalid value for attribute " + COMPONENT_ATTR_POLICY + " : " + policy, this.location);
+                            }
+                        }
+                        if ( attributes.getValue(COMPONENT_ATTR_ACTIVATE) != null ) {
+                            desc.setActivate(new MethodDescription(attributes.getValue(COMPONENT_ATTR_ACTIVATE)));
+                        }
+                        if ( attributes.getValue(COMPONENT_ATTR_DEACTIVATE) != null ) {
+                            desc.setDeactivate(new MethodDescription(attributes.getValue(COMPONENT_ATTR_DEACTIVATE)));
+                        }
+                        if ( attributes.getValue(COMPONENT_ATTR_MODIFIED) != null ) {
+                            desc.setModified(new MethodDescription(attributes.getValue(COMPONENT_ATTR_MODIFIED)));
+                        }
                     }
                 } else if (localName.equals(IMPLEMENTATION)) {
+                    // now we can create the class description and attach the component description
                     // Set the implementation class name (mandatory)
-                    final Implementation impl = new Implementation();
-                    this.currentComponent.setImplementation(impl);
-                    impl.setClassname(attributes.getValue("class"));
+                    try {
+                        this.currentClass = new ClassDescription(this.classLoader.loadClass(attributes.getValue("class")), null);
+                    } catch (final ClassNotFoundException e) {
+                        iLog.addError("Unable to load class " + attributes.getValue("class") + " from dependencies.", this.location);
+                    }
+                    this.currentClass.add(this.currentComponent);
 
                 } else if (localName.equals(PROPERTY)) {
 
                     // read the property, unless it is the service.pid
                     // property which must not be inherited
-                    final String propName = attributes.getValue( "name" );
-                    if ( !org.osgi.framework.Constants.SERVICE_PID.equals( propName ) )
-                    {
-                        final Property prop = new Property();
+                    final String propName = attributes.getValue("name");
+                    if (!org.osgi.framework.Constants.SERVICE_PID.equals(propName)) {
+                        final PropertyDescription prop = new PropertyDescription(null);
 
-                        prop.setName( propName );
-                        prop.setType( attributes.getValue( "type" ) );
-
-                        if ( attributes.getValue( "value" ) != null )
-                        {
-                            prop.setValue( attributes.getValue( "value" ) );
-                            this.currentComponent.addProperty( prop );
+                        prop.setName(propName);
+                        final String type = attributes.getValue("type");
+                        if ( type != null ) {
+                            try {
+                                prop.setType(PropertyType.valueOf(type));
+                            } catch (final IllegalArgumentException iae) {
+                                iLog.addWarning("Invalid value for attribute type : " + type, this.location);
+                            }
                         }
-                        else
-                        {
+
+                        if (attributes.getValue("value") != null) {
+                            prop.setValue(attributes.getValue("value"));
+                            this.currentClass.add(prop);
+                        } else {
                             // hold the property pending as we have a multi value
                             this.pendingProperty = prop;
                         }
                         // check for abstract properties
-                        prop.setLabel( attributes.getValue( "label" ) );
-                        prop.setDescription( attributes.getValue( "description" ) );
-                        prop.setCardinality( attributes.getValue( "cardinality" ) );
-                        final String pValue = attributes.getValue( "private" );
-                        if ( pValue != null )
-                        {
-                            prop.setPrivate( Boolean.valueOf( pValue ).booleanValue() );
+                        prop.setLabel(attributes.getValue("label"));
+                        prop.setDescription(attributes.getValue("description"));
+                        final String cardinality = attributes.getValue("cardinality");
+                        if ( cardinality != null ) {
+                            prop.setCardinality(Integer.valueOf(cardinality));
+                        }
+                        final String pValue = attributes.getValue("private");
+                        if (pValue != null) {
+                            prop.setPrivate(Boolean.valueOf(pValue));
                         }
                     }
 
@@ -478,36 +541,54 @@ public class ComponentDescriptorIO {
 
                 } else if (localName.equals(SERVICE)) {
 
-                    this.currentService = new Service();
+                    this.currentService = new ServiceDescription(null);
+                    this.currentClass.add(this.currentService);
 
-                    this.currentService.setServicefactory(attributes.getValue("servicefactory"));
-
-                    this.currentComponent.setService(this.currentService);
+                    if (attributes.getValue("servicefactory") != null) {
+                        this.currentService.setServiceFactory(Boolean.valueOf(attributes.getValue("servicefactory")));
+                    }
 
                 } else if (localName.equals(INTERFACE)) {
-                    final Interface interf = new Interface();
-                    this.currentService.addInterface(interf);
-                    interf.setInterfacename(attributes.getValue("interface"));
+                    this.currentService.addInterface(attributes.getValue("interface"));
 
                 } else if (localName.equals(REFERENCE)) {
-                    final Reference ref = new Reference();
+                    final ReferenceDescription ref = new ReferenceDescription(null);
 
                     ref.setName(attributes.getValue("name"));
-                    ref.setInterfacename(attributes.getValue("interface"));
-                    ref.setCardinality(attributes.getValue("cardinality"));
-                    ref.setPolicy(attributes.getValue("policy"));
+                    ref.setInterfaceName(attributes.getValue("interface"));
+                    final String cardinality = attributes.getValue("cardinality");
+                    if ( cardinality != null ) {
+                        ref.setCardinality(ReferenceCardinality.fromValue(cardinality));
+                        if ( ref.getCardinality() == null ) {
+                            iLog.addWarning("Invalid value for attribute cardinality : " + cardinality, this.location);
+                        }
+                    }
+                    final String policy = attributes.getValue("policy");
+                    if ( policy != null ) {
+                        try {
+                            ref.setPolicy(ReferencePolicy.valueOf(policy));
+                        } catch (final IllegalArgumentException iae) {
+                            iLog.addWarning("Invalid value for attribute policy : " + policy, this.location);
+                        }
+                    }
                     ref.setTarget(attributes.getValue("target"));
-                    ref.setBind(attributes.getValue("bind"));
-                    ref.setUnbind(attributes.getValue("unbind"));
-
-                    if ( attributes.getValue("checked") != null ) {
-                        ref.setChecked(Boolean.valueOf(attributes.getValue("checked")).booleanValue());
+                    if ( attributes.getValue("bind") != null ) {
+                        ref.setBind(new MethodDescription(attributes.getValue("bind")));
                     }
-                    if ( attributes.getValue("strategy") != null ) {
-                        ref.setStrategy(attributes.getValue("strategy"));
+                    if ( attributes.getValue("unbind") != null ) {
+                        ref.setUnbind(new MethodDescription(attributes.getValue("unbind")));
                     }
 
-                    this.currentComponent.addReference(ref);
+                    final String strategy = attributes.getValue("strategy");
+                    if ( strategy != null ) {
+                        try {
+                            ref.setStrategy(ReferenceStrategy.valueOf(strategy));
+                        } catch (final IllegalArgumentException iae) {
+                            throw new SAXException("Invalid value for attribute strategy : " + strategy);
+                        }
+                    }
+
+                    this.currentClass.add(ref);
                 }
             }
         }
@@ -516,35 +597,33 @@ public class ComponentDescriptorIO {
          * @see org.xml.sax.helpers.DefaultHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
          */
         public void endElement(String uri, String localName, String name) throws SAXException {
-            if ( this.overrideNamespace != null && "".equals(uri) ) {
+            if (this.overrideNamespace != null && "".equals(uri)) {
                 uri = this.overrideNamespace;
             }
 
-            if ( this.isComponent && "".equals(uri) )  {
+            if (this.isComponent && "".equals(uri)) {
                 uri = NAMESPACE_URI_1_0;
             }
 
-            if ( NAMESPACE_URI_1_0.equals( uri ) || NAMESPACE_URI_1_1.equals( uri )
-                || NAMESPACE_URI_1_1_FELIX.equals( uri ) )
-            {
-                if (localName.equals(COMPONENT) ) {
-                    this.components.addComponent(this.currentComponent);
+            if (NAMESPACE_URI_1_0.equals(uri) || NAMESPACE_URI_1_1.equals(uri) || NAMESPACE_URI_1_1_FELIX.equals(uri)) {
+                if (localName.equals(COMPONENT)) {
+                    this.currentClass = null;
                     this.currentComponent = null;
                     this.isComponent = false;
                 } else if (localName.equals(PROPERTY) && this.pendingProperty != null) {
                     // now split the value
                     final String text = this.pendingProperty.getValue();
-                    if ( text != null ) {
+                    if (text != null) {
                         final StringTokenizer st = new StringTokenizer(text);
                         final String[] values = new String[st.countTokens()];
                         int index = 0;
-                        while ( st.hasMoreTokens() ) {
+                        while (st.hasMoreTokens()) {
                             values[index] = st.nextToken();
                             index++;
                         }
                         this.pendingProperty.setMultiValue(values);
                     }
-                    this.currentComponent.addProperty(this.pendingProperty);
+                    this.currentClass.add(this.pendingProperty);
                     this.pendingProperty = null;
                 }
             }
@@ -554,9 +633,9 @@ public class ComponentDescriptorIO {
          * @see org.xml.sax.helpers.DefaultHandler#characters(char[], int, int)
          */
         public void characters(char[] ch, int start, int length) throws SAXException {
-            if ( this.pendingProperty != null ) {
+            if (this.pendingProperty != null) {
                 final String text = new String(ch, start, length);
-                if ( this.pendingProperty.getValue() == null ) {
+                if (this.pendingProperty.getValue() == null) {
                     this.pendingProperty.setValue(text);
                 } else {
                     this.pendingProperty.setValue(this.pendingProperty.getValue() + text);

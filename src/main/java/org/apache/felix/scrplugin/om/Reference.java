@@ -18,11 +18,18 @@
  */
 package org.apache.felix.scrplugin.om;
 
-import org.apache.felix.scrplugin.Constants;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Map;
+
 import org.apache.felix.scrplugin.SCRDescriptorException;
-import org.apache.felix.scrplugin.helper.IssueLog;
+import org.apache.felix.scrplugin.description.ReferenceCardinality;
+import org.apache.felix.scrplugin.description.ReferencePolicy;
+import org.apache.felix.scrplugin.description.ReferenceStrategy;
+import org.apache.felix.scrplugin.description.SpecVersion;
 import org.apache.felix.scrplugin.helper.StringUtils;
-import org.apache.felix.scrplugin.tags.*;
+import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
 
 /**
  * <code>Reference.java</code>...
@@ -33,34 +40,22 @@ public class Reference extends AbstractObject {
     protected String name;
     protected String interfacename;
     protected String target;
-    protected String cardinality;
-    protected String policy;
+    protected ReferenceCardinality cardinality;
+    protected ReferencePolicy policy;
     protected String bind;
     protected String unbind;
     protected String updated;
 
     /** @since 1.0.9 */
-    protected String strategy;
+    protected ReferenceStrategy strategy;
 
-    /** Is this reference already checked? */
-    protected boolean checked = false;
-
-    /** The class description containing this reference. */
-    protected final JavaClassDescription javaClassDescription;
-
-    /**
-     * Default constructor.
-     */
-    public Reference() {
-        this(null, null);
-    }
+    private Field field;
 
     /**
      * Constructor from java source.
      */
-    public Reference(JavaTag t, JavaClassDescription desc) {
-        super(t);
-        this.javaClassDescription = desc;
+    public Reference(final ScannedAnnotation annotation, final String sourceLocation) {
+        super(annotation, sourceLocation);
     }
 
     public String getName() {
@@ -69,6 +64,14 @@ public class Reference extends AbstractObject {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Field getField() {
+        return this.field;
+    }
+
+    public void setField(Field field) {
+        this.field = field;
     }
 
     public String getInterfacename() {
@@ -87,19 +90,19 @@ public class Reference extends AbstractObject {
         this.target = target;
     }
 
-    public String getCardinality() {
+    public ReferenceCardinality getCardinality() {
         return this.cardinality;
     }
 
-    public void setCardinality(String cardinality) {
+    public void setCardinality(ReferenceCardinality cardinality) {
         this.cardinality = cardinality;
     }
 
-    public String getPolicy() {
+    public ReferencePolicy getPolicy() {
         return this.policy;
     }
 
-    public void setPolicy(String policy) {
+    public void setPolicy(ReferencePolicy policy) {
         this.policy = policy;
     }
 
@@ -127,27 +130,19 @@ public class Reference extends AbstractObject {
         this.updated = updated;
     }
 
-    public boolean isChecked() {
-        return checked;
-    }
-
-    public void setChecked(boolean checked) {
-        this.checked = checked;
-    }
-
     /** @since 1.0.9 */
-    public String getStrategy() {
+    public ReferenceStrategy getStrategy() {
         return strategy;
     }
 
     /** @since 1.0.9 */
-    public void setStrategy(String strategy) {
+    public void setStrategy(ReferenceStrategy strategy) {
         this.strategy = strategy;
     }
 
     /** @since 1.0.9 */
     public boolean isLookupStrategy() {
-        return Constants.REFERENCE_STRATEGY_LOOKUP.equals(getStrategy());
+        return this.getStrategy() == ReferenceStrategy.LOOKUP;
     }
 
     /**
@@ -155,76 +150,71 @@ public class Reference extends AbstractObject {
      * If errors occur a message is added to the issues list,
      * warnings can be added to the warnings list.
      */
-    public void validate(final int specVersion,
-                         final boolean componentIsAbstract,
-                         final IssueLog iLog)
+    public void validate(final Context context, final boolean componentIsAbstract)
     throws SCRDescriptorException {
-        // if this reference is already checked, return immediately
-        if ( this.checked ) {
-            return;
-        }
-        final int currentIssueCount = iLog.getNumberOfErrors();
+        final int currentIssueCount = context.getIssueLog().getNumberOfErrors();
 
         // validate name
         if (StringUtils.isEmpty(this.name)) {
-            if ( specVersion < Constants.VERSION_1_1 ) {
-                this.logError( iLog, "Reference has no name" );
+            if (context.getSpecVersion().ordinal() < SpecVersion.VERSION_1_1.ordinal() ) {
+                this.logError(context.getIssueLog(), "Reference has no name");
             }
         }
 
         // validate interface
         if (StringUtils.isEmpty(this.interfacename)) {
-            this.logError( iLog, "Missing interface name" );
+            this.logError(context.getIssueLog(), "Missing interface name");
+        }
+        try {
+            context.getProject().getClassLoader().loadClass(this.interfacename);
+        } catch (final ClassNotFoundException e) {
+            this.logError(context.getIssueLog(), "Interface class can't be loaded: " + this.interfacename);
         }
 
         // validate cardinality
         if (this.cardinality == null) {
-            this.cardinality = "1..1";
-        } else if (!"0..1".equals(this.cardinality) && !"1..1".equals(this.cardinality)
-            && !"0..n".equals(this.cardinality) && !"1..n".equals(this.cardinality)) {
-            this.logError( iLog, "Invalid Cardinality specification " + this.cardinality );
+            this.cardinality = ReferenceCardinality.MANDATORY_UNARY;
         }
 
         // validate policy
         if (this.policy == null) {
-            this.policy = "static";
-        } else if (!"static".equals(this.policy) && !"dynamic".equals(this.policy)) {
-            this.logError( iLog, "Invalid Policy specification " + this.policy );
+            this.policy = ReferencePolicy.STATIC;
         }
 
         // validate strategy
         if (this.strategy == null) {
-            this.strategy = Constants.REFERENCE_STRATEGY_EVENT;
-        } else if (!Constants.REFERENCE_STRATEGY_EVENT.equals(this.strategy)
-                   && !Constants.REFERENCE_STRATEGY_LOOKUP.equals(this.strategy)) {
-            this.logError( iLog, "Invalid strategy type " + this.strategy );
+            this.strategy = ReferenceStrategy.EVENT;
         }
 
         // validate bind and unbind methods
         if (!isLookupStrategy()) {
-            // set default values
-            if ( this.bind == null ) {
-                this.setBind("bind");
+            String bindName = this.bind;
+            String unbindName = this.unbind;
+
+            final boolean canGenerate = context.getOptions().isGenerateAccessors() &&
+                            !this.isLookupStrategy() && this.getField() != null
+                            && (this.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || this.getCardinality() == ReferenceCardinality.MANDATORY_UNARY);
+            if (bindName == null && !canGenerate ) {
+                bindName = "bind";
             }
-            if ( this.unbind == null ) {
-                this.setUnbind("unbind");
+            if (unbindName == null && !canGenerate ) {
+                unbindName = "unbind";
             }
-            final String oldBind = this.bind;
-            final String oldUnbind = this.unbind;
-            this.bind = this.validateMethod(specVersion, this.bind, componentIsAbstract, iLog);
-            this.unbind = this.validateMethod(specVersion, this.unbind, componentIsAbstract, iLog);
-            if ( iLog.getNumberOfErrors() == currentIssueCount ) {
-                if ( this.bind != null && this.unbind != null ) {
-                    // no errors, so we're checked
-                    this.checked = true;
-                } else {
-                    if ( this.bind == null ) {
-                        this.bind = oldBind;
-                    }
-                    if ( this.unbind == null ) {
-                        this.unbind = oldUnbind;
-                    }
-                }
+
+            if ( bindName != null ) {
+                bindName = this.validateMethod(context, bindName, componentIsAbstract);
+            } else {
+                bindName = "bind" + Character.toUpperCase(this.name.charAt(0)) + this.name.substring(1);
+            }
+            if ( unbindName != null ) {
+                unbindName = this.validateMethod(context, unbindName, componentIsAbstract);
+            } else {
+                unbindName = "unbind" + Character.toUpperCase(this.name.charAt(0)) + this.name.substring(1);
+            }
+
+            if (context.getIssueLog().getNumberOfErrors() == currentIssueCount) {
+                this.bind = bindName;
+                this.unbind = unbindName;
             }
         } else {
             this.bind = null;
@@ -232,33 +222,33 @@ public class Reference extends AbstractObject {
         }
 
         // validate updated method
-        if ( this.updated != null ) {
-            if ( specVersion < Constants.VERSION_1_1_FELIX ) {
-                this.logError( iLog, "Updated method declaration requires namespace "
-                    + Constants.COMPONENT_DS_SPEC_VERSION_11_FELIX + " or newer" );
+        if (this.updated != null) {
+            if (context.getSpecVersion().ordinal() < SpecVersion.VERSION_1_1_FELIX.ordinal()) {
+                this.logError(context.getIssueLog(), "Updated method declaration requires version "
+                                + SpecVersion.VERSION_1_1_FELIX.getName() + " or newer");
             }
         }
+
     }
 
-    protected String validateMethod(final int      specVersion,
-                                    final String   methodName,
-                                    final boolean  componentIsAbstract,
-                                    final IssueLog iLog)
+    private String validateMethod(final Context ctx, final String methodName, final boolean componentIsAbstract)
     throws SCRDescriptorException {
-        final JavaMethod method = this.findMethod(specVersion, methodName);
+        final Method method = this.findMethod(ctx, methodName);
         if (method == null) {
-            if ( !componentIsAbstract ) {
-                this.logError( iLog, "Missing method " + methodName + " for reference " + (this.getName() == null ? "" : this.getName()));
+            if (!componentIsAbstract) {
+                this.logError(ctx.getIssueLog(),
+                                "Missing method " + methodName + " for reference "
+                                                + (this.getName() == null ? "" : this.getName()));
             }
             return null;
         }
 
         // method needs to be protected for 1.0
-        if ( specVersion == Constants.VERSION_1_0 ) {
-            if (method.isPublic()) {
-                this.logWarn( iLog, "Method " + method.getName() + " should be declared protected" );
-            } else if (!method.isProtected()) {
-                this.logError( iLog, "Method " + method.getName() + " has wrong qualifier, public or protected required" );
+        if (ctx.getSpecVersion() == SpecVersion.VERSION_1_0) {
+            if (Modifier.isPublic(method.getModifiers())) {
+                this.logWarn(ctx.getIssueLog(), "Method " + method.getName() + " should be declared protected");
+            } else if (!Modifier.isProtected(method.getModifiers())) {
+                this.logError(ctx.getIssueLog(), "Method " + method.getName() + " has wrong qualifier, public or protected required");
                 return null;
             }
         }
@@ -266,61 +256,73 @@ public class Reference extends AbstractObject {
     }
 
     private static final String TYPE_SERVICE_REFERENCE = "org.osgi.framework.ServiceReference";
-    private static final String TYPE_MAP = "java.util.Map";
 
-    public JavaMethod findMethod(final int    specVersion,
-                                 final String methodName)
+    private Method getMethod(final Context ctx, final String name, final Class<?>[] sig) {
+        try {
+            return ctx.getClassDescription().getDescribedClass().getDeclaredMethod(name, sig);
+        } catch (final SecurityException e) {
+            // ignore
+        } catch (final NoSuchMethodException e) {
+            // ignore
+        }
+        return null;
+    }
+
+    public Method findMethod(final Context ctx, final String methodName)
     throws SCRDescriptorException {
-        final String[] sig = new String[]{ TYPE_SERVICE_REFERENCE };
-        final String[] sig2 = new String[]{ this.getInterfacename() };
-        final String[] sig3 = new String[]{ this.getInterfacename(), TYPE_MAP};
+        try {
+            final Class<?>[] sig = new Class<?>[] { ctx.getProject().getClassLoader().loadClass(TYPE_SERVICE_REFERENCE) };
+            final Class<?>[] sig2 = new Class<?>[] {ctx.getProject().getClassLoader().loadClass(this.interfacename) };
+            final Class<?>[] sig3 = new Class<?>[] { ctx.getProject().getClassLoader().loadClass(this.interfacename), Map.class };
 
-        // service interface or ServiceReference first
-        String realMethodName = methodName;
-        JavaMethod method = this.javaClassDescription.getMethodBySignature(realMethodName, sig);
-        if (method == null) {
-            method = this.javaClassDescription.getMethodBySignature(realMethodName, sig2);
-            if ( specVersion >= Constants.VERSION_1_1 && method == null ) {
-                method = this.javaClassDescription.getMethodBySignature(realMethodName, sig3);
+            // service interface or ServiceReference first
+            String realMethodName = methodName;
+            Method method = getMethod(ctx, realMethodName, sig);
+            if (method == null) {
+                method = getMethod(ctx, realMethodName, sig2);
+                if (method == null && ctx.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                    method = getMethod(ctx, realMethodName, sig3);
+                }
             }
-        }
 
-        // append reference name with service interface and ServiceReference
-        if (method == null) {
-            final String info;
-            if (StringUtils.isEmpty(this.name)) {
-                final String interfaceName = this.getInterfacename();
-                final int pos = interfaceName.lastIndexOf('.');
-                info = interfaceName.substring(pos + 1);
-            } else {
-                info = this.name;
+            // append reference name with service interface and ServiceReference
+            if (method == null) {
+                final String info;
+                if (StringUtils.isEmpty(this.name)) {
+                    final String interfaceName = this.getInterfacename();
+                    final int pos = interfaceName.lastIndexOf('.');
+                    info = interfaceName.substring(pos + 1);
+                } else {
+                    info = this.name;
+                }
+                realMethodName = methodName + Character.toUpperCase(info.charAt(0)) + info.substring(1);
+
+                method = getMethod(ctx, realMethodName, sig);
             }
-            realMethodName = methodName + Character.toUpperCase(info.charAt(0)) + info.substring(1);
-
-            method = this.javaClassDescription.getMethodBySignature(realMethodName, sig);
-        }
-        if (method == null) {
-            method = this.javaClassDescription.getMethodBySignature(realMethodName, sig2);
-            if ( specVersion >= Constants.VERSION_1_1 && method == null ) {
-                method = this.javaClassDescription.getMethodBySignature(realMethodName, sig3);
+            if (method == null) {
+                method = getMethod(ctx, realMethodName, sig2);
+                if (method == null && ctx.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                    method = getMethod(ctx, realMethodName, sig3);
+                }
             }
-        }
 
-        // append type name with service interface and ServiceReference
-        if (method == null) {
-            int lastDot = this.getInterfacename().lastIndexOf('.');
-            realMethodName = methodName
-                + this.getInterfacename().substring(lastDot + 1);
-            method = this.javaClassDescription.getMethodBySignature(realMethodName, sig);
-        }
-        if (method == null) {
-            method = this.javaClassDescription.getMethodBySignature(realMethodName, sig2);
-            if ( specVersion >= Constants.VERSION_1_1 && method == null ) {
-                method = this.javaClassDescription.getMethodBySignature(realMethodName, sig3);
+            // append type name with service interface and ServiceReference
+            if (method == null) {
+                int lastDot = this.getInterfacename().lastIndexOf('.');
+                realMethodName = methodName + this.getInterfacename().substring(lastDot + 1);
+                method = getMethod(ctx, realMethodName, sig);
             }
-        }
+            if (method == null) {
+                method = getMethod(ctx, realMethodName, sig2);
+                if (method == null && ctx.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                    method = getMethod(ctx, realMethodName, sig3);
+                }
+            }
 
-        return method;
+            return method;
+        } catch (final ClassNotFoundException cnfe) {
+            throw new SCRDescriptorException("Unable to load class!", cnfe);
+        }
     }
 
 }

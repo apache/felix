@@ -16,8 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/**
- * Extracting SCR tags from source file declared as Java 1.5 annotations.   
- */
-package org.apache.felix.scrplugin.tags.annotation;
+package org.apache.felix.scrplugin.description;
 
+/**
+ * Options for {@link ComponentDescription#getConfigurationPolicy()}.
+ */
+public enum ComponentConfigurationPolicy {
+
+    /**
+     * If a configuration is available it will be used, if not the component
+     * will be activated anyway (this is the default).
+     */
+    OPTIONAL,
+
+    /**
+     * The configuration admin is not consulted for a configuration for this component.
+     */
+    IGNORE,
+
+    /**
+     * In order to activate this component a configuration is required.
+     */
+    REQUIRE;
+}

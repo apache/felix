@@ -16,26 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.tags.qdox;
+package org.apache.felix.scrplugin.scanner;
 
-import org.apache.felix.scrplugin.tags.JavaParameter;
+import java.util.Map;
 
-/**
- * <code>QDoxJavaParameter.java</code>...
- *
- */
-public class QDoxJavaParameter implements JavaParameter {
+public class ClassAnnotation extends ScannedAnnotation {
 
-    protected final com.thoughtworks.qdox.model.JavaParameter parameter;
-
-    public QDoxJavaParameter(com.thoughtworks.qdox.model.JavaParameter p) {
-        this.parameter = p;
+    public ClassAnnotation(final String name, final Map<String, Object> values) {
+        super(name, values);
     }
 
-    /**
-     * @see org.apache.felix.scrplugin.tags.JavaParameter#getType()
-     */
-    public String getType() {
-        return this.parameter.getType().getValue();
+    @Override
+    public String toString() {
+        return "ClassAnnotationDescription [name=" + name + ", values="
+                + values + "]";
     }
 }

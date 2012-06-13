@@ -16,23 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.tags;
+package org.apache.felix.scrplugin.description;
 
 /**
- * <code>JavaMethod.java</code>...
- *
+ * Options for {@link ReferenceDescription#getPolicy()}
  */
-public interface JavaMethod {
+public enum ReferencePolicy {
 
-    JavaMethod[] EMPTY_RESULT = new JavaMethod[0];
+    /**
+     * The component will be deactivated and re-activated if the service comes
+     * and/or goes away.
+     */
+    STATIC,
 
-    boolean isPublic();
-
-    boolean isProtected();
-
-    String getName();
-
-    JavaParameter[] getParameters();
-
-    boolean isConstructor();
+    /**
+     * The service will be made available to the component as it comes and goes.
+     */
+    DYNAMIC;
 }

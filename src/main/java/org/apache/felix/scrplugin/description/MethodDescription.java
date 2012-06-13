@@ -16,23 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.om;
+package org.apache.felix.scrplugin.description;
+
+import java.lang.reflect.Method;
 
 /**
- * <code>Implementation</code>
- * 
- * contains the class name implementing the component.
+ * A method description describes a reference to a method,
+ * this can either just be the name or a real method object.
  */
-public class Implementation {
+public class MethodDescription {
 
-    /** The class name. */
-    private final String className;
+    private final String name;
 
-    public Implementation(final String name) {
-        this.className = name;
+    private final Method method;
+
+    public MethodDescription(final String name) {
+        this.name = name;
+        this.method = null;
     }
 
-    public String getClassName() {
-        return this.className;
+    public MethodDescription(final Method method) {
+        this.name = method.getName();
+        this.method = method;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public Method getMethod() {
+        return this.method;
+    }
+
+    @Override
+    public String toString() {
+        return "MethodDescription [name=" + name + ", method=" + method + "]";
     }
 }

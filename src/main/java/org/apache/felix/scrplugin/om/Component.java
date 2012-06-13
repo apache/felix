@@ -18,17 +18,20 @@
  */
 package org.apache.felix.scrplugin.om;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.scrplugin.Constants;
 import org.apache.felix.scrplugin.SCRDescriptorException;
-import org.apache.felix.scrplugin.helper.IssueLog;
-import org.apache.felix.scrplugin.tags.*;
+import org.apache.felix.scrplugin.description.ClassDescription;
+import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
+import org.apache.felix.scrplugin.description.SpecVersion;
+import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
 
 /**
- * <code>Component</code>
- * is a described component.
+ * <code>Component</code> is a described component.
  *
  */
 public class Component extends AbstractObject {
@@ -64,7 +67,7 @@ public class Component extends AbstractObject {
     protected boolean isDs;
 
     /** Configuration policy. (V1.1) */
-    protected String configurationPolicy;
+    protected ComponentConfigurationPolicy configurationPolicy;
 
     /** Activation method. (V1.1) */
     protected String activate;
@@ -76,47 +79,38 @@ public class Component extends AbstractObject {
     protected String modified;
 
     /** The spec version. */
-    protected int specVersion;
+    protected SpecVersion specVersion;
 
-    /**
-     * Default constructor.
-     */
-    public Component() {
-        this(null);
-    }
+    /** The class description. */
+    private final ClassDescription classDescription;
 
     /**
      * Constructor from java source.
      */
-    public Component(JavaTag t) {
-        super(t);
+    public Component(final ClassDescription cDesc, final ScannedAnnotation annotation, final String sourceLocation) {
+        super(annotation, sourceLocation);
+        this.classDescription = cDesc;
+    }
+
+    public ClassDescription getClassDescription() {
+        return this.classDescription;
     }
 
     /**
      * Get the spec version.
      */
-    public int getSpecVersion() {
+    public SpecVersion getSpecVersion() {
         return this.specVersion;
     }
 
     /**
      * Set the spec version.
      */
-    public void setSpecVersion(int value) {
+    public void setSpecVersion(final SpecVersion value) {
         // only set a higher version, never "downgrade"
-        if (this.specVersion < value) {
+        if (this.specVersion == null || this.specVersion.ordinal() < value.ordinal()) {
             this.specVersion = value;
         }
-    }
-
-    /**
-     * Return the associated java class description
-     */
-    public JavaClassDescription getJavaClassDescription() {
-        if ( this.tag != null ) {
-            return this.tag.getJavaClassDescription();
-        }
-        return null;
     }
 
     /**
@@ -253,109 +247,104 @@ public class Component extends AbstractObject {
     }
 
     /**
-     * Validate the component description.
-     * If errors occur a message is added to the issues list,
-     * warnings can be added to the warnings list.
+     * Validate the component description. If errors occur a message is added to
+     * the issues list, warnings can be added to the warnings list.
      */
-    public void validate(final int specVersion, final IssueLog iLog)
-    throws SCRDescriptorException {
-        final int currentIssueCount = iLog.getNumberOfErrors();
-
+    public void validate(final Context context) throws SCRDescriptorException {
         // nothing to check if this is ignored
         if (!isDs()) {
             return;
         }
 
-        final JavaClassDescription javaClass = this.tag.getJavaClassDescription();
-        if (javaClass == null) {
-            this.logError( iLog, "Tag not declared in a Java Class" );
-        } else {
+        final int currentIssueCount = context.getIssueLog().getNumberOfErrors();
 
-            // if the service is abstract, we do not validate everything
-            if ( !this.isAbstract ) {
-                // ensure non-abstract, public class
-                if (!javaClass.isPublic()) {
-                    this.logError( iLog, "Class must be public: " + javaClass.getName() );
-                }
-                if (javaClass.isAbstract() || javaClass.isInterface()) {
-                    this.logError( iLog, "Class must be concrete class (not abstract or interface) : " + javaClass.getName() );
-                }
-
-                // no errors so far, let's continue
-                if ( iLog.getNumberOfErrors() == currentIssueCount ) {
-                    final String activateName = this.activate == null ? "activate" : this.activate;
-                    final String deactivateName = this.deactivate == null ? "deactivate" : this.deactivate;
-
-                    // check activate and deactivate methods
-                    this.checkLifecycleMethod(specVersion, javaClass, activateName, true, iLog);
-                    this.checkLifecycleMethod(specVersion, javaClass, deactivateName, false, iLog);
-
-                    if ( this.modified != null && specVersion >= Constants.VERSION_1_1 ) {
-                        this.checkLifecycleMethod(specVersion, javaClass, this.modified, true, iLog);
-                    }
-                    // ensure public default constructor
-                    boolean constructorFound = true;
-                    JavaMethod[] methods = javaClass.getMethods();
-                    for (int i = 0; methods != null && i < methods.length; i++) {
-                        if (methods[i].isConstructor()) {
-                            // if public default, succeed
-                            if (methods[i].isPublic()
-                                && (methods[i].getParameters() == null || methods[i].getParameters().length == 0)) {
-                                constructorFound = true;
-                                break;
-                            }
-
-                            // non-public/non-default constructor found, must have explicit
-                            constructorFound = false;
-                        }
-                    }
-                    if (!constructorFound) {
-                        this.logError( iLog, "Class must have public default constructor: " + javaClass.getName() );
-                    }
-
-                    // verify properties
-                    for(final Property prop : this.getProperties()) {
-                        prop.validate(specVersion, iLog);
-                    }
-
-                    // verify service
-                    boolean isServiceFactory = false;
-                    if (this.getService() != null) {
-                        if ( this.getService().getInterfaces().size() == 0 ) {
-                            this.logError( iLog, "Service interface information is missing!" );
-                        }
-                        this.getService().validate(specVersion, iLog);
-                        isServiceFactory = this.getService().isServicefactory();
-                    }
-
-                    // serviceFactory must not be true for immediate of component factory
-                    if (isServiceFactory && this.isImmediate() != null && this.isImmediate().booleanValue() && this.getFactory() != null) {
-                        this.logError( iLog, "Component must not be a ServiceFactory, if immediate and/or component factory: " + javaClass.getName() );
-                    }
-
-                    // immediate must not be true for component factory
-                    if (this.isImmediate() != null && this.isImmediate().booleanValue() && this.getFactory() != null) {
-                        this.logError( iLog, "Component must not be immediate if component factory: " + javaClass.getName() );
-                    }
-                }
+        // if the service is abstract, we do not validate everything
+        if (!this.isAbstract) {
+            // ensure non-abstract, public class
+            if (!Modifier.isPublic(context.getClassDescription().getDescribedClass().getModifiers())) {
+                this.logError(context.getIssueLog(), "Class must be public: "
+                                + context.getClassDescription().getDescribedClass().getName());
             }
-            if ( iLog.getNumberOfErrors() == currentIssueCount ) {
-                // verify references
-                for(final Reference ref : this.getReferences()) {
-                    ref.validate(specVersion, this.isAbstract, iLog);
+            if (Modifier.isAbstract(context.getClassDescription().getDescribedClass().getModifiers())
+                            || context.getClassDescription().getDescribedClass().isInterface()) {
+                this.logError(context.getIssueLog(), "Class must be concrete class (not abstract or interface) : "
+                                + context.getClassDescription().getDescribedClass().getName());
+            }
+
+            // no errors so far, let's continue
+            if (context.getIssueLog().getNumberOfErrors() == currentIssueCount) {
+
+                final String activateName = this.activate == null ? "activate" : this.activate;
+                final String deactivateName = this.deactivate == null ? "deactivate" : this.deactivate;
+
+                // check activate and deactivate methods
+                this.checkLifecycleMethod(context, activateName, true);
+                this.checkLifecycleMethod(context, deactivateName, false);
+
+                if (this.modified != null) {
+                    if ( context.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                        this.checkLifecycleMethod(context, this.modified, true);
+                    } else {
+                        this.logError(context.getIssueLog(), "If modified version is specified, spec version must be " +
+                            SpecVersion.VERSION_1_1.name() + " or higher : " + this.modified);
+                    }
+                }
+
+                // ensure public default constructor
+                boolean constructorFound = true;
+                Constructor<?>[] constructors = this.classDescription.getDescribedClass().getDeclaredConstructors();
+                for (int i = 0; constructors != null && i < constructors.length; i++) {
+                    // if public default, succeed
+                    if (Modifier.isPublic(constructors[i].getModifiers())
+                        && (constructors[i].getParameterTypes() == null || constructors[i].getParameterTypes().length == 0)) {
+                        constructorFound = true;
+                        break;
+                    }
+
+                    // non-public/non-default constructor found, must have
+                    // explicit
+                    constructorFound = false;
+                }
+
+                if (!constructorFound) {
+                    this.logError(context.getIssueLog(), "Class must have public default constructor: " + this.classDescription.getDescribedClass().getName());
+                }
+
+                // verify properties
+                for (final Property prop : this.getProperties()) {
+                    prop.validate(context);
+                }
+
+                // verify service
+                boolean isServiceFactory = false;
+                if (this.getService() != null) {
+                    if (this.getService().getInterfaces().size() == 0) {
+                        this.logError(context.getIssueLog(), "Service interface information is missing!");
+                    }
+                    this.getService().validate(context);
+                    isServiceFactory = this.getService().isServiceFactory();
+                }
+
+                // serviceFactory must not be true for immediate of component factory
+                if (isServiceFactory && this.isImmediate() != null && this.isImmediate().booleanValue()
+                    && this.getFactory() != null) {
+                    this.logError(context.getIssueLog(),
+                        "Component must not be a ServiceFactory, if immediate and/or component factory: "
+                        + this.getClassDescription().getDescribedClass().getName());
+                }
+
+                // immediate must not be true for component factory
+                if (this.isImmediate() != null && this.isImmediate().booleanValue() && this.getFactory() != null) {
+                    this.logError(context.getIssueLog(),
+                        "Component must not be immediate if component factory: " + this.getClassDescription().getDescribedClass().getName());
                 }
             }
         }
-        // check additional stuff if version is 1.1
-        if ( specVersion >= Constants.VERSION_1_1 ) {
-            final String cp = this.getConfigurationPolicy();
-            if ( cp != null
-                 && !Constants.COMPONENT_CONFIG_POLICY_IGNORE.equals(cp)
-                 && !Constants.COMPONENT_CONFIG_POLICY_REQUIRE.equals(cp)
-                 && !Constants.COMPONENT_CONFIG_POLICY_OPTIONAL.equals(cp) ) {
-                this.logError( iLog, "Component has an unknown value for configuration policy: " + cp );
+        if (context.getIssueLog().getNumberOfErrors() == currentIssueCount) {
+            // verify references
+            for (final Reference ref : this.getReferences()) {
+                ref.validate(context, this.isAbstract);
             }
-
         }
     }
 
@@ -365,78 +354,114 @@ public class Component extends AbstractObject {
     private static final String TYPE_INT = "int";
     private static final String TYPE_INTEGER = "java.lang.Integer";
 
+    private Method getMethod(final Context ctx, final String name, final String[] sig)
+    throws SCRDescriptorException {
+        Class<?>[] classSig = (sig == null ? null : new Class<?>[sig.length]);
+        if ( sig != null ) {
+            for(int i = 0; i<sig.length; i++) {
+                try {
+                    if ( sig[i].equals("int") ) {
+                        classSig[i] = int.class;
+                    } else {
+                        classSig[i] = ctx.getProject().getClassLoader().loadClass(sig[i]);
+                    }
+                } catch (final ClassNotFoundException e) {
+                    throw new SCRDescriptorException("Unable to load class.", e);
+                }
+            }
+        }
+        try {
+            return ctx.getClassDescription().getDescribedClass().getDeclaredMethod(name, classSig);
+        } catch (final SecurityException e) {
+            // ignore
+        } catch (final NoSuchMethodException e) {
+            // ignore
+        }
+        return null;
+    }
+
     /**
      * Check for existence of lifecycle methods.
-     * @param specVersion The spec version
-     * @param javaClass The java class to inspect.
-     * @param methodName The method name.
-     * @param warnings The list of warnings used to add new warnings.
+     *
+     * @param specVersion
+     *            The spec version
+     * @param javaClass
+     *            The java class to inspect.
+     * @param methodName
+     *            The method name.
+     * @param warnings
+     *            The list of warnings used to add new warnings.
      */
-    protected void checkLifecycleMethod(final int specVersion,
-                                        final JavaClassDescription javaClass,
-                                        final String methodName,
-                                        final boolean isActivate,
-                                        final IssueLog iLog)
+    private void checkLifecycleMethod(final Context ctx,
+                                      final String methodName,
+                                      final boolean isActivate)
     throws SCRDescriptorException {
         // first candidate is (de)activate(ComponentContext)
-        JavaMethod method = javaClass.getMethodBySignature(methodName, new String[] {TYPE_COMPONENT_CONTEXT});
-        if ( method == null ) {
-            if ( specVersion >= Constants.VERSION_1_1) {
+        Method method = this.getMethod(ctx, methodName, new String[] { TYPE_COMPONENT_CONTEXT });
+        if (method == null) {
+            if (ctx.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
                 // second candidate is (de)activate(BundleContext)
-                method = javaClass.getMethodBySignature(methodName, new String[] {TYPE_BUNDLE_CONTEXT});
-                if ( method == null ) {
+                method = this.getMethod(ctx, methodName, new String[] { TYPE_BUNDLE_CONTEXT });
+                if (method == null) {
                     // third candidate is (de)activate(Map)
-                    method = javaClass.getMethodBySignature(methodName, new String[] {TYPE_MAP});
+                    method = this.getMethod(ctx, methodName, new String[] { TYPE_MAP });
 
-                    if ( method == null ) {
-                        // if this is a deactivate method, we have two additional possibilities
-                        // a method with parameter of type int and one of type Integer
-                        if ( !isActivate ) {
-                            method = javaClass.getMethodBySignature(methodName, new String[] {TYPE_INT});
-                            if ( method == null ) {
-                                method = javaClass.getMethodBySignature(methodName, new String[] {TYPE_INTEGER});
+                    if (method == null) {
+                        // if this is a deactivate method, we have two
+                        // additional possibilities
+                        // a method with parameter of type int and one of type
+                        // Integer
+                        if (!isActivate) {
+                            method = this.getMethod(ctx, methodName, new String[] { TYPE_INT });
+                            if (method == null) {
+                                method = this.getMethod(ctx, methodName, new String[] { TYPE_INTEGER });
                             }
                         }
+                    }
 
-                        // fourth candidate is (de)activate with two or three arguments (type must be BundleContext, ComponentCtx and Map)
-                        // as we have to iterate now and the fifth candidate is zero arguments
+                    if (method == null) {
+                        // fourth candidate is (de)activate with two or three
+                        // arguments (type must be BundleContext, ComponentCtx
+                        // and Map)
+                        // as we have to iterate now and the fifth candidate is
+                        // zero arguments
                         // we already store this option
-                        JavaMethod zeroArgMethod = null;
-                        JavaMethod found = method;
-                        final JavaMethod[] methods = javaClass.getMethods();
+                        Method zeroArgMethod = null;
+                        Method found = method;
+                        final Method[] methods = ctx.getClassDescription().getDescribedClass().getDeclaredMethods();
                         int i = 0;
-                        while ( i < methods.length ) {
-                            if ( methodName.equals(methods[i].getName()) ) {
+                        while (i < methods.length) {
+                            if (methodName.equals(methods[i].getName())) {
 
-                                if ( methods[i].getParameters().length == 0 ) {
+                                if (methods[i].getParameterTypes() == null || methods[i].getParameterTypes().length == 0) {
                                     zeroArgMethod = methods[i];
-                                } else if ( methods[i].getParameters().length >= 2 ) {
+                                } else if (methods[i].getParameterTypes().length >= 2) {
                                     boolean valid = true;
-                                    for(int m=0; m<methods[i].getParameters().length; m++) {
-                                        final String type = methods[i].getParameters()[m].getType();
-                                        if ( !type.equals(TYPE_BUNDLE_CONTEXT)
-                                              && !type.equals(TYPE_COMPONENT_CONTEXT)
-                                              && !type.equals(TYPE_MAP) ) {
-                                            // if this is deactivate, int and integer are possible as well
-                                            if ( isActivate || (!type.equals(TYPE_INT) && !type.equals(TYPE_INTEGER)) ) {
+                                    for (int m = 0; m < methods[i].getParameterTypes().length; m++) {
+                                        final String type = methods[i].getParameterTypes()[m].getName();
+                                        if (!type.equals(TYPE_BUNDLE_CONTEXT) && !type.equals(TYPE_COMPONENT_CONTEXT)
+                                            && !type.equals(TYPE_MAP)) {
+                                            // if this is deactivate, int and
+                                            // integer are possible as well
+                                            if (isActivate || (!type.equals(TYPE_INT) && !type.equals(TYPE_INTEGER))) {
                                                 valid = false;
                                             }
                                         }
                                     }
-                                    if ( valid ) {
-                                        if ( found == null ) {
+                                    if (valid) {
+                                        if (found == null) {
                                             found = methods[i];
                                         } else {
                                             // print warning
-                                            this.logWarn( iLog, "Lifecycle method " + methods[i].getName()
-                                                + " occurs several times with different matching signature." );
+                                            this.logWarn(ctx.getIssueLog(), "Lifecycle method " + methods[i].getName()
+                                                      + " occurs several times with different matching signature.");
                                         }
                                     }
                                 }
                             }
                             i++;
                         }
-                        if ( found != null ) {
+                        if (found != null) {
                             method = found;
                         } else {
                             method = zeroArgMethod;
@@ -444,30 +469,31 @@ public class Component extends AbstractObject {
                     }
                 }
             }
-            // if no method is found, we check for any method with that name to print some warnings!
-            if ( method == null ) {
-                final JavaMethod[] methods = javaClass.getMethods();
-                for(int i=0; i<methods.length; i++) {
-                    if ( methodName.equals(methods[i].getName()) ) {
-                        if ( methods[i].getParameters().length != 1 ) {
-                            this.logWarn( iLog, "Lifecycle method " + methods[i].getName()
-                                + " has wrong number of arguments" );
-                        } else {
-                            this.logWarn( iLog, "Lifecycle method " + methods[i].getName() + " has wrong argument "
-                                + methods[i].getParameters()[0].getType() );
-                        }
+        }
+        // if no method is found, we check for any method with that name to print some warnings!
+        if (method == null) {
+           final Method[] methods = ctx.getClassDescription().getDescribedClass().getDeclaredMethods();
+            for (int i = 0; i < methods.length; i++) {
+                if (methodName.equals(methods[i].getName())) {
+                    if (methods[i].getParameterTypes() == null || methods[i].getParameterTypes().length != 1) {
+                        this.logWarn(ctx.getIssueLog(), "Lifecycle method " + methods[i].getName() + " has wrong number of arguments");
+                    } else {
+                        this.logWarn(ctx.getIssueLog(),
+                            "Lifecycle method " + methods[i].getName() + " has wrong argument "
+                            + methods[i].getParameterTypes()[0].getName());
                     }
                 }
             }
         }
+
         // method must be protected for version 1.0
-        if ( method != null && specVersion == Constants.VERSION_1_0) {
+        if (method != null && specVersion == SpecVersion.VERSION_1_0) {
             // check protected
-            if (method.isPublic()) {
-                this.logWarn( iLog, "Lifecycle method " + method.getName() + " should be declared protected" );
-            } else if (!method.isProtected()) {
-                this.logWarn( iLog, "Lifecycle method " + method.getName()
-                    + " has wrong qualifier, public or protected required" );
+            if (Modifier.isPublic(method.getModifiers())) {
+                this.logWarn(ctx.getIssueLog(), "Lifecycle method " + method.getName() + " should be declared protected");
+            } else if (!Modifier.isProtected(method.getModifiers())) {
+                this.logWarn(ctx.getIssueLog(), "Lifecycle method " + method.getName() +
+                            " has wrong qualifier, public or protected required");
             }
         }
     }
@@ -475,34 +501,27 @@ public class Component extends AbstractObject {
     /**
      * Return the configuration policy.
      */
-    public String getConfigurationPolicy() {
+    public ComponentConfigurationPolicy getConfigurationPolicy() {
         return this.configurationPolicy;
     }
 
     /**
      * Set the configuration policy.
      */
-    public void setConfigurationPolicy(final String value) {
+    public void setConfigurationPolicy(final ComponentConfigurationPolicy value) {
         this.configurationPolicy = value;
     }
 
     @Override
     public String toString() {
-        return "Component " + this.name + " (" +
-          "enabled=" + (enabled==null?"<notset>":enabled) +
-          ", immediate=" + (immediate == null?"<notset>":immediate) +
-          ", abstract=" + isAbstract +
-          ", isDS=" + isDs +
-          (factory != null ? ", factory="+factory:"")+
-          (configurationPolicy != null ? ", configurationPolicy=" + configurationPolicy : "") +
-          (activate != null ? ", activate=" + activate : "") +
-          (deactivate != null ? ", deactivate=" + deactivate : "") +
-          (modified != null ? ", modified=" + modified : "") +
-          ", specVersion=" + specVersion +
-          ", implementation=" + implementation +
-          ", service=" + service +
-          ", properties=" + properties +
-          ", references=" + references +
-          ")";
+        return "Component " + this.name + " (" + "enabled=" + (enabled == null ? "<notset>" : enabled) + ", immediate="
+                        + (immediate == null ? "<notset>" : immediate) + ", abstract=" + isAbstract + ", isDS=" + isDs
+                        + (factory != null ? ", factory=" + factory : "")
+                        + (configurationPolicy != null ? ", configurationPolicy=" + configurationPolicy : "")
+                        + (activate != null ? ", activate=" + activate : "")
+                        + (deactivate != null ? ", deactivate=" + deactivate : "")
+                        + (modified != null ? ", modified=" + modified : "") + ", specVersion=" + specVersion
+                        + ", implementation=" + implementation + ", service=" + service + ", properties=" + properties
+                        + ", references=" + references + ")";
     }
 }

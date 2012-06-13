@@ -16,26 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.tags.cl;
+package org.apache.felix.scrplugin.description;
 
-import org.apache.felix.scrplugin.tags.JavaParameter;
+import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
+
 
 /**
- * <code>ClassLoaderJavaParameter.java</code>...
+ * <code>AbstractDescription</code> is the base class for all descriptions.
  *
+ * @see ComponentDescription
+ * @see ServiceDescription
+ * @see ReferenceDescription
+ * @see PropertyDescription
  */
-public class ClassLoaderJavaParameter implements JavaParameter {
+public abstract class AbstractDescription {
 
-    protected final String type;
+    /** The corresponding annotation from the class file. */
+    protected final ScannedAnnotation annotation;
 
-    public ClassLoaderJavaParameter(String t) {
-        this.type = t;
+    /**
+     * Create a new abstract description
+     * @param annotation The corresponding annotation.
+     */
+    public AbstractDescription(final ScannedAnnotation annotation) {
+        this.annotation = annotation;
     }
 
     /**
-     * @see org.apache.felix.scrplugin.tags.JavaParameter#getType()
+     * Get the annotation.
+     * @return The annotation or <code>null</code>
      */
-    public String getType() {
-        return this.type;
+    public ScannedAnnotation getAnnotation() {
+        return this.annotation;
     }
 }
