@@ -72,15 +72,8 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
 
         // add custom processors defined in the tool (maven, ant...)
         for ( int i = 0; i < annotationProcessorClasses.length; i++ ) {
-            loadProcessor( classLoader, annotationProcessorClasses[i], false );
+            loadProcessor( classLoader, annotationProcessorClasses[i] );
         }
-
-        // always add processors supporting built-in SCR default properties (for compatibility with older
-        // annotation versions)
-        loadProcessor( classLoader,
-            "org.apache.felix.scrplugin.SCRAnnotationProcessor", true );
-        loadProcessor( classLoader,
-            "org.apache.felix.scrplugin.SlingAnnotationProcessor", true );
 
         // create ordered list
         for(final AnnotationProcessor pro : this.processors.values() ) {
@@ -123,7 +116,7 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
         }
     }
 
-    private void loadProcessor( final ClassLoader classLoader, final String className, final boolean silent )
+    private void loadProcessor( final ClassLoader classLoader, final String className )
     throws SCRDescriptorFailureException {
         String failureMessage = null;
         try {
@@ -142,8 +135,8 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
             failureMessage = "Annotation provider class '" + className + "' not found.";
         }
 
-        // throw an optional exception if not required to remaing silent
-        if ( failureMessage != null && !silent ) {
+        // throw an exception
+        if ( failureMessage != null  ) {
             throw new SCRDescriptorFailureException( failureMessage );
         }
     }
