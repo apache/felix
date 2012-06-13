@@ -18,144 +18,154 @@
  */
 package org.apache.felix.scrplugin.mojo;
 
-
 import org.apache.felix.scrplugin.Log;
-
 
 /**
  * The <code>MavenLog</code> class implements the {@link Log} interface using
  * the Maven logger created on instantiation.
  */
-public class MavenLog implements Log
-{
+public class MavenLog implements Log {
 
     private final org.apache.maven.plugin.logging.Log mavenLog;
 
-
-    MavenLog( org.apache.maven.plugin.logging.Log mavenLog )
-    {
+    MavenLog(final org.apache.maven.plugin.logging.Log mavenLog) {
         this.mavenLog = mavenLog;
     }
 
-
-    public void debug( String content, Throwable error )
-    {
-        mavenLog.debug( content, error );
+    /**
+     * @see org.apache.felix.scrplugin.Log#debug(java.lang.String,
+     *      java.lang.Throwable)
+     */
+    public void debug(final String content, final Throwable error) {
+        mavenLog.debug(content, error);
     }
 
-
-    public void debug( String content )
-    {
-        mavenLog.debug( content );
+    /**
+     * @see org.apache.felix.scrplugin.Log#debug(java.lang.String)
+     */
+    public void debug(final String content) {
+        mavenLog.debug(content);
     }
 
-
-    public void debug( Throwable error )
-    {
-        mavenLog.debug( error );
+    /**
+     * @see org.apache.felix.scrplugin.Log#debug(java.lang.Throwable)
+     */
+    public void debug(final Throwable error) {
+        mavenLog.debug(error);
     }
 
-
-    public void error( String content, Throwable error )
-    {
-        mavenLog.error( content, error );
+    /**
+     * @see org.apache.felix.scrplugin.Log#error(java.lang.String, java.lang.Throwable)
+     */
+    public void error(final String content, final Throwable error) {
+        mavenLog.error(content, error);
     }
 
-
-    public void error( String content, String location, int lineNumber )
-    {
-        if ( isErrorEnabled() )
-        {
-            final String message = formatMessage( content, location, lineNumber );
-            mavenLog.error( message );
-        }
+    /**
+     * @see org.apache.felix.scrplugin.Log#error(java.lang.String, java.lang.String, int)
+     */
+    public void error(final String content,
+            final String location,
+            final int lineNumber) {
+        final String message = formatMessage(content, location, lineNumber);
+        mavenLog.error(message);
     }
 
-
-    public void error( String content )
-    {
-        mavenLog.error( content );
+    /**
+     * @see org.apache.felix.scrplugin.Log#error(java.lang.String)
+     */
+    public void error(final String content) {
+        mavenLog.error(content);
     }
 
-
-    public void error( Throwable error )
-    {
-        mavenLog.error( error );
+    /**
+     * @see org.apache.felix.scrplugin.Log#error(java.lang.Throwable)
+     */
+    public void error(final Throwable error) {
+        mavenLog.error(error);
     }
 
-
-    public void info( String content, Throwable error )
-    {
-        mavenLog.info( content, error );
+    /**
+     * @see org.apache.felix.scrplugin.Log#info(java.lang.String, java.lang.Throwable)
+     */
+    public void info(final String content, final Throwable error) {
+        mavenLog.info(content, error);
     }
 
-
-    public void info( String content )
-    {
-        mavenLog.info( content );
+    /**
+     * @see org.apache.felix.scrplugin.Log#info(java.lang.String)
+     */
+    public void info(final String content) {
+        mavenLog.info(content);
     }
 
-
-    public void info( Throwable error )
-    {
-        mavenLog.info( error );
+    /**
+     * @see org.apache.felix.scrplugin.Log#info(java.lang.Throwable)
+     */
+    public void info(final Throwable error) {
+        mavenLog.info(error);
     }
 
-
-    public boolean isDebugEnabled()
-    {
+    /**
+     * @see org.apache.felix.scrplugin.Log#isDebugEnabled()
+     */
+    public boolean isDebugEnabled() {
         return mavenLog.isDebugEnabled();
     }
 
-
-    public boolean isErrorEnabled()
-    {
+    /**
+     * @see org.apache.felix.scrplugin.Log#isErrorEnabled()
+     */
+    public boolean isErrorEnabled() {
         return mavenLog.isErrorEnabled();
     }
 
-
-    public boolean isInfoEnabled()
-    {
+    /**
+     * @see org.apache.felix.scrplugin.Log#isInfoEnabled()
+     */
+    public boolean isInfoEnabled() {
         return mavenLog.isInfoEnabled();
     }
 
-
-    public boolean isWarnEnabled()
-    {
+    /**
+     * @see org.apache.felix.scrplugin.Log#isWarnEnabled()
+     */
+    public boolean isWarnEnabled() {
         return mavenLog.isWarnEnabled();
     }
 
-
-    public void warn( String content, Throwable error )
-    {
-        mavenLog.warn( content, error );
+    /**
+     * @see org.apache.felix.scrplugin.Log#warn(java.lang.String, java.lang.Throwable)
+     */
+    public void warn(final String content, final Throwable error) {
+        mavenLog.warn(content, error);
     }
 
-
-    public void warn( String content, String location, int lineNumber )
-    {
-        if ( isWarnEnabled() )
-        {
-            final String message = formatMessage( content, location, lineNumber );
-            mavenLog.warn( message );
-        }
+    /**
+     * @see org.apache.felix.scrplugin.Log#warn(java.lang.String, java.lang.String, int)
+     */
+    public void warn(final String content, final String location,
+            final int lineNumber) {
+        final String message = formatMessage(content, location, lineNumber);
+        mavenLog.warn(message);
     }
 
-
-    public void warn( String content )
-    {
-        mavenLog.warn( content );
+    /**
+     * @see org.apache.felix.scrplugin.Log#warn(java.lang.String)
+     */
+    public void warn(final String content) {
+        mavenLog.warn(content);
     }
 
-
-    public void warn( Throwable error )
-    {
-        mavenLog.warn( error );
+    /**
+     * @see org.apache.felix.scrplugin.Log#warn(java.lang.Throwable)
+     */
+    public void warn(final Throwable error) {
+        mavenLog.warn(error);
     }
 
-
-    private String formatMessage( String content, String location, int lineNumber )
-    {
+    private String formatMessage(final String content, final String location,
+            final int lineNumber) {
         return content + " at " + location + ":" + lineNumber;
     }
 }
