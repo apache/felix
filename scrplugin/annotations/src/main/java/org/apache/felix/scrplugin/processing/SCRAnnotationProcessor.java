@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin;
+package org.apache.felix.scrplugin.processing;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
@@ -34,6 +34,14 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scr.annotations.Services;
+import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.SCRDescriptorFailureException;
+import org.apache.felix.scrplugin.annotations.AnnotationProcessor;
+import org.apache.felix.scrplugin.annotations.ClassAnnotation;
+import org.apache.felix.scrplugin.annotations.FieldAnnotation;
+import org.apache.felix.scrplugin.annotations.MethodAnnotation;
+import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
+import org.apache.felix.scrplugin.annotations.ScannedClass;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
 import org.apache.felix.scrplugin.description.ComponentDescription;
@@ -47,11 +55,6 @@ import org.apache.felix.scrplugin.description.ReferencePolicy;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.ServiceDescription;
 import org.apache.felix.scrplugin.description.SpecVersion;
-import org.apache.felix.scrplugin.scanner.ClassAnnotation;
-import org.apache.felix.scrplugin.scanner.FieldAnnotation;
-import org.apache.felix.scrplugin.scanner.MethodAnnotation;
-import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
-import org.apache.felix.scrplugin.scanner.ScannedClass;
 
 /**
  * This is the processor for the Apache Felix SCR annotations.

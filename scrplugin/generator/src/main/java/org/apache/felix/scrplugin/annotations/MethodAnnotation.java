@@ -16,20 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.scanner;
+package org.apache.felix.scrplugin.annotations;
 
 import java.lang.reflect.Method;
 import java.util.Map;
 
+/**
+ * A method annotation
+ */
 public class MethodAnnotation extends ScannedAnnotation {
 
+    /** The annotated method. */
     private final Method method;
 
+    /**
+     * Constructor
+     */
     public MethodAnnotation(final String name, final Map<String, Object> values, final Method m) {
         super(name, values);
         this.method = m;
     }
 
+    /**
+     * Get the annotated method.
+     */
     public Method getAnnotatedMethod() {
         return this.method;
     }

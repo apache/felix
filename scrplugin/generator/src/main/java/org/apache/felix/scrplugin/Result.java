@@ -22,7 +22,7 @@ import java.util.List;
 
 
 /**
- * The result of the generation.
+ * The result of the {@link SCRDescriptorGenerator}.
  */
 public class Result {
 

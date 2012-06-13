@@ -16,19 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.scanner;
+package org.apache.felix.scrplugin;
 
-import java.util.Map;
+import java.io.File;
 
-public class ClassAnnotation extends ScannedAnnotation {
+/**
+ * Description of a source to be parsed.
+ */
+public interface Source {
 
-    public ClassAnnotation(final String name, final Map<String, Object> values) {
-        super(name, values);
-    }
+    /**
+     * The main class name.
+     * @return The main class name.
+     */
+    String getClassName();
 
-    @Override
-    public String toString() {
-        return "ClassAnnotationDescription [name=" + name + ", values="
-                + values + "]";
-    }
+    /**
+     * The file containing the class.
+     * @return The file containing the class.
+     */
+    File getFile();
 }

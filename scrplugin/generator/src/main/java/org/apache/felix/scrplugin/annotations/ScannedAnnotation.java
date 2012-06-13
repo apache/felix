@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.scanner;
+package org.apache.felix.scrplugin.annotations;
 
 import java.util.Map;
 
@@ -50,6 +50,14 @@ public abstract class ScannedAnnotation {
     }
 
     /**
+     * Get the simple name of the annotation
+     */
+    public String getSimpleName() {
+        final int pos = name.lastIndexOf('.');
+        return name.substring(pos + 1);
+    }
+
+    /**
      * Get a property value of the annotation.
      * @param paramName The property name.
      * @return The value of the property or <code>null</code>
@@ -61,6 +69,12 @@ public abstract class ScannedAnnotation {
         return null;
     }
 
+    /**
+     * Get a boolean value of the annotation
+     * @param name The property name
+     * @param defaultValue A default value if the property is not set
+     * @return The property value or the default value.
+     */
     public boolean getBooleanValue(final String name, final boolean defaultValue) {
         final Object val = this.getValue(name);
         if ( val != null ) {
@@ -69,6 +83,12 @@ public abstract class ScannedAnnotation {
         return defaultValue;
     }
 
+    /**
+     * Get an integer value of the annotation
+     * @param name The property name
+     * @param defaultValue A default value if the property is not set
+     * @return The property value or the default value.
+     */
     public int getIntegerValue(final String name, final int defaultValue) {
         final Object val = this.getValue(name);
         if ( val != null ) {
@@ -77,6 +97,12 @@ public abstract class ScannedAnnotation {
         return defaultValue;
     }
 
+    /**
+     * Get a long value of the annotation
+     * @param name The property name
+     * @param defaultValue A default value if the property is not set
+     * @return The property value or the default value.
+     */
     public long getLongValue(final String name, final long defaultValue) {
         final Object val = this.getValue(name);
         if ( val != null ) {
@@ -85,6 +111,12 @@ public abstract class ScannedAnnotation {
         return defaultValue;
     }
 
+    /**
+     * Get a string value of the annotation
+     * @param name The property name
+     * @param defaultValue A default value if the property is not set
+     * @return The property value or the default value.
+     */
     public String getStringValue(final String name, final String defaultValue) {
         final Object val = this.getValue(name);
         if ( val != null && val.toString().trim().length() > 0 ) {
@@ -93,6 +125,12 @@ public abstract class ScannedAnnotation {
         return defaultValue;
     }
 
+    /**
+     * Get an enumeration value of the annotation
+     * @param name The property name
+     * @param defaultValue A default value if the property is not set
+     * @return The property value or the default value.
+     */
     public String getEnumValue(final String name, final String defaultValue) {
         final Object val = this.getValue(name);
         if ( val != null ) {

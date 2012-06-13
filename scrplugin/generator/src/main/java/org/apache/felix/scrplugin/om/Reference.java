@@ -24,12 +24,12 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.SpecVersion;
 import org.apache.felix.scrplugin.helper.StringUtils;
-import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
 
 /**
  * <code>Reference.java</code>...

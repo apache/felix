@@ -26,8 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.felix.scrplugin.Log;
+import org.apache.felix.scrplugin.Source;
 import org.apache.felix.scrplugin.helper.StringUtils;
-import org.apache.felix.scrplugin.scanner.Source;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;

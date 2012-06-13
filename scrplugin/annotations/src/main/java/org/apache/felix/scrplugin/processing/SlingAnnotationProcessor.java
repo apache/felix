@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin;
+package org.apache.felix.scrplugin.processing;
 
 import java.util.List;
 
 import org.apache.felix.scr.annotations.sling.SlingFilter;
 import org.apache.felix.scr.annotations.sling.SlingFilterScope;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
+import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.SCRDescriptorFailureException;
+import org.apache.felix.scrplugin.annotations.AnnotationProcessor;
+import org.apache.felix.scrplugin.annotations.ClassAnnotation;
+import org.apache.felix.scrplugin.annotations.ScannedClass;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
 import org.apache.felix.scrplugin.description.ComponentDescription;
 import org.apache.felix.scrplugin.description.PropertyDescription;
 import org.apache.felix.scrplugin.description.PropertyType;
 import org.apache.felix.scrplugin.description.ServiceDescription;
-import org.apache.felix.scrplugin.scanner.ClassAnnotation;
-import org.apache.felix.scrplugin.scanner.ScannedClass;
 
 /**
  * This is the processor for the Apache Felix Sling annotations.

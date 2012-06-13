@@ -21,7 +21,7 @@ package org.apache.felix.scrplugin.description;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.felix.scrplugin.scanner.ScannedAnnotation;
+import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 
 /**
  * If a component is a service, the {@link ClassDescription} should

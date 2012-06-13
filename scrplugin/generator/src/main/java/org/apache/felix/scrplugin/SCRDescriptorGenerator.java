@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scrplugin.annotations.AnnotationProcessor;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentDescription;
 import org.apache.felix.scrplugin.description.PropertyDescription;
@@ -43,7 +44,6 @@ import org.apache.felix.scrplugin.helper.StringUtils;
 import org.apache.felix.scrplugin.om.Component;
 import org.apache.felix.scrplugin.om.Components;
 import org.apache.felix.scrplugin.om.Context;
-import org.apache.felix.scrplugin.om.Implementation;
 import org.apache.felix.scrplugin.om.Interface;
 import org.apache.felix.scrplugin.om.Property;
 import org.apache.felix.scrplugin.om.Reference;
@@ -410,10 +410,6 @@ public class SCRDescriptorGenerator {
         } else {
             ocd = null;
         }
-
-        // Create implementation object
-        final Implementation impl = new Implementation(desc.getDescribedClass().getName());
-        comp.setImplementation(impl);
 
         final Map<String, Reference> allReferences = new HashMap<String, Reference>();
         final Map<String, Property> allProperties = new HashMap<String, Property>();

@@ -43,7 +43,6 @@ import org.apache.felix.scrplugin.description.SpecVersion;
 import org.apache.felix.scrplugin.helper.IssueLog;
 import org.apache.felix.scrplugin.om.Component;
 import org.apache.felix.scrplugin.om.Components;
-import org.apache.felix.scrplugin.om.Implementation;
 import org.apache.felix.scrplugin.om.Interface;
 import org.apache.felix.scrplugin.om.Property;
 import org.apache.felix.scrplugin.om.Reference;
@@ -226,7 +225,7 @@ public class ComponentDescriptorIO {
         IOUtils.indent(contentHandler, 1);
         contentHandler.startElement(namespace, ComponentDescriptorIO.COMPONENT, ComponentDescriptorIO.COMPONENT_QNAME, ai);
         IOUtils.newline(contentHandler);
-        generateXML(component.getImplementation(), contentHandler);
+        generateImplementationXML(component, contentHandler);
         if (component.getService() != null) {
             generateXML(component.getService(), contentHandler);
         }
@@ -252,9 +251,9 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Implementation implementation, ContentHandler contentHandler) throws SAXException {
+    protected static void generateImplementationXML(Component component, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "class", implementation.getClassName());
+        IOUtils.addAttribute(ai, "class", component.getClassDescription().getDescribedClass().getName());
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.IMPLEMENTATION,
                         ComponentDescriptorIO.IMPLEMENTATION_QNAME, ai);
