@@ -20,17 +20,20 @@ package org.apache.felix.scrplugin.mojo;
 
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
-import org.apache.felix.scrplugin.*;
+import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.helper.StringUtils;
+import org.apache.felix.scrplugin.scanner.Source;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 
-public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
-{
+public class MavenProjectScanner {
 
     private final MavenProject project;
 
@@ -38,28 +41,23 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
 
     private final String excludeString;
 
-    public MavenJavaClassDescriptorManager( MavenProject project, Log log, ClassLoader classLoader,
-        String[] annotationTagProviders, String includeString, String excludeString, boolean parseJavadocs, boolean processAnnotations )
-        throws SCRDescriptorFailureException
-    {
-        super( log, classLoader, annotationTagProviders, parseJavadocs, processAnnotations );
+    private final Log log;
 
+    public MavenProjectScanner( final MavenProject project,
+            final String includeString,
+            final String excludeString,
+            final Log log) {
         this.project = project;
         this.includeString = includeString;
         this.excludeString = excludeString;
+        this.log = log;
     }
 
-
-    public String getOutputDirectory()
-    {
-        return this.project.getBuild().getOutputDirectory();
-    }
-
-
-    @Override
-    protected Iterator<File> getSourceFiles()
-    {
-        ArrayList<File> files = new ArrayList<File>();
+    /**
+     * Return all sources.
+     */
+    public Collection<Source> getSources() {
+        final ArrayList<Source> files = new ArrayList<Source>();
 
         @SuppressWarnings("unchecked")
         final Iterator<String> i = project.getCompileSourceRoots().iterator();
@@ -71,30 +69,24 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
         }
 
         final String[] excludes;
-        if ( excludeString != null )
-        {
+        if ( excludeString != null ) {
             excludes = StringUtils.split( excludeString, "," );
-        }
-        else
-        {
+        } else {
             excludes = null;
         }
 
-        while ( i.hasNext() )
-        {
+        while ( i.hasNext() ) {
             final String tree = i.next();
             final File directory = new File( tree );
-            if ( !directory.exists() )
-            {
-                this.log.warn("Source tree does not exist. Ignoring " + tree);
+            if ( !directory.exists() ) {
+                log.warn("Source tree does not exist. Ignoring " + tree);
                 continue;
             }
-            this.log.debug( "Scanning source tree " + tree );
+            log.debug( "Scanning source tree " + tree );
             final DirectoryScanner scanner = new DirectoryScanner();
             scanner.setBasedir( directory );
 
-            if ( excludes != null && excludes.length > 0 )
-            {
+            if ( excludes != null && excludes.length > 0 ) {
                 scanner.setExcludes( excludes );
             }
             scanner.addDefaultExcludes();
@@ -102,53 +94,52 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
 
             scanner.scan();
 
-            for ( String fileName : scanner.getIncludedFiles() )
-            {
-                files.add( new File( directory, fileName ) );
+            for ( final String fileName : scanner.getIncludedFiles() ) {
+                files.add( new Source() {
 
+                    public File getFile() {
+                        return new File(directory, fileName);
+                    }
+
+                    public String getClassName() {
+                        // remove ".java"
+                        String name = fileName.substring(0, fileName.length() - 5);
+                        return name.replace(File.separatorChar, '/').replace('/', '.');
+                    }
+                });
             }
         }
 
-        return files.iterator();
+        return files;
     }
 
-
-    @Override
-    protected List<File> getDependencies()
-    {
-        ArrayList<File> dependencies = new ArrayList<File>();
+    /**
+     * Return all dependencies
+     */
+    public List<File> getDependencies() {
+        final ArrayList<File> dependencies = new ArrayList<File>();
 
         @SuppressWarnings("unchecked")
         final Iterator<Artifact> it = project.getArtifacts().iterator();
-        while ( it.hasNext() )
-        {
+        while ( it.hasNext() ) {
             final Artifact declared = it.next();
             this.log.debug( "Checking artifact " + declared );
-            if ( this.isJavaArtifact( declared ) )
-            {
+            if ( this.isJavaArtifact( declared ) ) {
                 if ( Artifact.SCOPE_COMPILE.equals( declared.getScope() )
                     || Artifact.SCOPE_RUNTIME.equals( declared.getScope() )
                     || Artifact.SCOPE_PROVIDED.equals( declared.getScope() )
-                    || Artifact.SCOPE_SYSTEM.equals( declared.getScope() ) )
-                {
+                    || Artifact.SCOPE_SYSTEM.equals( declared.getScope() ) ) {
                     this.log.debug( "Resolving artifact " + declared );
-                    if ( declared.getFile() != null )
-                    {
+                    if ( declared.getFile() != null ) {
                         dependencies.add( declared.getFile() );
-                    }
-                    else
-                    {
+                    } else {
                         this.log.debug( "Unable to resolve artifact " + declared );
                     }
-                }
-                else
-                {
+                } else {
                     this.log.debug( "Artifact " + declared + " has not scope compile or runtime, but "
                         + declared.getScope() );
                 }
-            }
-            else
-            {
+            } else {
                 this.log.debug( "Artifact " + declared + " is not a java artifact, type is " + declared.getType() );
             }
         }
@@ -160,17 +151,13 @@ public class MavenJavaClassDescriptorManager extends JavaClassDescriptorManager
     /**
      * Check if the artifact is a java artifact (jar or bundle)
      */
-    private boolean isJavaArtifact( Artifact artifact )
-    {
-        if ( "jar".equals( artifact.getType() ) )
-        {
+    private boolean isJavaArtifact( Artifact artifact ) {
+        if ( "jar".equals( artifact.getType() ) ) {
             return true;
         }
-        if ( "bundle".equals( artifact.getType() ) )
-        {
+        if ( "bundle".equals( artifact.getType() ) ) {
             return true;
         }
         return false;
     }
-
 }

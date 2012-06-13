@@ -22,20 +22,34 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
 
-import org.apache.felix.scrplugin.*;
+import org.apache.felix.scrplugin.Options;
+import org.apache.felix.scrplugin.Project;
+import org.apache.felix.scrplugin.Result;
+import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.SCRDescriptorFailureException;
+import org.apache.felix.scrplugin.SCRDescriptorGenerator;
+import org.apache.felix.scrplugin.description.SpecVersion;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.apache.maven.model.Resource;
-import org.apache.maven.plugin.*;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.StringUtils;
 
 /**
- * The <code>SCRDescriptorMojo</code>
- * generates a service descriptor file based on annotations found in the sources.
+ * The <code>SCRDescriptorMojo</code> generates a service descriptor file based
+ * on annotations found in the sources.
  *
  * @goal scr
  * @phase process-classes
@@ -67,7 +81,8 @@ public class SCRDescriptorMojo extends AbstractMojo {
      *
      * @see #checkAnnotationArtifact(Artifact)
      */
-    private static final ArtifactVersion SCR_ANN_MIN_VERSION = new DefaultArtifactVersion("1.5.1");
+    private static final ArtifactVersion SCR_ANN_MIN_VERSION = new DefaultArtifactVersion(
+            "1.6.9");
 
     /**
      * @parameter expression="${project.build.directory}/scr-plugin-generated"
@@ -88,7 +103,8 @@ public class SCRDescriptorMojo extends AbstractMojo {
     /**
      * Name of the generated descriptor.
      *
-     * @parameter expression="${scr.descriptor.name}" default-value="serviceComponents.xml"
+     * @parameter expression="${scr.descriptor.name}"
+     *            default-value="serviceComponents.xml"
      */
     private String finalName;
 
@@ -101,38 +117,25 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
     /**
      * This flag controls the generation of the bind/unbind methods.
+     *
      * @parameter default-value="true"
      */
     private boolean generateAccessors;
 
     /**
-     * This flag controls whether the javadoc source code will be scanned for
-     * tags.
-     * @parameter default-value="true"
-     */
-    protected boolean parseJavadoc;
-
-    /**
-     * This flag controls whether the annotations in the sources will be
-     * processed.
-     * @parameter default-value="true"
-     */
-    protected boolean processAnnotations;
-
-    /**
      * In strict mode the plugin even fails on warnings.
+     *
      * @parameter default-value="false"
      */
     protected boolean strictMode;
 
-    
     /**
      * The comma separated list of tokens to include when processing sources.
-     * 
+     *
      * @parameter alias="includes"
      */
     private String sourceIncludes;
-    
+
     /**
      * The comma separated list of tokens to exclude when processing sources.
      *
@@ -149,87 +152,97 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
     /**
      * Allows to define additional implementations of the interface
-     * {@link org.apache.felix.scrplugin.tags.annotation.AnnotationTagProvider}
-     * that provide mappings from custom annotations to
-     * {@link org.apache.felix.scrplugin.tags.JavaTag} implementations.
-     * List of full qualified class file names.
+     * {@link org.apache.felix.scrplugin.AnnotationProcessor} that provide
+     * mappings from custom annotations to descriptions.
      *
      * @parameter
      */
-    private String[] annotationTagProviders = {};
+    private String[] annotationProcessors = {};
 
     /**
-     * The version of the DS spec this plugin generates a descriptor for.
-     * By default the version is detected by the used tags.
+     * The version of the DS spec this plugin generates a descriptor for. By
+     * default the version is detected by the used tags.
+     *
      * @parameter
      */
     private String specVersion;
 
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        // create the log for the generator
+        final org.apache.felix.scrplugin.Log scrLog = new MavenLog(getLog());
+        // create the class loader
+        final ClassLoader classLoader = new URLClassLoader(getClassPath(), this
+                .getClass().getClassLoader());
 
-    public void execute() throws MojoExecutionException, MojoFailureException
-    {
-        try
-        {
-            final org.apache.felix.scrplugin.Log scrLog = new MavenLog( getLog() );
+        // create project
+        final MavenProjectScanner scanner = new MavenProjectScanner(
+                this.project, this.sourceIncludes, this.sourceExcludes, scrLog);
 
-            final ClassLoader classLoader = new URLClassLoader( getClassPath(), this.getClass().getClassLoader() );
-            final JavaClassDescriptorManager jManager = new MavenJavaClassDescriptorManager( project, scrLog,
-                classLoader, this.annotationTagProviders, this.sourceIncludes, this.sourceExcludes, this.parseJavadoc,
-                this.processAnnotations );
+        final Project project = new Project();
+        project.setClassLoader(classLoader);
+        project.setDependencies(scanner.getDependencies());
+        project.setSources(scanner.getSources());
+        project.setClassesDirectory(this.project.getBuild().getOutputDirectory());
 
-            final SCRDescriptorGenerator generator = new SCRDescriptorGenerator( scrLog );
+        // create options
+        final Options options = new Options();
+        options.setGenerateAccessors(generateAccessors);
+        options.setStrictMode(strictMode);
+        options.setProperties(properties);
+        options.setSpecVersion(SpecVersion.fromName(specVersion));
+        if ( specVersion != null && options.getSpecVersion() == null ) {
+            throw new MojoExecutionException("Unknown spec version specified: " + specVersion);
+        }
+        options.setAnnotationProcessors(annotationProcessors);
+        try {
+
+            final SCRDescriptorGenerator generator = new SCRDescriptorGenerator(
+                    scrLog);
 
             // setup from plugin configuration
-            generator.setOutputDirectory( outputDirectory );
-            generator.setDescriptorManager( jManager );
-            generator.setFinalName( finalName );
-            generator.setMetaTypeName( metaTypeName );
-            generator.setGenerateAccessors( generateAccessors );
-            generator.setStrictMode( strictMode );
-            generator.setProperties( properties );
-            generator.setSpecVersion( specVersion );
+            generator.setOutputDirectory(outputDirectory);
+            generator.setOptions(options);
+            generator.setProject(project);
+            generator.setFinalName(finalName);
+            generator.setMetaTypeName(metaTypeName);
 
-            if ( generator.execute() )
-            {
-                setServiceComponentHeader();
-                addResources();
-            }
-        }
-        catch ( SCRDescriptorException sde )
-        {
-            throw new MojoExecutionException( sde.getMessage(), sde.getCause() );
-        }
-        catch ( SCRDescriptorFailureException sdfe )
-        {
-            throw ( MojoFailureException ) new MojoFailureException( sdfe.getMessage() ).initCause( sdfe );
+            final Result result = generator.execute();
+            this.setServiceComponentHeader(result.getScrFiles());
+            this.updateProjectResources();
+
+        } catch (final SCRDescriptorException sde) {
+            throw new MojoExecutionException(sde.getMessage(), sde.getCause());
+        } catch (SCRDescriptorFailureException sdfe) {
+            throw (MojoFailureException) new MojoFailureException(
+                    sdfe.getMessage()).initCause(sdfe);
         }
     }
 
-    private URL[] getClassPath() throws MojoFailureException{
+    private URL[] getClassPath() throws MojoFailureException {
         @SuppressWarnings("unchecked")
         List<Artifact> artifacts = this.project.getCompileArtifacts();
         ArrayList<URL> path = new ArrayList<URL>();
 
-        try
-        {
-            path.add(new File( this.project.getBuild().getOutputDirectory() ).toURI().toURL());
-        }
-        catch ( IOException ioe )
-        {
-            throw new MojoFailureException( "Unable to add target directory to classloader.");
+        try {
+            path.add(new File(this.project.getBuild().getOutputDirectory())
+                    .toURI().toURL());
+        } catch (final IOException ioe) {
+            throw new MojoFailureException(
+                    "Unable to add target directory to classloader.");
         }
 
-        for (Iterator<Artifact> ai=artifacts.iterator(); ai.hasNext(); ) {
+        for (Iterator<Artifact> ai = artifacts.iterator(); ai.hasNext();) {
             Artifact a = ai.next();
             assertMinScrAnnotationArtifactVersion(a);
             try {
                 path.add(a.getFile().toURI().toURL());
             } catch (IOException ioe) {
-                throw new MojoFailureException("Unable to get compile class loader.");
+                throw new MojoFailureException(
+                        "Unable to get compile class loader.");
             }
         }
 
-        return path.toArray( new URL[path.size()] );
+        return path.toArray(new URL[path.size()]);
     }
 
     /**
@@ -240,61 +253,83 @@ public class SCRDescriptorMojo extends AbstractMojo {
      * SCR Annotation libraries do not produce descriptors any more. If the
      * artifact is not this method silently returns.
      *
-     * @param a The artifact to check and assert
+     * @param a
+     *            The artifact to check and assert
      * @see #SCR_ANN_ARTIFACTID
      * @see #SCR_ANN_GROUPID
      * @see #SCR_ANN_MIN_VERSION
-     * @throws MojoFailureException If the artifact refers to the SCR Annotation
-     *             library with a version less than {@link #SCR_ANN_MIN_VERSION}
+     * @throws MojoFailureException
+     *             If the artifact refers to the SCR Annotation library with a
+     *             version less than {@link #SCR_ANN_MIN_VERSION}
      */
-    private void assertMinScrAnnotationArtifactVersion(Artifact a) throws MojoFailureException
-    {
-        if (SCR_ANN_ARTIFACTID.equals(a.getArtifactId()) && SCR_ANN_GROUPID.equals(a.getGroupId()))
-        {
+    @SuppressWarnings("unchecked")
+    private void assertMinScrAnnotationArtifactVersion(final Artifact a)
+            throws MojoFailureException {
+        if (SCR_ANN_ARTIFACTID.equals(a.getArtifactId())
+                && SCR_ANN_GROUPID.equals(a.getGroupId())) {
             // assert minimal version number
-            ArtifactVersion aVersion = new DefaultArtifactVersion(a.getBaseVersion());
-            if (SCR_ANN_MIN_VERSION.compareTo(aVersion) > 0)
-            {
+            final ArtifactVersion aVersion = new DefaultArtifactVersion(a.getBaseVersion());
+            if (SCR_ANN_MIN_VERSION.compareTo(aVersion) > 0) {
                 getLog().error("Project depends on " + a);
-                getLog().error("Minimum required version is " + SCR_ANN_MIN_VERSION);
-                throw new MojoFailureException("Please use org.apache.felix:org.apache.felix.scr.annotations version "
-                    + SCR_ANN_MIN_VERSION + " or newer.");
+                getLog().error(
+                        "Minimum required version is " + SCR_ANN_MIN_VERSION);
+                throw new MojoFailureException(
+                        "Please use org.apache.felix:org.apache.felix.scr.annotations version "
+                                + SCR_ANN_MIN_VERSION + " or newer.");
             }
         }
     }
 
-    private void setServiceComponentHeader()
-    {
-        final File descriptorFile = StringUtils.isEmpty( this.finalName ) ? null : new File( new File(
-            this.outputDirectory, "OSGI-INF" ), this.finalName );
-        if ( descriptorFile.exists() )
-        {
-            String svcComp = project.getProperties().getProperty( "Service-Component" );
-            final String svcPath = "OSGI-INF/" + finalName;
-            svcComp = ( svcComp == null ) ? svcPath :
-                svcComp.contains(svcPath) ? svcComp : svcComp + ", " + svcPath;
-            project.getProperties().setProperty( "Service-Component", svcComp );
+    /**
+     * Set the service component header based on the scr files.
+     */
+    private void setServiceComponentHeader(final List<String> files) {
+        if ( files != null && files.size() > 0 ) {
+            final String svcHeader = project.getProperties().getProperty("Service-Component");
+            final Set<String> xmlFiles = new HashSet<String>();
+            if ( svcHeader != null ) {
+                final StringTokenizer st = new StringTokenizer(svcHeader, ",");
+                while ( st.hasMoreTokens() ) {
+                    final String token = st.nextToken();
+                    xmlFiles.add(token.trim());
+                }
+            }
+
+            for(final String path : files) {
+                xmlFiles.add(path);
+            }
+            final StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            for(final String entry : xmlFiles) {
+                if ( !first ) {
+                    sb.append(", ");
+                } else {
+                    first = false;
+                }
+                sb.append(entry);
+            }
+            project.getProperties().setProperty("Service-Component", sb.toString());
         }
     }
 
-
-    private void addResources()
-    {
+    /**
+     * Update the Maven project resources.
+     */
+    private void updateProjectResources() {
         // now add the descriptor directory to the maven resources
         final String ourRsrcPath = this.outputDirectory.getAbsolutePath();
         boolean found = false;
         @SuppressWarnings("unchecked")
-        final Iterator<Resource> rsrcIterator = this.project.getResources().iterator();
-        while ( !found && rsrcIterator.hasNext() )
-        {
+        final Iterator<Resource> rsrcIterator = this.project.getResources()
+                .iterator();
+        while (!found && rsrcIterator.hasNext()) {
             final Resource rsrc = rsrcIterator.next();
-            found = rsrc.getDirectory().equals( ourRsrcPath );
+            found = rsrc.getDirectory().equals(ourRsrcPath);
         }
-        if ( !found )
-        {
+        if (!found) {
             final Resource resource = new Resource();
-            resource.setDirectory( this.outputDirectory.getAbsolutePath() );
-            this.project.addResource( resource );
+            resource.setDirectory(this.outputDirectory.getAbsolutePath());
+            this.project.addResource(resource);
         }
     }
 }
