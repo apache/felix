@@ -35,11 +35,11 @@ import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
  * <li>cardinality</li>
  * <li>policy</li>
  * <li>strategy</li>
- * <li>field</li>
  * </ul>
  *
  * These values have the following default values:
  * <ul>
+ * <li>field :  null</li>
  * <li>bind : null</li>
  * <li>unbind : null</li>
  * <li>updated : null</li>

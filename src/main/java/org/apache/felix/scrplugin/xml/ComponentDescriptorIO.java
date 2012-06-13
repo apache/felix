@@ -61,15 +61,6 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class ComponentDescriptorIO {
 
-    /** The namespace for R4.1 - Version 1.0 */
-    public static final String NAMESPACE_URI_1_0 = "http://www.osgi.org/xmlns/scr/v1.0.0";
-
-    /** The namespace for R4.2 - Version 1.1 */
-    public static final String NAMESPACE_URI_1_1 = "http://www.osgi.org/xmlns/scr/v1.1.0";
-
-    /** The namespace for R4.2+FELIX-1893 - Version 1.1-felix */
-    public static final String NAMESPACE_URI_1_1_FELIX = "http://felix.apache.org/xmlns/scr/v1.1.0-felix";
-
     /** The inner namespace - used for all inner elements. */
     public static final String INNER_NAMESPACE_URI = "";
 
@@ -170,14 +161,8 @@ public class ComponentDescriptorIO {
      */
     protected static void generateXML(Components components, ContentHandler contentHandler) throws SAXException {
         // detect namespace to use
-        final String namespace;
-        if (components.getSpecVersion() == SpecVersion.VERSION_1_0) {
-            namespace = NAMESPACE_URI_1_0;
-        } else if (components.getSpecVersion() == SpecVersion.VERSION_1_1) {
-            namespace = NAMESPACE_URI_1_1;
-        } else {
-            namespace = NAMESPACE_URI_1_1_FELIX;
-        }
+        final String namespace = components.getSpecVersion().getNamespaceUrl();
+
         contentHandler.startDocument();
         contentHandler.startPrefixMapping(PREFIX, namespace);
 
@@ -213,7 +198,7 @@ public class ComponentDescriptorIO {
         IOUtils.addAttribute(ai, COMPONENT_ATTR_FACTORY, component.getFactory());
 
         // attributes new in 1.1
-        if (NAMESPACE_URI_1_1.equals(namespace) || NAMESPACE_URI_1_1_FELIX.equals(namespace)) {
+        if (SpecVersion.VERSION_1_1.getNamespaceUrl().equals(namespace) || SpecVersion.VERSION_1_1_FELIX.getNamespaceUrl().equals(namespace)) {
             if ( component.getConfigurationPolicy() != ComponentConfigurationPolicy.OPTIONAL ) {
                 IOUtils.addAttribute(ai, COMPONENT_ATTR_POLICY, component.getConfigurationPolicy().name());
             }
@@ -350,7 +335,7 @@ public class ComponentDescriptorIO {
         IOUtils.addAttribute(ai, "unbind", reference.getUnbind());
 
         // attributes new in 1.1-felix (FELIX-1893)
-        if (NAMESPACE_URI_1_1_FELIX.equals(namespace)) {
+        if (SpecVersion.VERSION_1_1_FELIX.getNamespaceUrl().equals(namespace)) {
             IOUtils.addAttribute(ai, "updated", reference.getUpdated());
         }
 
@@ -420,7 +405,7 @@ public class ComponentDescriptorIO {
             if (this.firstElement) {
                 this.firstElement = false;
                 if (localName.equals(COMPONENT) && "".equals(uri)) {
-                    this.overrideNamespace = NAMESPACE_URI_1_0;
+                    this.overrideNamespace = SpecVersion.VERSION_1_0.getNamespaceUrl();
                 }
             }
 
@@ -432,19 +417,12 @@ public class ComponentDescriptorIO {
             // of a component are unqualified, so they don't have
             // the namespace - we allow both: with or without namespace!
             if (this.isComponent && "".equals(uri)) {
-                uri = NAMESPACE_URI_1_0;
+                uri = SpecVersion.VERSION_1_0.getNamespaceUrl();
             }
 
             // from here on, uri has the namespace regardless of the used xml format
-            if (NAMESPACE_URI_1_0.equals(uri) || NAMESPACE_URI_1_1.equals(uri) || NAMESPACE_URI_1_1_FELIX.equals(uri)) {
-
-                if (NAMESPACE_URI_1_0.equals(uri)) {
-                    specVersion = SpecVersion.VERSION_1_0;
-                } else if (NAMESPACE_URI_1_1.equals(uri)) {
-                    specVersion = SpecVersion.VERSION_1_1;
-                } else if (NAMESPACE_URI_1_1_FELIX.equals(uri)) {
-                    specVersion = SpecVersion.VERSION_1_1_FELIX;
-                }
+            specVersion = SpecVersion.fromNamespaceUrl(uri);
+            if (specVersion != null) {
 
                 if (localName.equals(COMPONENT)) {
                     this.isComponent = true;
@@ -601,10 +579,10 @@ public class ComponentDescriptorIO {
             }
 
             if (this.isComponent && "".equals(uri)) {
-                uri = NAMESPACE_URI_1_0;
+                uri = SpecVersion.VERSION_1_0.getNamespaceUrl();
             }
 
-            if (NAMESPACE_URI_1_0.equals(uri) || NAMESPACE_URI_1_1.equals(uri) || NAMESPACE_URI_1_1_FELIX.equals(uri)) {
+            if (SpecVersion.fromNamespaceUrl(uri) != null) {
                 if (localName.equals(COMPONENT)) {
                     this.currentClass = null;
                     this.currentComponent = null;
