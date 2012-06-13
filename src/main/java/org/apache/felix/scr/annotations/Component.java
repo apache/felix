@@ -117,20 +117,13 @@ public @interface Component {
      *
      * @since 1.0.1
      */
-    String specVersion() default "1.0";
+    String specVersion() default "";
 
     /**
      * Generated <code>service.pid</code> property by default, if none declared
      * explicitly.
      */
     boolean createPid() default true;
-
-    /**
-     * Set the metatype factory pid property (only for non factory components).
-     * @since 1.0
-     * @deprecated Use {@link #configurationFactory()}
-     */
-    boolean getConfigurationFactory() default false;
 
     /**
      * Set the metatype factory pid property (only for non factory components).
