@@ -1,2 +1,2 @@
-org.apache.felix.scrplugin.tags.annotation.defaulttag.DefaultAnnotationTagProvider
-org.apache.felix.scrplugin.tags.annotation.sling.SlingAnnotationTagProvider
+org.apache.felix.scrplugin.SCRAnnotationProcessor
+org.apache.felix.scrplugin.SlingAnnotationProcessor
