@@ -15,23 +15,34 @@ package org.apache.felix.scrplugin.ant;
 
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
-import org.apache.felix.scrplugin.*;
+import org.apache.felix.scrplugin.Options;
+import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.SCRDescriptorFailureException;
+import org.apache.felix.scrplugin.SCRDescriptorGenerator;
+import org.apache.felix.scrplugin.description.SpecVersion;
+import org.apache.felix.scrplugin.scanner.Source;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Location;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.MatchingTask;
+import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Reference;
+import org.apache.tools.ant.types.Resource;
+import org.apache.tools.ant.types.resources.FileResource;
 
 
 /**
  * The <code>SCRDescriptorTask</code> generates a service descriptor file based
  * on annotations found in the sources.
  */
-public class SCRDescriptorTask extends MatchingTask
-{
+public class SCRDescriptorTask extends MatchingTask {
 
     private File destdir;
 
@@ -51,18 +62,6 @@ public class SCRDescriptorTask extends MatchingTask
      * This flag controls the generation of the bind/unbind methods.
      */
     private boolean generateAccessors = true;
-
-    /**
-     * This flag controls whether the javadoc source code will be scanned for
-     * tags.
-     */
-    protected boolean parseJavadoc = true;
-
-    /**
-     * This flag controls whether the annotations in the sources will be
-     * processed.
-     */
-    protected boolean processAnnotations = true;
 
     /**
      * In strict mode the plugin even fails on warnings.
@@ -90,8 +89,7 @@ public class SCRDescriptorTask extends MatchingTask
 
 
     @Override
-    public void execute() throws BuildException
-    {
+    public void execute() throws BuildException {
 
         // ensure we know the source
         if (getImplicitFileSet().getDir() == null) {
@@ -108,49 +106,93 @@ public class SCRDescriptorTask extends MatchingTask
         scrLog.debug( "  finalName: " + finalName );
         scrLog.debug( "  metaTypeName: " + metaTypeName );
         scrLog.debug( "  generateAccessors: " + generateAccessors );
-        scrLog.debug( "  parseJavadoc: " + parseJavadoc );
-        scrLog.debug( "  processAnnotations: " + processAnnotations );
         scrLog.debug( "  strictMode: " + strictMode );
         scrLog.debug( "  specVersion: " + specVersion );
 
-        try
-        {
+        try {
+            final Path classPath = createClasspath();
             final ClassLoader classLoader = getClassLoader( this.getClass().getClassLoader() );
-            final JavaClassDescriptorManager jManager = new AntJavaClassDescriptorManager( scrLog, classLoader,
-                getImplicitFileSet(), destdir, createClasspath(), this.annotationTagProviders, this.parseJavadoc, this.processAnnotations );
+            final org.apache.felix.scrplugin.Project project = new org.apache.felix.scrplugin.Project();
+            project.setClassLoader(classLoader);
+            project.setDependencies(getDependencies(classPath));
+            project.setSources(getSourceFiles(getImplicitFileSet()));
+            project.setClassesDirectory(destdir.getAbsolutePath());
+
+            // create options
+            final Options options = new Options();
+            options.setGenerateAccessors(generateAccessors);
+            options.setStrictMode(strictMode);
+            options.setProperties(new HashMap<String, String>());
+            options.setSpecVersion(SpecVersion.fromName(specVersion));
+            if ( specVersion != null && options.getSpecVersion() == null ) {
+                throw new BuildException("Unknown spec version specified: " + specVersion);
+            }
+            options.setAnnotationProcessors(annotationTagProviders);
 
             final SCRDescriptorGenerator generator = new SCRDescriptorGenerator( scrLog );
 
             // setup from plugin configuration
-            generator.setOutputDirectory( destdir );
-            generator.setDescriptorManager( jManager );
-            generator.setFinalName( finalName );
-            generator.setMetaTypeName( metaTypeName );
-            generator.setGenerateAccessors( generateAccessors );
-            generator.setStrictMode( strictMode );
-            generator.setProperties( new HashMap<String, String>() );
-            generator.setSpecVersion( specVersion );
+            generator.setOutputDirectory(destdir);
+            generator.setOptions(options);
+            generator.setProject(project);
+            generator.setFinalName(finalName);
+            generator.setMetaTypeName(metaTypeName);
 
             generator.execute();
-        }
-        catch ( SCRDescriptorException sde )
-        {
-            if ( sde.getSourceLocation() != null )
-            {
+        } catch ( final SCRDescriptorException sde ) {
+            if ( sde.getSourceLocation() != null )  {
                 Location loc = new Location( sde.getSourceLocation(), sde.getLineNumber(), 0 );
                 throw new BuildException( sde.getMessage(), sde.getCause(), loc );
             }
             throw new BuildException( sde.getMessage(), sde.getCause() );
-        }
-        catch ( SCRDescriptorFailureException sdfe )
-        {
+        } catch ( SCRDescriptorFailureException sdfe ) {
             throw new BuildException( sdfe.getMessage(), sdfe.getCause() );
         }
     }
 
+    protected Collection<Source> getSourceFiles(final FileSet sourceFiles) {
+        final String prefix = sourceFiles.getDir().getAbsolutePath();
+        final int prefixLength = prefix.length() + 1;
 
-    private ClassLoader getClassLoader( final ClassLoader parent ) throws BuildException
-    {
+        final List<Source> result = new ArrayList<Source>();
+        @SuppressWarnings("unchecked")
+        final Iterator<Resource> resources = sourceFiles.iterator();
+        while ( resources.hasNext() ) {
+            final Resource r = resources.next();
+            if ( r instanceof FileResource ) {
+                final File file = ( ( FileResource ) r ).getFile();
+                if ( file.getName().endsWith(".java") ) {
+                    result.add(new Source() {
+
+                        public File getFile() {
+                            return file;
+                        }
+
+                        public String getClassName() {
+                            String name = file.getAbsolutePath().substring(prefixLength).replace(File.separatorChar, '/').replace('/', '.');
+                            return name.substring(0, name.length() - 5);
+                        }
+                    });
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+    private List<File> getDependencies(final Path classPath) {
+        ArrayList<File> files = new ArrayList<File>();
+        for ( String entry : classPath.list() ) {
+            File file = new File( entry );
+            if ( file.isFile() ) {
+                files.add( file );
+            }
+        }
+        return files;
+    }
+
+    private ClassLoader getClassLoader( final ClassLoader parent ) throws BuildException {
         Path classPath = createClasspath();
         log( "Using classes from: " + classPath, Project.MSG_DEBUG );
         return getProject().createClassLoader( parent, classpath );
@@ -159,42 +201,34 @@ public class SCRDescriptorTask extends MatchingTask
 
     // ---------- setters for configuration fields
 
-    public Path createClasspath()
-    {
-        if ( this.classpath == null )
-        {
+    public Path createClasspath() {
+        if ( this.classpath == null ) {
             this.classpath = new Path( getProject() );
         }
         return this.classpath;
     }
 
 
-    public void setClasspath( Path classPath )
-    {
+    public void setClasspath( Path classPath ) {
         createClasspath().add( classPath );
     }
 
 
-    public void setClasspathRef( Reference classpathRef )
-    {
-        if ( classpathRef != null && classpathRef.getReferencedObject() instanceof Path )
-        {
+    public void setClasspathRef( Reference classpathRef ) {
+        if ( classpathRef != null && classpathRef.getReferencedObject() instanceof Path ) {
             createClasspath().add( ( Path ) classpathRef.getReferencedObject() );
         }
     }
 
 
-    public void setSrcdir( File srcdir )
-    {
+    public void setSrcdir( File srcdir )  {
         getImplicitFileSet().setDir( srcdir );
     }
 
 
-    public void setDestdir( File outputDirectory )
-    {
+    public void setDestdir( File outputDirectory ) {
         this.destdir = outputDirectory;
-        if ( destdir != null )
-        {
+        if ( destdir != null ) {
             Path dst = new Path( getProject() );
             dst.setLocation( destdir );
             createClasspath().add( dst );
@@ -202,50 +236,32 @@ public class SCRDescriptorTask extends MatchingTask
     }
 
 
-    public void setFinalName( String finalName )
-    {
+    public void setFinalName( String finalName ) {
         this.finalName = finalName;
     }
 
 
-    public void setMetaTypeName( String metaTypeName )
-    {
+    public void setMetaTypeName( String metaTypeName ) {
         this.metaTypeName = metaTypeName;
     }
 
 
-    public void setGenerateAccessors( boolean generateAccessors )
-    {
+    public void setGenerateAccessors( boolean generateAccessors ) {
         this.generateAccessors = generateAccessors;
     }
 
 
-    public void setParseJavadoc( boolean parseJavadoc )
-    {
-        this.parseJavadoc = parseJavadoc;
-    }
-
-
-    public void setProcessAnnotations( boolean processAnnotations )
-    {
-        this.processAnnotations = processAnnotations;
-    }
-
-
-    public void setStrictMode( boolean strictMode )
-    {
+    public void setStrictMode( boolean strictMode ) {
         this.strictMode = strictMode;
     }
 
 
-    public void setAnnotationTagProviders( String[] annotationTagProviders )
-    {
+    public void setAnnotationTagProviders( String[] annotationTagProviders ) {
         this.annotationTagProviders = annotationTagProviders;
     }
 
 
-    public void setSpecVersion( String specVersion )
-    {
+    public void setSpecVersion( String specVersion ) {
         this.specVersion = specVersion;
     }
 
