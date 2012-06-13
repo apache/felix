@@ -1,0 +1,2 @@
+org.apache.felix.scrplugin.processing.SCRAnnotationProcessor
+org.apache.felix.scrplugin.processing.SlingAnnotationProcessor
