@@ -34,6 +34,7 @@ import org.apache.felix.scrplugin.description.PropertyType;
 import org.apache.felix.scrplugin.description.PropertyUnbounded;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferenceDescription;
+import org.apache.felix.scrplugin.description.ReferencePolicyOption;
 import org.apache.felix.scrplugin.description.ServiceDescription;
 import org.apache.felix.scrplugin.helper.AnnotationProcessorManager;
 import org.apache.felix.scrplugin.helper.ClassModifier;
@@ -651,6 +652,10 @@ public class SCRDescriptorGenerator {
             ref.setStrategy(rd.getStrategy());
             ref.setTarget(rd.getTarget());
             ref.setField(rd.getField());
+            ref.setPolicyOption(rd.getPolicyOption());
+            if ( ref.getPolicyOption() != ReferencePolicyOption.RELUCTANT ) {
+                component.setSpecVersion(SpecVersion.VERSION_1_2);
+            }
             if ( rd.getBind() != null ) {
                 ref.setBind(rd.getBind().getName());
             }
@@ -658,8 +663,11 @@ public class SCRDescriptorGenerator {
                 ref.setUnbind(rd.getUnbind().getName());
             }
             if ( rd.getUpdated() != null ) {
-                // updated requires 1.2
-                component.setSpecVersion(SpecVersion.VERSION_1_2);
+                // updated requires 1.2 or 1.1_FELIX, if nothing is set, we use 1.2
+                if ( component.getSpecVersion() == null
+                     || component.getSpecVersion().ordinal() < SpecVersion.VERSION_1_1_FELIX.ordinal() ) {
+                    component.setSpecVersion(SpecVersion.VERSION_1_2);
+                }
                 ref.setUpdated(rd.getUpdated().getName());
             }
 
