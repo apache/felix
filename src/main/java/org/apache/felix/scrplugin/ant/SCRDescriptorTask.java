@@ -26,7 +26,7 @@ import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.SCRDescriptorFailureException;
 import org.apache.felix.scrplugin.SCRDescriptorGenerator;
 import org.apache.felix.scrplugin.Source;
-import org.apache.felix.scrplugin.description.SpecVersion;
+import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Location;
 import org.apache.tools.ant.Project;
