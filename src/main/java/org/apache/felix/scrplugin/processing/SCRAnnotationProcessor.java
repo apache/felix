@@ -206,6 +206,9 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
                         ComponentConfigurationPolicy.OPTIONAL.name())));
         component.setSetMetatypeFactoryPid(cad.getBooleanValue("configurationFactory", false));
 
+        // Version 1.2
+        component.setConfigurationPid(cad.getStringValue("configurationPid", null));
+
         return component;
     }
 
