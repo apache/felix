@@ -34,6 +34,7 @@ import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
  * <li>target</li>
  * <li>cardinality</li>
  * <li>policy</li>
+ * <li>policyOption</li>
  * <li>strategy</li>
  * </ul>
  *
@@ -52,6 +53,7 @@ public class ReferenceDescription extends AbstractDescription {
     private String target;
     private ReferenceCardinality cardinality;
     private ReferencePolicy policy;
+    private ReferencePolicyOption policyOption;
     private ReferenceStrategy strategy;
 
     private Field field;
@@ -104,6 +106,14 @@ public class ReferenceDescription extends AbstractDescription {
         this.policy = policy;
     }
 
+    public ReferencePolicyOption getPolicyOption() {
+        return policyOption;
+    }
+
+    public void setPolicyOption(ReferencePolicyOption policyOption) {
+        this.policyOption = policyOption;
+    }
+
     public MethodDescription getBind() {
         return bind;
     }
@@ -140,7 +150,8 @@ public class ReferenceDescription extends AbstractDescription {
     public String toString() {
         return "ReferenceDescription [name=" + name + ", interfaceName="
                 + interfaceName + ", target=" + target + ", cardinality="
-                + cardinality + ", policy=" + policy + ", bind=" + bind
+                + cardinality + ", policy=" + policy + ", policyOption=" + policyOption +
+                "bind=" + bind
                 + ", unbind=" + unbind + ", updated=" + updated + ", strategy="
                 + strategy + ", field=" + field + ", annotation=" + annotation
                 + "]";

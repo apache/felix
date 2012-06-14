@@ -40,6 +40,7 @@ import org.apache.felix.scrplugin.description.PropertyUnbounded;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
+import org.apache.felix.scrplugin.description.ReferencePolicyOption;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.ServiceDescription;
 import org.osgi.service.component.annotations.Activate;
@@ -284,6 +285,8 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
 
         // policy
         ref.setPolicy(ReferencePolicy.valueOf(ad.getEnumValue("policy", ReferencePolicy.STATIC.name())));
+        // policy option
+        ref.setPolicyOption(ReferencePolicyOption.valueOf(ad.getEnumValue("policyOption", ReferencePolicyOption.RELUCTANT.name())));
         // target
         ref.setTarget(ad.getStringValue("target", null));
     }

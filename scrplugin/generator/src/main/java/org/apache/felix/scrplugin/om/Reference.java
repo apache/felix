@@ -28,6 +28,7 @@ import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
+import org.apache.felix.scrplugin.description.ReferencePolicyOption;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.helper.StringUtils;
 
@@ -42,6 +43,7 @@ public class Reference extends AbstractObject {
     protected String target;
     protected ReferenceCardinality cardinality;
     protected ReferencePolicy policy;
+    protected ReferencePolicyOption policyOption;
     protected String bind;
     protected String unbind;
     protected String updated;
@@ -104,6 +106,14 @@ public class Reference extends AbstractObject {
 
     public void setPolicy(ReferencePolicy policy) {
         this.policy = policy;
+    }
+
+    public ReferencePolicyOption getPolicyOption() {
+        return this.policyOption;
+    }
+
+    public void setPolicyOption(ReferencePolicyOption policyOption) {
+        this.policyOption = policyOption;
     }
 
     public String getBind() {
@@ -181,6 +191,16 @@ public class Reference extends AbstractObject {
             this.policy = ReferencePolicy.STATIC;
         }
 
+        // validate policy option
+        if ( this.policyOption == null ) {
+            this.policyOption = ReferencePolicyOption.RELUCTANT;
+        }
+        if ( this.policyOption != ReferencePolicyOption.RELUCTANT ) {
+            if ( context.getSpecVersion().ordinal() < SpecVersion.VERSION_1_2.ordinal() ) {
+                this.logError(context.getIssueLog(), "ReferencePolicyOption " + this.policyOption.name() +
+                                " requires spec version " + SpecVersion.VERSION_1_2.getName() + " or higher.");
+            }
+        }
         // validate strategy
         if (this.strategy == null) {
             this.strategy = ReferenceStrategy.EVENT;
@@ -225,7 +245,7 @@ public class Reference extends AbstractObject {
         if (this.updated != null) {
             if (context.getSpecVersion().ordinal() < SpecVersion.VERSION_1_1_FELIX.ordinal()) {
                 this.logError(context.getIssueLog(), "Updated method declaration requires version "
-                                + SpecVersion.VERSION_1_1_FELIX.getName() + ", " + SpecVersion.VERSION_1_2 + " or newer");
+                                + SpecVersion.VERSION_1_1_FELIX.getName() + ", " + SpecVersion.VERSION_1_2.getName() + " or newer");
             }
         }
 

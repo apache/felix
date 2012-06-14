@@ -16,21 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.annotations;
+package org.apache.felix.scrplugin.description;
 
 /**
- * Options for {@link Reference#policy()} property.
+ * Options for {@link ReferenceDescription#getPolicyOption()} property.
  */
-public enum ReferencePolicy {
+public enum ReferencePolicyOption {
 
     /**
-     * The component will be deactivated and re-activated if the service comes
-     * and/or goes away.
+     * The reluctant policy option is the default policy option.
+     * When a new target service for a reference becomes available,
+     * references having the reluctant policy option for the static
+     * policy or the dynamic policy with a unary cardinality will
+     * ignore the new target service. References having the dynamic
+     * policy with a multiple cardinality will bind the new
+     * target service
      */
-    STATIC,
+    RELUCTANT,
 
     /**
-     * The service will be made available to the component as it comes and goes.
+     * When a new target service for a reference becomes available,
+     * references having the greedy policy option will bind the new
+     * target service.
      */
-    DYNAMIC;
+    GREEDY;
 }

@@ -26,12 +26,4 @@ public enum ReferenceStrategy {
     EVENT,
 
     LOOKUP;
-
-    /**
-     * @return String representation of the stragey
-     */
-    public String getStrategyString() {
-        return this.name().toLowerCase();
-    }
-
 }

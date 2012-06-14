@@ -38,6 +38,7 @@ import org.apache.felix.scrplugin.description.PropertyType;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
+import org.apache.felix.scrplugin.description.ReferencePolicyOption;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.ServiceDescription;
 import org.apache.felix.scrplugin.helper.IssueLog;
@@ -200,7 +201,7 @@ public class ComponentDescriptorIO {
         // attributes new in 1.1
         if (component.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
             if ( component.getConfigurationPolicy() != ComponentConfigurationPolicy.OPTIONAL ) {
-                IOUtils.addAttribute(ai, COMPONENT_ATTR_POLICY, component.getConfigurationPolicy().name());
+                IOUtils.addAttribute(ai, COMPONENT_ATTR_POLICY, component.getConfigurationPolicy().name().toLowerCase());
             }
             IOUtils.addAttribute(ai, COMPONENT_ATTR_ACTIVATE, component.getActivate());
             IOUtils.addAttribute(ai, COMPONENT_ATTR_DEACTIVATE, component.getDeactivate());
@@ -334,7 +335,7 @@ public class ComponentDescriptorIO {
         IOUtils.addAttribute(ai, "name", reference.getName());
         IOUtils.addAttribute(ai, "interface", reference.getInterfacename());
         IOUtils.addAttribute(ai, "cardinality", reference.getCardinality().getCardinalityString());
-        IOUtils.addAttribute(ai, "policy", reference.getPolicy().name());
+        IOUtils.addAttribute(ai, "policy", reference.getPolicy().name().toLowerCase());
         IOUtils.addAttribute(ai, "target", reference.getTarget());
         IOUtils.addAttribute(ai, "bind", reference.getBind());
         IOUtils.addAttribute(ai, "unbind", reference.getUnbind());
@@ -342,6 +343,13 @@ public class ComponentDescriptorIO {
         // attributes new in 1.1-felix (FELIX-1893)
         if (component.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1_FELIX.ordinal() ) {
             IOUtils.addAttribute(ai, "updated", reference.getUpdated());
+        }
+
+        // attributes new in 1.2
+        if (component.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_2.ordinal() ) {
+            if ( reference.getPolicyOption() != ReferencePolicyOption.RELUCTANT ) {
+                IOUtils.addAttribute(ai, "policy-option", reference.getPolicyOption().name().toLowerCase());
+            }
         }
 
         IOUtils.indent(contentHandler, 2);
@@ -544,12 +552,22 @@ public class ComponentDescriptorIO {
                             iLog.addWarning("Invalid value for attribute cardinality : " + cardinality, this.location);
                         }
                     }
+                    ref.setPolicy(ReferencePolicy.STATIC);
                     final String policy = attributes.getValue("policy");
                     if ( policy != null ) {
                         try {
-                            ref.setPolicy(ReferencePolicy.valueOf(policy));
+                            ref.setPolicy(ReferencePolicy.valueOf(policy.toUpperCase()));
                         } catch (final IllegalArgumentException iae) {
                             iLog.addWarning("Invalid value for attribute policy : " + policy, this.location);
+                        }
+                    }
+                    ref.setPolicyOption(ReferencePolicyOption.RELUCTANT);
+                    final String policyOption = attributes.getValue("policy-option");
+                    if ( policyOption != null ) {
+                        try {
+                            ref.setPolicyOption(ReferencePolicyOption.valueOf(policyOption.toUpperCase()));
+                        } catch (final IllegalArgumentException iae) {
+                            iLog.addWarning("Invalid value for attribute policy-option : " + policyOption, this.location);
                         }
                     }
                     ref.setTarget(attributes.getValue("target"));
@@ -563,7 +581,7 @@ public class ComponentDescriptorIO {
                     final String strategy = attributes.getValue("strategy");
                     if ( strategy != null ) {
                         try {
-                            ref.setStrategy(ReferenceStrategy.valueOf(strategy));
+                            ref.setStrategy(ReferenceStrategy.valueOf(strategy.toUpperCase()));
                         } catch (final IllegalArgumentException iae) {
                             throw new SAXException("Invalid value for attribute strategy : " + strategy);
                         }
