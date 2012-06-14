@@ -48,6 +48,7 @@ import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
  * <li>deactivate : null</li>
  * <li>modified : null</li>
  * <li>specVersion : null</li>
+ * <li>configuraionPid : null</li>
  * </ul>
  *
  */
@@ -103,6 +104,9 @@ public class ComponentDescription extends AbstractDescription {
 
     /** The spec version. */
     private SpecVersion specVersion;
+
+    /** Configuration PID (V1.2) */
+    private String configurationPid;
 
     public ComponentDescription(final ScannedAnnotation annotation) {
         super(annotation);
@@ -246,16 +250,20 @@ public class ComponentDescription extends AbstractDescription {
 
     @Override
     public String toString() {
-        return "ComponentDescription [name=" + name + ", label=" + label
-                + ", description=" + description + ", enabled=" + enabled
-                + ", immediate=" + immediate + ", factory=" + factory
-                + ", isSetMetatypeFactoryPid=" + isSetMetatypeFactoryPid
-                + ", isAbstract=" + isAbstract + ", isInherit=" + isInherit
-                + ", createDs=" + createDs + ", createPid=" + createPid
-                + ", createMetatype=" + createMetatype
-                + ", configurationPolicy=" + configurationPolicy
-                + ", activate=" + activate + ", deactivate=" + deactivate
-                + ", modified=" + modified + ", specVersion=" + specVersion
-                + ", annotation=" + annotation + "]";
+        return "ComponentDescription [name=" + name + ", label=" + label + ", description=" + description
+                        + ", configurationPolicy=" + configurationPolicy + ", isAbstract=" + isAbstract + ", isInherit="
+                        + isInherit + ", createDs=" + createDs + ", createPid=" + createPid + ", createMetatype="
+                        + createMetatype + ", enabled=" + enabled + ", immediate=" + immediate + ", factory=" + factory
+                        + ", isSetMetatypeFactoryPid=" + isSetMetatypeFactoryPid + ", activate=" + activate + ", deactivate="
+                        + deactivate + ", modified=" + modified + ", specVersion=" + specVersion + ", configurationPid="
+                        + configurationPid + "]";
+    }
+
+    public String getConfigurationPid() {
+        return configurationPid;
+    }
+
+    public void setConfigurationPid(String configurationPid) {
+        this.configurationPid = configurationPid;
     }
 }

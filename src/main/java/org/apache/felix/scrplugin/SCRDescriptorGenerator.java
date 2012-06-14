@@ -371,6 +371,12 @@ public class SCRDescriptorGenerator {
         comp.setFactory(componentDesc.getFactory());
         comp.setSpecVersion(componentDesc.getSpecVersion());
 
+        // configuration pid in 1.2
+        if ( componentDesc.getConfigurationPid() != null && !componentDesc.getConfigurationPid().equals(componentDesc.getName())) {
+            comp.setConfigurationPid(componentDesc.getConfigurationPid());
+            comp.setSpecVersion(SpecVersion.VERSION_1_2);
+        }
+
         // Create metatype (if required)
         final OCD ocd;
         if ( !componentDesc.isAbstract() && componentDesc.isCreateMetatype() ) {
