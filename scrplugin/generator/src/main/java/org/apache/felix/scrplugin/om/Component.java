@@ -81,6 +81,9 @@ public class Component extends AbstractObject {
     /** The class description. */
     private final ClassDescription classDescription;
 
+    /** Configuration PID (V1.2) */
+    private String configurationPid;
+
     /**
      * Constructor from java source.
      */
@@ -249,6 +252,12 @@ public class Component extends AbstractObject {
 
         // if the service is abstract, we do not validate everything
         if (!this.isAbstract) {
+            // if configuration pid is set and different from name, we need 1.2
+            if ( this.configurationPid != null && !this.configurationPid.equals(this.name)
+                 && context.getSpecVersion().ordinal() < SpecVersion.VERSION_1_2.ordinal() ) {
+                this.logError(context.getIssueLog(), "Different configuration pid requires "
+                                + SpecVersion.VERSION_1_2.getName() + " or higher.");
+            }
             // ensure non-abstract, public class
             if (!Modifier.isPublic(context.getClassDescription().getDescribedClass().getModifiers())) {
                 this.logError(context.getIssueLog(), "Class must be public: "
@@ -503,14 +512,18 @@ public class Component extends AbstractObject {
 
     @Override
     public String toString() {
-        return "Component " + this.name + " (" + "enabled=" + (enabled == null ? "<notset>" : enabled) + ", immediate="
-                        + (immediate == null ? "<notset>" : immediate) + ", abstract=" + isAbstract + ", isDS=" + isDs
-                        + (factory != null ? ", factory=" + factory : "")
-                        + (configurationPolicy != null ? ", configurationPolicy=" + configurationPolicy : "")
-                        + (activate != null ? ", activate=" + activate : "")
-                        + (deactivate != null ? ", deactivate=" + deactivate : "")
-                        + (modified != null ? ", modified=" + modified : "") + ", specVersion=" + specVersion
-                        + ", service=" + service + ", properties=" + properties
-                        + ", references=" + references + ")";
+        return "Component [name=" + name + ", enabled=" + enabled + ", immediate=" + immediate + ", factory=" + factory
+                        + ", properties=" + properties + ", service=" + service + ", references=" + references + ", isAbstract="
+                        + isAbstract + ", isDs=" + isDs + ", configurationPolicy=" + configurationPolicy + ", activate="
+                        + activate + ", deactivate=" + deactivate + ", modified=" + modified + ", specVersion=" + specVersion
+                        + ", classDescription=" + classDescription + ", configurationPid=" + configurationPid + "]";
+    }
+
+    public String getConfigurationPid() {
+        return configurationPid;
+    }
+
+    public void setConfigurationPid(String configurationPid) {
+        this.configurationPid = configurationPid;
     }
 }

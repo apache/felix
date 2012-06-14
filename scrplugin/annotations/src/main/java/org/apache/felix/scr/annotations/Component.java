@@ -136,4 +136,11 @@ public @interface Component {
      * @since 1.0
      */
     ConfigurationPolicy policy() default ConfigurationPolicy.OPTIONAL;
+
+    /**
+     * The configuration pid.
+     * The default value for this is the name of the component.
+     * @since 1.7
+     */
+    String configurationPid();
 }

@@ -101,6 +101,9 @@ public class ComponentDescriptorIO {
     /** Component: The modified attribute. */
     private static final String COMPONENT_ATTR_MODIFIED = "modified";
 
+    /** Component: The configuration pid attribute. */
+    private static final String COMPONENT_ATTR_CONFIGURATION_PID = "configuration-pid";
+
     private static final String IMPLEMENTATION = "implementation";
 
     private static final String IMPLEMENTATION_QNAME = IMPLEMENTATION;
@@ -160,7 +163,8 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Components components, ContentHandler contentHandler) throws SAXException {
+    protected static void generateXML(final Components components,
+                    final ContentHandler contentHandler) throws SAXException {
         // detect namespace to use
         final String namespace = components.getSpecVersion().getNamespaceUrl();
 
@@ -173,7 +177,10 @@ public class ComponentDescriptorIO {
 
         for (final Component component : components.getComponents()) {
             if (component.isDs()) {
+                final SpecVersion oldVersion = component.getSpecVersion();
+                component.setSpecVersion(components.getSpecVersion());
                 generateXML(namespace, component, contentHandler);
+                component.setSpecVersion(oldVersion);
             }
         }
         // end wrapper element
@@ -207,7 +214,12 @@ public class ComponentDescriptorIO {
             IOUtils.addAttribute(ai, COMPONENT_ATTR_DEACTIVATE, component.getDeactivate());
             IOUtils.addAttribute(ai, COMPONENT_ATTR_MODIFIED, component.getModified());
         }
-
+        // attributes new in 1.2
+        if ( component.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_2.ordinal() ) {
+            if ( component.getConfigurationPid() != null && !component.getConfigurationPid().equals(component.getName())) {
+                IOUtils.addAttribute(ai, COMPONENT_ATTR_CONFIGURATION_PID, component.getConfigurationPid());
+            }
+        }
         IOUtils.indent(contentHandler, 1);
         contentHandler.startElement(namespace, ComponentDescriptorIO.COMPONENT, ComponentDescriptorIO.COMPONENT_QNAME, ai);
         IOUtils.newline(contentHandler);
