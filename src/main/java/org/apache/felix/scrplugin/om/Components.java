@@ -21,7 +21,7 @@ package org.apache.felix.scrplugin.om;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.scrplugin.description.SpecVersion;
+import org.apache.felix.scrplugin.SpecVersion;
 
 /**
  * <code>Components</code>...

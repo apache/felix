@@ -11,14 +11,20 @@
  * KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-package org.apache.felix.scrplugin.description;
+package org.apache.felix.scrplugin;
 
-
+/**
+ * An enumeration for all available spec versions.
+ *
+ * The versions in the enumeration have to be ordered, higher versions must have
+ * a higher ordinal.
+ */
 public enum SpecVersion {
 
     VERSION_1_0("1.0", "http://www.osgi.org/xmlns/scr/v1.0.0"),                        // R4.1
     VERSION_1_1("1.1", "http://www.osgi.org/xmlns/scr/v1.1.0"),                        // R4.2
-    VERSION_1_1_FELIX("1.1_FELIX", "http://felix.apache.org/xmlns/scr/v1.1.0-felix");  // R4.2 + FELIX-1893
+    VERSION_1_1_FELIX("1.1_FELIX", "http://felix.apache.org/xmlns/scr/v1.1.0-felix"),  // R4.2 + FELIX-1893
+    VERSION_1_2("1.2", "http://www.osgi.org/xmlns/scr/v1.2.0");                        // R4.3
 
     /**
      * internal human readable name

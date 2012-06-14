@@ -28,6 +28,7 @@ import java.util.StringTokenizer;
 import javax.xml.transform.TransformerException;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
 import org.apache.felix.scrplugin.description.ComponentDescription;
@@ -39,7 +40,6 @@ import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.ServiceDescription;
-import org.apache.felix.scrplugin.description.SpecVersion;
 import org.apache.felix.scrplugin.helper.IssueLog;
 import org.apache.felix.scrplugin.om.Component;
 import org.apache.felix.scrplugin.om.Components;
@@ -198,7 +198,7 @@ public class ComponentDescriptorIO {
         IOUtils.addAttribute(ai, COMPONENT_ATTR_FACTORY, component.getFactory());
 
         // attributes new in 1.1
-        if (SpecVersion.VERSION_1_1.getNamespaceUrl().equals(namespace) || SpecVersion.VERSION_1_1_FELIX.getNamespaceUrl().equals(namespace)) {
+        if (component.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
             if ( component.getConfigurationPolicy() != ComponentConfigurationPolicy.OPTIONAL ) {
                 IOUtils.addAttribute(ai, COMPONENT_ATTR_POLICY, component.getConfigurationPolicy().name());
             }
@@ -212,16 +212,16 @@ public class ComponentDescriptorIO {
         IOUtils.newline(contentHandler);
         generateImplementationXML(component, contentHandler);
         if (component.getService() != null) {
-            generateXML(component.getService(), contentHandler);
+            generateServiceXML(component.getService(), contentHandler);
         }
         if (component.getProperties() != null) {
             for (final Property property : component.getProperties()) {
-                generateXML(property, contentHandler);
+                generatePropertyXML(property, contentHandler);
             }
         }
         if (component.getReferences() != null) {
             for (final Reference reference : component.getReferences()) {
-                generateXML(namespace, reference, contentHandler);
+                generateReferenceXML(component, reference, contentHandler);
             }
         }
         IOUtils.indent(contentHandler, 1);
@@ -254,7 +254,10 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Service service, ContentHandler contentHandler) throws SAXException {
+    protected static void generateServiceXML(
+                    final Service service,
+                    final ContentHandler contentHandler)
+    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "servicefactory", String.valueOf(service.isServiceFactory()));
         IOUtils.indent(contentHandler, 2);
@@ -294,7 +297,7 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Property property, ContentHandler contentHandler) throws SAXException {
+    protected static void generatePropertyXML(Property property, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "name", property.getName());
         IOUtils.addAttribute(ai, "type", property.getType());
@@ -323,8 +326,10 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(final String namespace, Reference reference, ContentHandler contentHandler)
-                    throws SAXException {
+    protected static void generateReferenceXML(final Component component,
+                    final Reference reference,
+                    final ContentHandler contentHandler)
+    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "name", reference.getName());
         IOUtils.addAttribute(ai, "interface", reference.getInterfacename());
@@ -335,7 +340,7 @@ public class ComponentDescriptorIO {
         IOUtils.addAttribute(ai, "unbind", reference.getUnbind());
 
         // attributes new in 1.1-felix (FELIX-1893)
-        if (SpecVersion.VERSION_1_1_FELIX.getNamespaceUrl().equals(namespace)) {
+        if (component.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1_FELIX.ordinal() ) {
             IOUtils.addAttribute(ai, "updated", reference.getUpdated());
         }
 
@@ -444,8 +449,7 @@ public class ComponentDescriptorIO {
 
                     desc.setConfigurationPolicy(ComponentConfigurationPolicy.OPTIONAL);
                     // check for version 1.1 attributes
-                    if (specVersion == SpecVersion.VERSION_1_1
-                                    || specVersion == SpecVersion.VERSION_1_1_FELIX) {
+                    if (specVersion.ordinal() >= SpecVersion.VERSION_1_1.ordinal()) {
                         final String policy = attributes.getValue(COMPONENT_ATTR_POLICY);
                         if ( policy != null ) {
                             try {

@@ -25,10 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
-import org.apache.felix.scrplugin.description.SpecVersion;
 
 /**
  * <code>Component</code> is a described component.
