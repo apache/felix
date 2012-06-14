@@ -18,7 +18,11 @@
  */
 package org.apache.felix.scr.annotations;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * The <code>Reference</code> annotation defines references to other services
@@ -66,6 +70,12 @@ public @interface Reference {
      * and/or goes away.
      */
     ReferencePolicy policy() default ReferencePolicy.STATIC;
+
+    /**
+     * The policy option for the reference
+     * @since 1.7
+     */
+    ReferencePolicyOption policyOption() default ReferencePolicyOption.RELUCTANT;
 
     /**
      * A service target filter to select specific services to be made available.

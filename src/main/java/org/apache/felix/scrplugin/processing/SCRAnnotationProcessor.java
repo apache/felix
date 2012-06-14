@@ -53,6 +53,7 @@ import org.apache.felix.scrplugin.description.PropertyUnbounded;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
+import org.apache.felix.scrplugin.description.ReferencePolicyOption;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.ServiceDescription;
 
@@ -304,6 +305,7 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
             ref.setCardinality(ReferenceCardinality.valueOf(ad.getEnumValue("cardinality",
                             ReferenceCardinality.MANDATORY_UNARY.name())));
             ref.setPolicy(ReferencePolicy.valueOf(ad.getEnumValue("policy", ReferencePolicy.STATIC.name())));
+            ref.setPolicyOption(ReferencePolicyOption.valueOf(ad.getEnumValue("policyOption", ReferencePolicyOption.RELUCTANT.name())));
             ref.setStrategy(ReferenceStrategy.valueOf(ad.getEnumValue("strategy", ReferenceStrategy.EVENT.name())));
 
             ref.setBind(getMethodDescription(ad.getStringValue("bind", null)));

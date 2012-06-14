@@ -38,12 +38,4 @@ public enum ConfigurationPolicy {
      * In order to activate this component a configuration is required.
      */
     REQUIRE;
-
-    /**
-     * @return String representation of policy
-     */
-    public String getPolicyString() {
-        return this.name().toLowerCase();
-    }
-
 }
