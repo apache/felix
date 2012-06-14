@@ -37,7 +37,7 @@ import org.apache.felix.scrplugin.Result;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.SCRDescriptorFailureException;
 import org.apache.felix.scrplugin.SCRDescriptorGenerator;
-import org.apache.felix.scrplugin.description.SpecVersion;
+import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;

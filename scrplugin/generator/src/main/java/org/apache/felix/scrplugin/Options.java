@@ -21,7 +21,6 @@ package org.apache.felix.scrplugin;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.felix.scrplugin.description.SpecVersion;
 
 /**
  * Options for the {@link SCRDescriptorGenerator}

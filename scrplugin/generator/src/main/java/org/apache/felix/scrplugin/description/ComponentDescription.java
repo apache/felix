@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scrplugin.description;
 
+import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 
 /**

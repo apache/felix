@@ -24,11 +24,11 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
-import org.apache.felix.scrplugin.description.SpecVersion;
 import org.apache.felix.scrplugin.helper.StringUtils;
 
 /**
@@ -225,7 +225,7 @@ public class Reference extends AbstractObject {
         if (this.updated != null) {
             if (context.getSpecVersion().ordinal() < SpecVersion.VERSION_1_1_FELIX.ordinal()) {
                 this.logError(context.getIssueLog(), "Updated method declaration requires version "
-                                + SpecVersion.VERSION_1_1_FELIX.getName() + " or newer");
+                                + SpecVersion.VERSION_1_1_FELIX.getName() + ", " + SpecVersion.VERSION_1_2 + " or newer");
             }
         }
 

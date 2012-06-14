@@ -18,9 +18,9 @@
  */
 package org.apache.felix.scrplugin.om;
 
+import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 import org.apache.felix.scrplugin.description.PropertyType;
-import org.apache.felix.scrplugin.description.SpecVersion;
 
 /**
  * <code>Property.java</code>...

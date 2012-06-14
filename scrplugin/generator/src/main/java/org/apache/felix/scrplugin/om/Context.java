@@ -20,8 +20,8 @@ package org.apache.felix.scrplugin.om;
 
 import org.apache.felix.scrplugin.Options;
 import org.apache.felix.scrplugin.Project;
+import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.description.ClassDescription;
-import org.apache.felix.scrplugin.description.SpecVersion;
 import org.apache.felix.scrplugin.helper.IssueLog;
 
 public class Context {

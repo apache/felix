@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.SCRDescriptorFailureException;
+import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.annotations.AnnotationProcessor;
 import org.apache.felix.scrplugin.annotations.ClassAnnotation;
 import org.apache.felix.scrplugin.annotations.MethodAnnotation;
@@ -41,7 +42,6 @@ import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.ServiceDescription;
-import org.apache.felix.scrplugin.description.SpecVersion;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
