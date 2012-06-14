@@ -36,6 +36,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scr.annotations.Services;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.SCRDescriptorFailureException;
+import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.annotations.AnnotationProcessor;
 import org.apache.felix.scrplugin.annotations.ClassAnnotation;
 import org.apache.felix.scrplugin.annotations.FieldAnnotation;
@@ -54,7 +55,6 @@ import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.ServiceDescription;
-import org.apache.felix.scrplugin.description.SpecVersion;
 
 /**
  * This is the processor for the Apache Felix SCR annotations.
