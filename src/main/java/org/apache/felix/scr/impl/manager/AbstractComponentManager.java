@@ -450,6 +450,10 @@ public abstract class AbstractComponentManager implements Component
         return m_componentMetadata.getConfigurationPolicy();
     }
 
+    public String getConfigurationPid()
+    {
+        return m_componentMetadata.getConfigurationPid();
+    }
 
     public boolean isServiceFactory()
     {
