@@ -325,9 +325,22 @@ public abstract class ComponentTestBase
 
     protected static Field getField( Class<?> type, String fieldName ) throws NoSuchFieldException
     {
-        Field field = type.getDeclaredField( fieldName );
-        field.setAccessible( true );
-        return field;
+        Class<?> clazz = type;
+        while (clazz != null)
+        {
+            Field[] fields = clazz.getDeclaredFields();
+            for (int i = 0; i < fields.length; i++)
+            {
+                Field field = fields[i];
+                if (field.getName().equals(fieldName))
+                {
+                    field.setAccessible( true );
+                    return field;
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+        throw new NoSuchFieldException(fieldName);        
     }
 
 
