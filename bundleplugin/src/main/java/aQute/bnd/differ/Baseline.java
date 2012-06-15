@@ -14,7 +14,6 @@ import aQute.libg.version.*;
 
 /**
  * This class maintains
- * 
  */
 public class Baseline {
 
@@ -22,18 +21,19 @@ public class Baseline {
 		public String				packageName;
 		public Diff					packageDiff;
 		public Collection<String>	providers;
-		public Map<String, String>	attributes;
+		public Map<String,String>	attributes;
 		public Version				newerVersion;
 		public Version				olderVersion;
 		public Version				suggestedVersion;
 		public Version				suggestedIfProviders;
 		public boolean				mismatch;
-		public String				warning="";
+		public String				warning	= "";
 
 	}
 
 	final Differ	differ;
 	final Reporter	bnd;
+	Diff			diff;
 
 	public Baseline(Reporter bnd, Differ differ) throws IOException {
 		this.differ = differ;
@@ -51,25 +51,24 @@ public class Baseline {
 	 *         packages (also the ones that were ok).
 	 * @throws Exception
 	 */
-	public Set<Info> baseline(Jar newer, Jar older, Instructions packageFilters)
-			throws Exception {
+	public Set<Info> baseline(Jar newer, Jar older, Instructions packageFilters) throws Exception {
 		Tree n = differ.tree(newer);
 		Parameters nExports = getExports(newer);
 		Tree o = differ.tree(older);
 		Parameters oExports = getExports(older);
-		if ( packageFilters == null)
+		if (packageFilters == null)
 			packageFilters = new Instructions();
-		
+
 		return baseline(n, nExports, o, oExports, packageFilters);
 	}
 
-	public Set<Info> baseline(Tree n, Parameters nExports, Tree o,
-			Parameters oExports, Instructions packageFilters)
+	public Set<Info> baseline(Tree n, Parameters nExports, Tree o, Parameters oExports, Instructions packageFilters)
 			throws Exception {
-		Diff diff = n.diff(o).get("<api>");
+		diff = n.diff(o);
+		Diff apiDiff = diff.get("<api>");
 		Set<Info> infos = Create.set();
 
-		for (Diff pdiff : diff.getChildren()) {
+		for (Diff pdiff : apiDiff.getChildren()) {
 			if (pdiff.getType() != Type.PACKAGE) // Just packages
 				continue;
 
@@ -85,13 +84,13 @@ public class Baseline {
 			info.packageDiff = pdiff;
 			info.packageName = pdiff.getName();
 			info.attributes = nExports.get(info.packageName);
-			bnd.trace("attrs for %s %s", info.packageName,info.attributes);
+			bnd.trace("attrs for %s %s", info.packageName, info.attributes);
 
 			info.newerVersion = getVersion(info.attributes);
 			info.olderVersion = getVersion(oExports.get(info.packageName));
 			if (pdiff.getDelta() == Delta.UNCHANGED) {
 				info.suggestedVersion = info.olderVersion;
-				if( !info.newerVersion.equals(info.olderVersion)) {
+				if (!info.newerVersion.equals(info.olderVersion)) {
 					info.warning += "No difference but versions are equal";
 				}
 			} else if (pdiff.getDelta() == Delta.REMOVED) {
@@ -122,8 +121,7 @@ public class Baseline {
 						// by making them providers
 						Delta tryDelta = pdiff.getDelta(new Ignore() {
 							public boolean contains(Diff diff) {
-								if (diff.getType() == Type.INTERFACE
-										&& diff.getDelta() == Delta.MAJOR) {
+								if (diff.getType() == Type.INTERFACE && diff.getDelta() == Delta.MAJOR) {
 									info.providers.add(Descriptors.getShortName(diff.getName()));
 									return true;
 								}
@@ -141,22 +139,31 @@ public class Baseline {
 		return infos;
 	}
 
+	/**
+	 * Gets the generated diff
+	 * 
+	 * @return the diff
+	 */
+	public Diff getDiff() {
+		return diff;
+	}
+
 	private Version bump(Delta delta, Version last, int offset, int base) {
 		switch (delta) {
-		case UNCHANGED:
-			return last;
-		case MINOR:
-			return new Version(last.getMajor(), last.getMinor() + offset, base);
-		case MAJOR:
-			return new Version(last.getMajor() + 1, base, base);
-		case ADDED:
-			return last;
-		default:
-			return new Version(last.getMajor(), last.getMinor(), last.getMicro() + offset);
+			case UNCHANGED :
+				return last;
+			case MINOR :
+				return new Version(last.getMajor(), last.getMinor() + offset, base);
+			case MAJOR :
+				return new Version(last.getMajor() + 1, base, base);
+			case ADDED :
+				return last;
+			default :
+				return new Version(last.getMajor(), last.getMinor(), last.getMicro() + offset);
 		}
 	}
 
-	private Version getVersion(Map<String, String> map) {
+	private Version getVersion(Map<String,String> map) {
 		if (map == null)
 			return Version.LOWEST;
 

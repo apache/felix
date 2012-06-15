@@ -20,7 +20,7 @@ import aQute.bnd.service.diff.*;
  * unnecessary.
  */
 
-class Element implements Comparable<Element>, Tree {
+class Element implements Tree {
 	final static Element[]	EMPTY	= new Element[0];
 	final Type				type;
 	final String			name;
@@ -37,8 +37,7 @@ class Element implements Comparable<Element>, Tree {
 		this(type, name, Arrays.asList(children), Delta.MINOR, Delta.MAJOR, null);
 	}
 
-	Element(Type type, String name, Collection<? extends Element> children, Delta add,
-			Delta remove, String comment) {
+	Element(Type type, String name, Collection< ? extends Element> children, Delta add, Delta remove, String comment) {
 		this.type = type;
 		this.name = name;
 		this.add = add;
@@ -66,6 +65,7 @@ class Element implements Comparable<Element>, Tree {
 			Arrays.sort(this.children);
 		}
 	}
+
 	public Data serialize() {
 		Data data = new Data();
 		data.type = this.type;
@@ -94,11 +94,11 @@ class Element implements Comparable<Element>, Tree {
 		return comment;
 	}
 
-	public int compareTo(Element other) {
-		if (type == other.type)
-			return name.compareTo(other.name);
+	public int compareTo(Tree other) {
+		if (type == other.getType())
+			return name.compareTo(other.getName());
 		else
-			return type.compareTo(other.type);
+			return type.compareTo(other.getType());
 	}
 
 	public boolean equals(Object other) {
@@ -135,10 +135,9 @@ class Element implements Comparable<Element>, Tree {
 		}
 		return null;
 	}
-	
+
 	public String toString() {
 		return type + " " + name + " (" + add + "/" + remove + ")";
 	}
-
 
 }

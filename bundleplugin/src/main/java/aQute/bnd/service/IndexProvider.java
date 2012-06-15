@@ -1,12 +1,11 @@
 package aQute.bnd.service;
 
-import java.net.URL;
-import java.util.List;
-import java.util.Set;
+import java.net.*;
+import java.util.*;
 
 public interface IndexProvider {
 
-	List<URL> getIndexLocations() throws Exception;
+	List<URI> getIndexLocations() throws Exception;
 
 	Set<ResolutionPhase> getSupportedPhases();
 

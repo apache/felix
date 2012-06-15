@@ -17,8 +17,8 @@ import aQute.bnd.service.diff.*;
 
 public class DiffImpl implements Diff, Comparable<DiffImpl> {
 
-	final Element				older;
-	final Element				newer;
+	final Tree				older;
+	final Tree				newer;
 	final Collection<DiffImpl>	children;
 	final Delta					delta;
 
@@ -28,14 +28,30 @@ public class DiffImpl implements Diff, Comparable<DiffImpl> {
 	 * child delta for each child. This escalates deltas from below up.
 	 */
 	final static Delta[][]		TRANSITIONS	= {
-			{ IGNORED, UNCHANGED, CHANGED, MICRO, MINOR, MAJOR }, // IGNORED
-			{ IGNORED, UNCHANGED, CHANGED, MICRO, MINOR, MAJOR }, // UNCHANGED
-			{ IGNORED, CHANGED, CHANGED, MICRO, MINOR, MAJOR }, // CHANGED
-			{ IGNORED, MICRO, MICRO, MICRO, MINOR, MAJOR }, // MICRO
-			{ IGNORED, MINOR, MINOR, MINOR, MINOR, MAJOR }, // MINOR
-			{ IGNORED, MAJOR, MAJOR, MAJOR, MAJOR, MAJOR }, // MAJOR
-			{ IGNORED, MAJOR, MAJOR, MAJOR, MAJOR, MAJOR }, // REMOVED
-			{ IGNORED, MINOR, MINOR, MINOR, MINOR, MAJOR }, // ADDED
+			{
+			IGNORED, UNCHANGED, CHANGED, MICRO, MINOR, MAJOR
+			}, // IGNORED
+			{
+			IGNORED, UNCHANGED, CHANGED, MICRO, MINOR, MAJOR
+			}, // UNCHANGED
+			{
+			IGNORED, CHANGED, CHANGED, MICRO, MINOR, MAJOR
+			}, // CHANGED
+			{
+			IGNORED, MICRO, MICRO, MICRO, MINOR, MAJOR
+			}, // MICRO
+			{
+			IGNORED, MINOR, MINOR, MINOR, MINOR, MAJOR
+			}, // MINOR
+			{
+			IGNORED, MAJOR, MAJOR, MAJOR, MAJOR, MAJOR
+			}, // MAJOR
+			{
+			IGNORED, MAJOR, MAJOR, MAJOR, MAJOR, MAJOR
+			}, // REMOVED
+			{
+			IGNORED, MINOR, MINOR, MINOR, MINOR, MAJOR
+			}, // ADDED
 											};
 
 	/**
@@ -48,22 +64,22 @@ public class DiffImpl implements Diff, Comparable<DiffImpl> {
 	 *            The older Element
 	 * @param types
 	 */
-	DiffImpl(Element newer, Element older) {
+	public DiffImpl(Tree newer, Tree older) {
 		assert newer != null || older != null;
 		this.older = older;
 		this.newer = newer;
 
 		// Either newer or older can be null, indicating remove or add
 		// so we have to be very careful.
-		Element[] newerChildren = newer == null ? Element.EMPTY : newer.children;
-		Element[] olderChildren = older == null ? Element.EMPTY : older.children;
+		Tree[] newerChildren = newer == null ? Element.EMPTY : newer.getChildren();
+		Tree[] olderChildren = older == null ? Element.EMPTY : older.getChildren();
 
 		int o = 0;
 		int n = 0;
 		List<DiffImpl> children = new ArrayList<DiffImpl>();
 		while (true) {
-			Element nw = n < newerChildren.length ? newerChildren[n] : null;
-			Element ol = o < olderChildren.length ? olderChildren[o] : null;
+			Tree nw = n < newerChildren.length ? newerChildren[n] : null;
+			Tree ol = o < olderChildren.length ? olderChildren[o] : null;
 			DiffImpl diff;
 
 			if (nw == null && ol == null)
@@ -136,9 +152,9 @@ public class DiffImpl implements Diff, Comparable<DiffImpl> {
 			for (DiffImpl child : children) {
 				Delta sub = child.getDelta(ignore);
 				if (sub == REMOVED)
-					sub = child.older.remove;
+					sub = child.older.ifRemoved();
 				else if (sub == ADDED)
-					sub = child.newer.add;
+					sub = child.newer.ifAdded();
 
 				// The escalate method is used to calculate the default
 				// transition in the
@@ -160,7 +176,7 @@ public class DiffImpl implements Diff, Comparable<DiffImpl> {
 		return (newer == null ? older : newer).getName();
 	}
 
-	public Collection<? extends Diff> getChildren() {
+	public Collection< ? extends Diff> getChildren() {
 		return children;
 	}
 
@@ -171,8 +187,7 @@ public class DiffImpl implements Diff, Comparable<DiffImpl> {
 	public boolean equals(Object other) {
 		if (other instanceof DiffImpl) {
 			DiffImpl o = (DiffImpl) other;
-			return getDelta() == o.getDelta() && getType() == o.getType()
-					&& getName().equals(o.getName());
+			return getDelta() == o.getDelta() && getType() == o.getType() && getName().equals(o.getName());
 		}
 		return false;
 	}
@@ -206,5 +221,20 @@ public class DiffImpl implements Diff, Comparable<DiffImpl> {
 	public Tree getNewer() {
 		return newer;
 	}
+
+	public Data serialize() {
+		Data data = new Data();
+		data.type = getType();
+		data.delta = delta;
+		data.name = getName();
+		data.children = new Data[children.size()];
+		
+		int i=0;		
+		for ( Diff d : children)
+			data.children[i++] = d.serialize();
+				
+		return data;
+	}
+
 
 }
