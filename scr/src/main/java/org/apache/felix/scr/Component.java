@@ -312,9 +312,9 @@ public interface Component
 
 
     /**
-     * Reuturns the configuration policy declared in the component descriptor.
+     * Returns the configuration policy declared in the component descriptor.
      * If the component descriptor is a Declarative Services 1.0 descriptor or
-     * not configuration poliy has been declared, the default value
+     * no configuration policy has been declared, the default value
      * <i>optional</i> is returned.
      * <p>
      * The returned string is one of the three policies defined in the
@@ -327,7 +327,7 @@ public interface Component
      * the behaviour of Declarative Services 1.0</dd>
      * <dt>require</dt>
      * <dd>Configuration is required. The component remains unsatisfied until
-     * configuartion is available from the Configuration Admin service.</dd>
+     * configuration is available from the Configuration Admin service.</dd>
      * <dt>ignore</dt>
      * <dd>Configuration is ignored. No Configuration Admin service
      * configuration is supplied to the component.</dd>
@@ -337,6 +337,27 @@ public interface Component
      */
     String getConfigurationPolicy();
 
+    /**
+     * Returns the configuration pid declared in the component descriptor. 
+     * The value is used to retrieve the component configuration from the 
+     * OSGi configuration admin service. The value returned by this method 
+     * depends on the Declarative Service namespace used by the component:
+     * <p>
+     * <dl>
+     * <dt>DS 1.0</dt>
+     * <dd>The component name is returned.</dd>
+     * <dt>DS 1.1</dt>
+     * <dd>The component name is returned, if it has been specified. If not specified, 
+     * then the default component name is returned (that is the fully qualified component
+     * class name).
+     * <dt>DS 1.2</dt>
+     * <dd>The value of the configuration-pid attribute is returned if it has been specified.
+     * If not specified, then the same DS 1.1 rules are applied.</dd>
+     * </dl>
+     *
+     * @since 1.2
+     */
+    String getConfigurationPid();
 
     /**
      * Enables this Component if it is disabled. If the Component is not
