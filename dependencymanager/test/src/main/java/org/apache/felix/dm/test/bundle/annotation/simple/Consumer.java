@@ -34,21 +34,21 @@ import org.osgi.framework.BundleContext;
 public class Consumer
 {
     @ServiceDependency
-    Runnable m_runnable;
+    volatile Runnable m_runnable;
     
     @ServiceDependency
-    Sequencer m_sequencer;
+    volatile Sequencer m_sequencer;
     
     @Inject
-    BundleContext m_bc;
+    volatile BundleContext m_bc;
     BundleContext m_bcNotInjected;
     
     @Inject
-    DependencyManager m_dm;
+    volatile DependencyManager m_dm;
     DependencyManager m_dmNotInjected;
     
     @Inject
-    org.apache.felix.dm.Component m_component;
+    volatile org.apache.felix.dm.Component m_component;
     org.apache.felix.dm.Component m_componentNotInjected;
 
     @Start

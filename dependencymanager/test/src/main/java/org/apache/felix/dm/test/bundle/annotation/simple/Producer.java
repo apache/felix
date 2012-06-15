@@ -37,7 +37,7 @@ import org.osgi.framework.ServiceRegistration;
 public class Producer implements Runnable
 {
     @ServiceDependency
-    Sequencer m_sequencer;
+    volatile Sequencer m_sequencer;
 
     @Init
     protected void init()
