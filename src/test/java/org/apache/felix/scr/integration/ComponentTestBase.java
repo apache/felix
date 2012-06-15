@@ -98,7 +98,7 @@ public abstract class ComponentTestBase
 
     @ProbeBuilder
     public TestProbeBuilder extendProbe(TestProbeBuilder builder) {
-        builder.setHeader("Export-Package", "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature");
+        builder.setHeader("Export-Package", "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature,org.apache.felix.scr.integration.components.circular");
         builder.setHeader("Import-Package", "org.apache.felix.scr,org.apache.felix.scr.component;mandatory:=\"status\"; status=\"provisional\"");
         builder.setHeader("Bundle-ManifestVersion", "2");
         return builder;
@@ -352,7 +352,7 @@ public abstract class ComponentTestBase
                 .set(Constants.BUNDLE_SYMBOLICNAME, "simplecomponent")
                 .set(Constants.BUNDLE_VERSION, "0.0.11")
                 .set(Constants.IMPORT_PACKAGE,
-                        "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature")
+                        "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature,org.apache.felix.scr.integration.components.circular")
                 .set("Service-Component", "OSGI-INF/components.xml")
             .build(withBnd());
 
