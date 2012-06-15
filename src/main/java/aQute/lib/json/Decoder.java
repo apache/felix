@@ -5,15 +5,17 @@ import java.lang.reflect.*;
 import java.security.*;
 import java.util.*;
 
+import aQute.lib.converter.*;
+
 public class Decoder implements Closeable {
 	final JSONCodec		codec;
 	Reader				reader;
 	int					current;
 	MessageDigest		digest;
-	Map<String, Object>	extra;
-	String encoding = "UTF-8";
-	
-	boolean strict;
+	Map<String,Object>	extra;
+	String				encoding	= "UTF-8";
+
+	boolean				strict;
 
 	Decoder(JSONCodec codec) {
 		this.codec = codec;
@@ -26,12 +28,12 @@ public class Decoder implements Closeable {
 	public Decoder from(InputStream in) throws Exception {
 		return from(new InputStreamReader(in, encoding));
 	}
-	
+
 	public Decoder charset(String encoding) {
 		this.encoding = encoding;
 		return this;
 	}
-	
+
 	public Decoder strict() {
 		this.strict = true;
 		return this;
@@ -65,7 +67,8 @@ public class Decoder implements Closeable {
 		return digest.digest();
 	}
 
-	@SuppressWarnings("unchecked") public <T> T get(Class<T> clazz) throws Exception {
+	@SuppressWarnings("unchecked")
+	public <T> T get(Class<T> clazz) throws Exception {
 		return (T) codec.decode(clazz, this);
 	}
 
@@ -75,6 +78,11 @@ public class Decoder implements Closeable {
 
 	public Object get() throws Exception {
 		return codec.decode(null, this);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T get(TypeReference<T> ref) throws Exception {
+		return (T) codec.decode(ref.getType(), this);
 	}
 
 	int read() throws Exception {
@@ -129,9 +137,9 @@ public class Decoder implements Closeable {
 		reader.close();
 	}
 
-	public Map<String, Object> getExtra() {
+	public Map<String,Object> getExtra() {
 		if (extra == null)
-			extra = new HashMap<String, Object>();
+			extra = new HashMap<String,Object>();
 		return extra;
 	}
 }
