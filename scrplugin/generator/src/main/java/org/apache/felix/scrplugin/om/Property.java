@@ -18,7 +18,6 @@
  */
 package org.apache.felix.scrplugin.om;
 
-import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 import org.apache.felix.scrplugin.description.PropertyType;
 
@@ -72,27 +71,5 @@ public class Property extends AbstractObject {
     public void setMultiValue(String[] values) {
         this.multiValue = values;
         this.value = null;
-    }
-
-    /**
-     * Validate the property.
-     * If errors occur a message is added to the issues list,
-     * warnings can be added to the warnings list.
-     */
-    public void validate(final Context context) {
-        if (name == null || name.trim().length() == 0) {
-            this.logError(context.getIssueLog(), "Property name can not be empty.");
-        }
-        if (type != null) {
-            // now check for old and new char
-            if (context.getSpecVersion() == SpecVersion.VERSION_1_0 && type == PropertyType.Character) {
-                type = PropertyType.Char;
-            }
-            if (context.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal()
-                            && type == PropertyType.Char) {
-                type = PropertyType.Character;
-            }
-        }
-        // TODO might want to check value
     }
 }

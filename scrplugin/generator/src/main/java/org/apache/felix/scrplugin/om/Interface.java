@@ -18,7 +18,6 @@
  */
 package org.apache.felix.scrplugin.om;
 
-import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 
 /**
@@ -51,26 +50,5 @@ public class Interface extends AbstractObject {
      */
     public void setInterfaceName(final String name) {
         this.interfaceName = name;
-    }
-
-    /**
-     * Validate the interface.
-     * If errors occur a message is added to the issues list,
-     * warnings can be added to the warnings list.
-     */
-    public void validate(final Context context) throws SCRDescriptorException {
-        if (context.getClassDescription().getDescribedClass().isInterface()) {
-            this.logError(context.getIssueLog(), "Must be declared in a Java class - not an interface");
-        } else {
-            try {
-                final Class<?> interfaceClass = context.getProject().getClassLoader().loadClass(this.interfaceName);
-                if (!interfaceClass.isAssignableFrom(context.getClassDescription().getDescribedClass())) {
-                    // interface not implemented
-                    this.logError(context.getIssueLog(), "Class must implement provided interface " + this.interfaceName);
-                }
-            } catch (final ClassNotFoundException cnfe) {
-                throw new SCRDescriptorException("Unable to load interface class.", cnfe);
-            }
-        }
     }
 }

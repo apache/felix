@@ -39,11 +39,11 @@ public abstract class AbstractObject {
         this.sourceLocation = sourceLocation;
     }
 
-    protected void logWarn(IssueLog iLog, String message) {
+    public void logWarn(IssueLog iLog, String message) {
         iLog.addWarning(this.annotationPrefix + message, sourceLocation);
     }
 
-    protected void logError(IssueLog iLog, String message) {
+    public void logError(IssueLog iLog, String message) {
         iLog.addError(this.annotationPrefix + message, sourceLocation);
     }
 }
