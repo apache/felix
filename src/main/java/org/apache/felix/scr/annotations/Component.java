@@ -142,5 +142,5 @@ public @interface Component {
      * The default value for this is the name of the component.
      * @since 1.7
      */
-    String configurationPid();
+    String configurationPid() default "";
 }
