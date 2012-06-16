@@ -22,11 +22,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.felix.scrplugin.SCRDescriptorException;
-
 /**
  * <code>Service</code>
- * 
+ *
  * contains all service information of a component.
  */
 public class Service {
@@ -60,7 +58,7 @@ public class Service {
 
     /**
      * Search for an implemented interface.
-     * 
+     *
      * @param name
      *            The name of the interface.
      * @return The interface if it is implemented by this service or null.
@@ -78,7 +76,7 @@ public class Service {
 
     /**
      * Add an interface to the list of interfaces.
-     * 
+     *
      * @param interf
      *            The interface.
      */
@@ -86,17 +84,6 @@ public class Service {
         // add interface only once
         if (this.findInterface(interf.getInterfaceName()) == null) {
             this.interfaces.add(interf);
-        }
-    }
-
-    /**
-     * Validate the service.
-     * If errors occur a message is added to the issues list,
-     * warnings can be added to the warnings list.
-     */
-    public void validate(final Context context) throws SCRDescriptorException {
-        for (final Interface interf : this.getInterfaces()) {
-            interf.validate(context);
         }
     }
 }

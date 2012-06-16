@@ -21,7 +21,6 @@ package org.apache.felix.scrplugin;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +35,7 @@ import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ReferencePolicyOption;
 import org.apache.felix.scrplugin.description.ServiceDescription;
+import org.apache.felix.scrplugin.description.Validator;
 import org.apache.felix.scrplugin.helper.AnnotationProcessorManager;
 import org.apache.felix.scrplugin.helper.ClassModifier;
 import org.apache.felix.scrplugin.helper.ClassScanner;
@@ -43,7 +43,6 @@ import org.apache.felix.scrplugin.helper.IssueLog;
 import org.apache.felix.scrplugin.helper.StringUtils;
 import org.apache.felix.scrplugin.om.Component;
 import org.apache.felix.scrplugin.om.Components;
-import org.apache.felix.scrplugin.om.Context;
 import org.apache.felix.scrplugin.om.Interface;
 import org.apache.felix.scrplugin.om.Property;
 import org.apache.felix.scrplugin.om.Reference;
@@ -235,12 +234,8 @@ public class SCRDescriptorGenerator {
         for (final Component comp : processedComponents) {
             final int errorCount = iLog.getNumberOfErrors();
 
-            final Context ctx = new Context();
-            ctx.setClassDescription(comp.getClassDescription());
-            ctx.setIssueLog(iLog);
-            ctx.setProject(project);
-            ctx.setSpecVersion(specVersion);
-            ctx.setOptions(options);
+            final Validator validator = new Validator(comp.getClassDescription(),
+                            comp, specVersion, project, options);
 
             if ( this.options.isGenerateAccessors() ) {
                 // before we can validate we should check the references for bind/unbind method
@@ -262,11 +257,11 @@ public class SCRDescriptorGenerator {
                         boolean createUnbind = false;
 
                         // Only create method if no bind name has been specified
-                        if (bindValue == null && ref.findMethod(ctx, "bind") == null) {
+                        if (bindValue == null && validator.findMethod(iLog, ref, "bind") == null) {
                             // create bind method
                             createBind = true;
                         }
-                        if (unbindValue == null && ref.findMethod(ctx, "unbind") == null) {
+                        if (unbindValue == null && validator.findMethod(iLog, ref, "unbind") == null) {
                             // create unbind method
                             createUnbind = true;
                         }
@@ -282,7 +277,7 @@ public class SCRDescriptorGenerator {
                     }
                 }
             }
-            comp.validate(ctx);
+            validator.validate(iLog);
 
             // ignore component if it has errors
             if (iLog.getNumberOfErrors() == errorCount) {
@@ -417,8 +412,8 @@ public class SCRDescriptorGenerator {
             ocd = null;
         }
 
-        final Map<String, Reference> allReferences = new HashMap<String, Reference>();
-        final Map<String, Property> allProperties = new HashMap<String, Property>();
+        final Map<String, Reference> allReferences = new LinkedHashMap<String, Reference>();
+        final Map<String, Property> allProperties = new LinkedHashMap<String, Property>();
 
         ClassDescription current = desc;
         boolean inherit;
