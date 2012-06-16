@@ -193,7 +193,8 @@ class ExtensionManager extends URLStreamHandler implements Content
         // If any extra packages are specified, then append them.
         String pkgextra =
             (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMPACKAGES_EXTRA);
-        syspkgs = (pkgextra == null) ? syspkgs : syspkgs + "," + pkgextra;
+        syspkgs = ((pkgextra == null) || (pkgextra.trim().length() == 0))
+            ? syspkgs : syspkgs + "," + pkgextra;
         m_headerMap.put(FelixConstants.BUNDLE_MANIFESTVERSION, "2");
         m_headerMap.put(FelixConstants.EXPORT_PACKAGE, syspkgs);
 
@@ -212,7 +213,8 @@ class ExtensionManager extends URLStreamHandler implements Content
         // If any extra capabilities are specified, then append them.
         String capextra =
             (String) m_configMap.get(FelixConstants.FRAMEWORK_SYSTEMCAPABILITIES_EXTRA);
-        syscaps = (capextra == null) ? syscaps : syscaps + "," + capextra;
+        syscaps = ((capextra == null) || (capextra.trim().length() == 0))
+            ? syscaps : syscaps + "," + capextra;
         m_headerMap.put(FelixConstants.PROVIDE_CAPABILITY, syscaps);
         try
         {
