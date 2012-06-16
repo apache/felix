@@ -2215,9 +2215,12 @@ public class BundleWiringImpl implements BundleWiring
                             {
                                 felix.getFramework().activateBundle((BundleImpl) (lazy)[1], true);
                             }
-                            catch (BundleException ex)
+                            catch (Throwable ex)
                             {
-                                ex.printStackTrace();
+                                m_logger.log((BundleImpl) (lazy)[1],
+                                    Logger.LOG_WARNING,
+                                    "Unable to lazily start bundle.",
+                                    ex);
                             }
                         }
                     }
