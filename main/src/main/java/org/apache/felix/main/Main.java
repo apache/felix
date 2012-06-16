@@ -230,13 +230,13 @@ public class Main
         Main.loadSystemProperties();
 
         // Read configuration properties.
-        Properties configProps = Main.loadConfigProperties();
+        Map<String, String> configProps = Main.loadConfigProperties();
         // If no configuration properties were found, then create
         // an empty properties object.
         if (configProps == null)
         {
             System.err.println("No " + CONFIG_PROPERTIES_FILE_VALUE + " found.");
-            configProps = new Properties();
+            configProps = new HashMap<String, String>();
         }
 
         // Copy framework properties from the system properties.
@@ -246,19 +246,19 @@ public class Main
         // that overwrites anything in the config file.
         if (bundleDir != null)
         {
-            configProps.setProperty(AutoProcessor.AUTO_DEPLOY_DIR_PROPERY, bundleDir);
+            configProps.put(AutoProcessor.AUTO_DEPLOY_DIR_PROPERY, bundleDir);
         }
 
         // If there is a passed in bundle cache directory, then
         // that overwrites anything in the config file.
         if (cacheDir != null)
         {
-            configProps.setProperty(Constants.FRAMEWORK_STORAGE, cacheDir);
+            configProps.put(Constants.FRAMEWORK_STORAGE, cacheDir);
         }
 
         // If enabled, register a shutdown hook to make sure the framework is
         // cleanly shutdown when the VM exits.
-        String enableHook = configProps.getProperty(SHUTDOWN_HOOK_PROP);
+        String enableHook = configProps.get(SHUTDOWN_HOOK_PROP);
         if ((enableHook == null) || !enableHook.equalsIgnoreCase("false"))
         {
             Runtime.getRuntime().addShutdownHook(new Thread("Felix Shutdown Hook") {
@@ -470,7 +470,7 @@ public class Main
      * </p>
      * @return A <tt>Properties</tt> instance or <tt>null</tt> if there was an error.
     **/
-    public static Properties loadConfigProperties()
+    public static Map<String, String> loadConfigProperties()
     {
         // The config properties file is either specified by a system
         // property or it is in the conf/ directory of the Felix
@@ -552,18 +552,20 @@ public class Main
             return null;
         }
 
-        // Perform variable substitution for system properties.
+        // Perform variable substitution for system properties and
+        // convert to dictionary.
+        Map<String, String> map = new HashMap<String, String>();
         for (Enumeration e = props.propertyNames(); e.hasMoreElements(); )
         {
             String name = (String) e.nextElement();
-            props.setProperty(name,
+            map.put(name,
                 Util.substVars(props.getProperty(name), name, null, props));
         }
 
-        return props;
+        return map;
     }
 
-    public static void copySystemProperties(Properties configProps)
+    public static void copySystemProperties(Map configProps)
     {
         for (Enumeration e = System.getProperties().propertyNames();
              e.hasMoreElements(); )
@@ -571,7 +573,7 @@ public class Main
             String key = (String) e.nextElement();
             if (key.startsWith("felix.") || key.startsWith("org.osgi.framework."))
             {
-                configProps.setProperty(key, System.getProperty(key));
+                configProps.put(key, System.getProperty(key));
             }
         }
     }
