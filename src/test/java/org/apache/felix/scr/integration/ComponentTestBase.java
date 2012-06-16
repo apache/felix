@@ -30,14 +30,20 @@ import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.TreeSet;
 
 import javax.inject.Inject;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
+import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.ScrService;
 import org.junit.After;
 import org.junit.Before;
@@ -370,6 +376,172 @@ public abstract class ComponentTestBase
             catch ( IOException ioe )
             {
             }
+        }
+    }
+
+    //Code copied from ScrCommand to make it easier to find out what your test components are actually doing.
+    //    @Test
+    public void testDescription()
+    {
+        PrintStream out = System.out;
+        info( out );
+    }
+
+    void info( PrintStream out )
+    {
+        Component[] components = getComponents();
+        if ( components == null )
+        {
+            return;
+        }
+
+        for ( int j = 0; j < components.length; j++ )
+        {
+            Component component = components[j];
+            out.print( "ID: " );
+            out.println( component.getId() );
+            out.print( "Name: " );
+            out.println( component.getName() );
+            out.print( "Bundle: " );
+            out.println( component.getBundle().getSymbolicName() + " (" + component.getBundle().getBundleId() + ")" );
+            out.print( "State: " );
+            out.println( toStateString( component.getState() ) );
+            out.print( "Default State: " );
+            out.println( component.isDefaultEnabled() ? "enabled" : "disabled" );
+            out.print( "Activation: " );
+            out.println( component.isImmediate() ? "immediate" : "delayed" );
+
+            // DS 1.1 new features
+            out.print( "Configuration Policy: " );
+            out.println( component.getConfigurationPolicy() );
+            out.print( "Activate Method: " );
+            out.print( component.getActivate() );
+            if ( component.isActivateDeclared() )
+            {
+                out.print( " (declared in the descriptor)" );
+            }
+            out.println();
+            out.print( "Deactivate Method: " );
+            out.print( component.getDeactivate() );
+            if ( component.isDeactivateDeclared() )
+            {
+                out.print( " (declared in the descriptor)" );
+            }
+            out.println();
+            out.print( "Modified Method: " );
+            if ( component.getModified() != null )
+            {
+                out.print( component.getModified() );
+            }
+            else
+            {
+                out.print( "-" );
+            }
+            out.println();
+
+            if ( component.getFactory() != null )
+            {
+                out.print( "Factory: " );
+                out.println( component.getFactory() );
+            }
+
+            String[] services = component.getServices();
+            if ( services != null )
+            {
+                out.print( "Services: " );
+                out.println( services[0] );
+                for ( int i = 1; i < services.length; i++ )
+                {
+                    out.print( "          " );
+                    out.println( services[i] );
+                }
+                out.print( "Service Type: " );
+                out.println( component.isServiceFactory() ? "service factory" : "service" );
+            }
+
+            Reference[] refs = component.getReferences();
+            if ( refs != null )
+            {
+                for ( int i = 0; i < refs.length; i++ )
+                {
+                    out.print( "Reference: " );
+                    out.println( refs[i].getName() );
+                    out.print( "    Satisfied: " );
+                    out.println( refs[i].isSatisfied() ? "satisfied" : "unsatisfied" );
+                    out.print( "    Service Name: " );
+                    out.println( refs[i].getServiceName() );
+                    if ( refs[i].getTarget() != null )
+                    {
+                        out.print( "    Target Filter: " );
+                        out.println( refs[i].getTarget() );
+                    }
+                    out.print( "    Multiple: " );
+                    out.println( refs[i].isMultiple() ? "multiple" : "single" );
+                    out.print( "    Optional: " );
+                    out.println( refs[i].isOptional() ? "optional" : "mandatory" );
+                    out.print( "    Policy: " );
+                    out.println( refs[i].isStatic() ? "static" : "dynamic" );
+                    out.print( "    Policy option: " );
+                    out.println( refs[i].isReluctant() ? "reluctant" : "greedy" );
+                }
+            }
+
+            Dictionary props = component.getProperties();
+            if ( props != null )
+            {
+                out.println( "Properties:" );
+                TreeSet keys = new TreeSet( Collections.list( props.keys() ) );
+                for ( Iterator ki = keys.iterator(); ki.hasNext(); )
+                {
+                    Object key = ki.next();
+                    out.print( "    " );
+                    out.print( key );
+                    out.print( " = " );
+
+                    Object prop = props.get( key );
+                    if ( prop.getClass().isArray() )
+                    {
+                        prop = Arrays.asList( ( Object[] ) prop );
+                    }
+                    out.print( prop );
+
+                    out.println();
+                }
+            }
+        }
+    }
+
+    private String toStateString( int state )
+    {
+        switch ( state )
+        {
+            case Component.STATE_DISABLED:
+                return "disabled";
+            case Component.STATE_UNSATISFIED:
+                return "unsatisfied";
+            case Component.STATE_ACTIVE:
+                return "active";
+            case Component.STATE_REGISTERED:
+                return "registered";
+            case Component.STATE_FACTORY:
+                return "factory";
+            case Component.STATE_DISPOSED:
+                return "disposed";
+
+            case Component.STATE_ENABLING:
+                return "enabling";
+            case Component.STATE_ENABLED:
+                return "enabled";
+            case Component.STATE_ACTIVATING:
+                return "activating";
+            case Component.STATE_DEACTIVATING:
+                return "deactivating";
+            case Component.STATE_DISABLING:
+                return "disabling";
+            case Component.STATE_DISPOSING:
+                return "disposing";
+            default:
+                return String.valueOf( state );
         }
     }
 
