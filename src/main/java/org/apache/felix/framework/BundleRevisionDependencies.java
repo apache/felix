@@ -41,9 +41,7 @@ class BundleRevisionDependencies
 
     public synchronized void addDependent(BundleWire bw)
     {
-// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
-//       since the plan is to standardize on this method for the OBR spec.
-        BundleRevision provider = ((BundleWireImpl) bw).getProvider();
+        BundleRevision provider = bw.getProvider();
         Map<BundleCapability, Set<BundleWire>> caps =
             m_dependentsMap.get(provider);
         if (caps == null)
@@ -186,10 +184,7 @@ class BundleRevisionDependencies
                     {
                         for (BundleWire dependentWire : entry.getValue())
                         {
-// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
-//       since the plan is to standardize on this method for the OBR spec.
-                            result.add(((BundleWireImpl) dependentWire)
-                                .getRequirer().getBundle());
+                            result.add(dependentWire.getRequirer().getBundle());
                         }
                     }
                 }
@@ -227,10 +222,7 @@ class BundleRevisionDependencies
                     {
                         for (BundleWire dependentWire : entry.getValue())
                         {
-// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
-//       since the plan is to standardize on this method for the OBR spec.
-                            result.add(((BundleWireImpl) dependentWire)
-                                .getRequirer().getBundle());
+                            result.add(dependentWire.getRequirer().getBundle());
                         }
                     }
                 }
@@ -260,10 +252,7 @@ class BundleRevisionDependencies
                     {
                         for (BundleWire dependentWire : entry.getValue())
                         {
-// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
-//       since the plan is to standardize on this method for the OBR spec.
-                            result.add(((BundleWireImpl) dependentWire)
-                                .getRequirer().getBundle());
+                            result.add(dependentWire.getRequirer().getBundle());
                         }
                     }
                 }
@@ -284,10 +273,8 @@ class BundleRevisionDependencies
             {
                 for (BundleWire bw : wiring.getRequiredWires(null))
                 {
-// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
-//       since the plan is to standardize on this method for the OBR spec.
                     Map<BundleCapability, Set<BundleWire>> caps =
-                        m_dependentsMap.get(((BundleWireImpl) bw).getProvider());
+                        m_dependentsMap.get(bw.getProvider());
                     if (caps != null)
                     {
                         List<BundleCapability> gc = new ArrayList<BundleCapability>();
@@ -306,9 +293,7 @@ class BundleRevisionDependencies
                         }
                         if (caps.isEmpty())
                         {
-// TODO: OSGi R4.4 - Eventually we won't need to use the impl type here,
-//       since the plan is to standardize on this method for the OBR spec.
-                            m_dependentsMap.remove(((BundleWireImpl) bw).getProvider());
+                            m_dependentsMap.remove(bw.getProvider());
                         }
                     }
                 }
