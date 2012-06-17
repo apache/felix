@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scrplugin;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 
@@ -35,15 +36,11 @@ public class Options {
 
     private SpecVersion specVersion;
 
-    private String[] annotationProcessors;
+    private File outputDirectory;
 
-    public String[] getAnnotationProcessors() {
-        return annotationProcessors;
-    }
+    private String scrName = "serviceComponents.xml";
 
-    public void setAnnotationProcessors(String[] annotationProcessors) {
-        this.annotationProcessors = annotationProcessors;
-    }
+    private String metaTypeName = "metatype.xml";
 
     public boolean isGenerateAccessors() {
         return generateAccessors;
@@ -113,4 +110,49 @@ public class Options {
         this.specVersion = specVersion;
     }
 
+    /**
+     * Sets the directory where the descriptor files will be created.
+     * <p>
+     * This field has no default value and this setter <b>must</b> called prior to calling {@link #execute()}.
+     */
+    public void setOutputDirectory(final File outputDirectory) {
+        this.outputDirectory = outputDirectory;
+    }
+
+    /**
+     * Sets the name of the SCR declaration descriptor file. This file will be
+     * created in the <i>OSGI-INF</i> directory below the {@link #setOutputDirectory(File) output directory}.
+     * <p>
+     * This file will be overwritten if already existing. If no descriptors are created the file is actually removed.
+     * <p>
+     * The default value of this property is <code>serviceComponents.xml</code>.
+     */
+    public void setSCRName(final String finalName) {
+        this.scrName = finalName;
+    }
+
+    /**
+     * Sets the name of the file taking the Metatype Service descriptors. This
+     * file will be created in the <i>OSGI-INF/metatype</i> directory below the {@link #setOutputDirectory(File) output directory}
+     * .
+     * <p>
+     * This file will be overwritten if already existing. If no descriptors are created the file is actually removed.
+     * <p>
+     * The default value of this property is <code>metatype.xml</code>.
+     */
+    public void setMetaTypeName(final String metaTypeName) {
+        this.metaTypeName = metaTypeName;
+    }
+
+    public File getOutputDirectory() {
+        return this.outputDirectory;
+    }
+
+    public String getMetaTypeName() {
+        return this.metaTypeName;
+    }
+
+    public String getSCRName() {
+        return this.scrName;
+    }
 }
