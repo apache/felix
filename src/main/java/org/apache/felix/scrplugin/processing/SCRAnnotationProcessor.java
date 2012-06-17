@@ -63,6 +63,13 @@ import org.apache.felix.scrplugin.description.ServiceDescription;
 public class SCRAnnotationProcessor implements AnnotationProcessor {
 
     /**
+     * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getName()
+     */
+    public String getName() {
+        return "Apache Felix SCR Annotation Processor";
+    }
+
+    /**
      * @throws SCRDescriptorException
      * @throws SCRDescriptorFailureException
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#process(org.apache.felix.scrplugin.annotations.ScannedClass, org.apache.felix.scrplugin.description.ClassDescription)
