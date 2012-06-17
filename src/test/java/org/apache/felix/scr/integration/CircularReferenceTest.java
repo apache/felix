@@ -86,8 +86,7 @@ public class CircularReferenceTest extends ComponentTestBase
         TestCase.assertNotNull( componentB );
         TestCase.assertEquals( Component.STATE_ACTIVE, componentB.getState() );
         B b = ( B ) componentB.getComponentInstance().getInstance();
-        //Currently felix binds A.  I think this is wrong.
-//        assertEquals( 0, b.getAs().size() );
+        assertEquals( 0, b.getAs().size() );
     }
     /**
      * A > 1.1 > B > 0..n > A Both should start (B first), and B should have an A reference.
