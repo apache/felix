@@ -33,6 +33,8 @@ import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ModifiedMethod;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
@@ -44,7 +46,7 @@ import org.osgi.service.log.LogService;
  * The default ComponentManager. Objects of this class are responsible for managing
  * implementation object's lifecycle.
  */
-public class ImmediateComponentManager extends AbstractComponentManager
+public class ImmediateComponentManager extends AbstractComponentManager implements ServiceFactory
 {
 
     // The object that implements the service and that is bound to other services
@@ -113,18 +115,21 @@ public class ImmediateComponentManager extends AbstractComponentManager
     // also be overwritten
     protected boolean createComponent()
     {
-        ComponentContextImpl tmpContext = new ComponentContextImpl( this );
-        Object tmpComponent = createImplementationObject( tmpContext );
-
-        // if something failed creating the component instance, return false
-        if ( tmpComponent == null )
+        if ( m_implementationObject == null )
         {
-            return false;
-        }
+            ComponentContextImpl tmpContext = new ComponentContextImpl( this );
+            Object tmpComponent = createImplementationObject( tmpContext );
 
-        // otherwise set the context and component instance and return true
-        m_componentContext = tmpContext;
-        m_implementationObject = tmpComponent;
+            // if something failed creating the component instance, return false
+            if ( tmpComponent == null )
+            {
+                return false;
+            }
+
+            // otherwise set the context and component instance and return true
+            m_componentContext = tmpContext;
+            m_implementationObject = tmpComponent;
+        }
         return true;
     }
 
@@ -286,7 +291,7 @@ public class ImmediateComponentManager extends AbstractComponentManager
      */
     protected Object getService()
     {
-        return m_implementationObject;
+        return this;
     }
 
     State getSatisfiedState()
@@ -592,5 +597,27 @@ public class ImmediateComponentManager extends AbstractComponentManager
             }
         }
         return regProps.equals( props );
+    }
+
+    public Object getService( Bundle bundle, ServiceRegistration serviceRegistration )
+    {
+        obtainStateLock();
+        try
+        {
+            if (m_implementationObject != null)
+            {
+                return m_implementationObject;
+            }
+//            m_useCount++;
+            return Registered.getInstance().getService( this );
+        }
+        finally
+        {
+            releaseStateLock();
+        }
+    }
+
+    public void ungetService( Bundle bundle, ServiceRegistration serviceRegistration, Object o )
+    {
     }
 }

@@ -1020,7 +1020,7 @@ public abstract class AbstractComponentManager implements Component
         }
 
 
-        Object getService( DelayedComponentManager dcm )
+        Object getService( ImmediateComponentManager dcm )
         {
 //            log( dcm, "getService" );
 //            return null;
@@ -1225,21 +1225,21 @@ public abstract class AbstractComponentManager implements Component
                 return;
             }
 
+            acm.registerComponentService();
+
             // 1. Load the component implementation class
             // 2. Create the component instance and component context
             // 3. Bind the target services
             // 4. Call the activate method, if present
-            if ( !acm.createComponent() )
+            if ( ( acm.isImmediate() || acm.getComponentMetadata().isFactory() ) && !acm.createComponent() )
             {
                 // component creation failed, not active now
                 acm.log( LogService.LOG_ERROR, "Component instance could not be created, activation failed", null );
 
                 // set state to unsatisfied
                 acm.changeState( Unsatisfied.getInstance() );
-                return;
             }
 
-            acm.registerComponentService();
         }
 
 
@@ -1329,7 +1329,7 @@ public abstract class AbstractComponentManager implements Component
         }
 
 
-        Object getService( DelayedComponentManager dcm )
+        Object getService( ImmediateComponentManager dcm )
         {
             return dcm.getInstance();
         }
@@ -1365,9 +1365,9 @@ public abstract class AbstractComponentManager implements Component
         }
 
 
-        Object getService( DelayedComponentManager dcm )
+        Object getService( ImmediateComponentManager dcm )
         {
-            if ( dcm.createRealComponent() )
+            if ( dcm.createComponent() )
             {
                 dcm.changeState( Active.getInstance() );
                 return dcm.getInstance();

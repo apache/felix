@@ -37,7 +37,7 @@ import org.osgi.service.log.LogService;
  * The <code>ServiceFactoryComponentManager</code> for components specified with &lt;service serviceFactory='true'/&gt;
  * in the xml metadata. The component must be delayed, not immediate or factory.
  */
-public class ServiceFactoryComponentManager extends ImmediateComponentManager implements ServiceFactory
+public class ServiceFactoryComponentManager extends ImmediateComponentManager
 {
 
     // maintain the map of ComponentContext objects created for the
@@ -73,12 +73,6 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager im
     protected void deleteComponent( int reason )
     {
         // nothing to do, this is handled by ungetService
-    }
-
-
-    protected Object getService()
-    {
-        return this;
     }
 
 

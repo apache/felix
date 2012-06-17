@@ -30,7 +30,7 @@ import org.osgi.framework.ServiceRegistration;
 /**
  * The <code>DelayedComponentManager</code> TODO
  */
-public class DelayedComponentManager extends ImmediateComponentManager implements ServiceFactory
+public class DelayedComponentManager extends ImmediateComponentManager
 {
 
     // keep the using bundles as reference "counters" for instance deactivation
@@ -48,15 +48,6 @@ public class DelayedComponentManager extends ImmediateComponentManager implement
         this.m_useCount = 0;
     }
 
-
-    protected boolean createComponent()
-    {
-        // nothing to do here for a delayed component, will be done in the
-        // getService method for the first bundle acquiring the component
-        return true;
-    }
-
-
     protected void deleteComponent( int reason )
     {
         // only have to delete, if there is actually an instance
@@ -67,12 +58,6 @@ public class DelayedComponentManager extends ImmediateComponentManager implement
 
         // ensure the refence set is also clear
         m_useCount = 0;
-    }
-
-
-    protected Object getService()
-    {
-        return this;
     }
 
     State getSatisfiedState()
@@ -95,13 +80,6 @@ public class DelayedComponentManager extends ImmediateComponentManager implement
             releaseStateLock();
         }
     }
-
-
-    protected boolean createRealComponent()
-    {
-        return super.createComponent();
-    }
-
 
     public void ungetService( Bundle bundle, ServiceRegistration sr, Object service )
     {
