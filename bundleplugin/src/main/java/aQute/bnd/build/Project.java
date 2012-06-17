@@ -199,7 +199,7 @@ public class Project extends Processor {
 						sourcepath.add(getBase());
 
 					// Set default bin directory
-					output = getFile(getProperty("bin", "bin")).getAbsoluteFile();
+					output = getOutput0();
 					if (!output.exists()) {
 						output.mkdirs();
 						getWorkspace().changedFile(output);
@@ -213,11 +213,7 @@ public class Project extends Processor {
 					}
 
 					// Where we store all our generated stuff.
-					target = getFile(getProperty("target", "generated"));
-					if (!target.exists()) {
-						target.mkdirs();
-						getWorkspace().changedFile(target);
-					}
+					target = getTarget0();
 
 					// Where the launched OSGi framework stores stuff
 					String runStorageStr = getProperty(Constants.RUNSTORAGE);
@@ -287,6 +283,25 @@ public class Project extends Processor {
 		finally {
 			trail.remove(this);
 		}
+	}
+
+	/**
+	 * @return
+	 */
+	private File getOutput0() {
+		return getFile(getProperty("bin", "bin")).getAbsoluteFile();
+	}
+
+	/**
+	 * 
+	 */
+	private File getTarget0() {
+		File target = getFile(getProperty("target", "generated"));
+		if (!target.exists()) {
+			target.mkdirs();
+			getWorkspace().changedFile(target);
+		}
+		return target;
 	}
 
 	public File getSrc() {
@@ -1542,14 +1557,15 @@ public class Project extends Processor {
 	}
 
 	public void clean() throws Exception {
-		File target = getTarget();
+		File target = getTarget0();
 		if (target.isDirectory() && target.getParentFile() != null) {
 			IO.delete(target);
 			target.mkdirs();
 		}
+		File output = getOutput0();
 		if (getOutput().isDirectory())
-			IO.delete(getOutput());
-		getOutput().mkdirs();
+			IO.delete(output);
+		output.mkdirs();
 	}
 
 	public File[] build() throws Exception {
@@ -1783,8 +1799,8 @@ public class Project extends Processor {
 			return;
 		}
 		@SuppressWarnings("rawtypes")
-		Map x = (Map) getProperties();
-		scripters.get(0).eval((Map<String,Object>) x, new StringReader(script));
+		Map x = getProperties();
+		scripters.get(0).eval(x, new StringReader(script));
 	}
 
 	public String _repos(String args[]) throws Exception {
@@ -1809,11 +1825,11 @@ public class Project extends Processor {
 
 		if (what == null || what.equals("lead"))
 			return syntax.getLead();
-		if (what == null || what.equals("example"))
+		if (what.equals("example"))
 			return syntax.getExample();
-		if (what == null || what.equals("pattern"))
+		if (what.equals("pattern"))
 			return syntax.getPattern();
-		if (what == null || what.equals("values"))
+		if (what.equals("values"))
 			return syntax.getValues();
 
 		return "Invalid type specified for help: lead, example, pattern, values";
@@ -2030,7 +2046,7 @@ public class Project extends Processor {
 		}
 	}
 
-	File getPackageInfoFile(String packageName) throws IOException {
+	File getPackageInfoFile(String packageName) {
 		String path = packageName.replace('.', '/') + "/packageinfo";
 		return IO.getFile(getSrc(), path);
 
