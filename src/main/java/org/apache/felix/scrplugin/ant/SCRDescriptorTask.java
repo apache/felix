@@ -69,17 +69,6 @@ public class SCRDescriptorTask extends MatchingTask {
     protected boolean strictMode = false;
 
     /**
-     * Allows to define additional implementations of the interface
-     * {@link org.apache.felix.scrplugin.tags.annotation.AnnotationTagProvider}
-     * that provide mappings from custom annotations to
-     * {@link org.apache.felix.scrplugin.tags.JavaTag} implementations. List of
-     * full qualified class file names.
-     *
-     * @parameter
-     */
-    private String[] annotationTagProviders = {};
-
-    /**
      * The version of the DS spec this plugin generates a descriptor for. By
      * default the version is detected by the used tags.
      *
@@ -120,6 +109,9 @@ public class SCRDescriptorTask extends MatchingTask {
 
             // create options
             final Options options = new Options();
+            options.setOutputDirectory(destdir);
+            options.setSCRName(finalName);
+            options.setMetaTypeName(metaTypeName);
             options.setGenerateAccessors(generateAccessors);
             options.setStrictMode(strictMode);
             options.setProperties(new HashMap<String, String>());
@@ -127,16 +119,12 @@ public class SCRDescriptorTask extends MatchingTask {
             if ( specVersion != null && options.getSpecVersion() == null ) {
                 throw new BuildException("Unknown spec version specified: " + specVersion);
             }
-            options.setAnnotationProcessors(annotationTagProviders);
 
             final SCRDescriptorGenerator generator = new SCRDescriptorGenerator( scrLog );
 
             // setup from plugin configuration
-            generator.setOutputDirectory(destdir);
             generator.setOptions(options);
             generator.setProject(project);
-            generator.setFinalName(finalName);
-            generator.setMetaTypeName(metaTypeName);
 
             generator.execute();
         } catch ( final SCRDescriptorException sde ) {
@@ -255,14 +243,7 @@ public class SCRDescriptorTask extends MatchingTask {
         this.strictMode = strictMode;
     }
 
-
-    public void setAnnotationTagProviders( String[] annotationTagProviders ) {
-        this.annotationTagProviders = annotationTagProviders;
-    }
-
-
     public void setSpecVersion( String specVersion ) {
         this.specVersion = specVersion;
     }
-
 }
