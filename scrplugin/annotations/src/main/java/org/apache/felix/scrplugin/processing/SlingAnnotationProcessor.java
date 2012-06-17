@@ -41,6 +41,13 @@ import org.apache.felix.scrplugin.description.ServiceDescription;
 public class SlingAnnotationProcessor implements AnnotationProcessor {
 
     /**
+     * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getName()
+     */
+    public String getName() {
+        return "Apache Sling Annotation Processor";
+    }
+
+    /**
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#process(org.apache.felix.scrplugin.annotations.ScannedClass, org.apache.felix.scrplugin.description.ClassDescription)
      */
     public void process(final ScannedClass scannedClass,

@@ -55,6 +55,13 @@ import org.osgi.service.component.annotations.Reference;
 public class DSAnnotationProcessor implements AnnotationProcessor {
 
     /**
+     * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getName()
+     */
+    public String getName() {
+        return "DS Annotation Processor";
+    }
+
+    /**
      * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#process(org.apache.felix.scrplugin.annotations.ScannedClass, org.apache.felix.scrplugin.description.ClassDescription)
      */
     public void process(final ScannedClass scannedClass,

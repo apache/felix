@@ -29,6 +29,7 @@ import java.util.Map;
 
 import javax.imageio.spi.ServiceRegistry;
 
+import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.SCRDescriptorFailureException;
 import org.apache.felix.scrplugin.annotations.AnnotationProcessor;
@@ -55,12 +56,10 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
     private final List<AnnotationProcessor> cachedProcessors = new ArrayList<AnnotationProcessor>();
 
     /**
-     * @param annotationProcessorClasses List of classes that implements
-     *            {@link AnnotationProcessor} interface.
+     * Create annotation processor manager.
      * @throws SCRDescriptorFailureException
      */
-    public AnnotationProcessorManager(
-            final String[] annotationProcessorClasses,
+    public AnnotationProcessorManager(final Log log,
             final ClassLoader classLoader )
     throws SCRDescriptorFailureException {
         // search for providers
@@ -68,11 +67,6 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
         while ( serviceIter.hasNext() ) {
             final AnnotationProcessor provider = serviceIter.next();
             this.addProvider(provider);
-        }
-
-        // add custom processors defined in the tool (maven, ant...)
-        for ( int i = 0; i < annotationProcessorClasses.length; i++ ) {
-            loadProcessor( classLoader, annotationProcessorClasses[i] );
         }
 
         // create ordered list
@@ -85,6 +79,13 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
                 return Integer.valueOf(o1.getRanking()).compareTo(Integer.valueOf(o2.getRanking()));
             }
         });
+        if ( this.cachedProcessors.size() == 0 ) {
+            throw new SCRDescriptorFailureException("No annotation processors found in classpath.");
+        }
+        log.debug("Using annotation processors: ");
+        for(final AnnotationProcessor pro : this.cachedProcessors) {
+            log.debug("- " + pro.getName() + " - " + pro.getRanking());
+        }
     }
 
     /**
@@ -103,6 +104,13 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
      */
     public int getRanking() {
         return 0;
+    }
+
+    /**
+     * @see org.apache.felix.scrplugin.annotations.AnnotationProcessor#getName()
+     */
+    public String getName() {
+        return "Annotation Processor Manager";
     }
 
     /**

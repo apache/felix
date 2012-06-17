@@ -46,6 +46,11 @@ public interface AnnotationProcessor {
     throws SCRDescriptorException, SCRDescriptorFailureException;
 
     /**
+     * A user friendly name
+     */
+    String getName();
+
+    /**
      * The ranking of this processor.
      */
     int getRanking();

@@ -151,15 +151,6 @@ public class SCRDescriptorMojo extends AbstractMojo {
     private Map<String, String> properties = new HashMap<String, String>();
 
     /**
-     * Allows to define additional implementations of the interface
-     * {@link org.apache.felix.scrplugin.AnnotationProcessor} that provide
-     * mappings from custom annotations to descriptions.
-     *
-     * @parameter
-     */
-    private String[] annotationProcessors = {};
-
-    /**
      * The version of the DS spec this plugin generates a descriptor for. By
      * default the version is detected by the used tags.
      *
@@ -186,6 +177,9 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         // create options
         final Options options = new Options();
+        options.setOutputDirectory(outputDirectory);
+        options.setSCRName(finalName);
+        options.setMetaTypeName(metaTypeName);
         options.setGenerateAccessors(generateAccessors);
         options.setStrictMode(strictMode);
         options.setProperties(properties);
@@ -193,18 +187,15 @@ public class SCRDescriptorMojo extends AbstractMojo {
         if ( specVersion != null && options.getSpecVersion() == null ) {
             throw new MojoExecutionException("Unknown spec version specified: " + specVersion);
         }
-        options.setAnnotationProcessors(annotationProcessors);
+
         try {
 
             final SCRDescriptorGenerator generator = new SCRDescriptorGenerator(
                     scrLog);
 
             // setup from plugin configuration
-            generator.setOutputDirectory(outputDirectory);
             generator.setOptions(options);
             generator.setProject(project);
-            generator.setFinalName(finalName);
-            generator.setMetaTypeName(metaTypeName);
 
             final Result result = generator.execute();
             this.setServiceComponentHeader(result.getScrFiles());

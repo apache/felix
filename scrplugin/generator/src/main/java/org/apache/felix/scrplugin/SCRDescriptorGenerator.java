@@ -72,12 +72,6 @@ public class SCRDescriptorGenerator {
 
     private final Log logger;
 
-    private File outputDirectory;
-
-    private String finalName = "serviceComponents.xml";
-
-    private String metaTypeName = "metatype.xml";
-
     /** The project. */
     private Project project;
 
@@ -113,40 +107,6 @@ public class SCRDescriptorGenerator {
     }
 
     /**
-     * Sets the directory where the descriptor files will be created.
-     * <p>
-     * This field has no default value and this setter <b>must</b> called prior to calling {@link #execute()}.
-     */
-    public void setOutputDirectory(final File outputDirectory) {
-        this.outputDirectory = outputDirectory;
-    }
-
-    /**
-     * Sets the name of the SCR declaration descriptor file. This file will be
-     * created in the <i>OSGI-INF</i> directory below the {@link #setOutputDirectory(File) output directory}.
-     * <p>
-     * This file will be overwritten if already existing. If no descriptors are created the file is actually removed.
-     * <p>
-     * The default value of this property is <code>serviceComponents.xml</code>.
-     */
-    public void setFinalName(final String finalName) {
-        this.finalName = finalName;
-    }
-
-    /**
-     * Sets the name of the file taking the Metatype Service descriptors. This
-     * file will be created in the <i>OSGI-INF/metatype</i> directory below the {@link #setOutputDirectory(File) output directory}
-     * .
-     * <p>
-     * This file will be overwritten if already existing. If no descriptors are created the file is actually removed.
-     * <p>
-     * The default value of this property is <code>metatype.xml</code>.
-     */
-    public void setMetaTypeName(final String metaTypeName) {
-        this.metaTypeName = metaTypeName;
-    }
-
-    /**
      * Actually generates the Declarative Services and Metatype descriptors
      * scanning the java sources provided by the {@link #setProject(Project)}
      *
@@ -179,7 +139,7 @@ public class SCRDescriptorGenerator {
         this.iLog = new IssueLog(this.options.isStrictMode());
 
         // create the annotation processor manager
-        final AnnotationProcessor aProcessor = new AnnotationProcessorManager(options.getAnnotationProcessors(),
+        final AnnotationProcessor aProcessor = new AnnotationProcessorManager(this.logger,
                         this.project.getClassLoader());
 
         // create the class scanner - and start scanning
@@ -300,9 +260,9 @@ public class SCRDescriptorGenerator {
 
         final Result result = new Result();
         // write meta type info if there is a file name
-        if (!StringUtils.isEmpty(this.metaTypeName)) {
-            final String path = "OSGI-INF" + File.separator + "metatype" + File.separator + this.metaTypeName;
-            final File mtFile = new File(this.outputDirectory, path);
+        if (!StringUtils.isEmpty(this.options.getMetaTypeName())) {
+            final String path = "OSGI-INF" + File.separator + "metatype" + File.separator + this.options.getMetaTypeName();
+            final File mtFile = new File(this.options.getOutputDirectory(), path);
             final int size = metaData.getOCDs().size() + metaData.getDesignates().size();
             if (size > 0) {
                 this.logger.info("Generating " + size + " MetaType Descriptors to " + mtFile);
@@ -320,8 +280,8 @@ public class SCRDescriptorGenerator {
         }
 
         // check descriptor file
-        final String descriptorPath = "OSGI-INF" + File.separator + this.finalName;
-        final File descriptorFile = StringUtils.isEmpty(this.finalName) ? null : new File(this.outputDirectory, descriptorPath);
+        final String descriptorPath = "OSGI-INF" + File.separator + this.options.getSCRName();
+        final File descriptorFile = StringUtils.isEmpty(this.options.getSCRName()) ? null : new File(this.options.getOutputDirectory(), descriptorPath);
 
         // terminate if there is nothing else to write
         if (components.getComponents().isEmpty()) {
