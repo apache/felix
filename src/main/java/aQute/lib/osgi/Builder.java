@@ -70,7 +70,6 @@ public class Builder extends Analyzer {
 		doIncludeResources(dot);
 		doWab(dot);
 
-		doBndInfo(dot);
 
 		// Check if we override the calculation of the
 		// manifest. We still need to calculated it because
@@ -106,7 +105,7 @@ public class Builder extends Analyzer {
 
 		if (getProperty(POM) != null)
 			dot.putResource("pom.xml", new PomResource(dot.getManifest()));
-
+		
 		if (!isNoBundle())
 			doVerify(dot);
 
@@ -126,20 +125,6 @@ public class Builder extends Analyzer {
 		return dot;
 	}
 
-	/**
-	 * Make sure any bnd.info files are properly processed
-	 * 
-	 * @param jar
-	 */
-
-	private void doBndInfo(Jar jar) {
-		for (Entry<String,Resource> e : jar.getResources().entrySet()) {
-			if (e.getKey().endsWith("/bnd.info")) {
-				PreprocessResource pp = new PreprocessResource(this, e.getValue());
-				e.setValue(pp);
-			}
-		}
-	}
 
 	/**
 	 * Check if we need to calculate any checksums.
