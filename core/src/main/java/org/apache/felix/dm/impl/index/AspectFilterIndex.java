@@ -189,14 +189,17 @@ public class AspectFilterIndex implements FilterIndex, ServiceTrackerCustomizer 
     public void removeServiceListener(ServiceListener listener) {
         synchronized (m_sidToRankingToListenersMap) {
             String filter = (String) m_listenerToFilterMap.remove(listener);
-            FilterData data = getFilterData(null, filter);
-            if (data != null) {
-                synchronized (m_sidToRankingToListenersMap) {
-                    SortedMap /* <Integer, ServiceListener> */ rankingToListenersMap = (SortedMap) m_sidToRankingToListenersMap.get(Long.valueOf(data.serviceId));
-                    if (rankingToListenersMap != null) {
-                        rankingToListenersMap.remove(Integer.valueOf(data.ranking));
-                    }
-                }
+            if (filter != null) {
+            	// the listener does exist
+	            FilterData data = getFilterData(null, filter);
+	            if (data != null) {
+	                synchronized (m_sidToRankingToListenersMap) {
+	                    SortedMap /* <Integer, ServiceListener> */ rankingToListenersMap = (SortedMap) m_sidToRankingToListenersMap.get(Long.valueOf(data.serviceId));
+	                    if (rankingToListenersMap != null) {
+	                        rankingToListenersMap.remove(Integer.valueOf(data.ranking));
+	                    }
+	                }
+	            }
             }
         }
     }

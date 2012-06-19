@@ -398,19 +398,22 @@ public class MultiPropertyExactFilter implements FilterIndex, ServiceTrackerCust
     public void removeServiceListener(ServiceListener listener) {
         synchronized (m_keyToListenersMap) {
             String filter = (String) m_listenerToFilterMap.remove(listener);
-            List keys = createKeysFromFilter(null, filter);
-            Iterator iterator = keys.iterator();
-            while (iterator.hasNext()) {
-                String key = (String) iterator.next();
-                
-                boolean result = filter != null;
-                if (result) {
-                    List /* <ServiceListener> */ listeners = (List) m_keyToListenersMap.get(key);
-                    if (listeners != null) {
-                        listeners.remove(listener);
-                    }
-                    // TODO actually, if listeners == null that would be strange....
-                }
+            if (filter != null) {
+            	// the listener does exist
+            	List keys = createKeysFromFilter(null, filter);
+            	Iterator iterator = keys.iterator();
+            	while (iterator.hasNext()) {
+            		String key = (String) iterator.next();
+            		
+            		boolean result = filter != null;
+            		if (result) {
+            			List /* <ServiceListener> */ listeners = (List) m_keyToListenersMap.get(key);
+            			if (listeners != null) {
+            				listeners.remove(listener);
+            			}
+            			// TODO actually, if listeners == null that would be strange....
+            		}
+            	}
             }
         }
     }

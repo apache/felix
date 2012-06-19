@@ -172,12 +172,15 @@ public class AdapterFilterIndex implements FilterIndex, ServiceTrackerCustomizer
     public void removeServiceListener(ServiceListener listener) {
         synchronized (m_sidToListenersMap) {
             String filter = (String) m_listenerToFilterMap.remove(listener);
-            FilterData data = getFilterData(null, filter);
-            if (data != null) {
-            	Long sidObject = Long.valueOf(data.serviceId);
-            	List /* ServiceListener */ listeners = (List) m_sidToListenersMap.get(sidObject);
-            	if (listeners != null) {
-            		listeners.remove(listener);
+            if (filter != null) {
+            	// the listener does exist
+            	FilterData data = getFilterData(null, filter);
+            	if (data != null) {
+            		Long sidObject = Long.valueOf(data.serviceId);
+            		List /* ServiceListener */ listeners = (List) m_sidToListenersMap.get(sidObject);
+            		if (listeners != null) {
+            			listeners.remove(listener);
+            		}
             	}
             }
         }

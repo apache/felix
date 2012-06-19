@@ -169,4 +169,8 @@ public class ServiceRegistryCache implements ServiceListener/*, CommandProvider*
         sb.append("]");
         return sb.toString();
     }
+
+	public List getFilterIndices() {
+		return m_filterIndexList;
+	}
 }
