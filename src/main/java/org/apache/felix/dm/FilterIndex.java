@@ -42,6 +42,6 @@ public interface FilterIndex {
     public void serviceChanged(ServiceEvent event);
     /** Adds a service listener to this filter index. */
     public void addServiceListener(ServiceListener listener, String filter);
-    /** Removes a service listener from this filter index. */
+    /** Removes a service listener from this filter index. If the listener is not present in the filter index, this method does nothing. */
     public void removeServiceListener(ServiceListener listener);
 }
