@@ -87,10 +87,15 @@
             <version>4.1.0</version>
             <scope>provided</scope>
         </dependency>
+        
+        <!--
+            Configuration Admin and other API from latest enterprise
+            which provides Config Admin 1.5 API
+        -->
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.3.0</version>
+            <artifactId>org.osgi.enterprise</artifactId>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
 
