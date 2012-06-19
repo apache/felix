@@ -64,13 +64,13 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
     }
 
     public void removeServiceListener(ServiceListener listener) {
-        FilterIndex filterIndex = m_cache.hasFilterIndexFor(null, null);
-        if (filterIndex != null) {
-            filterIndex.removeServiceListener(listener);
-        }
-        else {
-            m_context.removeServiceListener(listener);
-        }
+    	// remove servicelistener. although it would be prettier to find the correct filterindex first it's
+    	// probaby faster to do a brute force removal.
+    	Iterator filterIndexIterator = m_cache.getFilterIndices().iterator();
+    	while (filterIndexIterator.hasNext()) {
+    		((FilterIndex) filterIndexIterator.next()).removeServiceListener(listener);
+    	}
+    	m_context.removeServiceListener(listener);
     }
 
     public ServiceReference[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
