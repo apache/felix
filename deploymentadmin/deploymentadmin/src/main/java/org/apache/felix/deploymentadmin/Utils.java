@@ -106,18 +106,6 @@ public class Utils {
         return result;
     }
 
-
-    public static void delete(File target) {
-        // TODO merge with #delete(File, boolean)?!
-        if (target.isDirectory()) {
-            File[] childs = target.listFiles();
-            for (int i = 0; i < childs.length; i++) {
-                delete(childs[i]);
-            }
-        }
-        target.delete();
-    }
-
     public static boolean rename(File from, File to) {
         if (!from.renameTo(to)) {
             if (copy(from, to)) {
@@ -132,7 +120,7 @@ public class Utils {
         return true;
     }
 
-    private static boolean delete(File root, boolean deleteRoot) {
+    public static boolean delete(File root, boolean deleteRoot) {
         boolean result = true;
         if (root.isDirectory()) {
             File[] files = root.listFiles();

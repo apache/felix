@@ -272,7 +272,10 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
         }
         finally {
             if (tempPackage != null) {
-                Utils.delete(tempPackage);
+                if (!Utils.delete(tempPackage, true)) {
+                	m_log.log(LogService.LOG_ERROR, "Could not delete temporary deployment package from disk");
+                	succeeded = false;
+                }
             }
         	if (source != null) {
         	    sendCompleteEvent(source, target, succeeded);
@@ -353,7 +356,10 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
             }
 
             File targetPackage = m_context.getDataFile(PACKAGE_DIR + File.separator + source.getName());
-            Utils.delete(targetPackage);
+            if (!Utils.delete(targetPackage, true)) {
+            	m_log.log(LogService.LOG_ERROR, "Could not delete deployment package from disk");
+            	throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not delete deployment package from disk");
+            }
             
             m_packages.remove(dp.getName());
 
