@@ -18,6 +18,8 @@
  */
 package org.apache.felix.deploymentadmin;
 
+import org.osgi.service.deploymentadmin.DeploymentPackage;
+
 public interface Constants extends org.osgi.framework.Constants {
 
     // manifest main attribute header constants
@@ -34,7 +36,11 @@ public interface Constants extends org.osgi.framework.Constants {
     public static final String EVENTTOPIC_INSTALL = "org/osgi/service/deployment/INSTALL";
     public static final String EVENTTOPIC_UNINSTALL = "org/osgi/service/deployment/UNINSTALL";
     public static final String EVENTTOPIC_COMPLETE = "org/osgi/service/deployment/COMPLETE";
-    public static final String EVENTPROPERTY_DEPLOYMENTPACKAGE_NAME = "deploymentpackage.name";
+    
+    public static final String EVENTPROPERTY_DEPLOYMENTPACKAGE_NAME = DeploymentPackage.EVENT_DEPLOYMENTPACKAGE_NAME;
+    public static final String EVENTPROPERTY_DEPLOYMENTPACKAGE_READABLENAME = DeploymentPackage.EVENT_DEPLOYMENTPACKAGE_READABLENAME;
+    public static final String EVENTPROPERTY_DEPLOYMENTPACKAGE_CURRENTVERSION = DeploymentPackage.EVENT_DEPLOYMENTPACKAGE_CURRENTVERSION;
+    public static final String EVENTPROPERTY_DEPLOYMENTPACKAGE_NEXTVERSION = DeploymentPackage.EVENT_DEPLOYMENTPACKAGE_NEXTVERSION;
     public static final String EVENTPROPERTY_SUCCESSFUL = "successful";
 
     // miscellaneous constants

@@ -65,7 +65,7 @@ public class ProcessResourceCommand extends Command {
         AbstractInfo[] resourceInfos = (AbstractInfo[]) source.getResourceInfos();
         for (int i = 0; i < resourceInfos.length; i++) {
             AbstractInfo resourceInfo = resourceInfos[i];
-            if(!resourceInfo.isMissing()) {
+            if (!resourceInfo.isMissing()) {
                 expectedResources.put(resourceInfo.getPath(), resourceInfo);
             }
         }
@@ -100,7 +100,7 @@ public class ProcessResourceCommand extends Command {
                             }
                             catch (ResourceProcessorException rpe) {
                                 if (rpe.getCode() == ResourceProcessorException.CODE_RESOURCE_SHARING_VIOLATION) {
-                                    throw new DeploymentException(DeploymentException.CODE_RESOURCE_SHARING_VIOLATION, "Violation while processing resource '" + name + "'", rpe);
+                                    throw new DeploymentException(DeploymentException.CODE_RESOURCE_SHARING_VIOLATION, "Sharing violation while processing resource '" + name + "'", rpe);
                                 }
                                 else {
                                     throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Error while processing resource '" + name + "'", rpe);

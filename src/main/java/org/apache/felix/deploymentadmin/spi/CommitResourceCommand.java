@@ -43,6 +43,14 @@ public class CommitResourceCommand extends Command {
             }
             catch (ResourceProcessorException e) {
                 session.getLog().log(LogService.LOG_ERROR, "Preparing commit for resource processor failed", e);
+                // Check what error code we got...
+                if (e.getCode() == ResourceProcessorException.CODE_PREPARE) {
+                    throw new DeploymentException(DeploymentException.CODE_COMMIT_ERROR, "Preparing commit for resource processor failed!", e);
+                }
+                throw new DeploymentException(e.getCode(), "Preparing commit for resource processor failed!", e);
+            }
+            catch (Exception e) {
+                session.getLog().log(LogService.LOG_ERROR, "Preparing commit for resource processor failed", e);
                 throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Preparing commit for resource processor failed", e);
             }
         }
