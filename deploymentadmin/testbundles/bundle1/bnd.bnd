@@ -1,0 +1,5 @@
+Bundle-Version: 1.0.0
+Bundle-SymbolicName: testbundles.bundle1
+Bundle-Activator: org.apache.felix.deploymentadmin.test.bundle1.impl.Activator
+Private-Package: org.apache.felix.deploymentadmin.test.bundle1.impl
+Export-Package: org.apache.felix.deploymentadmin.test.bundle1

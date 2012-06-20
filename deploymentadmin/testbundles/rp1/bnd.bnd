@@ -1,0 +1,6 @@
+Bundle-Version: 1.0.0
+Bundle-SymbolicName: testbundles.rp1
+Bundle-Activator: org.apache.felix.deploymentadmin.test.rp1.impl.Activator
+Private-Package: org.apache.felix.deploymentadmin.test.rp1.impl
+DeploymentPackage-Customizer: true
+Deployment-ProvidesResourceProcessor: org.apache.felix.deploymentadmin.test.rp1

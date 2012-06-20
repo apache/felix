@@ -1,0 +1,12 @@
+<MetaData xmlns='http://www.osgi.org/xmlns/metatype/v1.0.0'>
+	<OCD name='ocd' id='ocd'>
+		<AD id='default_group' type='STRING' cardinality='0' />
+	</OCD>
+	<Designate pid='test.service.pid' bundle="osgi-dp:adele.openid.manager">
+		<Object ocdref='ocd'>
+			<Attribute adref='default_group'>
+				<Value><![CDATA[openidusers]]></Value>
+			</Attribute>
+		</Object>
+	</Designate>
+</MetaData>

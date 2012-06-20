@@ -91,8 +91,11 @@ public class UpdateCommand extends Command {
                     }
                     throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not install new bundle '" + name + "'", be);
                 }
-                if (!bundle.getSymbolicName().equals(bundleInfo.getSymbolicName()) || !Version.parseVersion((String) bundle.getHeaders().get(org.osgi.framework.Constants.BUNDLE_VERSION)).equals(bundleInfo.getVersion())) {
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Installed/updated bundle version and/or symbolicnames do not match what was installed/updated");
+                if (!bundle.getSymbolicName().equals(bundleInfo.getSymbolicName())) {
+                    throw new DeploymentException(DeploymentException.CODE_BUNDLE_NAME_ERROR, "Installed/updated bundle symbolicname do not match what was installed/updated");
+                }
+                if (!Version.parseVersion((String) bundle.getHeaders().get(org.osgi.framework.Constants.BUNDLE_VERSION)).equals(bundleInfo.getVersion())) {
+                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Installed/updated bundle version do not match what was installed/updated");
                 }
             }
         }

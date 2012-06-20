@@ -1,0 +1,6 @@
+Bundle-Version: 1.0.0
+Bundle-SymbolicName: testbundles.bundle2
+Bundle-Activator: org.apache.felix.deploymentadmin.test.bundle2.impl.Activator
+Private-Package: org.apache.felix.deploymentadmin.test.bundle2.impl
+Import-Package: org.apache.felix.deploymentadmin.test.bundle1, org.osgi.framework, org.osgi.util.tracker, *
+

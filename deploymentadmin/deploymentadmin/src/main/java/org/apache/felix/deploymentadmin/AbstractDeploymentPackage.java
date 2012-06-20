@@ -146,10 +146,14 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
         if (isStale()) {
             throw new IllegalStateException("Can not get bundle from stale deployment package.");
         }
-        if (m_nameToBundleInfo.containsKey(symbolicName)) {
+        
+        BundleInfo bundleInfo = (BundleInfo) m_nameToBundleInfo.get(symbolicName);
+        if (bundleInfo != null) {
+            Version version = bundleInfo.getVersion();
+
             Bundle[] bundles = m_bundleContext.getBundles();
             for (int i = 0; i < bundles.length; i++) {
-                if (symbolicName.equals(bundles[i].getSymbolicName())) {
+                if (symbolicName.equals(bundles[i].getSymbolicName()) && version.equals(bundles[i].getVersion())) {
                     return bundles[i];
                 }
             }
@@ -272,6 +276,14 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
         return m_isStale;
     }
     
+    /**
+     * @return <code>true</code> if this package is actually an empty package used for 
+     *         installing new deployment packages, <code>false</code> otherwise.
+     */
+    public boolean isNew() {
+        return this == EMPTY_PACKAGE;
+    }
+    
     public void setStale(boolean isStale) {
         m_isStale = isStale;
     }
@@ -280,12 +292,23 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
         if (isStale()) {
             throw new IllegalStateException("Deployment package is stale, cannot uninstall.");
         }
-        m_deploymentAdmin.uninstallDeploymentPackage(this);
-        setStale(true);
+        try {
+            m_deploymentAdmin.uninstallDeploymentPackage(this, false /* force */);
+        } finally {
+            setStale(true);
+        }
     }
 
     public boolean uninstallForced() throws DeploymentException {
-        throw new IllegalStateException("Not implemented, use uninstall() for now.");
+        if (isStale()) {
+            throw new IllegalStateException("Deployment package is stale, cannot uninstall.");
+        }
+        try {
+            m_deploymentAdmin.uninstallDeploymentPackage(this, true /* force */);
+        } finally {
+            setStale(true);
+        }
+        return true;
     }
 
     /**

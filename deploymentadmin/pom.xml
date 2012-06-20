@@ -32,5 +32,7 @@ under the License.
     <modules>
         <module>deploymentadmin</module>
         <module>autoconf</module>
+        <module>testbundles</module>
+        <module>itest</module>
     </modules>
 </project>
