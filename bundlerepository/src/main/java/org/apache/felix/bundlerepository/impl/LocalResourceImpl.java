@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.felix.bundlerepository.Capability;
+import org.apache.felix.bundlerepository.Resource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -68,6 +69,11 @@ public class LocalResourceImpl extends ResourceImpl
         // For the system bundle, add a special platform capability.
         if (m_bundle.getBundleId() == 0)
         {
+            // add the alias bundle symbolic name "system.bundle"
+            CapabilityImpl sysBundleCap = new CapabilityImpl(Capability.BUNDLE);
+            sysBundleCap.addProperty(Resource.SYMBOLIC_NAME, Constants.SYSTEM_BUNDLE_SYMBOLICNAME);
+            addCapability(sysBundleCap);
+
             // set the execution environment(s) as Capability ee of the
             // system bundle to resolve bundles with specific requirements
             String ee = m_bundle.getBundleContext().getProperty(Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
