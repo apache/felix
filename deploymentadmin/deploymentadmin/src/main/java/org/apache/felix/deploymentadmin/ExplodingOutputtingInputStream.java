@@ -151,7 +151,7 @@ class ExplodingOutputtingInputStream extends OutputtingInputStream {
             
             Exception exception = m_task.m_exception;
             if (exception != null) {
-                throw new IOException(exception);
+                throw (IOException) new IOException("Exception while processing the stream in the background: " + exception.getMessage()).initCause(exception);
             }
         }
         finally {
