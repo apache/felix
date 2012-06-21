@@ -18,11 +18,7 @@
  */
 package org.apache.felix.ipojo.handlers.configuration;
 
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.HandlerFactory;
@@ -223,7 +219,16 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         // Check if the component is dynamically configurable
         // Propagation enabled by default.
         m_mustPropagate = true;
-        m_toPropagate = configuration; // Instance configuration to propagate.
+        // We must create a copy as the Config Admin dictionary has some limitation
+        m_toPropagate = new Properties();
+        if (configuration != null) {
+            Enumeration keys = configuration.keys();
+            while (keys.hasMoreElements()) {
+                String key = (String) keys.nextElement();
+                m_toPropagate.put(key, configuration.get(key));
+            }
+        }
+
         String propa = confs[0].getAttribute("propagation");
         if (propa != null && propa.equalsIgnoreCase("false")) {
             m_mustPropagate = false;
