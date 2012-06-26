@@ -27,11 +27,11 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Main</name>
   <artifactId>org.apache.felix.main</artifactId>
-  <version>4.0.2</version>
+  <version>4.0.3-RC</version>
     <scm>
-      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-4.0.2</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-4.0.2</developerConnection>
-      <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-4.0.2</url>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/main</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/main</developerConnection>
+      <url>http://svn.apache.org/repos/asf/felix/main</url>
     </scm>
   <dependencies>
     <dependency>
@@ -43,7 +43,7 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <framework.version>4.0.2</framework.version>
+    <framework.version>4.0.3-RC</framework.version>
     <gogo.runtime.version>0.10.0</gogo.runtime.version>
     <gogo.shell.version>0.10.0</gogo.shell.version>
     <gogo.command.version>0.12.0</gogo.command.version>
@@ -75,7 +75,7 @@
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
             <Embed-Dependency>*;artifactId=org.apache.felix.framework;inline=true</Embed-Dependency>
             <Private-Package>org.apache.felix.main.*</Private-Package>
-            <Export-Package>!org.osgi.service.log, !org.osgi.service.obr,org.osgi.*</Export-Package>
+            <Export-Package>!org.osgi.service.log, !org.osgi.service.obr, org.osgi.*</Export-Package>
             <Import-Package>!*</Import-Package>
           </instructions>
         </configuration>
