@@ -1208,7 +1208,11 @@ public class ResolverImpl implements Resolver
         Candidates allCandidates, BundleRequirement req, List<Candidates> permutations)
     {
         SortedSet<BundleCapability> candidates = allCandidates.getCandidates(req);
-        if (candidates.size() > 1)
+        // We can only permutate if there is more than one candidate; otherwise,
+        // don't bother. We check for null candidates since during a dynamic import
+        // the importing revision's previously resolved requirements will not have
+        // populated candidates. In all other cases, it should not be null.
+        if ((candidates != null) && (candidates.size() > 1))
         {
             Candidates perm = allCandidates.copy();
             candidates = perm.getCandidates(req);
@@ -1223,7 +1227,11 @@ public class ResolverImpl implements Resolver
         Candidates allCandidates, BundleRequirement req, List<Candidates> permutations)
     {
         SortedSet<BundleCapability> candidates = allCandidates.getCandidates(req);
-        if (candidates.size() > 1)
+        // We can only permutate if there is more than one candidate; otherwise,
+        // don't bother. We check for null candidates since during a dynamic import
+        // the importing revision's previously resolved requirements will not have
+        // populated candidates. In all other cases, it should not be null.
+        if ((candidates != null) && (candidates.size() > 1))
         {
             // Check existing permutations to make sure we haven't
             // already permutated this requirement. This check for
