@@ -1,2 +1,2 @@
-modified=${currenttime}
-version=${Bundle-Version}
+version = ${Bundle-Version}
+lastmodified = ${now}

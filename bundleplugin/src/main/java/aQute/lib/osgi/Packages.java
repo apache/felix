@@ -35,7 +35,7 @@ public class Packages implements Map<PackageRef,Attrs> {
 		if (map == null)
 			return false;
 
-		return map.containsKey((PackageRef) name);
+		return map.containsKey(name);
 	}
 
 	public boolean containsValue(Attrs value) {
@@ -51,7 +51,7 @@ public class Packages implements Map<PackageRef,Attrs> {
 		if (map == null)
 			return false;
 
-		return map.containsValue((Attrs) value);
+		return map.containsValue(value);
 	}
 
 	public Set<java.util.Map.Entry<PackageRef,Attrs>> entrySet() {
@@ -67,7 +67,7 @@ public class Packages implements Map<PackageRef,Attrs> {
 		if (map == null)
 			return null;
 
-		return map.get((PackageRef) key);
+		return map.get(key);
 	}
 
 	public Attrs get(PackageRef key) {
@@ -106,11 +106,11 @@ public class Packages implements Map<PackageRef,Attrs> {
 	}
 
 	public void putAll(Map< ? extends PackageRef, ? extends Attrs> map) {
-		if (this.map == null)
+		if (this.map == null) {
 			if (map.isEmpty())
 				return;
-			else
-				this.map = new LinkedHashMap<PackageRef,Attrs>();
+			this.map = new LinkedHashMap<PackageRef,Attrs>();
+		}
 		this.map.putAll(map);
 	}
 
@@ -127,7 +127,7 @@ public class Packages implements Map<PackageRef,Attrs> {
 		if (map == null)
 			return null;
 
-		return map.remove((PackageRef) var0);
+		return map.remove(var0);
 	}
 
 	public Attrs remove(PackageRef var0) {

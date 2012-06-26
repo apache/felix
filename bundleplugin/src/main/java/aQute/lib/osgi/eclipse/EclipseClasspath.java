@@ -50,7 +50,7 @@ public class EclipseClasspath {
 	 * @throws IOException
 	 */
 
-	public EclipseClasspath(Reporter reporter, File workspace, File project, int options) throws Exception {
+	public EclipseClasspath(Reporter reporter, File workspace, File project, @SuppressWarnings("unused") int options) throws Exception {
 		this.project = project.getCanonicalFile();
 		this.workspace = workspace.getCanonicalFile();
 		this.reporter = reporter;
@@ -184,8 +184,8 @@ public class EclipseClasspath {
 				File b = new File(base);
 				File f = new File(b, remainder.replace('/', File.separatorChar));
 				return f;
-			} else
-				reporter.error("Can't find replacement variable for: " + path);
+			}
+			reporter.error("Can't find replacement variable for: " + path);
 		} else
 			reporter.error("Cant split variable path: " + path);
 		return null;

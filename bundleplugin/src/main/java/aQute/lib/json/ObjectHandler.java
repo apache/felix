@@ -11,7 +11,7 @@ public class ObjectHandler extends Handler {
 	final Object	defaults[];
 	final Field		extra;
 
-	ObjectHandler(JSONCodec codec, Class< ? > c) throws Exception {
+	ObjectHandler(@SuppressWarnings("unused") JSONCodec codec, Class< ? > c) throws Exception {
 		rawClass = c;
 		fields = c.getFields();
 
@@ -74,7 +74,6 @@ public class ObjectHandler extends Handler {
 		app.append("}");
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	Object decodeObject(Decoder r) throws Exception {
 		assert r.current() == '{';

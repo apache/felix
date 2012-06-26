@@ -169,11 +169,11 @@ public class ServiceComponent implements AnalyzerPlugin {
 			Collection<Clazz> not = analyzer.getClasses("", QUERY.NAMED.toString(), name //
 					);
 
-			if (not.isEmpty())
+			if (not.isEmpty()) {
 				if ("*".equals(name))
 					return not;
-				else
-					error("Specified %s but could not find any class matching this pattern", name);
+				error("Specified %s but could not find any class matching this pattern", name);
+			}
 
 			for (Clazz c : not) {
 				if (c.getFormat().hasAnnotations())
@@ -432,7 +432,7 @@ public class ServiceComponent implements AnalyzerPlugin {
 		 * @param pw
 		 * @param provides
 		 */
-		void provide(PrintWriter pw, String provides, boolean servicefactory, String impl) {
+		void provide(PrintWriter pw, String provides, boolean servicefactory, @SuppressWarnings("unused") String impl) {
 			if (provides != null) {
 				if (!servicefactory)
 					pw.println("  <service>");

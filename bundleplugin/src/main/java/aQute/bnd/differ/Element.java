@@ -97,8 +97,7 @@ class Element implements Tree {
 	public int compareTo(Tree other) {
 		if (type == other.getType())
 			return name.compareTo(other.getName());
-		else
-			return type.compareTo(other.getType());
+		return type.compareTo(other.getType());
 	}
 
 	public boolean equals(Object other) {
@@ -125,7 +124,7 @@ class Element implements Tree {
 	}
 
 	public Diff diff(Tree older) {
-		return new DiffImpl(this, (Element) older);
+		return new DiffImpl(this, older);
 	}
 
 	public Element get(String name) {

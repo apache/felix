@@ -247,7 +247,7 @@ public class Builder extends Analyzer {
 		changedFile(f);
 	}
 
-	protected void changedFile(File f) {}
+	protected void changedFile(@SuppressWarnings("unused") File f) {}
 
 	/**
 	 * Sign the jar file. -sign : <alias> [ ';' 'password:=' <password> ] [ ';'
@@ -256,7 +256,7 @@ public class Builder extends Analyzer {
 	 * @return
 	 */
 
-	void sign(Jar jar) throws Exception {
+	void sign(@SuppressWarnings("unused") Jar jar) throws Exception {
 		String signing = getProperty("-sign");
 		if (signing == null)
 			return;
@@ -283,6 +283,7 @@ public class Builder extends Analyzer {
 		Parameters conditionals = getParameters(CONDITIONAL_PACKAGE);
 		if (conditionals.isEmpty())
 			return null;
+		trace("do Conditional Package %s", conditionals);
 		Instructions instructions = new Instructions(conditionals);
 
 		Collection<PackageRef> referred = instructions.select(getReferred().keySet(), false);
@@ -294,7 +295,10 @@ public class Builder extends Analyzer {
 			for (Jar cpe : getClasspath()) {
 				Map<String,Resource> map = cpe.getDirectories().get(pref.getPath());
 				if (map != null) {
-					jar.addDirectory(map, false);
+					copy(jar, cpe, pref.getPath(), false);
+// Now use copy so that bnd.info is processed, next line should be 
+// removed in the future TODO
+//					jar.addDirectory(map, false);
 					break;
 				}
 			}
@@ -429,7 +433,7 @@ public class Builder extends Analyzer {
 		return sourcePath;
 	}
 
-	private void doVerify(Jar dot) throws Exception {
+	private void doVerify(@SuppressWarnings("unused") Jar dot) throws Exception {
 		Verifier verifier = new Verifier(this);
 		// Give the verifier the benefit of our analysis
 		// prevents parsing the files twice
@@ -608,8 +612,18 @@ public class Builder extends Analyzer {
 	 * @param overwriteResource
 	 */
 	private void copy(Jar dest, Jar srce, String path, boolean overwrite) {
+		trace("copy d=" + dest + " s=" + srce +" p="+ path);
 		dest.copy(srce, path, overwrite);
-
+		
+		// bnd.info sources must be preprocessed
+		String bndInfoPath = path + "/bnd.info";
+		Resource r = dest.getResource(bndInfoPath);
+		if ( r != null && !(r instanceof PreprocessResource)) {
+			trace("preprocessing bnd.info");
+			PreprocessResource pp = new PreprocessResource(this, r);
+			dest.putResource(bndInfoPath, pp);
+		}
+		
 		if (hasSources()) {
 			String srcPath = "OSGI-OPT/src/" + path;
 			Map<String,Resource> srcContents = srce.getDirectories().get(srcPath);
@@ -926,7 +940,7 @@ public class Builder extends Analyzer {
 		}
 	}
 
-	private void noSuchFile(Jar jar, String clause, Map<String,String> extra, String source, String destinationPath)
+	private void noSuchFile(Jar jar, @SuppressWarnings("unused") String clause, Map<String,String> extra, String source, String destinationPath)
 			throws Exception {
 		Jar src = getJarFromName(source, "Include-Resource " + source);
 		if (src != null) {
@@ -1398,7 +1412,7 @@ public class Builder extends Analyzer {
 	 * @throws Exception
 	 */
 
-	public void doDiff(Jar dot) throws Exception {
+	public void doDiff(@SuppressWarnings("unused") Jar dot) throws Exception {
 		Parameters diffs = parseHeader(getProperty("-diff"));
 		if (diffs.isEmpty())
 			return;
