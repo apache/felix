@@ -190,8 +190,7 @@ public class Macro implements Replacer {
 			Processor parent = source.start.getParent();
 			if (parent != null)
 				return parent.getProperty(varname);
-			else
-				return null;
+			return null;
 		}
 
 		Processor rover = domain;
@@ -262,11 +261,11 @@ public class Macro implements Replacer {
 		return Processor.join(set, ",");
 	}
 
-	public String _pathseparator(String args[]) {
+	public String _pathseparator(@SuppressWarnings("unused") String args[]) {
 		return File.pathSeparator;
 	}
 
-	public String _separator(String args[]) {
+	public String _separator(@SuppressWarnings("unused") String args[]) {
 		return File.separator;
 	}
 
@@ -331,11 +330,10 @@ public class Macro implements Replacer {
 
 		if (args.length > 3)
 			return args[3];
-		else
-			return "";
+		return "";
 	}
 
-	public String _now(String args[]) {
+	public String _now(@SuppressWarnings("unused") String args[]) {
 		return new Date().toString();
 	}
 
@@ -476,19 +474,18 @@ public class Macro implements Replacer {
 		if (args.length < 2) {
 			domain.warning("Need at least one file name for ${dir;...}");
 			return null;
-		} else {
-			String del = "";
-			StringBuilder sb = new StringBuilder();
-			for (int i = 1; i < args.length; i++) {
-				File f = domain.getFile(args[i]);
-				if (f.exists() && f.getParentFile().exists()) {
-					sb.append(del);
-					sb.append(f.getParentFile().getAbsolutePath());
-					del = ",";
-				}
-			}
-			return sb.toString();
 		}
+		String del = "";
+		StringBuilder sb = new StringBuilder();
+		for (int i = 1; i < args.length; i++) {
+			File f = domain.getFile(args[i]);
+			if (f.exists() && f.getParentFile().exists()) {
+				sb.append(del);
+				sb.append(f.getParentFile().getAbsolutePath());
+				del = ",";
+			}
+		}
+		return sb.toString();
 
 	}
 
@@ -496,19 +493,18 @@ public class Macro implements Replacer {
 		if (args.length < 2) {
 			domain.warning("Need at least one file name for ${basename;...}");
 			return null;
-		} else {
-			String del = "";
-			StringBuilder sb = new StringBuilder();
-			for (int i = 1; i < args.length; i++) {
-				File f = domain.getFile(args[i]);
-				if (f.exists() && f.getParentFile().exists()) {
-					sb.append(del);
-					sb.append(f.getName());
-					del = ",";
-				}
-			}
-			return sb.toString();
 		}
+		String del = "";
+		StringBuilder sb = new StringBuilder();
+		for (int i = 1; i < args.length; i++) {
+			File f = domain.getFile(args[i]);
+			if (f.exists() && f.getParentFile().exists()) {
+				sb.append(del);
+				sb.append(f.getName());
+				del = ",";
+			}
+		}
+		return sb.toString();
 
 	}
 
@@ -516,14 +512,13 @@ public class Macro implements Replacer {
 		if (args.length < 2) {
 			domain.warning("Need at least one file name for ${isfile;...}");
 			return null;
-		} else {
-			boolean isfile = true;
-			for (int i = 1; i < args.length; i++) {
-				File f = new File(args[i]).getAbsoluteFile();
-				isfile &= f.isFile();
-			}
-			return isfile ? "true" : "false";
 		}
+		boolean isfile = true;
+		for (int i = 1; i < args.length; i++) {
+			File f = new File(args[i]).getAbsoluteFile();
+			isfile &= f.isFile();
+		}
+		return isfile ? "true" : "false";
 
 	}
 
@@ -531,14 +526,13 @@ public class Macro implements Replacer {
 		if (args.length < 2) {
 			domain.warning("Need at least one file name for ${isdir;...}");
 			return null;
-		} else {
-			boolean isdir = true;
-			for (int i = 1; i < args.length; i++) {
-				File f = new File(args[i]).getAbsoluteFile();
-				isdir &= f.isDirectory();
-			}
-			return isdir ? "true" : "false";
 		}
+		boolean isdir = true;
+		for (int i = 1; i < args.length; i++) {
+			File f = new File(args[i]).getAbsoluteFile();
+			isdir &= f.isDirectory();
+		}
+		return isdir ? "true" : "false";
 
 	}
 
@@ -611,7 +605,7 @@ public class Macro implements Replacer {
 		return Processor.join(result, ",");
 	}
 
-	public String _currenttime(String args[]) {
+	public String _currenttime(@SuppressWarnings("unused") String args[]) {
 		return Long.toString(System.currentTimeMillis());
 	}
 
@@ -849,7 +843,7 @@ public class Macro implements Replacer {
 		}
 	}
 
-	public static void verifyCommand(String args[], String help, Pattern[] patterns, int low, int high) {
+	public static void verifyCommand(String args[], @SuppressWarnings("unused") String help, Pattern[] patterns, int low, int high) {
 		String message = "";
 		if (args.length > high) {
 			message = "too many arguments";

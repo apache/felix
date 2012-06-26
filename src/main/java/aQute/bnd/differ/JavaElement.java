@@ -297,12 +297,11 @@ class JavaElement {
 					Clazz c = analyzer.findClass(name);
 					if (c == null) {
 						return "Cannot load " + name;
-					} else {
-						Element s = classElement(c);
-						for (Element child : s.children) {
-							if (INHERITED.contains(child.type) && !child.name.startsWith("<")) {
-								members.add(child);
-							}
+					}
+					Element s = classElement(c);
+					for (Element child : s.children) {
+						if (INHERITED.contains(child.type) && !child.name.startsWith("<")) {
+							members.add(child);
 						}
 					}
 				}
@@ -629,7 +628,7 @@ class JavaElement {
 		elements.addAll(set);
 	}
 
-	private static void access(Collection<Element> children, int access, boolean deprecated) {
+	private static void access(Collection<Element> children, int access, @SuppressWarnings("unused") boolean deprecated) {
 		if (!isPublic(access))
 			children.add(PROTECTED);
 		if (isAbstract(access))

@@ -48,7 +48,7 @@ public class Instructions implements Map<Instruction,Attrs> {
 		if (map == null)
 			return false;
 
-		return map.containsKey((Instruction) name);
+		return map.containsKey(name);
 	}
 
 	public boolean containsValue(Attrs value) {
@@ -64,7 +64,7 @@ public class Instructions implements Map<Instruction,Attrs> {
 		if (map == null)
 			return false;
 
-		return map.containsValue((Attrs) value);
+		return map.containsValue(value);
 	}
 
 	public Set<java.util.Map.Entry<Instruction,Attrs>> entrySet() {
@@ -80,7 +80,7 @@ public class Instructions implements Map<Instruction,Attrs> {
 		if (map == null)
 			return null;
 
-		return map.get((Instruction) key);
+		return map.get(key);
 	}
 
 	public Attrs get(Instruction key) {
@@ -109,11 +109,11 @@ public class Instructions implements Map<Instruction,Attrs> {
 	}
 
 	public void putAll(Map< ? extends Instruction, ? extends Attrs> map) {
-		if (this.map == null)
+		if (this.map == null) {
 			if (map.isEmpty())
 				return;
-			else
-				this.map = new LinkedHashMap<Instruction,Attrs>();
+			this.map = new LinkedHashMap<Instruction,Attrs>();
+		}
 		this.map.putAll(map);
 	}
 
@@ -123,7 +123,7 @@ public class Instructions implements Map<Instruction,Attrs> {
 		if (map == null)
 			return null;
 
-		return map.remove((Instruction) var0);
+		return map.remove(var0);
 	}
 
 	public Attrs remove(Instruction var0) {
@@ -212,8 +212,7 @@ public class Instructions implements Map<Instruction,Attrs> {
 			if (i.matches(value)) {
 				if (i.isNegated())
 					return false; // we deny this one explicitly
-				else
-					return true; // we allow it explicitly
+				return true; // we allow it explicitly
 			}
 		}
 		return false;

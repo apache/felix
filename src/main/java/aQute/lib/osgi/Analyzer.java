@@ -47,7 +47,7 @@ import aQute.libg.version.Version;
 
 public class Analyzer extends Processor {
 	private final SortedSet<Clazz.JAVA>				ees						= new TreeSet<Clazz.JAVA>();
-	static Manifest									bndInfo;
+	static Properties								bndInfo;
 
 	// Bundle parameters
 	private Jar										dot;
@@ -139,7 +139,7 @@ public class Analyzer extends Processor {
 				for (String dir : current.getDirectories().keySet()) {
 					PackageRef packageRef = getPackageRef(dir);
 					Resource resource = current.getResource(dir + "/packageinfo");
-					setPackageInfo(packageRef, resource, classpathExports);
+					getExportVersionsFromPackageInfo(packageRef, resource, classpathExports);
 				}
 			}
 
@@ -149,6 +149,7 @@ public class Analyzer extends Processor {
 			if (s != null) {
 				activator = getTypeRefFromFQN(s);
 				referTo(activator);
+				trace("activator %s %s", s, activator);
 			}
 
 			// Execute any plugins
@@ -560,7 +561,7 @@ public class Analyzer extends Processor {
 		return value.trim();
 	}
 
-	public String _bsn(String args[]) {
+	public String _bsn(@SuppressWarnings("unused") String args[]) {
 		return getBsn();
 	}
 
@@ -643,11 +644,11 @@ public class Analyzer extends Processor {
 	 * @return version or unknown.
 	 */
 	public String getBndVersion() {
-		return getBndInfo("Bundle-Version", "<unknown>");
+		return getBndInfo("version", "<unknown>");
 	}
 
 	public long getBndLastModified() {
-		String time = getBndInfo("Bnd-LastModified", "0");
+		String time = getBndInfo("lastmodified", "0");
 		try {
 			return Long.parseLong(time);
 		}
@@ -660,13 +661,25 @@ public class Analyzer extends Processor {
 	public String getBndInfo(String key, String defaultValue) {
 		if (bndInfo == null) {
 			try {
-				bndInfo = new Manifest(getClass().getResourceAsStream("META-INF/MANIFEST.MF"));
+				Properties bndInfoLocal = new Properties();
+				URL url = Analyzer.class.getResource("bnd.info");
+				if (url != null) {
+					InputStream in = url.openStream();
+					try {
+						bndInfoLocal.load(in);
+					}
+					finally {
+						in.close();
+					}
+				}
+				bndInfo = bndInfoLocal;
 			}
 			catch (Exception e) {
+				e.printStackTrace();
 				return defaultValue;
 			}
 		}
-		String value = bndInfo.getMainAttributes().getValue(key);
+		String value = bndInfo.getProperty(key);
 		if (value == null)
 			return defaultValue;
 		return value;
@@ -1345,38 +1358,43 @@ public class Analyzer extends Processor {
 	 * @param value
 	 * @throws Exception
 	 */
-	void setPackageInfo(PackageRef packageRef, Resource r, Packages classpathExports) throws Exception {
+	void getExportVersionsFromPackageInfo(PackageRef packageRef, Resource r, Packages classpathExports) throws Exception {
 		if (r == null)
 			return;
 
 		Properties p = new Properties();
-		InputStream in = r.openInputStream();
 		try {
-			p.load(in);
-		}
-		finally {
-			in.close();
-		}
-		Attrs map = classpathExports.get(packageRef);
-		if (map == null) {
-			classpathExports.put(packageRef, map = new Attrs());
-		}
-		for (Enumeration<String> t = (Enumeration<String>) p.propertyNames(); t.hasMoreElements();) {
-			String key = t.nextElement();
-			String value = map.get(key);
-			if (value == null) {
-				value = p.getProperty(key);
-
-				// Messy, to allow directives we need to
-				// allow the value to start with a ':' since we cannot
-				// encode this in a property name
-
-				if (value.startsWith(":")) {
-					key = key + ":";
-					value = value.substring(1);
-				}
-				map.put(key, value);
+			InputStream in = r.openInputStream();
+			try {
+				p.load(in);
 			}
+			finally {
+				in.close();
+			}
+			Attrs map = classpathExports.get(packageRef);
+			if (map == null) {
+				classpathExports.put(packageRef, map = new Attrs());
+			}
+			for (Enumeration<String> t = (Enumeration<String>) p.propertyNames(); t.hasMoreElements();) {
+				String key = t.nextElement();
+				String value = map.get(key);
+				if (value == null) {
+					value = p.getProperty(key);
+
+					// Messy, to allow directives we need to
+					// allow the value to start with a ':' since we cannot
+					// encode this in a property name
+
+					if (value.startsWith(":")) {
+						key = key + ":";
+						value = value.substring(1);
+					}
+					map.put(key, value);
+				}
+			}
+		}
+		catch (Exception e) {
+			msgs.NoSuchFile_(r);
 		}
 	}
 
@@ -1628,7 +1646,7 @@ public class Analyzer extends Processor {
 						// to overlap
 						if (!packageRef.isMetaData()) {
 							Resource pinfo = jar.getResource(prefix + packageRef.getPath() + "/packageinfo");
-							setPackageInfo(packageRef, pinfo, classpathExports);
+							getExportVersionsFromPackageInfo(packageRef, pinfo, classpathExports);
 						}
 					}
 				}
@@ -1677,7 +1695,7 @@ public class Analyzer extends Processor {
 							contained.put(packageRef);
 							if (!packageRef.isMetaData()) {
 								Resource pinfo = jar.getResource(prefix + packageRef.getPath() + "/packageinfo");
-								setPackageInfo(packageRef, pinfo, classpathExports);
+								getExportVersionsFromPackageInfo(packageRef, pinfo, classpathExports);
 							}
 						}
 						if (info != null)
@@ -1903,39 +1921,12 @@ public class Analyzer extends Processor {
 	final static String	DEFAULT_PROVIDER_POLICY	= "${range;[==,=+)}";
 	final static String	DEFAULT_CONSUMER_POLICY	= "${range;[==,+)}";
 
-	@SuppressWarnings("deprecation")
 	public String getVersionPolicy(boolean implemented) {
 		if (implemented) {
-			String s = getProperty(PROVIDER_POLICY);
-			if (s != null)
-				return s;
-
-			s = getProperty(VERSIONPOLICY_IMPL);
-			if (s != null)
-				return s;
-
-			return getProperty(VERSIONPOLICY, DEFAULT_PROVIDER_POLICY);
+			return getProperty(PROVIDER_POLICY, DEFAULT_PROVIDER_POLICY);
 		}
-		String s = getProperty(CONSUMER_POLICY);
-		if (s != null)
-			return s;
 
-		s = getProperty(VERSIONPOLICY_USES);
-		if (s != null)
-			return s;
-
-		return getProperty(VERSIONPOLICY, DEFAULT_CONSUMER_POLICY);
-
-		// String vp = implemented ? getProperty(VERSIONPOLICY_IMPL) :
-		// getProperty(VERSIONPOLICY_USES);
-		//
-		// if (vp != null)
-		// return vp;
-		//
-		// if (implemented)
-		// return getProperty(VERSIONPOLICY_IMPL, "{$range;[==,=+}");
-		// else
-		// return getProperty(VERSIONPOLICY, "${range;[==,+)}");
+		return getProperty(CONSUMER_POLICY, DEFAULT_CONSUMER_POLICY);
 	}
 
 	/**
@@ -2303,7 +2294,7 @@ public class Analyzer extends Processor {
 		return ees.first();
 	}
 
-	public String _ee(String args[]) {
+	public String _ee(@SuppressWarnings("unused") String args[]) {
 		return getLowestEE().getEE();
 	}
 

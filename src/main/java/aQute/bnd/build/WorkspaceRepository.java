@@ -22,7 +22,7 @@ public class WorkspaceRepository implements RepositoryPlugin {
 		this.workspace = workspace;
 	}
 
-	public File[] get(String bsn, String range) throws Exception {
+	private File[] get(String bsn, String range) throws Exception {
 		Collection<Project> projects = workspace.getAllProjects();
 		SortedMap<Version,File> foundVersion = new TreeMap<Version,File>();
 		for (Project project : projects) {
@@ -45,15 +45,13 @@ public class WorkspaceRepository implements RepositoryPlugin {
 		result = foundVersion.values().toArray(result);
 		if (!"latest".equals(range)) {
 			return result;
-		} else {
-			if (result.length > 0) {
-				return new File[] {
-					result[0]
-				};
-			} else {
-				return new File[0];
-			}
 		}
+		if (result.length > 0) {
+			return new File[] {
+				result[0]
+			};
+		}
+		return new File[0];
 	}
 
 	public File get(String bsn, String range, Strategy strategy, Map<String,String> properties) throws Exception {

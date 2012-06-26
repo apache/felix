@@ -58,9 +58,9 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 		properties = new Properties(parent);
 	}
 
-	public Processor(Processor parent) {
-		this(parent.properties);
-		this.parent = parent;
+	public Processor(Processor child) {
+		this(child.properties);
+		this.parent = child;
 	}
 
 	public void setParent(Processor processor) {
@@ -77,8 +77,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 	public Processor getTop() {
 		if (parent == null)
 			return this;
-		else
-			return parent.getTop();
+		return parent.getTop();
 	}
 
 	public void getInfo(Reporter processor, String prefix) {
@@ -111,8 +110,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 		Processor p = current.get();
 		if (p == null)
 			return this;
-		else
-			return p;
+		return p;
 	}
 
 	public void warning(String string, Object... args) {
@@ -338,7 +336,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 				key = removeDuplicateMarker(key);
 
 				try {
-					Class< ? > c = (Class< ? >) loader.loadClass(key);
+					Class< ? > c = loader.loadClass(key);
 					Object plugin = c.newInstance();
 					customize(plugin, entry.getValue());
 					list.add(plugin);
@@ -453,7 +451,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 		toBeClosed.clear();
 	}
 
-	public String _basedir(String args[]) {
+	public String _basedir(@SuppressWarnings("unused") String args[]) {
 		if (base == null)
 			throw new IllegalArgumentException("No base dir set");
 
@@ -859,7 +857,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 		return printClauses(exports, false);
 	}
 
-	public static String printClauses(Map< ? , ? extends Map< ? , ? >> exports, boolean checkMultipleVersions)
+	public static String printClauses(Map< ? , ? extends Map< ? , ? >> exports, @SuppressWarnings("unused") boolean checkMultipleVersions)
 			throws IOException {
 		StringBuilder sb = new StringBuilder();
 		String del = "";
@@ -919,8 +917,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 	public Macro getReplacer() {
 		if (replacer == null)
 			return replacer = new Macro(this, getMacroDomains());
-		else
-			return replacer;
+		return replacer;
 	}
 
 	/**
@@ -961,7 +958,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 		return result;
 	}
 
-	public boolean updateModified(long time, String reason) {
+	public boolean updateModified(long time, @SuppressWarnings("unused") String reason) {
 		if (time > lastModified) {
 			lastModified = time;
 			return true;
@@ -1127,8 +1124,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 	public String normalize(String f) {
 		if (f.startsWith(base.getAbsolutePath() + "/"))
 			return f.substring(base.getAbsolutePath().length() + 1);
-		else
-			return f;
+		return f;
 	}
 
 	public String normalize(File f) {
