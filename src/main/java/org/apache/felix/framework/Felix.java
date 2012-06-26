@@ -4847,7 +4847,8 @@ public class Felix extends BundleImpl implements Framework
             // holds the global lock or the bundle lock already.
             while (!bundle.isLockable() ||
                 ((m_globalLockThread != null)
-                    && (m_globalLockThread != Thread.currentThread())))
+                    && (m_globalLockThread != Thread.currentThread())
+                    && (bundle.getLockingThread() != Thread.currentThread())))
             {
                 // Check to make sure the bundle is in a desired state.
                 // If so, keep waiting. If not, throw an exception.
