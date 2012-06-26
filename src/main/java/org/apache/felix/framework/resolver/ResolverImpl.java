@@ -337,7 +337,7 @@ public class ResolverImpl implements Resolver
                         try
                         {
                             checkPackageSpaceConsistency(
-                                false, allCandidates.getWrappedHost(revision),
+                                true, allCandidates.getWrappedHost(revision),
                                 allCandidates, revisionPkgMap, new HashMap());
                         }
                         catch (ResolveException ex)
