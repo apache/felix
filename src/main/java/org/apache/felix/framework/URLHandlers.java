@@ -117,11 +117,16 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
 
     
     private static final Map m_handlerToURL = new HashMap();
-    private void init(String protocol)
+    private void init(String protocol, URLStreamHandlerFactory factory)
     {
         try
         {
-            m_handlerToURL.put(getBuiltInStreamHandler(protocol, null), new URL(protocol + ":") );
+            URLStreamHandler handler = getBuiltInStreamHandler(protocol, factory);
+            if (handler != null)
+            {
+                URL url = new URL(protocol, null, -1, "", handler);
+                m_handlerToURL.put(handler, url);
+            }
         }
         catch (Throwable ex)
         {
@@ -139,21 +144,45 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     **/
     private URLHandlers()
     {
-        init("file");
-        init("ftp");
-        init("http");
-        init("https");
-        try 
-        {
-            getBuiltInStreamHandler("jar", null);
-        }
-        catch (Throwable ex)
-        {
-            // Ignore, this is a best effort (maybe log it or something)
-        }
         m_sm = new SecurityManagerEx();
         synchronized (URL.class)
         {
+            URLStreamHandlerFactory currentFactory = null;
+            try
+            {
+                currentFactory = (URLStreamHandlerFactory) m_secureAction.swapStaticFieldIfNotClass(URL.class,
+                    URLStreamHandlerFactory.class, URLHANDLERS_CLASS, "streamHandlerLock");
+            }
+            catch (Exception ex)
+            {
+                // Ignore, this is a best effort (maybe log it or something)
+            }
+    
+            init("file", currentFactory);
+            init("ftp", currentFactory);
+            init("http", currentFactory);
+            init("https", currentFactory);
+            try
+            {
+                getBuiltInStreamHandler("jar", currentFactory);
+            }
+            catch (Throwable ex)
+            {
+                // Ignore, this is a best effort (maybe log it or something)
+            }
+    
+            if (currentFactory != null)
+            {
+                try
+                {
+                    URL.setURLStreamHandlerFactory(currentFactory);
+                }
+                catch (Exception ex)
+                {
+                    // Ignore, this is a best effort (maybe log it or something)
+                }
+            }
+            
             try
             {
                 URL.setURLStreamHandlerFactory(this);
@@ -342,6 +371,15 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         }
         // Check for built-in handlers for the mime type.
         // Iterate over built-in packages.
+        URLStreamHandler handler = loadBuiltInStreamHandler(protocol, null);
+        if (handler == null)
+        {
+            handler = loadBuiltInStreamHandler(protocol, ClassLoader.getSystemClassLoader());
+        }
+        return addToCache(protocol, handler);
+    }
+
+    private URLStreamHandler loadBuiltInStreamHandler(String protocol, ClassLoader classLoader) {
         StringTokenizer pkgTok = new StringTokenizer(m_streamPkgs, "| ");
         while (pkgTok.hasMoreTokens())
         {
@@ -350,11 +388,10 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             try
             {
                 // If a built-in handler is found then cache and return it
-                Class handler = m_secureAction.forName(className); 
+                Class handler = m_secureAction.forName(className, classLoader); 
                 if (handler != null)
                 {
-                    return addToCache(protocol, 
-                        (URLStreamHandler) handler.newInstance());
+                    return (URLStreamHandler) handler.newInstance();
                 }
             }
             catch (Throwable ex)
@@ -364,16 +401,16 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                 // case other than ignore it.
             }
         }
-        return addToCache(protocol, null);
+        return null;
     }
 
     private synchronized URLStreamHandler addToCache(String protocol, URLStreamHandler result)
     {
         if (!m_builtIn.containsKey(protocol))
-        {
-            m_builtIn.put(protocol, result);
-            return result;
-        }
+            {
+                m_builtIn.put(protocol, result);
+                return result;
+            }
         return (URLStreamHandler) m_builtIn.get(protocol);
     }
     
