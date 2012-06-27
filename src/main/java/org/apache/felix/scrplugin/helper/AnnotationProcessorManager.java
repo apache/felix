@@ -44,16 +44,9 @@ import org.apache.felix.scrplugin.description.ClassDescription;
 public class AnnotationProcessorManager implements AnnotationProcessor {
 
     /**
-     * Allows to define additional implementations of the interface
-     * {@linkAnnotationProcessor}
-     * that provide mappings from custom annotations to descriptions.
-     */
-    private final Map<String, AnnotationProcessor> processors = new HashMap<String, AnnotationProcessor>();
-
-    /**
      * Ordered list of processors
      */
-    private final List<AnnotationProcessor> cachedProcessors = new ArrayList<AnnotationProcessor>();
+    private final List<AnnotationProcessor> processors = new ArrayList<AnnotationProcessor>();
 
     /**
      * Create annotation processor manager.
@@ -63,28 +56,34 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
             final ClassLoader classLoader )
     throws SCRDescriptorFailureException {
         // search for providers
+        final Map<String, AnnotationProcessor> processorMap = new HashMap<String, AnnotationProcessor>();
+
         final Iterator<AnnotationProcessor> serviceIter = ServiceRegistry.lookupProviders(AnnotationProcessor.class, classLoader);
         while ( serviceIter.hasNext() ) {
-            final AnnotationProcessor provider = serviceIter.next();
-            this.addProvider(provider);
+            final AnnotationProcessor processor = serviceIter.next();
+            // check if this processor is already loaded
+            final String key = processor.getClass().getName();
+            if ( !processorMap.containsKey(key) ) {
+                processorMap.put(key, processor);
+            }
         }
 
-        // create ordered list
-        for(final AnnotationProcessor pro : this.processors.values() ) {
-            this.cachedProcessors.add(pro);
+        // create ordered list sorted by ranking
+        for(final AnnotationProcessor pro : processorMap.values() ) {
+            this.processors.add(pro);
         }
-        Collections.sort(this.cachedProcessors, new Comparator<AnnotationProcessor>() {
+        Collections.sort(this.processors, new Comparator<AnnotationProcessor>() {
 
             public int compare(AnnotationProcessor o1, AnnotationProcessor o2) {
                 return Integer.valueOf(o1.getRanking()).compareTo(Integer.valueOf(o2.getRanking()));
             }
         });
-        if ( this.cachedProcessors.size() == 0 ) {
+        if ( this.processors.size() == 0 ) {
             throw new SCRDescriptorFailureException("No annotation processors found in classpath.");
         }
-        log.debug("Using annotation processors: ");
-        for(final AnnotationProcessor pro : this.cachedProcessors) {
-            log.debug("- " + pro.getName() + " - " + pro.getRanking());
+        log.debug("..using annotation processors: ");
+        for(final AnnotationProcessor pro : this.processors) {
+            log.debug("  - " + pro.getName() + " - " + pro.getRanking());
         }
     }
 
@@ -94,7 +93,8 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
     public void process(final ScannedClass scannedClass,
             final ClassDescription describedClass)
     throws SCRDescriptorException, SCRDescriptorFailureException {
-        for(final AnnotationProcessor ap : this.cachedProcessors) {
+        // forward do all processors
+        for(final AnnotationProcessor ap : this.processors) {
             ap.process(scannedClass, describedClass);
         }
     }
@@ -111,16 +111,5 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
      */
     public String getName() {
         return "Annotation Processor Manager";
-    }
-
-    /**
-     * Add a processor (if not already available)
-     */
-    private void addProvider(final AnnotationProcessor processor) {
-        // check if this processor is already loaded
-        final String key = processor.getClass().getName();
-        if ( !this.processors.containsKey(key) ) {
-            this.processors.put(key, processor);
-        }
     }
 }

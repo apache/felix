@@ -59,4 +59,9 @@ public class DescriptionContainer {
     public void addComponent(ComponentContainer component) {
         this.components.add(component);
     }
+
+    @Override
+    public String toString() {
+        return "DescriptionContainer [options=" + options + ", components=" + components + "]";
+    }
 }
