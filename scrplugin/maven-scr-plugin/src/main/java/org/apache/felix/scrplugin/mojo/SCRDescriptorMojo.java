@@ -202,7 +202,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
             this.updateProjectResources();
 
         } catch (final SCRDescriptorException sde) {
-            throw new MojoExecutionException(sde.getMessage(), sde.getCause());
+            throw new MojoExecutionException(sde.getSourceLocation() + " : " + sde.getMessage(), sde.getCause());
         } catch (SCRDescriptorFailureException sdfe) {
             throw (MojoFailureException) new MojoFailureException(
                     sdfe.getMessage()).initCause(sdfe);

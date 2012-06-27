@@ -200,40 +200,26 @@ public class ClassScanner {
             final List<MethodNode> methods = classNode.methods;
             if (methods != null) {
                 for (final MethodNode method : methods) {
+
                     @SuppressWarnings("unchecked")
                     final List<AnnotationNode> annos = method.invisibleAnnotations;
                     if (annos != null) {
                         final String name = method.name;
-                        String signature = method.signature;
-                        if (signature != null) {
-                            // remove generics
-                            int pos;
-                            while ((pos = signature.indexOf('<')) > 0) {
-                                final int lastPos = signature.indexOf('>');
-                                signature = signature.substring(0, pos) + signature.substring(lastPos + 1);
-                            }
-                            // remove everthing after the brackets and replace slash with dot
-                            pos = signature.lastIndexOf(')');
-                            signature = signature.substring(0, pos + 1);
-                            signature = signature.replace('/', '.');
-                        }
+                        final Type[] signature = Type.getArgumentTypes(method.desc);
+
                         final Method[] allMethods = annotatedClass.getDeclaredMethods();
                         Method found = null;
                         for (final Method m : allMethods) {
                             if (m.getName().equals(name)) {
-                                if (m.getParameterTypes().length == 0 && signature == null) {
+                                if (m.getParameterTypes().length == 0 && (signature == null || signature.length == 0) ) {
                                     found = m;
                                 }
-                                if (m.getParameterTypes().length > 0 && signature != null) {
-                                    final StringBuilder sb = new StringBuilder("(");
-                                    for (final Class<?> c : m.getParameterTypes()) {
-                                        sb.append("L");
-                                        sb.append(c.getName());
-                                        sb.append(";");
-                                    }
-                                    sb.append(")");
-                                    if (sb.toString().equals(signature)) {
-                                        found = m;
+                                if (m.getParameterTypes().length > 0 && signature != null && m.getParameterTypes().length == signature.length) {
+                                    found = m;
+                                    for(int index = 0; index < m.getParameterTypes().length; index++ ) {
+                                        if ( !m.getParameterTypes()[index].getName().equals(signature[index].getClassName()) ) {
+                                            found = null;
+                                        }
                                     }
                                 }
                             }

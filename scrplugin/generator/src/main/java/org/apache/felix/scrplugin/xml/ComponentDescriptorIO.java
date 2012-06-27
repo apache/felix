@@ -129,7 +129,7 @@ public class ComponentDescriptorIO {
             IOUtils.parse(file, xmlHandler);
             return xmlHandler.components;
         } catch (final TransformerException e) {
-            throw new SCRDescriptorException("Unable to read xml", "[stream]", e);
+            throw new SCRDescriptorException("Unable to read xml", location, e);
         }
     }
 
@@ -486,6 +486,8 @@ public class ComponentDescriptorIO {
                             desc.setModified(attributes.getValue(COMPONENT_ATTR_MODIFIED));
                         }
                     }
+
+                    this.currentComponent = desc;
                 } else if (localName.equals(IMPLEMENTATION)) {
                     // now we can create the class description and attach the component description
                     // Set the implementation class name (mandatory)
