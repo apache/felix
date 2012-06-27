@@ -408,8 +408,10 @@ public class SCRDescriptorGenerator {
                 try {
                     current = this.scanner.getDescription(current.getDescribedClass().getSuperclass());
                 } catch ( final SCRDescriptorFailureException sde) {
+                    this.logger.debug(sde.getMessage(), sde);
                     iLog.addError(sde.getMessage(), current.getSource());
                 } catch ( final SCRDescriptorException sde) {
+                    this.logger.debug(sde.getSourceLocation() + " : " + sde.getMessage(), sde);
                     iLog.addError(sde.getMessage(), sde.getSourceLocation());
                 }
             }
