@@ -33,6 +33,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
+import org.objectweb.asm.tree.LocalVariableNode;
 
 /**
  * iPOJO Class Adapter.
@@ -218,9 +219,9 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
         MethodDescriptor md = getMethodDescriptor(name, desc);
         if (md == null) {
-            generateMethodHeader(access, name, desc, signature, exceptions, null, null);
+            generateMethodHeader(access, name, desc, signature, exceptions, null, null, null);
         } else {
-            generateMethodHeader(access, name, desc, signature, exceptions, md.getAnnotations(), md.getParameterAnnotations());
+            generateMethodHeader(access, name, desc, signature, exceptions, md.getArgumentLocalVariables(), md.getAnnotations(), md.getParameterAnnotations());
         }
 
         String id = generateMethodFlag(name, desc);
@@ -356,11 +357,21 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * @param desc : method descriptor.
      * @param signature : method signature.
      * @param exceptions : declared exceptions.
+     * @param localVariables : the local variable nodes.
      * @param annotations : the annotations to move to this method.
      * @param paramAnnotations : the parameter annotations to move to this method.
      */
-    private void generateMethodHeader(int access, String name, String desc, String signature, String[] exceptions, List<AnnotationDescriptor> annotations, Map<Integer, List<AnnotationDescriptor>> paramAnnotations) {
+    private void generateMethodHeader(int access, String name, String desc, String signature, String[] exceptions, List<LocalVariableNode> localVariables, List<AnnotationDescriptor> annotations, Map<Integer, List<AnnotationDescriptor>> paramAnnotations) {
         GeneratorAdapter mv = new GeneratorAdapter(cv.visitMethod(access, name, desc, signature, exceptions), access, name, desc);
+
+        // If we have variables, we wraps the code within labels. The `lifetime` of the variables are bound to those
+        // two variables.
+        boolean hasArgumentLabels = localVariables != null && !localVariables.isEmpty();
+        Label start = null;
+        if (hasArgumentLabels) {
+            start = new Label();
+            mv.visitLabel(start);
+        }
 
         mv.visitCode();
 
@@ -449,6 +460,13 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         }
         mv.visitInsn(returnType.getOpcode(IRETURN));
 
+        // If we had arguments, we mark the end of the lifetime.
+        Label end = null;
+        if (hasArgumentLabels) {
+            end = new Label();
+            mv.visitLabel(end);
+        }
+
         // Move annotations
         if (annotations != null) {
             for (int i = 0; i < annotations.size(); i++) {
@@ -467,6 +485,13 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                     AnnotationDescriptor ad = ads.get(i);
                     ad.visitParameterAnnotation(id.intValue(), mv);
                 }
+            }
+        }
+
+        // Write the arguments name.
+        if (hasArgumentLabels) {
+            for (LocalVariableNode var : localVariables) {
+                mv.visitLocalVariable(var.name, var.desc, var.signature, start, end, var.index);
             }
         }
 

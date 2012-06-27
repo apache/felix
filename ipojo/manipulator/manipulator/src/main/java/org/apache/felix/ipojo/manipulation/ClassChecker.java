@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -215,20 +215,16 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
             if (name.equals("<init>")) {
                 if (!isGeneratedConstructor(name, desc)) {
-                    final MethodDescriptor md = new MethodDescriptor("$init", desc);
+                    final MethodDescriptor md = new MethodDescriptor("$init", desc, (access & ACC_STATIC) == ACC_STATIC);
                     m_methods.add(md);
-                    if (m_supportAnnotation) {
-                        return new AnnotationCollector(md);
-                    }
+                    return new MethodInfoCollector(md);
                 }
             } else {
                 // no constructors.
                 if (!isGeneratedMethod(name, desc)) {
-                    final MethodDescriptor md = new MethodDescriptor(name, desc);
+                    final MethodDescriptor md = new MethodDescriptor(name, desc, (access & ACC_STATIC) == ACC_STATIC);
                     m_methods.add(md);
-                    if (m_supportAnnotation) {
-                        return new AnnotationCollector(md);
-                    }
+                    return new MethodInfoCollector(md);
                 }
             }
 
@@ -323,9 +319,10 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      * This class collects annotations in a method.
      * This class creates an {@link AnnotationDescriptor}
      * if an annotation is found during the visit.
+     * It also collects local variables definition.
      *  @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
      */
-    private final class AnnotationCollector extends EmptyVisitor {
+    private final class MethodInfoCollector extends EmptyVisitor {
         /**
          * The method descriptor of the visited method.
          */
@@ -335,7 +332,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * Creates an annotation collector.
          * @param md the method descriptor of the visited method.
          */
-        private AnnotationCollector(MethodDescriptor md) {
+        private MethodInfoCollector(MethodDescriptor md) {
             m_method = md;
         }
 
@@ -358,6 +355,14 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
                 return ann;
             }
             return null;
+        }
+        
+        public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+            m_method.addLocalVariable(name, desc, signature, index);
+        }
+        
+        public void visitEnd() {
+            m_method.end();
         }
 
         public AnnotationVisitor visitParameterAnnotation(int id,

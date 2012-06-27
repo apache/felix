@@ -19,14 +19,16 @@
 package org.apache.felix.ipojo.manipulation;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.felix.ipojo.manipulation.ClassChecker.AnnotationDescriptor;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.LocalVariableNode;
 
 /**
  * Method Descriptor describe a method.
@@ -67,21 +69,47 @@ public class MethodDescriptor {
     private Map<Integer, List<AnnotationDescriptor>> m_parameterAnnotations = new HashMap<Integer, List<AnnotationDescriptor>>();
 
     /**
+     * The arguments variables.
+     */
+    private List<LocalVariableNode> m_argLocalVariables;
+
+    /**
+     * The stack size to keep of the arguments.
+     */
+    private final int m_argsVarLength;
+
+    /**
+     * Flag indicating is the described method is static.
+     */
+    private final boolean m_isStatic;
+
+    /**
      * Constructor.
      * @param name : name of the method.
      * @param desc : descriptor of the method.
+     * @param isStatic : is the method static
      */
-    public MethodDescriptor(String name, String desc) {
+    public MethodDescriptor(String name, String desc, boolean isStatic) {
         m_name = name;
         m_desc = desc;
+        m_isStatic = isStatic;
         Type ret = Type.getReturnType(desc);
         Type[] args = Type.getArgumentTypes(desc);
 
         m_returnType = getType(ret);
         m_arguments = new String[args.length];
-        for (int i = 0; i < args.length; i++) {
-            m_arguments[i] = getType(args[i]);
+        int argsVarLength = args.length;
+        if (!m_isStatic) {
+            argsVarLength++;
         }
+        for (int i = 0; i < args.length; i++) {
+            String type = getType(args[i]);
+            m_arguments[i] = type;
+            if ("long".equals(type) || "double".equals(type)) {
+                argsVarLength++;
+            }
+        }
+        m_argsVarLength = argsVarLength;
     }
 
     /**
@@ -184,6 +212,32 @@ public class MethodDescriptor {
 
     public String getName() {
         return m_name;
+    }
+
+    public void addLocalVariable(String name, String desc, String signature, int index) {
+        if (index >= m_argsVarLength) {
+            // keep only argument-related local variables definitions (others relate to code which isn't in this method) 
+            return;
+        }
+        if (m_argLocalVariables == null) {
+            m_argLocalVariables = new ArrayList<LocalVariableNode>();
+        }
+        m_argLocalVariables.add(new LocalVariableNode(name, desc, signature, null, null, index));
+    }
+
+    public void end() {
+        if (m_argLocalVariables != null && m_argLocalVariables.size() > 1) {
+            // sort them by index, even if from experience, argument-related variables (and only those) are already sorted
+            Collections.sort(m_argLocalVariables, new Comparator<LocalVariableNode>(){
+                public int compare(LocalVariableNode o1, LocalVariableNode o2) {
+                    return o1.index - o2.index;
+                }
+            });
+        }
+    }
+
+    public List<LocalVariableNode> getArgumentLocalVariables() {
+        return m_argLocalVariables;
     }
 
 }
