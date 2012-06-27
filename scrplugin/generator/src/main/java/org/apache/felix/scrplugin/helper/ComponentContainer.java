@@ -78,4 +78,11 @@ public class ComponentContainer {
     public void setServiceDescription(ServiceDescription serviceDescription) {
         this.serviceDescription = serviceDescription;
     }
+
+    @Override
+    public String toString() {
+        return "ComponentContainer [classDescription=" + classDescription + ", componentDescription=" + componentDescription
+                        + ", serviceDescription=" + serviceDescription + ", allReferences=" + allReferences + ", allProperties="
+                        + allProperties + "]";
+    }
 }

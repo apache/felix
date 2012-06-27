@@ -113,6 +113,8 @@ public class SCRDescriptorGenerator {
      * @throws SCRDescriptorFailureException
      */
     public Result execute() throws SCRDescriptorException, SCRDescriptorFailureException {
+
+        this.logger.debug("Starting SCR Descriptor Generator....");
         if (this.project == null) {
             throw new SCRDescriptorFailureException("Project has not been set!");
         }
@@ -120,8 +122,14 @@ public class SCRDescriptorGenerator {
             // use default options
             this.options = new Options();
         }
+        if (this.options.getOutputDirectory() == null) {
+            throw new SCRDescriptorFailureException("Output directory has not been set!");
+        }
 
-        this.logger.debug("Starting SCRDescriptorMojo....");
+        this.logger.debug("..using output directory: " + this.options.getOutputDirectory());
+        this.logger.debug("..using scr name: " + this.options.getSCRName());
+        this.logger.debug("..using metatype name: " + this.options.getMetaTypeName());
+        this.logger.debug("..strict mode: " + this.options.isStrictMode());
         this.logger.debug("..generating accessors: " + this.options.isGenerateAccessors());
 
         // check speck version configuration

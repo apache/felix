@@ -173,10 +173,7 @@ public class ComponentDescriptorIO {
         IOUtils.newline(contentHandler);
 
         for (final ComponentContainer component : module.getComponents()) {
-            final SpecVersion oldVersion = component.getComponentDescription().getSpecVersion();
-            component.getComponentDescription().setSpecVersion(module.getOptions().getSpecVersion());
-            generateXML(namespace, component, contentHandler);
-            component.getComponentDescription().setSpecVersion(oldVersion);
+            generateXML(namespace, module, component, contentHandler);
         }
 
         // end wrapper element
@@ -193,7 +190,10 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(final String namespace, final ComponentContainer container, final ContentHandler contentHandler)
+    protected static void generateXML(final String namespace,
+                    final DescriptionContainer module,
+                    final ComponentContainer container,
+                    final ContentHandler contentHandler)
     throws SAXException {
         final ComponentDescription component = container.getComponentDescription();
 
@@ -204,7 +204,7 @@ public class ComponentDescriptorIO {
         IOUtils.addAttribute(ai, COMPONENT_ATTR_FACTORY, component.getFactory());
 
         // attributes new in 1.1
-        if (component.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+        if (module.getOptions().getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
             if ( component.getConfigurationPolicy() != ComponentConfigurationPolicy.OPTIONAL ) {
                 IOUtils.addAttribute(ai, COMPONENT_ATTR_POLICY, component.getConfigurationPolicy().name().toLowerCase());
             }
@@ -213,7 +213,7 @@ public class ComponentDescriptorIO {
             IOUtils.addAttribute(ai, COMPONENT_ATTR_MODIFIED, component.getModified());
         }
         // attributes new in 1.2
-        if ( component.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_2.ordinal() ) {
+        if ( module.getOptions().getSpecVersion().ordinal() >= SpecVersion.VERSION_1_2.ordinal() ) {
             if ( component.getConfigurationPid() != null && !component.getConfigurationPid().equals(component.getName())) {
                 IOUtils.addAttribute(ai, COMPONENT_ATTR_CONFIGURATION_PID, component.getConfigurationPid());
             }
@@ -230,7 +230,7 @@ public class ComponentDescriptorIO {
         }
 
         for (final ReferenceDescription reference : container.getReferences().values()) {
-            generateReferenceXML(component, reference, contentHandler);
+            generateReferenceXML(component, module, reference, contentHandler);
         }
 
         IOUtils.indent(contentHandler, 1);
@@ -337,6 +337,7 @@ public class ComponentDescriptorIO {
      * @throws SAXException
      */
     protected static void generateReferenceXML(final ComponentDescription component,
+                    final DescriptionContainer module,
                     final ReferenceDescription reference,
                     final ContentHandler contentHandler)
     throws SAXException {
@@ -350,12 +351,12 @@ public class ComponentDescriptorIO {
         IOUtils.addAttribute(ai, "unbind", reference.getUnbind());
 
         // attributes new in 1.1-felix (FELIX-1893)
-        if (component.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1_FELIX.ordinal() ) {
+        if (module.getOptions().getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1_FELIX.ordinal() ) {
             IOUtils.addAttribute(ai, "updated", reference.getUpdated());
         }
 
         // attributes new in 1.2
-        if (component.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_2.ordinal() ) {
+        if (module.getOptions().getSpecVersion().ordinal() >= SpecVersion.VERSION_1_2.ordinal() ) {
             if ( reference.getPolicyOption() != ReferencePolicyOption.RELUCTANT ) {
                 IOUtils.addAttribute(ai, "policy-option", reference.getPolicyOption().name().toLowerCase());
             }
