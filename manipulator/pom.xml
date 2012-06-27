@@ -38,12 +38,6 @@
             <groupId>asm</groupId>
             <artifactId>asm-all</artifactId>
             <version>3.3.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>asm</groupId>
-                    <artifactId>asm-tree</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -86,7 +80,7 @@
                         <Private-Package>org.apache.felix.ipojo.manipulation,
                             org.apache.felix.ipojo.manipulation.annotations,
                             org.apache.felix.ipojo.xml.parser, org.objectweb.asm,
-                            org.objectweb.asm.commons
+                            org.objectweb.asm.commons, org.objectweb.asm.tree
                         </Private-Package>
                         <Include-Resource>
                             META-INF/LICENSE=LICENSE,
@@ -95,7 +89,7 @@
                             META-INF/DEPENDENCIES=DEPENDENCIES,
                             {maven-resources}
                         </Include-Resource>
-                        <Import-Package>!org.objectweb.asm.tree, *</Import-Package>
+                        <Import-Package>*</Import-Package>
                     </instructions>
                     <obrRepository>NONE</obrRepository>
                 </configuration>
