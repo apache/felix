@@ -134,7 +134,13 @@ public abstract class ScannedAnnotation {
     public String getEnumValue(final String name, final String defaultValue) {
         final Object val = this.getValue(name);
         if ( val != null ) {
-            return ((String[])val)[1];
+            if ( val instanceof String[] ) {
+                return ((String[])val)[1];
+            }
+            if ( val instanceof String[][] ) {
+                return ((String[][])val)[0][1];
+            }
+            return val.toString();
         }
         return defaultValue;
     }

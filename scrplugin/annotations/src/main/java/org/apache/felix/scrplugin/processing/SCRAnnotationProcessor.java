@@ -294,8 +294,15 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
 
             ref.setName(ad.getStringValue("name",
                             (fieldAnnotation != null ? fieldAnnotation.getAnnotatedField().getName() : null)));
-            ref.setInterfaceName(ad.getStringValue("referenceInterface", (fieldAnnotation != null ? fieldAnnotation
-                            .getAnnotatedField().getType().getName() : null)));
+            String defaultInterfaceName = null;
+            if ( fieldAnnotation != null ) {
+                if ( fieldAnnotation.getAnnotatedField().getType().isArray() ) {
+                    defaultInterfaceName = fieldAnnotation.getAnnotatedField().getType().getComponentType().getName();
+                } else {
+                    defaultInterfaceName = fieldAnnotation.getAnnotatedField().getType().getName();
+                }
+            }
+            ref.setInterfaceName(ad.getStringValue("referenceInterface", defaultInterfaceName));
             ref.setTarget(ad.getStringValue("target", null));
             ref.setCardinality(ReferenceCardinality.valueOf(ad.getEnumValue("cardinality",
                             ReferenceCardinality.MANDATORY_UNARY.name())));
