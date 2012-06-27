@@ -206,7 +206,7 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
 
         // configuration pid
         component.setConfigurationPid(cad.getStringValue("configurationPid", null));
-        component.setCreatePid(cad.getBooleanValue("createPid", true));
+        component.setCreatePid(false);
 
         // no inheritance
         component.setInherit(false);
