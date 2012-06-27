@@ -40,29 +40,54 @@ import org.apache.felix.scrplugin.description.ServiceDescription;
  */
 public class ComponentContainer {
 
+    /** The class description. */
     private final ClassDescription classDescription;
 
+    /** The component description. */
     private final ComponentDescription componentDescription;
 
+    /** The service description (optional). */
     private ServiceDescription serviceDescription;
 
+    /** All references. */
     private final Map<String, ReferenceDescription> allReferences = new LinkedHashMap<String, ReferenceDescription>();
+
+    /** All properties. */
     private final Map<String, PropertyDescription> allProperties = new LinkedHashMap<String, PropertyDescription>();
 
+    /**
+     * Create a new component container
+     * @param classDescription     Class description
+     * @param componentDescription Component description
+     */
     public ComponentContainer(final ClassDescription classDescription,
                     final ComponentDescription componentDescription) {
         this.classDescription = classDescription;
         this.componentDescription = componentDescription;
     }
 
+    /**
+     * Get the class description
+     * @return The class description
+     */
     public ClassDescription getClassDescription() {
         return this.classDescription;
     }
 
+    /**
+     * Get the component description
+     * @return The component description
+     */
     public ComponentDescription getComponentDescription() {
         return this.componentDescription;
     }
 
+    /**
+     * Get all references.
+     * The references are put into the map by name.
+     * This map can be modified by clients.
+     * @return The map of references
+     */
     public Map<String, ReferenceDescription> getReferences() {
         return this.allReferences;
     }
