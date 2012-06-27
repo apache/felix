@@ -240,7 +240,7 @@ public class ClassScanner {
                         }
                         if (found == null) {
                             throw new SCRDescriptorException("Annotated method " + name + " not found.",
-                                            annotatedClass.getName(), -1);
+                                            annotatedClass.getName());
                         }
                         for (final AnnotationNode annotation : annos) {
                             parseAnnotation(descriptions, annotation, found);
@@ -267,7 +267,7 @@ public class ClassScanner {
                         }
                         if (found == null) {
                             throw new SCRDescriptorException("Annotated field " + name + " not found.",
-                                            annotatedClass.getName(), -1);
+                                            annotatedClass.getName());
                         }
                         for (final AnnotationNode annotation : annos) {
                             parseAnnotation(descriptions, annotation, found);
@@ -414,7 +414,7 @@ public class ClassScanner {
                         }
                         this.log.debug( "Artifact has no scrinfo file (it's optional): " + artifact );
                     } catch ( final IOException ioe ) {
-                        throw new SCRDescriptorException( "Unable to get scrinfo from artifact", artifact.toString(), 0,
+                        throw new SCRDescriptorException( "Unable to get scrinfo from artifact", artifact.toString(),
                             ioe );
                     } finally {
                         if ( scrInfoFile != null ) {
@@ -448,7 +448,7 @@ public class ClassScanner {
                         this.log.debug( "Unable to get manifest from artifact " + artifact );
                     }
                 } catch ( IOException ioe ) {
-                    throw new SCRDescriptorException( "Unable to get manifest from artifact", artifact.toString(), 0,
+                    throw new SCRDescriptorException( "Unable to get manifest from artifact", artifact.toString(),
                         ioe );
                 }
 
@@ -485,8 +485,7 @@ public class ClassScanner {
         try {
             xml = this.getFile( artifactFile, entry );
             if ( xml == null ) {
-                throw new SCRDescriptorException( "Entry " + entry + " not contained in JAR File ", artifactFile.toString(),
-                    0 );
+                throw new SCRDescriptorException( "Entry " + entry + " not contained in JAR File ", artifactFile.toString());
             }
             return this.parseServiceComponentDescriptor( xml, artifactFile.toString() + ':' + entry );
         } catch ( final IOException mee ) {

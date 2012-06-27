@@ -70,7 +70,7 @@ public class ClassModifier {
             fos.write(writer.toByteArray());
             fos.close();
         } catch (final Exception e) {
-            throw new SCRDescriptorException("Unable to add methods to " + className, typeName, 0, e);
+            throw new SCRDescriptorException("Unable to add methods to " + className, typeName, e);
         }
     }
 

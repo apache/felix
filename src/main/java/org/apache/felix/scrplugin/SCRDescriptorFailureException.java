@@ -19,20 +19,17 @@
 package org.apache.felix.scrplugin;
 
 
-public class SCRDescriptorFailureException extends Exception
-{
+public class SCRDescriptorFailureException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
 
-    public SCRDescriptorFailureException( String message )
-    {
+    public SCRDescriptorFailureException( final String message ) {
         super( message );
     }
 
 
-    public SCRDescriptorFailureException( String message, Throwable cause )
-    {
+    public SCRDescriptorFailureException( final String message, final Throwable cause ) {
         super( message, cause );
     }
 }

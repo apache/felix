@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.description;
+package org.apache.felix.scrplugin.helper;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -27,93 +27,102 @@ import org.apache.felix.scrplugin.Options;
 import org.apache.felix.scrplugin.Project;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.SpecVersion;
-import org.apache.felix.scrplugin.helper.IssueLog;
-import org.apache.felix.scrplugin.helper.StringUtils;
-import org.apache.felix.scrplugin.om.Component;
-import org.apache.felix.scrplugin.om.Interface;
-import org.apache.felix.scrplugin.om.Property;
-import org.apache.felix.scrplugin.om.Reference;
-import org.apache.felix.scrplugin.om.Service;
+import org.apache.felix.scrplugin.description.AbstractDescription;
+import org.apache.felix.scrplugin.description.ComponentDescription;
+import org.apache.felix.scrplugin.description.PropertyDescription;
+import org.apache.felix.scrplugin.description.PropertyType;
+import org.apache.felix.scrplugin.description.ReferenceCardinality;
+import org.apache.felix.scrplugin.description.ReferenceDescription;
+import org.apache.felix.scrplugin.description.ReferencePolicy;
+import org.apache.felix.scrplugin.description.ReferencePolicyOption;
+import org.apache.felix.scrplugin.description.ReferenceStrategy;
+import org.apache.felix.scrplugin.description.ServiceDescription;
 
 public class Validator {
 
-    private final ClassDescription classDescription;
-
-    private final Component component;
-
-    private final SpecVersion specVersion;
+    private final ComponentContainer container;
 
     private final Options options;
 
     private final Project project;
 
-    public Validator(final ClassDescription cd,
-                    final Component component,
-                    final SpecVersion specVersion,
+    private final IssueLog iLog;
+
+    public Validator(final ComponentContainer container,
                     final Project project,
-                    final Options options) {
-        this.classDescription = cd;
+                    final Options options,
+                    final IssueLog iLog) {
+        this.container = container;
         this.project = project;
-        this.specVersion = specVersion;
-        this.component = component;
         this.options = options;
+        this.iLog = iLog;
+    }
+
+    private void logWarn(final AbstractDescription desc, final String message) {
+        iLog.addWarning(desc.getIdentifier() + " : " + message, desc.getSource());
+    }
+
+    private void logError(final AbstractDescription desc, final String message) {
+        iLog.addError(desc.getIdentifier() + " : " + message, desc.getSource());
     }
 
     /**
      * Validate the component description. If errors occur a message is added to
      * the issues list, warnings can be added to the warnings list.
      */
-    public void validate(final IssueLog iLog)
+    public void validate()
     throws SCRDescriptorException {
+        final ComponentDescription component = this.container.getComponentDescription();
+
         // nothing to check if this is ignored
-        if (!component.isDs()) {
+        if (!component.isCreateDs()) {
             return;
         }
 
         final int currentIssueCount = iLog.getNumberOfErrors();
 
         // if the component is abstract, we do not validate everything
-        if (!this.component.isAbstract()) {
+        if (!component.isAbstract()) {
             // if configuration pid is set and different from name, we need 1.2
-            if ( this.component.getConfigurationPid() != null && !this.component.getConfigurationPid().equals(this.component.getName())
-                 && this.specVersion.ordinal() < SpecVersion.VERSION_1_2.ordinal() ) {
-                this.component.logError(iLog, "Different configuration pid requires "
+            if ( component.getConfigurationPid() != null && !component.getConfigurationPid().equals(component.getName())
+                 && options.getSpecVersion().ordinal() < SpecVersion.VERSION_1_2.ordinal() ) {
+                this.logError(component, "Different configuration pid requires "
                                 + SpecVersion.VERSION_1_2.getName() + " or higher.");
             }
 
             // ensure non-abstract, public class
-            if (!Modifier.isPublic(this.classDescription.getDescribedClass().getModifiers())) {
-                this.component.logError(iLog, "Class must be public: "
-                                + this.classDescription.getDescribedClass().getName());
+            if (!Modifier.isPublic(this.container.getClassDescription().getDescribedClass().getModifiers())) {
+                this.logError(component, "Class must be public: "
+                                + this.container.getClassDescription().getDescribedClass().getName());
             }
-            if (Modifier.isAbstract(this.classDescription.getDescribedClass().getModifiers())
-                            || this.classDescription.getDescribedClass().isInterface()) {
-                this.component.logError(iLog, "Class must be concrete class (not abstract or interface) : "
-                                + this.classDescription.getDescribedClass().getName());
+            if (Modifier.isAbstract(this.container.getClassDescription().getDescribedClass().getModifiers())
+                            || this.container.getClassDescription().getDescribedClass().isInterface()) {
+                this.logError(component, "Class must be concrete class (not abstract or interface) : "
+                                + this.container.getClassDescription().getDescribedClass().getName());
             }
 
             // no errors so far, let's continue
             if (iLog.getNumberOfErrors() == currentIssueCount) {
 
-                final String activateName = this.component.getActivate() == null ? "activate" : this.component.getActivate();
-                final String deactivateName = this.component.getDeactivate() == null ? "deactivate" : this.component.getDeactivate();
+                final String activateName = component.getActivate() == null ? "activate" : component.getActivate();
+                final String deactivateName = component.getDeactivate() == null ? "deactivate" : component.getDeactivate();
 
                 // check activate and deactivate methods
-                this.checkLifecycleMethod(iLog, activateName, true);
-                this.checkLifecycleMethod(iLog, deactivateName, false);
+                this.checkLifecycleMethod(activateName, true);
+                this.checkLifecycleMethod(deactivateName, false);
 
-                if (this.component.getModified() != null) {
-                    if ( this.specVersion.ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
-                        this.checkLifecycleMethod(iLog, this.component.getModified(), true);
+                if (component.getModified() != null) {
+                    if ( this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                        this.checkLifecycleMethod(component.getModified(), true);
                     } else {
-                        this.component.logError(iLog, "If modified version is specified, spec version must be " +
-                            SpecVersion.VERSION_1_1.name() + " or higher : " + this.component.getModified());
+                        this.logError(component, "If modified version is specified, spec version must be " +
+                            SpecVersion.VERSION_1_1.name() + " or higher : " + component.getModified());
                     }
                 }
 
                 // ensure public default constructor
                 boolean constructorFound = true;
-                Constructor<?>[] constructors = this.classDescription.getDescribedClass().getDeclaredConstructors();
+                Constructor<?>[] constructors = this.container.getClassDescription().getDescribedClass().getDeclaredConstructors();
                 for (int i = 0; constructors != null && i < constructors.length; i++) {
                     // if public default, succeed
                     if (Modifier.isPublic(constructors[i].getModifiers())
@@ -128,43 +137,43 @@ public class Validator {
                 }
 
                 if (!constructorFound) {
-                    this.component.logError(iLog, "Class must have public default constructor: " + this.classDescription.getDescribedClass().getName());
+                    this.logError(component, "Class must have public default constructor: " + this.container.getClassDescription().getDescribedClass().getName());
                 }
 
                 // verify properties
-                for (final Property prop : this.component.getProperties()) {
-                    this.validateProperty(iLog, prop);
+                for (final PropertyDescription prop : this.container.getProperties().values()) {
+                    this.validateProperty(prop);
                 }
 
                 // verify service
                 boolean isServiceFactory = false;
-                if (this.component.getService() != null) {
-                    if (this.component.getService().getInterfaces().size() == 0) {
-                        this.component.logError(iLog, "Service interface information is missing!");
+                if (this.container.getServiceDescription() != null) {
+                    if (this.container.getServiceDescription().getInterfaces().size() == 0) {
+                        this.logError(component, "Service interface information is missing!");
                     }
-                    this.validateService(iLog, component.getService());
-                    isServiceFactory = this.component.getService().isServiceFactory();
+                    this.validateService(this.container.getServiceDescription());
+                    isServiceFactory = this.container.getServiceDescription().isServiceFactory();
                 }
 
                 // serviceFactory must not be true for immediate of component factory
-                if (isServiceFactory && this.component.isImmediate() != null && this.component.isImmediate().booleanValue()
-                    && this.component.getFactory() != null) {
-                    this.component.logError(iLog,
+                if (isServiceFactory && component.getImmediate() != null && component.getImmediate().booleanValue()
+                    && component.getFactory() != null) {
+                    this.logError(component,
                         "Component must not be a ServiceFactory, if immediate and/or component factory: "
-                        + this.classDescription.getDescribedClass().getName());
+                        + this.container.getClassDescription().getDescribedClass().getName());
                 }
 
                 // immediate must not be true for component factory
-                if (this.component.isImmediate() != null && this.component.isImmediate().booleanValue() && this.component.getFactory() != null) {
-                    this.component.logError(iLog,
-                        "Component must not be immediate if component factory: " + this.classDescription.getDescribedClass().getName());
+                if (component.getImmediate() != null && component.getImmediate().booleanValue() && component.getFactory() != null) {
+                    this.logError(component,
+                        "Component must not be immediate if component factory: " + this.container.getClassDescription().getDescribedClass().getName());
                 }
             }
         }
         if (iLog.getNumberOfErrors() == currentIssueCount) {
             // verify references
-            for (final Reference ref : this.component.getReferences()) {
-                this.validateReference(iLog, ref, this.component.isAbstract());
+            for (final ReferenceDescription ref : this.container.getReferences().values()) {
+                this.validateReference(ref, component.isAbstract());
             }
         }
     }
@@ -192,7 +201,7 @@ public class Validator {
             }
         }
         try {
-            return this.classDescription.getDescribedClass().getDeclaredMethod(name, classSig);
+            return this.container.getClassDescription().getDescribedClass().getDeclaredMethod(name, classSig);
         } catch (final SecurityException e) {
             // ignore
         } catch (final NoSuchMethodException e) {
@@ -213,14 +222,13 @@ public class Validator {
      * @param warnings
      *            The list of warnings used to add new warnings.
      */
-    private void checkLifecycleMethod(final IssueLog iLog,
-                                      final String methodName,
+    private void checkLifecycleMethod(final String methodName,
                                       final boolean isActivate)
     throws SCRDescriptorException {
         // first candidate is (de)activate(ComponentContext)
         Method method = this.getMethod(methodName, new String[] { TYPE_COMPONENT_CONTEXT });
         if (method == null) {
-            if (this.specVersion.ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+            if (this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
                 // second candidate is (de)activate(BundleContext)
                 method = this.getMethod(methodName, new String[] { TYPE_BUNDLE_CONTEXT });
                 if (method == null) {
@@ -249,7 +257,7 @@ public class Validator {
                         // we already store this option
                         Method zeroArgMethod = null;
                         Method found = method;
-                        final Method[] methods = this.classDescription.getDescribedClass().getDeclaredMethods();
+                        final Method[] methods = this.container.getClassDescription().getDescribedClass().getDeclaredMethods();
                         int i = 0;
                         while (i < methods.length) {
                             if (methodName.equals(methods[i].getName())) {
@@ -274,7 +282,7 @@ public class Validator {
                                             found = methods[i];
                                         } else {
                                             // print warning
-                                            this.component.logWarn(iLog, "Lifecycle method " + methods[i].getName()
+                                            this.logWarn(this.container.getComponentDescription(), "Lifecycle method " + methods[i].getName()
                                                       + " occurs several times with different matching signature.");
                                         }
                                     }
@@ -293,13 +301,13 @@ public class Validator {
         }
         // if no method is found, we check for any method with that name to print some warnings!
         if (method == null) {
-           final Method[] methods = this.classDescription.getDescribedClass().getDeclaredMethods();
+           final Method[] methods = this.container.getClassDescription().getDescribedClass().getDeclaredMethods();
             for (int i = 0; i < methods.length; i++) {
                 if (methodName.equals(methods[i].getName())) {
                     if (methods[i].getParameterTypes() == null || methods[i].getParameterTypes().length != 1) {
-                        this.component.logWarn(iLog, "Lifecycle method " + methods[i].getName() + " has wrong number of arguments");
+                        this.logWarn(container.getComponentDescription(), "Lifecycle method " + methods[i].getName() + " has wrong number of arguments");
                     } else {
-                        this.component.logWarn(iLog,
+                        this.logWarn(container.getComponentDescription(),
                             "Lifecycle method " + methods[i].getName() + " has wrong argument "
                             + methods[i].getParameterTypes()[0].getName());
                     }
@@ -308,46 +316,36 @@ public class Validator {
         }
 
         // method must be protected for version 1.0
-        if (method != null && specVersion == SpecVersion.VERSION_1_0) {
+        if (method != null && options.getSpecVersion() == SpecVersion.VERSION_1_0) {
             // check protected
             if (Modifier.isPublic(method.getModifiers())) {
-                this.component.logWarn(iLog, "Lifecycle method " + method.getName() + " should be declared protected");
+                this.logWarn(container.getComponentDescription(), "Lifecycle method " + method.getName() + " should be declared protected");
             } else if (!Modifier.isProtected(method.getModifiers())) {
-                this.component.logWarn(iLog, "Lifecycle method " + method.getName() +
+                this.logWarn(container.getComponentDescription(), "Lifecycle method " + method.getName() +
                             " has wrong qualifier, public or protected required");
             }
         }
     }
 
     /**
-     * Validate the service.
+     * Validate the service and its interfaces
      * If errors occur a message is added to the issues list,
      * warnings can be added to the warnings list.
      */
-    private void validateService(final IssueLog iLog, final Service service) throws SCRDescriptorException {
-        for (final Interface interf : service.getInterfaces()) {
-            this.validateInterface(iLog, interf);
-        }
-    }
-
-    /**
-     * Validate the interface.
-     * If errors occur a message is added to the issues list,
-     * warnings can be added to the warnings list.
-     */
-    private void validateInterface(final IssueLog iLog, final Interface iFace)
-    throws SCRDescriptorException {
-        if (this.classDescription.getDescribedClass().isInterface()) {
-            iFace.logError(iLog, "Must be declared in a Java class - not an interface");
-        } else {
-            try {
-                final Class<?> interfaceClass = project.getClassLoader().loadClass(iFace.getInterfaceName());
-                if (!interfaceClass.isAssignableFrom(this.classDescription.getDescribedClass())) {
-                    // interface not implemented
-                    iFace.logError(iLog, "Class must implement provided interface " + iFace.getInterfaceName());
+    private void validateService(final ServiceDescription service) throws SCRDescriptorException {
+        for (final String interfaceName : service.getInterfaces()) {
+            if (this.container.getClassDescription().getDescribedClass().isInterface()) {
+                this.logError(service, "Must be declared in a Java class - not an interface");
+            } else {
+                try {
+                    final Class<?> interfaceClass = project.getClassLoader().loadClass(interfaceName);
+                    if (!interfaceClass.isAssignableFrom(this.container.getClassDescription().getDescribedClass())) {
+                        // interface not implemented
+                        this.logError(service, "Class must implement provided interface " + interfaceName);
+                    }
+                } catch (final ClassNotFoundException cnfe) {
+                    throw new SCRDescriptorException("Unable to load interface class.", cnfe);
                 }
-            } catch (final ClassNotFoundException cnfe) {
-                throw new SCRDescriptorException("Unable to load interface class.", cnfe);
             }
         }
     }
@@ -357,16 +355,16 @@ public class Validator {
      * If errors occur a message is added to the issues list,
      * warnings can be added to the warnings list.
      */
-    private void validateProperty(final IssueLog iLog, final Property property) {
+    private void validateProperty(final PropertyDescription property) {
         if (property.getName() == null || property.getName().trim().length() == 0) {
-            property.logError(iLog, "Property name can not be empty.");
+            this.logError(property, "Property name can not be empty.");
         }
         if (property.getType() != null) {
             // now check for old and new char
-            if (this.specVersion == SpecVersion.VERSION_1_0 && property.getType() == PropertyType.Character) {
+            if (this.options.getSpecVersion() == SpecVersion.VERSION_1_0 && property.getType() == PropertyType.Character) {
                 property.setType(PropertyType.Char);
             }
-            if (this.specVersion.ordinal() >= SpecVersion.VERSION_1_1.ordinal()
+            if (this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal()
                             && property.getType() == PropertyType.Char) {
                 property.setType(PropertyType.Character);
             }
@@ -379,25 +377,25 @@ public class Validator {
      * If errors occur a message is added to the issues list,
      * warnings can be added to the warnings list.
      */
-    private void validateReference(final IssueLog iLog, final Reference ref, final boolean componentIsAbstract)
+    private void validateReference(final ReferenceDescription ref, final boolean componentIsAbstract)
     throws SCRDescriptorException {
         final int currentIssueCount = iLog.getNumberOfErrors();
 
         // validate name
         if (StringUtils.isEmpty(ref.getName())) {
-            if (this.specVersion.ordinal() < SpecVersion.VERSION_1_1.ordinal() ) {
-                ref.logError(iLog, "Reference has no name");
+            if (this.options.getSpecVersion().ordinal() < SpecVersion.VERSION_1_1.ordinal() ) {
+                this.logError(ref, "Reference has no name");
             }
         }
 
         // validate interface
-        if (StringUtils.isEmpty(ref.getInterfacename())) {
-            ref.logError(iLog, "Missing interface name");
+        if (StringUtils.isEmpty(ref.getInterfaceName())) {
+            this.logError(ref, "Missing interface name");
         }
         try {
-            this.project.getClassLoader().loadClass(ref.getInterfacename());
+            this.project.getClassLoader().loadClass(ref.getInterfaceName());
         } catch (final ClassNotFoundException e) {
-            ref.logError(iLog, "Interface class can't be loaded: " + ref.getInterfacename());
+            this.logError(ref, "Interface class can't be loaded: " + ref.getInterfaceName());
         }
 
         // validate cardinality
@@ -415,8 +413,8 @@ public class Validator {
             ref.setPolicyOption(ReferencePolicyOption.RELUCTANT);
         }
         if ( ref.getPolicyOption() != ReferencePolicyOption.RELUCTANT ) {
-            if ( this.specVersion.ordinal() < SpecVersion.VERSION_1_2.ordinal() ) {
-                ref.logError(iLog, "ReferencePolicyOption " + ref.getPolicyOption().name() +
+            if ( this.options.getSpecVersion().ordinal() < SpecVersion.VERSION_1_2.ordinal() ) {
+                this.logError(ref, "ReferencePolicyOption " + ref.getPolicyOption().name() +
                                 " requires spec version " + SpecVersion.VERSION_1_2.getName() + " or higher.");
             }
         }
@@ -426,12 +424,12 @@ public class Validator {
         }
 
         // validate bind and unbind methods
-        if (!ref.isLookupStrategy()) {
+        if (ref.getStrategy() != ReferenceStrategy.LOOKUP) {
             String bindName = ref.getBind();
             String unbindName = ref.getUnbind();
 
             final boolean canGenerate = this.options.isGenerateAccessors() &&
-                            !ref.isLookupStrategy() && ref.getField() != null
+                            ref.getField() != null
                             && (ref.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || ref.getCardinality() == ReferenceCardinality.MANDATORY_UNARY);
             if (bindName == null && !canGenerate ) {
                 bindName = "bind";
@@ -441,12 +439,12 @@ public class Validator {
             }
 
             if ( bindName != null ) {
-                bindName = this.validateMethod(iLog, ref, bindName, componentIsAbstract);
+                bindName = this.validateMethod(ref, bindName, componentIsAbstract);
             } else {
                 bindName = "bind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
             }
             if ( unbindName != null ) {
-                unbindName = this.validateMethod(iLog, ref, unbindName, componentIsAbstract);
+                unbindName = this.validateMethod(ref, unbindName, componentIsAbstract);
             } else {
                 unbindName = "unbind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
             }
@@ -462,20 +460,20 @@ public class Validator {
 
         // validate updated method
         if (ref.getUpdated() != null) {
-            if (this.specVersion.ordinal() < SpecVersion.VERSION_1_1_FELIX.ordinal()) {
-                ref.logError(iLog, "Updated method declaration requires version "
+            if (this.options.getSpecVersion().ordinal() < SpecVersion.VERSION_1_1_FELIX.ordinal()) {
+                this.logError(ref, "Updated method declaration requires version "
                                 + SpecVersion.VERSION_1_1_FELIX.getName() + ", " + SpecVersion.VERSION_1_2.getName() + " or newer");
             }
         }
 
     }
 
-    private String validateMethod(final IssueLog iLog, final Reference ref, final String methodName, final boolean componentIsAbstract)
+    private String validateMethod(final ReferenceDescription ref, final String methodName, final boolean componentIsAbstract)
     throws SCRDescriptorException {
-        final Method method = this.findMethod(iLog, ref, methodName);
+        final Method method = this.findMethod(ref, methodName);
         if (method == null) {
             if (!componentIsAbstract) {
-                ref.logError(iLog,
+                this.logError(ref,
                                 "Missing method " + methodName + " for reference "
                                                 + (ref.getName() == null ? "" : ref.getName()));
             }
@@ -483,11 +481,11 @@ public class Validator {
         }
 
         // method needs to be protected for 1.0
-        if (this.specVersion == SpecVersion.VERSION_1_0) {
+        if (this.options.getSpecVersion() == SpecVersion.VERSION_1_0) {
             if (Modifier.isPublic(method.getModifiers())) {
-                ref.logWarn(iLog, "Method " + method.getName() + " should be declared protected");
+                this.logWarn(ref, "Method " + method.getName() + " should be declared protected");
             } else if (!Modifier.isProtected(method.getModifiers())) {
-                ref.logError(iLog, "Method " + method.getName() + " has wrong qualifier, public or protected required");
+                this.logError(ref, "Method " + method.getName() + " has wrong qualifier, public or protected required");
                 return null;
             }
         }
@@ -498,7 +496,7 @@ public class Validator {
 
     private Method getMethod(final String name, final Class<?>[] sig) {
         try {
-            return this.classDescription.getDescribedClass().getDeclaredMethod(name, sig);
+            return this.container.getClassDescription().getDescribedClass().getDeclaredMethod(name, sig);
         } catch (final SecurityException e) {
             // ignore
         } catch (final NoSuchMethodException e) {
@@ -507,19 +505,19 @@ public class Validator {
         return null;
     }
 
-    public Method findMethod(final IssueLog iLog, final Reference ref, final String methodName)
+    public Method findMethod(final ReferenceDescription ref, final String methodName)
     throws SCRDescriptorException {
         try {
             final Class<?>[] sig = new Class<?>[] { this.project.getClassLoader().loadClass(TYPE_SERVICE_REFERENCE) };
-            final Class<?>[] sig2 = new Class<?>[] { this.project.getClassLoader().loadClass(ref.getInterfacename()) };
-            final Class<?>[] sig3 = new Class<?>[] { this.project.getClassLoader().loadClass(ref.getInterfacename()), Map.class };
+            final Class<?>[] sig2 = new Class<?>[] { this.project.getClassLoader().loadClass(ref.getInterfaceName()) };
+            final Class<?>[] sig3 = new Class<?>[] { this.project.getClassLoader().loadClass(ref.getInterfaceName()), Map.class };
 
             // service interface or ServiceReference first
             String realMethodName = methodName;
             Method method = getMethod(realMethodName, sig);
             if (method == null) {
                 method = getMethod(realMethodName, sig2);
-                if (method == null && this.specVersion.ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                if (method == null && this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
                     method = getMethod(realMethodName, sig3);
                 }
             }
@@ -528,7 +526,7 @@ public class Validator {
             if (method == null) {
                 final String info;
                 if (StringUtils.isEmpty(ref.getName())) {
-                    final String interfaceName = ref.getInterfacename();
+                    final String interfaceName = ref.getInterfaceName();
                     final int pos = interfaceName.lastIndexOf('.');
                     info = interfaceName.substring(pos + 1);
                 } else {
@@ -540,20 +538,20 @@ public class Validator {
             }
             if (method == null) {
                 method = getMethod(realMethodName, sig2);
-                if (method == null && this.specVersion.ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                if (method == null && this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
                     method = getMethod(realMethodName, sig3);
                 }
             }
 
             // append type name with service interface and ServiceReference
             if (method == null) {
-                int lastDot = ref.getInterfacename().lastIndexOf('.');
-                realMethodName = methodName + ref.getInterfacename().substring(lastDot + 1);
+                int lastDot = ref.getInterfaceName().lastIndexOf('.');
+                realMethodName = methodName + ref.getInterfaceName().substring(lastDot + 1);
                 method = getMethod(realMethodName, sig);
             }
             if (method == null) {
                 method = getMethod(realMethodName, sig2);
-                if (method == null && this.specVersion.ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                if (method == null && this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
                     method = getMethod(realMethodName, sig3);
                 }
             }

@@ -18,7 +18,7 @@
  */
 package org.apache.felix.scrplugin.description;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
@@ -36,7 +36,7 @@ public class ServiceDescription extends AbstractDescription {
     private boolean isServiceFactory = false;
 
     /** The list of implemented interfaces. */
-    protected final Set<String> interfaces = new HashSet<String>();
+    protected final Set<String> interfaces = new LinkedHashSet<String>();
 
     public ServiceDescription(final ScannedAnnotation annotation) {
         super(annotation);

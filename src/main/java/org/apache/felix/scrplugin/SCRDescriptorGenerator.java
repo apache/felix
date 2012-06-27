@@ -34,19 +34,16 @@ import org.apache.felix.scrplugin.description.PropertyUnbounded;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ReferencePolicyOption;
+import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.ServiceDescription;
-import org.apache.felix.scrplugin.description.Validator;
 import org.apache.felix.scrplugin.helper.AnnotationProcessorManager;
 import org.apache.felix.scrplugin.helper.ClassModifier;
 import org.apache.felix.scrplugin.helper.ClassScanner;
+import org.apache.felix.scrplugin.helper.ComponentContainer;
+import org.apache.felix.scrplugin.helper.DescriptionContainer;
 import org.apache.felix.scrplugin.helper.IssueLog;
 import org.apache.felix.scrplugin.helper.StringUtils;
-import org.apache.felix.scrplugin.om.Component;
-import org.apache.felix.scrplugin.om.Components;
-import org.apache.felix.scrplugin.om.Interface;
-import org.apache.felix.scrplugin.om.Property;
-import org.apache.felix.scrplugin.om.Reference;
-import org.apache.felix.scrplugin.om.Service;
+import org.apache.felix.scrplugin.helper.Validator;
 import org.apache.felix.scrplugin.om.metatype.AttributeDefinition;
 import org.apache.felix.scrplugin.om.metatype.Designate;
 import org.apache.felix.scrplugin.om.metatype.MTObject;
@@ -150,7 +147,7 @@ public class SCRDescriptorGenerator {
         final MetaData metaData = new MetaData();
         metaData.setLocalization(MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype");
 
-        final List<Component> processedComponents = new ArrayList<Component>();
+        final List<ComponentContainer> processedComponents = new ArrayList<ComponentContainer>();
         for (final ClassDescription desc : scannedDescriptions) {
             this.logger.debug("Processing component class " + desc.getSource());
 
@@ -161,15 +158,15 @@ public class SCRDescriptorGenerator {
                                 desc.getSource());
             } else {
                 try {
-                    final Component comp = this.createComponent(desc, metaData, iLog);
-                    if (comp.getSpecVersion() != null) {
+                    final ComponentContainer comp = this.createComponent(desc, metaData, iLog);
+                    if (comp.getComponentDescription().getSpecVersion() != null) {
                         if ( specVersion == null ) {
-                            specVersion = comp.getSpecVersion();
+                            specVersion = comp.getComponentDescription().getSpecVersion();
                             logger.debug("Setting used spec version to " + specVersion);
-                        } else if (comp.getSpecVersion().ordinal() > specVersion.ordinal() && this.options.getSpecVersion() != null) {
+                        } else if (comp.getComponentDescription().getSpecVersion().ordinal() > specVersion.ordinal() && this.options.getSpecVersion() != null) {
                             // if a spec version has been configured and a component requires a higher
                             // version, this is considered an error!
-                            iLog.addError("Component " + comp + " requires spec version " + comp.getSpecVersion().name()
+                            iLog.addError("Component " + comp + " requires spec version " + comp.getComponentDescription().getSpecVersion().name()
                                             + " but plugin is configured to use version " + this.options.getSpecVersion(),
                                             desc.getSource());
                         }
@@ -186,42 +183,41 @@ public class SCRDescriptorGenerator {
             logger.debug("Using default spec version " + specVersion);
         }
         this.logger.debug("Generating descriptor for spec version: " + specVersion);
+        options.setSpecVersion(specVersion);
 
         // now check for abstract components and fill components objects
-        final Components components = new Components();
-        components.setSpecVersion(specVersion);
+        final DescriptionContainer module = new DescriptionContainer(this.options);
 
-        for (final Component comp : processedComponents) {
+        for (final ComponentContainer comp : processedComponents) {
             final int errorCount = iLog.getNumberOfErrors();
 
-            final Validator validator = new Validator(comp.getClassDescription(),
-                            comp, specVersion, project, options);
+            final Validator validator = new Validator(comp, project, options, iLog);
 
             if ( this.options.isGenerateAccessors() ) {
                 // before we can validate we should check the references for bind/unbind method
                 // in order to create them if possible
 
-                for (final Reference ref : comp.getReferences()) {
+                for (final ReferenceDescription ref : comp.getReferences().values()) {
                     // if this is a field with a single cardinality,
                     // we look for the bind/unbind methods
                     // and create them if they are not availabe
-                    if (!ref.isLookupStrategy() && ref.getField() != null
+                    if (ref.getStrategy() != ReferenceStrategy.LOOKUP && ref.getField() != null
                         && (ref.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || ref.getCardinality() == ReferenceCardinality.MANDATORY_UNARY)) {
 
                         final String bindValue = ref.getBind();
                         final String unbindValue = ref.getUnbind();
                         final String name = ref.getName();
-                        final String type = ref.getInterfacename();
+                        final String type = ref.getInterfaceName();
 
                         boolean createBind = false;
                         boolean createUnbind = false;
 
                         // Only create method if no bind name has been specified
-                        if (bindValue == null && validator.findMethod(iLog, ref, "bind") == null) {
+                        if (bindValue == null && validator.findMethod(ref, "bind") == null) {
                             // create bind method
                             createBind = true;
                         }
-                        if (unbindValue == null && validator.findMethod(iLog, ref, "unbind") == null) {
+                        if (unbindValue == null && validator.findMethod(ref, "unbind") == null) {
                             // create unbind method
                             createUnbind = true;
                         }
@@ -237,15 +233,15 @@ public class SCRDescriptorGenerator {
                     }
                 }
             }
-            validator.validate(iLog);
+            validator.validate();
 
             // ignore component if it has errors
             if (iLog.getNumberOfErrors() == errorCount) {
-                if (!comp.isDs()) {
+                if (!comp.getComponentDescription().isCreateDs()) {
                     logger.debug("Ignoring descriptor for DS : " + comp);
-                } else if (!comp.isAbstract()) {
+                } else if (!comp.getComponentDescription().isAbstract()) {
                     this.logger.debug("Adding descriptor for DS : " + comp);
-                    components.addComponent(comp);
+                    module.addComponent(comp);
                 }
             }
         }
@@ -284,7 +280,7 @@ public class SCRDescriptorGenerator {
         final File descriptorFile = StringUtils.isEmpty(this.options.getSCRName()) ? null : new File(this.options.getOutputDirectory(), descriptorPath);
 
         // terminate if there is nothing else to write
-        if (components.getComponents().isEmpty()) {
+        if (module.getComponents().isEmpty()) {
             this.logger.debug("No Service Component Descriptors found in project.");
             // remove file if it exists
             if (descriptorFile != null && descriptorFile.exists()) {
@@ -299,10 +295,10 @@ public class SCRDescriptorGenerator {
             // finally the descriptors have to be written ....
             descriptorFile.getParentFile().mkdirs(); // ensure parent dir
 
-            this.logger.info("Writing " + components.getComponents().size() + " Service Component Descriptors to "
+            this.logger.info("Writing " + module.getComponents().size() + " Service Component Descriptors to "
                             + descriptorFile);
 
-            ComponentDescriptorIO.write(components, descriptorFile);
+            ComponentDescriptorIO.write(module, descriptorFile);
             result.setScrFiles(Collections.singletonList(descriptorPath.replace(File.separatorChar, '/')));
         }
 
@@ -312,24 +308,15 @@ public class SCRDescriptorGenerator {
     /**
      * Create the SCR objects based on the descriptions
      */
-    private Component createComponent(final ClassDescription desc,
+    private ComponentContainer createComponent(final ClassDescription desc,
                     final MetaData metaData,
                     final IssueLog iLog)
     throws SCRDescriptorException, SCRDescriptorFailureException {
         final ComponentDescription componentDesc = desc.getDescription(ComponentDescription.class);
-        final Component comp = new Component(desc, componentDesc.getAnnotation(), desc.getSource());
-
-        comp.setName(componentDesc.getName());
-        comp.setConfigurationPolicy(componentDesc.getConfigurationPolicy());
-        comp.setAbstract(componentDesc.isAbstract());
-        comp.setDs(componentDesc.isCreateDs());
-        comp.setFactory(componentDesc.getFactory());
-        comp.setSpecVersion(componentDesc.getSpecVersion());
 
         // configuration pid in 1.2
         if ( componentDesc.getConfigurationPid() != null && !componentDesc.getConfigurationPid().equals(componentDesc.getName())) {
-            comp.setConfigurationPid(componentDesc.getConfigurationPid());
-            comp.setSpecVersion(SpecVersion.VERSION_1_2);
+            componentDesc.setSpecVersion(SpecVersion.VERSION_1_2);
         }
 
         // Create metatype (if required)
@@ -372,8 +359,7 @@ public class SCRDescriptorGenerator {
             ocd = null;
         }
 
-        final Map<String, Reference> allReferences = new LinkedHashMap<String, Reference>();
-        final Map<String, Property> allProperties = new LinkedHashMap<String, Property>();
+        final ComponentContainer container = new ComponentContainer(desc, componentDesc);
 
         ClassDescription current = desc;
         boolean inherit;
@@ -383,33 +369,33 @@ public class SCRDescriptorGenerator {
 
             if ( cd != null ) {
                 // handle enabled and immediate
-                if ( comp.isEnabled() == null ) {
-                    comp.setEnabled(cd.getEnabled());
+                if ( componentDesc.getEnabled() == null ) {
+                    componentDesc.setEnabled(cd.getEnabled());
                 }
-                if ( comp.isImmediate() == null ) {
-                    comp.setImmediate(cd.getImmediate());
+                if ( componentDesc.getImmediate() == null ) {
+                    componentDesc.setImmediate(cd.getImmediate());
                 }
 
                 // lifecycle methods
-                if ( comp.getActivate() == null && cd.getActivate() != null ) {
-                    comp.setActivate(cd.getActivate().getName());
+                if ( componentDesc.getActivate() == null && cd.getActivate() != null ) {
+                    componentDesc.setActivate(cd.getActivate());
                 }
-                if ( comp.getDeactivate() == null && cd.getDeactivate() != null ) {
-                    comp.setDeactivate(cd.getDeactivate().getName());
+                if ( componentDesc.getDeactivate() == null && cd.getDeactivate() != null ) {
+                    componentDesc.setDeactivate(cd.getDeactivate());
                 }
-                if ( comp.getModified() == null && cd.getModified() != null ) {
-                    comp.setModified(cd.getModified().getName());
+                if ( componentDesc.getModified() == null && cd.getModified() != null ) {
+                    componentDesc.setModified(cd.getModified());
                 }
-                if ( comp.getActivate() != null || comp.getDeactivate() != null || comp.getModified() != null ) {
+                if ( componentDesc.getActivate() != null || componentDesc.getDeactivate() != null || componentDesc.getModified() != null ) {
                     // spec version must be at least 1.1
-                    comp.setSpecVersion(SpecVersion.VERSION_1_1);
+                    componentDesc.setSpecVersion(SpecVersion.VERSION_1_1);
                 }
             }
 
             // services, properties, references
-            this.processServices(current, comp);
-            this.processProperties(current, comp, ocd, allProperties);
-            this.processReferences(current, comp, allReferences);
+            this.processServices(current, container);
+            this.processProperties(current, container, ocd);
+            this.processReferences(current, container);
 
             // go up in the class hierarchy
             if ( !inherit || current.getDescribedClass().getSuperclass() == null ) {
@@ -420,40 +406,37 @@ public class SCRDescriptorGenerator {
         } while ( inherit && current != null);
 
         // PID handling
-        if ( componentDesc.isCreatePid() && !allProperties.containsKey(org.osgi.framework.Constants.SERVICE_PID)) {
-            final Property pid = new Property(null, "scr-generator");
+        if ( componentDesc.isCreatePid() && !container.getProperties().containsKey(org.osgi.framework.Constants.SERVICE_PID)) {
+            final PropertyDescription pid = new PropertyDescription(null);
             pid.setName( org.osgi.framework.Constants.SERVICE_PID );
-            pid.setValue( comp.getName() );
+            pid.setValue( componentDesc.getName() );
 
-            allProperties.put(org.osgi.framework.Constants.SERVICE_PID, pid);
-            comp.addProperty( pid );
+            container.getProperties().put(org.osgi.framework.Constants.SERVICE_PID, pid);
         }
-        this.processGlobalProperties(desc, comp, allProperties);
+        this.processGlobalProperties(desc, container.getProperties());
 
-        return comp;
+        return container;
     }
 
     /**
      * Process service directives
      */
-    private void processServices(final ClassDescription current, final Component component)
+    private void processServices(final ClassDescription current, final ComponentContainer component)
     throws SCRDescriptorException, SCRDescriptorFailureException {
 
         final ServiceDescription serviceDesc = current.getDescription(ServiceDescription.class);
         if ( serviceDesc != null ) {
-            Service service = component.getService();
+            ServiceDescription service = component.getServiceDescription();
             if ( service == null ) {
-                service = new Service();
+                service = new ServiceDescription(serviceDesc.getAnnotation());
                 service.setServiceFactory(false);
-                component.setService(service);
+                component.setServiceDescription(service);
             }
             if ( serviceDesc.isServiceFactory() ) {
                 service.setServiceFactory(true);
             }
             for(final String className : serviceDesc.getInterfaces()) {
-                final Interface interf = new Interface(serviceDesc.getAnnotation(), current.getSource());
-                interf.setInterfaceName(className);
-                service.addInterface(interf);
+                service.addInterface(className);
             }
         }
     }
@@ -463,26 +446,17 @@ public class SCRDescriptorGenerator {
      */
     private void processProperties(
                     final ClassDescription current,
-                    final Component component,
-                    final OCD ocd,
-                    final Map<String, Property> allProperties)
+                    final ComponentContainer component,
+                    final OCD ocd)
     throws SCRDescriptorException, SCRDescriptorFailureException {
         for(final PropertyDescription pd : current.getDescriptions(PropertyDescription.class)) {
-            final Property prop = new Property(pd.getAnnotation(), current.getSource());
-            prop.setName(pd.getName());
-            prop.setType(pd.getType());
-            if ( pd.getValue() != null ) {
-                prop.setValue(pd.getValue());
-            } else {
-                prop.setMultiValue(pd.getMultiValue());
-            }
 
             // metatype - is this property private?
             final boolean isPrivate;
             if ( pd.isPrivate() != null ) {
                 isPrivate = pd.isPrivate();
             } else {
-                final String name = prop.getName();
+                final String name = pd.getName();
                 if (org.osgi.framework.Constants.SERVICE_RANKING.equals(name)
                     || org.osgi.framework.Constants.SERVICE_PID.equals(name)
                     || org.osgi.framework.Constants.SERVICE_DESCRIPTION.equals(name)
@@ -498,18 +472,18 @@ public class SCRDescriptorGenerator {
             if ( !isPrivate && ocd != null ) {
                 final AttributeDefinition ad = new AttributeDefinition();
                 ocd.getProperties().add(ad);
-                ad.setId(prop.getName());
-                ad.setType(prop.getType().name());
+                ad.setId(pd.getName());
+                ad.setType(pd.getType().name());
 
                 if (pd.getLabel() != null ) {
                     ad.setName(pd.getLabel());
                 } else {
-                    ad.setName("%" + prop.getName() + ".name");
+                    ad.setName("%" + pd.getName() + ".name");
                 }
                 if (pd.getDescription() != null ) {
                     ad.setDescription(pd.getDescription());
                 } else {
-                    ad.setDescription("%" + prop.getName() + ".description");
+                    ad.setDescription("%" + pd.getName() + ".description");
                 }
 
                 if ( pd.getUnbounded() == PropertyUnbounded.DEFAULT ) {
@@ -522,8 +496,8 @@ public class SCRDescriptorGenerator {
                     ad.setCardinality(new Integer(Integer.MIN_VALUE));
                 }
 
-                ad.setDefaultValue(prop.getValue());
-                ad.setDefaultMultiValue(prop.getMultiValue());
+                ad.setDefaultValue(pd.getValue());
+                ad.setDefaultMultiValue(pd.getMultiValue());
 
                 // check options
                 final String[] parameters = pd.getOptions();
@@ -540,9 +514,7 @@ public class SCRDescriptorGenerator {
                 }
 
             }
-            if ( this.testProperty(current, allProperties, prop, current == component.getClassDescription())) {
-                component.addProperty(prop);
-            }
+            this.testProperty(current, component.getProperties(), pd, current == component.getClassDescription());
         }
     }
 
@@ -550,8 +522,7 @@ public class SCRDescriptorGenerator {
      * Add global properties (if not already defined in the component)
      */
     private void processGlobalProperties(final ClassDescription desc,
-                    final Component component,
-                    final Map<String, Property> allProperties) {
+                    final Map<String, PropertyDescription> allProperties) {
         // apply pre configured global properties
         if ( this.options.getProperties() != null ) {
             for(final Map.Entry<String, String> entry : this.options.getProperties().entrySet()) {
@@ -560,12 +531,11 @@ public class SCRDescriptorGenerator {
                 // check if the service already provides this property
                 if ( value != null && !allProperties.containsKey(propName) ) {
 
-                    final Property p = new Property(null, "scr-generator");
+                    final PropertyDescription p = new PropertyDescription(null);
                     p.setName(propName);
                     p.setValue(value);
                     p.setType(PropertyType.String);
 
-                    component.addProperty(p);
                     allProperties.put(propName, p);
                 }
             }
@@ -575,9 +545,9 @@ public class SCRDescriptorGenerator {
     /**
      * Test a newly found property
      */
-    private boolean testProperty(final ClassDescription current,
-                    final Map<String, Property> allProperties,
-                    final Property newProperty,
+    private void testProperty(final ClassDescription current,
+                    final Map<String, PropertyDescription> allProperties,
+                    final PropertyDescription newProperty,
                     boolean isInspectedClass ) {
         final String propName = newProperty.getName();
 
@@ -591,63 +561,42 @@ public class SCRDescriptorGenerator {
                 }
             } else {
                 allProperties.put(propName, newProperty);
-                return true;
             }
         }
-        return false;
     }
 
     /**
      * Process reference directives
      */
     private void processReferences(final ClassDescription current,
-                    final Component component,
-                    final Map<String, Reference> allReferences)
+                    final ComponentContainer component)
     throws SCRDescriptorException, SCRDescriptorFailureException {
         for(final ReferenceDescription rd : current.getDescriptions(ReferenceDescription.class)) {
-            final Reference ref = new Reference(rd.getAnnotation(), current.getSource());
-            ref.setName(rd.getName());
-            ref.setInterfacename(rd.getInterfaceName());
-            ref.setCardinality(rd.getCardinality());
-            ref.setPolicy(rd.getPolicy());
-            ref.setStrategy(rd.getStrategy());
-            ref.setTarget(rd.getTarget());
-            ref.setField(rd.getField());
-            ref.setPolicyOption(rd.getPolicyOption());
-            if ( ref.getPolicyOption() != ReferencePolicyOption.RELUCTANT ) {
-                component.setSpecVersion(SpecVersion.VERSION_1_2);
-            }
-            if ( rd.getBind() != null ) {
-                ref.setBind(rd.getBind().getName());
-            }
-            if ( rd.getUnbind() != null ) {
-                ref.setUnbind(rd.getUnbind().getName());
+            if ( rd.getPolicyOption() != ReferencePolicyOption.RELUCTANT ) {
+                component.getComponentDescription().setSpecVersion(SpecVersion.VERSION_1_2);
             }
             if ( rd.getUpdated() != null ) {
                 // updated requires 1.2 or 1.1_FELIX, if nothing is set, we use 1.2
-                if ( component.getSpecVersion() == null
-                     || component.getSpecVersion().ordinal() < SpecVersion.VERSION_1_1_FELIX.ordinal() ) {
-                    component.setSpecVersion(SpecVersion.VERSION_1_2);
+                if ( component.getComponentDescription().getSpecVersion() == null
+                     || component.getComponentDescription().getSpecVersion().ordinal() < SpecVersion.VERSION_1_1_FELIX.ordinal() ) {
+                    component.getComponentDescription().setSpecVersion(SpecVersion.VERSION_1_2);
                 }
-                ref.setUpdated(rd.getUpdated().getName());
             }
 
-            if ( this.testReference(current, allReferences, ref, component.getClassDescription() == current) ) {
-                component.addReference(ref);
-            }
+            this.testReference(current, component.getReferences(), rd, component.getClassDescription() == current);
         }
     }
 
     /**
      * Test a newly found reference
      */
-    private boolean testReference(final ClassDescription current,
-                    final Map<String, Reference> allReferences,
-                    final Reference newReference,
+    private void testReference(final ClassDescription current,
+                    final Map<String, ReferenceDescription> allReferences,
+                    final ReferenceDescription newReference,
                     boolean isInspectedClass ) {
         String refName = newReference.getName();
         if ( refName == null) {
-            refName = newReference.getInterfacename();
+            refName = newReference.getInterfaceName();
         }
 
         if ( refName != null ) {
@@ -660,9 +609,7 @@ public class SCRDescriptorGenerator {
                 }
             } else {
                 allReferences.put(refName, newReference);
-                return true;
             }
         }
-        return false;
     }
 }
