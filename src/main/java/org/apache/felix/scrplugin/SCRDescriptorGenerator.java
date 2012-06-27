@@ -156,7 +156,7 @@ public class SCRDescriptorGenerator {
         final MetaData metaData = new MetaData();
         metaData.setLocalization(MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype");
 
-        final List<ComponentContainer> processedComponents = new ArrayList<ComponentContainer>();
+        final List<ComponentContainer> processedContainers = new ArrayList<ComponentContainer>();
         for (final ClassDescription desc : scannedDescriptions) {
             this.logger.debug("Processing component class " + desc.getSource());
 
@@ -166,24 +166,20 @@ public class SCRDescriptorGenerator {
                              " Check the annotations and merge the definitions to a single definition.",
                                 desc.getSource());
             } else {
-                try {
-                    final ComponentContainer comp = this.createComponent(desc, metaData, iLog);
-                    if (comp.getComponentDescription().getSpecVersion() != null) {
-                        if ( specVersion == null ) {
-                            specVersion = comp.getComponentDescription().getSpecVersion();
-                            logger.debug("Setting used spec version to " + specVersion);
-                        } else if (comp.getComponentDescription().getSpecVersion().ordinal() > specVersion.ordinal() && this.options.getSpecVersion() != null) {
-                            // if a spec version has been configured and a component requires a higher
-                            // version, this is considered an error!
-                            iLog.addError("Component " + comp + " requires spec version " + comp.getComponentDescription().getSpecVersion().name()
-                                            + " but plugin is configured to use version " + this.options.getSpecVersion(),
-                                            desc.getSource());
-                        }
+                final ComponentContainer container = this.createComponent(desc, metaData, iLog);
+                if (container.getComponentDescription().getSpecVersion() != null) {
+                    if ( specVersion == null ) {
+                        specVersion = container.getComponentDescription().getSpecVersion();
+                        logger.debug("Setting used spec version to " + specVersion);
+                    } else if (container.getComponentDescription().getSpecVersion().ordinal() > specVersion.ordinal() && this.options.getSpecVersion() != null) {
+                        // if a spec version has been configured and a component requires a higher
+                        // version, this is considered an error!
+                        iLog.addError("Component " + container + " requires spec version " + container.getComponentDescription().getSpecVersion().name()
+                                        + " but plugin is configured to use version " + this.options.getSpecVersion(),
+                                        desc.getSource());
                     }
-                    processedComponents.add(comp);
-                } catch (final SCRDescriptorException sde) {
-                    iLog.addError(sde.getMessage(), sde.getSourceLocation());
                 }
+                processedContainers.add(container);
             }
         }
         // if spec version is still not set, we're using lowest available
@@ -197,16 +193,16 @@ public class SCRDescriptorGenerator {
         // now check for abstract components and fill components objects
         final DescriptionContainer module = new DescriptionContainer(this.options);
 
-        for (final ComponentContainer comp : processedComponents) {
+        for (final ComponentContainer container : processedContainers) {
             final int errorCount = iLog.getNumberOfErrors();
 
-            final Validator validator = new Validator(comp, project, options, iLog);
+            final Validator validator = new Validator(container, project, options, iLog);
 
             if ( this.options.isGenerateAccessors() ) {
                 // before we can validate we should check the references for bind/unbind method
                 // in order to create them if possible
 
-                for (final ReferenceDescription ref : comp.getReferences().values()) {
+                for (final ReferenceDescription ref : container.getReferences().values()) {
                     // if this is a field with a single cardinality,
                     // we look for the bind/unbind methods
                     // and create them if they are not availabe
@@ -231,7 +227,7 @@ public class SCRDescriptorGenerator {
                             createUnbind = true;
                         }
                         if (createBind || createUnbind) {
-                            ClassModifier.addMethods(comp.getClassDescription().getDescribedClass().getName(),
+                            ClassModifier.addMethods(container.getClassDescription().getDescribedClass().getName(),
                                             name,
                                             ref.getField().getName(),
                                             type,
@@ -246,11 +242,11 @@ public class SCRDescriptorGenerator {
 
             // ignore component if it has errors
             if (iLog.getNumberOfErrors() == errorCount) {
-                if (!comp.getComponentDescription().isCreateDs()) {
-                    logger.debug("Ignoring descriptor for DS : " + comp);
-                } else if (!comp.getComponentDescription().isAbstract()) {
-                    this.logger.debug("Adding descriptor for DS : " + comp);
-                    module.addComponent(comp);
+                if (!container.getComponentDescription().isCreateDs()) {
+                    logger.debug("Ignoring descriptor for DS : " + container);
+                } else if (!container.getComponentDescription().isAbstract()) {
+                    this.logger.debug("Adding descriptor for DS : " + container);
+                    module.add(container);
                 }
             }
         }
@@ -319,8 +315,7 @@ public class SCRDescriptorGenerator {
      */
     private ComponentContainer createComponent(final ClassDescription desc,
                     final MetaData metaData,
-                    final IssueLog iLog)
-    throws SCRDescriptorException, SCRDescriptorFailureException {
+                    final IssueLog iLog) {
         final ComponentDescription componentDesc = desc.getDescription(ComponentDescription.class);
 
         // configuration pid in 1.2
@@ -410,7 +405,13 @@ public class SCRDescriptorGenerator {
             if ( !inherit || current.getDescribedClass().getSuperclass() == null ) {
                 current = null;
             } else {
-                current = this.scanner.getDescription(current.getDescribedClass().getSuperclass());
+                try {
+                    current = this.scanner.getDescription(current.getDescribedClass().getSuperclass());
+                } catch ( final SCRDescriptorFailureException sde) {
+                    iLog.addError(sde.getMessage(), current.getSource());
+                } catch ( final SCRDescriptorException sde) {
+                    iLog.addError(sde.getMessage(), sde.getSourceLocation());
+                }
             }
         } while ( inherit && current != null);
 
@@ -430,8 +431,7 @@ public class SCRDescriptorGenerator {
     /**
      * Process service directives
      */
-    private void processServices(final ClassDescription current, final ComponentContainer component)
-    throws SCRDescriptorException, SCRDescriptorFailureException {
+    private void processServices(final ClassDescription current, final ComponentContainer component) {
 
         final ServiceDescription serviceDesc = current.getDescription(ServiceDescription.class);
         if ( serviceDesc != null ) {
@@ -456,8 +456,7 @@ public class SCRDescriptorGenerator {
     private void processProperties(
                     final ClassDescription current,
                     final ComponentContainer component,
-                    final OCD ocd)
-    throws SCRDescriptorException, SCRDescriptorFailureException {
+                    final OCD ocd) {
         for(final PropertyDescription pd : current.getDescriptions(PropertyDescription.class)) {
 
             // metatype - is this property private?
@@ -581,8 +580,7 @@ public class SCRDescriptorGenerator {
      * Process reference directives
      */
     private void processReferences(final ClassDescription current,
-                    final ComponentContainer component)
-    throws SCRDescriptorException, SCRDescriptorFailureException {
+                    final ComponentContainer component) {
         for(final ReferenceDescription rd : current.getDescriptions(ReferenceDescription.class)) {
             if ( rd.getPolicyOption() != ReferencePolicyOption.RELUCTANT ) {
                 component.getComponentDescription().setSpecVersion(SpecVersion.VERSION_1_2);

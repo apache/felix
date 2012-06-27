@@ -18,50 +18,54 @@
  */
 package org.apache.felix.scrplugin.helper;
 
-import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.felix.scrplugin.Options;
-import org.apache.felix.scrplugin.description.ComponentDescription;
 
 /**
- * <code>DescriptionContainer</code>...
- *
- * A description container is a collection of {@link ComponentDescription}s.
+ * The description container holds all {@link ComponentContainer}s.
  */
 public class DescriptionContainer {
 
     /** The options. */
     private final Options options;
 
-    /** The list of {@link Component}s. */
-    private final List<ComponentContainer> components = new ArrayList<ComponentContainer>();
+    /** The list of {@link ComponentContainer}s. */
+    private final List<ComponentContainer> containers = new ArrayList<ComponentContainer>();
 
+    /**
+     * Constructor
+     * @param options The options for this module
+     */
     public DescriptionContainer(final Options options) {
         this.options = options;
     }
 
+    /**
+     * Get the options
+     * @return The options
+     */
     public Options getOptions() {
         return this.options;
     }
 
     /**
-     * Return the list of {@link Component}s.
+     * Return the list of {@link ComponentContainer}s.
      */
     public List<ComponentContainer> getComponents() {
-        return this.components;
+        return this.containers;
     }
 
     /**
-     * Add a component to the list.
+     * Add a container to the list.
      */
-    public void addComponent(ComponentContainer component) {
-        this.components.add(component);
+    public void add(final ComponentContainer c) {
+        this.containers.add(c);
     }
 
     @Override
     public String toString() {
-        return "DescriptionContainer [options=" + options + ", components=" + components + "]";
+        return "DescriptionContainer [options=" + options + ", containers=" + containers + "]";
     }
 }

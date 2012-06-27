@@ -36,7 +36,6 @@ import org.apache.felix.scrplugin.description.ServiceDescription;
  * - the service descriptor
  * - reference descriptors
  * - property descriptors
- *
  */
 public class ComponentContainer {
 
@@ -92,15 +91,29 @@ public class ComponentContainer {
         return this.allReferences;
     }
 
+    /**
+     * Get all properties.
+     * The properties are put into the map by name.
+     * This map can be modified by clients.
+     * @return The map of properties
+     */
     public Map<String, PropertyDescription> getProperties() {
         return this.allProperties;
     }
 
+    /**
+     * Get the service description.
+     * @return The service description or <code>null</code>
+     */
     public ServiceDescription getServiceDescription() {
         return serviceDescription;
     }
 
-    public void setServiceDescription(ServiceDescription serviceDescription) {
+    /**
+     * Set the service description
+     * @param serviceDescription The new service description
+     */
+    public void setServiceDescription(final ServiceDescription serviceDescription) {
         this.serviceDescription = serviceDescription;
     }
 
