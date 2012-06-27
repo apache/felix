@@ -492,11 +492,13 @@ public class ComponentDescriptorIO {
                     // now we can create the class description and attach the component description
                     // Set the implementation class name (mandatory)
                     final String className = attributes.getValue("class");
+                    Class<?> cl = null;
                     try {
-                        this.currentClass = new ClassDescription(this.classLoader.loadClass(className), "classpath:" + className);
-                    } catch (final ClassNotFoundException e) {
-                        iLog.addError("Unable to load class " + className + " from dependencies.", this.location);
+                        cl = this.classLoader.loadClass(className);
+                    } catch (final Throwable e) {
+                        iLog.addWarning("Unable to load class " + className + " from dependencies.", this.location);
                     }
+                    this.currentClass = new ClassDescription(cl, "classpath:" + className);
                     this.currentClass.add(this.currentComponent);
 
                 } else if (localName.equals(PROPERTY)) {
