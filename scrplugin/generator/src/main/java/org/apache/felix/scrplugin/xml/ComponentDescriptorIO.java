@@ -471,7 +471,7 @@ public class ComponentDescriptorIO {
                         final String policy = attributes.getValue(COMPONENT_ATTR_POLICY);
                         if ( policy != null ) {
                             try {
-                                desc.setConfigurationPolicy(ComponentConfigurationPolicy.valueOf(policy));
+                                desc.setConfigurationPolicy(ComponentConfigurationPolicy.valueOf(policy.toUpperCase()));
                             } catch (final IllegalArgumentException iae) {
                                 iLog.addWarning("Invalid value for attribute " + COMPONENT_ATTR_POLICY + " : " + policy, this.location);
                             }
