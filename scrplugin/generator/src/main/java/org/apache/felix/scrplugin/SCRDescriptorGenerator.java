@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.felix.scrplugin.annotations.AnnotationProcessor;
 import org.apache.felix.scrplugin.description.ClassDescription;
@@ -556,7 +557,7 @@ public class SCRDescriptorGenerator {
     private void testProperty(final ClassDescription current,
                     final Map<String, PropertyDescription> allProperties,
                     final PropertyDescription newProperty,
-                    boolean isInspectedClass ) {
+                    final boolean isInspectedClass ) {
         final String propName = newProperty.getName();
 
         if ( !StringUtils.isEmpty(propName) ) {
@@ -570,6 +571,9 @@ public class SCRDescriptorGenerator {
             } else {
                 allProperties.put(propName, newProperty);
             }
+        } else {
+            // no name - generate a unique one
+            allProperties.put(UUID.randomUUID().toString(), newProperty);
         }
     }
 
@@ -601,7 +605,7 @@ public class SCRDescriptorGenerator {
     private void testReference(final ClassDescription current,
                     final Map<String, ReferenceDescription> allReferences,
                     final ReferenceDescription newReference,
-                    boolean isInspectedClass ) {
+                    final boolean isInspectedClass ) {
         String refName = newReference.getName();
         if ( refName == null) {
             refName = newReference.getInterfaceName();
@@ -618,6 +622,9 @@ public class SCRDescriptorGenerator {
             } else {
                 allReferences.put(refName, newReference);
             }
+        } else {
+            // no name - generate a unique one
+            allReferences.put(UUID.randomUUID().toString(), newReference);
         }
     }
 }
