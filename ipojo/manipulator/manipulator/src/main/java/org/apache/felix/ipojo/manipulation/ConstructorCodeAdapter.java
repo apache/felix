@@ -262,8 +262,9 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
         if (index == 0) {
             mv.visitLocalVariable(name, desc, signature, start, end, index);
             mv.visitLocalVariable("_manager", "Lorg/apache/felix/ipojo/InstanceManager;", null, start, end, 1);
+        } else {
+            mv.visitLocalVariable(name, desc, signature, start, end, index + 1);
         }
-        mv.visitLocalVariable(name, desc, signature, start, end, index + 1);
     }
 
     /**
