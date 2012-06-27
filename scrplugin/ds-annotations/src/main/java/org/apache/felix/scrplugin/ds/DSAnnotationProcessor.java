@@ -33,7 +33,6 @@ import org.apache.felix.scrplugin.annotations.ScannedClass;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
 import org.apache.felix.scrplugin.description.ComponentDescription;
-import org.apache.felix.scrplugin.description.MethodDescription;
 import org.apache.felix.scrplugin.description.PropertyDescription;
 import org.apache.felix.scrplugin.description.PropertyType;
 import org.apache.felix.scrplugin.description.PropertyUnbounded;
@@ -88,13 +87,13 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
             final List<MethodAnnotation> methodTags = scannedClass.getMethodAnnotations(null);
             for (final MethodAnnotation m : methodTags) {
                 if (m.getName().equals(Activate.class.getName())) {
-                    cd.setActivate(new MethodDescription(m.getAnnotatedMethod()));
+                    cd.setActivate(m.getAnnotatedMethod().getName());
                     scannedClass.processed(m);
                 } else if (m.getName().equals(Deactivate.class.getName())) {
-                    cd.setDeactivate(new MethodDescription(m.getAnnotatedMethod()));
+                    cd.setDeactivate(m.getAnnotatedMethod().getName());
                     scannedClass.processed(m);
                 } else if (m.getName().equals(Modified.class.getName())) {
-                    cd.setModified(new MethodDescription(m.getAnnotatedMethod()));
+                    cd.setModified(m.getAnnotatedMethod().getName());
                     scannedClass.processed(m);
                 } else if (m.getName().equals(Reference.class.getName()) ) {
                     this.processReference(describedClass, m);
@@ -196,7 +195,7 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
             final SpecVersion spec = SpecVersion.fromNamespaceUrl(cad.getValue("xmlns").toString());
             if ( spec == null ) {
                 throw new SCRDescriptorException("Unknown xmlns attribute value: " + cad.getValue("xmlns"),
-                                describedClass.getSource(), -1);
+                                describedClass.getSource());
             }
             component.setSpecVersion(spec);
         }
@@ -253,18 +252,18 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
         final String defaultUpdateMethodName = "updated" + refNameByMethod;
 
         // bind method
-        ref.setBind(new MethodDescription(ad.getAnnotatedMethod()));
+        ref.setBind(ad.getAnnotatedMethod().getName());
         // unbind method
         final String unbind = ad.getStringValue("unbind",
                         this.hasMethod(describedClass, defaultUnbindMethodName) ? defaultUnbindMethodName : "-");
         if ( !unbind.equals("-") ) {
-            ref.setUnbind(new MethodDescription(unbind));
+            ref.setUnbind(unbind);
         }
         // update method
-        final String update = ad.getStringValue("updated",
+        final String updated = ad.getStringValue("updated",
                         this.hasMethod(describedClass, defaultUpdateMethodName) ? defaultUpdateMethodName : "-");
-        if ( !update.equals("-") ) {
-            ref.setUpdated(new MethodDescription(update));
+        if ( !updated.equals("-") ) {
+            ref.setUpdated(updated);
         }
 
         // name

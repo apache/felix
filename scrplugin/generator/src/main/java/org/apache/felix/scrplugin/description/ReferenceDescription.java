@@ -58,9 +58,9 @@ public class ReferenceDescription extends AbstractDescription {
 
     private Field field;
 
-    private MethodDescription bind;
-    private MethodDescription unbind;
-    private MethodDescription updated;
+    private String bind;
+    private String unbind;
+    private String updated;
 
     public ReferenceDescription(final ScannedAnnotation annotation) {
         super(annotation);
@@ -114,27 +114,27 @@ public class ReferenceDescription extends AbstractDescription {
         this.policyOption = policyOption;
     }
 
-    public MethodDescription getBind() {
+    public String getBind() {
         return bind;
     }
 
-    public void setBind(MethodDescription bind) {
+    public void setBind(String bind) {
         this.bind = bind;
     }
 
-    public MethodDescription getUnbind() {
+    public String getUnbind() {
         return unbind;
     }
 
-    public void setUnbind(MethodDescription unbind) {
+    public void setUnbind(String unbind) {
         this.unbind = unbind;
     }
 
-    public MethodDescription getUpdated() {
+    public String getUpdated() {
         return updated;
     }
 
-    public void setUpdated(MethodDescription updated) {
+    public void setUpdated(String updated) {
         this.updated = updated;
     }
 

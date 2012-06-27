@@ -129,7 +129,7 @@ public class SCRDescriptorTask extends MatchingTask {
             generator.execute();
         } catch ( final SCRDescriptorException sde ) {
             if ( sde.getSourceLocation() != null )  {
-                Location loc = new Location( sde.getSourceLocation(), sde.getLineNumber(), 0 );
+                final Location loc = new Location( sde.getSourceLocation(), -1, 0 );
                 throw new BuildException( sde.getMessage(), sde.getCause(), loc );
             }
             throw new BuildException( sde.getMessage(), sde.getCause() );

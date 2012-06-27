@@ -21,44 +21,29 @@ package org.apache.felix.scrplugin;
 
 public class SCRDescriptorException extends Exception {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final String m_sourceLocation;
 
-    private final int m_lineNumber;
-
-
-    public SCRDescriptorException( final String message, final String sourceLocation, final int lineNumber )
-    {
+    public SCRDescriptorException( final String message, final String sourceLocation ) {
         super( message );
         this.m_sourceLocation = sourceLocation;
-        this.m_lineNumber = lineNumber;
     }
 
 
-    public SCRDescriptorException( final String message, final Throwable cause )
-    {
-        this( message, null, -1, cause );
+    public SCRDescriptorException( final String message, final Throwable cause ) {
+        this( message, null, cause );
     }
 
 
-    public SCRDescriptorException( final String message, final String sourceLocation, final int lineNumber,
-        final Throwable cause )
-    {
+    public SCRDescriptorException( final String message, final String sourceLocation,
+        final Throwable cause ) {
         super( message, cause );
         this.m_sourceLocation = sourceLocation;
-        this.m_lineNumber = lineNumber;
     }
 
 
-    public String getSourceLocation()
-    {
+    public String getSourceLocation() {
         return m_sourceLocation;
-    }
-
-
-    public int getLineNumber()
-    {
-        return m_lineNumber;
     }
 }

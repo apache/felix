@@ -46,7 +46,6 @@ import org.apache.felix.scrplugin.annotations.ScannedClass;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
 import org.apache.felix.scrplugin.description.ComponentDescription;
-import org.apache.felix.scrplugin.description.MethodDescription;
 import org.apache.felix.scrplugin.description.PropertyDescription;
 import org.apache.felix.scrplugin.description.PropertyType;
 import org.apache.felix.scrplugin.description.PropertyUnbounded;
@@ -98,13 +97,13 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
             final List<MethodAnnotation> methodTags = scannedClass.getMethodAnnotations(null);
             for (final MethodAnnotation m : methodTags) {
                 if (m.getName().equals(Activate.class.getName())) {
-                    cd.setActivate(new MethodDescription(m.getAnnotatedMethod()));
+                    cd.setActivate(m.getAnnotatedMethod().getName());
                     scannedClass.processed(m);
                 } else if (m.getName().equals(Deactivate.class.getName())) {
-                    cd.setDeactivate(new MethodDescription(m.getAnnotatedMethod()));
+                    cd.setDeactivate(m.getAnnotatedMethod().getName());
                     scannedClass.processed(m);
                 } else if (m.getName().equals(Modified.class.getName())) {
-                    cd.setModified(new MethodDescription(m.getAnnotatedMethod()));
+                    cd.setModified(m.getAnnotatedMethod().getName());
                     scannedClass.processed(m);
                 }
             }
@@ -273,20 +272,6 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
     }
 
     /**
-     * Create a method description if a name is provided.
-     *
-     * @param methodName
-     *            The name of the method or <code>null</code>
-     * @return A method description if the name is not null.
-     */
-    private MethodDescription getMethodDescription(final String methodName) {
-        if (methodName != null) {
-            return new MethodDescription(methodName);
-        }
-        return null;
-    }
-
-    /**
      * Create reference descriptions
      *
      * @param descs
@@ -318,9 +303,9 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
             ref.setPolicyOption(ReferencePolicyOption.valueOf(ad.getEnumValue("policyOption", ReferencePolicyOption.RELUCTANT.name())));
             ref.setStrategy(ReferenceStrategy.valueOf(ad.getEnumValue("strategy", ReferenceStrategy.EVENT.name())));
 
-            ref.setBind(getMethodDescription(ad.getStringValue("bind", null)));
-            ref.setUnbind(getMethodDescription(ad.getStringValue("unbind", null)));
-            ref.setUpdated(getMethodDescription(ad.getStringValue("updated", null)));
+            ref.setBind(ad.getStringValue("bind", null));
+            ref.setUnbind(ad.getStringValue("unbind", null));
+            ref.setUpdated(ad.getStringValue("updated", null));
 
             describedClass.add(ref);
         }

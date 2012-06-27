@@ -94,13 +94,13 @@ public class ComponentDescription extends AbstractDescription {
     private boolean isSetMetatypeFactoryPid = false;
 
     /** Activation method. (V1.1) */
-    private MethodDescription activate;
+    private String activate;
 
     /** Deactivation method. (V1.1) */
-    private MethodDescription deactivate;
+    private String deactivate;
 
     /** Modified method. (V1.1) */
-    private MethodDescription modified;
+    private String modified;
 
     /** The spec version. */
     private SpecVersion specVersion;
@@ -216,27 +216,27 @@ public class ComponentDescription extends AbstractDescription {
         this.configurationPolicy = configurationPolicy;
     }
 
-    public MethodDescription getActivate() {
+    public String getActivate() {
         return activate;
     }
 
-    public void setActivate(MethodDescription activate) {
+    public void setActivate(String activate) {
         this.activate = activate;
     }
 
-    public MethodDescription getDeactivate() {
+    public String getDeactivate() {
         return deactivate;
     }
 
-    public void setDeactivate(MethodDescription deactivate) {
+    public void setDeactivate(String deactivate) {
         this.deactivate = deactivate;
     }
 
-    public MethodDescription getModified() {
+    public String getModified() {
         return modified;
     }
 
-    public void setModified(MethodDescription modified) {
+    public void setModified(String modified) {
         this.modified = modified;
     }
 
@@ -244,8 +244,10 @@ public class ComponentDescription extends AbstractDescription {
         return specVersion;
     }
 
-    public void setSpecVersion(SpecVersion specVersion) {
-        this.specVersion = specVersion;
+    public void setSpecVersion(final SpecVersion specVersion) {
+        if ( this.specVersion == null || this.specVersion.ordinal() < specVersion.ordinal() ) {
+            this.specVersion = specVersion;
+        }
     }
 
     @Override

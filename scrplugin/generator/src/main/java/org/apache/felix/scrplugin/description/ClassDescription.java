@@ -73,6 +73,7 @@ public class ClassDescription {
      */
     public void add(final AbstractDescription desc) {
         this.descriptions.add(desc);
+        desc.setSource(this.source);
     }
 
     /**

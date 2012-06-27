@@ -28,20 +28,31 @@ import java.util.Map;
  */
 public class Options {
 
+    /** Flag for generating accessor methods. */
     private boolean generateAccessors = true;
 
+    /** Flag for strict mode. */
     private boolean strictMode = false;
 
+    /** Map of global properties. */
     private Map<String, String> properties = Collections.emptyMap();
 
+    /** The requested spec version. */
     private SpecVersion specVersion;
 
+    /** The output directory for the generated files. */
     private File outputDirectory;
 
+    /** The name of the scr file. */
     private String scrName = "serviceComponents.xml";
 
+    /** The name of the metatype file. */
     private String metaTypeName = "metatype.xml";
 
+    /**
+     * @see #setGenerateAccessors(boolean)
+     * @return Whether accessor methods should be generated.
+     */
     public boolean isGenerateAccessors() {
         return generateAccessors;
     }
@@ -56,10 +67,14 @@ public class Options {
      * <p>
      * The default value of this property is <code>true</code>.
      */
-    public void setGenerateAccessors(boolean generateAccessors) {
+    public void setGenerateAccessors(final boolean generateAccessors) {
         this.generateAccessors = generateAccessors;
     }
 
+    /**
+     * @see #setStrictMode(boolean)
+     * @return Whether strict mode should be used or not.
+     */
     public boolean isStrictMode() {
         return strictMode;
     }
@@ -70,7 +85,7 @@ public class Options {
      * <p>
      * The default value of this property is <code>false</code>.
      */
-    public void setStrictMode(boolean strictMode) {
+    public void setStrictMode(final boolean strictMode) {
         this.strictMode = strictMode;
     }
 
@@ -89,6 +104,10 @@ public class Options {
         this.properties = properties;
     }
 
+    /**
+     * @see #setSpecVersion(SpecVersion)
+     * @return Return the requested spec version
+     */
     public SpecVersion getSpecVersion() {
         return specVersion;
     }
@@ -106,17 +125,34 @@ public class Options {
      * <code>configuration-policy</code>, are used, version 1.0 is used,
      * otherwise a 1.1 descriptor is generated.
      */
-    public void setSpecVersion(SpecVersion specVersion) {
+    public void setSpecVersion(final SpecVersion specVersion) {
         this.specVersion = specVersion;
+    }
+
+    /**
+     * @see #setOutputDirectory(File)
+     * @return The output directory for the generated files.
+     */
+    public File getOutputDirectory() {
+        return this.outputDirectory;
     }
 
     /**
      * Sets the directory where the descriptor files will be created.
      * <p>
-     * This field has no default value and this setter <b>must</b> called prior to calling {@link #execute()}.
+     * This field has no default value and this setter <b>must</b> called
+     * before passing this object to {@link SCRDescriptorGenerator#setOptions(Options)}.
      */
     public void setOutputDirectory(final File outputDirectory) {
         this.outputDirectory = outputDirectory;
+    }
+
+    /**
+     * @see #setSCRName(String)
+     * @return The file name for the SCR file.
+     */
+    public String getSCRName() {
+        return this.scrName;
     }
 
     /**
@@ -132,6 +168,14 @@ public class Options {
     }
 
     /**
+     * @see #setMetaTypeName(String)
+     * @return The name for the metatype file
+     */
+    public String getMetaTypeName() {
+        return this.metaTypeName;
+    }
+
+    /**
      * Sets the name of the file taking the Metatype Service descriptors. This
      * file will be created in the <i>OSGI-INF/metatype</i> directory below the {@link #setOutputDirectory(File) output directory}
      * .
@@ -142,17 +186,5 @@ public class Options {
      */
     public void setMetaTypeName(final String metaTypeName) {
         this.metaTypeName = metaTypeName;
-    }
-
-    public File getOutputDirectory() {
-        return this.outputDirectory;
-    }
-
-    public String getMetaTypeName() {
-        return this.metaTypeName;
-    }
-
-    public String getSCRName() {
-        return this.scrName;
     }
 }

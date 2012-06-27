@@ -123,29 +123,4 @@ public class AnnotationProcessorManager implements AnnotationProcessor {
             this.processors.put(key, processor);
         }
     }
-
-    private void loadProcessor( final ClassLoader classLoader, final String className )
-    throws SCRDescriptorFailureException {
-        String failureMessage = null;
-        try {
-            Class<?> clazz = classLoader.loadClass( className );
-            try {
-                addProvider( ( AnnotationProcessor ) clazz.newInstance() );
-            } catch ( final ClassCastException e ) {
-                failureMessage = "Class '" + clazz.getName() + "' " + "does not implement interface '"
-                    + AnnotationProcessor.class.getName() + "'.";
-            } catch ( final InstantiationException e ) {
-                failureMessage = "Unable to instantiate class '" + clazz.getName() + "': " + e.getMessage();
-            } catch ( final IllegalAccessException e ) {
-                failureMessage = "Illegal access to class '" + clazz.getName() + "': " + e.getMessage();
-            }
-        } catch ( final ClassNotFoundException e ) {
-            failureMessage = "Annotation provider class '" + className + "' not found.";
-        }
-
-        // throw an exception
-        if ( failureMessage != null  ) {
-            throw new SCRDescriptorFailureException( failureMessage );
-        }
-    }
 }

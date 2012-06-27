@@ -34,12 +34,22 @@ public abstract class AbstractDescription {
     /** The corresponding annotation from the class file. */
     protected final ScannedAnnotation annotation;
 
+    private final String annotationPrefix;
+
+    private String sourceLocation;
+
     /**
      * Create a new abstract description
      * @param annotation The corresponding annotation.
      */
     public AbstractDescription(final ScannedAnnotation annotation) {
         this.annotation = annotation;
+        if ( annotation == null ) {
+            this.annotationPrefix = "";
+        } else {
+            this.annotationPrefix = "@" + annotation.getSimpleName();
+        }
+        this.sourceLocation = "<unknown>";
     }
 
     /**
@@ -48,5 +58,17 @@ public abstract class AbstractDescription {
      */
     public ScannedAnnotation getAnnotation() {
         return this.annotation;
+    }
+
+    public void setSource(final String location) {
+        this.sourceLocation = location;
+    }
+
+    public String getSource() {
+        return this.sourceLocation;
+    }
+
+    public String getIdentifier() {
+        return this.annotationPrefix;
     }
 }

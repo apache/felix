@@ -18,9 +18,11 @@
  */
 package org.apache.felix.scrplugin.xml;
 
+import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Provider.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -32,7 +34,6 @@ import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
 import org.apache.felix.scrplugin.description.ComponentDescription;
-import org.apache.felix.scrplugin.description.MethodDescription;
 import org.apache.felix.scrplugin.description.PropertyDescription;
 import org.apache.felix.scrplugin.description.PropertyType;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
@@ -41,13 +42,9 @@ import org.apache.felix.scrplugin.description.ReferencePolicy;
 import org.apache.felix.scrplugin.description.ReferencePolicyOption;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.ServiceDescription;
+import org.apache.felix.scrplugin.helper.ComponentContainer;
+import org.apache.felix.scrplugin.helper.DescriptionContainer;
 import org.apache.felix.scrplugin.helper.IssueLog;
-import org.apache.felix.scrplugin.om.Component;
-import org.apache.felix.scrplugin.om.Components;
-import org.apache.felix.scrplugin.om.Interface;
-import org.apache.felix.scrplugin.om.Property;
-import org.apache.felix.scrplugin.om.Reference;
-import org.apache.felix.scrplugin.om.Service;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -132,26 +129,26 @@ public class ComponentDescriptorIO {
             IOUtils.parse(file, xmlHandler);
             return xmlHandler.components;
         } catch (final TransformerException e) {
-            throw new SCRDescriptorException("Unable to read xml", "[stream]", 0, e);
+            throw new SCRDescriptorException("Unable to read xml", "[stream]", e);
         }
     }
 
     /**
      * Write the component descriptors to the file.
      *
-     * @param components
+     * @param module
      * @param file
      * @throws SCRDescriptorException
      */
-    public static void write(Components components, File file) throws SCRDescriptorException {
+    public static void write(final DescriptionContainer module, final File file) throws SCRDescriptorException {
         try {
-            generateXML(components, IOUtils.getSerializer(file));
-        } catch (TransformerException e) {
-            throw new SCRDescriptorException("Unable to write xml", file.toString(), 0, e);
-        } catch (SAXException e) {
-            throw new SCRDescriptorException("Unable to generate xml", file.toString(), 0, e);
-        } catch (IOException e) {
-            throw new SCRDescriptorException("Unable to write xml", file.toString(), 0, e);
+            generateXML(module, IOUtils.getSerializer(file));
+        } catch (final TransformerException e) {
+            throw new SCRDescriptorException("Unable to write xml", file.toString(), e);
+        } catch (final SAXException e) {
+            throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
+        } catch (final IOException e) {
+            throw new SCRDescriptorException("Unable to write xml", file.toString(), e);
         }
     }
 
@@ -163,10 +160,10 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(final Components components,
+    protected static void generateXML(final DescriptionContainer module,
                     final ContentHandler contentHandler) throws SAXException {
         // detect namespace to use
-        final String namespace = components.getSpecVersion().getNamespaceUrl();
+        final String namespace = module.getOptions().getSpecVersion().getNamespaceUrl();
 
         contentHandler.startDocument();
         contentHandler.startPrefixMapping(PREFIX, namespace);
@@ -175,14 +172,13 @@ public class ComponentDescriptorIO {
         contentHandler.startElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS, new AttributesImpl());
         IOUtils.newline(contentHandler);
 
-        for (final Component component : components.getComponents()) {
-            if (component.isDs()) {
-                final SpecVersion oldVersion = component.getSpecVersion();
-                component.setSpecVersion(components.getSpecVersion());
-                generateXML(namespace, component, contentHandler);
-                component.setSpecVersion(oldVersion);
-            }
+        for (final ComponentContainer component : module.getComponents()) {
+            final SpecVersion oldVersion = component.getComponentDescription().getSpecVersion();
+            component.getComponentDescription().setSpecVersion(module.getOptions().getSpecVersion());
+            generateXML(namespace, component, contentHandler);
+            component.getComponentDescription().setSpecVersion(oldVersion);
         }
+
         // end wrapper element
         contentHandler.endElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS);
         IOUtils.newline(contentHandler);
@@ -197,11 +193,13 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(final String namespace, final Component component, final ContentHandler contentHandler)
-                    throws SAXException {
+    protected static void generateXML(final String namespace, final ComponentContainer container, final ContentHandler contentHandler)
+    throws SAXException {
+        final ComponentDescription component = container.getComponentDescription();
+
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, COMPONENT_ATTR_ENABLED, component.isEnabled());
-        IOUtils.addAttribute(ai, COMPONENT_ATTR_IMMEDIATE, component.isImmediate());
+        IOUtils.addAttribute(ai, COMPONENT_ATTR_ENABLED, component.getEnabled());
+        IOUtils.addAttribute(ai, COMPONENT_ATTR_IMMEDIATE, component.getImmediate());
         IOUtils.addAttribute(ai, COMPONENT_ATTR_NAME, component.getName());
         IOUtils.addAttribute(ai, COMPONENT_ATTR_FACTORY, component.getFactory());
 
@@ -223,20 +221,18 @@ public class ComponentDescriptorIO {
         IOUtils.indent(contentHandler, 1);
         contentHandler.startElement(namespace, ComponentDescriptorIO.COMPONENT, ComponentDescriptorIO.COMPONENT_QNAME, ai);
         IOUtils.newline(contentHandler);
-        generateImplementationXML(component, contentHandler);
-        if (component.getService() != null) {
-            generateServiceXML(component.getService(), contentHandler);
+        generateImplementationXML(container, contentHandler);
+        if (container.getServiceDescription() != null) {
+            generateServiceXML(container.getServiceDescription(), contentHandler);
         }
-        if (component.getProperties() != null) {
-            for (final Property property : component.getProperties()) {
-                generatePropertyXML(property, contentHandler);
-            }
+        for (final PropertyDescription property : container.getProperties().values()) {
+            generatePropertyXML(property, contentHandler);
         }
-        if (component.getReferences() != null) {
-            for (final Reference reference : component.getReferences()) {
-                generateReferenceXML(component, reference, contentHandler);
-            }
+
+        for (final ReferenceDescription reference : container.getReferences().values()) {
+            generateReferenceXML(component, reference, contentHandler);
         }
+
         IOUtils.indent(contentHandler, 1);
         contentHandler.endElement(namespace, ComponentDescriptorIO.COMPONENT, ComponentDescriptorIO.COMPONENT_QNAME);
         IOUtils.newline(contentHandler);
@@ -249,7 +245,7 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateImplementationXML(Component component, ContentHandler contentHandler) throws SAXException {
+    protected static void generateImplementationXML(ComponentContainer component, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "class", component.getClassDescription().getDescribedClass().getName());
         IOUtils.indent(contentHandler, 2);
@@ -268,7 +264,7 @@ public class ComponentDescriptorIO {
      * @throws SAXException
      */
     protected static void generateServiceXML(
-                    final Service service,
+                    final ServiceDescription service,
                     final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
@@ -277,8 +273,8 @@ public class ComponentDescriptorIO {
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.SERVICE, ComponentDescriptorIO.SERVICE_QNAME, ai);
         if (service.getInterfaces() != null && service.getInterfaces().size() > 0) {
             IOUtils.newline(contentHandler);
-            for (final Interface interf : service.getInterfaces()) {
-                generateXML(interf, contentHandler);
+            for (final String interf : service.getInterfaces()) {
+                generateServiceXML(interf, contentHandler);
             }
             IOUtils.indent(contentHandler, 2);
         }
@@ -293,9 +289,10 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(Interface interf, ContentHandler contentHandler) throws SAXException {
+    private static void generateServiceXML(final String interfaceName, final ContentHandler contentHandler)
+    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "interface", interf.getInterfaceName());
+        IOUtils.addAttribute(ai, "interface", interfaceName);
         IOUtils.indent(contentHandler, 3);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME,
                         ai);
@@ -310,7 +307,7 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generatePropertyXML(Property property, ContentHandler contentHandler) throws SAXException {
+    protected static void generatePropertyXML(PropertyDescription property, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "name", property.getName());
         IOUtils.addAttribute(ai, "type", property.getType());
@@ -339,13 +336,13 @@ public class ComponentDescriptorIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateReferenceXML(final Component component,
-                    final Reference reference,
+    protected static void generateReferenceXML(final ComponentDescription component,
+                    final ReferenceDescription reference,
                     final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "name", reference.getName());
-        IOUtils.addAttribute(ai, "interface", reference.getInterfacename());
+        IOUtils.addAttribute(ai, "interface", reference.getInterfaceName());
         IOUtils.addAttribute(ai, "cardinality", reference.getCardinality().getCardinalityString());
         IOUtils.addAttribute(ai, "policy", reference.getPolicy().name().toLowerCase());
         IOUtils.addAttribute(ai, "target", reference.getTarget());
@@ -479,22 +476,23 @@ public class ComponentDescriptorIO {
                             }
                         }
                         if ( attributes.getValue(COMPONENT_ATTR_ACTIVATE) != null ) {
-                            desc.setActivate(new MethodDescription(attributes.getValue(COMPONENT_ATTR_ACTIVATE)));
+                            desc.setActivate(attributes.getValue(COMPONENT_ATTR_ACTIVATE));
                         }
                         if ( attributes.getValue(COMPONENT_ATTR_DEACTIVATE) != null ) {
-                            desc.setDeactivate(new MethodDescription(attributes.getValue(COMPONENT_ATTR_DEACTIVATE)));
+                            desc.setDeactivate(attributes.getValue(COMPONENT_ATTR_DEACTIVATE));
                         }
                         if ( attributes.getValue(COMPONENT_ATTR_MODIFIED) != null ) {
-                            desc.setModified(new MethodDescription(attributes.getValue(COMPONENT_ATTR_MODIFIED)));
+                            desc.setModified(attributes.getValue(COMPONENT_ATTR_MODIFIED));
                         }
                     }
                 } else if (localName.equals(IMPLEMENTATION)) {
                     // now we can create the class description and attach the component description
                     // Set the implementation class name (mandatory)
+                    final String className = attributes.getValue("class");
                     try {
-                        this.currentClass = new ClassDescription(this.classLoader.loadClass(attributes.getValue("class")), null);
+                        this.currentClass = new ClassDescription(this.classLoader.loadClass(className), "classpath:" + className);
                     } catch (final ClassNotFoundException e) {
-                        iLog.addError("Unable to load class " + attributes.getValue("class") + " from dependencies.", this.location);
+                        iLog.addError("Unable to load class " + className + " from dependencies.", this.location);
                     }
                     this.currentClass.add(this.currentComponent);
 
@@ -584,10 +582,13 @@ public class ComponentDescriptorIO {
                     }
                     ref.setTarget(attributes.getValue("target"));
                     if ( attributes.getValue("bind") != null ) {
-                        ref.setBind(new MethodDescription(attributes.getValue("bind")));
+                        ref.setBind(attributes.getValue("bind"));
                     }
                     if ( attributes.getValue("unbind") != null ) {
-                        ref.setUnbind(new MethodDescription(attributes.getValue("unbind")));
+                        ref.setUnbind(attributes.getValue("unbind"));
+                    }
+                    if ( attributes.getValue("updated") != null ) {
+                        ref.setUnbind(attributes.getValue("updated"));
                     }
 
                     final String strategy = attributes.getValue("strategy");
