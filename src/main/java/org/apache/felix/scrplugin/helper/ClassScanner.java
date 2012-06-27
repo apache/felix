@@ -125,6 +125,10 @@ public class ClassScanner {
         final List<ClassDescription> result = new ArrayList<ClassDescription>();
 
         for (final Source src : project.getSources()) {
+            if ( src.getFile().getName().equals("package-info.java") ) {
+                log.debug("Skipping file " + src.getClassName());
+                continue;
+            }
             log.debug("Scanning class " + src.getClassName());
 
             try {
