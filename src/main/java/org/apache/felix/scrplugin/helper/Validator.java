@@ -169,11 +169,12 @@ public class Validator {
                         "Component must not be immediate if component factory: " + this.container.getClassDescription().getDescribedClass().getName());
                 }
             }
-        }
-        if (iLog.getNumberOfErrors() == currentIssueCount) {
-            // verify references
-            for (final ReferenceDescription ref : this.container.getReferences().values()) {
-                this.validateReference(ref, component.isAbstract());
+
+            if (iLog.getNumberOfErrors() == currentIssueCount) {
+                // verify references
+                for (final ReferenceDescription ref : this.container.getReferences().values()) {
+                    this.validateReference(ref, component.isAbstract());
+                }
             }
         }
     }
@@ -200,14 +201,7 @@ public class Validator {
                 }
             }
         }
-        try {
-            return this.container.getClassDescription().getDescribedClass().getDeclaredMethod(name, classSig);
-        } catch (final SecurityException e) {
-            // ignore
-        } catch (final NoSuchMethodException e) {
-            // ignore
-        }
-        return null;
+        return this.getMethod(name, classSig);
     }
 
     /**
@@ -473,7 +467,7 @@ public class Validator {
         final Method method = this.findMethod(ref, methodName);
         if (method == null) {
             if (!componentIsAbstract) {
-                this.logError(ref,
+                this.logError(this.container.getComponentDescription(),
                                 "Missing method " + methodName + " for reference "
                                                 + (ref.getName() == null ? "" : ref.getName()));
             }
@@ -495,12 +489,16 @@ public class Validator {
     private static final String TYPE_SERVICE_REFERENCE = "org.osgi.framework.ServiceReference";
 
     private Method getMethod(final String name, final Class<?>[] sig) {
-        try {
-            return this.container.getClassDescription().getDescribedClass().getDeclaredMethod(name, sig);
-        } catch (final SecurityException e) {
-            // ignore
-        } catch (final NoSuchMethodException e) {
-            // ignore
+        Class<?> checkClass = this.container.getClassDescription().getDescribedClass();
+        while ( checkClass != null ) {
+            try {
+                return checkClass.getDeclaredMethod(name, sig);
+            } catch (final SecurityException e) {
+                // ignore
+            } catch (final NoSuchMethodException e) {
+                // ignore
+            }
+            checkClass = checkClass.getSuperclass();
         }
         return null;
     }

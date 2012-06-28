@@ -238,6 +238,7 @@ public class SCRDescriptorGenerator {
                     }
                 }
             }
+
             validator.validate();
 
             // ignore component if it has errors
