@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -158,7 +159,24 @@ public class SCRDescriptorMojo extends AbstractMojo {
      */
     private String specVersion;
 
+    /**
+     * Project types which this plugin supports.
+     *
+     * @parameter
+     */
+    protected List<String> supportedProjectTypes = Arrays.asList( new String[]
+        { "jar", "bundle" } );
+
     public void execute() throws MojoExecutionException, MojoFailureException {
+        final String projectType = project.getArtifact().getType();
+
+        // ignore unsupported project types, useful when bundleplugin is configured in parent pom
+        if ( !supportedProjectTypes.contains( projectType ) ) {
+            getLog().debug(
+                "Ignoring project type " + projectType + " - supportedProjectTypes = " + supportedProjectTypes );
+            return;
+        }
+
         // create the log for the generator
         final org.apache.felix.scrplugin.Log scrLog = new MavenLog(getLog());
 
