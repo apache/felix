@@ -500,6 +500,7 @@ public class ComponentDescriptorIO {
                     }
                     this.currentClass = new ClassDescription(cl, "classpath:" + className);
                     this.currentClass.add(this.currentComponent);
+                    this.components.add(this.currentClass);
 
                 } else if (localName.equals(PROPERTY)) {
 
