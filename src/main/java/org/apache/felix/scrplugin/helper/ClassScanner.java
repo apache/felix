@@ -365,7 +365,7 @@ public class ClassScanner {
             // and cache
             allDescriptions.put(name, result);
         }
-        return result;
+        return result.clone();
     }
 
     /**

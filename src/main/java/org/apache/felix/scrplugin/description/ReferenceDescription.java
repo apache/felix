@@ -146,6 +146,14 @@ public class ReferenceDescription extends AbstractDescription {
         this.strategy = strategy;
     }
 
+    public Field getField() {
+        return field;
+    }
+
+    public void setField(Field field) {
+        this.field = field;
+    }
+
     @Override
     public String toString() {
         return "ReferenceDescription [name=" + name + ", interfaceName="
@@ -157,11 +165,21 @@ public class ReferenceDescription extends AbstractDescription {
                 + "]";
     }
 
-    public Field getField() {
-        return field;
-    }
+    @Override
+    public AbstractDescription clone() {
+        final ReferenceDescription cd = new ReferenceDescription(this.annotation);
+        cd.setName(this.getName());
+        cd.setInterfaceName(this.getInterfaceName());
+        cd.setTarget(this.getTarget());
+        cd.setCardinality(this.getCardinality());
+        cd.setPolicy(this.getPolicy());
+        cd.setPolicyOption(this.getPolicyOption());
+        cd.setStrategy(this.getStrategy());
+        cd.setField(this.getField());
+        cd.setBind(this.getBind());
+        cd.setUnbind(this.getUnbind());
+        cd.setUpdated(this.getUpdated());
 
-    public void setField(Field field) {
-        this.field = field;
+        return cd;
     }
 }

@@ -68,4 +68,15 @@ public class ServiceDescription extends AbstractDescription {
                 + ", interfaces=" + interfaces + ", annotation=" + annotation
                 + "]";
     }
+
+    @Override
+    public AbstractDescription clone() {
+        final ServiceDescription cd = new ServiceDescription(this.annotation);
+        cd.setServiceFactory(this.isServiceFactory);
+        for(final String i : this.getInterfaces()) {
+            cd.addInterface(i);
+        }
+
+        return cd;
+    }
 }

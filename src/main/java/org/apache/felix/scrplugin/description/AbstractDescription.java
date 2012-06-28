@@ -71,4 +71,6 @@ public abstract class AbstractDescription {
     public String getIdentifier() {
         return this.annotationPrefix;
     }
+
+    public abstract AbstractDescription clone();
 }

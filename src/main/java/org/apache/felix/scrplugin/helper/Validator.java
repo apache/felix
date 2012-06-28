@@ -28,6 +28,7 @@ import org.apache.felix.scrplugin.Project;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.description.AbstractDescription;
+import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentDescription;
 import org.apache.felix.scrplugin.description.PropertyDescription;
 import org.apache.felix.scrplugin.description.PropertyType;
@@ -59,11 +60,23 @@ public class Validator {
     }
 
     private void logWarn(final AbstractDescription desc, final String message) {
-        iLog.addWarning(desc.getIdentifier() + " : " + message, desc.getSource());
+        // check if location of description is the same as the class
+        final String classLocation = this.container.getComponentDescription().getSource();
+        if ( classLocation.equals(desc.getSource()) ) {
+            iLog.addWarning(desc.getIdentifier() + " : " + message, desc.getSource());
+        } else {
+            iLog.addWarning(desc.getIdentifier() + " (" + desc.getSource() + ") : " + message, classLocation);
+        }
     }
 
     private void logError(final AbstractDescription desc, final String message) {
-        iLog.addError(desc.getIdentifier() + " : " + message, desc.getSource());
+        // check if location of description is the same as the class
+        final String classLocation = this.container.getComponentDescription().getSource();
+        if ( classLocation.equals(desc.getSource()) ) {
+            iLog.addError(desc.getIdentifier() + " : " + message, desc.getSource());
+        } else {
+            iLog.addError(desc.getIdentifier() + " (" + desc.getSource() + ") : " + message, classLocation);
+        }
     }
 
     /**
@@ -201,7 +214,7 @@ public class Validator {
                 }
             }
         }
-        return this.getMethod(name, classSig);
+        return getMethod(this.container.getClassDescription(), name, classSig);
     }
 
     /**
@@ -434,6 +447,9 @@ public class Validator {
 
             if ( bindName != null ) {
                 bindName = this.validateMethod(ref, bindName, componentIsAbstract);
+                if ( bindName == null && ref.getField() != null ) {
+                    iLog.addError("Something went wrong: " + canGenerate + " - " + this.options.isGenerateAccessors() + " - " + ref.getCardinality(), ref.getField().getName());
+                }
             } else {
                 bindName = "bind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
             }
@@ -464,10 +480,10 @@ public class Validator {
 
     private String validateMethod(final ReferenceDescription ref, final String methodName, final boolean componentIsAbstract)
     throws SCRDescriptorException {
-        final Method method = this.findMethod(ref, methodName);
+        final Method method = findMethod(this.project, this.options, this.container.getClassDescription(), ref, methodName);
         if (method == null) {
             if (!componentIsAbstract) {
-                this.logError(this.container.getComponentDescription(),
+                this.logError(ref,
                                 "Missing method " + methodName + " for reference "
                                                 + (ref.getName() == null ? "" : ref.getName()));
             }
@@ -488,8 +504,8 @@ public class Validator {
 
     private static final String TYPE_SERVICE_REFERENCE = "org.osgi.framework.ServiceReference";
 
-    private Method getMethod(final String name, final Class<?>[] sig) {
-        Class<?> checkClass = this.container.getClassDescription().getDescribedClass();
+    private static Method getMethod(final ClassDescription cd, final String name, final Class<?>[] sig) {
+        Class<?> checkClass = cd.getDescribedClass();
         while ( checkClass != null ) {
             try {
                 return checkClass.getDeclaredMethod(name, sig);
@@ -503,20 +519,24 @@ public class Validator {
         return null;
     }
 
-    public Method findMethod(final ReferenceDescription ref, final String methodName)
+    public static Method findMethod(final Project project,
+                    final Options options,
+                    final ClassDescription cd,
+                    final ReferenceDescription ref,
+                    final String methodName)
     throws SCRDescriptorException {
         try {
-            final Class<?>[] sig = new Class<?>[] { this.project.getClassLoader().loadClass(TYPE_SERVICE_REFERENCE) };
-            final Class<?>[] sig2 = new Class<?>[] { this.project.getClassLoader().loadClass(ref.getInterfaceName()) };
-            final Class<?>[] sig3 = new Class<?>[] { this.project.getClassLoader().loadClass(ref.getInterfaceName()), Map.class };
+            final Class<?>[] sig = new Class<?>[] { project.getClassLoader().loadClass(TYPE_SERVICE_REFERENCE) };
+            final Class<?>[] sig2 = new Class<?>[] { project.getClassLoader().loadClass(ref.getInterfaceName()) };
+            final Class<?>[] sig3 = new Class<?>[] { project.getClassLoader().loadClass(ref.getInterfaceName()), Map.class };
 
             // service interface or ServiceReference first
             String realMethodName = methodName;
-            Method method = getMethod(realMethodName, sig);
+            Method method = getMethod(cd, realMethodName, sig);
             if (method == null) {
-                method = getMethod(realMethodName, sig2);
-                if (method == null && this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
-                    method = getMethod(realMethodName, sig3);
+                method = getMethod(cd, realMethodName, sig2);
+                if (method == null && options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                    method = getMethod(cd, realMethodName, sig3);
                 }
             }
 
@@ -532,12 +552,12 @@ public class Validator {
                 }
                 realMethodName = methodName + Character.toUpperCase(info.charAt(0)) + info.substring(1);
 
-                method = getMethod(realMethodName, sig);
+                method = getMethod(cd, realMethodName, sig);
             }
             if (method == null) {
-                method = getMethod(realMethodName, sig2);
-                if (method == null && this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
-                    method = getMethod(realMethodName, sig3);
+                method = getMethod(cd, realMethodName, sig2);
+                if (method == null && options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                    method = getMethod(cd, realMethodName, sig3);
                 }
             }
 
@@ -545,12 +565,12 @@ public class Validator {
             if (method == null) {
                 int lastDot = ref.getInterfaceName().lastIndexOf('.');
                 realMethodName = methodName + ref.getInterfaceName().substring(lastDot + 1);
-                method = getMethod(realMethodName, sig);
+                method = getMethod(cd, realMethodName, sig);
             }
             if (method == null) {
-                method = getMethod(realMethodName, sig2);
-                if (method == null && this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
-                    method = getMethod(realMethodName, sig3);
+                method = getMethod(cd, realMethodName, sig2);
+                if (method == null && options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                    method = getMethod(cd, realMethodName, sig3);
                 }
             }
 

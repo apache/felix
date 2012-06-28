@@ -190,23 +190,19 @@ public class SCRDescriptorGenerator {
         this.logger.debug("Generating descriptor for spec version: " + specVersion);
         options.setSpecVersion(specVersion);
 
-        // now check for abstract components and fill components objects
         final DescriptionContainer module = new DescriptionContainer(this.options);
 
-        for (final ComponentContainer container : processedContainers) {
-            final int errorCount = iLog.getNumberOfErrors();
+        // before we can validate we should check the references for bind/unbind method
+        // in order to create them if possible
+        if ( this.options.isGenerateAccessors() ) {
 
-            final Validator validator = new Validator(container, project, options, iLog);
-
-            if ( this.options.isGenerateAccessors() ) {
-                // before we can validate we should check the references for bind/unbind method
-                // in order to create them if possible
-
+            for (final ComponentContainer container : processedContainers) {
                 for (final ReferenceDescription ref : container.getReferences().values()) {
                     // if this is a field with a single cardinality,
                     // we look for the bind/unbind methods
                     // and create them if they are not availabe
                     if (ref.getStrategy() != ReferenceStrategy.LOOKUP && ref.getField() != null
+                        && ref.getField().getClass().getName().equals(container.getClassDescription().getDescribedClass().getName())
                         && (ref.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || ref.getCardinality() == ReferenceCardinality.MANDATORY_UNARY)) {
 
                         final String bindValue = ref.getBind();
@@ -218,15 +214,24 @@ public class SCRDescriptorGenerator {
                         boolean createUnbind = false;
 
                         // Only create method if no bind name has been specified
-                        if (bindValue == null && validator.findMethod(ref, "bind") == null) {
+                        if (bindValue == null && Validator.findMethod(this.project, this.options, container.getClassDescription(), ref, "bind") == null) {
                             // create bind method
                             createBind = true;
                         }
-                        if (unbindValue == null && validator.findMethod(ref, "unbind") == null) {
+                        if (unbindValue == null && Validator.findMethod(this.project, this.options, container.getClassDescription(), ref, "unbind") == null) {
                             // create unbind method
                             createUnbind = true;
                         }
                         if (createBind || createUnbind) {
+                            // logging
+                            if ( createBind && createUnbind ) {
+                                this.logger.debug("Generating bind and unbind method for " + name + " in " + container.getClassDescription().getClass().getName());
+                            } else if ( createBind ) {
+                                this.logger.debug("Generating bind method for " + name + " in " + container.getClassDescription().getClass().getName());
+                            } else {
+                                this.logger.debug("Generating unbind method for " + name + " in " + container.getClassDescription().getClass().getName());
+
+                            }
                             ClassModifier.addMethods(container.getClassDescription().getDescribedClass().getName(),
                                             name,
                                             ref.getField().getName(),
@@ -238,7 +243,13 @@ public class SCRDescriptorGenerator {
                     }
                 }
             }
+        }
 
+        // now validate
+        for (final ComponentContainer container : processedContainers) {
+            final int errorCount = iLog.getNumberOfErrors();
+
+            final Validator validator = new Validator(container, project, options, iLog);
             validator.validate();
 
             // ignore component if it has errors
@@ -251,7 +262,6 @@ public class SCRDescriptorGenerator {
                 }
             }
         }
-
         // log issues
         iLog.logMessages(logger);
 

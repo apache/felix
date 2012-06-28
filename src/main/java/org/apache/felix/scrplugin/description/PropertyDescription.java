@@ -156,4 +156,19 @@ public class PropertyDescription extends AbstractDescription {
                 + ", options=" + Arrays.toString(options) + ", annotation=" + annotation + "]";
     }
 
+    @Override
+    public AbstractDescription clone() {
+        final PropertyDescription cd = new PropertyDescription(this.annotation);
+        cd.setName(this.getName());
+        cd.setLabel(this.getLabel());
+        cd.setDescription(this.getDescription());
+        cd.setValue(this.getValue());
+        cd.setType(this.getType());
+        cd.setMultiValue(this.getMultiValue());
+        cd.setUnbounded(this.getUnbounded());
+        cd.setCardinality(this.getCardinality());
+        cd.setPrivate(this.isPrivate());
+        cd.setOptions(this.getOptions());
+        return cd;
+    }
 }
