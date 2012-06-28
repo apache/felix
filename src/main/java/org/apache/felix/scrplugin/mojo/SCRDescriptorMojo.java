@@ -164,7 +164,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      *
      * @parameter
      */
-    protected List<String> supportedProjectTypes = Arrays.asList( new String[]
+    private List<String> supportedProjectTypes = Arrays.asList( new String[]
         { "jar", "bundle" } );
 
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -220,7 +220,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         } catch (final SCRDescriptorException sde) {
             throw new MojoExecutionException(sde.getSourceLocation() + " : " + sde.getMessage(), sde.getCause());
-        } catch (SCRDescriptorFailureException sdfe) {
+        } catch (final SCRDescriptorFailureException sdfe) {
             throw (MojoFailureException) new MojoFailureException(
                     sdfe.getMessage()).initCause(sdfe);
         }
@@ -228,8 +228,8 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
     private URL[] getClassPath() throws MojoFailureException {
         @SuppressWarnings("unchecked")
-        List<Artifact> artifacts = this.project.getCompileArtifacts();
-        ArrayList<URL> path = new ArrayList<URL>();
+        final List<Artifact> artifacts = this.project.getCompileArtifacts();
+        final ArrayList<URL> path = new ArrayList<URL>();
 
         try {
             path.add(new File(this.project.getBuild().getOutputDirectory())
@@ -239,8 +239,8 @@ public class SCRDescriptorMojo extends AbstractMojo {
                     "Unable to add target directory to classloader.");
         }
 
-        for (Iterator<Artifact> ai = artifacts.iterator(); ai.hasNext();) {
-            Artifact a = ai.next();
+        for (final Iterator<Artifact> ai = artifacts.iterator(); ai.hasNext();) {
+            final Artifact a = ai.next();
             assertMinScrAnnotationArtifactVersion(a);
             try {
                 path.add(a.getFile().toURI().toURL());
