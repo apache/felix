@@ -55,6 +55,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
      * The list of the managed instance name.
      * This list is shared by all factories and is
      * used to assert name unicity.
+     * All accesses must be protected using the INSTANCE_NAME lock.
      */
     protected static final List INSTANCE_NAME = new ArrayList();
 
@@ -274,39 +275,49 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
                     + ": " + e.getMessage());
         }
 
-        String name;
-        if (configuration.get("instance.name") == null && configuration.get("name") == null) { // Support both instance.name & name
-            name = generateName();
-            configuration.put("instance.name", name);
-        } else {
-            name = (String) configuration.get("instance.name");
-            if (name == null) {
-                name = (String) configuration.get("name");
-                getLogger().log(Logger.WARNING, "The 'name' (" + name + ") attribute, used as the instance name, is deprecated, please use the 'instance.name' attribute");
-                configuration.put("instance.name", name);
-            }
-            if (INSTANCE_NAME.contains(name)) {
-                m_logger.log(Logger.ERROR, "The configuration is not acceptable : Name already used");
-                throw new UnacceptableConfiguration(getFactoryName() + " : Name already used : " + name);
-            }
-        }
-        // Here we are sure to be valid until the end of the method.
-        HandlerManager[] handlers = new HandlerManager[m_requiredHandlers.size()];
-        for (int i = 0; i < handlers.length; i++) {
-            RequiredHandler req = (RequiredHandler) m_requiredHandlers.get(i);
-            handlers[i] = getHandler(req, serviceContext);
-        }
+        // The following code is doing a sequence of operation on the INSTANCE_NAME list
+        // So, it needs to be protected against concurrent access.
+        synchronized (INSTANCE_NAME) {
 
-        try {
-            ComponentInstance instance = createInstance(configuration, context, handlers); // This method is called with the lock.
-            INSTANCE_NAME.add(name);
-            m_componentInstances.put(name, instance);
-            m_logger.log(Logger.INFO, "Instance " + name + " from factory " + m_factoryName + " created");
-            return instance;
-        } catch (ConfigurationException e) {
-            m_logger.log(Logger.ERROR, e.getMessage());
-            throw new ConfigurationException(e.getMessage(), m_factoryName);
-        }
+            String name;
+            if (configuration.get("instance.name") == null && configuration.get("name") == null) { // Support both instance.name & name
+                // We're holding the INSTANCE_NAME lock, so no problem.
+                name = generateName();
+                configuration.put("instance.name", name);
+            } else {
+                name = (String) configuration.get("instance.name");
+                if (name == null) {
+                    name = (String) configuration.get("name");
+                    getLogger().log(Logger.WARNING, "The 'name' (" + name + ") attribute, used as the instance name, is deprecated, please use the 'instance.name' attribute");
+                    configuration.put("instance.name", name);
+                }
+
+                // We're holding the INSTANCE_NAME's lock.
+                if (INSTANCE_NAME.contains(name)) {
+                        m_logger.log(Logger.ERROR, "The configuration is not acceptable : Name already used");
+                        throw new UnacceptableConfiguration(getFactoryName() + " : Name already used : " + name);
+                }
+
+            }
+            // Here we are sure to be valid until the end of the method.
+            HandlerManager[] handlers = new HandlerManager[m_requiredHandlers.size()];
+            for (int i = 0; i < handlers.length; i++) {
+                RequiredHandler req = (RequiredHandler) m_requiredHandlers.get(i);
+                handlers[i] = getHandler(req, serviceContext);
+            }
+
+            try {
+                ComponentInstance instance = createInstance(configuration, context, handlers); // This method is called with the lock.
+                // We're still in the synchronized block, so we can access the INSTANCE_NAME.
+                INSTANCE_NAME.add(name);
+                m_componentInstances.put(name, instance);
+                m_logger.log(Logger.INFO, "Instance " + name + " from factory " + m_factoryName + " created");
+                return instance;
+            } catch (ConfigurationException e) {
+                m_logger.log(Logger.ERROR, e.getMessage());
+                throw new ConfigurationException(e.getMessage(), m_factoryName);
+            }
+        } // End of the synchronized block on INSTANCE_NAME.
 
 
     }
@@ -673,7 +684,9 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
      * @see org.osgi.service.cm.ManagedServiceFactory#deleted(java.lang.String)
      */
     public synchronized void deleted(String name) {
-        INSTANCE_NAME.remove(name);
+        synchronized (INSTANCE_NAME) {
+            INSTANCE_NAME.remove(name);
+        }
         ComponentInstance instance = (ComponentInstance) m_componentInstances.remove(name);
         if (instance != null) {
             instance.dispose();
@@ -687,8 +700,10 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
     public void disposed(ComponentInstance instance) {
         String name = instance.getInstanceName();
         synchronized (this) {
-            INSTANCE_NAME.remove(name);
             m_componentInstances.remove(name);
+        }
+        synchronized (INSTANCE_NAME) {
+            INSTANCE_NAME.remove(name);
         }
     }
 
@@ -769,7 +784,10 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
                     if (instance.getState() != ComponentInstance.DISPOSED) {
                         instance.dispose();
                     }
-                    INSTANCE_NAME.remove(instance.getInstanceName());
+                    // Need to enter a synchronized block locking the INSTANCE_NAME class to avoid concurrent accesses.
+                    synchronized (INSTANCE_NAME) {
+                        INSTANCE_NAME.remove(instance.getInstanceName());
+                    }
                 }
 
                 m_componentInstances.clear();
@@ -833,7 +851,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
 
     /**
      * Helper method generating a new unique name.
-     * This method is call when holding the lock to assert generated name unicity.
+     * This method is call when holding the lock on INSTANCE_NAME to assert generated name unicity.
      * @return a non already used name
      */
     protected String generateName() {
