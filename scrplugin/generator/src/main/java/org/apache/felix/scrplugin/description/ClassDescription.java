@@ -111,4 +111,12 @@ public class ClassDescription {
                         + ", describedClass=" + describedClass + ", source=" + source
                         + "]";
     }
+
+    public ClassDescription clone() {
+        final ClassDescription cd = new ClassDescription(this.describedClass, this.source);
+        for(final AbstractDescription ad : this.descriptions) {
+            cd.add(ad.clone());
+        }
+        return cd;
+    }
 }

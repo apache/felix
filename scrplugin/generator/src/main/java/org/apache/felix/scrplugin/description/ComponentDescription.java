@@ -250,6 +250,14 @@ public class ComponentDescription extends AbstractDescription {
         }
     }
 
+    public String getConfigurationPid() {
+        return configurationPid;
+    }
+
+    public void setConfigurationPid(String configurationPid) {
+        this.configurationPid = configurationPid;
+    }
+
     @Override
     public String toString() {
         return "ComponentDescription [name=" + name + ", label=" + label + ", description=" + description
@@ -261,11 +269,28 @@ public class ComponentDescription extends AbstractDescription {
                         + configurationPid + "]";
     }
 
-    public String getConfigurationPid() {
-        return configurationPid;
-    }
+    @Override
+    public AbstractDescription clone() {
+        final ComponentDescription cd = new ComponentDescription(this.annotation);
+        cd.setName(this.getName());
+        cd.setLabel(this.getLabel());
+        cd.setDescription(this.getDescription());
+        cd.setConfigurationPolicy(this.getConfigurationPolicy());
+        cd.setAbstract(this.isAbstract);
+        cd.setInherit(this.isInherit);
+        cd.setCreateDs(this.isCreateDs());
+        cd.setCreateMetatype(this.isCreateMetatype());
+        cd.setCreatePid(this.isCreatePid());
+        cd.setEnabled(this.getEnabled());
+        cd.setImmediate(this.getImmediate());
+        cd.setFactory(this.getFactory());
+        cd.setSetMetatypeFactoryPid(this.isSetMetatypeFactoryPid());
+        cd.setActivate(this.getActivate());
+        cd.setDeactivate(this.getDeactivate());
+        cd.setModified(this.getModified());
+        cd.setSpecVersion(this.getSpecVersion());
+        cd.setConfigurationPid(this.getConfigurationPid());
 
-    public void setConfigurationPid(String configurationPid) {
-        this.configurationPid = configurationPid;
+        return cd;
     }
 }

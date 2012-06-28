@@ -100,9 +100,9 @@ public class SCRDescriptorTask extends MatchingTask {
 
         try {
             final Path classPath = createClasspath();
-            final ClassLoader classLoader = getClassLoader( this.getClass().getClassLoader() );
             final org.apache.felix.scrplugin.Project project = new org.apache.felix.scrplugin.Project();
-            project.setClassLoader(classLoader);
+            project.setClassLoader(getClassLoader( this.getClass().getClassLoader() ));
+
             project.setDependencies(getDependencies(classPath));
             project.setSources(getSourceFiles(getImplicitFileSet()));
             project.setClassesDirectory(destdir.getAbsolutePath());

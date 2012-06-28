@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.Source;
-import org.apache.felix.scrplugin.helper.StringUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;
@@ -65,12 +64,12 @@ public class MavenProjectScanner {
         // FELIX-509: check for excludes
         String[] includes = new String[] { "**/*.java" };
         if ( includeString != null ) {
-        	includes = StringUtils.split( includeString, "," );
+        	includes = includeString.split( "," );
         }
 
         final String[] excludes;
         if ( excludeString != null ) {
-            excludes = StringUtils.split( excludeString, "," );
+            excludes = excludeString.split( "," );
         } else {
             excludes = null;
         }
