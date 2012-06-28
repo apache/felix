@@ -63,7 +63,7 @@ public abstract class ClassModifier {
             final ClassReader reader = new ClassReader(new FileInputStream(fileName));
             reader.accept(cn, 0);
 
-            final ClassWriter writer = new ClassWriter(0);
+            final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS  | ClassWriter.COMPUTE_FRAMES);
 
             // remove existing implementation von previous builds
             final ClassAdapter adapter = new ClassAdapter(writer) {
