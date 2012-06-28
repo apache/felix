@@ -18,35 +18,12 @@
  */
 package org.apache.felix.scrplugin.helper;
 
+/**
+ * Some string utilities.
+ */
+public abstract class StringUtils {
 
-public class StringUtils
-{
-
-    public static String[] split( String value, String sep )
-    {
-        return value.split( sep );
-    }
-
-
-    public static boolean isEmpty( final String string )
-    {
+    public static boolean isEmpty( final String string ) {
         return string == null || string.length() == 0;
-    }
-
-
-    public static String leftPad( final String base, final int width, final String pad )
-    {
-        StringBuilder builder = new StringBuilder( width );
-
-        int missing = width - base.length();
-        while ( missing > 0 )
-        {
-            builder.append( pad );
-            missing -= pad.length();
-        }
-
-        builder.append( base );
-
-        return builder.toString();
     }
 }
