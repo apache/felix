@@ -161,16 +161,15 @@ public class SCRDescriptorMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         // create the log for the generator
         final org.apache.felix.scrplugin.Log scrLog = new MavenLog(getLog());
-        // create the class loader
-        final ClassLoader classLoader = new URLClassLoader(getClassPath(), this
-                .getClass().getClassLoader());
 
         // create project
         final MavenProjectScanner scanner = new MavenProjectScanner(
                 this.project, this.sourceIncludes, this.sourceExcludes, scrLog);
 
         final Project project = new Project();
-        project.setClassLoader(classLoader);
+        // create the class loader
+        project.setClassLoader(new URLClassLoader(getClassPath(), this
+                                .getClass().getClassLoader()));
         project.setDependencies(scanner.getDependencies());
         project.setSources(scanner.getSources());
         project.setClassesDirectory(this.project.getBuild().getOutputDirectory());
