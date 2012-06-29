@@ -140,6 +140,7 @@ public class R4LibraryClause
             || currentOSName.equals("windowsnt")
             || currentOSName.equals("windows2000")
             || currentOSName.equals("windows2003")
+            || currentOSName.equals("windows2008")
             || currentOSName.equals("windowsxp")
             || currentOSName.equals("windowsce")
             || currentOSName.equals("windowsvista")
@@ -377,6 +378,10 @@ public class R4LibraryClause
             else if (value.indexOf("2003") >= 0)
             {
                 os = "windows2003";
+            }
+            else if (value.indexOf("2008") >= 0)
+            {
+                os = "windows2008";
             }
             else if (value.indexOf("xp") >= 0)
             {
