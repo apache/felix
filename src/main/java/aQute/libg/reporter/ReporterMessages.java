@@ -1,19 +1,3 @@
-/*
- * Copyright (c) OSGi Alliance (2012). All Rights Reserved.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package aQute.libg.reporter;
 
 import java.lang.reflect.*;
@@ -21,8 +5,48 @@ import java.util.*;
 
 import aQute.libg.reporter.Messages.ERROR;
 import aQute.libg.reporter.Messages.WARNING;
+import aQute.service.reporter.*;
+import aQute.service.reporter.Reporter.SetLocation;
 
 public class ReporterMessages {
+
+	static class WARNINGImpl implements ERROR {
+		Reporter.SetLocation	loc;
+
+		public SetLocation file(String file) {
+			return loc.file(file);
+		}
+
+		public SetLocation header(String header) {
+			return loc.header(header);
+		}
+
+		public SetLocation context(String context) {
+			return loc.context(context);
+		}
+
+		public SetLocation method(String methodName) {
+			return loc.method(methodName);
+		}
+
+		public SetLocation line(int n) {
+			return loc.line(n);
+		}
+
+		public SetLocation reference(String reference) {
+			return loc.reference(reference);
+		}
+
+		public WARNINGImpl(Reporter.SetLocation loc) {
+			this.loc = loc;
+		}
+	}
+
+	static class ERRORImpl extends WARNINGImpl implements WARNING {
+		public ERRORImpl(SetLocation e) {
+			super(e);
+		}
+	}
 
 	public static <T> T base(final Reporter reporter, Class<T> messages) {
 		return (T) Proxy.newProxyInstance(messages.getClassLoader(), new Class[] {
@@ -30,12 +54,6 @@ public class ReporterMessages {
 		}, new InvocationHandler() {
 
 			public Object invoke(Object target, Method method, Object[] args) throws Throwable {
-				if (reporter.isExceptions() && args!=null) {
-					for (Object o : args) {
-						if (o instanceof Throwable)
-							((Throwable) o).printStackTrace();
-					}
-				}
 				String format;
 				Message d = method.getAnnotation(Message.class);
 				if (d == null) {
@@ -63,9 +81,10 @@ public class ReporterMessages {
 
 				try {
 					if (method.getReturnType() == ERROR.class) {
-						reporter.error(format, args);
+						return new ERRORImpl(reporter.error(format, args));
+
 					} else if (method.getReturnType() == WARNING.class) {
-						reporter.warning(format, args);
+						return new WARNINGImpl(reporter.warning(format, args));
 					} else
 						reporter.trace(format, args);
 				}

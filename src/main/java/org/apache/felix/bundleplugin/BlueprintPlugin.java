@@ -47,7 +47,7 @@ import aQute.lib.osgi.Processor;
 import aQute.lib.osgi.Resource;
 import aQute.libg.generics.Create;
 import aQute.libg.qtokens.QuotedTokenizer;
-import aQute.libg.reporter.Reporter;
+import aQute.service.reporter.Reporter;
 
 
 public class BlueprintPlugin implements AnalyzerPlugin
