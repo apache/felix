@@ -30,6 +30,7 @@ import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.FieldMetadata;
 import org.apache.felix.ipojo.parser.MethodMetadata;
 import org.apache.felix.ipojo.util.Logger;
+import org.apache.felix.ipojo.util.Property;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -200,6 +201,31 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         // Create the standard handlers and add these handlers to the list
         for (int i = 0; i < m_handlers.length; i++) {
             m_handlers[i].init(this, metadata, configuration);
+        }
+        
+        /* Fix for Felix-3576
+         * BundleContext injection is not registered with the InstanceManager.
+         * We're iterating through factory's all constructors and register first
+         * BundleContext parameter as constructor injection. So rest of the code
+         * don't have to do anything to handle BundleContext mixed with other
+         * injections.
+         */
+        MethodMetadata[] constructors = getFactory().getPojoMetadata().getConstructors();
+        for(int i=0; i < constructors.length; i++ )
+        {
+        	String[] ctorArguments = constructors[i].getMethodArguments();
+        	for(int index = 0; index < ctorArguments.length; index++ )
+        	{
+        		if(ctorArguments[index].equals(BundleContext.class.getName()))
+        		{
+        			Property contextInjection = 
+        					new Property("__context", null, null, index, null, 
+        							BundleContext.class.getName(), this, null);
+        			
+        			contextInjection.setValue(getContext());        			
+        			register(index, contextInjection);
+        		}
+        	}
         }
 
         // Check that the constructor parameter are continuous.
