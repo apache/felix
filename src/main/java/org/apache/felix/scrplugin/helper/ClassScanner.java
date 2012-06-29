@@ -397,7 +397,13 @@ public class ClassScanner {
                             final List<ClassDescription> c =  this.parseServiceComponentDescriptor( scrInfoFile, artifact.toString() + ':' + ABSTRACT_DESCRIPTOR_ARCHIV_PATH);
                             if ( c != null ) {
                                 for(final ClassDescription cd : c) {
-                                    loadedDependencies.put(cd.getDescribedClass().getName(), cd);
+                                    final String name;
+                                    if ( cd.getDescribedClass() == null ) {
+                                        name = cd.getDescription(ComponentDescription.class).getName();
+                                    } else {
+                                        name = cd.getDescribedClass().getName();
+                                    }
+                                    loadedDependencies.put(name, cd);
                                 }
                             }
                             continue;
@@ -426,7 +432,13 @@ public class ClassScanner {
                                     final List<ClassDescription> c = this.readServiceComponentDescriptor( artifact, entry );
                                     if ( c != null ) {
                                         for(final ClassDescription cd : c) {
-                                            loadedDependencies.put(cd.getDescribedClass().getName(), cd);
+                                            final String name;
+                                            if ( cd.getDescribedClass() == null ) {
+                                                name = cd.getDescription(ComponentDescription.class).getName();
+                                            } else {
+                                                name = cd.getDescribedClass().getName();
+                                            }
+                                            loadedDependencies.put(name, cd);
                                         }
                                     }
                                 }
