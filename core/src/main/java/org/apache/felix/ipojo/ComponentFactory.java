@@ -130,6 +130,7 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
     public ComponentTypeDescription getComponentTypeDescription() {
         return new PrimitiveTypeDescription(this);
     }
+    
 
     /**
      * Allows a factory to check if the given element is well-formed.
