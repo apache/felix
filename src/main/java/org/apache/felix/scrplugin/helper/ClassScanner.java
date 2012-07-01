@@ -136,9 +136,12 @@ public class ClassScanner {
                 final Class<?> annotatedClass = project.getClassLoader().loadClass(src.getClassName());
 
                 final ClassDescription desc = this.processClass(annotatedClass, src.getFile().toString());
-                if (desc != null) {
-                    result.add(desc);
+                if ( desc != null ) {
                     this.allDescriptions.put(annotatedClass.getName(), desc);
+                    if ( desc.getDescriptions(ComponentDescription.class).size() > 0) {
+                        result.add(desc);
+                        log.debug("Found component description " + desc + " in " + annotatedClass.getName());
+                    }
                 } else {
                     this.allDescriptions.put(annotatedClass.getName(), new ClassDescription(annotatedClass, GENERATED));
                 }
@@ -154,6 +157,7 @@ public class ClassScanner {
      */
     private ClassDescription processClass(final Class<?> annotatedClass, final String location)
     throws SCRDescriptorFailureException, SCRDescriptorException {
+        log.info("Scanning " + annotatedClass.getName());
         try {
             // get the class file for ASM
             final String pathToClassFile = annotatedClass.getName().replace('.', '/') + ".class";
@@ -174,10 +178,8 @@ public class ClassScanner {
                 final ClassDescription desc = new ClassDescription(annotatedClass, location);
                 aProcessor.process(new ScannedClass(descriptions, annotatedClass), desc);
 
-                if (desc.getDescriptions(ComponentDescription.class).size() > 0) {
-                    log.debug("Found component description " + desc + " in " + annotatedClass.getName());
-                    return desc;
-                }
+                log.debug("Found descriptions " + desc + " in " + annotatedClass.getName());
+                return desc;
             }
         } catch (final IOException ioe) {
             throw new SCRDescriptorFailureException("Unable to scan class files: " + annotatedClass.getName(), ioe);
@@ -394,18 +396,7 @@ public class ClassScanner {
                     try {
                         scrInfoFile = this.getFile( artifact, ABSTRACT_DESCRIPTOR_ARCHIV_PATH );
                         if ( scrInfoFile != null ) {
-                            final List<ClassDescription> c =  this.parseServiceComponentDescriptor( scrInfoFile, artifact.toString() + ':' + ABSTRACT_DESCRIPTOR_ARCHIV_PATH);
-                            if ( c != null ) {
-                                for(final ClassDescription cd : c) {
-                                    final String name;
-                                    if ( cd.getDescribedClass() == null ) {
-                                        name = cd.getDescription(ComponentDescription.class).getName();
-                                    } else {
-                                        name = cd.getDescribedClass().getName();
-                                    }
-                                    loadedDependencies.put(name, cd);
-                                }
-                            }
+                            this.readServiceComponentDescriptor( scrInfoFile, artifact.toString() + ':' + ABSTRACT_DESCRIPTOR_ARCHIV_PATH);
                             continue;
                         }
                         this.log.debug( "Artifact has no scrinfo file (it's optional): " + artifact );
@@ -429,18 +420,7 @@ public class ClassScanner {
                             while ( st.hasMoreTokens() ) {
                                 final String entry = st.nextToken().trim();
                                 if ( entry.length() > 0 ) {
-                                    final List<ClassDescription> c = this.readServiceComponentDescriptor( artifact, entry );
-                                    if ( c != null ) {
-                                        for(final ClassDescription cd : c) {
-                                            final String name;
-                                            if ( cd.getDescribedClass() == null ) {
-                                                name = cd.getDescription(ComponentDescription.class).getName();
-                                            } else {
-                                                name = cd.getDescribedClass().getName();
-                                            }
-                                            loadedDependencies.put(name, cd);
-                                        }
-                                    }
+                                    this.readServiceComponentDescriptor( artifact, entry );
                                 }
                             }
                         } else {
@@ -467,10 +447,22 @@ public class ClassScanner {
      * @throws SCRDescriptorException If an error occurrs reading the
      *             descriptors from the stream.
      */
-    private List<ClassDescription> parseServiceComponentDescriptor(
+    private void readServiceComponentDescriptor(
                     final InputStream file, final String location )
     throws SCRDescriptorException {
-        return ComponentDescriptorIO.read( file, this.project.getClassLoader(), iLog, location );
+        final List<ClassDescription> list = ComponentDescriptorIO.read( file, this.project.getClassLoader(), iLog, location );
+        if ( list != null ) {
+            for(final ClassDescription cd : list) {
+                final String name;
+                if ( cd.getDescribedClass() == null ) {
+                    name = cd.getDescription(ComponentDescription.class).getName();
+                } else {
+                    name = cd.getDescribedClass().getName();
+                }
+                loadedDependencies.put(name, cd);
+            }
+        }
+
     }
 
     /**
@@ -481,7 +473,7 @@ public class ClassScanner {
      * @throws IOException
      * @throws SCRDescriptorException
      */
-    private List<ClassDescription> readServiceComponentDescriptor( final File artifactFile, String entry ) {
+    private void readServiceComponentDescriptor( final File artifactFile, String entry ) {
         this.log.debug( "Reading " + entry + " from " + artifactFile );
         InputStream xml = null;
         try {
@@ -489,7 +481,7 @@ public class ClassScanner {
             if ( xml == null ) {
                 throw new SCRDescriptorException( "Entry " + entry + " not contained in JAR File ", artifactFile.toString());
             }
-            return this.parseServiceComponentDescriptor( xml, artifactFile.toString() + ':' + entry );
+            this.readServiceComponentDescriptor( xml, artifactFile.toString() + ':' + entry );
         } catch ( final IOException mee ) {
             this.log.warn( "Unable to read SCR descriptor file from JAR File " + artifactFile + " at " + entry );
             this.log.debug( "Exception occurred during reading: " + mee.getMessage(), mee );
@@ -501,8 +493,6 @@ public class ClassScanner {
                 try { xml.close(); } catch (final IOException ignore) {}
             }
         }
-
-        return null;
     }
 
 

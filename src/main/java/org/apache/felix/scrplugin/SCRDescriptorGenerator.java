@@ -426,7 +426,7 @@ public class SCRDescriptorGenerator {
                     iLog.addError(sde.getMessage(), sde.getSourceLocation());
                 }
             }
-        } while ( inherit && current != null);
+        } while ( current != null);
 
         // PID handling
         if ( componentDesc.isCreatePid() && !container.getProperties().containsKey(org.osgi.framework.Constants.SERVICE_PID)) {
