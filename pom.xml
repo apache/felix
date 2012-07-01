@@ -27,11 +27,11 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Main</name>
   <artifactId>org.apache.felix.main</artifactId>
-  <version>4.0.3-SNAPSHOT</version>
+  <version>4.0.3</version>
     <scm>
-      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/branches/org.apache.felix.main-4.0.3-RC</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/branches/org.apache.felix.main-4.0.3-RC</developerConnection>
-      <url>http://svn.apache.org/repos/asf/felix/main</url>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-4.0.3</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-4.0.3</developerConnection>
+      <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.main-4.0.3</url>
     </scm>
   <dependencies>
     <dependency>
