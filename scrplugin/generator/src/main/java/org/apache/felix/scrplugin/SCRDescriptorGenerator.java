@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import org.apache.felix.scrplugin.annotations.AnnotationProcessor;
 import org.apache.felix.scrplugin.description.ClassDescription;
+import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
 import org.apache.felix.scrplugin.description.ComponentDescription;
 import org.apache.felix.scrplugin.description.PropertyDescription;
 import org.apache.felix.scrplugin.description.PropertyType;
@@ -403,6 +404,10 @@ public class SCRDescriptorGenerator {
                 }
                 if ( componentDesc.getActivate() != null || componentDesc.getDeactivate() != null || componentDesc.getModified() != null ) {
                     // spec version must be at least 1.1
+                    componentDesc.setSpecVersion(SpecVersion.VERSION_1_1);
+                }
+                if ( componentDesc.getConfigurationPolicy() != ComponentConfigurationPolicy.OPTIONAL ) {
+                    // policy requires 1.1
                     componentDesc.setSpecVersion(SpecVersion.VERSION_1_1);
                 }
             }

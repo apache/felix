@@ -157,7 +157,7 @@ public class ClassScanner {
      */
     private ClassDescription processClass(final Class<?> annotatedClass, final String location)
     throws SCRDescriptorFailureException, SCRDescriptorException {
-        log.info("Scanning " + annotatedClass.getName());
+        log.debug("Processing " + annotatedClass.getName());
         try {
             // get the class file for ASM
             final String pathToClassFile = annotatedClass.getName().replace('.', '/') + ".class";
@@ -172,11 +172,11 @@ public class ClassScanner {
             classReader.accept(classNode, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
 
             // create descriptions
-            final List<ScannedAnnotation> descriptions = extractAnnotation(classNode, annotatedClass);
-            if (descriptions.size() > 0) {
-                // process descriptions
+            final List<ScannedAnnotation> annotations = extractAnnotation(classNode, annotatedClass);
+            if (annotations.size() > 0) {
+                // process annotations and create descriptions
                 final ClassDescription desc = new ClassDescription(annotatedClass, location);
-                aProcessor.process(new ScannedClass(descriptions, annotatedClass), desc);
+                aProcessor.process(new ScannedClass(annotations, annotatedClass), desc);
 
                 log.debug("Found descriptions " + desc + " in " + annotatedClass.getName());
                 return desc;
