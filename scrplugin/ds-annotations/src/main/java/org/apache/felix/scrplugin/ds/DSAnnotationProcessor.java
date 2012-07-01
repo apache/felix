@@ -162,7 +162,7 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
 
         // immediate
         if (cad.getValue("immediate") != null) {
-            component.setEnabled(cad.getBooleanValue("immediate", false));
+            component.setImmediate(cad.getBooleanValue("immediate", false));
         }
 
         // property

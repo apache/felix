@@ -205,7 +205,7 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
         // FELIX-593: immediate attribute does not default to true all the
         // times hence we only set it if declared in the tag
         if (cad.getValue("immediate") != null) {
-            component.setEnabled(cad.getBooleanValue("immediate", false));
+            component.setImmediate(cad.getBooleanValue("immediate", false));
         }
         component.setInherit(cad.getBooleanValue("inherit", true));
         component.setConfigurationPolicy(ComponentConfigurationPolicy.valueOf(cad.getEnumValue("policy",
