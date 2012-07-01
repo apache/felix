@@ -27,7 +27,7 @@
   <packaging>bundle</packaging>
   <name>Apache Felix Main</name>
   <artifactId>org.apache.felix.main</artifactId>
-  <version>4.0.3-RC</version>
+  <version>4.0.3-SNAPSHOT</version>
     <scm>
       <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/main</connection>
       <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/main</developerConnection>
@@ -43,7 +43,7 @@
   <properties>
     <log.level>4</log.level>
     <dollar>$</dollar>
-    <framework.version>4.0.3-RC</framework.version>
+    <framework.version>4.0.3</framework.version>
     <gogo.runtime.version>0.10.0</gogo.runtime.version>
     <gogo.shell.version>0.10.0</gogo.shell.version>
     <gogo.command.version>0.12.0</gogo.command.version>
