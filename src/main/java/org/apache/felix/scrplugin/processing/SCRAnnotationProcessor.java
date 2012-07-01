@@ -32,6 +32,7 @@ import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scr.annotations.Services;
 import org.apache.felix.scrplugin.SCRDescriptorException;
@@ -130,6 +131,16 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
         }
         if (allServiceTags.size() > 0) {
             describedClass.add(createService(allServiceTags, scannedClass));
+        }
+
+        // references - class level
+        final List<ClassAnnotation> referencesClassTags = scannedClass.getClassAnnotations(References.class.getName());
+        scannedClass.processed(referencesClassTags);
+        for (final ClassAnnotation cad : referencesClassTags) {
+            final ClassAnnotation[] values = (ClassAnnotation[]) cad.getValue("value");
+            if (values != null) {
+                createReferences(Arrays.asList(values), describedClass);
+            }
         }
 
         // reference - class level
