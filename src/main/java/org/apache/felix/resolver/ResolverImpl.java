@@ -195,7 +195,7 @@ public class ResolverImpl implements Resolver
                         try
                         {
                             checkPackageSpaceConsistency(
-                                rc, false, allCandidates.getWrappedHost(target),
+                                rc, allCandidates.getWrappedHost(target),
                                 allCandidates, resourcePkgMap, new HashMap());
                         }
                         catch (ResolutionException ex)
@@ -280,11 +280,35 @@ public class ResolverImpl implements Resolver
         return wireMap;
     }
 
-/*
- TODO: RFC-112 - Modify dynamic import handling to be like obr-resolver prototype.
+    /**
+     * Resolves a dynamic requirement for the specified host resource using the specified
+     * {@link ResolveContext}.  The dynamic requirement may contain wild cards in its filter
+     * for the package name.  The matching candidates are used to resolve the requirement and
+     * the resolve context is not asked to find providers for the dynamic requirement.
+     * The host resource is expected to not be a fragment, to already be resolved and
+     * have an existing wiring provided by the resolve context.
+     * <p>
+     * This operation may resolve additional resources in order to resolve the dynamic
+     * requirement.  The returned map will contain entries for each resource that got resolved
+     * in addition to the specified host resource.  The wire list for the host resource
+     * will only contain a single wire which is for the dynamic requirement.
+     * @param rc the resolve context
+     * @param host the hosting resource
+     * @param dynamicReq the dynamic requirement
+     * @param matches a list of matching capabilities
+     * @param ondemandFragments collection of on demand fragments that will attach to any host that is a candidate
+     * @return The new resources and wires required to satisfy the specified
+     *         dynamic requirement. The returned map is the property of the caller
+     *         and can be modified by the caller.
+     * @throws ResolutionException
+     */
     public Map<Resource, List<Wire>> resolve(
-        ResolveContext rc, Resouce resource, String pkgName)
+        ResolveContext rc, Resource host, Requirement dynamicReq,
+        List<Capability> matches, Collection<Resource> ondemandFragments)
+        throws ResolutionException
     {
+        Map<Resource, List<Wire>> wireMap = new HashMap<Resource, List<Wire>>();
+
         // We can only create a dynamic import if the following
         // conditions are met:
         // 1. The specified resource is resolved.
@@ -292,19 +316,27 @@ public class ResolverImpl implements Resolver
         // 3. The package in question is not accessible via require-bundle.
         // 4. The package in question is not exported by the resource.
         // 5. The package in question matches a dynamic import of the resource.
-        // The following call checks all of these conditions and returns
-        // the associated dynamic import and matching capabilities.
-        Candidates allCandidates =
-            getDynamicImportCandidates(rc, resource, pkgName);
-        if (allCandidates != null)
+        if (!matches.isEmpty() && rc.getWirings().containsKey(host))
         {
-            Collection<Resource> ondemandFragments = (rc instanceof ResolveContextImpl)
-                ? ((ResolveContextImpl) rc).getOndemandResources() : Collections.EMPTY_LIST;
+            // Make sure all matching candidates are packages.
+            for (Capability cap : matches)
+            {
+                if (!cap.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE))
+                {
+                    throw new IllegalArgumentException(
+                        "Matching candidate does not provide a package name.");
+                }
+            }
 
-            Map<Resource, List<ResolverWire>> wireMap =
-                new HashMap<Resource, List<ResolverWire>>();
-            Map<Resource, Packages> resourcePkgMap =
-                new HashMap<Resource, Packages>();
+            // Make copy of args in case we want to modify them.
+            ondemandFragments = new ArrayList<Resource>(ondemandFragments);
+
+            // Create all candidates pre-populated with the single candidate set
+            // for the resolving dynamic import of the host.
+            Candidates allCandidates = new Candidates();
+            allCandidates.populateDynamic(rc, host, dynamicReq, matches);
+
+            Map<Resource, Packages> resourcePkgMap = new HashMap<Resource, Packages>();
 
             boolean retry;
             do
@@ -328,7 +360,7 @@ public class ResolverImpl implements Resolver
                     // Record the initial candidate permutation.
                     m_usesPermutations.add(allCandidates);
 
-                    ResolveException rethrow = null;
+                    ResolutionException rethrow = null;
 
                     do
                     {
@@ -347,20 +379,20 @@ public class ResolverImpl implements Resolver
                         // execute code, so we don't need to check for
                         // this case like we do for a normal resolve.
 
-                        calculatePackageSpaces(
-                            allCandidates.getWrappedHost(resource), allCandidates, resourcePkgMap,
-                            new HashMap(), new HashSet());
+                        calculatePackageSpaces(rc,
+                            allCandidates.getWrappedHost(host), allCandidates,
+                            resourcePkgMap, new HashMap(), new HashSet());
 //System.out.println("+++ PACKAGE SPACES START +++");
 //dumpResourcePkgMap(resourcePkgMap);
 //System.out.println("+++ PACKAGE SPACES END +++");
 
                         try
                         {
-                            checkPackageSpaceConsistency(
-                                false, allCandidates.getWrappedHost(resource),
+                            checkDynamicPackageSpaceConsistency(rc,
+                                allCandidates.getWrappedHost(host),
                                 allCandidates, resourcePkgMap, new HashMap());
                         }
-                        catch (ResolveException ex)
+                        catch (ResolutionException ex)
                         {
                             rethrow = ex;
                         }
@@ -374,14 +406,21 @@ public class ResolverImpl implements Resolver
                     // again; otherwise, rethrow the resolve exception.
                     if (rethrow != null)
                     {
-                        Resource faultyResource =
-                            getDeclaredResource(rethrow.getResource()));
-                        if (rethrow.getRequirement() instanceof WrappedRequirement)
+                        Collection<Requirement> exReqs = rethrow.getUnresolvedRequirements();
+                        Requirement faultyReq = ((exReqs == null) || (exReqs.isEmpty()))
+                            ? null : exReqs.iterator().next();
+                        Resource faultyResource = (faultyReq == null)
+                            ? null : getDeclaredResource(faultyReq.getResource());
+                        // If the faulty requirement is wrapped, then it may
+                        // be from a fragment, so consider the fragment faulty
+                        // instead of the host.
+                        if (faultyReq instanceof WrappedRequirement)
                         {
                             faultyResource =
-                                ((WrappedRequirement) rethrow.getRequirement())
-                                    .getOriginalRequirement().getResource());
+                                ((WrappedRequirement) faultyReq)
+                                    .getDeclaredRequirement().getResource();
                         }
+                        // Try to ignore the faulty resource if it is not mandatory.
                         if (ondemandFragments.remove(faultyResource))
                         {
                             retry = true;
@@ -395,9 +434,8 @@ public class ResolverImpl implements Resolver
                     // resolve, so populate the wire map.
                     else
                     {
-                        wireMap = populateDynamicWireMap(
-                            resource, pkgName, resourcePkgMap, wireMap, allCandidates);
-                        return wireMap;
+                        wireMap = populateDynamicWireMap(rc,
+                            host, dynamicReq, resourcePkgMap, wireMap, allCandidates);
                     }
                 }
                 finally
@@ -410,106 +448,9 @@ public class ResolverImpl implements Resolver
             while (retry);
         }
 
-        return null;
+        return wireMap;
     }
 
-    private static Candidates getDynamicImportCandidates(
-        ResolveContext rc, Resource resource, String pkgName)
-    {
-        // Unresolved resources cannot dynamically import, nor can the default
-        // package be dynamically imported.
-        if ((resource.getWiring() == null) || pkgName.length() == 0)
-        {
-            return null;
-        }
-
-        // If the resource doesn't have dynamic imports, then just return
-        // immediately.
-        List<Requirement> dynamics =
-            Util.getDynamicRequirements(resource.getWiring().getRequirements(null));
-        if ((dynamics == null) || dynamics.isEmpty())
-        {
-            return null;
-        }
-
-        // If the resource exports this package, then we cannot
-        // attempt to dynamically import it.
-        for (Capability cap : resource.getWiring().getCapabilities(null))
-        {
-            if (cap.getNamespace().equals(Resource.PACKAGE_NAMESPACE)
-                && cap.getAttributes().get(Resource.PACKAGE_NAMESPACE).equals(pkgName))
-            {
-                return null;
-            }
-        }
-
-        // If this resource already imports or requires this package, then
-        // we cannot dynamically import it.
-        if (((WiringImpl) resource.getWiring()).hasPackageSource(pkgName))
-        {
-            return null;
-        }
-
-        // Determine if any providers of the package exist.
-        Map<String, Object> attrs = Collections.singletonMap(
-            PackageNamespace.PACKAGE_NAMESPACE, (Object) pkgName);
-        RequirementImpl req = new RequirementImpl(
-            resource,
-            PackageNamespace.PACKAGE_NAMESPACE,
-            Collections.EMPTY_MAP,
-            attrs);
-        List<Capability> candidates = rc.findProviders(req, false);
-
-        // Try to find a dynamic requirement that matches the capabilities.
-        RequirementImpl dynReq = null;
-        for (int dynIdx = 0;
-            (candidates.size() > 0) && (dynReq == null) && (dynIdx < dynamics.size());
-            dynIdx++)
-        {
-            for (Iterator<Capability> itCand = candidates.iterator();
-                (dynReq == null) && itCand.hasNext(); )
-            {
-                Capability cap = itCand.next();
-                if (CapabilitySet.matches(
-                    (CapabilityImpl) cap,
-                    ((RequirementImpl) dynamics.get(dynIdx)).getFilter()))
-                {
-                    dynReq = (RequirementImpl) dynamics.get(dynIdx);
-                }
-            }
-        }
-
-        // If we found a matching dynamic requirement, then filter out
-        // any candidates that do not match it.
-        if (dynReq != null)
-        {
-            for (Iterator<Capability> itCand = candidates.iterator();
-                itCand.hasNext(); )
-            {
-                Capability cap = itCand.next();
-                if (!CapabilitySet.matches(
-                    (CapabilityImpl) cap, dynReq.getFilter()))
-                {
-                    itCand.remove();
-                }
-            }
-        }
-        else
-        {
-            candidates.clear();
-        }
-
-        Candidates allCandidates = null;
-
-        if (candidates.size() > 0)
-        {
-            allCandidates = new Candidates();
-            allCandidates.populateDynamic(rc, resource, dynReq, candidates);
-        }
-
-        return allCandidates;
-    }
-*/
     private void calculatePackageSpaces(
         ResolveContext rc,
         Resource resource,
@@ -538,8 +479,10 @@ public class ResolverImpl implements Resolver
             }
         }
 
-        // Create parallel arrays for requirement and proposed candidate
+        // Create parallel lists for requirement and proposed candidate
         // capability or actual capability if resource is resolved or not.
+        // We use parallel lists so we can calculate the packages spaces for
+        // resolved and unresolved resources in an identical fashion.
         List<Requirement> reqs = new ArrayList();
         List<Capability> caps = new ArrayList();
         boolean isDynamicImporting = false;
@@ -578,6 +521,11 @@ public class ResolverImpl implements Resolver
             // Since the resource is resolved, it could be dynamically importing,
             // so check to see if there are candidates for any of its dynamic
             // imports.
+            //
+            // NOTE: If the resource is dynamically importing, the fact that
+            // the dynamic import is added here last to the parallel reqs/caps
+            // list is used later when checking to see if the package being
+            // dynamically imported shadows an existing provider.
             for (Requirement req
                 : Util.getDynamicRequirements(wiring.getResourceRequirements(null)))
             {
@@ -588,7 +536,6 @@ public class ResolverImpl implements Resolver
                 {
                     continue;
                 }
-
                 // Grab first (i.e., highest priority) candidate.
                 Capability cap = candCaps.get(0);
                 reqs.add(req);
@@ -634,6 +581,30 @@ public class ResolverImpl implements Resolver
             Requirement req = reqs.get(i);
             Capability cap = caps.get(i);
             calculateExportedPackages(rc, cap.getResource(), allCandidates, resourcePkgMap);
+
+            // If this resource is dynamically importing, then the last requirement
+            // is the dynamic import being resolved, since it is added last to the
+            // parallel lists above. For the dynamically imported package, make
+            // sure that the resource doesn't already have a provider for that
+            // package, which would be illegal and shouldn't be allowed.
+            if (isDynamicImporting && ((i + 1) == reqs.size()))
+            {
+                String pkgName = (String)
+                    cap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
+                if (resourcePkgs.m_exportedPkgs.containsKey(pkgName)
+                    || resourcePkgs.m_importedPkgs.containsKey(pkgName)
+                    || resourcePkgs.m_requiredPkgs.containsKey(pkgName))
+                {
+                    throw new IllegalArgumentException(
+                        "Resource "
+                        + resource
+                        + " cannot dynamically import package '"
+                        + pkgName
+                        + "' since it already has access to it."
+                        );
+                }
+            }
+
             mergeCandidatePackages(
                 rc, resource, req, cap, resourcePkgMap, allCandidates,
                 new HashMap<Resource, List<Capability>>());
@@ -970,17 +941,27 @@ public class ResolverImpl implements Resolver
 
     private void checkPackageSpaceConsistency(
         ResolveContext rc,
-        boolean isDynamicImporting,
         Resource resource,
         Candidates allCandidates,
         Map<Resource, Packages> resourcePkgMap,
         Map<Resource, Object> resultCache) throws ResolutionException
     {
-        if (rc.getWirings().containsKey(resource) && !isDynamicImporting)
+        if (rc.getWirings().containsKey(resource))
         {
             return;
         }
-        else if(resultCache.containsKey(resource))
+        checkDynamicPackageSpaceConsistency(
+            rc, resource, allCandidates, resourcePkgMap, resultCache);
+    }
+
+    private void checkDynamicPackageSpaceConsistency(
+        ResolveContext rc,
+        Resource resource,
+        Candidates allCandidates,
+        Map<Resource, Packages> resourcePkgMap,
+        Map<Resource, Object> resultCache) throws ResolutionException
+    {
+        if (resultCache.containsKey(resource))
         {
             return;
         }
@@ -1245,7 +1226,7 @@ public class ResolverImpl implements Resolver
                     try
                     {
                         checkPackageSpaceConsistency(
-                            rc, false, importBlame.m_cap.getResource(),
+                            rc, importBlame.m_cap.getResource(),
                             allCandidates, resourcePkgMap, resultCache);
                     }
                     catch (ResolutionException ex)
@@ -1270,7 +1251,7 @@ public class ResolverImpl implements Resolver
         Candidates allCandidates, Requirement req, List<Candidates> permutations)
     {
         List<Capability> candidates = allCandidates.getCandidates(req);
-        if (candidates.size() > 1)
+        if ((candidates != null) && (candidates.size() > 1))
         {
             Candidates perm = allCandidates.copy();
             candidates = perm.getCandidates(req);
@@ -1283,7 +1264,7 @@ public class ResolverImpl implements Resolver
         Candidates allCandidates, Requirement req, List<Candidates> permutations)
     {
         List<Capability> candidates = allCandidates.getCandidates(req);
-        if (candidates.size() > 1)
+        if ((candidates != null) && (candidates.size() > 1))
         {
             // Check existing permutations to make sure we haven't
             // already permutated this requirement. This check for
