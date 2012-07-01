@@ -1,3 +1,18 @@
+Changes from 4.0.2 to 4.0.3
+---------------------------
+
+** Bug
+    * [FELIX-3003] - NPE in ResolverImpl.permutateIfNeeded
+    * [FELIX-3296] - URLHandlers caches null as values for common protocols
+    * [FELIX-3302] - Adapt the URLHandlers for the 4.0 refactoring
+    * [FELIX-3363] - Native bundles cannot be installed on Windows Server 2008 r2 with the tag win32
+    * [FELIX-3393] - Possible deadlock with reentrant calls
+    * [FELIX-3572] - [Framework] Resolver is not checking package space consistency for dynamic imports
+
+** Improvement
+    * [FELIX-3262] - Startup delay due to URLHandlersBundleStreamHandler 
+
+
 Changes from 4.0.1 to 4.0.2
 ---------------------------
 
