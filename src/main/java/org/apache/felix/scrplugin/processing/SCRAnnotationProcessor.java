@@ -370,6 +370,8 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
                 index += 2;
             }
 
+            final boolean hasName = ad.getStringValue("name", null) != null;
+
             if (values != null) {
                 prop.setType(PropertyType.valueOf(type));
                 if (values.length == 1) {
@@ -378,40 +380,47 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
                     prop.setMultiValue(values);
                 }
             } else if (fieldAnnotation != null) {
-
                 // Detect values from field
-                final Object value = fieldAnnotation.getAnnotatedFieldValue();
-                if (value != null) {
-                    if (value.getClass().isArray()) {
-                        values = new String[Array.getLength(value)];
-                        for (int i = 0; i < values.length; i++) {
-                            values[i] = Array.get(value, i).toString();
-                        }
-                        prop.setMultiValue(values);
-                        prop.setType(PropertyType.from(Array.get(value, 0).getClass()));
-                    } else {
-                        prop.setType(PropertyType.from(value.getClass()));
-                        prop.setValue(value.toString());
-                    }
-                }
-            }
-
-            final String defaultName;
-            if (fieldAnnotation != null) {
-                if (values == null) {
-                    defaultName = fieldAnnotation.getAnnotatedField().getName();
-                } else {
+                if ( hasName ) {
                     final Object value = fieldAnnotation.getAnnotatedFieldValue();
                     if (value != null) {
-                        defaultName = value.toString();
-                    } else {
-                        defaultName = null;
+                        if (value.getClass().isArray()) {
+                            final String[] newValues = new String[Array.getLength(value)];
+                            for (int i = 0; i < newValues.length; i++) {
+                                newValues[i] = Array.get(value, i).toString();
+                            }
+                            prop.setMultiValue(newValues);
+                            prop.setType(PropertyType.from(Array.get(value, 0).getClass()));
+                        } else {
+                            prop.setType(PropertyType.from(value.getClass()));
+                            prop.setValue(value.toString());
+                        }
                     }
+                } else {
+                    prop.setType(PropertyType.String);
+                    prop.setValue(fieldAnnotation.getAnnotatedField().getName());
+                }
+            }
+
+            final String name;
+            if ( hasName ) {
+                name = ad.getStringValue("name", null);
+            } else if (fieldAnnotation != null) {
+                if (values == null) {
+                    final Object value = fieldAnnotation.getAnnotatedFieldValue();
+                    if (value != null) {
+                        name = value.toString();
+                    } else {
+                        name = null;
+                    }
+                } else {
+                    name = fieldAnnotation.getAnnotatedField().getName();
                 }
             } else {
-                defaultName = null;
+                name = null;
             }
-            prop.setName(ad.getStringValue("name", defaultName));
+
+            prop.setName(name);
             prop.setLabel(ad.getStringValue("label", null));
             prop.setDescription(ad.getStringValue("description", null));
 
