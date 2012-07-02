@@ -433,6 +433,9 @@ public class SCRDescriptorGenerator {
             }
         } while ( current != null);
 
+        // global properties
+        this.processGlobalProperties(desc, container.getProperties());
+
         // PID handling
         if ( componentDesc.isCreatePid() && !container.getProperties().containsKey(org.osgi.framework.Constants.SERVICE_PID)) {
             final PropertyDescription pid = new PropertyDescription(null);
@@ -442,7 +445,6 @@ public class SCRDescriptorGenerator {
 
             container.getProperties().put(org.osgi.framework.Constants.SERVICE_PID, pid);
         }
-        this.processGlobalProperties(desc, container.getProperties());
 
         return container;
     }
