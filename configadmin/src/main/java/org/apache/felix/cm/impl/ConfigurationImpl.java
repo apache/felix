@@ -37,7 +37,7 @@ import org.osgi.service.log.LogService;
  * the {@link ConfigurationAdapter} class, whose instances are actually returned
  * to clients.
  */
-class ConfigurationImpl extends ConfigurationBase
+public class ConfigurationImpl extends ConfigurationBase
 {
 
     /*

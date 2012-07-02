@@ -32,7 +32,7 @@ import org.osgi.service.cm.ConfigurationPlugin;
  * array is the one to use first and the last elementis the one to
  * use last.
  */
-abstract class RankingComparator implements Comparator
+public abstract class RankingComparator implements Comparator
 {
 
     /**
@@ -47,7 +47,7 @@ abstract class RankingComparator implements Comparator
      * <li><code>&gt; 0</code> if obj1 has lower ranking than obj2</li>
      * </ul>
      */
-    static Comparator SRV_RANKING = new RankingComparator()
+    public static Comparator SRV_RANKING = new RankingComparator()
     {
         public int compare( Object obj1, Object obj2 )
         {
@@ -87,7 +87,7 @@ abstract class RankingComparator implements Comparator
      * <li><code>&gt; 0</code> if obj1 has higher ranking than obj2</li>
      * </ul>
      */
-    static Comparator CM_RANKING = new RankingComparator()
+    public static Comparator CM_RANKING = new RankingComparator()
     {
         public int compare( Object obj1, Object obj2 )
         {

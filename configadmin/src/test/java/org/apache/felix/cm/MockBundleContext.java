@@ -21,6 +21,7 @@ package org.apache.felix.cm;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Properties;
 
@@ -184,7 +185,7 @@ public class MockBundleContext implements BundleContext
      * @seeorg.osgi.framework.BundleContext#getService(org.osgi.framework.
      * ServiceReference)
      */
-    public Object getService( ServiceReference arg0 )
+    public <S> S getService( ServiceReference<S> reference )
     {
         return null;
     }
@@ -239,7 +240,7 @@ public class MockBundleContext implements BundleContext
      * @see org.osgi.framework.BundleContext#registerService(java.lang.String[],
      * java.lang.Object, java.util.Dictionary)
      */
-    public ServiceRegistration registerService( String[] arg0, Object arg1, Dictionary arg2 )
+    public ServiceRegistration<?> registerService( String[] clazzes, Object service, Dictionary<String, ?> properties )
     {
         return null;
     }
@@ -250,7 +251,7 @@ public class MockBundleContext implements BundleContext
      * @see org.osgi.framework.BundleContext#registerService(java.lang.String,
      * java.lang.Object, java.util.Dictionary)
      */
-    public ServiceRegistration registerService( String arg0, Object arg1, Dictionary arg2 )
+    public ServiceRegistration<?> registerService( String clazz, Object service, Dictionary<String, ?> properties )
     {
         return null;
     }
@@ -294,8 +295,37 @@ public class MockBundleContext implements BundleContext
      * @seeorg.osgi.framework.BundleContext#ungetService(org.osgi.framework.
      * ServiceReference)
      */
-    public boolean ungetService( ServiceReference arg0 )
+    public boolean ungetService( ServiceReference<?> reference )
     {
         return false;
+    }
+
+
+    public <S> ServiceRegistration<S> registerService( Class<S> clazz, S service, Dictionary<String, ?> properties )
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    public <S> ServiceReference<S> getServiceReference( Class<S> clazz )
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    public <S> Collection<ServiceReference<S>> getServiceReferences( Class<S> clazz, String filter )
+        throws InvalidSyntaxException
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    public Bundle getBundle( String location )
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
