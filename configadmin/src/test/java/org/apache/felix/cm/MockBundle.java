@@ -52,7 +52,6 @@ public class MockBundle implements Bundle
 
     public Enumeration findEntries( String arg0, String arg1, boolean arg2 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -71,35 +70,30 @@ public class MockBundle implements Bundle
 
     public URL getEntry( String arg0 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public Enumeration getEntryPaths( String arg0 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public Dictionary getHeaders()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public Dictionary getHeaders( String arg0 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public long getLastModified()
     {
-        // TODO Auto-generated method stub
         return 0;
     }
 
@@ -112,141 +106,129 @@ public class MockBundle implements Bundle
 
     public ServiceReference[] getRegisteredServices()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public URL getResource( String arg0 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
-    public Enumeration getResources( String arg0 ) throws IOException
+    public Enumeration getResources( String arg0 )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public ServiceReference[] getServicesInUse()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public int getState()
     {
-        // TODO Auto-generated method stub
         return 0;
     }
 
 
     public String getSymbolicName()
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public boolean hasPermission( Object arg0 )
     {
-        // TODO Auto-generated method stub
         return false;
     }
 
 
     public Class loadClass( String arg0 ) throws ClassNotFoundException
     {
-        // TODO Auto-generated method stub
-        return null;
+        throw new ClassNotFoundException( arg0 );
     }
 
 
-    public void start() throws BundleException
+    public void start()
     {
-        // TODO Auto-generated method stub
-
     }
 
 
-    public void stop() throws BundleException
+    public void stop()
     {
-        // TODO Auto-generated method stub
-
     }
 
 
-    public void uninstall() throws BundleException
+    public void uninstall()
     {
-        // TODO Auto-generated method stub
-
     }
 
 
-    public void update() throws BundleException
+    public void update()
     {
-        // TODO Auto-generated method stub
-
     }
 
 
     public void update( InputStream arg0 ) throws BundleException
     {
-        // TODO Auto-generated method stub
-
+        if ( arg0 != null )
+        {
+            try
+            {
+                arg0.close();
+            }
+            catch ( IOException ioe )
+            {
+                throw new BundleException( ioe.getMessage(), ioe );
+            }
+        }
     }
 
 
-    public void start( int options ) throws BundleException
+    public void start( int options )
     {
-        // TODO Auto-generated method stub
-
     }
 
 
-    public void stop( int options ) throws BundleException
+    public void stop( int options )
     {
-        // TODO Auto-generated method stub
-
     }
 
 
     public int compareTo( Bundle o )
     {
-        // TODO Auto-generated method stub
         return 0;
     }
 
 
+    // Framework 1.5 additions
+
     public Map<X509Certificate, List<X509Certificate>> getSignerCertificates( int signersType )
     {
-        // TODO Auto-generated method stub
-        return null;
+        throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.5" );
     }
 
 
     public Version getVersion()
     {
-        // TODO Auto-generated method stub
-        return null;
+        throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.5" );
     }
 
 
+    // Framework 1.6 additions
+
     public <A> A adapt( Class<A> type )
     {
-        // TODO Auto-generated method stub
-        return null;
+        throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.6" );
     }
 
 
     public File getDataFile( String filename )
     {
-        // TODO Auto-generated method stub
-        return null;
+        throw new AbstractMethodError( "Not supported on Framework API 1.4; added in Framework API 1.6" );
     }
 
 }
