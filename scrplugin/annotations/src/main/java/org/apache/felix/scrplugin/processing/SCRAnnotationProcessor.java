@@ -404,7 +404,6 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
                         }
                     }
                 } else {
-                    prop.setType(PropertyType.String);
                     final Object value = fieldAnnotation.getAnnotatedFieldValue();
                     if (value != null) {
                         name = value.toString();

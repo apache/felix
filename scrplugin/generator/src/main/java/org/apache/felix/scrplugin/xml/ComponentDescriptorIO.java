@@ -522,6 +522,9 @@ public class ComponentDescriptorIO {
                                 iLog.addWarning("Invalid value for attribute type : " + type, this.location);
                             }
                         }
+                        if ( prop.getType() == null ) {
+                            prop.setType(PropertyType.String);
+                        }
 
                         if (attributes.getValue("value") != null) {
                             prop.setValue(attributes.getValue("value"));
