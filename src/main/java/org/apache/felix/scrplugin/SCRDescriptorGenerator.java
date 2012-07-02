@@ -480,70 +480,73 @@ public class SCRDescriptorGenerator {
                     final OCD ocd) {
         for(final PropertyDescription pd : current.getDescriptions(PropertyDescription.class)) {
 
-            // metatype - is this property private?
-            final boolean isPrivate;
-            if ( pd.isPrivate() != null ) {
-                isPrivate = pd.isPrivate();
-            } else {
-                final String name = pd.getName();
-                if (org.osgi.framework.Constants.SERVICE_RANKING.equals(name)
-                    || org.osgi.framework.Constants.SERVICE_PID.equals(name)
-                    || org.osgi.framework.Constants.SERVICE_DESCRIPTION.equals(name)
-                    || org.osgi.framework.Constants.SERVICE_ID.equals(name)
-                    || org.osgi.framework.Constants.SERVICE_VENDOR.equals(name)
-                    || ConfigurationAdmin.SERVICE_BUNDLELOCATION.equals(name)
-                    || ConfigurationAdmin.SERVICE_FACTORYPID.equals(name) ) {
-                    isPrivate = true;
-                } else {
-                    isPrivate = false;
-                }
-            }
-            if ( !isPrivate && ocd != null ) {
-                final AttributeDefinition ad = new AttributeDefinition();
-                ocd.getProperties().add(ad);
-                ad.setId(pd.getName());
-                ad.setType(pd.getType().name());
+            if ( this.testProperty(current, component.getProperties(), pd, current == component.getClassDescription()) && ocd != null) {
 
-                if (pd.getLabel() != null ) {
-                    ad.setName(pd.getLabel());
+                // metatype - is this property private?
+                final boolean isPrivate;
+                if ( pd.isPrivate() != null ) {
+                    isPrivate = pd.isPrivate();
                 } else {
-                    ad.setName("%" + pd.getName() + ".name");
-                }
-                if (pd.getDescription() != null ) {
-                    ad.setDescription(pd.getDescription());
-                } else {
-                    ad.setDescription("%" + pd.getName() + ".description");
-                }
-
-                if ( pd.getUnbounded() == PropertyUnbounded.DEFAULT ) {
-                    ad.setCardinality(pd.getCardinality());
-                } else if ( pd.getUnbounded() == PropertyUnbounded.ARRAY ) {
-                    // unlimited array
-                    ad.setCardinality(new Integer(Integer.MAX_VALUE));
-                } else {
-                    // unlimited vector
-                    ad.setCardinality(new Integer(Integer.MIN_VALUE));
-                }
-
-                ad.setDefaultValue(pd.getValue());
-                ad.setDefaultMultiValue(pd.getMultiValue());
-
-                // check options
-                final String[] parameters = pd.getOptions();
-                if ( parameters != null && parameters.length > 0 ) {
-                    final Map<String, String> options = new LinkedHashMap<String, String>();
-                    for (int j=0; j < parameters.length; j=j+2) {
-                        final String optionLabel = parameters[j];
-                        final String optionValue = (j < parameters.length-1) ? parameters[j+1] : null;
-                        if (optionValue != null) {
-                            options.put(optionLabel, optionValue);
-                        }
+                    final String name = pd.getName();
+                    if (org.osgi.framework.Constants.SERVICE_RANKING.equals(name)
+                        || org.osgi.framework.Constants.SERVICE_PID.equals(name)
+                        || org.osgi.framework.Constants.SERVICE_DESCRIPTION.equals(name)
+                        || org.osgi.framework.Constants.SERVICE_ID.equals(name)
+                        || org.osgi.framework.Constants.SERVICE_VENDOR.equals(name)
+                        || ConfigurationAdmin.SERVICE_BUNDLELOCATION.equals(name)
+                        || ConfigurationAdmin.SERVICE_FACTORYPID.equals(name) ) {
+                        isPrivate = true;
+                    } else {
+                        isPrivate = false;
                     }
-                    ad.setOptions(options);
                 }
+                if ( !isPrivate ) {
+                    final AttributeDefinition ad = new AttributeDefinition();
+                    ocd.getProperties().add(ad);
+                    ad.setId(pd.getName());
+                    ad.setType(pd.getType().name());
 
+                    if (pd.getLabel() != null ) {
+                        ad.setName(pd.getLabel());
+                    } else {
+                        ad.setName("%" + pd.getName() + ".name");
+                    }
+                    if (pd.getDescription() != null ) {
+                        ad.setDescription(pd.getDescription());
+                    } else {
+                        ad.setDescription("%" + pd.getName() + ".description");
+                    }
+
+                    if ( pd.getUnbounded() == PropertyUnbounded.DEFAULT ) {
+                        if ( pd.getCardinality() != 0 ) {
+                            ad.setCardinality(pd.getCardinality());
+                        }
+                    } else if ( pd.getUnbounded() == PropertyUnbounded.ARRAY ) {
+                        // unlimited array
+                        ad.setCardinality(new Integer(Integer.MAX_VALUE));
+                    } else {
+                        // unlimited vector
+                        ad.setCardinality(new Integer(Integer.MIN_VALUE));
+                    }
+
+                    ad.setDefaultValue(pd.getValue());
+                    ad.setDefaultMultiValue(pd.getMultiValue());
+
+                    // check options
+                    final String[] parameters = pd.getOptions();
+                    if ( parameters != null && parameters.length > 0 ) {
+                        final Map<String, String> options = new LinkedHashMap<String, String>();
+                        for (int j=0; j < parameters.length; j=j+2) {
+                            final String optionLabel = parameters[j];
+                            final String optionValue = (j < parameters.length-1) ? parameters[j+1] : null;
+                            if (optionValue != null) {
+                                options.put(optionLabel, optionValue);
+                            }
+                        }
+                        ad.setOptions(options);
+                    }
+                }
             }
-            this.testProperty(current, component.getProperties(), pd, current == component.getClassDescription());
         }
     }
 
@@ -574,7 +577,7 @@ public class SCRDescriptorGenerator {
     /**
      * Test a newly found property
      */
-    private void testProperty(final ClassDescription current,
+    private boolean testProperty(final ClassDescription current,
                     final Map<String, PropertyDescription> allProperties,
                     final PropertyDescription newProperty,
                     final boolean isInspectedClass ) {
@@ -588,13 +591,15 @@ public class SCRDescriptorGenerator {
                     iLog.addError("Duplicate definition for property " + propName + " in class "
                                     + current.getDescribedClass().getName(), current.getSource() );
                 }
-            } else {
-                allProperties.put(propName, newProperty);
+                return false;
             }
+            allProperties.put(propName, newProperty);
+
         } else {
             // no name - generate a unique one
             allProperties.put(UUID.randomUUID().toString(), newProperty);
         }
+        return true;
     }
 
     /**
