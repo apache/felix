@@ -441,10 +441,10 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
             }
 
             // options
-            final ClassAnnotation[] options = (ClassAnnotation[])ad.getValue("options");
+            final ScannedAnnotation[] options = (ScannedAnnotation[])ad.getValue("options");
             if (options != null) {
                 final List<String> propertyOptions = new ArrayList<String>();
-                for(final ClassAnnotation po : options) {
+                for(final ScannedAnnotation po : options) {
                     propertyOptions.add(po.getStringValue("name", ""));
                     propertyOptions.add(po.getStringValue("value", ""));
                 }
