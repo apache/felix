@@ -22,6 +22,7 @@ package org.apache.felix.cm.impl.helper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 
 
 /**
@@ -110,18 +111,17 @@ public class TargetedPID
      */
     public boolean matchesTarget( ServiceReference<?> reference )
     {
+        // already unregistered
+        final Bundle serviceBundle = reference.getBundle();
+        if ( serviceBundle == null )
+        {
+            return false;
+        }
+
         // This is not really targeted
         if ( this.symbolicName == null )
         {
             return true;
-        }
-
-        final Bundle serviceBundle = reference.getBundle();
-
-        // already unregistered
-        if ( serviceBundle == null )
-        {
-            return false;
         }
 
         // bundle symbolic names don't match
@@ -130,12 +130,16 @@ public class TargetedPID
             return false;
         }
 
-        // assert version match
+        // no more specific target
         if ( this.version == null )
         {
             return true;
         }
-        else if ( !this.version.equals( serviceBundle.getVersion().toString() ) )
+
+        // bundle version does not match
+        Object v = serviceBundle.getHeaders().get( Constants.BUNDLE_VERSION );
+        Version s = ( v == null ) ? Version.emptyVersion : new Version( v.toString() );
+        if ( !this.version.equals( s.toString() ) )
         {
             return false;
         }
