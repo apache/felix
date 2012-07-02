@@ -143,10 +143,10 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap>
     protected abstract boolean isFactory();
 
     // Updates
-    public abstract void provide( ServiceReference<S> service, ConfigurationImpl config, Dictionary<String, ?> properties );
+    public abstract void provideConfiguration( ServiceReference<S> service, ConfigurationImpl config, Dictionary<String, ?> properties );
 
 
-    public abstract void remove( ServiceReference<S> service, ConfigurationImpl config );
+    public abstract void removeConfiguration( ServiceReference<S> service, ConfigurationImpl config );
 
 
     protected final S getRealService( ServiceReference<S> reference )

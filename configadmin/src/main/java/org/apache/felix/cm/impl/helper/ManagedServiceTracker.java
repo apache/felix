@@ -43,7 +43,7 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
 
 
     @Override
-    public void provide( ServiceReference<ManagedService> service, final ConfigurationImpl config, Dictionary<String, ?> properties )
+    public void provideConfiguration( ServiceReference<ManagedService> service, final ConfigurationImpl config, Dictionary<String, ?> properties )
     {
         ManagedService srv = this.getRealService( service );
         if ( srv != null )
@@ -65,7 +65,7 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
     }
 
     @Override
-    public void remove( ServiceReference<ManagedService> service, final ConfigurationImpl config )
+    public void removeConfiguration( ServiceReference<ManagedService> service, final ConfigurationImpl config )
     {
         ManagedService srv = this.getRealService( service );
         try

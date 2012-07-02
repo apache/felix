@@ -1556,7 +1556,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     }
                     else if ( canReceive( refBundle, configBundleLocation ) )
                     {
-                        helper.provide( ref, this.config, this.properties );
+                        helper.provideConfiguration( ref, this.config, this.properties );
                     }
                     else
                     {
@@ -1628,7 +1628,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     }
                     else if ( canReceive( srBundle, configLocation ) )
                     {
-                        this.helper.remove( sr, this.config );
+                        this.helper.removeConfiguration( sr, this.config );
                     }
                     else
                     {
@@ -1705,7 +1705,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     if ( wasVisible && !isVisible )
                     {
                         // call deleted method
-                        helper.remove( sr );
+                        helper.removeConfiguration( sr, this.config );
                         log( LogService.LOG_DEBUG, "Configuration {0} revoked from {1} (no more visibility)",
                             new Object[]
                                 { config.getPid(), ConfigurationManager.toString( sr ) } );
@@ -1713,7 +1713,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     else if ( !wasVisible && isVisible )
                     {
                         // call updated method
-                        helper.provide( sr, this.config, this.properties );
+                        helper.provideConfiguration( sr, this.config, this.properties );
                         log( LogService.LOG_DEBUG, "Configuration {0} provided to {1} (new visibility)", new Object[]
                             { config.getPid(), ConfigurationManager.toString( sr ) } );
                     }
