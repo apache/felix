@@ -42,7 +42,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
 
 
     @Override
-    public void provide( ServiceReference<ManagedServiceFactory> reference, final ConfigurationImpl config, final Dictionary<String, ?> rawProps )
+    public void provideConfiguration( ServiceReference<ManagedServiceFactory> reference, final ConfigurationImpl config, final Dictionary<String, ?> rawProps )
     {
         ManagedServiceFactory service = getRealService( reference );
         if ( service != null )
@@ -65,7 +65,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
 
 
     @Override
-    public void remove( ServiceReference<ManagedServiceFactory> reference, final ConfigurationImpl config )
+    public void removeConfiguration( ServiceReference<ManagedServiceFactory> reference, final ConfigurationImpl config )
     {
         ManagedServiceFactory service = this.getRealService( reference );
         if ( service != null )
