@@ -204,7 +204,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
         pd2.setName("sling.filter.scope");
         pd2.setValue(scope);
         pd2.setType(PropertyType.String);
-        pd.setPrivate(true);
+        pd2.setPrivate(true);
         classDescription.add(pd2);
     }
 }
