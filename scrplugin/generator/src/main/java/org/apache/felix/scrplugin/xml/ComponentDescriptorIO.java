@@ -310,7 +310,9 @@ public class ComponentDescriptorIO {
     protected static void generatePropertyXML(PropertyDescription property, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "name", property.getName());
-        IOUtils.addAttribute(ai, "type", property.getType());
+        if ( property.getType() != PropertyType.String ) {
+            IOUtils.addAttribute(ai, "type", property.getType());
+        }
         IOUtils.addAttribute(ai, "value", property.getValue());
 
         IOUtils.indent(contentHandler, 2);

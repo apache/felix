@@ -370,7 +370,7 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
                 index += 2;
             }
 
-            final boolean hasName = ad.getStringValue("name", null) != null;
+            String name = ad.getStringValue("name", null);
 
             if (values != null) {
                 prop.setType(PropertyType.valueOf(type));
@@ -379,9 +379,16 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
                 } else {
                     prop.setMultiValue(values);
                 }
+                if ( name == null ) {
+                    final Object value = fieldAnnotation.getAnnotatedFieldValue();
+                    if (value != null) {
+                        name = value.toString();
+                    }
+                }
+
             } else if (fieldAnnotation != null) {
                 // Detect values from field
-                if ( hasName ) {
+                if ( name != null ) {
                     final Object value = fieldAnnotation.getAnnotatedFieldValue();
                     if (value != null) {
                         if (value.getClass().isArray()) {
@@ -398,26 +405,11 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
                     }
                 } else {
                     prop.setType(PropertyType.String);
-                    prop.setValue(fieldAnnotation.getAnnotatedField().getName());
-                }
-            }
-
-            final String name;
-            if ( hasName ) {
-                name = ad.getStringValue("name", null);
-            } else if (fieldAnnotation != null) {
-                if (values == null) {
                     final Object value = fieldAnnotation.getAnnotatedFieldValue();
                     if (value != null) {
                         name = value.toString();
-                    } else {
-                        name = null;
                     }
-                } else {
-                    name = fieldAnnotation.getAnnotatedField().getName();
                 }
-            } else {
-                name = null;
             }
 
             prop.setName(name);
