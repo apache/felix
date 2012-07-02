@@ -46,7 +46,7 @@ public class MockConfigurationManager extends ConfigurationManager
     }
 
 
-    void log( int level, String message, Throwable t )
+    public void log( int level, String message, Throwable t )
     {
         // no logging for now
     }

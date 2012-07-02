@@ -81,10 +81,15 @@
     </properties>
 
     <dependencies>
+    
+        <!--
+            Depend on latest version to make use of generics. Still we
+            make sure to only require Framework API 1.5 (OSGi Core R4.2)
+        -->
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.1.0</version>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
         
@@ -168,10 +173,12 @@
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.cm.impl,
+                            org.apache.felix.cm.impl.helper,
                             org.osgi.util.tracker
                         </Private-Package>
                         <Import-Package>
                             org.osgi.service.cm;version="[1.5,1.6)",
+                            org.osgi.framework;version="[1.4,2)",
                             *
                         </Import-Package>
                         <DynamicImport-Package>

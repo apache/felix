@@ -37,7 +37,7 @@ import java.util.Vector;
  * out by the Configuration Admin Service Specification requiring the property
  * names to keep case but to ignore case when accessing the properties.
  */
-class CaseInsensitiveDictionary extends Dictionary
+public class CaseInsensitiveDictionary extends Dictionary
 {
 
     /**
@@ -52,14 +52,14 @@ class CaseInsensitiveDictionary extends Dictionary
     private Hashtable originalKeys;
 
 
-    CaseInsensitiveDictionary()
+    public CaseInsensitiveDictionary()
     {
         internalMap = new Hashtable();
         originalKeys = new Hashtable();
     }
 
 
-    CaseInsensitiveDictionary( Dictionary props )
+    public CaseInsensitiveDictionary( Dictionary props )
     {
         this();
 

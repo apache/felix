@@ -19,16 +19,21 @@
 package org.apache.felix.cm;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 
 
 public class MockBundle implements Bundle
@@ -207,6 +212,41 @@ public class MockBundle implements Bundle
     {
         // TODO Auto-generated method stub
 
+    }
+
+
+    public int compareTo( Bundle o )
+    {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+
+    public Map<X509Certificate, List<X509Certificate>> getSignerCertificates( int signersType )
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    public Version getVersion()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    public <A> A adapt( Class<A> type )
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    public File getDataFile( String filename )
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
