@@ -24,9 +24,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -149,7 +149,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      *
      * @parameter
      */
-    private Map<String, String> properties = new HashMap<String, String>();
+    private Map<String, String> properties = new LinkedHashMap<String, String>();
 
     /**
      * The version of the DS spec this plugin generates a descriptor for. By

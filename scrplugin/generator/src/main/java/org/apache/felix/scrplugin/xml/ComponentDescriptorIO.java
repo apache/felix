@@ -496,7 +496,8 @@ public class ComponentDescriptorIO {
                     try {
                         cl = this.classLoader.loadClass(className);
                     } catch (final Throwable e) {
-                        iLog.addWarning("Unable to load class " + className + " from dependencies.", this.location);
+                        // this doesn't have an effect as the classes we processed are loaded
+                        // anyway.
                     }
                     this.currentClass = new ClassDescription(cl, "classpath:" + className);
                     this.currentClass.add(this.currentComponent);

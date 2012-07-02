@@ -438,6 +438,7 @@ public class SCRDescriptorGenerator {
             final PropertyDescription pid = new PropertyDescription(null);
             pid.setName( org.osgi.framework.Constants.SERVICE_PID );
             pid.setValue( componentDesc.getName() );
+            pid.setType(PropertyType.String);
 
             container.getProperties().put(org.osgi.framework.Constants.SERVICE_PID, pid);
         }
