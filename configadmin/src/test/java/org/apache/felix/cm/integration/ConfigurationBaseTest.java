@@ -505,7 +505,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
 
     @Test
-    public void test_basic_configuration_factory_configure_then_start() throws BundleException, IOException
+    public void test_basic_configuration_factory_start_then_configure() throws BundleException, IOException
     {
         final String factoryPid = "test_basic_configuration_factory_configure_then_start";
         bundle = installBundle( factoryPid, ManagedServiceFactoryTestActivator.class );
@@ -541,13 +541,14 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
 
     @Test
-    public void test_basic_configuration_factory_start_then_configure() throws BundleException, IOException
+    public void test_basic_configuration_factory_configure_then_start() throws BundleException, IOException
     {
         // 1. create config with pid and locationA
         // 2. update config with properties
         final String factoryPid = "test_basic_configuration_factory_start_then_configure";
         final Configuration config = createFactoryConfiguration( factoryPid, null, true );
         final String pid = config.getPid();
+        delay();
 
         // 3. register ManagedService ms1 with pid from said locationA
         bundle = installBundle( factoryPid, ManagedServiceFactoryTestActivator.class );
