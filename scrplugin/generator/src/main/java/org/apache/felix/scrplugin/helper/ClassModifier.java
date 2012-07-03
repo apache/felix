@@ -54,6 +54,7 @@ public abstract class ClassModifier {
                            final String typeName,
                            final boolean createBind,
                            final boolean createUnbind,
+                           final ClassLoader classLoader,
                            final String outputDirectory)
     throws SCRDescriptorException {
         // now do byte code manipulation
@@ -63,7 +64,34 @@ public abstract class ClassModifier {
             final ClassReader reader = new ClassReader(new FileInputStream(fileName));
             reader.accept(cn, 0);
 
-            final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS  | ClassWriter.COMPUTE_FRAMES);
+            // TODO: ClassWriter.COMPUTE_MAXS  | ClassWriter.COMPUTE_FRAMES
+            final ClassWriter writer = new ClassWriter(0) {
+
+                protected String getCommonSuperClass(final String type1, final String type2)
+                {
+                    Class c, d;
+                    try {
+                        c = classLoader.loadClass(type1.replace('/', '.'));
+                        d = classLoader.loadClass(type2.replace('/', '.'));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e.toString());
+                    }
+                    if (c.isAssignableFrom(d)) {
+                        return type1;
+                    }
+                    if (d.isAssignableFrom(c)) {
+                        return type2;
+                    }
+                    if (c.isInterface() || d.isInterface()) {
+                        return "java/lang/Object";
+                    } else {
+                        do {
+                            c = c.getSuperclass();
+                        } while (!c.isAssignableFrom(d));
+                        return c.getName().replace('.', '/');
+                    }
+                }
+            };
 
             // remove existing implementation von previous builds
             final ClassAdapter adapter = new ClassAdapter(writer) {
