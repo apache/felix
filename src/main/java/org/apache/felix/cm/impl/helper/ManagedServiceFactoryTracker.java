@@ -30,14 +30,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
 
     public ManagedServiceFactoryTracker( ConfigurationManager cm )
     {
-        super( cm, ManagedServiceFactory.class );
-    }
-
-
-    @Override
-    protected boolean isFactory()
-    {
-        return true;
+        super( cm, true );
     }
 
 
@@ -54,7 +47,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
             }
             catch ( Throwable t )
             {
-                this.cm.handleCallBackError( t, reference, config );
+                this.handleCallBackError( t, reference, config );
             }
             finally
             {
@@ -76,7 +69,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
             }
             catch ( Throwable t )
             {
-                this.cm.handleCallBackError( t, reference, config );
+                this.handleCallBackError( t, reference, config );
             }
             finally
             {

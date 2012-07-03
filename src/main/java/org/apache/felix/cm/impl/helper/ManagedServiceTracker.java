@@ -18,6 +18,7 @@
  */
 package org.apache.felix.cm.impl.helper;
 
+
 import java.util.Dictionary;
 
 import org.apache.felix.cm.impl.ConfigurationImpl;
@@ -25,60 +26,54 @@ import org.apache.felix.cm.impl.ConfigurationManager;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ManagedService;
 
+
 public class ManagedServiceTracker extends BaseTracker<ManagedService>
 {
 
-
     public ManagedServiceTracker( ConfigurationManager cm )
     {
-        super( cm, ManagedService.class );
+        super( cm, false );
     }
 
 
     @Override
-    protected boolean isFactory()
+    public void provideConfiguration( ServiceReference<ManagedService> service, final ConfigurationImpl config,
+        Dictionary<String, ?> properties )
     {
-        return false;
+        updateService( service, config, properties );
     }
 
 
     @Override
-    public void provideConfiguration( ServiceReference<ManagedService> service, final ConfigurationImpl config, Dictionary<String, ?> properties )
+    public void removeConfiguration( ServiceReference<ManagedService> service, final ConfigurationImpl config )
+    {
+        updateService( service, config, null );
+    }
+
+
+    private void updateService( ServiceReference<ManagedService> service, final ConfigurationImpl config,
+        Dictionary<String, ?> properties )
     {
         ManagedService srv = this.getRealService( service );
         if ( srv != null )
         {
             try
             {
-                Dictionary props = getProperties( properties, config.getPid(), service );
-                srv.updated( props );
+                if ( properties != null )
+                {
+                    properties = getProperties( properties, config.getPid(), service );
+                }
+
+                srv.updated( properties );
             }
             catch ( Throwable t )
             {
-                this.cm.handleCallBackError( t, service, config );
+                this.handleCallBackError( t, service, config );
             }
             finally
             {
                 this.ungetRealService( service );
             }
-        }
-    }
-
-    @Override
-    public void removeConfiguration( ServiceReference<ManagedService> service, final ConfigurationImpl config )
-    {
-        ManagedService srv = this.getRealService( service );
-        try
-        {
-            srv.updated( null );
-        }
-        catch ( Throwable t )
-        {
-            this.cm.handleCallBackError( t, service, config );
-        }
-        finally
-        {
-            this.ungetRealService( service );
         }
     }
 }
