@@ -51,12 +51,9 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
-import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.cm.ConfigurationPermission;
 import org.osgi.service.cm.ConfigurationPlugin;
-import org.osgi.service.cm.ManagedService;
-import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.cm.SynchronousConfigurationListener;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
@@ -798,17 +795,28 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      * service property as a String[], which may be <code>null</code> if
      * the ManagedServiceFactory does not have such a property.
      */
-    //TODO: replace above configure methods
-    public void configure( String pid, ServiceReference sr, Object service, final boolean factory )
+    /**
+     * Schedules the configuration of the referenced service with
+     * configuration for the given PID.
+     *
+     * @param pid The service PID of the configuration to be provided
+     *      to the referenced service.
+     * @param sr The <code>ServiceReference</code> to the service
+     *      to be configured.
+     * @param factory <code>true</code> If the service is considered to
+     *      be a <code>ManagedServiceFactory</code>. Otherwise the service
+     *      is considered to be a <code>ManagedService</code>.
+     */
+    public void configure( String pid, ServiceReference sr, final boolean factory )
     {
         Runnable r;
         if ( factory )
         {
-            r = new ManagedServiceFactoryUpdate( pid, sr, ( ManagedServiceFactory ) service );
+            r = new ManagedServiceFactoryUpdate( pid, sr );
         }
         else
         {
-            r = new ManagedServiceUpdate( pid, sr, ( ManagedService ) service );
+            r = new ManagedServiceUpdate( pid, sr );
         }
         updateThread.schedule( r );
         log( LogService.LOG_DEBUG, "[{0}] scheduled", new Object[]
@@ -1074,17 +1082,15 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     }
 
 
-
-
     public static String toString( ServiceReference ref )
     {
         String[] ocs = ( String[] ) ref.getProperty( "objectClass" );
-        StringBuffer buf = new StringBuffer("[");
+        StringBuffer buf = new StringBuffer( "[" );
         for ( int i = 0; i < ocs.length; i++ )
         {
-            buf.append(ocs[i]);
+            buf.append( ocs[i] );
             if ( i < ocs.length - 1 )
-                buf.append(", ");
+                buf.append( ", " );
         }
 
         buf.append( ", id=" ).append( ref.getProperty( Constants.SERVICE_ID ) );
@@ -1102,34 +1108,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         buf.append( "]" );
         return buf.toString();
-    }
-
-
-    public void handleCallBackError( final Throwable error, final ServiceReference target, final ConfigurationImpl config )
-    {
-        if ( error instanceof ConfigurationException )
-        {
-            final ConfigurationException ce = ( ConfigurationException ) error;
-            if ( ce.getProperty() != null )
-            {
-                log( LogService.LOG_ERROR, "{0}: Updating property {1} of configuration {2} caused a problem: {3}",
-                    new Object[]
-                        { toString( target ), ce.getProperty(), config.getPid(), ce.getReason(), ce } );
-            }
-            else
-            {
-                log( LogService.LOG_ERROR, "{0}: Updating configuration {1} caused a problem: {2}", new Object[]
-                    { toString( target ), config.getPid(), ce.getReason(), ce } );
-            }
-        }
-        else
-        {
-            {
-                log( LogService.LOG_ERROR, "{0}: Unexpected problem updating configuration {1}", new Object[]
-                    { toString( target ), config, error } );
-            }
-
-        }
     }
 
 
@@ -1200,19 +1178,16 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private final ServiceReference sr;
 
-        private final ManagedService service;
-
         private final ConfigurationImpl config;
 
         private final Dictionary rawProperties;
 
         private final long revision;
 
-        ManagedServiceUpdate( String pid, ServiceReference sr, ManagedService service )
+        ManagedServiceUpdate( String pid, ServiceReference sr )
         {
             this.pid = pid;
             this.sr = sr;
-            this.service = service;
 
             // get or load configuration for the pid
             ConfigurationImpl config = null;
@@ -1266,9 +1241,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 {
                     // 104.4.2 Dynamic Binding
                     config.tryBindLocation( serviceBundle.getLocation() );
-
-                    // prepare the configuration for the service (call plugins)
-                    callPlugins( properties, pid, sr, config );
                 }
                 else
                 {
@@ -1293,15 +1265,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 properties = null;
             }
 
-            // update the service with the configuration
-            try
-            {
-                service.updated( properties );
-            }
-            catch ( Throwable t )
-            {
-                handleCallBackError( t, sr, config );
-            }
+            managedServiceTracker.provideConfiguration( sr, config, properties );
         }
 
         public String toString()
@@ -1323,17 +1287,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private final ServiceReference sr;
 
-        private final ManagedServiceFactory service;
-
         private final Map configs;
 
         private final Map revisions;
 
-        ManagedServiceFactoryUpdate( String factoryPid, ServiceReference sr, ManagedServiceFactory service )
+        ManagedServiceFactoryUpdate( String factoryPid, ServiceReference sr )
         {
             this.factoryPid = factoryPid;
             this.sr = sr;
-            this.service = service;
 
             Factory factory = null;
             Map configs = null;
@@ -1456,25 +1417,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     // 104.4.2 Dynamic Binding
                     cfg.tryBindLocation( serviceBundle.getLocation() );
 
-                    // prepare the configuration for the service (call plugins)
-                    // call the plugins with cm.target set to the service's factory PID
-                    // (clarification in Section 104.9.1 of Compendium 4.2)
-                    callPlugins( properties, factoryPid, sr, cfg );
-
                     // update the service with the configuration (if non-null)
                     if ( properties != null )
                     {
                         log( LogService.LOG_DEBUG, "{0}: Updating configuration pid={1}", new Object[]
                             { ConfigurationManager.toString( sr ), cfg.getPid() } );
-
-                        try
-                        {
-                            service.updated( cfg.getPid(), properties );
-                        }
-                        catch ( Throwable t )
-                        {
-                            handleCallBackError( t, sr, cfg );
-                        }
+                        managedServiceFactoryTracker.provideConfiguration( sr, cfg, properties );
                     }
                 }
             }

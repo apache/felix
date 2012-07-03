@@ -150,9 +150,21 @@ public class TargetedPID
 
 
     /**
+     * Gets the raw PID with which this instance has been created.
+     * <p>
+     * If an actual service PID contains pipe symbols that PID might be
+     * considered being targeted PID without it actually being one. This
+     * method provides access to the raw PID to allow for such services to
+     * be configured.
+     */
+    public String getRawPid()
+    {
+        return rawPid;
+    }
+
+    /**
      * Returns the service PID of this targeted PID which basically is
      * the targeted PID without the targeting information.
-     * @return
      */
     public String getServicePid()
     {
@@ -191,6 +203,8 @@ public class TargetedPID
      */
     public int matchLevel( final ServiceReference ref )
     {
+
+        // TODO: this fails on multi-value PID properties !
         final Object servicePid = ref.getProperty( Constants.SERVICE_PID );
 
         // in case the service PID contains | characters, this allows
