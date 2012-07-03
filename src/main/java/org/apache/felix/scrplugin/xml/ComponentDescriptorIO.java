@@ -60,6 +60,8 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class ComponentDescriptorIO {
 
+    private static final String PROPERTY_ATTR_TYPE = "type";
+
     /** General attribute for the name (component, reference, property) */
     private static final String ATTR_NAME = "name";
 
@@ -126,6 +128,8 @@ public class ComponentDescriptorIO {
 
     private static final String PROPERTY_ATTR_VALUE = "value";
 
+    private static final String PROPERTY_ATTR_PRIVATE = "private";
+
     private static final String REFERENCE = "reference";
 
     private static final String REFERENCE_QNAME = REFERENCE;
@@ -142,11 +146,15 @@ public class ComponentDescriptorIO {
 
     private static final String REFERENCE_ATTR_TARGET = "target";
 
+    private static final String REFERENCE_ATTR_STRATEGY = "strategy";
+
     private static final String INTERFACE = "provide";
 
     private static final String INTERFACE_QNAME = INTERFACE;
 
     private static final String INTERFACE_ATTR_NAME = "interface";
+
+    private static final String PROPERTIES = "properties";
 
     public static List<ClassDescription> read(final InputStream file,
                     final ClassLoader classLoader,
@@ -338,7 +346,7 @@ public class ComponentDescriptorIO {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, ATTR_NAME, property.getName());
         if ( property.getType() != PropertyType.String ) {
-            IOUtils.addAttribute(ai, "type", property.getType());
+            IOUtils.addAttribute(ai, PROPERTY_ATTR_TYPE, property.getType());
         }
         IOUtils.addAttribute(ai, PROPERTY_ATTR_VALUE, property.getValue());
 
@@ -541,7 +549,7 @@ public class ComponentDescriptorIO {
                         final PropertyDescription prop = new PropertyDescription(null);
 
                         prop.setName(propName);
-                        final String type = attributes.getValue("type");
+                        final String type = attributes.getValue(PROPERTY_ATTR_TYPE);
                         if ( type != null ) {
                             try {
                                 prop.setType(PropertyType.valueOf(type));
@@ -575,13 +583,13 @@ public class ComponentDescriptorIO {
                                 prop.setUnbounded(PropertyUnbounded.VECTOR);
                             }
                         }
-                        final String pValue = attributes.getValue("private");
+                        final String pValue = attributes.getValue(PROPERTY_ATTR_PRIVATE);
                         if (pValue != null) {
                             prop.setPrivate(Boolean.valueOf(pValue));
                         }
                     }
 
-                } else if (localName.equals("properties")) {
+                } else if (localName.equals(PROPERTIES)) {
 
                     // TODO: implement the properties tag
 
@@ -638,7 +646,7 @@ public class ComponentDescriptorIO {
                         ref.setUnbind(attributes.getValue(REFERENCE_ATTR_UPDATED));
                     }
 
-                    final String strategy = attributes.getValue("strategy");
+                    final String strategy = attributes.getValue(REFERENCE_ATTR_STRATEGY);
                     if ( strategy != null ) {
                         try {
                             ref.setStrategy(ReferenceStrategy.valueOf(strategy.toUpperCase()));
