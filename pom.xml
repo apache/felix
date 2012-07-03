@@ -169,13 +169,8 @@
                             <!-- just list, version from package-info classes -->
                             org.apache.felix.cm;
                             org.apache.felix.cm.file,
-                            org.osgi.service.cm;provide:=true;version=1.5;-split-package:=merge-first
+                            org.osgi.service.cm;provide:=true;version=1.5
                         </Export-Package>
-                        <Private-Package>
-                            org.apache.felix.cm.impl,
-                            org.apache.felix.cm.impl.helper,
-                            org.osgi.util.tracker
-                        </Private-Package>
                         <Import-Package>
                             org.osgi.service.cm;version="[1.5,1.6)",
                             org.osgi.framework;version="[1.4,2)",
@@ -198,6 +193,9 @@
 						<Import-Service>
 							org.osgi.service.log.LogService;availability:=optional;multiple:=false
 						</Import-Service>
+                        <Embed-Dependency>
+                            org.osgi.core;inline=org/osgi/util/tracker/ServiceTracker*|org/osgi/util/tracker/AbstractTracked.class
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
