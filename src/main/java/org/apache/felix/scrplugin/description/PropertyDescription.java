@@ -162,9 +162,12 @@ public class PropertyDescription extends AbstractDescription {
         cd.setName(this.getName());
         cd.setLabel(this.getLabel());
         cd.setDescription(this.getDescription());
-        cd.setValue(this.getValue());
+        if ( this.getValue() != null ) {
+            cd.setValue(this.getValue());
+        } else {
+            cd.setMultiValue(this.getMultiValue());
+        }
         cd.setType(this.getType());
-        cd.setMultiValue(this.getMultiValue());
         cd.setUnbounded(this.getUnbounded());
         cd.setCardinality(this.getCardinality());
         cd.setPrivate(this.isPrivate());
