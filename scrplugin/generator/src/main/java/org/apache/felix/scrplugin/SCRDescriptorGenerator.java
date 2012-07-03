@@ -203,7 +203,7 @@ public class SCRDescriptorGenerator {
                     // we look for the bind/unbind methods
                     // and create them if they are not availabe
                     if (ref.getStrategy() != ReferenceStrategy.LOOKUP && ref.getField() != null
-                        && ref.getField().getClass().getName().equals(container.getClassDescription().getDescribedClass().getName())
+                        && ref.getField().getDeclaringClass().getName().equals(container.getClassDescription().getDescribedClass().getName())
                         && (ref.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || ref.getCardinality() == ReferenceCardinality.MANDATORY_UNARY)) {
 
                         final String bindValue = ref.getBind();
@@ -226,11 +226,11 @@ public class SCRDescriptorGenerator {
                         if (createBind || createUnbind) {
                             // logging
                             if ( createBind && createUnbind ) {
-                                this.logger.debug("Generating bind and unbind method for " + name + " in " + container.getClassDescription().getClass().getName());
+                                this.logger.debug("Generating bind and unbind method for " + name + " in " + container.getClassDescription().getDescribedClass().getName());
                             } else if ( createBind ) {
-                                this.logger.debug("Generating bind method for " + name + " in " + container.getClassDescription().getClass().getName());
+                                this.logger.debug("Generating bind method for " + name + " in " + container.getClassDescription().getDescribedClass().getName());
                             } else {
-                                this.logger.debug("Generating unbind method for " + name + " in " + container.getClassDescription().getClass().getName());
+                                this.logger.debug("Generating unbind method for " + name + " in " + container.getClassDescription().getDescribedClass().getName());
 
                             }
                             ClassModifier.addMethods(container.getClassDescription().getDescribedClass().getName(),
