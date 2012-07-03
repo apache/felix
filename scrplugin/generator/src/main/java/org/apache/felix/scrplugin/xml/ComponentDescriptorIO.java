@@ -36,6 +36,7 @@ import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
 import org.apache.felix.scrplugin.description.ComponentDescription;
 import org.apache.felix.scrplugin.description.PropertyDescription;
 import org.apache.felix.scrplugin.description.PropertyType;
+import org.apache.felix.scrplugin.description.PropertyUnbounded;
 import org.apache.felix.scrplugin.description.ReferenceCardinality;
 import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ReferencePolicy;
@@ -58,6 +59,15 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  */
 public class ComponentDescriptorIO {
+
+    /** General attribute for the name (component, reference, property) */
+    private static final String ATTR_NAME = "name";
+
+    private static final String ATTR_CARDINALITY = "cardinality";
+
+    private static final String ATTR_DESCRIPTION = "description";
+
+    private static final String ATTR_LABEL = "label";
 
     /** The inner namespace - used for all inner elements. */
     public static final String INNER_NAMESPACE_URI = "";
@@ -86,9 +96,6 @@ public class ComponentDescriptorIO {
     /** Component: The immediate attribute. */
     private static final String COMPONENT_ATTR_IMMEDIATE = "immediate";
 
-    /** Component: The name attribute. */
-    private static final String COMPONENT_ATTR_NAME = "name";
-
     /** Component: The activate attribute. */
     private static final String COMPONENT_ATTR_ACTIVATE = "activate";
 
@@ -105,21 +112,41 @@ public class ComponentDescriptorIO {
 
     private static final String IMPLEMENTATION_QNAME = IMPLEMENTATION;
 
+    private static final String IMPLEMENTATION_ATTR_CLASS = "class";
+
     private static final String SERVICE = "service";
 
     private static final String SERVICE_QNAME = SERVICE;
+
+    private static final String SERVICE_ATTR_FACTORY = "servicefactory";
 
     private static final String PROPERTY = "property";
 
     private static final String PROPERTY_QNAME = PROPERTY;
 
+    private static final String PROPERTY_ATTR_VALUE = "value";
+
     private static final String REFERENCE = "reference";
 
     private static final String REFERENCE_QNAME = REFERENCE;
 
+    private static final String REFERENCE_ATTR_POLICY = "policy";
+
+    private static final String REFERENCE_ATTR_POLICY_OPTION = "policy-option";
+
+    private static final String REFERENCE_ATTR_UPDATED = "updated";
+
+    private static final String REFERENCE_ATTR_UNBIND = "unbind";
+
+    private static final String REFERENCE_ATTR_BIND = "bind";
+
+    private static final String REFERENCE_ATTR_TARGET = "target";
+
     private static final String INTERFACE = "provide";
 
     private static final String INTERFACE_QNAME = INTERFACE;
+
+    private static final String INTERFACE_ATTR_NAME = "interface";
 
     public static List<ClassDescription> read(final InputStream file,
                     final ClassLoader classLoader,
@@ -200,7 +227,7 @@ public class ComponentDescriptorIO {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, COMPONENT_ATTR_ENABLED, component.getEnabled());
         IOUtils.addAttribute(ai, COMPONENT_ATTR_IMMEDIATE, component.getImmediate());
-        IOUtils.addAttribute(ai, COMPONENT_ATTR_NAME, component.getName());
+        IOUtils.addAttribute(ai, ATTR_NAME, component.getName());
         IOUtils.addAttribute(ai, COMPONENT_ATTR_FACTORY, component.getFactory());
 
         // attributes new in 1.1
@@ -247,7 +274,7 @@ public class ComponentDescriptorIO {
      */
     protected static void generateImplementationXML(ComponentContainer component, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "class", component.getClassDescription().getDescribedClass().getName());
+        IOUtils.addAttribute(ai, IMPLEMENTATION_ATTR_CLASS, component.getClassDescription().getDescribedClass().getName());
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.IMPLEMENTATION,
                         ComponentDescriptorIO.IMPLEMENTATION_QNAME, ai);
@@ -268,7 +295,7 @@ public class ComponentDescriptorIO {
                     final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "servicefactory", String.valueOf(service.isServiceFactory()));
+        IOUtils.addAttribute(ai, SERVICE_ATTR_FACTORY, String.valueOf(service.isServiceFactory()));
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.SERVICE, ComponentDescriptorIO.SERVICE_QNAME, ai);
         if (service.getInterfaces() != null && service.getInterfaces().size() > 0) {
@@ -292,7 +319,7 @@ public class ComponentDescriptorIO {
     private static void generateServiceXML(final String interfaceName, final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "interface", interfaceName);
+        IOUtils.addAttribute(ai, INTERFACE_ATTR_NAME, interfaceName);
         IOUtils.indent(contentHandler, 3);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME,
                         ai);
@@ -309,11 +336,11 @@ public class ComponentDescriptorIO {
      */
     protected static void generatePropertyXML(PropertyDescription property, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "name", property.getName());
+        IOUtils.addAttribute(ai, ATTR_NAME, property.getName());
         if ( property.getType() != PropertyType.String ) {
             IOUtils.addAttribute(ai, "type", property.getType());
         }
-        IOUtils.addAttribute(ai, "value", property.getValue());
+        IOUtils.addAttribute(ai, PROPERTY_ATTR_VALUE, property.getValue());
 
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.PROPERTY, ComponentDescriptorIO.PROPERTY_QNAME, ai);
@@ -344,23 +371,23 @@ public class ComponentDescriptorIO {
                     final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "name", reference.getName());
-        IOUtils.addAttribute(ai, "interface", reference.getInterfaceName());
-        IOUtils.addAttribute(ai, "cardinality", reference.getCardinality().getCardinalityString());
-        IOUtils.addAttribute(ai, "policy", reference.getPolicy().name().toLowerCase());
-        IOUtils.addAttribute(ai, "target", reference.getTarget());
-        IOUtils.addAttribute(ai, "bind", reference.getBind());
-        IOUtils.addAttribute(ai, "unbind", reference.getUnbind());
+        IOUtils.addAttribute(ai, ATTR_NAME, reference.getName());
+        IOUtils.addAttribute(ai, INTERFACE_ATTR_NAME, reference.getInterfaceName());
+        IOUtils.addAttribute(ai, ATTR_CARDINALITY, reference.getCardinality().getCardinalityString());
+        IOUtils.addAttribute(ai, REFERENCE_ATTR_POLICY, reference.getPolicy().name().toLowerCase());
+        IOUtils.addAttribute(ai, REFERENCE_ATTR_TARGET, reference.getTarget());
+        IOUtils.addAttribute(ai, REFERENCE_ATTR_BIND, reference.getBind());
+        IOUtils.addAttribute(ai, REFERENCE_ATTR_UNBIND, reference.getUnbind());
 
         // attributes new in 1.1-felix (FELIX-1893)
         if (module.getOptions().getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1_FELIX.ordinal() ) {
-            IOUtils.addAttribute(ai, "updated", reference.getUpdated());
+            IOUtils.addAttribute(ai, REFERENCE_ATTR_UPDATED, reference.getUpdated());
         }
 
         // attributes new in 1.2
         if (module.getOptions().getSpecVersion().ordinal() >= SpecVersion.VERSION_1_2.ordinal() ) {
             if ( reference.getPolicyOption() != ReferencePolicyOption.RELUCTANT ) {
-                IOUtils.addAttribute(ai, "policy-option", reference.getPolicyOption().name().toLowerCase());
+                IOUtils.addAttribute(ai, REFERENCE_ATTR_POLICY_OPTION, reference.getPolicyOption().name().toLowerCase());
             }
         }
 
@@ -453,7 +480,7 @@ public class ComponentDescriptorIO {
                     this.isComponent = true;
 
                     final ComponentDescription desc = new ComponentDescription(null);
-                    desc.setName(attributes.getValue(COMPONENT_ATTR_NAME));
+                    desc.setName(attributes.getValue(ATTR_NAME));
 
                     // enabled attribute is optional
                     if (attributes.getValue(COMPONENT_ATTR_ENABLED) != null) {
@@ -493,7 +520,7 @@ public class ComponentDescriptorIO {
                 } else if (localName.equals(IMPLEMENTATION)) {
                     // now we can create the class description and attach the component description
                     // Set the implementation class name (mandatory)
-                    final String className = attributes.getValue("class");
+                    final String className = attributes.getValue(IMPLEMENTATION_ATTR_CLASS);
                     Class<?> cl = null;
                     try {
                         cl = this.classLoader.loadClass(className);
@@ -509,7 +536,7 @@ public class ComponentDescriptorIO {
 
                     // read the property, unless it is the service.pid
                     // property which must not be inherited
-                    final String propName = attributes.getValue("name");
+                    final String propName = attributes.getValue(ATTR_NAME);
                     if (!org.osgi.framework.Constants.SERVICE_PID.equals(propName)) {
                         final PropertyDescription prop = new PropertyDescription(null);
 
@@ -526,19 +553,27 @@ public class ComponentDescriptorIO {
                             prop.setType(PropertyType.String);
                         }
 
-                        if (attributes.getValue("value") != null) {
-                            prop.setValue(attributes.getValue("value"));
+                        if (attributes.getValue(PROPERTY_ATTR_VALUE) != null) {
+                            prop.setValue(attributes.getValue(PROPERTY_ATTR_VALUE));
                             this.currentClass.add(prop);
                         } else {
                             // hold the property pending as we have a multi value
                             this.pendingProperty = prop;
                         }
                         // check for abstract properties
-                        prop.setLabel(attributes.getValue("label"));
-                        prop.setDescription(attributes.getValue("description"));
-                        final String cardinality = attributes.getValue("cardinality");
+                        prop.setLabel(attributes.getValue(ATTR_LABEL));
+                        prop.setDescription(attributes.getValue(ATTR_DESCRIPTION));
+                        final String cardinality = attributes.getValue(ATTR_CARDINALITY);
+                        prop.setUnbounded(PropertyUnbounded.DEFAULT);
                         if ( cardinality != null ) {
                             prop.setCardinality(Integer.valueOf(cardinality));
+                            if ( prop.getCardinality() == Integer.MAX_VALUE ) {
+                                prop.setCardinality(0);
+                                prop.setUnbounded(PropertyUnbounded.ARRAY);
+                            } else if ( prop.getCardinality() == Integer.MIN_VALUE ) {
+                                prop.setCardinality(0);
+                                prop.setUnbounded(PropertyUnbounded.VECTOR);
+                            }
                         }
                         final String pValue = attributes.getValue("private");
                         if (pValue != null) {
@@ -555,19 +590,19 @@ public class ComponentDescriptorIO {
                     this.currentService = new ServiceDescription(null);
                     this.currentClass.add(this.currentService);
 
-                    if (attributes.getValue("servicefactory") != null) {
-                        this.currentService.setServiceFactory(Boolean.valueOf(attributes.getValue("servicefactory")));
+                    if (attributes.getValue(SERVICE_ATTR_FACTORY) != null) {
+                        this.currentService.setServiceFactory(Boolean.valueOf(attributes.getValue(SERVICE_ATTR_FACTORY)));
                     }
 
                 } else if (localName.equals(INTERFACE)) {
-                    this.currentService.addInterface(attributes.getValue("interface"));
+                    this.currentService.addInterface(attributes.getValue(INTERFACE_ATTR_NAME));
 
                 } else if (localName.equals(REFERENCE)) {
                     final ReferenceDescription ref = new ReferenceDescription(null);
 
-                    ref.setName(attributes.getValue("name"));
-                    ref.setInterfaceName(attributes.getValue("interface"));
-                    final String cardinality = attributes.getValue("cardinality");
+                    ref.setName(attributes.getValue(ATTR_NAME));
+                    ref.setInterfaceName(attributes.getValue(INTERFACE_ATTR_NAME));
+                    final String cardinality = attributes.getValue(ATTR_CARDINALITY);
                     if ( cardinality != null ) {
                         ref.setCardinality(ReferenceCardinality.fromValue(cardinality));
                         if ( ref.getCardinality() == null ) {
@@ -575,7 +610,7 @@ public class ComponentDescriptorIO {
                         }
                     }
                     ref.setPolicy(ReferencePolicy.STATIC);
-                    final String policy = attributes.getValue("policy");
+                    final String policy = attributes.getValue(REFERENCE_ATTR_POLICY);
                     if ( policy != null ) {
                         try {
                             ref.setPolicy(ReferencePolicy.valueOf(policy.toUpperCase()));
@@ -584,7 +619,7 @@ public class ComponentDescriptorIO {
                         }
                     }
                     ref.setPolicyOption(ReferencePolicyOption.RELUCTANT);
-                    final String policyOption = attributes.getValue("policy-option");
+                    final String policyOption = attributes.getValue(REFERENCE_ATTR_POLICY_OPTION);
                     if ( policyOption != null ) {
                         try {
                             ref.setPolicyOption(ReferencePolicyOption.valueOf(policyOption.toUpperCase()));
@@ -592,15 +627,15 @@ public class ComponentDescriptorIO {
                             iLog.addWarning("Invalid value for attribute policy-option : " + policyOption, this.location);
                         }
                     }
-                    ref.setTarget(attributes.getValue("target"));
-                    if ( attributes.getValue("bind") != null ) {
-                        ref.setBind(attributes.getValue("bind"));
+                    ref.setTarget(attributes.getValue(REFERENCE_ATTR_TARGET));
+                    if ( attributes.getValue(REFERENCE_ATTR_BIND) != null ) {
+                        ref.setBind(attributes.getValue(REFERENCE_ATTR_BIND));
                     }
-                    if ( attributes.getValue("unbind") != null ) {
-                        ref.setUnbind(attributes.getValue("unbind"));
+                    if ( attributes.getValue(REFERENCE_ATTR_UNBIND) != null ) {
+                        ref.setUnbind(attributes.getValue(REFERENCE_ATTR_UNBIND));
                     }
-                    if ( attributes.getValue("updated") != null ) {
-                        ref.setUnbind(attributes.getValue("updated"));
+                    if ( attributes.getValue(REFERENCE_ATTR_UPDATED) != null ) {
+                        ref.setUnbind(attributes.getValue(REFERENCE_ATTR_UPDATED));
                     }
 
                     final String strategy = attributes.getValue("strategy");
