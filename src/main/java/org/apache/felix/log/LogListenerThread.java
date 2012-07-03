@@ -40,6 +40,10 @@ final class LogListenerThread extends Thread
     // The list of listeners.
     private final List m_listeners = new ArrayList();
 
+    LogListenerThread() {
+        super("FelixLogListener");
+    }
+
     /**
      * Add an entry to the list of messages to deliver.
      * @param entry the log entry to deliver
