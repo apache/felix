@@ -67,14 +67,13 @@ public abstract class ClassModifier {
             // TODO: ClassWriter.COMPUTE_MAXS  | ClassWriter.COMPUTE_FRAMES
             final ClassWriter writer = new ClassWriter(0) {
 
-                protected String getCommonSuperClass(final String type1, final String type2)
-                {
-                    Class c, d;
+                protected String getCommonSuperClass(final String type1, final String type2) {
+                    Class<?> c, d;
                     try {
                         c = classLoader.loadClass(type1.replace('/', '.'));
                         d = classLoader.loadClass(type2.replace('/', '.'));
-                    } catch (Exception e) {
-                        throw new RuntimeException(e.toString());
+                    } catch (final Exception e) {
+                        throw new RuntimeException(e.toString(), e);
                     }
                     if (c.isAssignableFrom(d)) {
                         return type1;
@@ -84,12 +83,11 @@ public abstract class ClassModifier {
                     }
                     if (c.isInterface() || d.isInterface()) {
                         return "java/lang/Object";
-                    } else {
-                        do {
-                            c = c.getSuperclass();
-                        } while (!c.isAssignableFrom(d));
-                        return c.getName().replace('.', '/');
                     }
+                    do {
+                        c = c.getSuperclass();
+                    } while (!c.isAssignableFrom(d));
+                    return c.getName().replace('.', '/');
                 }
             };
 
@@ -135,10 +133,10 @@ public abstract class ClassModifier {
         }
     }
 
-    private static void createMethod(final ClassWriter cw, final String className, final String referenceName, final String fieldName, final String typeName, boolean bind) {
+    private static void createMethod(final ClassWriter cw, final String className, final String referenceName, final String fieldName, final String typeName, final boolean bind) {
         final org.objectweb.asm.Type type = org.objectweb.asm.Type.getType("L" + typeName.replace('.', '/') + ";");
         final String methodName = (bind ? "" : "un") + "bind" + referenceName.substring(0, 1).toUpperCase() + referenceName.substring(1);
-        MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PROTECTED, methodName, "(" + type.toString() + ")V", null, null);
+        final MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PROTECTED, methodName, "(" + type.toString() + ")V", null, null);
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         if ( bind ) {
             mv.visitVarInsn(type.getOpcode(Opcodes.ILOAD), 1);
