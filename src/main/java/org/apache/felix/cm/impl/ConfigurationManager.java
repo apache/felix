@@ -29,6 +29,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -163,11 +164,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     private int pmtCount;
 
     // the cache of Factory instances mapped by their factory PID
-    private final Map factories = new HashMap();
+    private final HashMap<String, Factory> factories = new HashMap<String, Factory>();
 
     // the cache of Configuration instances mapped by their PID
     // have this always set to prevent NPE on bundle shutdown
-    private final Map configurations = new HashMap();
+    private final HashMap<String, ConfigurationImpl> configurations = new HashMap<String, ConfigurationImpl>();
 
     /**
      * The map of dynamic configuration bindings. This maps the
@@ -273,14 +274,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
         configurationAdminRegistration = bundleContext.registerService( ConfigurationAdmin.class.getName(), caf, props );
 
+        // start handling ManagedService[Factory] services
+        managedServiceTracker = new ManagedServiceTracker(this);
+        managedServiceFactoryTracker = new ManagedServiceFactoryTracker(this);
+
         // start processing the event queues only after registering the service
         // see FELIX-2813 for details
         this.updateThread.start();
         this.eventThread.start();
-
-        // start handling ManagedService[Factory] services
-        managedServiceTracker = new ManagedServiceTracker(this);
-        managedServiceFactoryTracker = new ManagedServiceFactoryTracker(this);
     }
 
 
@@ -289,6 +290,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         // stop handling bundle events immediately
         handleBundleEvents = false;
+
+        // stop handling ManagedService[Factory] services
+        managedServiceFactoryTracker.close();
+        managedServiceTracker.close();
 
         // stop queue processing before unregistering the service
         // see FELIX-2813 for details
@@ -314,10 +319,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         // consider inactive after unregistering such that during
         // unregistration the manager is still alive and can react
         isActive = false;
-
-        // stop handling ManagedService[Factory] services
-        managedServiceFactoryTracker.close();
-        managedServiceTracker.close();
 
         // don't care for PersistenceManagers any more
         persistenceManagerTracker.close();
@@ -370,7 +371,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( configurations )
         {
-            return ( ConfigurationImpl ) configurations.get( pid );
+            return configurations.get( pid );
         }
     }
 
@@ -379,7 +380,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( configurations )
         {
-            return ( ConfigurationImpl[] ) configurations.values().toArray(
+            return configurations.values().toArray(
                 new ConfigurationImpl[configurations.size()] );
         }
     }
@@ -389,13 +390,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( configurations )
         {
-            Object existing = configurations.get( configuration.getPid() );
+            final String pid = configuration.getPidString();
+            final Object existing = configurations.get( pid );
             if ( existing != null )
             {
                 return ( ConfigurationImpl ) existing;
             }
 
-            configurations.put( configuration.getPid(), configuration );
+            configurations.put( pid, configuration );
             return configuration;
         }
     }
@@ -405,7 +407,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( configurations )
         {
-            configurations.remove( configuration.getPid() );
+            configurations.remove( configuration.getPidString() );
         }
     }
 
@@ -414,7 +416,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( factories )
         {
-            return ( Factory ) factories.get( factoryPid );
+            return factories.get( factoryPid );
         }
     }
 
@@ -423,7 +425,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( factories )
         {
-            return ( Factory[] ) factories.values().toArray( new Factory[factories.size()] );
+            return factories.values().toArray( new Factory[factories.size()] );
         }
     }
 
@@ -432,7 +434,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         synchronized ( factories )
         {
-            factories.put( factory.getFactoryPid(), factory );
+            factories.put( factory.getFactoryPidString(), factory );
         }
     }
 
@@ -470,6 +472,49 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     ConfigurationImpl createFactoryConfiguration( String factoryPid, String location ) throws IOException
     {
         return cacheConfiguration( createConfiguration( createPid( factoryPid ), factoryPid, location ) );
+    }
+
+    /**
+     * Returns a targeted configuration for the given service PID and
+     * the reference target service.
+     *
+     * @param rawPid The raw service PID to get targeted configuration for.
+     * @param target The target <code>ServiceReference</code> to get
+     *      configuration for.
+     * @return The best matching targeted configuration or <code>null</code>
+     *      if there is no configuration at all.
+     * @throwss IOException if an error occurrs reading configurations
+     *      from persistence.
+     */
+    ConfigurationImpl getTargetedConfiguration( final String rawPid, final ServiceReference target ) throws IOException
+    {
+        final Bundle serviceBundle = target.getBundle();
+        if ( serviceBundle != null )
+        {
+            // for pre-1.5 API compatibility
+            final StringBuffer targetedPid = new StringBuffer( rawPid );
+            int i = 3;
+            String[] names = new String[4];
+            names[i--] = targetedPid.toString();
+            targetedPid.append( '|' ).append( serviceBundle.getSymbolicName() );
+            names[i--] = targetedPid.toString();
+            targetedPid.append( '|' ).append( TargetedPID.getBundleVersion( serviceBundle ) );
+            names[i--] = targetedPid.toString();
+            targetedPid.append( '|' ).append( serviceBundle.getLocation() );
+            names[i--] = targetedPid.toString();
+
+            for ( String candidate : names )
+            {
+                ConfigurationImpl config = getConfiguration( candidate );
+                if ( config != null )
+                {
+                    return config;
+                }
+            }
+        }
+
+        // service already unregistered, nothing to do really
+        return null;
     }
 
 
@@ -626,7 +671,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         // remove the configuration from the cache
         removeConfiguration( config );
-        fireConfigurationEvent( ConfigurationEvent.CM_DELETED, config.getPid(), config.getFactoryPid() );
+        fireConfigurationEvent( ConfigurationEvent.CM_DELETED, config.getPidString(), config.getFactoryPidString() );
         updateThread.schedule( new DeleteConfiguration( config ) );
         log( LogService.LOG_DEBUG, "DeleteConfiguration({0}) scheduled", new Object[]
             { config.getPid() } );
@@ -637,7 +682,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     {
         if ( fireEvent )
         {
-            fireConfigurationEvent( ConfigurationEvent.CM_UPDATED, config.getPid(), config.getFactoryPid() );
+            fireConfigurationEvent( ConfigurationEvent.CM_UPDATED, config.getPidString(), config.getFactoryPidString() );
         }
         updateThread.schedule( new UpdateConfiguration( config ) );
         log( LogService.LOG_DEBUG, "UpdateConfiguration({0}) scheduled", new Object[]
@@ -647,7 +692,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
     void locationChanged( ConfigurationImpl config, String oldLocation )
     {
-        fireConfigurationEvent( ConfigurationEvent.CM_LOCATION_CHANGED, config.getPid(), config.getFactoryPid() );
+        fireConfigurationEvent( ConfigurationEvent.CM_LOCATION_CHANGED, config.getPidString(), config.getFactoryPidString() );
         if ( oldLocation != null && !config.isNew() )
         {
             updateThread.schedule( new LocationChanged( config, oldLocation ) );
@@ -854,14 +899,100 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     }
 
 
+    /**
+     * Returns a list of {@link Factory} instances according to the
+     * Configuration Admin 1.5 specification for targeted PIDs (Section
+     * 104.3.2)
+     *
+     * @param rawFactoryPid The raw factory PID without any targetting.
+     * @param target The <code>ServiceReference</code> of the service to
+     *      be supplied with targeted configuration.
+     * @return A list of {@link Factory} instances as listed above. This
+     *      list will always at least include an instance for the
+     *      <code>rawFactoryPid</code>. Other instances are only included
+     *      if existing.
+     * @throws IOException If an error occurrs reading any of the
+     *      {@link Factory} instances from persistence
+     */
+    List<Factory> getTargetedFactories( final String rawFactoryPid, final ServiceReference target ) throws IOException
+    {
+        LinkedList<Factory> factories = new LinkedList<Factory>();
+
+        final Bundle serviceBundle = target.getBundle();
+        if ( serviceBundle != null )
+        {
+            // for pre-1.5 API compatibility
+            final StringBuffer targetedPid = new StringBuffer( rawFactoryPid );
+            factories.add( getOrCreateFactory( targetedPid.toString() ) );
+
+            targetedPid.append( '|' ).append( serviceBundle.getSymbolicName() );
+            Factory f = getFactory( targetedPid.toString() );
+            if ( f != null )
+            {
+                factories.add( 0, f );
+            }
+
+            targetedPid.append( '|' ).append( TargetedPID.getBundleVersion( serviceBundle ) );
+            f = getFactory( targetedPid.toString() );
+            if ( f != null )
+            {
+                factories.add( 0, f );
+            }
+
+            targetedPid.append( '|' ).append( serviceBundle.getLocation() );
+            f = getFactory( targetedPid.toString() );
+            if ( f != null )
+            {
+                factories.add( 0, f );
+            }
+        }
+
+        return factories;
+    }
+
+
+    /**
+     * Gets the factory with the exact identifier from the cached or from
+     * the persistence managers. If no factory exists already one is
+     * created and cached.
+     *
+     * @param factoryPid The PID of the {@link Factory} to return
+     * @return The existing or newly created {@link Factory}
+     * @throws IOException If an error occurrs reading the factory from
+     *      a {@link PersistenceManager}
+     */
+    Factory getOrCreateFactory( String factoryPid ) throws IOException
+    {
+        Factory factory = getFactory( factoryPid );
+        if ( factory != null )
+        {
+            return factory;
+        }
+
+        return createFactory( factoryPid );
+    }
+
+
+    /**
+     * Gets the factory with the exact identifier from the cached or from
+     * the persistence managers. If no factory exists <code>null</code>
+     * is returned.
+     *
+     * @param factoryPid The PID of the {@link Factory} to return
+     * @return The existing {@link Factory} or <code>null</code>
+     * @throws IOException If an error occurrs reading the factory from
+     *      a {@link PersistenceManager}
+     */
     Factory getFactory( String factoryPid ) throws IOException
     {
+        // check for cached factory
         Factory factory = getCachedFactory( factoryPid );
         if ( factory != null )
         {
             return factory;
         }
 
+        // try to load factory from persistence
         PersistenceManager[] pmList = getPersistenceManagers();
         for ( int i = 0; i < pmList.length; i++ )
         {
@@ -873,11 +1004,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             }
         }
 
-        // if getting here, there is no configuration yet, optionally create new
-        return createFactory( factoryPid );
+        // no existing factory
+        return null;
     }
 
 
+    /**
+     * Creates a new factory with the given <code>factoryPid</code>.
+     */
     Factory createFactory( String factoryPid )
     {
         Factory factory = new Factory( this, getPersistenceManagers()[0], factoryPid );
@@ -1195,7 +1329,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             long revision = -1;
             try
             {
-                config = getConfiguration( pid );
+                config = getTargetedConfiguration( pid, sr );
                 if ( config != null )
                 {
                     synchronized ( config )
@@ -1224,8 +1358,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             // check configuration and call plugins if existing
             if ( config != null )
             {
-                log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
-                    { pid, new Long( revision ) } );
+                log( LogService.LOG_DEBUG, "Updating service {0} to with configuration {1}@{2}", new Object[]
+                    { pid, this.config.getPid(), new Long( revision ) } );
 
                 Bundle serviceBundle = sr.getBundle();
                 if ( serviceBundle == null )
@@ -1296,13 +1430,13 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             this.factoryPid = factoryPid;
             this.sr = sr;
 
-            Factory factory = null;
+            List<Factory> factories = null;
             Map configs = null;
             Map revisions = null;
             try
             {
-                factory = getFactory( factoryPid );
-                if (factory != null) {
+                factories = getTargetedFactories( factoryPid, sr );
+                for (Factory factory : factories) {
                     configs = new HashMap();
                     revisions = new HashMap();
                     for ( Iterator pi = factory.getPIDs().iterator(); pi.hasNext(); )
@@ -1342,6 +1476,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                                 { pid } );
                             continue;
                         }
+                        /*
+                         * this code would catch targeted factory PIDs;
+                         * since this is not expected any way, we can
+                         * leave this out
+                         */
+                        /*
                         else if ( !factoryPid.equals( cfg.getFactoryPid() ) )
                         {
                             log( LogService.LOG_ERROR,
@@ -1352,6 +1492,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                             factory.storeSilently();
                             continue;
                         }
+                        */
 
                         // get the configuration properties for later
                         synchronized ( cfg )
@@ -1401,8 +1542,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     final Dictionary properties = ( Dictionary ) entry.getValue();
                     final long revision = ( ( Long ) revisions.get( cfg ) ).longValue();
 
-                    log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
-                        { cfg.getPid(), new Long( revision ) } );
+                    log( LogService.LOG_DEBUG, "Updating service {0} with configuration {1}/{2}@{3}", new Object[]
+                        { this.factoryPid, cfg.getFactoryPid(), cfg.getPid(), new Long( revision ) } );
 
                     // CM 1.4 / 104.13.2.1
                     if ( !canReceive( serviceBundle, cfg.getBundleLocation() ) )
@@ -1435,31 +1576,37 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
     }
 
-    private abstract class ConfigurationProvider<T> implements Runnable {
+    private abstract class ConfigurationProvider<T> implements Runnable
+    {
 
         protected final ConfigurationImpl config;
         protected final long revision;
         protected final Dictionary<String, ?> properties;
         protected final BaseTracker<T> helper;
 
-        protected ConfigurationProvider(final ConfigurationImpl config) {
-            this.config = config;
-            this.helper = ( BaseTracker<T> ) ( ( config.getFactoryPid() == null ) ? managedServiceTracker : managedServiceFactoryTracker );
+
+        protected ConfigurationProvider( final ConfigurationImpl config )
+        {
             synchronized ( config )
             {
+                this.config = config;
                 this.revision = config.getRevision();
                 this.properties = config.getProperties( true );
             }
+            this.helper = ( BaseTracker<T> ) ( ( config.getFactoryPid() == null ) ? managedServiceTracker
+                : managedServiceFactoryTracker );
         }
 
-        protected TargetedPID getTargetedServicePid() {
-            final String factoryPid = this.config.getFactoryPid();
-            if (factoryPid == null) {
-                return new TargetedPID( this.config.getPid() );
+
+        protected TargetedPID getTargetedServicePid()
+        {
+            final TargetedPID factoryPid = this.config.getFactoryPid();
+            if ( factoryPid != null )
+            {
+                return factoryPid;
             }
-            return new TargetedPID( factoryPid );
+            return this.config.getPid();
         }
-
     }
 
     /**
@@ -1558,9 +1705,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         public void run()
         {
-            final String pid = config.getPid();
-            final String factoryPid = config.getFactoryPid();
-
             List<ServiceReference<?>> srList = this.helper.getServices( getTargetedServicePid() );
             if ( !srList.isEmpty() )
             {
@@ -1589,12 +1733,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 }
             }
 
+            final TargetedPID factoryPid = config.getFactoryPid();
             if ( factoryPid != null )
             {
                 // remove the pid from the factory
+                final String pid = config.getPidString();
                 try
                 {
-                    Factory factory = getFactory( factoryPid );
+                    Factory factory = getOrCreateFactory( factoryPid.toString() );
                     factory.removePID( pid );
                     factory.store();
                 }

@@ -52,7 +52,7 @@ public class ConfigurationAdapter implements Configuration
     public String getPid()
     {
         checkDeleted();
-        return delegatee.getPid();
+        return delegatee.getPidString();
     }
 
 
@@ -62,7 +62,7 @@ public class ConfigurationAdapter implements Configuration
     public String getFactoryPid()
     {
         checkDeleted();
-        return delegatee.getFactoryPid();
+        return delegatee.getFactoryPidString();
     }
 
 

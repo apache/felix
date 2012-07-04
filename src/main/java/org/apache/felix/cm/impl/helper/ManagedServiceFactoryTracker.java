@@ -42,8 +42,8 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
         {
             try
             {
-                Dictionary props = getProperties( rawProps, config.getFactoryPid(), reference );
-                service.updated( config.getPid(), props );
+                Dictionary props = getProperties( rawProps, config.getFactoryPidString(), reference );
+                service.updated( config.getPidString(), props );
             }
             catch ( Throwable t )
             {
@@ -65,7 +65,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
         {
             try
             {
-                service.deleted( config.getPid() );
+                service.deleted( config.getPidString() );
             }
             catch ( Throwable t )
             {
