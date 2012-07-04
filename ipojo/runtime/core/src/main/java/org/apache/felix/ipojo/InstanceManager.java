@@ -203,30 +203,8 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
             m_handlers[i].init(this, metadata, configuration);
         }
         
-        /* Fix for Felix-3576
-         * BundleContext injection is not registered with the InstanceManager.
-         * We're iterating through factory's all constructors and register first
-         * BundleContext parameter as constructor injection. So rest of the code
-         * don't have to do anything to handle BundleContext mixed with other
-         * injections.
-         */
-        MethodMetadata[] constructors = getFactory().getPojoMetadata().getConstructors();
-        for(int i=0; i < constructors.length; i++ )
-        {
-        	String[] ctorArguments = constructors[i].getMethodArguments();
-        	for(int index = 0; index < ctorArguments.length; index++ )
-        	{
-        		if(ctorArguments[index].equals(BundleContext.class.getName()))
-        		{
-        			Property contextInjection = 
-        					new Property("__context", null, null, index, null, 
-        							BundleContext.class.getName(), this, null);
-        			
-        			contextInjection.setValue(getContext());        			
-        			register(index, contextInjection);
-        		}
-        	}
-        }
+        // Fix for Felix-3576
+        handleBCInjections();
 
         // Check that the constructor parameter are continuous.
         if (m_constructorRegistration != null) {
@@ -235,6 +213,70 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                     throw new ConfigurationException("The constructor parameter " + i + " is not managed");
                 }
             }
+        }
+    }
+    
+    /**
+     * BundleContext injection is not registered with the InstanceManager.
+     * We're iterating through factory's all constructors and register first
+     * BundleContext parameter as constructor injection. So rest of the code
+     * don't have to do anything to handle BundleContext mixed with other
+     * injections.
+     * 
+     * @throws ConfigurationException
+     */
+    private void handleBCInjections() throws ConfigurationException
+    {
+        MethodMetadata[] constructors = getFactory().getPojoMetadata().getConstructors();
+        for(int i=0; i < constructors.length; i++ )
+        {
+        	String[] ctorArguments = constructors[i].getMethodArguments();
+        	for(int index = 0; index < ctorArguments.length; index++ )
+        	{
+        		if(ctorArguments[index].equals(BundleContext.class.getName()))
+        		{
+        			//Check if its used with only other injections.
+        			boolean injectionsConsistent = true;
+        			for(int siblingIndex = 0; siblingIndex < ctorArguments.length; siblingIndex++)
+        			{
+        				if(siblingIndex == index){
+        					continue;
+        				}
+        				
+        				String injectionType = ctorArguments[siblingIndex];
+        				if(m_constructorRegistration.containsKey(new Integer(siblingIndex)))
+        				{
+        					ConstructorInjector siblingInjector = 
+        							(ConstructorInjector)m_constructorRegistration.get(new Integer(siblingIndex));
+        					Class injectorClass = siblingInjector.getConstructorParameterType(siblingIndex);
+        					
+        					if(injectorClass == null && ! injectorClass.getName().equals(injectionType))
+        					{
+        						injectionsConsistent = false;
+        						break;
+        					}
+        				}
+        				else
+        				{
+        					injectionsConsistent = false;
+        					break;
+        				}
+        			}
+        			
+        			if(injectionsConsistent)
+        			{
+        				Property contextInjection = 
+            					new Property("__context", null, null, index, null, 
+            							BundleContext.class.getName(), this, null);
+            			
+            			contextInjection.setValue(getContext());        			
+            			register(index, contextInjection);
+            			
+            			// We register the first valid BC injection.
+            			break;
+        			}
+        		}
+        	}
         }
     }
 
