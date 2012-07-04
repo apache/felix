@@ -861,6 +861,10 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         TestCase.assertNotNull( cf );
         final String pid = cf.getPid();
 
+        // check factory configuration setup
+        TestCase.assertNotNull( "Configuration must have PID", pid );
+        TestCase.assertEquals( "Factory configuration must have requested factory PID", factoryPid, cf.getFactoryPid() );
+
         try
         {
             bundle = installBundle( factoryPid, ManagedServiceFactoryTestActivator.class );
@@ -869,9 +873,6 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
             final ManagedServiceFactoryTestActivator tester = ManagedServiceFactoryTestActivator.INSTANCE;
             TestCase.assertEquals( "MSF must not be updated with new configuration", 0, tester.numManagedServiceFactoryUpdatedCalls );
-
-            TestCase.assertNotNull( "Configuration must have PID", pid );
-            TestCase.assertEquals( "Factory configuration must have requested factory PID", factoryPid, cf.getFactoryPid() );
 
             // assert getConfiguration returns the same configurtion
             final Configuration c1 = getConfigurationAdmin().getConfiguration( pid, null );
