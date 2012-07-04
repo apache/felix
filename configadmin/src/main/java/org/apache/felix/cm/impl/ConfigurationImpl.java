@@ -24,6 +24,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.cm.PersistenceManager;
+import org.apache.felix.cm.impl.helper.TargetedPID;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -99,7 +100,7 @@ public class ConfigurationImpl extends ConfigurationBase
      * The factory PID of this configuration or <code>null</code> if this
      * is not a factory configuration.
      */
-    private final String factoryPID;
+    private final TargetedPID factoryPID;
 
     /**
      * The statically bound bundle location, which is set explicitly by calling
@@ -145,12 +146,13 @@ public class ConfigurationImpl extends ConfigurationBase
     {
         super( configurationManager, persistenceManager, ( String ) properties.remove( Constants.SERVICE_PID ) );
 
-        this.factoryPID = ( String ) properties.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
+        final String factoryPid = ( String ) properties.remove( ConfigurationAdmin.SERVICE_FACTORYPID );
+        this.factoryPID = ( factoryPid == null ) ? null : new TargetedPID( factoryPid );
         this.isDeleted = false;
 
         // set bundle location from persistence and/or check for dynamic binding
         this.staticBundleLocation = ( String ) properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ;
-        this.dynamicBundleLocation = configurationManager.getDynamicBundleLocation( getBaseId() );
+        this.dynamicBundleLocation = configurationManager.getDynamicBundleLocation( getBaseId().toString() );
 
         // set the properties internally
         configureFromPersistence( properties );
@@ -162,12 +164,12 @@ public class ConfigurationImpl extends ConfigurationBase
     {
         super( configurationManager, persistenceManager, pid );
 
-        this.factoryPID = factoryPid;
+        this.factoryPID = ( factoryPid == null ) ? null : new TargetedPID( factoryPid );
         this.isDeleted = false;
 
         // set bundle location from persistence and/or check for dynamic binding
         this.staticBundleLocation = bundleLocation;
-        this.dynamicBundleLocation = configurationManager.getDynamicBundleLocation( getBaseId() );
+        this.dynamicBundleLocation = configurationManager.getDynamicBundleLocation( getBaseId().toString() );
 
         // first "update"
         this.properties = null;
@@ -186,24 +188,34 @@ public class ConfigurationImpl extends ConfigurationBase
     public void delete() throws IOException
     {
         this.isDeleted = true;
-        getPersistenceManager().delete( this.getPid() );
-        getConfigurationManager().setDynamicBundleLocation( this.getPid(), null );
+        getPersistenceManager().delete( this.getPidString() );
+        getConfigurationManager().setDynamicBundleLocation( this.getPidString(), null );
         getConfigurationManager().deleted( this );
     }
 
 
-    public String getPid()
+    public String getPidString()
+    {
+        return getBaseId().toString();
+    }
+
+
+    public TargetedPID getPid()
     {
         return getBaseId();
     }
 
 
-    public String getFactoryPid()
+    public String getFactoryPidString()
     {
-        return factoryPID;
+        return (factoryPID == null) ? null : factoryPID.toString();
     }
 
 
+    public TargetedPID getFactoryPid()
+    {
+        return factoryPID;
+    }
 
 
     /**
@@ -266,7 +278,7 @@ public class ConfigurationImpl extends ConfigurationBase
         final String oldBundleLocation = getBundleLocation();
 
         this.dynamicBundleLocation = bundleLocation;
-        this.getConfigurationManager().setDynamicBundleLocation( this.getBaseId(), bundleLocation );
+        this.getConfigurationManager().setDynamicBundleLocation( this.getPidString(), bundleLocation );
 
         // CM 1.4
         if ( dispatchConfiguration )
@@ -288,7 +300,7 @@ public class ConfigurationImpl extends ConfigurationBase
         if ( this.getBundleLocation() == null )
         {
             getConfigurationManager().log( LogService.LOG_DEBUG, "Dynamically binding config {0} to {1}", new Object[]
-                { getPid(), bundleLocation } );
+                { getPidString(), bundleLocation } );
             setDynamicBundleLocation( bundleLocation, true );
         }
 
@@ -335,15 +347,15 @@ public class ConfigurationImpl extends ConfigurationBase
         if ( localPersistenceManager != null )
         {
             // read configuration from persistence (again)
-            if ( localPersistenceManager.exists( getPid() ) )
+            if ( localPersistenceManager.exists( getPidString() ) )
             {
-                Dictionary properties = localPersistenceManager.load( getPid() );
+                Dictionary properties = localPersistenceManager.load( getPidString() );
 
                 // ensure serviceReference pid
                 String servicePid = ( String ) properties.get( Constants.SERVICE_PID );
-                if ( servicePid != null && !getPid().equals( servicePid ) )
+                if ( servicePid != null && !getPidString().equals( servicePid ) )
                 {
-                    throw new IOException( "PID of configuration file does match requested PID; expected " + getPid()
+                    throw new IOException( "PID of configuration file does match requested PID; expected " + getPidString()
                         + ", got " + servicePid );
                 }
 
@@ -367,34 +379,15 @@ public class ConfigurationImpl extends ConfigurationBase
             CaseInsensitiveDictionary newProperties = new CaseInsensitiveDictionary( properties );
 
             getConfigurationManager().log( LogService.LOG_DEBUG, "Updating config {0} with {1}", new Object[]
-                { getPid(), newProperties } );
+                { getPidString(), newProperties } );
 
             setAutoProperties( newProperties, true );
 
             // persist new configuration
-            localPersistenceManager.store( getPid(), newProperties );
+            localPersistenceManager.store( getPidString(), newProperties );
 
             // if this is a factory configuration, update the factory with
-            String factoryPid = getFactoryPid();
-            if ( factoryPid != null )
-            {
-                Factory factory = getConfigurationManager().getFactory( factoryPid );
-                if ( factory.addPID( getPid() ) )
-                {
-                    // only write back if the pid was not already registered
-                    // with the factory
-                    try
-                    {
-                        factory.store();
-                    }
-                    catch ( IOException ioe )
-                    {
-                        getConfigurationManager().log( LogService.LOG_ERROR,
-                            "Failure storing factory {0} with new configuration {1}", new Object[]
-                                { factoryPid, getPid(), ioe } );
-                    }
-                }
-            }
+            updateFactory();
 
             // finally assign the configuration for use
             configure( newProperties );
@@ -416,7 +409,7 @@ public class ConfigurationImpl extends ConfigurationBase
 
         if ( obj instanceof Configuration )
         {
-            return getPid().equals( ( ( Configuration ) obj ).getPid() );
+            return getPidString().equals( ( ( Configuration ) obj ).getPid() );
         }
 
         return false;
@@ -425,13 +418,13 @@ public class ConfigurationImpl extends ConfigurationBase
 
     public int hashCode()
     {
-        return getPid().hashCode();
+        return getPidString().hashCode();
     }
 
 
     public String toString()
     {
-        return "Configuration PID=" + getPid() + ", factoryPID=" + factoryPID + ", bundleLocation=" + getBundleLocation();
+        return "Configuration PID=" + getPidString() + ", factoryPID=" + factoryPID + ", bundleLocation=" + getBundleLocation();
     }
 
 
@@ -451,19 +444,56 @@ public class ConfigurationImpl extends ConfigurationBase
      */
     void ensureFactoryConfigPersisted() throws IOException
     {
-        if ( this.factoryPID != null && isNew() && !getPersistenceManager().exists( getPid() ) )
+        if ( this.factoryPID != null && isNew() && !getPersistenceManager().exists( getPidString() ) )
         {
             storeNewConfiguration();
         }
     }
 
 
+    /**
+     * Persists a new (freshly created) configuration with a marker for
+     * it to be a new configuration.
+     *
+     * @throws IOException If an error occurrs storing the configuraiton
+     */
     private void storeNewConfiguration() throws IOException
     {
         Dictionary props = new Hashtable();
         setAutoProperties( props, true );
         props.put( CONFIGURATION_NEW, Boolean.TRUE );
-        getPersistenceManager().store( getPid(), props );
+        getPersistenceManager().store( getPidString(), props );
+    }
+
+
+    /**
+     * Makes sure the configuration is added to the {@link Factory} (and
+     * the factory be stored if updated) if this is a factory
+     * configuration.
+     *
+     * @throws IOException If an error occurrs storing the {@link Factory}
+     */
+    private void updateFactory() throws IOException {
+        String factoryPid = getFactoryPidString();
+        if ( factoryPid != null )
+        {
+            Factory factory = getConfigurationManager().getOrCreateFactory( factoryPid );
+            if ( factory.addPID( getPidString() ) )
+            {
+                // only write back if the pid was not already registered
+                // with the factory
+                try
+                {
+                    factory.store();
+                }
+                catch ( IOException ioe )
+                {
+                    getConfigurationManager().log( LogService.LOG_ERROR,
+                        "Failure storing factory {0} with new configuration {1}", new Object[]
+                            { factoryPid, getPidString(), ioe } );
+                }
+            }
+        }
     }
 
 
@@ -489,7 +519,7 @@ public class ConfigurationImpl extends ConfigurationBase
         }
 
         // only store now, if this is not a new configuration
-        getPersistenceManager().store( getPid(), props );
+        getPersistenceManager().store( getPidString(), props );
     }
 
 
@@ -576,8 +606,8 @@ public class ConfigurationImpl extends ConfigurationBase
     void setAutoProperties( Dictionary properties, boolean withBundleLocation )
     {
         // set pid and factory pid in the properties
-        replaceProperty( properties, Constants.SERVICE_PID, getPid() );
-        replaceProperty( properties, ConfigurationAdmin.SERVICE_FACTORYPID, factoryPID );
+        replaceProperty( properties, Constants.SERVICE_PID, getPidString() );
+        replaceProperty( properties, ConfigurationAdmin.SERVICE_FACTORYPID, getFactoryPidString() );
 
         // bundle location is not set here
         if ( withBundleLocation )

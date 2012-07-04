@@ -61,7 +61,7 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
             {
                 if ( properties != null )
                 {
-                    properties = getProperties( properties, config.getPid(), service );
+                    properties = getProperties( properties, config.getPidString(), service );
                 }
 
                 srv.updated( properties );

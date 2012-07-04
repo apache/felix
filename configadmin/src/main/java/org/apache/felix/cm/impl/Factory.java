@@ -26,6 +26,7 @@ import java.util.Hashtable;
 import java.util.Set;
 
 import org.apache.felix.cm.PersistenceManager;
+import org.apache.felix.cm.impl.helper.TargetedPID;
 
 
 /**
@@ -86,9 +87,15 @@ class Factory extends ConfigurationBase
     }
 
 
-    String getFactoryPid()
+    TargetedPID getFactoryPid()
     {
         return getBaseId();
+    }
+
+
+    String getFactoryPidString()
+    {
+        return getFactoryPid().toString();
     }
 
 
@@ -119,7 +126,7 @@ class Factory extends ConfigurationBase
             props.put( FACTORY_PID_LIST, pids.toArray( new String[pids.size()] ) );
         }
 
-        String id = factoryPidToIdentifier( this.getFactoryPid() );
+        String id = factoryPidToIdentifier( this.getFactoryPid().toString() );
         if ( props.isEmpty() )
         {
             getPersistenceManager().delete( id );

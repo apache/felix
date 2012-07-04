@@ -22,6 +22,7 @@ package org.apache.felix.cm.impl;
 import java.io.IOException;
 import java.util.Dictionary;
 import org.apache.felix.cm.PersistenceManager;
+import org.apache.felix.cm.impl.helper.TargetedPID;
 import org.osgi.service.log.LogService;
 
 
@@ -38,7 +39,7 @@ abstract class ConfigurationBase
     private final PersistenceManager persistenceManager;
 
     // the basic ID of this instance
-    private final String baseId;
+    private final TargetedPID baseId;
 
     protected ConfigurationBase( final ConfigurationManager configurationManager,
         final PersistenceManager persistenceManager, final String baseId )
@@ -55,7 +56,7 @@ abstract class ConfigurationBase
 
         this.configurationManager = configurationManager;
         this.persistenceManager = persistenceManager;
-        this.baseId = baseId;
+        this.baseId = new TargetedPID( baseId );
     }
 
 
@@ -71,7 +72,7 @@ abstract class ConfigurationBase
     }
 
 
-    String getBaseId()
+    TargetedPID getBaseId()
     {
         return baseId;
     }
