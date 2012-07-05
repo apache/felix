@@ -510,7 +510,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             for ( String candidate : names )
             {
                 ConfigurationImpl config = getConfiguration( candidate );
-                if ( config != null )
+                if ( config != null && !config.isDeleted() )
                 {
                     // check visibility to use and dynamically bind
                     if ( canReceive( serviceBundle, config.getBundleLocation() ) )
@@ -1612,14 +1612,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                         final TargetedPID configPid;
                         final Dictionary properties;
                         final long revision;
-                        synchronized ( config )
+                        synchronized ( rc )
                         {
-                            configPid = config.getPid();
-                            properties = config.getProperties( true );
-                            revision = config.getRevision();
+                            configPid = rc.getPid();
+                            properties = rc.getProperties( true );
+                            revision = rc.getRevision();
                         }
 
-                        helper.provideConfiguration( sr, configPid, null, properties, revision );
+                        helper.provideConfiguration( sr, configPid, null, properties, -revision );
 
                         return true;
                     }
