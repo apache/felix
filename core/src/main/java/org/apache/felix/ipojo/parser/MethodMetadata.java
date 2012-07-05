@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.parser;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.metadata.Element;
 
 /**
@@ -151,6 +152,12 @@ public class MethodMetadata {
         StringBuffer identifier = new StringBuffer("$init");
         Class[] args = method.getParameterTypes();
         for (int i = 0; i < args.length; i++) {
+            // If the first argument is the InstanceManager skip it
+            if (i == 0  && InstanceManager.class.equals(args[i])) {
+                // Skip it.
+                continue;
+            }
+
             identifier.append('$'); // Argument separator.
             if (args[i].isArray()) {
                 if (args[i].getComponentType().isPrimitive()) {
