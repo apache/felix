@@ -137,7 +137,22 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     protected abstract ConfigurationMap<?> createConfigurationMap( String[] pids );
 
 
-    // Updates
+    /**
+     * Updates the given service with the provided configuration.
+     * <p>
+     * See the implementations of this method for more information.
+     *
+     * @param service The reference to the service to update
+     * @param configPid The targeted configuration PID
+     * @param factoryPid The targeted factory PID or <code>null</code> for
+     *      a non-factory configuration
+     * @param properties The configuration properties, which may be
+     *      <code>null</code> for a non-factory configuration
+     * @param revision The configuration revision
+     *
+     * @see {@link ManagedServiceTracker#provideConfiguration(ServiceReference, TargetedPID, TargetedPID, Dictionary, long)}
+     * @see {@link ManagedServiceFactoryTracker#provideConfiguration(ServiceReference, TargetedPID, TargetedPID, Dictionary, long)}
+     */
     public abstract void provideConfiguration( ServiceReference<S> service, TargetedPID configPid,
         TargetedPID factoryPid, Dictionary<String, ?> properties, long revision );
 
