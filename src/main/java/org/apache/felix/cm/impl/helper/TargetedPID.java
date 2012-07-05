@@ -208,8 +208,8 @@ public class TargetedPID
 
 
     /**
-     * Returns <code>true</code> if the <code>other</code> {@link TargetedPID}
-     * binds stronger than this.
+     * Returns <code>true</code> if this targeted PID binds stronger than
+     * the <code>other</code> {@link TargetedPID}.
      * <p>
      * This method assumes both targeted PIDs have already been checked for
      * suitability for the bundle encoded in the targetting.
@@ -221,7 +221,7 @@ public class TargetedPID
      */
     boolean bindsStronger( final TargetedPID other )
     {
-        return other.bindingLevel > this.bindingLevel;
+        return this.bindingLevel > other.bindingLevel;
     }
 
 
