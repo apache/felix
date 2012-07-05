@@ -32,9 +32,6 @@ import java.util.Vector;
 import junit.framework.TestCase;
 
 
-/**
- * The <code>FilePersistenceManagerTest</code> TODO
- */
 public class FilePersistenceManagerTest extends TestCase
 {
     private File file = new File( System.getProperty( "java.io.tmpdir" ), "config" );

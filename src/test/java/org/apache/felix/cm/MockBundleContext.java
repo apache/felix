@@ -27,11 +27,9 @@ import java.util.Properties;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -103,7 +101,7 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#addServiceListener(org.osgi.framework
      * .ServiceListener, java.lang.String)
      */
-    public void addServiceListener( ServiceListener arg0, String arg1 ) throws InvalidSyntaxException
+    public void addServiceListener( ServiceListener arg0, String arg1 )
     {
     }
 
@@ -112,7 +110,7 @@ public class MockBundleContext implements BundleContext
      * (non-Javadoc)
      * @see org.osgi.framework.BundleContext#createFilter(java.lang.String)
      */
-    public Filter createFilter( String arg0 ) throws InvalidSyntaxException
+    public Filter createFilter( String arg0 )
     {
         return null;
     }
@@ -124,7 +122,7 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#getAllServiceReferences(java.lang.String
      * , java.lang.String)
      */
-    public ServiceReference[] getAllServiceReferences( String arg0, String arg1 ) throws InvalidSyntaxException
+    public ServiceReference[] getAllServiceReferences( String arg0, String arg1 )
     {
         return null;
     }
@@ -208,7 +206,7 @@ public class MockBundleContext implements BundleContext
      * org.osgi.framework.BundleContext#getServiceReferences(java.lang.String,
      * java.lang.String)
      */
-    public ServiceReference[] getServiceReferences( String arg0, String arg1 ) throws InvalidSyntaxException
+    public ServiceReference[] getServiceReferences( String arg0, String arg1 )
     {
         return null;
     }
@@ -218,7 +216,7 @@ public class MockBundleContext implements BundleContext
      * (non-Javadoc)
      * @see org.osgi.framework.BundleContext#installBundle(java.lang.String)
      */
-    public Bundle installBundle( String arg0 ) throws BundleException
+    public Bundle installBundle( String arg0 )
     {
         return null;
     }
@@ -229,7 +227,7 @@ public class MockBundleContext implements BundleContext
      * @see org.osgi.framework.BundleContext#installBundle(java.lang.String,
      * java.io.InputStream)
      */
-    public Bundle installBundle( String arg0, InputStream arg1 ) throws BundleException
+    public Bundle installBundle( String arg0, InputStream arg1 )
     {
         return null;
     }
@@ -303,29 +301,24 @@ public class MockBundleContext implements BundleContext
 
     public <S> ServiceRegistration<S> registerService( Class<S> clazz, S service, Dictionary<String, ?> properties )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public <S> ServiceReference<S> getServiceReference( Class<S> clazz )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public <S> Collection<ServiceReference<S>> getServiceReferences( Class<S> clazz, String filter )
-        throws InvalidSyntaxException
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
 
     public Bundle getBundle( String location )
     {
-        // TODO Auto-generated method stub
         return null;
     }
 }
