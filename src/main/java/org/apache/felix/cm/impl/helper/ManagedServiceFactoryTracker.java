@@ -20,7 +20,6 @@ package org.apache.felix.cm.impl.helper;
 
 import java.util.Dictionary;
 
-import org.apache.felix.cm.impl.ConfigurationImpl;
 import org.apache.felix.cm.impl.ConfigurationManager;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ManagedServiceFactory;
@@ -35,45 +34,65 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
 
 
     @Override
-    public void provideConfiguration( ServiceReference<ManagedServiceFactory> reference, final ConfigurationImpl config, final Dictionary<String, ?> rawProps )
+    protected ConfigurationMap<?> createConfigurationMap( String[] pids )
+    {
+        return new ManagedServiceFactoryConfigurationMap( pids );
+    }
+
+
+    @Override
+    public void provideConfiguration( ServiceReference<ManagedServiceFactory> reference, TargetedPID configPid,
+        TargetedPID factoryPid, Dictionary<String, ?> properties, long revision )
     {
         ManagedServiceFactory service = getRealService( reference );
-        if ( service != null )
+        final ConfigurationMap configs = this.getService( reference );
+        if ( service != null && configs != null )
         {
-            try
+            if ( configs.shallTake( configPid, factoryPid, revision ) )
             {
-                Dictionary props = getProperties( rawProps, config.getFactoryPidString(), reference );
-                service.updated( config.getPidString(), props );
-            }
-            catch ( Throwable t )
-            {
-                this.handleCallBackError( t, reference, config );
-            }
-            finally
-            {
-                this.ungetRealService( reference );
+                try
+                {
+                    Dictionary props = getProperties( properties, reference, configPid.toString(),
+                        factoryPid.toString() );
+                    service.updated( configPid.toString(), props );
+                    configs.record( configPid, factoryPid, revision );
+                }
+                catch ( Throwable t )
+                {
+                    this.handleCallBackError( t, reference, configPid );
+                }
+                finally
+                {
+                    this.ungetRealService( reference );
+                }
             }
         }
     }
 
 
     @Override
-    public void removeConfiguration( ServiceReference<ManagedServiceFactory> reference, final ConfigurationImpl config )
+    public void removeConfiguration( ServiceReference<ManagedServiceFactory> reference, TargetedPID configPid,
+        TargetedPID factoryPid )
     {
-        ManagedServiceFactory service = this.getRealService( reference );
-        if ( service != null )
+        final ManagedServiceFactory service = this.getRealService( reference );
+        final ConfigurationMap configs = this.getService( reference );
+        if ( service != null && configs != null)
         {
-            try
+            if ( configs.removeConfiguration( configPid, factoryPid ) )
             {
-                service.deleted( config.getPidString() );
-            }
-            catch ( Throwable t )
-            {
-                this.handleCallBackError( t, reference, config );
-            }
-            finally
-            {
-                this.ungetRealService( reference );
+                try
+                {
+                    service.deleted( configPid.toString() );
+                    configs.record( configPid, factoryPid, -1 );
+                }
+                catch ( Throwable t )
+                {
+                    this.handleCallBackError( t, reference, configPid );
+                }
+                finally
+                {
+                    this.ungetRealService( reference );
+                }
             }
         }
     }

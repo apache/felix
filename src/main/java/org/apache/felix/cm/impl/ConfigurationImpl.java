@@ -386,11 +386,14 @@ public class ConfigurationImpl extends ConfigurationBase
             // persist new configuration
             localPersistenceManager.store( getPidString(), newProperties );
 
-            // if this is a factory configuration, update the factory with
-            updateFactory();
-
             // finally assign the configuration for use
             configure( newProperties );
+
+            // if this is a factory configuration, update the factory with
+            // do this only after configuring with current properties such
+            // that a concurrently registered ManagedServiceFactory service
+            // does not receive a new/unusable configuration
+            updateFactory();
 
             // update the service and fire an CM_UPDATED event
             getConfigurationManager().updated( this, true );
@@ -530,7 +533,7 @@ public class ConfigurationImpl extends ConfigurationBase
      * counter, the two calls should be synchronized on this instance to
      * ensure configuration values and revision counter match.
      */
-    long getRevision()
+    public long getRevision()
     {
         return revision;
     }
@@ -618,6 +621,14 @@ public class ConfigurationImpl extends ConfigurationBase
         {
             properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION );
         }
+    }
+
+
+    static void setAutoProperties( Dictionary properties, String pid, String factoryPid )
+    {
+        replaceProperty( properties, Constants.SERVICE_PID, pid );
+        replaceProperty( properties, ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid );
+        properties.remove( ConfigurationAdmin.SERVICE_BUNDLELOCATION );
     }
 
 

@@ -44,6 +44,17 @@ public class TargetedPID
     private final String version;
     private final String location;
 
+    /**
+     * The level of binding of this targeted PID:
+     * <ul>
+     * <li><code>0</code> -- this PID is not targeted at all</li>
+     * <li><code>1</code> -- this PID is targeted by the symbolic name</li>
+     * <li><code>2</code> -- this PID is targeted by the symbolic name and version</li>
+     * <li><code>3</code> -- this PID is targeted by the symoblic name, version, and location</li>
+     * </ul>
+     */
+    private final short bindingLevel;
+
 
     /**
      * Returns the bundle's version as required for targeted PIDs: If the
@@ -75,6 +86,7 @@ public class TargetedPID
             this.symbolicName = null;
             this.version = null;
             this.location = null;
+            this.bindingLevel = 0;
         }
         else
         {
@@ -93,11 +105,13 @@ public class TargetedPID
                 {
                     this.version = rawPid.substring( start, end );
                     this.location = rawPid.substring( end + 1 );
+                    this.bindingLevel = 3;
                 }
                 else
                 {
                     this.version = rawPid.substring( start );
                     this.location = null;
+                    this.bindingLevel = 2;
                 }
             }
             else
@@ -105,6 +119,7 @@ public class TargetedPID
                 this.symbolicName = rawPid.substring( start );
                 this.version = null;
                 this.location = null;
+                this.bindingLevel = 1;
             }
         }
     }
@@ -181,6 +196,7 @@ public class TargetedPID
         return rawPid;
     }
 
+
     /**
      * Returns the service PID of this targeted PID which basically is
      * the targeted PID without the targeting information.
@@ -190,86 +206,22 @@ public class TargetedPID
         return servicePid;
     }
 
+
     /**
-     * Returns how string this <code>TargetedPID</code> matches the
-     * given <code>ServiceReference</code>. The return value is one of
-     * those listed in the table:
+     * Returns <code>true</code> if the <code>other</code> {@link TargetedPID}
+     * binds stronger than this.
+     * <p>
+     * This method assumes both targeted PIDs have already been checked for
+     * suitability for the bundle encoded in the targetting.
      *
-     * <table>
-     * <tr><th>level</th><th>Description</th></tr>
-     * <tr><td>-1</td><td>The targeted PID does not match at all. This means
-     *      that either the service PID, the bundle's symbolic name, the
-     *      bundle's version or bundle's location does not match the
-     *      respective non-<code>null</code> parts of the targeted PID.
-     *      This value is also returned if the raw PID fully matches the
-     *      service PID.</td></tr>
-     * <tr><td>0</td><td>The targeted PID only has the service PID which
-     *      also matches. The bundle's symbolic name, version, and
-     *      location are not considered.</td></tr>
-     * <tr><td>1</td><td>The targeted PID only has the service PID and
-     *      bundle symbolic name which both match. The bundle's version and
-     *      location are not considered.</td></tr>
-     * <tr><td>2</td><td>The targeted PID only has the service PID, bundle
-     *      symbolic name and version which all match. The bundle's
-     *      location is not considered.</td></tr>
-     * <tr><td>3</td><td>The targeted PID has the service PID as well as
-     *      the bundle symbolic name, version, and location which all
-     *      match.</td></tr>
-     * </table>
-     *
-     * @param ref
-     * @return
+     * @param other The targeted PID to check whether it is binding stronger
+     *      or not.
+     * @return <code>true</code> if the <code>other</code> targeted PID
+     *      is binding strong.
      */
-    public int matchLevel( final ServiceReference ref )
+    boolean bindsStronger( final TargetedPID other )
     {
-
-        // TODO: this fails on multi-value PID properties !
-        final Object servicePid = ref.getProperty( Constants.SERVICE_PID );
-
-        // in case the service PID contains | characters, this allows
-        // it to match the raw version of the targeted PID
-        if ( this.rawPid.equals( servicePid ) )
-        {
-            return 1;
-        }
-
-        if ( !this.servicePid.equals( servicePid ) )
-        {
-            return -1;
-        }
-
-        if ( this.symbolicName == null )
-        {
-            return 0;
-        }
-
-        final Bundle refBundle = ref.getBundle();
-        if ( !this.symbolicName.equals( refBundle.getSymbolicName() ) )
-        {
-            return -1;
-        }
-
-        if ( this.version == null )
-        {
-            return 1;
-        }
-
-        if ( !this.version.equals( refBundle.getHeaders().get( Constants.BUNDLE_VERSION ) ) )
-        {
-            return -1;
-        }
-
-        if ( this.location == null )
-        {
-            return 2;
-        }
-
-        if ( !this.location.equals( refBundle.getLocation() ) )
-        {
-            return -1;
-        }
-
-        return 3;
+        return other.bindingLevel > this.bindingLevel;
     }
 
 
@@ -285,7 +237,7 @@ public class TargetedPID
     {
         if ( obj == null )
         {
-            return true;
+            return false;
         }
         else if ( obj == this )
         {
@@ -301,6 +253,7 @@ public class TargetedPID
         // not the same class or different raw PID
         return false;
     }
+
 
     @Override
     public String toString()

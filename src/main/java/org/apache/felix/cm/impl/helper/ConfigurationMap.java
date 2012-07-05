@@ -18,43 +18,102 @@
  */
 package org.apache.felix.cm.impl.helper;
 
+
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class ConfigurationMap
+
+abstract class ConfigurationMap<T>
 {
-    private Map<String, Object> configurations;
+    private Map<String, T> configurations;
 
 
-    public ConfigurationMap( final String[] configuredPids )
+    protected ConfigurationMap( final String[] configuredPids )
     {
         this.configurations = Collections.emptyMap();
         setConfiguredPids( configuredPids );
     }
 
-    public boolean accepts(final String servicePid) {
+
+    protected abstract Map<String, T> createMap( int size );
+
+
+    protected abstract boolean shallTake( TargetedPID configPid, TargetedPID factoryPid, long revision );
+
+
+    protected abstract void record( TargetedPID configPid, TargetedPID factoryPid, long revision );
+
+
+    protected abstract boolean removeConfiguration( TargetedPID configPid, TargetedPID factoryPid );
+
+
+    protected T get( final TargetedPID key )
+    {
+        return this.configurations.get( key.getServicePid() );
+    }
+
+
+    protected void put( final TargetedPID key, final T value )
+    {
+        final String servicePid = key.getServicePid();
+        if ( this.accepts( servicePid ) )
+        {
+            this.configurations.put( servicePid, value );
+        }
+    }
+
+
+    /**
+     * Returns <code>true</code> if this map is foreseen to take a
+     * configuration with the given service PID.
+     *
+     * @param servicePid The service PID of the configuration which is
+     *      the part of the targeted PID without the bundle's symbolic
+     *      name, version, and location; i.e. {@link TargetedPID#getServicePid()}
+     *
+     * @return <code>true</code> if this map is configured to take
+     *      configurations for the service PID.
+     */
+    public boolean accepts( final String servicePid )
+    {
         return configurations.containsKey( servicePid );
     }
 
+
     public void setConfiguredPids( String[] configuredPids )
     {
-        HashMap<String, Object> newConfigs = new HashMap<String, Object>();
+        final Map<String, T> newConfigs;
         if ( configuredPids != null )
         {
+            newConfigs = this.createMap( configuredPids.length );
             for ( String pid : configuredPids )
             {
                 newConfigs.put( pid, this.configurations.get( pid ) );
             }
         }
+        else
+        {
+            newConfigs = Collections.emptyMap();
+        }
         this.configurations = newConfigs;
     }
 
 
-    public boolean isDifferentPids( final String[] pids )
+    /**
+     * Returns <code>true</code> if the set of service PIDs given is
+     * different from the current set of service PIDs.
+     * <p>
+     * For comparison a <code>null</code> argument is considered to
+     * be an empty set of service PIDs.
+     *
+     * @param pids The new set of service PIDs to be compared to the
+     *      current set of service PIDs.
+     * @return <code>true</code> if the set is different
+     */
+    boolean isDifferentPids( final String[] pids )
     {
         if ( this.configurations.isEmpty() && pids == null )
         {

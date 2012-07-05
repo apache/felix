@@ -20,8 +20,8 @@ package org.apache.felix.cm.impl.helper;
 
 
 import java.util.Dictionary;
+import java.util.Hashtable;
 
-import org.apache.felix.cm.impl.ConfigurationImpl;
 import org.apache.felix.cm.impl.ConfigurationManager;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ManagedService;
@@ -30,6 +30,9 @@ import org.osgi.service.cm.ManagedService;
 public class ManagedServiceTracker extends BaseTracker<ManagedService>
 {
 
+    private static final Dictionary<String, ?> INITIAL_MARKER = new Hashtable<String, Object>( 0 );
+
+
     public ManagedServiceTracker( ConfigurationManager cm )
     {
         super( cm, false );
@@ -37,43 +40,76 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
 
 
     @Override
-    public void provideConfiguration( ServiceReference<ManagedService> service, final ConfigurationImpl config,
-        Dictionary<String, ?> properties )
+    protected ConfigurationMap<?> createConfigurationMap( String[] pids )
     {
-        updateService( service, config, properties );
+        return new ManagedServiceConfigurationMap( pids );
     }
 
 
     @Override
-    public void removeConfiguration( ServiceReference<ManagedService> service, final ConfigurationImpl config )
+    public void provideConfiguration( ServiceReference<ManagedService> service, TargetedPID configPid,
+        TargetedPID factoryPid, Dictionary<String, ?> properties, long revision )
     {
-        updateService( service, config, null );
+        Dictionary<String, ?> supplied = ( properties == null ) ? INITIAL_MARKER : properties;
+        updateService( service, configPid, supplied, revision );
     }
 
 
-    private void updateService( ServiceReference<ManagedService> service, final ConfigurationImpl config,
-        Dictionary<String, ?> properties )
+    @Override
+    public void removeConfiguration( ServiceReference<ManagedService> service, TargetedPID configPid,
+        TargetedPID factoryPid )
     {
-        ManagedService srv = this.getRealService( service );
-        if ( srv != null )
-        {
-            try
-            {
-                if ( properties != null )
-                {
-                    properties = getProperties( properties, config.getPidString(), service );
-                }
+        updateService( service, configPid, null, -1 );
+    }
 
-                srv.updated( properties );
-            }
-            catch ( Throwable t )
+
+    private void updateService( ServiceReference<ManagedService> service, final TargetedPID configPid,
+        Dictionary<String, ?> properties, long revision )
+    {
+        final ManagedService srv = this.getRealService( service );
+        final ConfigurationMap configs = this.getService( service );
+        if ( srv != null && configs != null )
+        {
+            boolean doUpdate = false;
+            if ( properties == null )
             {
-                this.handleCallBackError( t, service, config );
+                doUpdate = configs.removeConfiguration( configPid, null );
             }
-            finally
+            else if ( properties == INITIAL_MARKER )
             {
-                this.ungetRealService( service );
+                // initial call to ManagedService may supply null properties
+                properties = null;
+                revision = -1;
+                doUpdate = true;
+            }
+            else if ( configs.shallTake( configPid, null, revision ) )
+            {
+                // run the plugins and cause the update
+                properties = getProperties( properties, service, configPid.toString(), null );
+                doUpdate = true;
+            }
+            else
+            {
+                // new configuration is not a better match, don't update
+                doUpdate = false;
+            }
+
+            if ( doUpdate )
+            {
+                try
+                {
+                    srv.updated( properties );
+                    configs.record( configPid, null, revision );
+                }
+                catch ( Throwable t )
+                {
+                    this.handleCallBackError( t, service, configPid );
+                }
+                finally
+                {
+                    this.ungetRealService( service );
+                }
             }
         }
-    }
+   }
 }
