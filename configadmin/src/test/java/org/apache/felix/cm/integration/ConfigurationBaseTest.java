@@ -595,7 +595,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
         // assert activater has no configuration
         TestCase.assertNull( "Expect no Properties after Service Registration", tester.props );
-        TestCase.assertEquals( "Expect no update call", 1, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( "Expect update call", 1, tester.numManagedServiceUpdatedCalls );
 
         // configure after ManagedServiceRegistration --> configure via update
         configure( pid );
@@ -603,7 +603,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
         // assert activater has configuration
         TestCase.assertNotNull( "Expect Properties after Service Registration", tester.props );
-        TestCase.assertEquals( "Expect a single update call", 2, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( "Expect a second update call", 2, tester.numManagedServiceUpdatedCalls );
 
         // stop the bundle now
         bundle.stop();
