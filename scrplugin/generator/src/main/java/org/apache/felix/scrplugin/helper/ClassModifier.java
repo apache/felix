@@ -23,7 +23,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
-import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
@@ -89,39 +88,18 @@ public abstract class ClassModifier {
                     } while (!c.isAssignableFrom(d));
                     return c.getName().replace('.', '/');
                 }
-            };
-
-            // remove existing implementation von previous builds
-            final ClassAdapter adapter = new ClassAdapter(writer) {
-
-                protected final String bindMethodName = "bind" + referenceName.substring(0, 1).toUpperCase() + referenceName.substring(1);
-                protected final String unbindMethodName = "unbind" + referenceName.substring(0, 1).toUpperCase() + referenceName.substring(1);
-                protected final String description = "(L" + typeName.replace('.', '/') + ";)V";
-
-                /**
-                 * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
-                 */
-                public MethodVisitor visitMethod(final int access,
-                                final String name,
-                                final String desc,
-                                final String signature,
-                                final String[] exceptions) {
-                    if ( createBind && name.equals(bindMethodName) && description.equals(desc) ) {
-                        return null;
-                    }
-                    if ( createUnbind && name.equals(unbindMethodName)  && description.equals(desc) ) {
-                        return null;
-                    }
-                    return super.visitMethod(access, name, desc, signature, exceptions);
-                }
 
             };
 
-            cn.accept(adapter);
+            cn.accept(writer);
             if ( createBind ) {
+                System.out.println("Adding bind " + className + " " + fieldName);
+
                 createMethod(writer, className, referenceName, fieldName, typeName, true);
             }
             if ( createUnbind ) {
+                System.out.println("Adding unbind " + className + " " + fieldName);
+
                 createMethod(writer, className, referenceName, fieldName, typeName, false);
             }
 
