@@ -46,6 +46,19 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
     }
 
 
+    /**
+     * Provides the given configuration to the managed service.
+     * <p>
+     * Depending on targeted PIDs this configuration may not actually be
+     * provided if the service already has more strictly binding
+     * configuration from a targeted configuration bound.
+     * <p>
+     * If the revision is a negative value, the provided configuration
+     * is assigned to the ManagedService in any case without further
+     * checks. This allows a replacement configuration for a deleted
+     * or invisible configuration to be assigned without first removing
+     * the deleted or invisible configuration.
+     */
     @Override
     public void provideConfiguration( ServiceReference<ManagedService> service, TargetedPID configPid,
         TargetedPID factoryPid, Dictionary<String, ?> properties, long revision )
@@ -82,11 +95,12 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
                 revision = -1;
                 doUpdate = true;
             }
-            else if ( configs.shallTake( configPid, null, revision ) )
+            else if ( revision < 0 || configs.shallTake( configPid, null, revision ) )
             {
                 // run the plugins and cause the update
                 properties = getProperties( properties, service, configPid.toString(), null );
                 doUpdate = true;
+                revision = Math.abs( revision );
             }
             else
             {
