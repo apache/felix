@@ -26,7 +26,6 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.apache.felix.cm.impl.CaseInsensitiveDictionary;
-import org.apache.felix.cm.impl.ConfigurationImpl;
 import org.apache.felix.cm.impl.ConfigurationManager;
 import org.apache.felix.cm.impl.RankingComparator;
 import org.osgi.framework.Constants;
@@ -45,7 +44,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * {@link ConfigurationMap} mapping their service PIDs to provided
  * configuration.
  */
-public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap>
+public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<?>>
 {
     protected final ConfigurationManager cm;
 
@@ -62,17 +61,23 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap>
     }
 
 
-    public ConfigurationMap addingService( ServiceReference<S> reference )
+    public ConfigurationMap<?> addingService( ServiceReference<S> reference )
     {
+        this.cm.log( LogService.LOG_DEBUG, "Registering service {0}", new String[]
+            { ConfigurationManager.toString( reference ) } );
+
         final String[] pids = getServicePid( reference );
         configure( reference, pids );
-        return new ConfigurationMap( pids );
+        return createConfigurationMap( pids );
     }
 
 
     @Override
-    public void modifiedService( ServiceReference<S> reference, ConfigurationMap service )
+    public void modifiedService( ServiceReference<S> reference, ConfigurationMap<?> service )
     {
+        this.cm.log( LogService.LOG_DEBUG, "Modified service {0}", new String[]
+            { ConfigurationManager.toString( reference ) } );
+
         String[] pids = getServicePid( reference );
         if ( service.isDifferentPids( pids ) )
         {
@@ -82,41 +87,20 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap>
     }
 
 
+    @Override
+    public void removedService( ServiceReference<S> reference, ConfigurationMap<?> service )
+    {
+        // just log
+        this.cm.log( LogService.LOG_DEBUG, "Unregistering service {0}", new String[]
+            { ConfigurationManager.toString( reference ) } );
+    }
+
+
     private void configure( ServiceReference<S> reference, String[] pids )
     {
         if ( pids != null )
         {
-
-            /*
-             * We get the service here for performance reasons only.
-             * Assuming a service is registered as a ServiceFactory with
-             * multiple PIDs, it may be instantiated and destroyed multiple
-             * times during its inital setup phase. By getting it first
-             * and ungetting it at the end we prevent this cycling ensuring
-             * all updates go the same service instance.
-             */
-
-            S service = getRealService( reference );
-            if ( service != null )
-            {
-                try
-                {
-                    if ( this.cm.isLogEnabled( LogService.LOG_DEBUG ) )
-                    {
-                        this.cm.log( LogService.LOG_DEBUG, "configure(ManagedService {0})", new Object[]
-                            { ConfigurationManager.toString( reference ) } );
-                    }
-
-                    for ( int i = 0; i < pids.length; i++ )
-                    {
-                        this.cm.configure( pids[i], reference, managedServiceFactory );
-                    }
-                }
-                finally
-                {
-                    ungetRealService( reference );
-                }
-            }
+            this.cm.configure( pids, reference, managedServiceFactory );
         }
     }
 
@@ -150,12 +134,15 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap>
     }
 
 
+    protected abstract ConfigurationMap<?> createConfigurationMap( String[] pids );
+
+
     // Updates
-    public abstract void provideConfiguration( ServiceReference<S> service, ConfigurationImpl config,
-        Dictionary<String, ?> properties );
+    public abstract void provideConfiguration( ServiceReference<S> service, TargetedPID configPid,
+        TargetedPID factoryPid, Dictionary<String, ?> properties, long revision );
 
 
-    public abstract void removeConfiguration( ServiceReference<S> service, ConfigurationImpl config );
+    public abstract void removeConfiguration( ServiceReference<S> service, TargetedPID configPid, TargetedPID factoryPid );
 
 
     protected final S getRealService( ServiceReference<S> reference )
@@ -170,17 +157,16 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap>
     }
 
 
-    protected final Dictionary getProperties( Dictionary<String, ?> rawProperties, String targetPid,
-        ServiceReference service )
+    protected final Dictionary getProperties( Dictionary<String, ?> rawProperties, ServiceReference service,
+        String configPid, String factoryPid )
     {
         Dictionary props = new CaseInsensitiveDictionary( rawProperties );
-        this.cm.callPlugins( props, targetPid, service, null /* config */);
+        this.cm.callPlugins( props, service, configPid, factoryPid );
         return props;
     }
 
 
-    protected final void handleCallBackError( final Throwable error, final ServiceReference target,
-        final ConfigurationImpl config )
+    protected final void handleCallBackError( final Throwable error, final ServiceReference target, final TargetedPID pid )
     {
         if ( error instanceof ConfigurationException )
         {
@@ -189,21 +175,20 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap>
             {
                 this.cm.log( LogService.LOG_ERROR,
                     "{0}: Updating property {1} of configuration {2} caused a problem: {3}", new Object[]
-                        { ConfigurationManager.toString( target ), ce.getProperty(), config.getPid(), ce.getReason(),
-                            ce } );
+                        { ConfigurationManager.toString( target ), ce.getProperty(), pid, ce.getReason(), ce } );
             }
             else
             {
                 this.cm.log( LogService.LOG_ERROR, "{0}: Updating configuration {1} caused a problem: {2}",
                     new Object[]
-                        { ConfigurationManager.toString( target ), config.getPid(), ce.getReason(), ce } );
+                        { ConfigurationManager.toString( target ), pid, ce.getReason(), ce } );
             }
         }
         else
         {
             {
                 this.cm.log( LogService.LOG_ERROR, "{0}: Unexpected problem updating configuration {1}", new Object[]
-                    { ConfigurationManager.toString( target ), config, error } );
+                    { ConfigurationManager.toString( target ), pid, error } );
             }
 
         }

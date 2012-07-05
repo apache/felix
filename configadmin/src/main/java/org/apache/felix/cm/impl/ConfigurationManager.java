@@ -31,7 +31,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import org.apache.felix.cm.PersistenceManager;
@@ -477,6 +476,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     /**
      * Returns a targeted configuration for the given service PID and
      * the reference target service.
+     * <p>
+     * A configuration returned has already been checked for visibility
+     * by the bundle registering the referenced service. Additionally,
+     * the configuration is also dynamically bound if needed.
      *
      * @param rawPid The raw service PID to get targeted configuration for.
      * @param target The target <code>ServiceReference</code> to get
@@ -491,7 +494,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         final Bundle serviceBundle = target.getBundle();
         if ( serviceBundle != null )
         {
-            // for pre-1.5 API compatibility
+            // list of targeted PIDs to check
+            // (StringBuffer for pre-1.5 API compatibility)
             final StringBuffer targetedPid = new StringBuffer( rawPid );
             int i = 3;
             String[] names = new String[4];
@@ -508,9 +512,29 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 ConfigurationImpl config = getConfiguration( candidate );
                 if ( config != null )
                 {
-                    return config;
+                    // check visibility to use and dynamically bind
+                    if ( canReceive( serviceBundle, config.getBundleLocation() ) )
+                    {
+                        config.tryBindLocation( serviceBundle.getLocation() );
+                        return config;
+                    }
+
+                    // CM 1.4 / 104.13.2.2 / 104.5.3
+                    // act as if there is no configuration
+                    log(
+                        LogService.LOG_DEBUG,
+                        "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}; calling with null",
+                        new Object[]
+                            { config.getPid(), toString( target ), config.getBundleLocation() } );
                 }
             }
+        }
+        else
+        {
+            log( LogService.LOG_INFO,
+                "Service for PID {0} seems to already have been unregistered, not updating with configuration",
+                new Object[]
+                    { rawPid } );
         }
 
         // service already unregistered, nothing to do really
@@ -844,16 +868,22 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      * Schedules the configuration of the referenced service with
      * configuration for the given PID.
      *
-     * @param pid The service PID of the configuration to be provided
-     *      to the referenced service.
+     * @param pid The list of service PID of the configurations to be
+     *      provided to the referenced service.
      * @param sr The <code>ServiceReference</code> to the service
      *      to be configured.
      * @param factory <code>true</code> If the service is considered to
      *      be a <code>ManagedServiceFactory</code>. Otherwise the service
      *      is considered to be a <code>ManagedService</code>.
      */
-    public void configure( String pid, ServiceReference sr, final boolean factory )
+    public void configure( String[] pid, ServiceReference sr, final boolean factory )
     {
+        if ( this.isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            this.log( LogService.LOG_DEBUG, "configure(ManagedService {0})", new Object[]
+                { toString( sr ) } );
+        }
+
         Runnable r;
         if ( factory )
         {
@@ -1022,31 +1052,32 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
     /**
      * Calls the registered configuration plugins on the given configuration
-     * properties from the given configuration object unless the configuration
-     * has just been created and not been updated yet.
+     * properties from the given configuration object.
+     * <p>
+     * The plugins to be called are selected as <code>ConfigurationPlugin</code>
+     * services registered with a <code>cm.target</code> property set to
+     * <code>*</code> or the factory PID of the configuration (for factory
+     * configurations) or the PID of the configuration (for non-factory
+     * configurations).
      *
      * @param props The configuraiton properties run through the registered
-     *          ConfigurationPlugin services. This may be <code>null</code>
-     *          in which case this method just immediately returns.
-     * @param targetPid The identification of the configuration update used to
-     *          select the plugins according to their cm.target service
-     *          property
+     *          ConfigurationPlugin services. This must not be
+     *          <code>null</code>.
      * @param sr The service reference of the managed service (factory) which
      *          is to be updated with configuration
-     * @param cfg The configuration object whose properties have to be passed
-     *          through the plugins
+     * @param configPid The PID of the configuration object whose properties
+     *          are to be augmented
+     * @param factoryPid the factory PID of the configuration object whose
+     *          properties are to be augmented. This is non-<code>null</code>
+     *          only for a factory configuration.
      */
-    public void callPlugins( final Dictionary props, final String targetPid, final ServiceReference sr,
-        final ConfigurationImpl cfg )
+    public void callPlugins( final Dictionary props, final ServiceReference sr, final String configPid,
+        final String factoryPid )
     {
-        // guard against NPE for new configuration never updated
-        if (props == null) {
-            return;
-        }
-
         ServiceReference[] plugins = null;
         try
         {
+            final String targetPid = (factoryPid == null) ? configPid : factoryPid;
             String filter = "(|(!(cm.target=*))(cm.target=" + targetPid + "))";
             plugins = bundleContext.getServiceReferences( ConfigurationPlugin.class.getName(), filter );
         }
@@ -1088,7 +1119,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     // ensure ungetting the plugin
                     bundleContext.ungetService( pluginRef );
                 }
-                cfg.setAutoProperties( props, false );
+                ConfigurationImpl.setAutoProperties( props, configPid, factoryPid );
             }
         }
     }
@@ -1308,103 +1339,74 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      */
     private class ManagedServiceUpdate implements Runnable
     {
-        private final String pid;
+        private final String[] pids;
 
         private final ServiceReference sr;
 
-        private final ConfigurationImpl config;
-
-        private final Dictionary rawProperties;
-
-        private final long revision;
-
-        ManagedServiceUpdate( String pid, ServiceReference sr )
+        ManagedServiceUpdate( String[] pids, ServiceReference sr )
         {
-            this.pid = pid;
+            this.pids = pids;
             this.sr = sr;
-
-            // get or load configuration for the pid
-            ConfigurationImpl config = null;
-            Dictionary rawProperties = null;
-            long revision = -1;
-            try
-            {
-                config = getTargetedConfiguration( pid, sr );
-                if ( config != null )
-                {
-                    synchronized ( config )
-                    {
-                        rawProperties = config.getProperties( true );
-                        revision = config.getRevision();
-                    }
-                }
-            }
-            catch ( IOException ioe )
-            {
-                log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
-                    { pid, ioe } );
-            }
-
-            this.config = config;
-            this.rawProperties = rawProperties;
-            this.revision = revision;
         }
 
 
         public void run()
         {
-            Dictionary properties = rawProperties;
+            for ( String pid : this.pids )
+            {
+                try
+                {
+                    final ConfigurationImpl config = getTargetedConfiguration( pid, this.sr );
+                    provide( pid, config );
+                }
+                catch ( IOException ioe )
+                {
+                    log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
+                        { pid, ioe } );
+                }
+                catch ( Exception e )
+                {
+                    log( LogService.LOG_ERROR, "Unexpected problem providing configuration {0} to service {1}",
+                        new Object[]
+                            { pid, ConfigurationManager.toString( this.sr ), e } );
+                }
+            }
+        }
 
-            // check configuration and call plugins if existing
+
+        private void provide(final String servicePid, final ConfigurationImpl config)
+        {
+            // check configuration
+            final TargetedPID configPid;
+            final Dictionary properties;
+            final long revision;
             if ( config != null )
             {
-                log( LogService.LOG_DEBUG, "Updating service {0} to with configuration {1}@{2}", new Object[]
-                    { pid, this.config.getPid(), new Long( revision ) } );
-
-                Bundle serviceBundle = sr.getBundle();
-                if ( serviceBundle == null )
+                synchronized ( config )
                 {
-                    log( LogService.LOG_INFO,
-                        "Service for PID {0} seems to already have been unregistered, not updating with configuration",
-                        new Object[]
-                            { pid } );
-                    return;
+                    configPid = config.getPid();
+                    properties = config.getProperties( true );
+                    revision = config.getRevision();
                 }
-
-                if ( canReceive( serviceBundle, config.getBundleLocation() ) )
-                {
-                    // 104.4.2 Dynamic Binding
-                    config.tryBindLocation( serviceBundle.getLocation() );
-                }
-                else
-                {
-                    // CM 1.4 / 104.13.2.2 / 104.5.3
-                    // act as if there is no configuration
-                    log(
-                        LogService.LOG_DEBUG,
-                        "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}; calling with null",
-                        new Object[]
-                            { pid, ConfigurationManager.toString( sr ), config.getBundleLocation() } );
-
-                    // CM 1.4 / 104.5.3 ManagedService.updated must be
-                    // called with null if configuration is no visible
-                    properties = null;
-                }
-
             }
             else
             {
                 // 104.5.3 ManagedService.updated must be called with null
                 // if no configuration is available
+                configPid = new TargetedPID( servicePid );
                 properties = null;
+                revision = -1;
             }
 
-            managedServiceTracker.provideConfiguration( sr, config, properties );
+            log( LogService.LOG_DEBUG, "Updating service {0} with configuration {1}@{2}", new Object[]
+                { servicePid, configPid, new Long( revision ) } );
+
+            managedServiceTracker.provideConfiguration( sr, configPid, null, properties, revision);
         }
 
         public String toString()
         {
-            return "ManagedService Update: pid=" + pid;
+            return "ManagedService Update: pid=" + Arrays.asList( pids );
         }
     }
 
@@ -1417,106 +1419,113 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      */
     private class ManagedServiceFactoryUpdate implements Runnable
     {
-        private final String factoryPid;
+        private final String[] factoryPids;
 
         private final ServiceReference sr;
 
-        private final Map configs;
 
-        private final Map revisions;
-
-        ManagedServiceFactoryUpdate( String factoryPid, ServiceReference sr )
+        ManagedServiceFactoryUpdate( String[] factoryPids, ServiceReference sr )
         {
-            this.factoryPid = factoryPid;
+            this.factoryPids = factoryPids;
             this.sr = sr;
-
-            List<Factory> factories = null;
-            Map configs = null;
-            Map revisions = null;
-            try
-            {
-                factories = getTargetedFactories( factoryPid, sr );
-                for (Factory factory : factories) {
-                    configs = new HashMap();
-                    revisions = new HashMap();
-                    for ( Iterator pi = factory.getPIDs().iterator(); pi.hasNext(); )
-                    {
-                        final String pid = ( String ) pi.next();
-                        ConfigurationImpl cfg;
-                        try
-                        {
-                            cfg = getConfiguration( pid );
-                        }
-                        catch ( IOException ioe )
-                        {
-                            log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
-                                { pid, ioe } );
-                            continue;
-                        }
-
-                        // sanity check on the configuration
-                        if ( cfg == null )
-                        {
-                            log( LogService.LOG_ERROR, "Configuration {0} referred to by factory {1} does not exist",
-                                new Object[]
-                                    { pid, factoryPid } );
-                            factory.removePID( pid );
-                            factory.storeSilently();
-                            continue;
-                        }
-                        else if ( cfg.isNew() )
-                        {
-                            // Configuration has just been created but not yet updated
-                            // we currently just ignore it and have the update mechanism
-                            // provide the configuration to the ManagedServiceFactory
-                            // As of FELIX-612 (not storing new factory configurations)
-                            // this should not happen. We keep this for added stability
-                            // but raise the logging level to error.
-                            log( LogService.LOG_ERROR, "Ignoring new configuration pid={0}", new Object[]
-                                { pid } );
-                            continue;
-                        }
-                        /*
-                         * this code would catch targeted factory PIDs;
-                         * since this is not expected any way, we can
-                         * leave this out
-                         */
-                        /*
-                        else if ( !factoryPid.equals( cfg.getFactoryPid() ) )
-                        {
-                            log( LogService.LOG_ERROR,
-                                "Configuration {0} referred to by factory {1} seems to belong to factory {2}",
-                                new Object[]
-                                    { pid, factoryPid, cfg.getFactoryPid() } );
-                            factory.removePID( pid );
-                            factory.storeSilently();
-                            continue;
-                        }
-                        */
-
-                        // get the configuration properties for later
-                        synchronized ( cfg )
-                        {
-                            configs.put( cfg, cfg.getProperties( true ) );
-                            revisions.put( cfg, new Long( cfg.getRevision() ) );
-                        }
-                    }
-                }
-            }
-            catch ( IOException ioe )
-            {
-                log( LogService.LOG_ERROR, "Cannot get factory mapping for factory PID {0}", new Object[]
-                    { factoryPid, ioe } );
-            }
-
-            this.configs = configs;
-            this.revisions = revisions;
         }
 
 
         public void run()
         {
-            Bundle serviceBundle = sr.getBundle();
+            for ( String factoryPid : this.factoryPids )
+            {
+
+                List<Factory> factories = null;
+                try
+                {
+                    factories = getTargetedFactories( factoryPid, sr );
+                    for ( Factory factory : factories )
+                    {
+                        for ( Iterator pi = factory.getPIDs().iterator(); pi.hasNext(); )
+                        {
+                            final String pid = ( String ) pi.next();
+                            ConfigurationImpl cfg;
+                            try
+                            {
+                                cfg = getConfiguration( pid );
+                            }
+                            catch ( IOException ioe )
+                            {
+                                log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
+                                    { pid, ioe } );
+                                continue;
+                            }
+
+                            // sanity check on the configuration
+                            if ( cfg == null )
+                            {
+                                log( LogService.LOG_ERROR,
+                                    "Configuration {0} referred to by factory {1} does not exist", new Object[]
+                                        { pid, factoryPid } );
+                                factory.removePID( pid );
+                                factory.storeSilently();
+                                continue;
+                            }
+                            else if ( cfg.isNew() )
+                            {
+                                // Configuration has just been created but not yet updated
+                                // we currently just ignore it and have the update mechanism
+                                // provide the configuration to the ManagedServiceFactory
+                                // As of FELIX-612 (not storing new factory configurations)
+                                // this should not happen. We keep this for added stability
+                                // but raise the logging level to error.
+                                log( LogService.LOG_ERROR, "Ignoring new configuration pid={0}", new Object[]
+                                    { pid } );
+                                continue;
+                            }
+
+                            /*
+                             * this code would catch targeted factory PIDs;
+                             * since this is not expected any way, we can
+                             * leave this out
+                             */
+                            /*
+                            else if ( !factoryPid.equals( cfg.getFactoryPid() ) )
+                            {
+                                log( LogService.LOG_ERROR,
+                                    "Configuration {0} referred to by factory {1} seems to belong to factory {2}",
+                                    new Object[]
+                                        { pid, factoryPid, cfg.getFactoryPid() } );
+                                factory.removePID( pid );
+                                factory.storeSilently();
+                                continue;
+                            }
+                            */
+
+                            provide( factoryPid, cfg );
+                        }
+                    }
+                }
+                catch ( IOException ioe )
+                {
+                    log( LogService.LOG_ERROR, "Cannot get factory mapping for factory PID {0}", new Object[]
+                        { factoryPid, ioe } );
+                }
+            }
+        }
+
+
+        private void provide(final String factoryPid, final ConfigurationImpl config) {
+
+            final Dictionary rawProperties;
+            final long revision;
+            synchronized ( config )
+            {
+                rawProperties = config.getProperties( true );
+                revision = config.getRevision();
+            }
+
+            log( LogService.LOG_DEBUG, "Updating service {0} with configuration {1}/{2}@{3}", new Object[]
+                { factoryPid, config.getFactoryPid(), config.getPid(), new Long( revision ) } );
+
+            // CM 1.4 / 104.13.2.1
+            final Bundle serviceBundle = this.sr.getBundle();
             if ( serviceBundle == null )
             {
                 log(
@@ -1527,52 +1536,34 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 return;
             }
 
-            if ( configs == null || configs.isEmpty() )
+            if ( !canReceive( serviceBundle, config.getBundleLocation() ) )
             {
-                log( LogService.LOG_DEBUG, "No configuration with factory PID {0}; not updating ManagedServiceFactory",
+                log( LogService.LOG_ERROR,
+                    "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
                     new Object[]
-                        { factoryPid } );
+                        { config.getPid(), ConfigurationManager.toString( sr ), config.getBundleLocation() } );
+
+                // no service, really, bail out
+                return;
             }
-            else
+
+            // 104.4.2 Dynamic Binding
+            config.tryBindLocation( serviceBundle.getLocation() );
+
+            // update the service with the configuration (if non-null)
+            if ( rawProperties != null )
             {
-                for ( Iterator ci = configs.entrySet().iterator(); ci.hasNext(); )
-                {
-                    final Map.Entry entry = ( Map.Entry ) ci.next();
-                    final ConfigurationImpl cfg = ( ConfigurationImpl ) entry.getKey();
-                    final Dictionary properties = ( Dictionary ) entry.getValue();
-                    final long revision = ( ( Long ) revisions.get( cfg ) ).longValue();
-
-                    log( LogService.LOG_DEBUG, "Updating service {0} with configuration {1}/{2}@{3}", new Object[]
-                        { this.factoryPid, cfg.getFactoryPid(), cfg.getPid(), new Long( revision ) } );
-
-                    // CM 1.4 / 104.13.2.1
-                    if ( !canReceive( serviceBundle, cfg.getBundleLocation() ) )
-                    {
-                        log( LogService.LOG_ERROR,
-                            "Cannot use configuration {0} for {1}: No visibility to configuration bound to {2}",
-                            new Object[]
-                                { cfg.getPid(), ConfigurationManager.toString( sr ), cfg.getBundleLocation() } );
-                        continue;
-                    }
-
-                    // 104.4.2 Dynamic Binding
-                    cfg.tryBindLocation( serviceBundle.getLocation() );
-
-                    // update the service with the configuration (if non-null)
-                    if ( properties != null )
-                    {
-                        log( LogService.LOG_DEBUG, "{0}: Updating configuration pid={1}", new Object[]
-                            { ConfigurationManager.toString( sr ), cfg.getPid() } );
-                        managedServiceFactoryTracker.provideConfiguration( sr, cfg, properties );
-                    }
-                }
+                log( LogService.LOG_DEBUG, "{0}: Updating configuration pid={1}", new Object[]
+                    { ConfigurationManager.toString( sr ), config.getPid() } );
+                managedServiceFactoryTracker.provideConfiguration( sr, config.getPid(), config.getFactoryPid(),
+                    rawProperties, revision );
             }
         }
 
 
         public String toString()
         {
-            return "ManagedServiceFactory Update: factoryPid=" + factoryPid;
+            return "ManagedServiceFactory Update: factoryPid=" + Arrays.asList( this.factoryPids );
         }
     }
 
@@ -1606,6 +1597,48 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 return factoryPid;
             }
             return this.config.getPid();
+        }
+
+
+        protected boolean provideReplacement( ServiceReference<T> sr )
+        {
+            if ( this.config.getFactoryPid() == null )
+            {
+                try
+                {
+                    final ConfigurationImpl rc = getTargetedConfiguration( this.config.getPid().getServicePid(), sr );
+                    if ( rc != null )
+                    {
+                        final TargetedPID configPid;
+                        final Dictionary properties;
+                        final long revision;
+                        synchronized ( config )
+                        {
+                            configPid = config.getPid();
+                            properties = config.getProperties( true );
+                            revision = config.getRevision();
+                        }
+
+                        helper.provideConfiguration( sr, configPid, null, properties, revision );
+
+                        return true;
+                    }
+                }
+                catch ( IOException ioe )
+                {
+                    log( LogService.LOG_ERROR, "Error loading configuration for {0}", new Object[]
+                        { this.config.getPid(), ioe } );
+                }
+                catch ( Exception e )
+                {
+                    log( LogService.LOG_ERROR, "Unexpected problem providing configuration {0} to service {1}",
+                        new Object[]
+                            { this.config.getPid(), ConfigurationManager.toString( sr ), e } );
+                }
+            }
+
+            // factory or no replacement available
+            return false;
         }
     }
 
@@ -1651,7 +1684,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     }
                     else if ( canReceive( refBundle, configBundleLocation ) )
                     {
-                        helper.provideConfiguration( ref, this.config, this.properties );
+                        helper.provideConfiguration( ref, this.config.getPid(), this.config.getFactoryPid(),
+                            this.properties, this.revision );
                     }
                     else
                     {
@@ -1720,7 +1754,12 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     }
                     else if ( canReceive( srBundle, configLocation ) )
                     {
-                        this.helper.removeConfiguration( sr, this.config );
+                        // revoke configuration unless a replacement
+                        // configuration can be provided
+                        if ( !this.provideReplacement( sr ) )
+                        {
+                            this.helper.removeConfiguration( sr, this.config.getPid(), this.config.getFactoryPid() );
+                        }
                     }
                     else
                     {
@@ -1798,16 +1837,21 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
                     if ( wasVisible && !isVisible )
                     {
-                        // call deleted method
-                        helper.removeConfiguration( sr, this.config );
-                        log( LogService.LOG_DEBUG, "Configuration {0} revoked from {1} (no more visibility)",
-                            new Object[]
-                                { config.getPid(), ConfigurationManager.toString( sr ) } );
+                        // revoke configuration unless a replacement
+                        // configuration can be provided
+                        if ( !this.provideReplacement( sr ) )
+                        {
+                            helper.removeConfiguration( sr, this.config.getPid(), this.config.getFactoryPid() );
+                            log( LogService.LOG_DEBUG, "Configuration {0} revoked from {1} (no more visibility)",
+                                new Object[]
+                                    { config.getPid(), ConfigurationManager.toString( sr ) } );
+                        }
                     }
                     else if ( !wasVisible && isVisible )
                     {
                         // call updated method
-                        helper.provideConfiguration( sr, this.config, this.properties );
+                        helper.provideConfiguration( sr, this.config.getPid(), this.config.getFactoryPid(),
+                            this.properties, this.revision );
                         log( LogService.LOG_DEBUG, "Configuration {0} provided to {1} (new visibility)", new Object[]
                             { config.getPid(), ConfigurationManager.toString( sr ) } );
                     }
@@ -1958,3 +2002,4 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
     }
 }
+
