@@ -47,9 +47,9 @@
     <dependencies>
         <!-- bind/unbind method generation -->
         <dependency>
-            <groupId>asm</groupId>
+            <groupId>org.ow2.asm</groupId>
             <artifactId>asm-all</artifactId>
-            <version>3.3.1</version>
+            <version>4.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
