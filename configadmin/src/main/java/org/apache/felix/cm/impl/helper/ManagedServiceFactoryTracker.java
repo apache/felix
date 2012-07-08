@@ -40,6 +40,18 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
     }
 
 
+    /**
+     * Always returns the raw PID because for a ManagedServiceFactory
+     * the configuration's PID is automatically generated and is not a
+     * real targeted PID.
+     */
+    @Override
+    public String getServicePid( ServiceReference<ManagedServiceFactory> service, TargetedPID pid )
+    {
+        return pid.getRawPid();
+    }
+
+
     @Override
     public void provideConfiguration( ServiceReference<ManagedServiceFactory> reference, TargetedPID configPid,
         TargetedPID factoryPid, Dictionary<String, ?> properties, long revision )

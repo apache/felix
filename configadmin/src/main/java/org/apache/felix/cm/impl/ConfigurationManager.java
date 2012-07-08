@@ -1606,7 +1606,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             {
                 try
                 {
-                    final ConfigurationImpl rc = getTargetedConfiguration( this.config.getPid().getServicePid(), sr );
+                    final String configPidString = this.helper.getServicePid( sr, this.config.getPid() );
+                    final ConfigurationImpl rc = getTargetedConfiguration( configPidString, sr );
                     if ( rc != null )
                     {
                         final TargetedPID configPid;
