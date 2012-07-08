@@ -46,6 +46,20 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
     }
 
 
+    @Override
+    public String getServicePid( ServiceReference<ManagedService> service, TargetedPID pid )
+    {
+        final ConfigurationMap configs = this.getService( service );
+        if ( configs != null )
+        {
+            return configs.getKeyPid( pid );
+        }
+
+        // this service is not handled...
+        return null;
+    }
+
+
     /**
      * Provides the given configuration to the managed service.
      * <p>

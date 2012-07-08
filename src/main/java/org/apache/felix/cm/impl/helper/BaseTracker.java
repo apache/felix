@@ -136,6 +136,24 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
 
     protected abstract ConfigurationMap<?> createConfigurationMap( String[] pids );
 
+    /**
+     * Returns the String to be used as the PID of the service PID for the
+     * {@link TargetedPID pid} retrieved from the configuration.
+     * <p>
+     * This method will return {@link TargetedPID#getServicePid()} most of
+     * the time except if the service PID used for the consumer's service
+     * registration contains one or more pipe symbols (|). In this case
+     * {@link TargetedPID#getRawPid()} might be returned.
+     *
+     * @param service The reference ot the service for which the service
+     *      PID is to be returned.
+     * @param pid The {@link TargetedPID} for which to return the service
+     *      PID.
+     * @return The service PID or <code>null</code> if the service does not
+     *      respond to the targeted PID at all.
+     */
+    public abstract String getServicePid( ServiceReference<S> service, TargetedPID pid );
+
 
     /**
      * Updates the given service with the provided configuration.

@@ -75,7 +75,6 @@ class ManagedServiceConfigurationMap extends ConfigurationMap<ManagedServiceConf
         // update if the used targeted PID matches
         if ( configPid.equals( entry.targetedPid ) )
         {
-            this.put( configPid, null );
             return true;
         }
 

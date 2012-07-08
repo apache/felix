@@ -222,4 +222,52 @@ public class TargetedPidTest extends ConfigurationTestBase
         }
     }
 
+    @Test
+    public void test_pid_with_pipe() throws BundleException
+    {
+        final String pid0 = "test_targeted";
+        final String pid1 = String.format( "%s|%s", pid0, ManagedServiceTestActivator.class.getName() );
+        try
+        {
+
+            // start the bundle and assert this
+            bundle = installBundle( pid1 );
+
+            configure( pid0 );
+            configure( pid1 );
+
+            bundle.start();
+            final ManagedServiceTestActivator tester = ManagedServiceTestActivator.INSTANCE;
+            TestCase.assertNotNull( "Activator not started !!", tester );
+
+            // give cm time for distribution
+            delay();
+
+            // assert activater has configuration
+            int callCount = 0;
+            TestCase.assertNotNull( "Expect Properties after update", tester.props );
+            TestCase.assertEquals( "Expect PID", pid1, tester.props.get( Constants.SERVICE_PID ) );
+            TestCase.assertEquals( "Expect calls", ++callCount, tester.numManagedServiceUpdatedCalls );
+
+            // delete pid1 - don't expect pid0 is assigned
+            deleteConfig( pid1 );
+            delay();
+
+            // final delete
+            TestCase.assertNull( "Expect no Properties after delete", tester.props );
+            TestCase.assertEquals( "Expect calls", ++callCount, tester.numManagedServiceUpdatedCalls );
+
+            // cleanup
+            bundle.uninstall();
+            bundle = null;
+
+        }
+        finally
+        {
+            // remove the configuration for good
+            deleteConfig( pid0 );
+            deleteConfig( pid1 );
+        }
+    }
+
 }

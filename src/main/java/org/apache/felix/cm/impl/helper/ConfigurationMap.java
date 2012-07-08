@@ -52,17 +52,43 @@ abstract class ConfigurationMap<T>
 
     protected T get( final TargetedPID key )
     {
-        return this.configurations.get( key.getServicePid() );
+        final String servicePid = getKeyPid( key );
+        if ( servicePid != null )
+        {
+            return this.configurations.get( servicePid );
+        }
+
+        // the targeted PID does not match here
+        return null;
     }
 
 
     protected void put( final TargetedPID key, final T value )
     {
-        final String servicePid = key.getServicePid();
-        if ( this.accepts( servicePid ) )
+        final String servicePid = getKeyPid( key );
+        if ( servicePid != null )
         {
             this.configurations.put( servicePid, value );
         }
+    }
+
+
+    protected String getKeyPid( final TargetedPID targetedPid )
+    {
+        // regular use case: service PID is the key
+        if ( this.accepts( targetedPid.getServicePid() ) )
+        {
+            return targetedPid.getServicePid();
+        }
+
+        // the raw PID is the key (if the service PID contains pipes)
+        if ( this.accepts( targetedPid.getRawPid() ) )
+        {
+            return targetedPid.getRawPid();
+        }
+
+        // this is not really expected here
+        return null;
     }
 
 
