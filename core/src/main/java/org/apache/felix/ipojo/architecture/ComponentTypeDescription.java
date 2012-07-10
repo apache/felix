@@ -19,6 +19,8 @@
 package org.apache.felix.ipojo.architecture;
 
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Properties;
 
 import org.apache.felix.ipojo.ComponentFactory;
@@ -45,6 +47,11 @@ public class ComponentTypeDescription {
      * Configuration Properties accepted by the component type.
      */
     private PropertyDescription[] m_properties = new PropertyDescription[0];
+    
+    /*
+     * Used by custom handlers to keep and retrieve custom info.
+     */
+    private Dictionary m_handlerInfoSlot = new Hashtable();
 
     /**
      * Represented factory.
@@ -139,6 +146,32 @@ public class ComponentTypeDescription {
         System.arraycopy(m_properties, 0, newProps, 0, m_properties.length);
         newProps[m_properties.length] = pd;
         m_properties = newProps;
+    }
+    
+    /**
+     * Adds the HandlerInfo for specified handler.
+     * @param handlerNs Handler's namespace
+     * @param handlerName Handler's name
+     * @param info HandlerInfo associated with the given custom handler.
+     */
+    public void setHandlerInfo(String handlerNs, String handlerName, CustomHandlerInfo info)
+    {
+    	String fullHandlerName = handlerNs + ":" + handlerName;
+    	
+    	if(info == null)
+    	{
+    		m_handlerInfoSlot.remove(fullHandlerName);
+    	}
+    	else
+    	{
+    		m_handlerInfoSlot.put(fullHandlerName, info);
+    	}
+    }
+    
+    public CustomHandlerInfo getHandlerInfo(String handlerNs, String handlerName)
+    {
+    	String fullHandlerName = handlerNs + ":" + handlerName;    	
+    	return (CustomHandlerInfo)m_handlerInfoSlot.get(fullHandlerName);
     }
 
     /**
@@ -254,6 +287,19 @@ public class ComponentTypeDescription {
                 prop.addAttribute(new Attribute("value", m_properties[i].getValue()));
             }
             desc.addElement(prop);
+        }
+        
+        if(m_handlerInfoSlot.size() > 0)
+        {        	
+        	Enumeration keys = m_handlerInfoSlot.keys();
+            
+            while(keys.hasMoreElements())
+            {
+            	String fullHandlerName = (String) keys.nextElement();
+            	
+            	CustomHandlerInfo handlerInfo = (CustomHandlerInfo)m_handlerInfoSlot.get(fullHandlerName);
+            	desc.addElement( handlerInfo.getDescription() );
+            }
         }
 
         return desc;
