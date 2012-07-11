@@ -235,6 +235,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             m_callbackAdded = prototype.m_callbackAdded;
             m_callbackChanged = prototype.m_callbackChanged;
             m_callbackRemoved = prototype.m_callbackRemoved;
+            m_callbackSwapped = prototype.m_callbackSwapped;
             m_autoConfigInstance = prototype.m_autoConfigInstance;
             m_defaultImplementation = prototype.m_defaultImplementation;
         }
