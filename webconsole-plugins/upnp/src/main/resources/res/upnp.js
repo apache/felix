@@ -154,7 +154,7 @@ function renderDevice(device) {
 		var xvalue = _val(device.props[key]);
 		if ('objectClass' == key) continue;
 		if ('service.id'  == key) {
-			xvalue = '<a href="' + appRoot + '/services/' + key + '">' + xvalue + '</a>';
+			xvalue = '<a href="' + appRoot + '/services/' + xvalue + '">' + xvalue + '</a>';
 		}
 		table += '<tr><td class="ui-priority-primary">' + key + '</td><td>' + xvalue + '</td></tr>';
 	}
