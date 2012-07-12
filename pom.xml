@@ -127,6 +127,7 @@
                         <Import-Package>
                             org.osgi.service.metatype;resolution:=optional,
                             javax.servlet.*;version=2.4,
+                            org.apache.commons.io; version="[1.4,3)",
                             *
                         </Import-Package>
                         <DynamicImport-Package>
