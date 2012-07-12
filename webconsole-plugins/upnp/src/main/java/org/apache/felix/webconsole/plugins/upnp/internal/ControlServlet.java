@@ -530,7 +530,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
     {
         UPnPDevice device = (UPnPDevice) bc.getService(ref);
 
-        UPnPIcon[] _icons = device.getIcons(null);
+        UPnPIcon[] _icons = device == null ? null : device.getIcons(null);
         if (_icons != null && _icons.length > 0)
         {
             icons.put(ref.getProperty(UPnPDevice.UDN), _icons[0]);
