@@ -20,6 +20,8 @@ package org.apache.felix.webconsole.internal.core;
 
 import java.io.PrintWriter;
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Locale;
 
 import org.apache.felix.webconsole.internal.AbstractConfigurationPrinter;
@@ -28,6 +30,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.packageadmin.ExportedPackage;
 
 /**
  * ServicesConfigurationPrinter provides a configuration printer for inspecting the 
@@ -136,7 +139,50 @@ public class ServicesConfigurationPrinter extends AbstractConfigurationPrinter i
         }
 
         // no services or invalid filter syntax (unlikely)
-        return refs != null ? refs : NO_REFS;
+        if (refs != null)
+        {
+            Arrays.sort(refs, new ServiceReferenceComparator());
+        }
+        else
+        {
+            refs = NO_REFS;
+        }
+        return refs;
     }
 
+}
+
+class ServiceReferenceComparator implements Comparator
+{
+    private static final Long ZERO = new Long(0);
+
+    public int compare(ServiceReference p1, ServiceReference p2)
+    {
+        Long id1 = null;
+        if (p1 != null)
+        {
+            id1 = (Long) p1.getProperty(Constants.SERVICE_ID);
+        }
+        if (id1 == null)
+        {
+            id1 = ZERO;
+        }
+
+        Long id2 = null;
+        if (p2 != null)
+        {
+            id2 = (Long) p2.getProperty(Constants.SERVICE_ID);
+        }
+        if (id2 == null)
+        {
+            id2 = ZERO;
+        }
+
+        return id1.compareTo(id2);
+    }
+
+    public int compare(Object o1, Object o2)
+    {
+        return compare((ServiceReference) o1, (ServiceReference) o2);
+    }
 }
