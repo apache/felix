@@ -38,6 +38,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
+import org.osgi.service.cm.SynchronousConfigurationListener;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -62,7 +63,9 @@ public class FELIX2813_ConfigurationAdminStartupTest extends ConfigurationTestBa
         final TestListener listener = new TestListener();
         bundleContext.registerService( ConfigurationListener.class.getName(), listener, null );
         final TestListener syncListener = new SynchronousTestListener();
-        bundleContext.registerService( ConfigurationListener.class.getName(), syncListener, null );
+        bundleContext.registerService( SynchronousConfigurationListener.class.getName(), syncListener, null );
+        final TestListener syncListenerAsync = new SynchronousTestListener();
+        bundleContext.registerService( ConfigurationListener.class.getName(), syncListenerAsync, null );
         bundleContext.addServiceListener( this, "(" + Constants.OBJECTCLASS + "=" + ConfigurationAdmin.class.getName()
             + ")" );
 
@@ -95,6 +98,7 @@ public class FELIX2813_ConfigurationAdminStartupTest extends ConfigurationTestBa
         delay();
         listener.assertEvent( ConfigurationEvent.CM_UPDATED, "test", null, true, 1 );
         syncListener.assertEvent( ConfigurationEvent.CM_UPDATED, "test", null, false, 1 );
+        syncListenerAsync.assertEvent( ConfigurationEvent.CM_UPDATED, "test", null, true, 1 );
     }
 
 
