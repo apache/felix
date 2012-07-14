@@ -135,6 +135,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     // the ConfigurationEvent listeners
     private ServiceTracker configurationListenerTracker;
 
+    // the synchronous ConfigurationEvent listeners
+    private ServiceTracker syncConfigurationListenerTracker;
+
     // service tracker for managed services
     private ManagedServiceTracker managedServiceTracker;
 
@@ -221,6 +224,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         // configurationlistener support
         configurationListenerTracker = new ServiceTracker( bundleContext, ConfigurationListener.class.getName(), null );
         configurationListenerTracker.open();
+        syncConfigurationListenerTracker = new ServiceTracker( bundleContext,
+            SynchronousConfigurationListener.class.getName(), null );
+        syncConfigurationListenerTracker.open();
 
         // initialize the asynchonous updater thread
         ThreadGroup tg = new ThreadGroup( "Configuration Admin Service" );
@@ -328,6 +334,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         if ( configurationListenerTracker != null )
         {
             configurationListenerTracker.close();
+        }
+
+        if ( syncConfigurationListenerTracker != null )
+        {
+            syncConfigurationListenerTracker.close();
         }
 
         if ( logTracker != null )
@@ -734,16 +745,32 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
     void fireConfigurationEvent( int type, String pid, String factoryPid )
     {
-        FireConfigurationEvent event = new FireConfigurationEvent( type, pid, factoryPid );
-        event.fireSynchronousEvents();
-        if ( event.hasConfigurationEventListeners() )
+        // prevent event senders
+        FireConfigurationEvent asyncSender = new FireConfigurationEvent( this.configurationListenerTracker, type, pid,
+            factoryPid );
+        FireConfigurationEvent syncSender = new FireConfigurationEvent( this.syncConfigurationListenerTracker, type,
+            pid, factoryPid );
+
+        // send synchronous events
+        if ( syncSender.hasConfigurationEventListeners() )
         {
-            eventThread.schedule( event );
+            syncSender.run();
+        }
+        else
+        {
+            log( LogService.LOG_DEBUG, "No SynchronousConfigurationListeners to send {0} event to.", new Object[]
+                { syncSender.getTypeName() } );
+        }
+
+        // schedule asynchronous events
+        if ( asyncSender.hasConfigurationEventListeners() )
+        {
+            eventThread.schedule( asyncSender );
         }
         else
         {
             log( LogService.LOG_DEBUG, "No ConfigurationListeners to send {0} event to.", new Object[]
-                { event.getTypeName() } );
+                { asyncSender.getTypeName() } );
         }
     }
 
@@ -1890,13 +1917,13 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private ConfigurationEvent event;
 
-        private FireConfigurationEvent( final int type, final String pid, final String factoryPid)
+        private FireConfigurationEvent( final ServiceTracker listenerTracker, final int type, final String pid, final String factoryPid)
         {
             this.type = type;
             this.pid = pid;
             this.factoryPid = factoryPid;
 
-            final ServiceReference[] srs = configurationListenerTracker.getServiceReferences();
+            final ServiceReference[] srs = listenerTracker.getServiceReferences();
             if ( srs == null || srs.length == 0 )
             {
                 this.listenerReferences = null;
@@ -1910,23 +1937,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 this.listenerProvider = new Bundle[srs.length];
                 for ( int i = 0; i < srs.length; i++ )
                 {
-                    this.listeners[i] = ( ConfigurationListener ) configurationListenerTracker.getService( srs[i] );
+                    this.listeners[i] = ( ConfigurationListener ) listenerTracker.getService( srs[i] );
                     this.listenerProvider[i] = srs[i].getBundle();
-                }
-            }
-        }
-
-
-        void fireSynchronousEvents()
-        {
-            if ( hasConfigurationEventListeners() && getServiceReference() != null )
-            {
-                for ( int i = 0; i < this.listeners.length; i++ )
-                {
-                    if ( this.listeners[i] instanceof SynchronousConfigurationListener )
-                    {
-                        sendEvent( i );
-                    }
                 }
             }
         }

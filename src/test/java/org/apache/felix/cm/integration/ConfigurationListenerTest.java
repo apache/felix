@@ -31,6 +31,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
+import org.osgi.service.cm.SynchronousConfigurationListener;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -113,14 +114,27 @@ public class ConfigurationListenerTest extends ConfigurationTestBase
     {
         final String pid = "test_listener";
         Configuration config = configure( pid, null, false );
+
+        // Synchronous listener expecting synchronous events being
+        // registered as a SynchronousConfigurationListener
         final TestListener testListener = new SynchronousTestListener();
-        final ServiceRegistration listener = this.bundleContext.registerService( ConfigurationListener.class.getName(),
-            testListener, null );
+        final ServiceRegistration listener = this.bundleContext.registerService(
+            SynchronousConfigurationListener.class.getName(), testListener, null );
+
+        // Synchronous listener expecting asynchronous events being
+        // registered as a regular ConfigurationListener
+        final TestListener testListenerAsync = new SynchronousTestListener();
+        final ServiceRegistration listenerAsync = this.bundleContext.registerService(
+            ConfigurationListener.class.getName(), testListenerAsync, null );
+
         int eventCount = 0;
+        int eventCountAsync = 0;
+
         try
         {
             delay();
             testListener.assertNoEvent();
+            testListenerAsync.assertNoEvent();
 
             config.update( new Hashtable<String, Object>()
             {
@@ -130,6 +144,7 @@ public class ConfigurationListenerTest extends ConfigurationTestBase
             } );
             delay();
             testListener.assertEvent( ConfigurationEvent.CM_UPDATED, pid, null, false, ++eventCount );
+            testListenerAsync.assertEvent( ConfigurationEvent.CM_UPDATED, pid, null, true, ++eventCountAsync );
 
             config.update( new Hashtable<String, Object>()
             {
@@ -139,18 +154,22 @@ public class ConfigurationListenerTest extends ConfigurationTestBase
             } );
             delay();
             testListener.assertEvent( ConfigurationEvent.CM_UPDATED, pid, null, false, ++eventCount );
+            testListenerAsync.assertEvent( ConfigurationEvent.CM_UPDATED, pid, null, true, ++eventCountAsync );
 
             config.setBundleLocation( "new_Location" );
             delay();
             testListener.assertEvent( ConfigurationEvent.CM_LOCATION_CHANGED, pid, null, false, ++eventCount );
+            testListenerAsync.assertEvent( ConfigurationEvent.CM_LOCATION_CHANGED, pid, null, true, ++eventCountAsync );
 
             config.update();
             testListener.assertNoEvent();
+            testListenerAsync.assertNoEvent();
 
             config.delete();
             config = null;
             delay();
             testListener.assertEvent( ConfigurationEvent.CM_DELETED, pid, null, false, ++eventCount );
+            testListenerAsync.assertEvent( ConfigurationEvent.CM_DELETED, pid, null, true, ++eventCountAsync );
         }
         finally
         {
@@ -167,6 +186,7 @@ public class ConfigurationListenerTest extends ConfigurationTestBase
             }
 
             listener.unregister();
+            listenerAsync.unregister();
         }
     }
 }
