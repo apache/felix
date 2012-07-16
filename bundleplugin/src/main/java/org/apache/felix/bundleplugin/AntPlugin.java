@@ -31,8 +31,8 @@ import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.StringUtils;
 
-import aQute.lib.osgi.Builder;
-import aQute.lib.osgi.Jar;
+import aQute.bnd.osgi.Builder;
+import aQute.bnd.osgi.Jar;
 
 
 /**

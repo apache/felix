@@ -34,7 +34,7 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.osgi.framework.Constants;
 
-import aQute.lib.osgi.Builder;
+import aQute.bnd.osgi.Builder;
 
 
 public class BlueprintComponentTest extends TestCase

@@ -40,11 +40,11 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import aQute.bnd.service.AnalyzerPlugin;
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Descriptors.PackageRef;
-import aQute.lib.osgi.Jar;
-import aQute.lib.osgi.Processor;
-import aQute.lib.osgi.Resource;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Descriptors.PackageRef;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Processor;
+import aQute.bnd.osgi.Resource;
 import aQute.libg.generics.Create;
 import aQute.libg.qtokens.QuotedTokenizer;
 import aQute.service.reporter.Reporter;

@@ -53,8 +53,8 @@ import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
 import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
 import org.codehaus.plexus.util.FileUtils;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Jar;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Jar;
 
 
 /**
