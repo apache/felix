@@ -33,7 +33,7 @@ import java.util.zip.ZipEntry;
 
 import org.apache.maven.artifact.Artifact;
 
-import aQute.lib.osgi.Analyzer;
+import aQute.bnd.osgi.Analyzer;
 
 
 /**

@@ -67,13 +67,13 @@ import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Builder;
-import aQute.lib.osgi.Constants;
-import aQute.lib.osgi.EmbeddedResource;
-import aQute.lib.osgi.FileResource;
-import aQute.lib.osgi.Jar;
-import aQute.lib.osgi.Processor;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Builder;
+import aQute.bnd.osgi.Constants;
+import aQute.bnd.osgi.EmbeddedResource;
+import aQute.bnd.osgi.FileResource;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Processor;
 import aQute.lib.spring.SpringXMLType;
 
 

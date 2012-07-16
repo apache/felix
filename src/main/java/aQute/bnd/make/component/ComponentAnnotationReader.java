@@ -1,15 +1,15 @@
 package aQute.bnd.make.component;
 
-import static aQute.lib.osgi.Constants.*;
+import static aQute.bnd.osgi.Constants.*;
 
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.regex.*;
 
 import aQute.bnd.annotation.component.*;
-import aQute.lib.osgi.*;
-import aQute.lib.osgi.Clazz.MethodDef;
-import aQute.lib.osgi.Descriptors.TypeRef;
+import aQute.bnd.osgi.*;
+import aQute.bnd.osgi.Clazz.MethodDef;
+import aQute.bnd.osgi.Descriptors.TypeRef;
 import aQute.service.reporter.*;
 
 public class ComponentAnnotationReader extends ClassDataCollector {
@@ -256,16 +256,17 @@ public class ComponentAnnotationReader extends ClassDataCollector {
 		return Modifier.isPublic(method.getAccess()) || Modifier.isProtected(method.getAccess());
 	}
 
-	static Pattern	PROPERTY_PATTERN	= Pattern.compile("[^=]+=.+");
+	static Pattern	PROPERTY_PATTERN	= Pattern.compile("\\s*([^=\\s])+\\s*=(.+)");
 
-	private void doProperties(aQute.lib.osgi.Annotation annotation) {
+	private void doProperties(aQute.bnd.osgi.Annotation annotation) {
 		Object[] properties = annotation.get(Component.PROPERTIES);
 
 		if (properties != null) {
 			for (Object o : properties) {
 				String p = (String) o;
-				if (PROPERTY_PATTERN.matcher(p).matches())
-					this.properties.add(p);
+				Matcher m = PROPERTY_PATTERN.matcher(p);
+				if (m.matches())
+					this.properties.add(m.group(1)+"="+m.group(2));
 				else
 					throw new IllegalArgumentException("Malformed property '" + p + "' on: "
 							+ annotation.get(Component.NAME));

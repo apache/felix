@@ -6,11 +6,10 @@ import java.util.regex.*;
 
 import org.osgi.service.component.annotations.*;
 
+import aQute.bnd.osgi.*;
+import aQute.bnd.osgi.Clazz.MethodDef;
+import aQute.bnd.osgi.Descriptors.TypeRef;
 import aQute.lib.collections.*;
-import aQute.lib.osgi.*;
-import aQute.lib.osgi.Clazz.MethodDef;
-import aQute.lib.osgi.Descriptors.TypeRef;
-import aQute.libg.version.*;
 
 /**
  * fixup any unbind methods To declare no unbind method, the value "-" must be
@@ -27,7 +26,7 @@ import aQute.libg.version.*;
 public class AnnotationReader extends ClassDataCollector {
 	final static TypeRef[]		EMPTY					= new TypeRef[0];
 	final static Pattern		PROPERTY_PATTERN		= Pattern
-																.compile("([^=]+(:(Boolean|Byte|Char|Short|Integer|Long|Float|Double|String))?)\\s*=(.*)");
+																.compile("\\s*([^=]+(\\s*:\\s*(Boolean|Byte|Char|Short|Integer|Long|Float|Double|String))?)\\s*=(.*)");
 
 	public static final Version	V1_1					= new Version("1.1.0");																												// "1.1.0"
 	public static final Version	V1_2					= new Version("1.2.0");																												// "1.1.0"
