@@ -76,6 +76,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
 
         String bpHeader = analyzer.getProperty( "Bundle-Blueprint", "OSGI-INF/blueprint" );
         Map<String, ? extends Map<String, String>> map = Processor.parseHeader( bpHeader, null );
+		bpHeader = "";
         for ( String root : map.keySet() )
         {
             Jar jar = analyzer.getJar();
@@ -83,19 +84,34 @@ public class BlueprintPlugin implements AnalyzerPlugin
             if ( dir == null || dir.isEmpty() )
             {
                 Resource resource = jar.getResource( root );
-                if ( resource != null )
+                if ( resource != null ) 
+				{
                     process( analyzer, root, resource, headers );
+					if (bpHeader.length() > 0) {
+						bpHeader += ",";
+					}
+					bpHeader += root;
+				}
                 return false;
             }
             for ( Map.Entry<String, Resource> entry : dir.entrySet() )
             {
                 String path = entry.getKey();
                 Resource resource = entry.getValue();
-                if ( PATHS.matcher( path ).matches() )
+                if ( PATHS.matcher( path ).matches() ) 
+				{
                     process( analyzer, path, resource, headers );
+					if (bpHeader.length() > 0) {
+						bpHeader += ",";
+					}
+					bpHeader += path;
+				}
             }
-
         }
+		if( !map.isEmpty() ) 
+		{
+			analyzer.setProperty("Bundle-Blueprint", bpHeader);
+		}
 
         // Group and analyze
         Map<String, Set<Attribute>> hdrs = Create.map();
