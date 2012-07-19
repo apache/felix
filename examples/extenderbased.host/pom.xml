@@ -35,10 +35,8 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.main</artifactId>
+      <artifactId>org.apache.felix.framework</artifactId>
       <version>4.0.2</version>
-      <type>zip</type>
-      <classifier>source-release</classifier>
     </dependency>
   </dependencies>
   <build>
@@ -55,7 +53,7 @@
             <Import-Package>!android.*,!dalvik.*,org.osgi.framework,org.osgi.service.packageadmin,org.osgi.service.url,org.osgi.service.startlevel,org.osgi.util.tracker,*</Import-Package>
             <Export-Package>org.apache.felix.example.extenderbased.host.extension.*</Export-Package>
             <Private-Package>org.apache.felix.example.extenderbased.host.*</Private-Package>
-            <Embed-Dependency>*;artifactId=org.apache.felix.main;inline=true</Embed-Dependency>
+            <Embed-Dependency>*;artifactId=org.apache.felix.framework;inline=true</Embed-Dependency>
             <Bundle-Activator>org.apache.felix.example.extenderbased.host.Activator</Bundle-Activator>
             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
           </instructions>
