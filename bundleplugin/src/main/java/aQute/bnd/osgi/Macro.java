@@ -7,6 +7,7 @@ import java.text.*;
 import java.util.*;
 import java.util.regex.*;
 
+import aQute.bnd.version.*;
 import aQute.lib.collections.*;
 import aQute.lib.io.*;
 
@@ -230,7 +231,7 @@ public class Macro {
 				if (e.getCause() instanceof IllegalArgumentException) {
 					domain.error("%s, for cmd: %s, arguments; %s", e.getMessage(), method, Arrays.toString(args));
 				} else {
-					domain.warning("Exception in replace: " + e.getCause());
+					domain.warning("Exception in replace: %s", e.getCause());
 					e.getCause().printStackTrace();
 				}
 			}
