@@ -40,6 +40,8 @@ import java.util.StringTokenizer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.Project;
@@ -82,6 +84,9 @@ public class ClassScanner {
 
     /** Source for all generated descriptions. */
     private static final String GENERATED = "<generated>";
+    
+    /** With this syntax array pameters names are returned by reflection API */
+    private static final Pattern ARRAY_PARAM_TYPE_NAME = Pattern.compile("^\\[L(.*);$");
 
     /** Component descriptions loaded from dependencies*/
     private Map<String, ClassDescription> loadedDependencies;
@@ -195,7 +200,7 @@ public class ClassScanner {
         final List<ScannedAnnotation> descriptions = new ArrayList<ScannedAnnotation>();
         // first parse class annotations
         @SuppressWarnings("unchecked")
-        final List<AnnotationNode> annotations = classNode.invisibleAnnotations;
+        final List<AnnotationNode> annotations = getAllAnnotations(classNode.invisibleAnnotations, classNode.visibleAnnotations);
         if (annotations != null) {
             for (final AnnotationNode annotation : annotations) {
                 this.parseAnnotation(descriptions, annotation, annotatedClass);
@@ -208,7 +213,7 @@ public class ClassScanner {
                 for (final MethodNode method : methods) {
 
                     @SuppressWarnings("unchecked")
-                    final List<AnnotationNode> annos = method.invisibleAnnotations;
+                    final List<AnnotationNode> annos = getAllAnnotations(method.invisibleAnnotations, method.visibleAnnotations);
                     if (annos != null) {
                         final String name = method.name;
                         final Type[] signature = Type.getArgumentTypes(method.desc);
@@ -223,10 +228,20 @@ public class ClassScanner {
                                 if (m.getParameterTypes().length > 0 && signature != null && m.getParameterTypes().length == signature.length) {
                                     found = m;
                                     for(int index = 0; index < m.getParameterTypes().length; index++ ) {
-                                        if ( !m.getParameterTypes()[index].getName().equals(signature[index].getClassName()) ) {
+                                        String parameterTypeName = m.getParameterTypes()[index].getName();
+                                        // Name of array parameters is returned with syntax [L<name>;, convert to <name>[]
+                                        Matcher matcher = ARRAY_PARAM_TYPE_NAME.matcher(parameterTypeName);
+                                        if (matcher.matches()) {
+                                            parameterTypeName = matcher.group(1) + "[]";
+                                        }
+                                        if (!parameterTypeName.equals(signature[index].getClassName())) {
                                             found = null;
                                         }
                                     }
+                                }
+                                // if method is found return it now, to avoid resetting 'found' to null if next method has same name but different parameters
+                                if (found != null) {
+                                    break;
                                 }
                             }
                         }
@@ -247,7 +262,7 @@ public class ClassScanner {
             if (fields != null) {
                 for (final FieldNode field : fields) {
                     @SuppressWarnings("unchecked")
-                    final List<AnnotationNode> annos = field.invisibleAnnotations;
+                    final List<AnnotationNode> annos = getAllAnnotations(field.invisibleAnnotations, field.visibleAnnotations);
                     if (annos != null) {
                         final String name = field.name;
                         final Field[] allFields = annotatedClass.getDeclaredFields();
@@ -255,6 +270,7 @@ public class ClassScanner {
                         for (final Field f : allFields) {
                             if (f.getName().equals(name)) {
                                 found = f;
+                                break;
                             }
                         }
                         if (found == null) {
@@ -269,6 +285,26 @@ public class ClassScanner {
             }
         }
         return descriptions;
+    }
+
+    /**
+     * Method is used to get both invisible (e.g. RetentionPolicy.CLASS) and visible (e.g. RetentionPolicy.RUNTIME) annotations.
+     * Although it is recommended to use RetentionPolicy.CLASS for SCR annotations, it may make sense to declae them with another
+     * RetentionPolicy if the same annotation is used for other usecases which require runtime access as well.
+     * @param annotationLists List of invisible and visible annotations.
+     * @return List with all annotations from all lists, or null if none found
+     */
+    private List<AnnotationNode> getAllAnnotations(List<AnnotationNode>... annotationLists) {
+        List<AnnotationNode> resultList = null;
+        for (List<AnnotationNode> annotationList : annotationLists) {
+            if (annotationList!=null && annotationList.size()>0) {
+                if (resultList==null) {
+                    resultList = new ArrayList<AnnotationNode>();
+                }
+                resultList.addAll(annotationList);
+            }
+        }
+        return resultList;
     }
 
     private <T> T[] convertToArray(final List<?> values, final Class<T> type) {

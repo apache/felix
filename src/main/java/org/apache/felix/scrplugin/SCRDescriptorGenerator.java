@@ -240,7 +240,8 @@ public class SCRDescriptorGenerator {
                                             createBind,
                                             createUnbind,
                                             this.project.getClassLoader(),
-                                            this.project.getClassesDirectory());
+                                            this.project.getClassesDirectory(),
+                                            this.logger);
                         }
                     }
                 }

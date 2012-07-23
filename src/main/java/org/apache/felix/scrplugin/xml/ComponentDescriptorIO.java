@@ -240,7 +240,8 @@ public class ComponentDescriptorIO {
 
         // attributes new in 1.1
         if (module.getOptions().getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
-            if ( component.getConfigurationPolicy() != ComponentConfigurationPolicy.OPTIONAL ) {
+            if ( component.getConfigurationPolicy() != null
+                    && component.getConfigurationPolicy() != ComponentConfigurationPolicy.OPTIONAL ) {
                 IOUtils.addAttribute(ai, COMPONENT_ATTR_POLICY, component.getConfigurationPolicy().name().toLowerCase());
             }
             IOUtils.addAttribute(ai, COMPONENT_ATTR_ACTIVATE, component.getActivate());

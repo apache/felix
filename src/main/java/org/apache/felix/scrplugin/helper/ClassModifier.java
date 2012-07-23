@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
+import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -54,7 +55,8 @@ public abstract class ClassModifier {
                            final boolean createBind,
                            final boolean createUnbind,
                            final ClassLoader classLoader,
-                           final String outputDirectory)
+                           final String outputDirectory,
+                           final Log logger)
     throws SCRDescriptorException {
         // now do byte code manipulation
         final String fileName = outputDirectory + File.separatorChar +  className.replace('.', File.separatorChar) + ".class";
@@ -93,12 +95,12 @@ public abstract class ClassModifier {
 
             cn.accept(writer);
             if ( createBind ) {
-                System.out.println("Adding bind " + className + " " + fieldName);
+                logger.debug("Adding bind " + className + " " + fieldName);
 
                 createMethod(writer, className, referenceName, fieldName, typeName, true);
             }
             if ( createUnbind ) {
-                System.out.println("Adding unbind " + className + " " + fieldName);
+                logger.debug("Adding unbind " + className + " " + fieldName);
 
                 createMethod(writer, className, referenceName, fieldName, typeName, false);
             }
