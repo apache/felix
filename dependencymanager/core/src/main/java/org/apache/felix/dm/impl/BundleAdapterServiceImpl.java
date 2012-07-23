@@ -46,7 +46,8 @@ public class BundleAdapterServiceImpl extends FilterService
                  .add(dm.createBundleDependency()
                       .setFilter(bundleFilter)
                       .setStateMask(bundleStateMask)
-                      .setCallbacks("added", "removed"));
+                      .setCallbacks("added", "removed"))
+                 .setCallbacks("init", null, "stop", null);
     }
 
     public class BundleAdapterImpl extends AbstractDecorator {

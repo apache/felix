@@ -52,7 +52,8 @@ public class AdapterServiceImpl extends FilterService {
                  .add(dm.createServiceDependency()
                       .setService(adapteeInterface, adapteeFilter)
                       .setAutoConfig(false)
-                      .setCallbacks("added", null, "removed", "swapped"));
+                      .setCallbacks("added", null, "removed", "swapped"))
+                 .setCallbacks("init", null, "stop", null);
     }	
 	
     public AdapterServiceImpl(DependencyManager dm, Class adapteeInterface, String adapteeFilter, String autoConfig, String add, String change, String remove) {
@@ -61,7 +62,8 @@ public class AdapterServiceImpl extends FilterService {
                  .add(dm.createServiceDependency()
                       .setService(adapteeInterface, adapteeFilter)
                       .setAutoConfig(false)
-                      .setCallbacks("added", null, "removed", "swapped"));
+                      .setCallbacks("added", null, "removed", "swapped"))
+                 .setCallbacks("init", null, "stop", null);
     }
     
     public class AdapterImpl extends AbstractDecorator {

@@ -53,7 +53,8 @@ public class ResourceAdapterServiceImpl extends FilterService {
             .add(dm.createResourceDependency()
                  .setFilter(resourceFilter)
                  .setAutoConfig(false)
-                 .setCallbacks("added", "removed"));
+                 .setCallbacks("added", "removed"))
+            .setCallbacks("init", null, "stop", null);
     }
     
     public ResourceAdapterServiceImpl(DependencyManager dm, String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackSet, String callbackChanged) {
@@ -65,7 +66,8 @@ public class ResourceAdapterServiceImpl extends FilterService {
             .add(dm.createResourceDependency()
                  .setFilter(resourceFilter)
                  .setAutoConfig(false)
-                 .setCallbacks("added", "removed"));
+                 .setCallbacks("added", "removed"))
+            .setCallbacks("init", null, "stop", null);
     }   
 
     public class ResourceAdapterImpl extends AbstractDecorator {

@@ -599,6 +599,25 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 					.getTracked(new ServiceReference[length]);
 		}
 	}
+	
+	/**
+	 * Returns a boolean indicating whether this <code>ServiceTracker</code> is tracking any services.
+	 * 
+	 * @return true if services are being tracked, false if no services are being tracked.
+	 */
+	public boolean hasReference() {
+		if (cachedReference != null) {
+			return true;
+		}
+		final Tracked t = tracked();
+		if (t == null) { /* if ServiceTracker is not open */
+			return false;
+		}
+		synchronized (t) {
+			int length = t.size();
+			return length > 0;
+		}
+	}
 
 	/**
 	 * Returns a <code>ServiceReference</code> for one of the services being
