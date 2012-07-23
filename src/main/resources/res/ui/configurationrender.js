@@ -55,7 +55,7 @@ $(document).ready(function() {
 
 	_tabs = $('#tabs').tabs({ajaxOptions: {
 		beforeSend : function() { dlg.dialog('open') },
-		complete   : function() { dlg.dialog('close')},
+		complete   : function() { dlg.dialog('close')}
 	}}).tabs('paging');
 
 	setTimeout(setSelectedTab, 1000);
