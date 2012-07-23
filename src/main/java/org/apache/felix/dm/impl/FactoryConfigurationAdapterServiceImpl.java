@@ -51,7 +51,8 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
         props.put(Constants.SERVICE_PID, factoryPid);
         m_component
             .setInterface(ManagedServiceFactory.class.getName(), props)
-            .setImplementation(new AdapterImpl(factoryPid, update, propagate));
+            .setImplementation(new AdapterImpl(factoryPid, update, propagate))
+            .setCallbacks("init", null, "stop", null);
     }
     
     public FactoryConfigurationAdapterServiceImpl(DependencyManager dm, String factoryPid, String update, boolean propagate,
@@ -63,7 +64,8 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
             .setInterface(ManagedServiceFactory.class.getName(), props)
             .setImplementation(new MetaTypeAdapterImpl(factoryPid, update, propagate,
                 bctx, logger, heading, description,
-                localization, properyMetaData));
+                localization, properyMetaData))
+            .setCallbacks("init", null, "stop", null);
     }
     
     /**

@@ -165,6 +165,7 @@ public class AdapterFilterIndex implements FilterIndex, ServiceTrackerCustomizer
             		m_sidToListenersMap.put(sidObject, listeners);
             	}
             	listeners.add(listener);
+            	m_listenerToFilterMap.put(listener, filter);
             }
         }
     }

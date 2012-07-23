@@ -740,7 +740,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
     
     private synchronized boolean makeUnavailable() {
-        if ((isAvailable()) && (m_tracker.getServiceReference() == null)) {
+        if ((isAvailable()) && (!m_tracker.hasReference())) {
             m_isAvailable = false;
             return true;
         }

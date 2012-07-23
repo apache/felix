@@ -45,7 +45,7 @@ public class InvocationUtil {
     
     public static Object invokeCallbackMethod(Object instance, String methodName, Class[][] signatures, Object[][] parameters) throws NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         Class currentClazz = instance.getClass();
-        while (currentClazz != null) {
+        while (currentClazz != null && currentClazz != Object.class) {
             try {
                 return invokeMethod(instance, currentClazz, methodName, signatures, parameters, false);
             }
