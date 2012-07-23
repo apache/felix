@@ -45,7 +45,8 @@ public class AspectServiceImpl extends FilterService {
              .add(dm.createServiceDependency()
                   .setService(aspectInterface, createDependencyFilterForAspect(aspectFilter))
                   .setAutoConfig(false)
-                  .setCallbacks("added", "removed"));
+                  .setCallbacks("added", "removed"))
+             .setCallbacks("init", null, "stop", null);
     }
 
     private String createDependencyFilterForAspect(String filter) {
