@@ -761,6 +761,8 @@ class StatefulResolver
     private void markResolvedRevisions(Map<BundleRevision, List<ResolverWire>> wireMap)
         throws ResolveException
     {
+        boolean debugLog = m_felix.getLogger().getLogLevel() >= Logger.LOG_DEBUG;
+
         // DO THIS IN THREE PASSES:
         // 1. Aggregate fragments per host.
         // 2. Attach wires and fragments to hosts.
@@ -841,13 +843,19 @@ class StatefulResolver
 
                     if (Util.isFragment(revision))
                     {
-                        m_felix.getLogger().log(
-                            Logger.LOG_DEBUG,
-                            "FRAGMENT WIRE: " + rw.toString());
+                        if (debugLog)
+                        {
+                            m_felix.getLogger().log(
+                                Logger.LOG_DEBUG,
+                                "FRAGMENT WIRE: " + rw.toString());
+                        }
                     }
                     else
                     {
-                        m_felix.getLogger().log(Logger.LOG_DEBUG, "WIRE: " + rw.toString());
+                        if (debugLog)
+                        {
+                            m_felix.getLogger().log(Logger.LOG_DEBUG, "WIRE: " + rw.toString());
+                        }
 
                         if (rw.getCapability().getNamespace()
                             .equals(BundleRevision.PACKAGE_NAMESPACE))
