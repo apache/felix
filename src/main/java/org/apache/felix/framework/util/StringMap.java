@@ -30,7 +30,9 @@ import java.util.*;
  **/
 public class StringMap extends AbstractMap<String, Object>
 {
-    private final TreeMap<String, KeyValueEntry> m_map = new TreeMap<String, KeyValueEntry>();
+    private static final CharArrayComparator COMPARATOR = new CharArrayComparator();
+
+    private final TreeMap<char[], KeyValueEntry> m_map = new TreeMap<char[], KeyValueEntry>(COMPARATOR);
 
     public StringMap(boolean caseSensitive)
     {
@@ -56,7 +58,7 @@ public class StringMap extends AbstractMap<String, Object>
     @Override
     public boolean containsKey(Object arg0)
     {
-        return m_map.containsKey(arg0.toString().toUpperCase());
+        return m_map.containsKey(toUpperCase(arg0.toString()));
     }
 
     @Override
@@ -68,14 +70,14 @@ public class StringMap extends AbstractMap<String, Object>
     @Override
     public Object get(Object arg0)
     {
-        KeyValueEntry kve = m_map.get(arg0.toString().toUpperCase());
+        KeyValueEntry kve = m_map.get(toUpperCase(arg0.toString()));
         return (kve != null) ? kve.value : null;
     }
 
     @Override
     public Object put(String key, Object value)
     {
-        KeyValueEntry kve = (KeyValueEntry) m_map.put(key.toUpperCase(), new KeyValueEntry(key, value));
+        KeyValueEntry kve = (KeyValueEntry) m_map.put(toUpperCase(key), new KeyValueEntry(key, value));
         return (kve != null) ? kve.value : null;
     }
 
@@ -91,7 +93,7 @@ public class StringMap extends AbstractMap<String, Object>
     @Override
     public Object remove(Object arg0)
     {
-        KeyValueEntry kve = m_map.remove(arg0.toString().toUpperCase());
+        KeyValueEntry kve = m_map.remove(toUpperCase(arg0.toString()));
         return (kve != null) ? kve.value : null;
     }
 
@@ -110,7 +112,7 @@ public class StringMap extends AbstractMap<String, Object>
             {
                 return new Iterator<Entry<String, Object>>()
                 {
-                    Iterator<Entry<String, KeyValueEntry>> it = m_map.entrySet().iterator();
+                    Iterator<Entry<char[], KeyValueEntry>> it = m_map.entrySet().iterator();
 
                     public boolean hasNext()
                     {
@@ -137,7 +139,50 @@ public class StringMap extends AbstractMap<String, Object>
         };
     }
 
-    private class KeyValueEntry implements Entry<String, Object>
+    private static char[] toUpperCase(String str)
+    {
+        char[] ch = str.toCharArray();
+        for (int i = 0; i < ch.length; i++)
+        {
+            char c = ch[i];
+            if (c < 128)
+            {
+                if ('a' <= c && c <= 'z')
+                {
+                    ch[i] = (char)(c - ('a' - 'A'));
+                }
+            }
+            else
+            {
+                ch[i] = Character.toUpperCase(c);
+            }
+        }
+        return ch;
+    }
+
+    private static class CharArrayComparator implements Comparator<char[]>
+    {
+        public int compare(char[] v1, char[] v2)
+        {
+            int len1 = v1.length;
+            int len2 = v2.length;
+            int n = Math.min(len1, len2);
+            int k = 0;
+            while (k < n)
+            {
+                char c1 = v1[k];
+                char c2 = v2[k];
+                if (c1 != c2)
+                {
+                    return c1 - c2;
+                }
+                k++;
+            }
+            return len1 - len2;
+        }
+    }
+
+    private static class KeyValueEntry implements Map.Entry<String, Object>
     {
         private KeyValueEntry(String key, Object value)
         {
