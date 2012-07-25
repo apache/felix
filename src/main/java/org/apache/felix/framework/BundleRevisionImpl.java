@@ -93,7 +93,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         m_id = id;
         m_headerMap = null;
         m_content = null;
-        m_manifestVersion = null;
+        m_manifestVersion = "";
         m_symbolicName = null;
         m_isExtension = false;
         m_isFragment = false;
@@ -250,7 +250,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     public int getTypes()
     {
-        return (m_isFragment) ? BundleRevision.TYPE_FRAGMENT : 0;
+        return (getManifestVersion().equals("2") && m_isFragment) ? BundleRevision.TYPE_FRAGMENT : 0;
     }
 
     public BundleWiring getWiring()
