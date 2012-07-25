@@ -250,8 +250,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     public int getTypes()
     {
-        return getManifestVersion() == "2" && m_isFragment
-                ? BundleRevision.TYPE_FRAGMENT : 0;
+        return (m_isFragment) ? BundleRevision.TYPE_FRAGMENT : 0;
     }
 
     public BundleWiring getWiring()
