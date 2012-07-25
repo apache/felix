@@ -137,6 +137,11 @@ public final class BundleInputStream extends InputStream
 
             m_outputBuffer.m_outBuffer = null;
         }
+        else
+        {
+            m_output.close();
+            m_output = null;
+        }   
 
         return read();
     }
