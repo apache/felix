@@ -64,8 +64,8 @@ public class ServiceRegistry
         org.osgi.service.url.URLStreamHandlerService.class,
         java.net.ContentHandler.class
     };
-    private final Map<Class<?>, Set<ServiceReference<?>>> m_allHooks =
-        new HashMap<Class<?>, Set<ServiceReference<?>>>();
+    private final Map<Class<?>, TreeSet<ServiceReference<?>>> m_allHooks =
+        new HashMap<Class<?>, TreeSet<ServiceReference<?>>>();
 
     public ServiceRegistry(Logger logger, ServiceRegistryCallbacks callbacks)
     {
@@ -701,10 +701,10 @@ public class ServiceRegistry
             {
                 synchronized (m_allHooks)
                 {
-                    Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
+                    TreeSet<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
                     if (hooks == null)
                     {
-                        hooks = new HashSet<ServiceReference<?>>();
+                        hooks = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
                         m_allHooks.put(hookClass, hooks);
                     }
                     hooks.add(ref);
@@ -743,19 +743,18 @@ public class ServiceRegistry
     {
         synchronized (m_allHooks)
         {
-            Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
+            TreeSet<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
             if (hooks != null)
             {
-                SortedSet sorted = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
-                sorted.addAll(hooks);
+                SortedSet<ServiceReference<?>> sorted = (SortedSet<ServiceReference<?>>) hooks.clone();
                 return asTypedSortedSet(sorted);
             }
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
     }
 
     private static <S> SortedSet<ServiceReference<S>> asTypedSortedSet(
-        SortedSet<ServiceReference<?>> ss)
+            SortedSet<ServiceReference<?>> ss)
     {
         return (SortedSet<ServiceReference<S>>) (SortedSet) ss;
     }
