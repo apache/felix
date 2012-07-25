@@ -293,7 +293,9 @@ public final class BundleDNParser
             .getNextJarEntry())
         {
 
-            if (entry.isDirectory() || entry.getName().startsWith("META-INF"))
+            if (entry.isDirectory() || 
+                (entry.getName().startsWith("META-INF/") && 
+                (entry.getName().indexOf('/', "META-INF/".length()) < 0)))
             {
                 continue;
             }
