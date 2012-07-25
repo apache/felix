@@ -56,6 +56,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     private final String m_manifestVersion;
     private final boolean m_isExtension;
+    private final boolean m_isFragment;
     private final String m_symbolicName;
     private final Version m_version;
 
@@ -95,6 +96,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         m_manifestVersion = null;
         m_symbolicName = null;
         m_isExtension = false;
+        m_isFragment = false;
         m_version = null;
         m_declaredCaps = Collections.EMPTY_LIST;
         m_declaredReqs = Collections.EMPTY_LIST;
@@ -136,6 +138,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
             : ManifestParser.parseDelimitedString(mp.getActivationIncludeDirective(), ",");
         m_symbolicName = mp.getSymbolicName();
         m_isExtension = mp.isExtension();
+        m_isFragment = m_headerMap.containsKey(Constants.FRAGMENT_HOST);
     }
 
     static SecureAction getSecureAction()
@@ -247,12 +250,8 @@ public class BundleRevisionImpl implements BundleRevision, Resource
 
     public int getTypes()
     {
-        if ((getManifestVersion() == "2")
-            && getHeaders().containsKey(Constants.FRAGMENT_HOST))
-        {
-            return BundleRevision.TYPE_FRAGMENT;
-        }
-        return 0;
+        return getManifestVersion() == "2" && m_isFragment
+                ? BundleRevision.TYPE_FRAGMENT : 0;
     }
 
     public BundleWiring getWiring()
