@@ -21,6 +21,7 @@ package org.apache.felix.framework;
 import java.security.Permission;
 import java.security.ProtectionDomain;
 
+import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.ext.SecurityProvider;
 import org.apache.felix.framework.security.condpermadmin.ConditionalPermissionAdminImpl;
 import org.apache.felix.framework.security.permissionadmin.PermissionAdminImpl;
@@ -44,13 +45,13 @@ public final class SecurityProviderImpl implements SecurityProvider
 
     SecurityProviderImpl(String crlList, String typeList, String passwdList,
         String storeList, PermissionAdminImpl pai,
-        ConditionalPermissionAdminImpl cpai, SecureAction action)
+        ConditionalPermissionAdminImpl cpai, SecureAction action, Logger logger)
     {
         m_pai = pai;
         m_cpai = cpai;
         m_action = action;
         m_parser = new BundleDNParser(new TrustManager(crlList, typeList,
-            passwdList, storeList, m_action));
+            passwdList, storeList, m_action), logger);
     }
 
     /**

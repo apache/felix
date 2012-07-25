@@ -202,7 +202,7 @@ public final class SecurityActivator implements BundleActivator
             }
 
             SecurityProvider provider = new SecurityProviderImpl(crlList,
-                typeList, passwdList, storeList, pai, cpai, action);
+                typeList, passwdList, storeList, pai, cpai, action, ((Felix) context.getBundle(0)).getLogger());
 
             ((Felix) context.getBundle(0)).setSecurityProvider(provider);
         }

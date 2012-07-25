@@ -35,6 +35,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 import org.apache.felix.framework.BundleRevisionImpl;
+import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.security.util.BundleInputStream;
 import org.apache.felix.framework.security.util.TrustManager;
 /*
@@ -78,14 +79,16 @@ public final class BundleDNParser
         m_getCertificates = getCertificates;
     }
 
+    private final Logger m_logger;
     private final Map m_cache = new WeakHashMap();
     private final Map m_allCache = new WeakHashMap();
 
     private final TrustManager m_manager;
 
-    public BundleDNParser(TrustManager manager)
+    public BundleDNParser(TrustManager manager, Logger logger)
     {
         m_manager = manager;
+        m_logger = logger;
     }
 
     public Map getCache()
@@ -442,7 +445,7 @@ public final class BundleDNParser
                 }
                 catch (CertificateException ex)
                 {
-                    // TODO: log this or something
+                    m_logger.log(Logger.LOG_WARNING, "Invalid Certificate", ex);
                     revoked = true;
                 }
             }
@@ -508,7 +511,7 @@ public final class BundleDNParser
                     catch (CertificateException ex)
                     {
                         // Not much we can do
-                        // TODO: log this or something
+                        m_logger.log(Logger.LOG_WARNING, "Invalid Certificate", ex);
                     }
                 }
             }
@@ -535,7 +538,7 @@ public final class BundleDNParser
                 }
                 catch (Exception ex)
                 {
-                    // TODO: log this or something
+                    m_logger.log(Logger.LOG_WARNING, "Invalid Certificate", ex);
                 }
             }
         }
