@@ -172,7 +172,14 @@ public class ManifestPlugin extends BundlePlugin
 
         if ( !file.exists() )
         {
-            throw new FileNotFoundException( file.getPath() );
+            if ( file.equals( getOutputDirectory() ) )
+            {
+                file.mkdirs();
+            }
+            else
+            {
+                throw new FileNotFoundException( file.getPath() );
+            }
         }
 
         Builder analyzer = getOSGiBuilder( project, instructions, properties, classpath );
@@ -203,7 +210,7 @@ public class ManifestPlugin extends BundlePlugin
         else
         {
             analyzer.mergeManifest( analyzer.getJar().getManifest() );
-            analyzer.calcManifest();
+            analyzer.getJar().setManifest( analyzer.calcManifest() );
         }
 
         mergeMavenManifest( project, analyzer );
