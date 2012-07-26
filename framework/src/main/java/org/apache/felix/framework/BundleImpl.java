@@ -1161,23 +1161,14 @@ class BundleImpl implements Bundle, BundleRevisions
     {
         m_revisions.add(0, revision);
 
-        // Set protection domain after adding the revision to the bundle,
-        // since this requires that the bundle has a revision.
-        ((BundleRevisionImpl) revision).setProtectionDomain(
-            new BundleProtectionDomain(getFramework(), this));
-
-        SecurityProvider sp = getFramework().getSecurityProvider();
-        if ((sp != null) && (System.getSecurityManager() != null))
+        try
         {
-            try
-            {
-                sp.checkBundle(this);
-            }
-            catch (Exception ex)
-            {
-                m_revisions.remove(0);
-                throw ex;
-            }
+            getFramework().setBundleProtectionDomain(this, (BundleRevisionImpl) revision);
+        }
+        catch (Exception ex)
+        {
+            m_revisions.remove(0);
+            throw ex;
         }
 
         // TODO: REFACTOR - consider nulling capabilities for extension bundles

@@ -699,6 +699,10 @@ public class Felix extends BundleImpl implements Framework
                     archives = null;
                 }
 
+                // Create system bundle activator and bundle context so we can activate it.
+                setActivator(new SystemBundleActivator());
+                setBundleContext(new BundleContextImpl(m_logger, this, this));
+
                 // Now load all cached bundles.
                 for (int i = 0; (archives != null) && (i < archives.length); i++)
                 {
@@ -759,9 +763,6 @@ public class Felix extends BundleImpl implements Framework
                 // so create a gate for that purpose.
                 m_shutdownGate = new ThreadGate();
 
-                // Create system bundle activator and bundle context so we can activate it.
-                setActivator(new SystemBundleActivator());
-                setBundleContext(new BundleContextImpl(m_logger, this, this));
                 try
                 {
                     Felix.m_secureAction.startActivator(
@@ -778,6 +779,53 @@ public class Felix extends BundleImpl implements Framework
                 // its bundle context to the logger so that it can track log services.
                 m_logger.setSystemBundleContext(_getBundleContext());
 
+                // We have to check with the security provider (if there is one). 
+                // This is to avoid having bundles in the cache that have been tampered with
+                SecurityProvider sp = getFramework().getSecurityProvider();
+                if ((sp != null) && (System.getSecurityManager() != null))
+                {
+                    boolean locked = acquireGlobalLock();
+                    if (!locked)
+                    {
+                        throw new BundleException(
+                            "Unable to acquire the global lock to check the bundle.");
+                    }
+                    try
+                    {
+                        for (Object bundle : m_installedBundles[IDENTIFIER_MAP_IDX].values())
+                        {
+                            try
+                            {
+                                if (bundle != this)
+                                {
+                                    setBundleProtectionDomain((BundleImpl) bundle, (BundleRevisionImpl) ((BundleImpl) bundle).adapt(BundleRevisionImpl.class));
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                ((BundleImpl) bundle).close();
+                                maps = new Map[] {
+                                    new HashMap<String, BundleImpl>(m_installedBundles[LOCATION_MAP_IDX]),
+                                    new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
+                                };
+                                maps[LOCATION_MAP_IDX].remove(((BundleImpl) bundle)._getLocation());
+                                maps[IDENTIFIER_MAP_IDX].remove(new Long(((BundleImpl) bundle).getBundleId()));
+                                m_installedBundles = maps;
+
+                                m_logger.log(
+                                    Logger.LOG_ERROR,
+                                    "Bundle in cache doesn't pass security check anymore.",
+                                    ex);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        // Always release the global lock.
+                        releaseGlobalLock();
+                    }
+                }
+                
                 // Clear the cache of classes coming from the system bundle.
                 // This is only used for Felix.getBundle(Class clazz) to speed
                 // up class lookup for the system bundle.
@@ -791,6 +839,20 @@ public class Felix extends BundleImpl implements Framework
         {
             releaseBundleLock(this);
         }
+    }
+
+    void setBundleProtectionDomain(BundleImpl bundleImpl, BundleRevisionImpl revisionImpl) throws Exception
+    {
+        Object certificates = null;
+        SecurityProvider sp = getFramework().getSecurityProvider();
+        if ((sp != null) && (System.getSecurityManager() != null))
+        {
+            sp.checkBundle(bundleImpl);
+            Map signers = (Map) sp.getSignerMatcher(this, Bundle.SIGNERS_TRUSTED);
+            certificates = signers.keySet().toArray(new java.security.cert.Certificate[0]);
+        }
+        revisionImpl.setProtectionDomain(
+            new BundleProtectionDomain(this, bundleImpl, certificates));
     }
 
     /**
