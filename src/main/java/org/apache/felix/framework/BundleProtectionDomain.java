@@ -36,7 +36,7 @@ public class BundleProtectionDomain extends ProtectionDomain
     private final WeakReference m_revision;
 
     // TODO: SECURITY - This should probably take a revision, not a bundle.
-    BundleProtectionDomain(Felix felix, BundleImpl bundle)
+    BundleProtectionDomain(Felix felix, BundleImpl bundle, Object certificates)
         throws MalformedURLException
     {
         super(
@@ -46,7 +46,7 @@ public class BundleProtectionDomain extends ProtectionDomain
                     bundle._getLocation(),
                     new FakeURLStreamHandler()
                     ),
-                (Certificate[]) null),
+                (Certificate[]) certificates),
             null);
         m_felix = new WeakReference(felix);
         m_bundle = new WeakReference(bundle);
