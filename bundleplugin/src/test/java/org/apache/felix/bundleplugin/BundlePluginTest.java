@@ -124,7 +124,7 @@ public class BundlePluginTest extends AbstractBundlePluginTest
             { jar } );
 
         analyzer.setProperty( Analyzer.EXPORT_PACKAGE, "*" );
-        analyzer.calcManifest();
+        analyzer.getJar().setManifest( analyzer.calcManifest() );
 
         assertEquals( 3, analyzer.getExports().size() );
 
