@@ -848,7 +848,7 @@ public class Felix extends BundleImpl implements Framework
         if ((sp != null) && (System.getSecurityManager() != null))
         {
             sp.checkBundle(bundleImpl);
-            Map signers = (Map) sp.getSignerMatcher(this, Bundle.SIGNERS_TRUSTED);
+            Map signers = (Map) sp.getSignerMatcher(bundleImpl, Bundle.SIGNERS_TRUSTED);
             certificates = signers.keySet().toArray(new java.security.cert.Certificate[0]);
         }
         revisionImpl.setProtectionDomain(
