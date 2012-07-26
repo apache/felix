@@ -106,6 +106,10 @@ public class R4Library
         {
             exts.add("dylib");
         }
+        if (libname.endsWith(".dylib") && m_libraryFile.endsWith(".jnilib"))
+        {
+            exts.add("jnilib");
+        }
         // Loop until we find a match or not.
         int extIdx = -1;
         while (!matched && (extIdx < exts.size()))
