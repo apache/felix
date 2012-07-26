@@ -488,6 +488,7 @@ public class ServiceRegistry
 
     void servicePropertiesModified(ServiceRegistration reg, Dictionary oldProps)
     {
+        updateHook(reg.getReference());
         if (m_callbacks != null)
         {
             m_callbacks.serviceChanged(
@@ -704,10 +705,36 @@ public class ServiceRegistry
                     Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
                     if (hooks == null)
                     {
-                        hooks = new HashSet<ServiceReference<?>>();
+                        hooks = new TreeSet<ServiceReference<?>>(Collections.reverseOrder());
                         m_allHooks.put(hookClass, hooks);
                     }
                     hooks.add(ref);
+                }
+            }
+        }
+    }
+
+    private void updateHook(ServiceReference ref)
+    {
+        // We maintain the hooks sorted, so if ranking has changed for example,
+        // we need to ensure the order remains correct by resorting the hooks.
+        Object svcObj = ((ServiceRegistrationImpl.ServiceReferenceImpl) ref)
+                .getRegistration().getService();
+        String [] classNames = (String[]) ref.getProperty(Constants.OBJECTCLASS);
+
+        for (Class<?> hookClass : m_hookClasses)
+        {
+            if (isHook(classNames, hookClass, svcObj))
+            {
+                synchronized (m_allHooks)
+                {
+                    Set<ServiceReference<?>> hooks = m_allHooks.get(hookClass);
+                    if (hooks != null)
+                    {
+                        List<ServiceReference<?>> refs = new ArrayList<ServiceReference<?>>(hooks);
+                        hooks.clear();
+                        hooks.addAll(refs);
+                    }
                 }
             }
         }
