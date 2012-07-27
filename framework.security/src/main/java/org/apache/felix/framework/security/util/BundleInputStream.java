@@ -46,6 +46,8 @@ public final class BundleInputStream extends InputStream
     private ByteArrayInputStream m_buffer = null;
     private JarOutputStream m_output = null;
 
+    private static final String DUMMY_ENTRY = "__DUMMY-ENTRY__/";
+
     public BundleInputStream(Content root) throws IOException
     {
         m_root = root;
@@ -53,6 +55,7 @@ public final class BundleInputStream extends InputStream
         List entries = new ArrayList();
 
         int count = 0;
+        boolean inMetaInf = true;
         String manifest = null;
         for (Enumeration e = m_root.getEntries(); e.hasMoreElements();)
         {
@@ -68,7 +71,8 @@ public final class BundleInputStream extends InputStream
                     manifest = entry;
                 }
             }
-            else if (entry.toUpperCase().startsWith("META-INF/"))
+            else if (entry.toUpperCase().startsWith("META-INF/")
+                        && entry.indexOf('/', "META-INF/".length()) < 0)
             {
                 entries.add(count++, entry);
             }
@@ -77,6 +81,7 @@ public final class BundleInputStream extends InputStream
                 entries.add(entry);
             }
         }
+        entries.add(count++, DUMMY_ENTRY);
         if (manifest == null)
         {
             manifest = "META-INF/MANIFEST.MF";
@@ -150,38 +155,47 @@ public final class BundleInputStream extends InputStream
     {
         m_outputBuffer.m_outBuffer = new ByteArrayOutputStream();
 
-        InputStream in = null;
-        try
+        if (path == DUMMY_ENTRY)
         {
-            in = m_root.getEntryAsStream(path);
-
-            if (in == null)
-            {
-                throw new IOException("Missing entry");
-            }
-
             JarEntry entry = new JarEntry(path);
 
             m_output.putNextEntry(entry);
-
-            byte[] buffer = new byte[4 * 1024];
-
-            for (int c = in.read(buffer); c != -1; c = in.read(buffer))
-            {
-                m_output.write(buffer, 0, c);
-            }
         }
-        finally
+        else
         {
-            if (in != null)
+            InputStream in = null;
+            try
             {
-                try
+                in = m_root.getEntryAsStream(path);
+
+                if (in == null)
                 {
-                    in.close();
+                    throw new IOException("Missing entry");
                 }
-                catch (Exception ex)
+
+                JarEntry entry = new JarEntry(path);
+
+                m_output.putNextEntry(entry);
+
+                byte[] buffer = new byte[4 * 1024];
+
+                for (int c = in.read(buffer); c != -1; c = in.read(buffer))
                 {
-                    // Not much we can do
+                    m_output.write(buffer, 0, c);
+                }
+            }
+            finally
+            {
+                if (in != null)
+                {
+                    try
+                    {
+                        in.close();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Not much we can do
+                    }
                 }
             }
         }
