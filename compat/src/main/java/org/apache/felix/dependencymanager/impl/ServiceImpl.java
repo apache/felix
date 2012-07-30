@@ -245,4 +245,9 @@ public class ServiceImpl implements Service
     public Component getDelegate() {
         return m_delegate;
     }
+    
+    public String toString()
+    {
+        return m_delegate.toString();
+    }
 }
