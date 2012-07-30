@@ -92,4 +92,9 @@ public class ConfigurationDependencyImpl extends ConfigurationDependency
     {
         return m_delegate.isRequired();
     }
+        
+    public String toString()
+    {
+        return m_delegate.toString();
+    }
 }
