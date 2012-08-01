@@ -87,8 +87,8 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
         Enumeration keys = conf.keys();
         while(keys.hasMoreElements()) {
         	String key = (String) keys.nextElement();
-        	if (! key.equals("instance.name")
-        			|| key.equals("component")) { // Remove instance.name and component
+            if (! (key.equals("instance.name")
+                    || key.equals("component"))) { // Remove instance.name and component
         		toAppend.put(key, conf.get(key));
         	}
         }
