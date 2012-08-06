@@ -646,10 +646,10 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             Enumeration configs = pmList[i].getDictionaries();
             while ( configs.hasMoreElements() )
             {
-                Dictionary config = ( Dictionary ) configs.nextElement();
+                final Dictionary config = ( Dictionary ) configs.nextElement();
 
                 // ignore non-Configuration dictionaries
-                String pid = ( String ) config.get( Constants.SERVICE_PID );
+                final String pid = ( String ) config.get( Constants.SERVICE_PID );
                 if ( pid == null )
                 {
                     continue;
@@ -663,7 +663,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                         LogService.LOG_DEBUG,
                         "Omitting configuration {0}: No permission for bundle {1} on configuration bound to {2}",
                         new Object[]
-                            { config.get( Constants.SERVICE_PID ), configurationAdmin.getBundle().getLocation(),
+                            { pid, configurationAdmin.getBundle().getLocation(),
                                 config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) } );
                     continue;
                 }
@@ -682,17 +682,17 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     if ( !cfg.isNew() )
                     {
                         log( LogService.LOG_DEBUG, "Adding configuration {0}", new Object[]
-                            { config.get( Constants.SERVICE_PID ) } );
+                            { pid } );
                         configList.add( cfg );
                     }
                     else
                     {
                         log( LogService.LOG_DEBUG, "Omitting configuration {0}: Is new", new Object[]
-                            { config.get( Constants.SERVICE_PID ) } );
+                            { pid } );
                     }
                 } else {
                     log( LogService.LOG_DEBUG, "Omitting configuration {0}: Does not match filter", new Object[]
-                        { config.get( Constants.SERVICE_PID ) } );
+                        { pid } );
                 }
             }
         }
