@@ -14,6 +14,7 @@ import aQute.bnd.maven.support.*;
 import aQute.bnd.osgi.*;
 import aQute.bnd.osgi.eclipse.*;
 import aQute.bnd.service.*;
+import aQute.bnd.service.RepositoryPlugin.PutResult;
 import aQute.bnd.service.RepositoryPlugin.Strategy;
 import aQute.bnd.service.action.*;
 import aQute.bnd.version.*;
@@ -146,6 +147,7 @@ public class Project extends Processor {
 		return workspace;
 	}
 
+	@Override
 	public String toString() {
 		return getBase().getName();
 	}
@@ -202,7 +204,9 @@ public class Project extends Processor {
 					// Set default bin directory
 					output = getOutput0();
 					if (!output.exists()) {
-						output.mkdirs();
+						if (!output.mkdirs()) {
+							throw new IOException("Could not create directory " + output);
+						}
 						getWorkspace().changedFile(output);
 					}
 					if (!output.isDirectory())
@@ -296,10 +300,12 @@ public class Project extends Processor {
 	/**
 	 * 
 	 */
-	private File getTarget0() {
+	private File getTarget0() throws IOException {
 		File target = getFile(getProperty("target", "generated"));
 		if (!target.exists()) {
-			target.mkdirs();
+			if (!target.mkdirs()) {
+				throw new IOException("Could not create directory " + target);
+			}
 			getWorkspace().changedFile(target);
 		}
 		return target;
@@ -809,15 +815,16 @@ public class Project extends Processor {
 		return join(list, separator);
 	}
 
+	@Override
 	protected Object[] getMacroDomains() {
 		return new Object[] {
 			workspace
 		};
 	}
 
-	public File release(Jar jar) throws Exception {
+	public File release(String jarName, InputStream jarStream) throws Exception {
 		String name = getProperty(Constants.RELEASEREPO);
-		return release(name, jar);
+		return release(name, jarName, jarStream);
 	}
 
 	/**
@@ -825,11 +832,12 @@ public class Project extends Processor {
 	 * 
 	 * @param name
 	 *            The repository name
-	 * @param jar
+	 * @param jarName
+	 * @param jarStream
 	 * @return
 	 * @throws Exception
 	 */
-	public File release(String name, Jar jar) throws Exception {
+	public File release(String name, String jarName, InputStream jarStream) throws Exception {
 		trace("release %s", name);
 		List<RepositoryPlugin> plugins = getPlugins(RepositoryPlugin.class);
 		RepositoryPlugin rp = null;
@@ -848,14 +856,11 @@ public class Project extends Processor {
 
 		if (rp != null) {
 			try {
-				File file = rp.put(jar);
-				trace("Released %s to file %s in repository %s", jar.getName(), file, rp);
+				PutResult r = rp.put(jarStream, new RepositoryPlugin.PutOptions());
+				trace("Released %s to %s in repository %s", jarName, r.artifact, rp);
 			}
 			catch (Exception e) {
-				msgs.Release_Into_Exception_(jar, rp, e);
-			}
-			finally {
-				jar.close();
+				msgs.Release_Into_Exception_(jarName, rp, e);
 			}
 		} else if (name == null)
 			msgs.NoNameForReleaseRepository();
@@ -890,15 +895,8 @@ public class Project extends Processor {
 		}
 		trace("build ", Arrays.toString(jars));
 		for (File jar : jars) {
-			Jar j = new Jar(jar);
-			try {
-				release(name, j);
-			}
-			finally {
-				j.close();
-			}
+			release(name, jar.getName(), new BufferedInputStream(new FileInputStream(jar)));
 		}
-
 	}
 
 	/**
@@ -1114,16 +1112,12 @@ public class Project extends Processor {
 		}
 
 		if (rp != null) {
-			Jar jar = new Jar(file);
 			try {
-				rp.put(jar);
+				rp.put(new BufferedInputStream(new FileInputStream(file)), new RepositoryPlugin.PutOptions());
 				return;
 			}
 			catch (Exception e) {
 				msgs.DeployingFile_On_Exception_(file, rp.getName(), e);
-			}
-			finally {
-				jar.close();
 			}
 			return;
 		}
@@ -1155,22 +1149,16 @@ public class Project extends Processor {
 		}
 		File[] outputs = getBuildFiles();
 		for (File output : outputs) {
-			Jar jar = new Jar(output);
-			try {
 				for (Deploy d : getPlugins(Deploy.class)) {
-					trace("Deploying %s to: %s", jar, d);
+					trace("Deploying %s to: %s", output.getName(), d);
 					try {
-						if (d.deploy(this, jar))
+						if (d.deploy(this, output.getName(), new BufferedInputStream(new FileInputStream(output))))
 							trace("deployed %s successfully to %s", output, d);
 					}
 					catch (Exception e) {
 						msgs.Deploying(e);
 					}
 				}
-			}
-			finally {
-				jar.close();
-			}
 		}
 	}
 
@@ -1452,8 +1440,12 @@ public class Project extends Processor {
 			if (!f.exists() || f.lastModified() < jar.lastModified()) {
 				reportNewer(f.lastModified(), jar);
 				f.delete();
-				if (!f.getParentFile().isDirectory())
-					f.getParentFile().mkdirs();
+				File fp = f.getParentFile();
+				if (!fp.isDirectory()) {
+					if (!fp.exists() && !fp.mkdirs()) {
+						throw new IOException("Could not create directory " + fp);
+					}
+				}
 				jar.write(f);
 
 				getWorkspace().changedFile(f);
@@ -1491,6 +1483,7 @@ public class Project extends Processor {
 	/**
 	 * Refresh if we are based on stale data. This also implies our workspace.
 	 */
+	@Override
 	public boolean refresh() {
 		boolean changed = false;
 		if (isCnf()) {
@@ -1503,6 +1496,7 @@ public class Project extends Processor {
 		return getBase().getName().equals(Workspace.CNFDIR);
 	}
 
+	@Override
 	public void propertiesChanged() {
 		super.propertiesChanged();
 		preparedPaths = false;
@@ -1568,12 +1562,16 @@ public class Project extends Processor {
 		File target = getTarget0();
 		if (target.isDirectory() && target.getParentFile() != null) {
 			IO.delete(target);
-			target.mkdirs();
+			if (!target.exists() && !target.mkdirs()) {
+				throw new IOException("Could not create directory " + target);
+			}
 		}
 		File output = getOutput0();
 		if (getOutput().isDirectory())
 			IO.delete(output);
-		output.mkdirs();
+		if (!output.exists() && !output.mkdirs()) {
+			throw new IOException("Could not create directory " + output);
+		}
 	}
 
 	public File[] build() throws Exception {
@@ -2052,7 +2050,10 @@ public class Project extends Processor {
 
 		String path = packageName.replace('.', '/') + "/packageinfo";
 		File binary = IO.getFile(getOutput(), path);
-		binary.getParentFile().mkdirs();
+		File bp = binary.getParentFile();
+		if (!bp.exists() && !bp.mkdirs()) {
+			throw new IOException("Could not create directory " + bp);
+		}
 		IO.copy(file, binary);
 
 		refresh();

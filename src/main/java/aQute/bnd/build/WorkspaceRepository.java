@@ -86,7 +86,7 @@ public class WorkspaceRepository implements RepositoryPlugin {
 		return false;
 	}
 
-	public File put(Jar jar) throws Exception {
+	public PutResult put(InputStream stream, PutOptions options) throws Exception {
 		return null;
 	}
 

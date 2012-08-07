@@ -85,7 +85,10 @@ public class EclipseRepo implements Plugin, RepositoryPlugin {
 
 	private void write(File index, Map<String, ? extends Map<String,String>> map) throws Exception {
 		String s = Processor.printClauses(map);
-		index.getParentFile().mkdirs();
+		File ip = index.getParentFile();
+		if (!ip.exists() && !ip.mkdirs()) {
+			throw new IOException("Could not create directory " + ip);
+		}
 		PrintWriter fw = IO.writer(index);
 		try {
 			fw.write(s);
@@ -166,7 +169,7 @@ public class EclipseRepo implements Plugin, RepositoryPlugin {
 		return result;
 	}
 
-	public File put(Jar jar) throws Exception {
+	public PutResult put(InputStream stream, PutOptions options) throws Exception {
 		return null;
 	}
 
