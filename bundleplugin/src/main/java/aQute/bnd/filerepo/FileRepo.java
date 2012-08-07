@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.*;
 
-import aQute.bnd.osgi.*;
 import aQute.bnd.version.*;
 
 public class FileRepo {
@@ -97,9 +96,11 @@ public class FileRepo {
 		return files[files.length - 1];
 	}
 
-	public File put(String bsn, Version version) {
+	public File put(String bsn, Version version) throws IOException {
 		File dir = new File(root, bsn);
-		dir.mkdirs();
+		if (!dir.exists() && !dir.mkdirs()) {
+			throw new IOException("Could not create directory " + dir);
+		}
 		File file = new File(dir, bsn + "-" + version.getMajor() + "." + version.getMinor() + "." + version.getMicro()
 				+ ".jar");
 		return file;

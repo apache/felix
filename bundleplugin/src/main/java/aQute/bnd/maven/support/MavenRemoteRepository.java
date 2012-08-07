@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-import aQute.bnd.osgi.*;
 import aQute.bnd.service.*;
 import aQute.bnd.version.*;
 import aQute.lib.io.*;
@@ -68,7 +67,7 @@ public class MavenRemoteRepository implements RepositoryPlugin, RegistryPlugin, 
 		return false;
 	}
 
-	public File put(Jar jar) throws Exception {
+	public PutResult put(InputStream stream, PutOptions options) throws Exception {
 		throw new UnsupportedOperationException("cannot do put");
 	}
 

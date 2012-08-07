@@ -127,12 +127,10 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 		try {
 			if (p.isFailOk())
 				return p.warning(string, args);
-			else {
-				String s = formatArrays(string, args == null ? new Object[0] : args);
-				if (!p.errors.contains(s))
-					p.errors.add(s);
-				return location(s);
-			}
+			String s = formatArrays(string, args == null ? new Object[0] : args);
+			if (!p.errors.contains(s))
+				p.errors.add(s);
+			return location(s);
 		}
 		finally {
 			p.signal();
@@ -160,13 +158,11 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 			if (p.isFailOk()) {
 				return p.warning(string + ": " + t, args);
 			}
-			else {
-				p.errors.add("Exception: " + t.getMessage());
-				String s = formatArrays(string, args == null ? new Object[0] : args);
-				if (!p.errors.contains(s))
-					p.errors.add(s);
-				return location(s);
-			}
+			p.errors.add("Exception: " + t.getMessage());
+			String s = formatArrays(string, args == null ? new Object[0] : args);
+			if (!p.errors.contains(s))
+				p.errors.add(s);
+			return location(s);
 		}
 		finally {
 			p.signal();
@@ -408,6 +404,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 		return plugin;
 	}
 
+	@Override
 	public boolean isFailOk() {
 		String v = getProperty(Analyzer.FAIL_OK, null);
 		return v != null && v.equalsIgnoreCase("true");
@@ -1184,6 +1181,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 			super.addURL(url);
 		}
 
+		@Override
 		public Class< ? > loadClass(String name) throws NoClassDefFoundError {
 			try {
 				Class< ? > c = super.loadClass(name);
@@ -1581,6 +1579,7 @@ public class Processor extends Domain implements Reporter, Registry, Constants, 
 	 * Printout of the status of this processor for toString()
 	 */
 
+	@Override
 	public String toString() {
 		try {
 			StringBuilder sb = new StringBuilder();

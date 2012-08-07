@@ -62,7 +62,12 @@ public class CAFS implements Closeable, Iterable<SHA1> {
 		this.home = home;
 		if (!home.isDirectory()) {
 			if (create) {
-				home.mkdirs();
+				if (home.exists()) {
+					throw new IOException(home + " is not a directory");
+				}
+				if (!home.mkdirs()) {
+					throw new IOException("Could not create directory " + home);
+				}
 			} else
 				throw new IllegalArgumentException("CAFS requires a directory with create=false");
 		}
@@ -290,6 +295,7 @@ public class CAFS implements Closeable, Iterable<SHA1> {
 				return size;
 			}
 
+			@Override
 			public int read() throws IOException {
 				int c = super.read();
 				if (c < 0)
@@ -315,6 +321,7 @@ public class CAFS implements Closeable, Iterable<SHA1> {
 							+ calculatedSha1));
 			}
 
+			@Override
 			public void close() throws IOException {
 				eof();
 				super.close();

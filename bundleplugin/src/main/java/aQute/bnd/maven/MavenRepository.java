@@ -17,6 +17,7 @@ public class MavenRepository implements RepositoryPlugin, Plugin, BsnToMavenPath
 	Reporter					reporter;
 	String						name;
 
+	@Override
 	public String toString() {
 		return "maven:" + root;
 	}
@@ -112,7 +113,7 @@ public class MavenRepository implements RepositoryPlugin, Plugin, BsnToMavenPath
 		}
 	}
 
-	public File put(Jar jar) throws Exception {
+	public PutResult put(InputStream stream, PutOptions options) throws Exception {
 		throw new IllegalStateException("Maven does not support the put command");
 	}
 
