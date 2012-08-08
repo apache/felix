@@ -33,8 +33,6 @@ import org.osgi.service.log.LogListener;
  */
 final class LogListenerThread extends Thread
 {
-    // Whether the thread is stopping or not.
-    private boolean m_stopping = false;
     // The list of entries waiting to be delivered to the log listeners.
     private final List m_entriesToDeliver = new ArrayList();
     // The list of listeners.
@@ -87,7 +85,10 @@ final class LogListenerThread extends Thread
      */
     int getListenerCount()
     {
-        return m_listeners.size();
+        synchronized (m_listeners)
+        {
+            return m_listeners.size();
+        }
     }
 
     /**
@@ -97,8 +98,7 @@ final class LogListenerThread extends Thread
     {
         synchronized (m_entriesToDeliver)
         {
-            m_stopping = true;
-            m_entriesToDeliver.notifyAll();
+            interrupt();
         }
     }
 
@@ -108,34 +108,11 @@ final class LogListenerThread extends Thread
      */
     public void run()
     {
-        boolean stop = false;
-
-        for (; !stop;)
+        while (!isInterrupted())
         {
+            List entriesToDeliver = new ArrayList();
             synchronized (m_entriesToDeliver)
             {
-                if (!m_entriesToDeliver.isEmpty())
-                {
-                    LogEntry entry = (LogEntry) m_entriesToDeliver.remove(0);
-
-                    synchronized (m_listeners)
-                    {
-                        Iterator listenerIt = m_listeners.iterator();
-                        while (listenerIt.hasNext())
-                        {
-                            try
-                            {
-                                LogListener listener = (LogListener) listenerIt.next();
-                                listener.logged(entry);
-                            }
-                            catch (Throwable t)
-                            {
-                                // catch and discard any exceptions thrown by the listener
-                            }
-                        }
-                    }
-                }
-
                 if (m_entriesToDeliver.isEmpty())
                 {
                     try
@@ -144,14 +121,49 @@ final class LogListenerThread extends Thread
                     }
                     catch (InterruptedException e)
                     {
-                        // do nothing
+                        // the interrupt-flag is cleared; so, let's play nice and 
+                        // interrupt this thread again to stop it...
+                        interrupt();
                     }
                 }
+                else 
+                {
+                    // Copy all current entries and deliver them in a single go...
+                    entriesToDeliver.addAll(m_entriesToDeliver);
+                    m_entriesToDeliver.clear();
+                }
             }
-
-            if (m_stopping)
+            
+            if (!entriesToDeliver.isEmpty())
             {
-                stop = true;
+                // Take a snapshot of all current listeners and deliver all
+                // pending messages to them...
+                List listeners = new ArrayList();
+                synchronized (m_listeners) 
+                {
+                    listeners.addAll(m_listeners);
+                }
+
+                Iterator entriesIt = entriesToDeliver.iterator();
+                while (entriesIt.hasNext()) 
+                {
+                    LogEntry entry = (LogEntry) entriesIt.next();
+                    
+                    Iterator listenerIt = listeners.iterator();
+                    while (listenerIt.hasNext())
+                    {
+                        LogListener listener = (LogListener) listenerIt.next();
+                        
+                        try
+                        {
+                            listener.logged(entry);
+                        }
+                        catch (Throwable t)
+                        {
+                            // catch and discard any exceptions thrown by the listener
+                        }
+                    }
+                }
             }
         }
     }
