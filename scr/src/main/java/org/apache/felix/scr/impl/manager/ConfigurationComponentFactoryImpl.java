@@ -258,5 +258,9 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
             super( activator, componentHolder, metadata );
         }
 
+        public boolean isImmediate()
+        {
+            return true;
+        }
     }
 }

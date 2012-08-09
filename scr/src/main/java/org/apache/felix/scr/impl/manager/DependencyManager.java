@@ -125,8 +125,7 @@ public class DependencyManager implements ServiceListener, Reference
         m_bind = new BindMethod( m_componentManager,
                                  m_dependencyMetadata.getBind(),
                                  instanceClass,
-                                 m_dependencyMetadata.getName(),
-                                 m_dependencyMetadata.getInterface()
+                m_dependencyMetadata.getInterface()
         );
         m_updated = new UpdatedMethod( m_componentManager,
                 m_dependencyMetadata.getUpdated(),

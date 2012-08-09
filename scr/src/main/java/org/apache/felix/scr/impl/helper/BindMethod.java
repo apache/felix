@@ -38,15 +38,13 @@ public class BindMethod extends BaseMethod
 
     private static final Class OBJECT_CLASS = Object.class;
 
-    private final String m_referenceName;
     private final String m_referenceClassName;
 
 
     public BindMethod( final AbstractComponentManager componentManager, final String methodName,
-        final Class componentClass, final String referenceName, final String referenceClassName )
+            final Class componentClass, final String referenceClassName )
     {
         super( componentManager, methodName, componentClass );
-        m_referenceName = referenceName;
         m_referenceClassName = referenceClassName;
     }
 

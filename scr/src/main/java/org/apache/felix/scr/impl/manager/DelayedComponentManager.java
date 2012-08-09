@@ -32,10 +32,6 @@ import org.osgi.framework.ServiceRegistration;
 public class DelayedComponentManager extends ImmediateComponentManager
 {
 
-//    // keep the using bundles as reference "counters" for instance deactivation
-//    private int m_useCount;
-
-
     /**
      * @param activator
      * @param metadata
@@ -44,65 +40,12 @@ public class DelayedComponentManager extends ImmediateComponentManager
         ComponentMetadata metadata )
     {
         super( activator, componentHolder, metadata );
-//        this.m_useCount = 0;
     }
 
-//    protected void deleteComponent( int reason )
+
+//    State getSatisfiedState()
 //    {
-//        // only have to delete, if there is actually an instance
-//        if ( getInstance() != null )
-//        {
-//            super.deleteComponent( reason );
-//        }
-//
-//        // ensure the refence set is also clear
-////        m_useCount = 0;
+//        return Registered.getInstance();
 //    }
 
-    State getSatisfiedState()
-    {
-        return Registered.getInstance();
-    }
-
-    //---------- ServiceFactory interface -------------------------------------
-
-//    public Object getService( Bundle bundle, ServiceRegistration sr )
-//    {
-//        obtainReadLock();
-//        try
-//        {
-//            m_useCount++;
-//            return state().getService( this );
-//        }
-//        finally
-//        {
-//            releaseReadLock();
-//        }
-//    }
-//
-//    public void ungetService( Bundle bundle, ServiceRegistration sr, Object service )
-//    {
-//        obtainReadLock();
-//        try
-//        {
-//            // the framework should not call ungetService more than it calls
-//            // calls getService. Still, we want to be sure to not go below zero
-//            if ( m_useCount > 0 )
-//            {
-//                m_useCount--;
-//
-//                // unget the service instance if no bundle is using it
-//                // any longer unless delayed component instances have to
-//                // be kept (FELIX-3039)
-//                if ( m_useCount == 0 && !getActivator().getConfiguration().keepInstances() )
-//                {
-//                    state().ungetService( this );
-//                }
-//            }
-//        }
-//        finally
-//        {
-//            releaseReadLock();
-//        }
-//    }
 }

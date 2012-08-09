@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import EDU.oswego.cs.dl.util.concurrent.ReaderPreferenceReadWriteLock;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -90,7 +91,7 @@ public abstract class AbstractComponentManager implements Component
     private BundleComponentActivator m_activator;
 
     // The ServiceRegistration
-    private final AtomicReferenceWrapper m_serviceRegistration = new AtomicReferenceWrapper(  );
+    private final AtomicReferenceWrapper m_serviceRegistration;
 
     private final LockWrapper m_stateLock;
 
@@ -114,10 +115,12 @@ public abstract class AbstractComponentManager implements Component
         if (JUC_AVAILABLE)
         {
             m_stateLock = new JLock();
+            m_serviceRegistration = new JAtomicReferenceWrapper();
         }
         else
         {
             m_stateLock = new EDULock();
+            m_serviceRegistration = new EDUAtomicReferenceWrapper();
         }
 
         // dump component details
@@ -151,17 +154,15 @@ public abstract class AbstractComponentManager implements Component
     //ImmediateComponentHolder should be in this manager package and this should be default access.
     public final boolean obtainReadLock()
     {
-//        new Exception("Stack trace obtainReadLock").printStackTrace();
         if (m_stateLock.getReadHoldCount() >0)
         {
             return false;
-//            throw new IllegalStateException( "nested read locks" );
         }
         try
         {
             if (!m_stateLock.tryReadLock( m_timeout ) )
             {
-                throw new IllegalStateException( "Could not obtain lock" );
+                throw new IllegalStateException( "Could not obtain lock in " + m_timeout + " milliseconds for component " + m_componentMetadata.getName() );
             }
         }
         catch ( InterruptedException e )
@@ -175,13 +176,11 @@ public abstract class AbstractComponentManager implements Component
 
     public final void releaseReadLock()
     {
-//        new Exception("Stack trace releaseReadLock").printStackTrace();
         m_stateLock.unlockReadLock();
     }
 
-    public final void escalateLock()
+    final void escalateLock()
     {
-//        new Exception("Stack trace escalateLock").printStackTrace();
         m_stateLock.unlockReadLock();
         try
         {
@@ -197,13 +196,12 @@ public abstract class AbstractComponentManager implements Component
         }
     }
 
-    public final void deescalateLock()
+    final void deescalateLock()
     {
-//        new Exception("Stack trace deescalateLock").printStackTrace();
         m_stateLock.deescalate();
     }
 
-    public final void checkLocked()
+    final void checkLocked()
     {
         if ( m_stateLock.getReadHoldCount() == 0 && m_stateLock.getWriteHoldCount() == 0 )
         {
@@ -211,7 +209,7 @@ public abstract class AbstractComponentManager implements Component
         }
     }
 
-    public final boolean isWriteLocked()
+    final boolean isWriteLocked()
     {
         return m_stateLock.getWriteHoldCount() > 0;
     }
@@ -924,7 +922,7 @@ public abstract class AbstractComponentManager implements Component
      */
     public Dictionary getServiceProperties()
     {
-        return copyTo( null, getProperties(), false);
+        return copyTo( null, getProperties(), false );
     }
 
     /**
@@ -1304,6 +1302,10 @@ public abstract class AbstractComponentManager implements Component
                 acm.escalateLock();
                 try
                 {
+                    if ( acm.isImmediate() )
+                    {
+                        acm.changeState( Active.getInstance() );
+                    }
                     if ( !acm.createComponent() )
                     {
                         // component creation failed, not active now
@@ -1629,45 +1631,62 @@ public abstract class AbstractComponentManager implements Component
         }
     }
 
-    private static class EDULock implements LockWrapper
+    private static class EDULock extends EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock implements LockWrapper
     {
-        private final EDU.oswego.cs.dl.util.concurrent.ReentrantLock lock = new EDU.oswego.cs.dl.util.concurrent.ReentrantLock();
-
         public boolean tryReadLock( long milliseconds ) throws InterruptedException
         {
-            return lock.attempt( milliseconds );
+            return readLock().attempt( milliseconds );
         }
 
         public long getReadHoldCount()
         {
-            return lock.holds();
+            return readers_.size();
         }
 
         public void unlockReadLock()
         {
-            lock.release();
+            readLock().release();
         }
 
         public boolean tryWriteLock( long milliseconds ) throws InterruptedException
         {
-            return false;
+            return writeLock().attempt( milliseconds );
         }
 
         public long getWriteHoldCount()
         {
-            return 0;
+            return writeHolds_;
         }
 
         public void unlockWriteLock()
         {
+            writeLock().release();
         }
 
         public void deescalate()
         {
+            try
+            {
+                readLock().acquire();
+            }
+            catch ( InterruptedException e )
+            {
+                //should not happen, we have the write lock
+                throw ( IllegalStateException ) new IllegalStateException( "Unexpected InterruptedException while acquiring read lock and holding write lock" ).initCause( e );
+            }
+            writeLock().release();
         }
     }
 
-    static class AtomicReferenceWrapper
+    private interface AtomicReferenceWrapper
+    {
+        ServiceRegistration get();
+
+        boolean compareAndSet(ServiceRegistration expected, ServiceRegistration replacement);
+
+    }
+
+    private static class JAtomicReferenceWrapper implements AtomicReferenceWrapper
     {
         private final AtomicReference ref = new AtomicReference(  );
 
@@ -1681,4 +1700,20 @@ public abstract class AbstractComponentManager implements Component
             return ref.compareAndSet( expected, replacement );
         }
     }
+
+    private static class EDUAtomicReferenceWrapper implements AtomicReferenceWrapper
+    {
+        private final EDU.oswego.cs.dl.util.concurrent.SynchronizedRef ref = new EDU.oswego.cs.dl.util.concurrent.SynchronizedRef( null );
+
+        public ServiceRegistration get()
+        {
+            return ( ServiceRegistration ) ref.get();
+        }
+
+        public boolean compareAndSet(ServiceRegistration expected, ServiceRegistration replacement)
+        {
+            return ref.commit( expected, replacement );
+        }
+    }
+
 }
