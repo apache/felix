@@ -94,7 +94,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         final ImmediateComponentManager cm = createComponentManager();
 
         ComponentInstance instance;
-        cm.obtainReadLock();
+        final boolean release = cm.obtainReadLock();
         try
         {
             cm.setFactoryProperties( dictionary );
@@ -108,13 +108,16 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
             if ( instance == null )
             {
                 // activation failed, clean up component manager
-                cm.dispose();
+                cm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
                 throw new ComponentException( "Failed activating component" );
             }
         }
         finally
         {
-            cm.releaseReadLock();
+            if ( release )
+            {
+                cm.releaseReadLock();
+            }
         }
 
         synchronized ( m_componentInstances )

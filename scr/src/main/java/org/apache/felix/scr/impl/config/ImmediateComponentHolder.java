@@ -188,14 +188,17 @@ public class ImmediateComponentHolder implements ComponentHolder
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             // singleton configuration deleted
-            m_singleComponent.obtainReadLock();
+            final boolean release = m_singleComponent.obtainReadLock();
             try
             {
                 m_singleComponent.reconfigure( null );
             }
             finally
             {
-                m_singleComponent.releaseReadLock();
+                if ( release )
+                {
+                    m_singleComponent.releaseReadLock();
+                }
             }
         }
         else
@@ -205,7 +208,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             if ( icm != null )
             {
                 boolean dispose = true;
-                icm.obtainReadLock();
+                final boolean release = icm.obtainReadLock();
                 try
                 {
                     // special casing if the single component is deconfigured
@@ -242,7 +245,10 @@ public class ImmediateComponentHolder implements ComponentHolder
                 }
                 finally
                 {
-                    icm.releaseReadLock();
+                    if ( release )
+                    {
+                        icm.releaseReadLock();
+                    }
                 }
             }
         }
@@ -271,7 +277,7 @@ public class ImmediateComponentHolder implements ComponentHolder
 
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            m_singleComponent.obtainReadLock();
+            final boolean release = m_singleComponent.obtainReadLock();
             try
             {
 // singleton configuration has pid equal to component name
@@ -279,7 +285,10 @@ public class ImmediateComponentHolder implements ComponentHolder
             }
             finally
             {
-                m_singleComponent.releaseReadLock();
+                if ( release )
+                {
+                    m_singleComponent.releaseReadLock();
+                }
             }
         }
         else
@@ -288,7 +297,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             final ImmediateComponentManager icm = getComponentManager( pid );
             if ( icm != null )
             {
-                icm.obtainReadLock();
+                final boolean release = icm.obtainReadLock();
                 try
                 {
                     // factory configuration updated for existing component instance
@@ -296,7 +305,10 @@ public class ImmediateComponentHolder implements ComponentHolder
                 }
                 finally
                 {
-                    icm.releaseReadLock();
+                    if ( release )
+                    {
+                        icm.releaseReadLock();
+                    }
                 }
             }
             else
@@ -315,14 +327,17 @@ public class ImmediateComponentHolder implements ComponentHolder
                 }
 
                 // configure the component
-                newIcm.obtainReadLock();
+                final boolean release = newIcm.obtainReadLock();
                 try
                 {
                     newIcm.reconfigure( props );
                 }
                 finally
                 {
-                    newIcm.releaseReadLock();
+                    if ( release )
+                    {
+                        newIcm.releaseReadLock();
+                    }
                 }
 
                 // enable the component if it is initially enabled

@@ -617,7 +617,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
     public Object getService( Bundle bundle, ServiceRegistration serviceRegistration )
     {
-        obtainReadLock();
+        final boolean release = obtainReadLock();
         try
         {
             if ( m_useCount == 0 )
@@ -641,13 +641,16 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         }
         finally
         {
-            releaseReadLock();
+            if ( release )
+            {
+                releaseReadLock();
+            }
         }
     }
 
     public void ungetService( Bundle bundle, ServiceRegistration serviceRegistration, Object o )
     {
-        obtainReadLock();
+        final boolean release = obtainReadLock();
         try
         {
             // the framework should not call ungetService more than it calls
@@ -678,7 +681,10 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         }
         finally
         {
-            releaseReadLock();
+            if ( release )
+            {
+                releaseReadLock();
+            }
         }
     }
 }

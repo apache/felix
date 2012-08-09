@@ -155,7 +155,7 @@ public class DependencyManager implements ServiceListener, Reference
         final ServiceReference ref = event.getServiceReference();
         final String serviceString = "Service " + m_dependencyMetadata.getInterface() + "/"
             + ref.getProperty( Constants.SERVICE_ID );
-        m_componentManager.obtainReadLock();
+        final boolean release = m_componentManager.obtainReadLock();
         try
         {
             switch ( event.getType() )
@@ -258,7 +258,10 @@ public class DependencyManager implements ServiceListener, Reference
         }
         finally
         {
-            m_componentManager.releaseReadLock();
+            if ( release )
+            {
+                m_componentManager.releaseReadLock();
+            }
         }
     }
 
