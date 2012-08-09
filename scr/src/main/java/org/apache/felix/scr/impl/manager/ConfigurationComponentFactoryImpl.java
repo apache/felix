@@ -139,7 +139,7 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
         }
         else   //non-spec backwards compatible
         {
-            obtainStateLock();
+            obtainReadLock();
             try
             {
                 ImmediateComponentManager cm;
@@ -178,20 +178,20 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
                 {
                     // update the configuration as if called as ManagedService
                     //TODO deadlock potential, we are holding our own state lock.
-                    cm.obtainStateLock();
+                    cm.obtainReadLock();
                     try
                     {
                         cm.reconfigure( configuration );
                     }
                     finally
                     {
-                        cm.releaseStateLock();
+                        cm.releaseReadLock();
                     }
                 }
             }
             finally
             {
-                releaseStateLock();
+                releaseReadLock();
             }
         }
     }

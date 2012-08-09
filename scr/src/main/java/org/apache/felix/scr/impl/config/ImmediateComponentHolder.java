@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
 import org.apache.felix.scr.impl.manager.DelayedComponentManager;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
@@ -189,14 +188,14 @@ public class ImmediateComponentHolder implements ComponentHolder
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             // singleton configuration deleted
-            m_singleComponent.obtainStateLock();
+            m_singleComponent.obtainReadLock();
             try
             {
                 m_singleComponent.reconfigure( null );
             }
             finally
             {
-                m_singleComponent.releaseStateLock();
+                m_singleComponent.releaseReadLock();
             }
         }
         else
@@ -206,7 +205,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             if ( icm != null )
             {
                 boolean dispose = true;
-                icm.obtainStateLock();
+                icm.obtainReadLock();
                 try
                 {
                     // special casing if the single component is deconfigured
@@ -238,12 +237,12 @@ public class ImmediateComponentHolder implements ComponentHolder
                     // is not the "last" and has to be disposed off
                     if ( dispose )
                     {
-                        icm.dispose( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
+                        icm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
                     }
                 }
                 finally
                 {
-                    icm.releaseStateLock();
+                    icm.releaseReadLock();
                 }
             }
         }
@@ -272,7 +271,7 @@ public class ImmediateComponentHolder implements ComponentHolder
 
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            m_singleComponent.obtainStateLock();
+            m_singleComponent.obtainReadLock();
             try
             {
 // singleton configuration has pid equal to component name
@@ -280,7 +279,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             }
             finally
             {
-                m_singleComponent.releaseStateLock();
+                m_singleComponent.releaseReadLock();
             }
         }
         else
@@ -289,7 +288,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             final ImmediateComponentManager icm = getComponentManager( pid );
             if ( icm != null )
             {
-                icm.obtainStateLock();
+                icm.obtainReadLock();
                 try
                 {
                     // factory configuration updated for existing component instance
@@ -297,7 +296,7 @@ public class ImmediateComponentHolder implements ComponentHolder
                 }
                 finally
                 {
-                    icm.releaseStateLock();
+                    icm.releaseReadLock();
                 }
             }
             else
@@ -316,14 +315,14 @@ public class ImmediateComponentHolder implements ComponentHolder
                 }
 
                 // configure the component
-                newIcm.obtainStateLock();
+                newIcm.obtainReadLock();
                 try
                 {
                     newIcm.reconfigure( props );
                 }
                 finally
                 {
-                    newIcm.releaseStateLock();
+                    newIcm.releaseReadLock();
                 }
 
                 // enable the component if it is initially enabled

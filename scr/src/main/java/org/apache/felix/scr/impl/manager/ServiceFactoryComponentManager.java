@@ -25,7 +25,6 @@ import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
@@ -96,7 +95,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
 
         // When the getServiceMethod is called, the implementation object must be created
 
-        obtainStateLock();
+        obtainReadLock();
         try
         {
 // private ComponentContext and implementation instances
@@ -127,7 +126,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
         }
         finally
         {
-            releaseStateLock();
+            releaseReadLock();
         }
     }
 
@@ -140,7 +139,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
         log( LogService.LOG_DEBUG, "ServiceFactory.ungetService()", null );
 
         // When the ungetServiceMethod is called, the implementation object must be deactivated
-        obtainStateLock();
+        obtainReadLock();
         try
         {
 // private ComponentContext and implementation instances
@@ -157,7 +156,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
         }
         finally
         {
-            releaseStateLock();
+            releaseReadLock();
         }
     }
 
