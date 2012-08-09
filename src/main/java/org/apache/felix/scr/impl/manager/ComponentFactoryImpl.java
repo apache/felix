@@ -94,7 +94,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         final ImmediateComponentManager cm = createComponentManager();
 
         ComponentInstance instance;
-        cm.obtainStateLock();
+        cm.obtainReadLock();
         try
         {
             cm.setFactoryProperties( dictionary );
@@ -114,7 +114,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         }
         finally
         {
-            cm.releaseStateLock();
+            cm.releaseReadLock();
         }
 
         synchronized ( m_componentInstances )
@@ -179,13 +179,11 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     }
 
 
-    protected ServiceRegistration registerService()
+    protected void registerService()
     {
         log( LogService.LOG_DEBUG, "registering component factory", null );
-
-        Dictionary serviceProperties = getServiceProperties();
-        return getActivator().getBundleContext().registerService( new String[]
-            { ComponentFactory.class.getName() }, getService(), serviceProperties );
+        registerService(new String[]
+            { ComponentFactory.class.getName() });
     }
 
 

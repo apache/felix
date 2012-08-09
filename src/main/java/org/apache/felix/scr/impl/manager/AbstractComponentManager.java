@@ -28,7 +28,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
@@ -89,7 +90,7 @@ public abstract class AbstractComponentManager implements Component
     private BundleComponentActivator m_activator;
 
     // The ServiceRegistration
-    private volatile ServiceRegistration m_serviceRegistration;
+    private final AtomicReferenceWrapper m_serviceRegistration = new AtomicReferenceWrapper(  );
 
     private final LockWrapper m_stateLock;
 
@@ -148,11 +149,12 @@ public abstract class AbstractComponentManager implements Component
     }
 
     //ImmediateComponentHolder should be in this manager package and this should be default access.
-    public final void obtainStateLock()
+    public final void obtainReadLock()
     {
+//        new Exception("Stack trace obtainReadLock").printStackTrace();
         try
         {
-            if (!m_stateLock.tryLock(  m_timeout ) )
+            if (!m_stateLock.tryReadLock( m_timeout ) )
             {
                 throw new IllegalStateException( "Could not obtain lock" );
             }
@@ -165,18 +167,47 @@ public abstract class AbstractComponentManager implements Component
     }
 
 
-    public final void releaseStateLock()
+    public final void releaseReadLock()
     {
-        m_stateLock.unlock();
+//        new Exception("Stack trace releaseReadLock").printStackTrace();
+        m_stateLock.unlockReadLock();
     }
 
+    public final void escalateLock()
+    {
+//        new Exception("Stack trace escalateLock").printStackTrace();
+        m_stateLock.unlockReadLock();
+        try
+        {
+            if (!m_stateLock.tryWriteLock( m_timeout ) )
+            {
+                throw new IllegalStateException( "Could not obtain lock" );
+            }
+        }
+        catch ( InterruptedException e )
+        {
+            //TODO this is so wrong
+            throw new IllegalStateException( "Could not obtain lock (Reason: " + e + ")" );
+        }
+    }
+
+    public final void deescalateLock()
+    {
+//        new Exception("Stack trace deescalateLock").printStackTrace();
+        m_stateLock.deescalate();
+    }
 
     public final void checkLocked()
     {
-        if ( m_stateLock.getHoldCount() == 0 )
+        if ( m_stateLock.getReadHoldCount() == 0 && m_stateLock.getWriteHoldCount() == 0 )
         {
             throw new IllegalStateException( "State lock should be held by current thread" );
         }
+    }
+
+    public final boolean isWriteLocked()
+    {
+        return m_stateLock.getWriteHoldCount() > 0;
     }
 
 //---------- Component ID management
@@ -225,7 +256,7 @@ public abstract class AbstractComponentManager implements Component
 
     public final void enable( final boolean async )
     {
-        obtainStateLock();
+        obtainReadLock();
         try
         {
             enableInternal();
@@ -236,7 +267,7 @@ public abstract class AbstractComponentManager implements Component
         }
         finally
         {
-            releaseStateLock();
+            releaseReadLock();
         }
 
         if ( async )
@@ -245,14 +276,14 @@ public abstract class AbstractComponentManager implements Component
             {
                 public void run()
                 {
-                    obtainStateLock();
+                    obtainReadLock();
                     try
                     {
                         activateInternal();
                     }
                     finally
                     {
-                        releaseStateLock();
+                        releaseReadLock();
                     }
                 }
             } );
@@ -273,7 +304,7 @@ public abstract class AbstractComponentManager implements Component
 
     public final void disable( final boolean async )
     {
-        obtainStateLock();
+        obtainReadLock();
         try
         {
             if ( !async )
@@ -284,7 +315,7 @@ public abstract class AbstractComponentManager implements Component
         }
         finally
         {
-            releaseStateLock();
+            releaseReadLock();
         }
 
         if ( async )
@@ -293,14 +324,14 @@ public abstract class AbstractComponentManager implements Component
             {
                 public void run()
                 {
-                    obtainStateLock();
+                    obtainReadLock();
                     try
                     {
                         deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED );
                     }
                     finally
                     {
-                        releaseStateLock();
+                        releaseReadLock();
                     }
                 }
             } );
@@ -331,14 +362,14 @@ public abstract class AbstractComponentManager implements Component
      */
     public void dispose( int reason )
     {
-        obtainStateLock();
+        obtainReadLock();
         try
         {
             disposeInternal( reason );
         }
         finally
         {
-            releaseStateLock();
+            releaseReadLock();
         }
     }
 
@@ -502,7 +533,7 @@ public abstract class AbstractComponentManager implements Component
      * method has to actually complete before other actions like bundle stopping
      * may continue.
      */
-    final void disposeInternal( int reason )
+    public final void disposeInternal( int reason )
     {
         m_state.dispose( this );
     }
@@ -566,21 +597,35 @@ public abstract class AbstractComponentManager implements Component
      * @return The <code>ServiceRegistration</code> for the registered
      *      service or <code>null</code> if no service is registered.
      */
-    protected ServiceRegistration registerService()
+    protected void registerService()
     {
         if ( getComponentMetadata().getServiceMetadata() != null )
+        {
+            String[] provides = getComponentMetadata().getServiceMetadata().getProvides();
+            registerService( provides );
+        }
+    }
+
+    protected void registerService( String[] provides )
+    {
+            ServiceRegistration existing = m_serviceRegistration.get();
+        if ( existing == null )
         {
             log( LogService.LOG_DEBUG, "registering services", null );
 
             // get a copy of the component properties as service properties
             final Dictionary serviceProperties = getServiceProperties();
 
-            return getActivator().getBundleContext().registerService(
-                    getComponentMetadata().getServiceMetadata().getProvides(),
-                    getService(), serviceProperties );
+            ServiceRegistration newRegistration = getActivator().getBundleContext().registerService(
+                provides,
+                getService(), serviceProperties );
+            boolean weWon = m_serviceRegistration.compareAndSet( existing, newRegistration );
+            if (weWon)
+            {
+                return;
+            }
+            newRegistration.unregister();
         }
-
-        return null;
     }
 
     /**
@@ -593,20 +638,14 @@ public abstract class AbstractComponentManager implements Component
      */
     final void registerComponentService()
     {
-
-        if (this.m_serviceRegistration != null)
-        {
-            throw new IllegalStateException( "Component service already registered: " + this );
-        }
-        this.m_serviceRegistration = registerService();
+        registerService();
     }
 
     final void unregisterComponentService()
     {
-        ServiceRegistration sr = this.m_serviceRegistration;
-        this.m_serviceRegistration = null;
+        ServiceRegistration sr = m_serviceRegistration.get();
 
-        if ( sr != null )
+        if ( sr != null && m_serviceRegistration.compareAndSet( sr, null ) )
         {
             log( LogService.LOG_DEBUG, "Unregistering the services", null );
             sr.unregister();
@@ -630,7 +669,7 @@ public abstract class AbstractComponentManager implements Component
 
     final ServiceRegistration getServiceRegistration()
     {
-        return m_serviceRegistration;
+        return m_serviceRegistration.get();
     }
 
 
@@ -1028,7 +1067,7 @@ public abstract class AbstractComponentManager implements Component
         }
 
 
-        void ungetService( DelayedComponentManager dcm )
+        void ungetService( ImmediateComponentManager dcm )
         {
 //            log( dcm, "ungetService" );
             throw new IllegalStateException("ungetService" + this);
@@ -1081,8 +1120,16 @@ public abstract class AbstractComponentManager implements Component
             try
             {
                 acm.unregisterComponentService();
-                acm.deleteComponent( reason );
-                acm.deactivateDependencyManagers();
+                acm.escalateLock();
+                try
+                {
+                    acm.deleteComponent( reason );
+                    acm.deactivateDependencyManagers();
+                }
+                finally
+                {
+                    acm.deescalateLock();
+                }
             }
             catch ( Throwable t )
             {
@@ -1194,7 +1241,7 @@ public abstract class AbstractComponentManager implements Component
                 return;
             }
 
-            // set satisifed state before registering the service because
+            // set satisfied state before registering the service because
             // during service registration a listener may try to get the
             // service from the service reference which may cause a
             // delayed service object instantiation through the State
@@ -1210,7 +1257,7 @@ public abstract class AbstractComponentManager implements Component
             // test if all the mandatory dependencies are satisfied
             if ( !acm.verifyDependencyManagers( acm.getProperties() ) )
             {
-                acm.log( LogService.LOG_DEBUG, "Not all dependencies satisified, cannot activate", null );
+                acm.log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
                 acm.changeState( Unsatisfied.getInstance() );
                 return;
             }
@@ -1231,13 +1278,23 @@ public abstract class AbstractComponentManager implements Component
             // 2. Create the component instance and component context
             // 3. Bind the target services
             // 4. Call the activate method, if present
-            if ( ( acm.isImmediate() || acm.getComponentMetadata().isFactory() ) && !acm.createComponent() )
+            if ( ( acm.isImmediate() || acm.getComponentMetadata().isFactory() ) )
             {
-                // component creation failed, not active now
-                acm.log( LogService.LOG_ERROR, "Component instance could not be created, activation failed", null );
+                acm.escalateLock();
+                try
+                {
+                    if ( !acm.createComponent() )
+                    {
+                        // component creation failed, not active now
+                        acm.log( LogService.LOG_ERROR, "Component instance could not be created, activation failed", null );
+                        acm.changeState( Unsatisfied.getInstance() );
+                    }
+                }
+                finally
+                {
+                    acm.deescalateLock();
+                }
 
-                // set state to unsatisfied
-                acm.changeState( Unsatisfied.getInstance() );
             }
 
         }
@@ -1335,7 +1392,7 @@ public abstract class AbstractComponentManager implements Component
         }
 
 
-        void ungetService( DelayedComponentManager dcm )
+        void ungetService( ImmediateComponentManager dcm )
         {
             dcm.deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
             dcm.changeState( Registered.getInstance() );
@@ -1447,7 +1504,7 @@ public abstract class AbstractComponentManager implements Component
         void deactivate( AbstractComponentManager acm, int reason )
         {
             acm.changeState( Active.getInstance() );
-            acm.dispose( reason );
+            acm.disposeInternal( reason );
         }
     }
 
@@ -1498,28 +1555,56 @@ public abstract class AbstractComponentManager implements Component
 
     private static interface LockWrapper
     {
-        boolean tryLock( long milliseconds ) throws InterruptedException;
-        long getHoldCount();
-        void unlock();
+        boolean tryReadLock( long milliseconds ) throws InterruptedException;
+        long getReadHoldCount();
+        void unlockReadLock();
+        
+        boolean tryWriteLock( long milliseconds ) throws InterruptedException;
+        long getWriteHoldCount();
+        void unlockWriteLock();
+        void deescalate();
+
+        
     }
 
     private static class JLock implements LockWrapper
     {
-        private final ReentrantLock lock = new ReentrantLock( true );
+        private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock( true );
 
-        public boolean tryLock( long milliseconds ) throws InterruptedException
+        public boolean tryReadLock( long milliseconds ) throws InterruptedException
         {
-             return lock.tryLock( milliseconds, TimeUnit.MILLISECONDS );
+             return lock.readLock().tryLock( milliseconds, TimeUnit.MILLISECONDS );
         }
 
-        public long getHoldCount()
+        public long getReadHoldCount()
         {
-            return lock.getHoldCount();
+            return lock.getReadHoldCount();
         }
 
-        public void unlock()
+        public void unlockReadLock()
         {
-            lock.unlock();
+            lock.readLock().unlock();
+        }
+
+        public boolean tryWriteLock( long milliseconds ) throws InterruptedException
+        {
+            return lock.writeLock().tryLock( milliseconds, TimeUnit.MILLISECONDS );
+        }
+
+        public long getWriteHoldCount()
+        {
+            return lock.getWriteHoldCount();
+        }
+
+        public void unlockWriteLock()
+        {
+            lock.writeLock().unlock();
+        }
+
+        public void deescalate()
+        {
+            lock.readLock().lock();
+            lock.writeLock().unlock();
         }
     }
 
@@ -1527,19 +1612,52 @@ public abstract class AbstractComponentManager implements Component
     {
         private final EDU.oswego.cs.dl.util.concurrent.ReentrantLock lock = new EDU.oswego.cs.dl.util.concurrent.ReentrantLock();
 
-        public boolean tryLock( long milliseconds ) throws InterruptedException
+        public boolean tryReadLock( long milliseconds ) throws InterruptedException
         {
             return lock.attempt( milliseconds );
         }
 
-        public long getHoldCount()
+        public long getReadHoldCount()
         {
             return lock.holds();
         }
 
-        public void unlock()
+        public void unlockReadLock()
         {
             lock.release();
+        }
+
+        public boolean tryWriteLock( long milliseconds ) throws InterruptedException
+        {
+            return false;
+        }
+
+        public long getWriteHoldCount()
+        {
+            return 0;
+        }
+
+        public void unlockWriteLock()
+        {
+        }
+
+        public void deescalate()
+        {
+        }
+    }
+
+    static class AtomicReferenceWrapper
+    {
+        private final AtomicReference ref = new AtomicReference(  );
+
+        public ServiceRegistration get()
+        {
+            return ( ServiceRegistration ) ref.get();
+        }
+
+        public boolean compareAndSet(ServiceRegistration expected, ServiceRegistration replacement)
+        {
+            return ref.compareAndSet( expected, replacement );
         }
     }
 }

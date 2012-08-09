@@ -71,7 +71,7 @@ public class DependencyManager implements ServiceListener, Reference
     private final Map m_bound;
 
     // the number of matching services registered in the system
-    private int m_size;
+    private volatile int m_size;
 
     // the object on which the bind/undind methods are to be called
     private volatile Object m_componentInstance;
@@ -155,7 +155,7 @@ public class DependencyManager implements ServiceListener, Reference
         final ServiceReference ref = event.getServiceReference();
         final String serviceString = "Service " + m_dependencyMetadata.getInterface() + "/"
             + ref.getProperty( Constants.SERVICE_ID );
-        m_componentManager.obtainStateLock();
+        m_componentManager.obtainReadLock();
         try
         {
             switch ( event.getType() )
@@ -258,7 +258,7 @@ public class DependencyManager implements ServiceListener, Reference
         }
         finally
         {
-            m_componentManager.releaseStateLock();
+            m_componentManager.releaseReadLock();
         }
     }
 

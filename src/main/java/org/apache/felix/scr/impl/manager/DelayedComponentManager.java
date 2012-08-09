@@ -23,7 +23,6 @@ import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
 
@@ -33,8 +32,8 @@ import org.osgi.framework.ServiceRegistration;
 public class DelayedComponentManager extends ImmediateComponentManager
 {
 
-    // keep the using bundles as reference "counters" for instance deactivation
-    private int m_useCount;
+//    // keep the using bundles as reference "counters" for instance deactivation
+//    private int m_useCount;
 
 
     /**
@@ -45,20 +44,20 @@ public class DelayedComponentManager extends ImmediateComponentManager
         ComponentMetadata metadata )
     {
         super( activator, componentHolder, metadata );
-        this.m_useCount = 0;
+//        this.m_useCount = 0;
     }
 
-    protected void deleteComponent( int reason )
-    {
-        // only have to delete, if there is actually an instance
-        if ( getInstance() != null )
-        {
-            super.deleteComponent( reason );
-        }
-
-        // ensure the refence set is also clear
-        m_useCount = 0;
-    }
+//    protected void deleteComponent( int reason )
+//    {
+//        // only have to delete, if there is actually an instance
+//        if ( getInstance() != null )
+//        {
+//            super.deleteComponent( reason );
+//        }
+//
+//        // ensure the refence set is also clear
+////        m_useCount = 0;
+//    }
 
     State getSatisfiedState()
     {
@@ -67,43 +66,43 @@ public class DelayedComponentManager extends ImmediateComponentManager
 
     //---------- ServiceFactory interface -------------------------------------
 
-    public Object getService( Bundle bundle, ServiceRegistration sr )
-    {
-        obtainStateLock();
-        try
-        {
-            m_useCount++;
-            return state().getService( this );
-        }
-        finally
-        {
-            releaseStateLock();
-        }
-    }
-
-    public void ungetService( Bundle bundle, ServiceRegistration sr, Object service )
-    {
-        obtainStateLock();
-        try
-        {
-            // the framework should not call ungetService more than it calls
-            // calls getService. Still, we want to be sure to not go below zero
-            if ( m_useCount > 0 )
-            {
-                m_useCount--;
-
-                // unget the service instance if no bundle is using it
-                // any longer unless delayed component instances have to
-                // be kept (FELIX-3039)
-                if ( m_useCount == 0 && !getActivator().getConfiguration().keepInstances() )
-                {
-                    state().ungetService( this );
-                }
-            }
-        }
-        finally
-        {
-            releaseStateLock();
-        }
-    }
+//    public Object getService( Bundle bundle, ServiceRegistration sr )
+//    {
+//        obtainReadLock();
+//        try
+//        {
+//            m_useCount++;
+//            return state().getService( this );
+//        }
+//        finally
+//        {
+//            releaseReadLock();
+//        }
+//    }
+//
+//    public void ungetService( Bundle bundle, ServiceRegistration sr, Object service )
+//    {
+//        obtainReadLock();
+//        try
+//        {
+//            // the framework should not call ungetService more than it calls
+//            // calls getService. Still, we want to be sure to not go below zero
+//            if ( m_useCount > 0 )
+//            {
+//                m_useCount--;
+//
+//                // unget the service instance if no bundle is using it
+//                // any longer unless delayed component instances have to
+//                // be kept (FELIX-3039)
+//                if ( m_useCount == 0 && !getActivator().getConfiguration().keepInstances() )
+//                {
+//                    state().ungetService( this );
+//                }
+//            }
+//        }
+//        finally
+//        {
+//            releaseReadLock();
+//        }
+//    }
 }
