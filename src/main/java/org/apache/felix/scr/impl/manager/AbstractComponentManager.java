@@ -149,9 +149,14 @@ public abstract class AbstractComponentManager implements Component
     }
 
     //ImmediateComponentHolder should be in this manager package and this should be default access.
-    public final void obtainReadLock()
+    public final boolean obtainReadLock()
     {
 //        new Exception("Stack trace obtainReadLock").printStackTrace();
+        if (m_stateLock.getReadHoldCount() >0)
+        {
+            return false;
+//            throw new IllegalStateException( "nested read locks" );
+        }
         try
         {
             if (!m_stateLock.tryReadLock( m_timeout ) )
@@ -164,6 +169,7 @@ public abstract class AbstractComponentManager implements Component
             //TODO this is so wrong
             throw new IllegalStateException( "Could not obtain lock (Reason: " + e + ")" );
         }
+        return true;
     }
 
 
@@ -256,7 +262,7 @@ public abstract class AbstractComponentManager implements Component
 
     public final void enable( final boolean async )
     {
-        obtainReadLock();
+        final boolean release = obtainReadLock();
         try
         {
             enableInternal();
@@ -267,7 +273,10 @@ public abstract class AbstractComponentManager implements Component
         }
         finally
         {
-            releaseReadLock();
+            if ( release )
+            {
+                releaseReadLock();
+            }
         }
 
         if ( async )
@@ -276,14 +285,17 @@ public abstract class AbstractComponentManager implements Component
             {
                 public void run()
                 {
-                    obtainReadLock();
+                    final boolean release = obtainReadLock();
                     try
                     {
                         activateInternal();
                     }
                     finally
                     {
-                        releaseReadLock();
+                        if ( release )
+                        {
+                            releaseReadLock();
+                        }
                     }
                 }
             } );
@@ -304,7 +316,7 @@ public abstract class AbstractComponentManager implements Component
 
     public final void disable( final boolean async )
     {
-        obtainReadLock();
+        final boolean release = obtainReadLock();
         try
         {
             if ( !async )
@@ -315,7 +327,10 @@ public abstract class AbstractComponentManager implements Component
         }
         finally
         {
-            releaseReadLock();
+            if ( release )
+            {
+                releaseReadLock();
+            }
         }
 
         if ( async )
@@ -324,14 +339,17 @@ public abstract class AbstractComponentManager implements Component
             {
                 public void run()
                 {
-                    obtainReadLock();
+                    final boolean release = obtainReadLock();
                     try
                     {
                         deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED );
                     }
                     finally
                     {
-                        releaseReadLock();
+                        if ( release )
+                        {
+                            releaseReadLock();
+                        }
                     }
                 }
             } );
@@ -362,14 +380,17 @@ public abstract class AbstractComponentManager implements Component
      */
     public void dispose( int reason )
     {
-        obtainReadLock();
+        final boolean release = obtainReadLock();
         try
         {
             disposeInternal( reason );
         }
         finally
         {
-            releaseReadLock();
+            if ( release )
+            {
+                releaseReadLock();
+            }
         }
     }
 
