@@ -331,6 +331,9 @@
                         <ignore>java.util.concurrent.locks.ReentrantReadWriteLock$ReadLock</ignore>
                         <ignore>java.util.concurrent.locks.ReentrantReadWriteLock$WriteLock</ignore>
                         <ignore>java.util.concurrent.TimeUnit</ignore>
+                        <ignore>java.lang.management.ManagementFactory</ignore>
+                        <ignore>java.lang.management.ThreadInfo</ignore>
+                        <ignore>java.lang.management.ThreadMXBean</ignore>
                     </ignores>
                 </configuration>
                 <executions>

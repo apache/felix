@@ -18,6 +18,9 @@
  */
 package org.apache.felix.scr.impl.manager;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import EDU.oswego.cs.dl.util.concurrent.ReaderPreferenceReadWriteLock;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -96,6 +98,9 @@ public abstract class AbstractComponentManager implements Component
     private final LockWrapper m_stateLock;
 
     private long m_timeout = 5000;
+
+    private Thread lockingThread;
+    private Throwable lockingStackTrace;
 
     /**
      * The constructor receives both the activator and the metadata
@@ -162,7 +167,15 @@ public abstract class AbstractComponentManager implements Component
         {
             if (!m_stateLock.tryReadLock( m_timeout ) )
             {
-                throw new IllegalStateException( "Could not obtain lock in " + m_timeout + " milliseconds for component " + m_componentMetadata.getName() );
+                try
+                {
+                    dumpThreads();
+                }
+                catch ( Throwable e )
+                {
+                     //we are on a pre 1.6 vm, no worries
+                }
+                throw ( IllegalStateException ) new IllegalStateException( "Could not obtain lock in " + m_timeout + " milliseconds for component " + m_componentMetadata.getName() ).initCause( lockingStackTrace );
             }
         }
         catch ( InterruptedException e )
@@ -188,6 +201,8 @@ public abstract class AbstractComponentManager implements Component
             {
                 throw new IllegalStateException( "Could not obtain lock" );
             }
+            lockingThread = Thread.currentThread();
+            lockingStackTrace = new Exception("Write lock stack trace for thread: " + lockingThread);
         }
         catch ( InterruptedException e )
         {
@@ -199,6 +214,8 @@ public abstract class AbstractComponentManager implements Component
     final void deescalateLock()
     {
         m_stateLock.deescalate();
+        lockingThread = null;
+        lockingStackTrace = null;
     }
 
     final void checkLocked()
@@ -212,6 +229,18 @@ public abstract class AbstractComponentManager implements Component
     final boolean isWriteLocked()
     {
         return m_stateLock.getWriteHoldCount() > 0;
+    }
+
+    private void dumpThreads()
+    {
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        StringBuffer b = new StringBuffer( "Thread dump\n" );
+        ThreadInfo[] infos = threadMXBean.dumpAllThreads( threadMXBean.isObjectMonitorUsageSupported(), threadMXBean.isSynchronizerUsageSupported() );
+        for ( int i = 0; i < infos.length; i++ )
+        {
+            b.append( infos[i] ).append( "\n\n" );
+        }
+        log( LogService.LOG_INFO, b.toString(), null );
     }
 
 //---------- Component ID management
