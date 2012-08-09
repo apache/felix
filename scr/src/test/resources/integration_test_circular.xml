@@ -178,4 +178,125 @@
     </scr:component>
 
 
+    <!-- A 1.1 dynamic. B 0..1 dynamic  both immediate.  Both should start (A first) and B should have no reference to A -->
+    <scr:component name="5.A.1.1.dynamic"
+        enabled="true"
+        immediate="true"
+        configuration-policy="ignore">
+        <implementation class="org.apache.felix.scr.integration.components.circular.A" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.circular.A" />
+        </service>
+        <reference
+            name="b"
+            interface="org.apache.felix.scr.integration.components.circular.B"
+            cardinality="1..1"
+            policy="dynamic"
+            bind="setB"
+            unbind="unsetB"
+            target="(service.pid=5.B.0.1.dynamic)"
+        />
+        <property name="service.pid" value="5.A.1.1.dynamic" />
+    </scr:component>
+    <scr:component name="5.B.0.1.dynamic"
+        enabled="true"
+        immediate="true"
+        configuration-policy="ignore">
+        <implementation class="org.apache.felix.scr.integration.components.circular.B" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.circular.B" />
+        </service>
+        <reference
+            name="a"
+            interface="org.apache.felix.scr.integration.components.circular.A"
+            cardinality="0..1"
+            policy="dynamic"
+            bind="setA"
+            unbind="unsetA"
+            target="(service.pid=5.A.1.1.dynamic)"
+        />
+        <property name="service.pid" value="5.B.0.1.dynamic" />
+    </scr:component>
+
+    <!-- A 1.1 dynamic. B 0..1 dynamic  both immediate.  Both should start (B first) and B should have a reference to A -->
+    <scr:component name="6.B.0.1.dynamic"
+        enabled="true"
+        immediate="true"
+        configuration-policy="ignore">
+        <implementation class="org.apache.felix.scr.integration.components.circular.B" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.circular.B" />
+        </service>
+        <reference
+            name="a"
+            interface="org.apache.felix.scr.integration.components.circular.A"
+            cardinality="0..1"
+            policy="dynamic"
+            bind="setA"
+            unbind="unsetA"
+            target="(service.pid=6.A.1.1.dynamic)"
+        />
+        <property name="service.pid" value="6.B.0.1.dynamic" />
+    </scr:component>
+    <scr:component name="6.A.1.1.dynamic"
+        enabled="true"
+        immediate="true"
+        configuration-policy="ignore">
+        <implementation class="org.apache.felix.scr.integration.components.circular.A" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.circular.A" />
+        </service>
+        <reference
+            name="b"
+            interface="org.apache.felix.scr.integration.components.circular.B"
+            cardinality="1..1"
+            policy="dynamic"
+            bind="setB"
+            unbind="unsetB"
+            target="(service.pid=6.B.0.1.dynamic)"
+        />
+        <property name="service.pid" value="6.A.1.1.dynamic" />
+    </scr:component>
+
+    <!-- A 1.1 dynamic. B 0..1 dynamic  both delayed.  Both should start and B should have no reference to A -->
+    <scr:component name="7.A.1.1.dynamic"
+        enabled="true"
+        immediate="false"
+        configuration-policy="ignore">
+        <implementation class="org.apache.felix.scr.integration.components.circular.A" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.circular.A" />
+        </service>
+        <reference
+            name="b"
+            interface="org.apache.felix.scr.integration.components.circular.B"
+            cardinality="1..1"
+            policy="dynamic"
+            bind="setB"
+            unbind="unsetB"
+            target="(service.pid=7.B.0.1.dynamic)"
+        />
+        <property name="service.pid" value="7.A.1.1.dynamic" />
+    </scr:component>
+    <scr:component name="7.B.0.1.dynamic"
+        enabled="true"
+        immediate="false"
+        configuration-policy="ignore">
+        <implementation class="org.apache.felix.scr.integration.components.circular.B" />
+        <service>
+            <provide interface="org.apache.felix.scr.integration.components.circular.B" />
+        </service>
+        <reference
+            name="a"
+            interface="org.apache.felix.scr.integration.components.circular.A"
+            cardinality="0..1"
+            policy="dynamic"
+            bind="setA"
+            unbind="unsetA"
+            target="(service.pid=7.A.1.1.dynamic)"
+        />
+        <property name="service.pid" value="7.B.0.1.dynamic" />
+    </scr:component>
+
+
 </components>
