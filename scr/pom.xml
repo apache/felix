@@ -326,7 +326,10 @@
                         <version>1.0</version>
                     </signature>
                     <ignores>
-                        <ignore>java.util.concurrent.locks.ReentrantLock</ignore>
+                        <ignore>java.util.concurrent.atomic.AtomicReference</ignore>
+                        <ignore>java.util.concurrent.locks.ReentrantReadWriteLock</ignore>
+                        <ignore>java.util.concurrent.locks.ReentrantReadWriteLock$ReadLock</ignore>
+                        <ignore>java.util.concurrent.locks.ReentrantReadWriteLock$WriteLock</ignore>
                         <ignore>java.util.concurrent.TimeUnit</ignore>
                     </ignores>
                 </configuration>
