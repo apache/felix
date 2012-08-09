@@ -31,7 +31,7 @@ public class UnbindMethod extends BindMethod
     public UnbindMethod( final AbstractComponentManager componentManager, final String methodName,
         final Class componentClass, final String referenceName, final String referenceClassName )
     {
-        super( componentManager, methodName, componentClass, referenceName, referenceClassName );
+        super( componentManager, methodName, componentClass, referenceClassName );
     }
 
 

@@ -184,8 +184,8 @@ abstract class BaseMethod
             {
                 // log and return null
                 getComponentManager().log( LogService.LOG_ERROR,
-                    "findMethod: Suitable but non-accessible method found in class {0}", new Object[]
-                        { targetClass.getName() }, null );
+                    "findMethod: Suitable but non-accessible method {0} found in class {1}, subclass of {2}", new Object[]
+                        { getMethodName(), theClass.getName(), targetClass.getName() }, null );
                 break;
             }
 

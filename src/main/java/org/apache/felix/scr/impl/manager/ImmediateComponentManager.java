@@ -150,6 +150,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         if ( m_implementationObject != null )
         {
             disposeImplementationObject( m_implementationObject, m_componentContext, reason );
+            m_useCount = 0;
             m_implementationObject = null;
             m_componentContext = null;
             m_properties = null;
@@ -310,7 +311,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
     State getSatisfiedState()
     {
-        return Active.getInstance();
+        return Registered.getInstance();
     }
 
     protected void setFactoryProperties( Dictionary dictionary )
@@ -627,8 +628,13 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 {
                     if ( m_useCount == 0 )
                     {
-                        m_useCount++;
-                        return state().getService( this );
+                        //state should be "Registered"
+                        Object result = state().getService( this );
+                        if ( result != null )
+                        {
+                            m_useCount++;
+                        }
+                        return result;
                     }
                 }
                 finally
