@@ -1536,7 +1536,7 @@ public abstract class AbstractComponentManager implements Component
      * deactivated due to not being satisified any longer. See section 112.5.5,
      * Factory Component, for full details.
      */
-    protected static final class FactoryInstance extends Satisfied
+    protected static final class FactoryInstance extends Satisfied//Registered
     {
         private static final FactoryInstance m_inst = new FactoryInstance();
 
@@ -1552,6 +1552,33 @@ public abstract class AbstractComponentManager implements Component
             return m_inst;
         }
 
+        Object getService( ImmediateComponentManager dcm )
+        {
+            if ( dcm.createComponent() )
+            {
+                dcm.changeState( Active.getInstance() );
+                return dcm.getInstance();
+            }
+
+            // log that the delayed component cannot be created (we don't
+            // know why at this moment; this should already have been logged)
+            dcm.log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
+
+            // component could not really be created. This may be temporary
+            // so we stay in the registered state but ensure the component
+            // instance is deleted
+            try
+            {
+                dcm.deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
+            }
+            catch ( Throwable t )
+            {
+                dcm.log( LogService.LOG_DEBUG, "Cannot delete incomplete component instance. Ignoring.", t );
+            }
+
+            // no service can be returned (be prepared for more logging !!)
+            return null;
+        }
 
         void deactivate( AbstractComponentManager acm, int reason )
         {
