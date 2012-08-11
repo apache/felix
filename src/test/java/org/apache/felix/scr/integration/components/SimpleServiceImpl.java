@@ -52,6 +52,10 @@ public class SimpleServiceImpl implements SimpleService
         return instance;
     }
 
+    public SimpleServiceImpl()
+    {
+        this("", 0);
+    }
 
     SimpleServiceImpl( final String value, final int ranking )
     {

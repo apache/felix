@@ -50,7 +50,7 @@ public class ComponentFactoryTest extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-        // paxRunnerVmOption = DEBUG_VM_OPTION;
+//        paxRunnerVmOption = DEBUG_VM_OPTION;
     }
 
 
@@ -517,4 +517,61 @@ public class ComponentFactoryTest extends ComponentTestBase
 //        TestCase.assertNull( SimpleComponent.INSTANCE );
 //        TestCase.assertNull( instanceNonMatch.getInstance() ); // SCR 112.12.6.2
     }
+
+    @Test
+    public void test_component_factory_referredTo() throws InvalidSyntaxException
+    {
+        //set up the component that refers to the service the factory will create.
+        final String referringComponentName = "ComponentReferringToFactoryObject";
+        final Component referringComponent = findComponentByName( referringComponentName );
+        TestCase.assertNotNull( referringComponent );
+        referringComponent.enable();
+        delay();
+
+        //make sure it's unsatisfied (service is not yet available
+        TestCase.assertEquals( Component.STATE_UNSATISFIED, referringComponent.getState() );
+
+
+        final String componentname = "factory.component.referred";
+        final String componentfactory = "factory.component.factory.referred";
+
+        final Component component = findComponentByName( componentname );
+
+        TestCase.assertNotNull( component );
+        TestCase.assertFalse( component.isDefaultEnabled() );
+
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+
+        component.enable();
+        delay();
+
+        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+
+        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
+        TestCase.assertNotNull( refs );
+        TestCase.assertEquals( 1, refs.length );
+        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
+        TestCase.assertNotNull( factory );
+
+        // create the factory instance
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put( "service.pid", "myFactoryInstance" );
+        final ComponentInstance instance = factory.newInstance( props );
+        TestCase.assertNotNull( instance );
+
+        TestCase.assertNotNull( instance.getInstance() );
+
+        //The referring service should now be active
+        TestCase.assertEquals( Component.STATE_ACTIVE, referringComponent.getState() );
+
+        instance.dispose();
+        TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
+
+        //make sure it's unsatisfied (service is no longer available)
+        TestCase.assertEquals( Component.STATE_UNSATISFIED, referringComponent.getState() );
+    }
+
 }
