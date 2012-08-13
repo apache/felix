@@ -1,3 +1,21 @@
+Changes from 1.6.0 to 1.7.0
+---------------------------
+
+** Task
+    * [FELIX-3225] - Drop javadoc annotation support
+    * [FELIX-3247] - Change annotation retention from source to class
+    * [FELIX-3552] - Implement new features of DS 1.2
+    * [FELIX-3550] - Reimplement the SCR Generator
+    * [FELIX-3551] - Support the DS annotations
+
+** Bug
+    * [FELIX-3457] - Component annotation does not detect abstract class
+    * [FELIX-3077] - Abstract class is not detected as abstract
+
+** Improvement
+    * [FELIX-2689] - Upgrade Descriptor generator to new parent POM and adapt legal files
+
+
 Changes from 1.5.0 to 1.6.0
 ---------------------------
 
