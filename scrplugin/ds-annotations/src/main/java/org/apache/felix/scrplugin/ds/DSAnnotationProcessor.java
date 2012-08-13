@@ -241,10 +241,10 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
             defaultUnbindMethodName = "remove" + refNameByMethod;
         } else if ( methodName.startsWith("set") ) {
             refNameByMethod = methodName.substring(3);
-            defaultUnbindMethodName = "un" + refNameByMethod;
+            defaultUnbindMethodName = "unset" + refNameByMethod;
         } else if ( methodName.startsWith("bind") ) {
             refNameByMethod = methodName.substring(4);
-            defaultUnbindMethodName = "un" + refNameByMethod;
+            defaultUnbindMethodName = "unbind" + refNameByMethod;
         } else {
             refNameByMethod = methodName;
             defaultUnbindMethodName = "un" + refNameByMethod;
