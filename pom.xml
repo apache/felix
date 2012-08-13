@@ -20,10 +20,10 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>felix-parent</artifactId>
         <groupId>org.apache.felix</groupId>
-        <version>1.2.0</version>
-        <relativePath>../pom/pom.xml</relativePath>
+        <artifactId>felix-parent</artifactId>
+        <version>2.1</version>
+        <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
     <groupId>org.apache.felix</groupId>
@@ -57,23 +57,27 @@
             <version>1.2.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <version>1.7.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
+            <version>1.2.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-all</artifactId>
+            <version>4.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
     
     <build>
-        <resources>
-            <resource>
-                <directory>${basedir}/src/main/resources</directory>
-            </resource>
-            <resource>
-                <targetPath>META-INF</targetPath>
-                <directory>${basedir}</directory>
-                <includes>
-                    <include>LICENSE</include>
-                    <include>NOTICE</include>
-                    <include>DEPENDENCIES</include>
-                </includes>
-            </resource>
-        </resources>
         <plugins>
             <!-- unpack qdox, asm and annotations into bundle package -->
             <plugin>
@@ -85,13 +89,13 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                org.apache.felix.scr.generator,qdox,asm-all,org.apache.felix.scr.annotations
+                                org.apache.felix.scr.generator,asm-all,org.apache.felix.scr.annotations,org.apache.felix.scr.ds-annotations
                             </includeArtifactIds>
                             <outputDirectory>
                                 ${project.build.outputDirectory}
                             </outputDirectory>
                             <excludes>
-                                **/DEPENDENCIES,**/NOTICE,**/LICENSE,**/MANIFEST.MF
+                                **/MANIFEST.MF
                             </excludes>
                         </configuration>
                     </execution>
