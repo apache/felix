@@ -20,10 +20,10 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>felix-parent</artifactId>
         <groupId>org.apache.felix</groupId>
-        <version>1.2.0</version>
-        <relativePath>../pom/pom.xml</relativePath>
+        <artifactId>felix-parent</artifactId>
+        <version>2.1</version>
+        <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
     <groupId>org.apache.felix</groupId>
@@ -65,20 +65,6 @@
     </dependencies>
     
     <build>
-        <resources>
-            <resource>
-                <directory>${basedir}/src/main/resources</directory>
-            </resource>
-            <resource>
-                <targetPath>META-INF</targetPath>
-                <directory>${basedir}</directory>
-                <includes>
-                    <include>LICENSE</include>
-                    <include>NOTICE</include>
-                    <include>DEPENDENCIES</include>
-                </includes>
-            </resource>
-        </resources>
         <plugins>
             <!-- JDK 1.5 needed for annotation support -->
             <plugin>
