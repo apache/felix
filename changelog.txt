@@ -11,6 +11,7 @@ Changes from 1.6.0 to 1.7.0
 ** Bug
     * [FELIX-3457] - Component annotation does not detect abstract class
     * [FELIX-3077] - Abstract class is not detected as abstract
+    * [FELIX-3593] - ClassCastException when using short-cut notation inside array value annotations
 
 ** Improvement
     * [FELIX-2689] - Upgrade Descriptor generator to new parent POM and adapt legal files
