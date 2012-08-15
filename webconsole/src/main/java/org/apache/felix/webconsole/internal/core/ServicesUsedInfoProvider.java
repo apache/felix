@@ -34,9 +34,6 @@ import org.osgi.framework.ServiceRegistration;
 
 final class ServicesUsedInfoProvider implements
 	BundleInfoProvider {
-
-    // TODO: add i18n for those entries
-    private static final String SERVICE_DESCRIPTION = "%services.info.descr.";
     
     private final LocalizationHelper localization;
     
