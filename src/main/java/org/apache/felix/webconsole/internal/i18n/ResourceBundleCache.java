@@ -33,12 +33,12 @@ import org.osgi.framework.Constants;
 /**
  * The <code>ResourceBundleCache</code> caches resource bundles per OSGi bundle.
  */
-class ResourceBundleCache
+public class ResourceBundleCache
 {
 
     /**
      * The default locale corresponding to the default language in the
-     * bundle.properties file, which is english.
+     * bundle.properties file, which is English.
      * (FELIX-1957 The Locale(String) constructor used before is not available
      * in the OSGi/Minimum-1.1 profile and should be prevented)
      */
@@ -51,14 +51,25 @@ class ResourceBundleCache
     private Map resourceBundleEntries;
 
 
-    ResourceBundleCache( final Bundle bundle )
+    /**
+     * Creates a new object
+     * 
+     * @param bundle the bundle which resources should be loaded.
+     */
+    public ResourceBundleCache( final Bundle bundle )
     {
         this.bundle = bundle;
         this.resourceBundles = new HashMap();
     }
 
 
-    ResourceBundle getResourceBundle( final Locale locale )
+    /**
+     * Gets the resource bundle for the specified locale.
+     * 
+     * @param locale the requested locale
+     * @return the resource bundle for the requested locale
+     */
+    public ResourceBundle getResourceBundle( final Locale locale )
     {
         if ( locale == null )
         {
@@ -161,7 +172,7 @@ class ResourceBundleCache
     }
 
 
-    private Locale getParentLocale( Locale locale )
+    private static final Locale getParentLocale( Locale locale )
     {
         if ( locale.getVariant().length() != 0 )
         {

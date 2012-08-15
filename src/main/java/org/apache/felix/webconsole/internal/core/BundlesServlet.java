@@ -32,6 +32,9 @@ import org.apache.felix.framework.util.VersionRange;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
 import org.apache.felix.webconsole.*;
+import org.apache.felix.webconsole.bundleinfo.BundleInfo;
+import org.apache.felix.webconsole.bundleinfo.BundleInfoProvider;
+import org.apache.felix.webconsole.bundleinfo.BundleInfoType;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
 import org.json.*;
@@ -42,6 +45,7 @@ import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
+import org.osgi.util.tracker.ServiceTracker;
 
 
 /**
@@ -81,6 +85,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     private boolean[] bootPkgWildcards;
 
     private ServiceRegistration configurationPrinter;
+    private ServiceTracker bundleInfoTracker;
 
     // templates
     private final String TEMPLATE_MAIN;
@@ -100,6 +105,9 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     public void activate( BundleContext bundleContext )
     {
         super.activate( bundleContext );
+        
+        bundleInfoTracker = new ServiceTracker( bundleContext, BundleInfoProvider.class.getName(), null);
+        bundleInfoTracker.open();
 
         // bootdelegation property parsing from Apache Felix R4SearchPolicyCore
         String bootDelegation = bundleContext.getProperty( Constants.FRAMEWORK_BOOTDELEGATION );
@@ -134,6 +142,12 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         {
             configurationPrinter.unregister();
             configurationPrinter = null;
+        }
+        
+        if ( bundleInfoTracker != null)
+        {
+            bundleInfoTracker.close();
+            bundleInfoTracker = null;
         }
 
         super.deactivate();
@@ -758,10 +772,53 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         }
 
         listHeaders( jw, bundle );
+        bundleInfoDetails(jw, bundle, pluginRoot.substring(0, pluginRoot.lastIndexOf("/")), locale);
 
         jw.endArray();
     }
 
+    
+    private final void bundleInfoDetails( JSONWriter jw, Bundle bundle, String appRoot, final Locale locale)
+	        throws JSONException
+    {
+	jw.object();
+	jw.key( "key" );
+	jw.value( "nfo" );
+	jw.key( "value");
+	jw.object();
+        final Object[] bundleInfoProviders = bundleInfoTracker.getServices();
+        for ( int i = 0; bundleInfoProviders != null && i < bundleInfoProviders.length; i++ )
+        {
+            final BundleInfoProvider infoProvider = (BundleInfoProvider) bundleInfoProviders[i];
+            final BundleInfo[] infos = infoProvider.getBundleInfo(bundle, appRoot, locale);
+            if ( null != infos && infos.length > 0)
+            {
+        	jw.key( infoProvider.getName(locale) );
+        	jw.array();
+        	for ( int j = 0; j < infos.length; j++ ) 
+        	{
+        	    bundleInfo( jw, infos[j] );
+        	}
+        	jw.endArray();
+            }
+        }
+        jw.endObject(); // value
+        jw.endObject();
+    }
+    
+    private static final void bundleInfo( JSONWriter jw, BundleInfo info ) throws JSONException
+    {
+	jw.object();
+	jw.key("name");
+	jw.value( info.getName() );
+	jw.key("description");
+	jw.value( info.getDescription() );
+	jw.key("type");
+	jw.value( info.getType().getName() );
+	jw.key("value");
+	jw.value( info.getValue() );
+	jw.endObject();
+    }
 
     private final Integer getStartLevel( Bundle bundle )
     {

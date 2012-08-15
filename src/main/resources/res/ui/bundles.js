@@ -175,38 +175,63 @@ function renderDetails( data ) {
     var details = data.props;
     for (var idx in details) {
         var prop = details[idx];
-		var key = i18n[prop.key] ? i18n[prop.key] : prop.key;
-
-        var txt = "<tr><td class='aligntop' noWrap='true' style='border:0px none'>" + key + "</td><td class='aligntop' style='border:0px none'>";          
-        if (prop.value) {
-            if ( prop.key == 'Bundle Documentation' )  {
-                txt = txt + "<a href='" + prop.value + "' target='_blank'>" + prop.value + "</a>";
-            } else  {
-                if ( $.isArray(prop.value) ) {
-                    var i = 0;
-                    for(var pi in prop.value) {
-                        var value = prop.value[pi];
-                        if (i > 0) { txt = txt + "<br/>"; }
-		                var span;
-		                if (value.substring(0, 6) == "INFO: ") {
-		                	txt = txt + "<span class='ui-state-info-text'>" + value.substring(5) + "</span>";
-		                } else if (value.substring(0, 7) == "ERROR: ") {
-		                	txt = txt + "<span class='ui-state-error-text'>" + value.substring(6) + "</span>";
-		                } else {
-		                	txt = txt + value;
-		                }
-                        i++;
-                    }
-                } else {
-                    txt = txt + prop.value;
-                }
-            }
-        } else {
-            txt = txt + "\u00a0";
-        }
-        txt = txt + "</td></tr>";
-        $("#pluginInlineDetails" + data.id + " > table > tbody").append(txt);
+        
+        if (prop.key == 'nfo') {
+        	$.each(prop.value, function(name, bundleInfo) {
+        		var txt = '';
+        		$.each(bundleInfo, function(idx, ie) {
+        			txt += '<div title="' + makeSafe(ie.description) + '">';
+        			if (ie.type == 'link' || ie.type == 'resource') {
+        				txt += '<a href="' + ie.value + '">' + ie.name + '</a>';
+        			} else {
+        				txt += ie.name + " = " + ie.value;
+        			}
+        			txt += '</div>';
+        		});
+            	$("#pluginInlineDetails" + data.id + " > table > tbody").append( 
+                		renderDetailsEntry(name, txt) );
+        	});
+        } else 
+        	$("#pluginInlineDetails" + data.id + " > table > tbody").append( 
+        		renderDetailsEntry(prop.key, prop.value) );
     }
+}
+function makeSafe(text) {
+	return text.replace(/\W/g, function (chr) {
+		return '&#' + chr.charCodeAt(0) + ';';
+	});
+};
+
+function renderDetailsEntry(key, value) {
+	var key18 = i18n[key] ? i18n[key] : key;
+	var txt = "<tr><td class='aligntop' noWrap='true' style='border:0px none'>" + key18 + "</td><td class='aligntop' style='border:0px none'>";          
+    if (value) {
+        if ( key == 'Bundle Documentation' )  {
+            txt += "<a href='" + value + "' target='_blank'>" + value + "</a>";
+        } else  {
+            if ( $.isArray(value) ) {
+                var i = 0;
+                for(var pi in value) {
+                    var xv = value[pi];
+                    if (i > 0) { txt = txt + "<br/>"; }
+	                var span;
+	                if (xv.substring(0, 6) == "INFO: ") {
+	                	txt += "<span class='ui-state-info-text'>" + xv.substring(5) + "</span>";
+	                } else if (xv.substring(0, 7) == "ERROR: ") {
+	                	txt += "<span class='ui-state-error-text'>" + xv.substring(6) + "</span>";
+	                } else {
+	                	txt +=  xv;
+	                }
+                    i++;
+                }
+            } else {
+                txt += value;
+            }
+        }
+    } else {
+        txt += "\u00a0";
+    }
+    return txt + "</td></tr>";
 }
 
 
