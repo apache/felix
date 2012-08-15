@@ -38,9 +38,11 @@ import org.apache.felix.webconsole.internal.Util;
 import org.json.JSONException;
 import org.json.JSONWriter;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 
 /**
@@ -104,8 +106,8 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
     /** the label for the services plugin */
-    public static final String LABEL = "services";
-    private static final String TITLE = "%services.pluginTitle";
+    public static final String LABEL = "services"; //$NON-NLS-1$
+    private static final String TITLE = "%services.pluginTitle"; //$NON-NLS-1$
     private static final String CSS[] = null;
 
     private final String TEMPLATE;
@@ -115,7 +117,24 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         super(LABEL, TITLE, CSS);
 
         // load templates
-        TEMPLATE = readTemplateFile( "/templates/services.html" );
+        TEMPLATE = readTemplateFile( "/templates/services.html" ); //$NON-NLS-1$
+    }
+    
+    private ServiceRegistration bipReg;
+    
+    public void activate(BundleContext bundleContext) 
+    {
+        super.activate(bundleContext);
+        bipReg = new ServicesUsedInfoProvider( bundleContext.getBundle() ).register( bundleContext );
+    }
+    
+    public void deactivate() {
+	if ( null != bipReg )
+	{
+	    bipReg.unregister();
+	    bipReg = null;
+	}
+        super.deactivate();
     }
 
 
