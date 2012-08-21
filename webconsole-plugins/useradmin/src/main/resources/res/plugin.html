@@ -1,0 +1,125 @@
+﻿<script type="text/javascript" src="${pluginRoot}/res/jsTree.v.0.9.9a/jquery.tree.min.js"></script>
+<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/core-min.js"></script>
+<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/x64-core-min.js"></script>
+<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/md5-min.js"></script>
+<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/sha1-min.js"></script>
+<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/sha256-min.js"></script>
+<script type="text/javascript" src="${pluginRoot}/res/crypto-js-3.0.2/sha512-min.js"></script>
+<script type="text/javascript" src="${pluginRoot}/res/json2.min.js"></script>
+<script type="text/javascript" src="${pluginRoot}/res/plugin.js"></script>
+<script type="text/javascript">
+// <![CDATA[
+var i18n = {
+	abort : '${abort}',
+	close : '${abort}',
+	add   : '${save}',
+	root  : '${role.tree.root}',
+	status: '${role.statline}'
+}
+// ]]>
+</script>
+
+<!-- status line -->
+<p class="statline">&nbsp;</p>
+
+<!-- table caption -->
+<form method="post" action="${pluginRoot}">
+	<div class="ui-widget-header ui-corner-top buttonGroup">
+		<button id="newRole">${role.new}</button>
+		<button id="reload">${reload}</button>
+	</div>
+</form>
+
+<table class="nicetable">
+	<tr>
+		<td id="userTree">-</td>
+		<td id="roleDetails">
+			<table class="nicetable ui-helper-hidden">
+				<thead class="ui-widget-header ">
+					<tr>
+						<td class="property-name">${role.key}</td>
+						<td class="property-value">${role.value}</td>
+						<td class="property-type">${type}</td>
+						<td class="actions">${bundles.actions}</td>
+					</tr>
+				</thead>
+				<tfoot class="ui-widget-header">
+					<tr>
+						<td colspan="4">
+							<button id="delRole">${delete}</button> 
+							<button id="savRole">${save}</button>
+						</td>
+					</tr>
+				</tfoot>
+				<tbody>
+					<tr class="ui-priority-primary header header-props">
+						<td colspan="4" class="">
+							${role.properties}
+							<ul class="icons">
+								<li class="dynhover">
+									<span class="ui-icon ui-icon-plus">&nbsp;</span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+					<tr class="ui-priority-primary header header-cred">
+						<td colspan="4">
+							${role.credentials}
+							<ul class="icons">
+								<li class="dynhover">
+									<span class="ui-icon ui-icon-plus">&nbsp;</span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+					<tr>
+						<td><input class="k" /></td>
+						<td><input class="v" /></td>
+						<td>
+							<select class="dynhover">
+								<option value="string">${type.string}</option>
+								<option value="byte[]">${type.bytes}</option>
+								<option value="password-MD5">${type.password-MD5}</option>
+								<option value="password-SHA1">${type.password-SHA1}</option>
+								<option value="password-SHA256">${type.password-SHA256}</option>
+								<option value="password-SHA512">${type.password-SHA512}</option>
+							</select>
+						</td>
+						<td class="actions">
+							<ul class="icons">
+								<li class="dynhover">
+									<span class="ui-icon ui-icon-trash">&nbsp;</span>
+								</li>
+							</ul>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<div id="roleDetailsHelp">${role.help.initial}</div>
+		</td>
+	</tr>
+</table>
+
+<div class="ui-helper-hidden1" title="${role.new.title}" id="newDialogRole">
+	<table class="nicetable">
+		<tr>
+			<td class="label">
+				${role.name}
+			</td>
+			<td>
+				<input/>
+			</td>
+		</tr>
+		<tr>
+			<td class="label">
+				${type}
+			</td>
+			<td>
+				<select class="dynhover">
+					<option value="1">${role.type.1}</option>
+					<option value="2">${role.type.2}</option>
+				</select>
+			</td>
+		</tr>
+	</table>
+</div>

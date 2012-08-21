@@ -1,0 +1,10 @@
+/* your css definitions here */
+#userTree { width: 20% }
+#userTree li a { padding-left: 12px ! important}
+.header ul { float: right }
+#roleDetails .actions { width: 32px }
+input.k, input.v { width: 100% }
+#roleDetails .property-type {width: 5em}
+.actions ul { float : right }
+#newDialogRole select { width : 100% }
+.required { font-style:italic }
