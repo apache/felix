@@ -618,12 +618,12 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
     public Object getService( Bundle bundle, ServiceRegistration serviceRegistration )
     {
-        final boolean release = obtainReadLock();
+        final boolean release = obtainReadLock( "ImmediateComponentManager.getService.1" );
         try
         {
             if ( m_useCount == 0 )
             {
-                escalateLock();
+                escalateLock( "ImmediateComponentManager.getService.1" );
                 try
                 {
                     if ( m_useCount == 0 )
@@ -639,7 +639,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 }
                 finally
                 {
-                    deescalateLock();
+                    deescalateLock( "ImmediateComponentManager.getService.1" );
                 }
             }
             m_useCount++;
@@ -649,14 +649,14 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         {
             if ( release )
             {
-                releaseReadLock();
+                releaseReadLock( "ImmediateComponentManager.getService.1" );
             }
         }
     }
 
     public void ungetService( Bundle bundle, ServiceRegistration serviceRegistration, Object o )
     {
-        final boolean release = obtainReadLock();
+        final boolean release = obtainReadLock( "ImmediateComponentManager.ungetService.1" );
         try
         {
             // the framework should not call ungetService more than it calls
@@ -670,7 +670,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 // be kept (FELIX-3039)
                 if ( m_useCount == 0 && !isImmediate() && !getActivator().getConfiguration().keepInstances() )
                 {
-                    escalateLock();
+                    escalateLock( "ImmediateComponentManager.ungetService.1" );
                     try
                     {
                         if ( m_useCount == 0 )
@@ -680,7 +680,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                     }
                     finally
                     {
-                        deescalateLock();
+                        deescalateLock( "ImmediateComponentManager.ungetService.1" );
                     }
                 }
             }
@@ -689,7 +689,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         {
             if ( release )
             {
-                releaseReadLock();
+                releaseReadLock( "ImmediateComponentManager.ungetService.1" );
             }
         }
     }

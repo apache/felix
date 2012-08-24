@@ -32,7 +32,6 @@ import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.component.ComponentFactory;
@@ -94,7 +93,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         final ImmediateComponentManager cm = createComponentManager();
 
         ComponentInstance instance;
-        final boolean release = cm.obtainReadLock();
+        final boolean release = cm.obtainReadLock( "ComponentFactoryImpl.newInstance.1" );
         try
         {
             cm.setFactoryProperties( dictionary );
@@ -116,7 +115,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         {
             if ( release )
             {
-                cm.releaseReadLock();
+                cm.releaseReadLock( "ComponentFactoryImpl.newInstance.1" );
             }
         }
 

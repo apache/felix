@@ -95,7 +95,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
 
         // When the getServiceMethod is called, the implementation object must be created
 
-        final boolean release = obtainReadLock();
+        final boolean release = obtainReadLock( "ServiceFactoryComponentManager.getService.1" );
         try
         {
 // private ComponentContext and implementation instances
@@ -128,7 +128,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
         {
             if ( release )
             {
-                releaseReadLock();
+                releaseReadLock( "ServiceFactoryComponentManager.getService.1" );
             }
         }
     }
@@ -142,7 +142,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
         log( LogService.LOG_DEBUG, "ServiceFactory.ungetService()", null );
 
         // When the ungetServiceMethod is called, the implementation object must be deactivated
-        final boolean release = obtainReadLock();
+        final boolean release = obtainReadLock( "ServiceFactoryComponentManager.ungetService.1" );
         try
         {
 // private ComponentContext and implementation instances
@@ -161,7 +161,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
         {
             if ( release )
             {
-                releaseReadLock();
+                releaseReadLock( "ServiceFactoryComponentManager.ungetService.1" );
             }
         }
     }

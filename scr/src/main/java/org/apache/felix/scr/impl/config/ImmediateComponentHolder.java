@@ -188,7 +188,7 @@ public class ImmediateComponentHolder implements ComponentHolder
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             // singleton configuration deleted
-            final boolean release = m_singleComponent.obtainReadLock();
+            final boolean release = m_singleComponent.obtainReadLock( "ImmediateComponentHolder.configurationDeleted.1" );
             try
             {
                 m_singleComponent.reconfigure( null );
@@ -197,7 +197,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             {
                 if ( release )
                 {
-                    m_singleComponent.releaseReadLock();
+                    m_singleComponent.releaseReadLock( "ImmediateComponentHolder.configurationDeleted.1" );
                 }
             }
         }
@@ -208,7 +208,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             if ( icm != null )
             {
                 boolean dispose = true;
-                final boolean release = icm.obtainReadLock();
+                final boolean release = icm.obtainReadLock( "ImmediateComponentHolder.configurationDeleted.2" );
                 try
                 {
                     // special casing if the single component is deconfigured
@@ -247,7 +247,7 @@ public class ImmediateComponentHolder implements ComponentHolder
                 {
                     if ( release )
                     {
-                        icm.releaseReadLock();
+                        icm.releaseReadLock( "ImmediateComponentHolder.configurationDeleted.2" );
                     }
                 }
             }
@@ -277,7 +277,7 @@ public class ImmediateComponentHolder implements ComponentHolder
 
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            final boolean release = m_singleComponent.obtainReadLock();
+            final boolean release = m_singleComponent.obtainReadLock( "ImmediateComponentHolder.configurationUpdated.1" );
             try
             {
 // singleton configuration has pid equal to component name
@@ -287,7 +287,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             {
                 if ( release )
                 {
-                    m_singleComponent.releaseReadLock();
+                    m_singleComponent.releaseReadLock( "ImmediateComponentHolder.configurationUpdated.1" );
                 }
             }
         }
@@ -297,7 +297,7 @@ public class ImmediateComponentHolder implements ComponentHolder
             final ImmediateComponentManager icm = getComponentManager( pid );
             if ( icm != null )
             {
-                final boolean release = icm.obtainReadLock();
+                final boolean release = icm.obtainReadLock( "ImmediateComponentHolder.configurationUpdated.2" );
                 try
                 {
                     // factory configuration updated for existing component instance
@@ -307,7 +307,7 @@ public class ImmediateComponentHolder implements ComponentHolder
                 {
                     if ( release )
                     {
-                        icm.releaseReadLock();
+                        icm.releaseReadLock( "ImmediateComponentHolder.configurationUpdated.2" );
                     }
                 }
             }
@@ -327,7 +327,7 @@ public class ImmediateComponentHolder implements ComponentHolder
                 }
 
                 // configure the component
-                final boolean release = newIcm.obtainReadLock();
+                final boolean release = newIcm.obtainReadLock( "ImmediateComponentHolder.configurationUpdated.3" );
                 try
                 {
                     newIcm.reconfigure( props );
@@ -336,7 +336,7 @@ public class ImmediateComponentHolder implements ComponentHolder
                 {
                     if ( release )
                     {
-                        newIcm.releaseReadLock();
+                        newIcm.releaseReadLock( "ImmediateComponentHolder.configurationUpdated.3" );
                     }
                 }
 
