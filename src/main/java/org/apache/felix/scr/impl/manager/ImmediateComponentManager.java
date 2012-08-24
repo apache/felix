@@ -295,20 +295,6 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         // nothing to do, we keep no references on per-Bundle services
     }
 
-
-    /**
-     * Returns the service object to be registered if the service element is
-     * specified.
-     * <p/>
-     * Extensions of this class may overwrite this method to return a
-     * ServiceFactory to register in the case of a delayed or a service
-     * factory component.
-     */
-    protected Object getService()
-    {
-        return this;
-    }
-
     State getSatisfiedState()
     {
         return Registered.getInstance();
