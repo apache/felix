@@ -643,17 +643,14 @@ public abstract class AbstractComponentManager implements Component
     protected abstract void deleteComponent( int reason );
 
     /**
-     * Returns the service object to be registered if the service element is
-     * specified.
-     * <p>
-     * Extensions of this class may overwrite this method to return a
-     * ServiceFactory to register in the case of a delayed or a service
-     * factory component.
+     * All ComponentManagers are ServiceFactory instances
      *
-     * @return
+     * @return this as a ServiceFactory.
      */
-    protected abstract Object getService();
-
+    private Object getService()
+    {
+        return this;
+    }
 
     abstract State getSatisfiedState();
 

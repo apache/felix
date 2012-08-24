@@ -245,12 +245,6 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         return props;
     }
 
-
-    protected Object getService()
-    {
-        return this;
-    }
-
     State getSatisfiedState()
     {
         return Factory.getInstance();
