@@ -674,7 +674,7 @@ public abstract class AbstractComponentManager implements Component
 
     protected void registerService( String[] provides )
     {
-            ServiceRegistration existing = m_serviceRegistration.get();
+        ServiceRegistration existing = m_serviceRegistration.get();
         if ( existing == null )
         {
             log( LogService.LOG_DEBUG, "registering services", null );
@@ -1307,6 +1307,23 @@ public abstract class AbstractComponentManager implements Component
                 return;
             }
 
+            // Before creating the implementation object, we are going to
+            // test if all the mandatory dependencies are satisfied
+            if ( !acm.verifyDependencyManagers( acm.getProperties() ) )
+            {
+                acm.log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
+                return;
+            }
+
+            // Before creating the implementation object, we are going to
+            // test that the bundle has enough permissions to register services
+            if ( !acm.hasServiceRegistrationPermissions() )
+            {
+                acm.log( LogService.LOG_DEBUG, "Component is not permitted to register all services, cannot activate",
+                    null );
+                return;
+            }
+
             // set satisfied state before registering the service because
             // during service registration a listener may try to get the
             // service from the service reference which may cause a
@@ -1318,25 +1335,6 @@ public abstract class AbstractComponentManager implements Component
             // may be accepted.
             final State satisfiedState = acm.getSatisfiedState();
             acm.changeState( satisfiedState );
-
-            // Before creating the implementation object, we are going to
-            // test if all the mandatory dependencies are satisfied
-            if ( !acm.verifyDependencyManagers( acm.getProperties() ) )
-            {
-                acm.log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
-                acm.changeState( Unsatisfied.getInstance() );
-                return;
-            }
-
-            // Before creating the implementation object, we are going to
-            // test that the bundle has enough permissions to register services
-            if ( !acm.hasServiceRegistrationPermissions() )
-            {
-                acm.log( LogService.LOG_DEBUG, "Component is not permitted to register all services, cannot activate",
-                    null );
-                acm.changeState( Unsatisfied.getInstance() );
-                return;
-            }
 
             acm.registerComponentService();
 
