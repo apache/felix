@@ -101,6 +101,7 @@ public abstract class AbstractComponentManager implements Component
 
     private Thread lockingThread;
     private Throwable lockingStackTrace;
+    private ArrayList lockingActivity = new ArrayList( );
 
     /**
      * The constructor receives both the activator and the metadata
@@ -157,8 +158,9 @@ public abstract class AbstractComponentManager implements Component
     }
 
     //ImmediateComponentHolder should be in this manager package and this should be default access.
-    public final boolean obtainReadLock()
+    public final boolean obtainReadLock( String source )
     {
+        lockingActivity.add( "obtainReadLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
         if (m_stateLock.getReadHoldCount() >0)
         {
             return false;
@@ -187,13 +189,28 @@ public abstract class AbstractComponentManager implements Component
     }
 
 
-    public final void releaseReadLock()
+    public final void releaseReadLock( String source )
     {
-        m_stateLock.unlockReadLock();
+        lockingActivity.add( "releaseReadLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+        try
+        {
+            m_stateLock.unlockReadLock();
+        }
+        catch ( IllegalMonitorStateException e )
+        {
+            StringBuffer b = new StringBuffer( "Locking activity before IllegalMonitorStateException: \n" );
+            for (Iterator i = lockingActivity.iterator(); i.hasNext();)
+            {
+                b.append( "  " ).append( i.next() ).append( "\n" );
+            }
+            log( LogService.LOG_ERROR, b.toString(), null );
+            throw e;
+        }
     }
 
-    final void escalateLock()
+    final void escalateLock( String source )
     {
+        lockingActivity.add( "escalateLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
         m_stateLock.unlockReadLock();
         try
         {
@@ -211,8 +228,9 @@ public abstract class AbstractComponentManager implements Component
         }
     }
 
-    final void deescalateLock()
+    final void deescalateLock( String source )
     {
+        lockingActivity.add( "deescalateLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
         m_stateLock.deescalate();
         lockingThread = null;
         lockingStackTrace = null;
@@ -240,7 +258,7 @@ public abstract class AbstractComponentManager implements Component
         {
             b.append( infos[i] ).append( "\n\n" );
         }
-        log( LogService.LOG_INFO, b.toString(), null );
+        log( LogService.LOG_ERROR, b.toString(), null );
     }
 
 //---------- Component ID management
@@ -289,7 +307,7 @@ public abstract class AbstractComponentManager implements Component
 
     public final void enable( final boolean async )
     {
-        final boolean release = obtainReadLock();
+        final boolean release = obtainReadLock( "AbstractComponentManager.enable.1" );
         try
         {
             enableInternal();
@@ -302,7 +320,7 @@ public abstract class AbstractComponentManager implements Component
         {
             if ( release )
             {
-                releaseReadLock();
+                releaseReadLock( "AbstractComponentManager.enable.1" );
             }
         }
 
@@ -312,7 +330,7 @@ public abstract class AbstractComponentManager implements Component
             {
                 public void run()
                 {
-                    final boolean release = obtainReadLock();
+                    final boolean release = obtainReadLock( "AbstractComponentManager.enable.2" );
                     try
                     {
                         activateInternal();
@@ -321,7 +339,7 @@ public abstract class AbstractComponentManager implements Component
                     {
                         if ( release )
                         {
-                            releaseReadLock();
+                            releaseReadLock( "AbstractComponentManager.enable.2" );
                         }
                     }
                 }
@@ -343,7 +361,7 @@ public abstract class AbstractComponentManager implements Component
 
     public final void disable( final boolean async )
     {
-        final boolean release = obtainReadLock();
+        final boolean release = obtainReadLock( "AbstractComponentManager.disable.1" );
         try
         {
             if ( !async )
@@ -356,7 +374,7 @@ public abstract class AbstractComponentManager implements Component
         {
             if ( release )
             {
-                releaseReadLock();
+                releaseReadLock( "AbstractComponentManager.disable.1" );
             }
         }
 
@@ -366,7 +384,7 @@ public abstract class AbstractComponentManager implements Component
             {
                 public void run()
                 {
-                    final boolean release = obtainReadLock();
+                    final boolean release = obtainReadLock( "AbstractComponentManager.disable.2" );
                     try
                     {
                         deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED );
@@ -375,7 +393,7 @@ public abstract class AbstractComponentManager implements Component
                     {
                         if ( release )
                         {
-                            releaseReadLock();
+                            releaseReadLock( "AbstractComponentManager.disable.2" );
                         }
                     }
                 }
@@ -407,7 +425,7 @@ public abstract class AbstractComponentManager implements Component
      */
     public void dispose( int reason )
     {
-        final boolean release = obtainReadLock();
+        final boolean release = obtainReadLock( "AbstractComponentManager.dispose.1" );
         try
         {
             disposeInternal( reason );
@@ -416,7 +434,7 @@ public abstract class AbstractComponentManager implements Component
         {
             if ( release )
             {
-                releaseReadLock();
+                releaseReadLock( "AbstractComponentManager.dispose.1" );
             }
         }
     }
@@ -1168,7 +1186,7 @@ public abstract class AbstractComponentManager implements Component
             try
             {
                 acm.unregisterComponentService();
-                acm.escalateLock();
+                acm.escalateLock( "AbstractComponentManager.State.doDeactivate.1" );
                 try
                 {
                     acm.deleteComponent( reason );
@@ -1176,7 +1194,7 @@ public abstract class AbstractComponentManager implements Component
                 }
                 finally
                 {
-                    acm.deescalateLock();
+                    acm.deescalateLock( "AbstractComponentManager.State.doDeactivate.1" );
                 }
             }
             catch ( Throwable t )
@@ -1328,7 +1346,7 @@ public abstract class AbstractComponentManager implements Component
             // 4. Call the activate method, if present
             if ( ( acm.isImmediate() || acm.getComponentMetadata().isFactory() ) )
             {
-                acm.escalateLock();
+                acm.escalateLock( "AbstractComponentManager.Unsatisifed.activate.1" );
                 try
                 {
                     if ( acm.isImmediate() )
@@ -1344,7 +1362,7 @@ public abstract class AbstractComponentManager implements Component
                 }
                 finally
                 {
-                    acm.deescalateLock();
+                    acm.deescalateLock( "AbstractComponentManager.Unsatisifed.activate.1" );
                 }
 
             }

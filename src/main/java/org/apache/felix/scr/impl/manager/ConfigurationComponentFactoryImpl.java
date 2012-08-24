@@ -139,7 +139,7 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
         }
         else   //non-spec backwards compatible
         {
-            final boolean release = obtainReadLock();
+            final boolean release = obtainReadLock( "ConfigurationComponentFactoryImpl.newInstance.1" );
             try
             {
                 ImmediateComponentManager cm;
@@ -178,7 +178,7 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
                 {
                     // update the configuration as if called as ManagedService
                     //TODO deadlock potential, we are holding our own state lock.
-                    final boolean releaseInner = cm.obtainReadLock();
+                    final boolean releaseInner = cm.obtainReadLock( "ConfigurationComponentFactoryImpl.newInstance.2" );
                     try
                     {
                         cm.reconfigure( configuration );
@@ -187,7 +187,7 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
                     {
                         if ( releaseInner )
                         {
-                            cm.releaseReadLock();
+                            cm.releaseReadLock( "ConfigurationComponentFactoryImpl.newInstance.2" );
                         }
                     }
                 }
@@ -196,7 +196,7 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
             {
                 if ( release )
                 {
-                    releaseReadLock();
+                    releaseReadLock( "ConfigurationComponentFactoryImpl.newInstance.1" );
                 }
             }
         }
