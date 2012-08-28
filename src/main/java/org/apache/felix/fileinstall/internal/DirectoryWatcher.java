@@ -481,17 +481,20 @@ public class DirectoryWatcher extends Thread implements BundleListener
         Collection uninstalledBundles = uninstall(deleted);
         Collection updatedBundles = update(modified);
         Collection installedBundles = install(created);
-        
-        Set toRefresh = new HashSet();
-        toRefresh.addAll( uninstalledBundles );
-        toRefresh.addAll(updatedBundles);
-        toRefresh.addAll( installedBundles );
-        findBundlesWithFragmentsToRefresh( toRefresh );
-        findBundlesWithOptionalPackagesToRefresh( toRefresh );
-        if (toRefresh.size() > 0)
+
+        if (!uninstalledBundles.isEmpty() || !updatedBundles.isEmpty() || !installedBundles.isEmpty())
         {
-            // Refresh if any bundle got uninstalled or updated.
-            refresh((Bundle[]) toRefresh.toArray(new Bundle[toRefresh.size()]));
+            Set toRefresh = new HashSet();
+            toRefresh.addAll(uninstalledBundles);
+            toRefresh.addAll(updatedBundles);
+            toRefresh.addAll(installedBundles);
+            findBundlesWithFragmentsToRefresh(toRefresh);
+            findBundlesWithOptionalPackagesToRefresh(toRefresh);
+            if (toRefresh.size() > 0)
+            {
+                // Refresh if any bundle got uninstalled or updated.
+                refresh((Bundle[]) toRefresh.toArray(new Bundle[toRefresh.size()]));
+            }
         }
 
         if (startBundles)
