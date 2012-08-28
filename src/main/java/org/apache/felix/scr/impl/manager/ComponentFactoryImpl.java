@@ -250,6 +250,11 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         return Factory.getInstance();
     }
 
+    State getActiveState()
+    {
+        return Factory.getInstance();
+    }
+
     //---------- Component interface
 
 
@@ -396,7 +401,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
             super( activator, componentHolder, metadata );
         }
 
-        State getSatisfiedState()
+        State getActiveState()
         {
             return FactoryInstance.getInstance();
         }

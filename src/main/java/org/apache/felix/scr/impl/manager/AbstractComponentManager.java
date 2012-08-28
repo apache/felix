@@ -654,6 +654,8 @@ public abstract class AbstractComponentManager implements Component
 
     abstract State getSatisfiedState();
 
+    abstract State getActiveState();
+
     /**
      * Registers the service on behalf of the component.
      *
@@ -1344,10 +1346,7 @@ public abstract class AbstractComponentManager implements Component
                 acm.escalateLock( "AbstractComponentManager.Unsatisifed.activate.1" );
                 try
                 {
-                    if ( acm.isImmediate() )
-                    {
-                        acm.changeState( Active.getInstance() );
-                    }
+                    acm.changeState( acm.getActiveState() );
                     if ( !acm.createComponent() )
                     {
                         // component creation failed, not active now
@@ -1549,16 +1548,15 @@ public abstract class AbstractComponentManager implements Component
      * deactivated due to not being satisified any longer. See section 112.5.5,
      * Factory Component, for full details.
      */
-    protected static final class FactoryInstance extends Satisfied//Registered
+    protected static final class FactoryInstance extends Satisfied
     {
         private static final FactoryInstance m_inst = new FactoryInstance();
 
 
         private FactoryInstance()
         {
-            super( "Active", STATE_ACTIVE );
+            super("FactoryInstance", STATE_ACTIVE);
         }
-
 
         static State getInstance()
         {
@@ -1567,35 +1565,18 @@ public abstract class AbstractComponentManager implements Component
 
         Object getService( ImmediateComponentManager dcm )
         {
-            if ( dcm.createComponent() )
-            {
-                dcm.changeState( Active.getInstance() );
-                return dcm.getInstance();
-            }
+            return dcm.getInstance();
+        }
 
-            // log that the delayed component cannot be created (we don't
-            // know why at this moment; this should already have been logged)
-            dcm.log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
 
-            // component could not really be created. This may be temporary
-            // so we stay in the registered state but ensure the component
-            // instance is deleted
-            try
-            {
-                dcm.deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
-            }
-            catch ( Throwable t )
-            {
-                dcm.log( LogService.LOG_DEBUG, "Cannot delete incomplete component instance. Ignoring.", t );
-            }
-
-            // no service can be returned (be prepared for more logging !!)
-            return null;
+        void ungetService( ImmediateComponentManager dcm )
+        {
+            dcm.deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
+            dcm.changeState( Registered.getInstance() );
         }
 
         void deactivate( AbstractComponentManager acm, int reason )
         {
-            acm.changeState( Active.getInstance() );
             acm.disposeInternal( reason );
         }
     }
@@ -1636,7 +1617,7 @@ public abstract class AbstractComponentManager implements Component
 
         void dispose( AbstractComponentManager acm )
         {
-            throw new IllegalStateException( "dispose: " + this );
+            //factory instance can have dispose called with no effect. 112.5.5
         }
 
         void enable( AbstractComponentManager acm )
