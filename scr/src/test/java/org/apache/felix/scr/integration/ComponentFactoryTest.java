@@ -512,10 +512,10 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertNull( instanceNonMatch.getInstance() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        //FactoryInstance.deactivate disposes the instance.  Don't do it again
-//        instanceNonMatch.dispose();
-//        TestCase.assertNull( SimpleComponent.INSTANCE );
-//        TestCase.assertNull( instanceNonMatch.getInstance() ); // SCR 112.12.6.2
+        //Check that calling dispose on a deactivated instance has no effect
+        instanceNonMatch.dispose();
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+        TestCase.assertNull( instanceNonMatch.getInstance() ); // SCR 112.12.6.2
     }
 
     @Test

@@ -300,6 +300,11 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         return Registered.getInstance();
     }
 
+    State getActiveState()
+    {
+        return Active.getInstance();
+    }
+
     protected void setFactoryProperties( Dictionary dictionary )
     {
         m_factoryProperties = copyTo( null, dictionary );
