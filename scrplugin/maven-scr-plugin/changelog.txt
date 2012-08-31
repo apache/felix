@@ -9,6 +9,10 @@ Changes from 1.7.4 to 1.8.0
 ** Bug
     * [FELIX-3571] - "Comparison method violates general contract!" error in maven-scr-plugin
     * [FELIX-3555] - Maven SCR Plugin shoudn't attempt to run on modules of type POM
+    * [FELIX-3269] - @Property is not properly parsed.
+    * [FELIX-3189] - Mixing full-qualified Reference annotations and imported one results in no References exported to seviceComponents.xml
+    * [FELIX-3606] - SCR Plugin: build failure on wildcard imports (e.g. java.util.*)
+    * [FELIX-3234] - @Property annotation raises exceptions on longValue=0L use 
 
 ** Improvement
     * [FELIX-2689] - Upgrade Descriptor generator to new parent POM and adapt legal files
