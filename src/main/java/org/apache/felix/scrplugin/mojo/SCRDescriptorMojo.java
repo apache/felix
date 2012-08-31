@@ -47,6 +47,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
  * The <code>SCRDescriptorMojo</code> generates a service descriptor file based
@@ -174,6 +175,11 @@ public class SCRDescriptorMojo extends AbstractMojo {
     private List<String> supportedProjectTypes = Arrays.asList( new String[]
         { "jar", "bundle" } );
 
+    /**
+     * @component
+     */
+    private BuildContext buildContext;
+
     public void execute() throws MojoExecutionException, MojoFailureException {
         final String projectType = project.getArtifact().getType();
 
@@ -189,6 +195,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         // create project
         final MavenProjectScanner scanner = new MavenProjectScanner(
+                        this.buildContext,
                 this.project, this.sourceIncludes, this.sourceExcludes, scrLog);
 
         final Project project = new Project();
@@ -227,11 +234,26 @@ public class SCRDescriptorMojo extends AbstractMojo {
             this.setServiceComponentHeader(result.getScrFiles());
             this.updateProjectResources();
 
+            // refreshing the target files does not seem to be the right thing
+            //this.updateBuildContext(result);
         } catch (final SCRDescriptorException sde) {
             throw new MojoExecutionException(sde.getSourceLocation() + " : " + sde.getMessage(), sde);
         } catch (final SCRDescriptorFailureException sdfe) {
             throw (MojoFailureException) new MojoFailureException(
                     sdfe.getMessage()).initCause(sdfe);
+        }
+    }
+
+    private void updateBuildContext(final Result result) {
+        if ( result.getMetatypeFiles() != null ) {
+            for(final String name : result.getMetatypeFiles() ) {
+                this.buildContext.refresh(new File(this.outputDirectory, name.replace('/', File.separatorChar)));
+            }
+        }
+        if ( result.getScrFiles() != null ) {
+            for(final String name : result.getScrFiles() ) {
+                this.buildContext.refresh(new File(this.outputDirectory, name.replace('/', File.separatorChar)));
+            }
         }
     }
 
