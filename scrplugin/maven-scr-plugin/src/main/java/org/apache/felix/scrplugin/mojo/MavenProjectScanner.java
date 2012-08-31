@@ -29,7 +29,8 @@ import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.Source;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.DirectoryScanner;
+import org.codehaus.plexus.util.Scanner;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 
 public class MavenProjectScanner {
@@ -42,7 +43,10 @@ public class MavenProjectScanner {
 
     private final Log log;
 
-    public MavenProjectScanner( final MavenProject project,
+    private final BuildContext buildContext;
+
+    public MavenProjectScanner( final BuildContext buildContext,
+            final MavenProject project,
             final String includeString,
             final String excludeString,
             final Log log) {
@@ -50,6 +54,7 @@ public class MavenProjectScanner {
         this.includeString = includeString;
         this.excludeString = excludeString;
         this.log = log;
+        this.buildContext = buildContext;
     }
 
     /**
@@ -82,8 +87,7 @@ public class MavenProjectScanner {
                 continue;
             }
             log.debug( "Scanning source tree " + tree );
-            final DirectoryScanner scanner = new DirectoryScanner();
-            scanner.setBasedir( directory );
+            final Scanner scanner = this.buildContext.newScanner(directory, false);
 
             if ( excludes != null && excludes.length > 0 ) {
                 scanner.setExcludes( excludes );
