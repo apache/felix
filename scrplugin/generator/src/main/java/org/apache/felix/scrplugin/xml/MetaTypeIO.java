@@ -29,10 +29,9 @@ import org.apache.felix.scrplugin.Options;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.helper.ComponentContainer;
 import org.apache.felix.scrplugin.helper.DescriptionContainer;
+import org.apache.felix.scrplugin.helper.MetatypeAttributeDefinition;
+import org.apache.felix.scrplugin.helper.MetatypeContainer;
 import org.apache.felix.scrplugin.helper.StringUtils;
-import org.apache.felix.scrplugin.om.metatype.AttributeDefinition;
-import org.apache.felix.scrplugin.om.metatype.Designate;
-import org.apache.felix.scrplugin.om.metatype.OCD;
 import org.osgi.service.metatype.MetaTypeService;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -77,7 +76,7 @@ public class MetaTypeIO {
     throws SCRDescriptorException {
         int metatypeCount = 0;
         for(final ComponentContainer component : module.getComponents()) {
-            if ( component.getOCD() != null ) {
+            if ( component.getMetatypeContainer() != null ) {
                 metatypeCount++;
             }
         }
@@ -134,9 +133,9 @@ public class MetaTypeIO {
         IOUtils.newline(contentHandler);
 
         for(final ComponentContainer comp : metaData.getComponents()) {
-            if ( comp.getOCD() != null ) {
-                generateXML(comp.getOCD(), contentHandler);
-                generateXML(comp.getDesignate(), contentHandler);
+            if ( comp.getMetatypeContainer() != null ) {
+                generateOCDXML(comp.getMetatypeContainer(), contentHandler);
+                generateDesignateXML(comp.getMetatypeContainer(), contentHandler);
             }
         }
 
@@ -147,7 +146,7 @@ public class MetaTypeIO {
         contentHandler.endDocument();
     }
 
-    private static void generateXML(OCD ocd, ContentHandler contentHandler)
+    private static void generateOCDXML(final MetatypeContainer ocd, final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "id", ocd.getId());
@@ -158,10 +157,10 @@ public class MetaTypeIO {
 
         if ( ocd.getProperties().size() > 0 ) {
             IOUtils.newline(contentHandler);
-            final Iterator<AttributeDefinition> i = ocd.getProperties().iterator();
+            final Iterator<MetatypeAttributeDefinition> i = ocd.getProperties().iterator();
             while ( i.hasNext() ) {
-                final AttributeDefinition ad = i.next();
-                generateXML(ad, contentHandler);
+                final MetatypeAttributeDefinition ad = i.next();
+                generateAttributeXML(ad, contentHandler);
             }
             IOUtils.indent(contentHandler, 1);
         }
@@ -170,7 +169,7 @@ public class MetaTypeIO {
         IOUtils.newline(contentHandler);
     }
 
-    private static void generateXML(AttributeDefinition ad, ContentHandler contentHandler)
+    private static void generateAttributeXML(final MetatypeAttributeDefinition ad, final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "id", ad.getId());
@@ -212,10 +211,10 @@ public class MetaTypeIO {
         IOUtils.newline(contentHandler);
     }
 
-    private static void generateXML(final Designate designate, final ContentHandler contentHandler)
+    private static void generateDesignateXML(final MetatypeContainer designate, final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "pid", designate.getPid());
+        IOUtils.addAttribute(ai, "pid", designate.getId());
         IOUtils.addAttribute(ai, "factoryPid", designate.getFactoryPid());
         IOUtils.indent(contentHandler, 1);
         contentHandler.startElement(INNER_NAMESPACE_URI, DESIGNATE_ELEMENT, DESIGNATE_ELEMENT_QNAME, ai);
@@ -228,10 +227,10 @@ public class MetaTypeIO {
         IOUtils.newline(contentHandler);
     }
 
-    private static void generateObjectXML(final Designate obj, final ContentHandler contentHandler)
+    private static void generateObjectXML(final MetatypeContainer obj, final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "ocdref", obj.getPid());
+        IOUtils.addAttribute(ai, "ocdref", obj.getId());
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, OBJECT_ELEMENT, OBJECT_ELEMENT_QNAME, ai);
         contentHandler.endElement(INNER_NAMESPACE_URI, OBJECT_ELEMENT, OBJECT_ELEMENT_QNAME);
