@@ -46,13 +46,10 @@ import org.apache.felix.scrplugin.helper.StringUtils;
 import org.apache.felix.scrplugin.helper.Validator;
 import org.apache.felix.scrplugin.om.metatype.AttributeDefinition;
 import org.apache.felix.scrplugin.om.metatype.Designate;
-import org.apache.felix.scrplugin.om.metatype.MTObject;
-import org.apache.felix.scrplugin.om.metatype.MetaData;
 import org.apache.felix.scrplugin.om.metatype.OCD;
 import org.apache.felix.scrplugin.xml.ComponentDescriptorIO;
 import org.apache.felix.scrplugin.xml.MetaTypeIO;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.metatype.MetaTypeService;
 
 /**
  * The <code>SCRDescriptorGenerator</code> class does the hard work of
@@ -152,10 +149,6 @@ public class SCRDescriptorGenerator {
         this.scanner = new ClassScanner(logger, iLog, project, aProcessor);
         final List<ClassDescription> scannedDescriptions = scanner.scanSources();
 
-        // setup metadata
-        final MetaData metaData = new MetaData();
-        metaData.setLocalization(MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype");
-
         final List<ComponentContainer> processedContainers = new ArrayList<ComponentContainer>();
         for (final ClassDescription desc : scannedDescriptions) {
             this.logger.debug("Processing component class " + desc.getSource());
@@ -166,7 +159,7 @@ public class SCRDescriptorGenerator {
                              " Check the annotations and merge the definitions to a single definition.",
                                 desc.getSource());
             } else {
-                final ComponentContainer container = this.createComponent(desc, metaData, iLog);
+                final ComponentContainer container = this.createComponent(desc, iLog);
                 if (container.getComponentDescription().getSpecVersion() != null) {
                     if ( specVersion == null ) {
                         specVersion = container.getComponentDescription().getSpecVersion();
@@ -275,7 +268,7 @@ public class SCRDescriptorGenerator {
         // create result and generate files
         final Result result = new Result();
 
-        result.setMetatypeFiles(MetaTypeIO.generateDescriptors(metaData, this.options, this.logger));
+        result.setMetatypeFiles(MetaTypeIO.generateDescriptors(module, this.options, this.logger));
         result.setScrFiles(ComponentDescriptorIO.generateDescriptorFiles(module, this.options, logger));
 
         return result;
@@ -285,7 +278,6 @@ public class SCRDescriptorGenerator {
      * Create the SCR objects based on the descriptions
      */
     private ComponentContainer createComponent(final ClassDescription desc,
-                    final MetaData metaData,
                     final IssueLog iLog) {
         final ComponentDescription componentDesc = desc.getDescription(ComponentDescription.class);
 
@@ -294,12 +286,14 @@ public class SCRDescriptorGenerator {
             componentDesc.setSpecVersion(SpecVersion.VERSION_1_2);
         }
 
+        final ComponentContainer container = new ComponentContainer(desc, componentDesc);
+
         // Create metatype (if required)
         final OCD ocd;
         if ( !componentDesc.isAbstract() && componentDesc.isCreateMetatype() ) {
             // OCD
             ocd = new OCD();
-            metaData.addOCD( ocd );
+            container.setOCD( ocd );
             ocd.setId( componentDesc.getName() );
             if ( componentDesc.getLabel() != null ) {
                 ocd.setName( componentDesc.getLabel() );
@@ -314,7 +308,7 @@ public class SCRDescriptorGenerator {
 
             // Designate
             final Designate designate = new Designate();
-            metaData.addDesignate( designate );
+            container.setDesignate( designate );
             designate.setPid( componentDesc.getName() );
 
             // Factory pid
@@ -326,15 +320,9 @@ public class SCRDescriptorGenerator {
                         + " should not set metatype factory pid.", desc.getSource() );
                 }
             }
-            // MTObject
-            final MTObject mtobject = new MTObject();
-            designate.setObject( mtobject );
-            mtobject.setOcdref( componentDesc.getName() );
         } else {
             ocd = null;
         }
-
-        final ComponentContainer container = new ComponentContainer(desc, componentDesc);
 
         ClassDescription current = desc;
         boolean inherit;

@@ -24,8 +24,6 @@ public class Designate {
 
     protected String factoryPid;
 
-    protected MTObject object;
-
     public String getPid() {
         return this.pid;
     }
@@ -40,13 +38,5 @@ public class Designate {
 
     public void setFactoryPid(String pid) {
         this.factoryPid = pid;
-    }
-
-    public MTObject getObject() {
-        return this.object;
-    }
-
-    public void setObject(MTObject object) {
-        this.object = object;
     }
 }

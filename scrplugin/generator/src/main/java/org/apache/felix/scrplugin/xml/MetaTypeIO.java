@@ -27,12 +27,13 @@ import java.util.Map;
 import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.Options;
 import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.helper.ComponentContainer;
+import org.apache.felix.scrplugin.helper.DescriptionContainer;
 import org.apache.felix.scrplugin.helper.StringUtils;
 import org.apache.felix.scrplugin.om.metatype.AttributeDefinition;
 import org.apache.felix.scrplugin.om.metatype.Designate;
-import org.apache.felix.scrplugin.om.metatype.MTObject;
-import org.apache.felix.scrplugin.om.metatype.MetaData;
 import org.apache.felix.scrplugin.om.metatype.OCD;
+import org.osgi.service.metatype.MetaTypeService;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -70,30 +71,42 @@ public class MetaTypeIO {
     private static final String OPTION_ELEMENT = "Option";
     private static final String OPTION_ELEMENT_QNAME = OPTION_ELEMENT;
 
-    public static List<String> generateDescriptors(final MetaData metaData, final Options options, final Log logger)
+    public static List<String> generateDescriptors(final DescriptionContainer module,
+                    final Options options,
+                    final Log logger)
     throws SCRDescriptorException {
+        int metatypeCount = 0;
+        for(final ComponentContainer component : module.getComponents()) {
+            if ( component.getOCD() != null ) {
+                metatypeCount++;
+            }
+        }
         // write meta type info if there is a file name
         if (!StringUtils.isEmpty(options.getMetaTypeName())) {
-            final String path = "OSGI-INF" + File.separator + "metatype" + File.separator + options.getMetaTypeName();
-            final File mtFile = new File(options.getOutputDirectory(), path);
-            final int size = metaData.getOCDs().size() + metaData.getDesignates().size();
-            if (size > 0) {
-                logger.info("Generating " + size + " MetaType Descriptors to " + mtFile);
+            final File parentDir = new File(options.getOutputDirectory(), "OSGI-INF");
+            final File mtDir = new File(parentDir, "metatype");
+
+            final File mtFile = new File(mtDir, options.getMetaTypeName());
+
+            if (metatypeCount > 0) {
+                logger.info("Generating " + metatypeCount + " MetaType Descriptors to " + mtFile);
                 mtFile.getParentFile().mkdirs();
-                MetaTypeIO.write(metaData, mtFile);
-                return Collections.singletonList(path.replace(File.separatorChar, '/'));
+                MetaTypeIO.write(module, mtFile);
+                return Collections.singletonList(parentDir.getName() + '/' + mtDir.getName() + '/' + mtFile.getName());
             }
             if (mtFile.exists()) {
                 mtFile.delete();
             }
 
         } else {
-            logger.info("Meta type file name is not set: meta type info is not written.");
+            if ( metatypeCount > 0 ) {
+                logger.info("Meta type file name is not set: meta type info is not written.");
+            }
         }
         return null;
     }
 
-    private static void write(final MetaData metaData, final File file)
+    private static void write(final DescriptionContainer metaData, final File file)
     throws SCRDescriptorException {
         try {
             generateXML(metaData, IOUtils.getSerializer(file));
@@ -109,22 +122,22 @@ public class MetaTypeIO {
      * @param contentHandler
      * @throws SAXException
      */
-    private static void generateXML(final MetaData metaData, final ContentHandler contentHandler)
+    private static void generateXML(final DescriptionContainer metaData, final ContentHandler contentHandler)
     throws SAXException {
         contentHandler.startDocument();
         contentHandler.startPrefixMapping(PREFIX, NAMESPACE_URI);
 
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "localization", metaData.getLocalization());
+        IOUtils.addAttribute(ai, "localization", MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype");
 
         contentHandler.startElement(NAMESPACE_URI, METADATA_ELEMENT, METADATA_ELEMENT_QNAME, ai);
         IOUtils.newline(contentHandler);
 
-        for(final OCD ocd : metaData.getOCDs()) {
-            generateXML(ocd, contentHandler);
-        }
-        for(final Designate d : metaData.getDesignates()) {
-            generateXML(d, contentHandler);
+        for(final ComponentContainer comp : metaData.getComponents()) {
+            if ( comp.getOCD() != null ) {
+                generateXML(comp.getOCD(), contentHandler);
+                generateXML(comp.getDesignate(), contentHandler);
+            }
         }
 
         // end wrapper element
@@ -199,7 +212,7 @@ public class MetaTypeIO {
         IOUtils.newline(contentHandler);
     }
 
-    private static void generateXML(Designate designate, ContentHandler contentHandler)
+    private static void generateXML(final Designate designate, final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "pid", designate.getPid());
@@ -208,17 +221,17 @@ public class MetaTypeIO {
         contentHandler.startElement(INNER_NAMESPACE_URI, DESIGNATE_ELEMENT, DESIGNATE_ELEMENT_QNAME, ai);
         IOUtils.newline(contentHandler);
 
-        generateXML(designate.getObject(), contentHandler);
+        generateObjectXML(designate, contentHandler);
 
         IOUtils.indent(contentHandler, 1);
         contentHandler.endElement(INNER_NAMESPACE_URI, DESIGNATE_ELEMENT, DESIGNATE_ELEMENT_QNAME);
         IOUtils.newline(contentHandler);
     }
 
-    private static void generateXML(MTObject obj, ContentHandler contentHandler)
+    private static void generateObjectXML(final Designate obj, final ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "ocdref", obj.getOcdref());
+        IOUtils.addAttribute(ai, "ocdref", obj.getPid());
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, OBJECT_ELEMENT, OBJECT_ELEMENT_QNAME, ai);
         contentHandler.endElement(INNER_NAMESPACE_URI, OBJECT_ELEMENT, OBJECT_ELEMENT_QNAME);
