@@ -18,9 +18,7 @@
  */
 package org.apache.felix.scrplugin;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -274,32 +272,11 @@ public class SCRDescriptorGenerator {
             throw new SCRDescriptorFailureException("SCR Descriptor parsing had failures (see log)");
         }
 
+        // create result and generate files
         final Result result = new Result();
-        // write meta type info if there is a file name
-        if (!StringUtils.isEmpty(this.options.getMetaTypeName())) {
-            final String path = "OSGI-INF" + File.separator + "metatype" + File.separator + this.options.getMetaTypeName();
-            final File mtFile = new File(this.options.getOutputDirectory(), path);
-            final int size = metaData.getOCDs().size() + metaData.getDesignates().size();
-            if (size > 0) {
-                this.logger.info("Generating " + size + " MetaType Descriptors to " + mtFile);
-                mtFile.getParentFile().mkdirs();
-                MetaTypeIO.write(metaData, mtFile);
-                result.setMetatypeFiles(Collections.singletonList(path.replace(File.separatorChar, '/')));
-            } else {
-                if (mtFile.exists()) {
-                    mtFile.delete();
-                }
-            }
 
-        } else {
-            this.logger.info("Meta type file name is not set: meta type info is not written.");
-        }
-
-        // check descriptor file
-        final List<String> descriptorFiles = ComponentDescriptorIO.generateDescriptorFiles(module, this.options, logger);
-        if ( descriptorFiles != null ) {
-            result.setScrFiles(descriptorFiles);
-        }
+        result.setMetatypeFiles(MetaTypeIO.generateDescriptors(metaData, this.options, this.logger));
+        result.setScrFiles(ComponentDescriptorIO.generateDescriptorFiles(module, this.options, logger));
 
         return result;
     }
