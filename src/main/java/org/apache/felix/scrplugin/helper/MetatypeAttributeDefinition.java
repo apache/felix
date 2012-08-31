@@ -16,29 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.om.metatype;
+package org.apache.felix.scrplugin.helper;
 
 import java.util.Map;
 
-public class AttributeDefinition {
+public class MetatypeAttributeDefinition {
 
-    public static final String DEFAULT_TYPE = "String";
+    private static final String DEFAULT_TYPE = "String";
 
-    protected String id;
+    private String id;
 
-    protected String type = DEFAULT_TYPE;
+    private String type = DEFAULT_TYPE;
 
-    protected String defaultValue;
+    private String defaultValue;
 
-    protected String name;
+    private String name;
 
-    protected String[] defaultMultiValue;
+    private String[] defaultMultiValue;
 
-    protected String description;
+    private String description;
 
-    protected Integer cardinality;
+    private Integer cardinality;
 
-    protected Map<String, String> options;
+    private Map<String, String> options;
 
     public String getId() {
         return this.id;

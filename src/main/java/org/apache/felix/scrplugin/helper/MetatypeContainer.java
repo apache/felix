@@ -16,20 +16,49 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scrplugin.om.metatype;
+package org.apache.felix.scrplugin.helper;
 
-public class Designate {
+import java.util.ArrayList;
+import java.util.List;
 
-    protected String pid;
+public class MetatypeContainer {
 
-    protected String factoryPid;
+    private String id;
 
-    public String getPid() {
-        return this.pid;
+    private String name;
+
+    private String description;
+
+    private String factoryPid;
+
+    private final List<MetatypeAttributeDefinition> properties = new ArrayList<MetatypeAttributeDefinition>();
+
+    public String getId() {
+        return this.id;
     }
 
-    public void setPid(String pid) {
-        this.pid = pid;
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public List<MetatypeAttributeDefinition> getProperties() {
+        return this.properties;
     }
 
     public String getFactoryPid() {

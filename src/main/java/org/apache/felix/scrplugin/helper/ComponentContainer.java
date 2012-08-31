@@ -26,8 +26,6 @@ import org.apache.felix.scrplugin.description.ComponentDescription;
 import org.apache.felix.scrplugin.description.PropertyDescription;
 import org.apache.felix.scrplugin.description.ReferenceDescription;
 import org.apache.felix.scrplugin.description.ServiceDescription;
-import org.apache.felix.scrplugin.om.metatype.Designate;
-import org.apache.felix.scrplugin.om.metatype.OCD;
 
 
 /**
@@ -56,11 +54,8 @@ public class ComponentContainer {
     /** All properties. */
     private final Map<String, PropertyDescription> allProperties = new LinkedHashMap<String, PropertyDescription>();
 
-    /** Metatype: OCD. */
-    private OCD ocd;
-
-    /** Metatype: Designate. */
-    private Designate designate;
+    /** Metatype container. */
+    private MetatypeContainer metatype;
 
     /**
      * Create a new component container
@@ -132,19 +127,11 @@ public class ComponentContainer {
                         + allProperties + "]";
     }
 
-    public OCD getOCD() {
-        return ocd;
+    public MetatypeContainer getMetatypeContainer() {
+        return this.metatype;
     }
 
-    public void setOCD(final OCD ocd) {
-        this.ocd = ocd;
-    }
-
-    public Designate getDesignate() {
-        return designate;
-    }
-
-    public void setDesignate(final Designate designate) {
-        this.designate = designate;
+    public void setMetatypeContainer(final MetatypeContainer ocd) {
+        this.metatype = ocd;
     }
 }

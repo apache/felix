@@ -42,11 +42,10 @@ import org.apache.felix.scrplugin.helper.ClassScanner;
 import org.apache.felix.scrplugin.helper.ComponentContainer;
 import org.apache.felix.scrplugin.helper.DescriptionContainer;
 import org.apache.felix.scrplugin.helper.IssueLog;
+import org.apache.felix.scrplugin.helper.MetatypeAttributeDefinition;
+import org.apache.felix.scrplugin.helper.MetatypeContainer;
 import org.apache.felix.scrplugin.helper.StringUtils;
 import org.apache.felix.scrplugin.helper.Validator;
-import org.apache.felix.scrplugin.om.metatype.AttributeDefinition;
-import org.apache.felix.scrplugin.om.metatype.Designate;
-import org.apache.felix.scrplugin.om.metatype.OCD;
 import org.apache.felix.scrplugin.xml.ComponentDescriptorIO;
 import org.apache.felix.scrplugin.xml.MetaTypeIO;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -289,11 +288,11 @@ public class SCRDescriptorGenerator {
         final ComponentContainer container = new ComponentContainer(desc, componentDesc);
 
         // Create metatype (if required)
-        final OCD ocd;
+        final MetatypeContainer ocd;
         if ( !componentDesc.isAbstract() && componentDesc.isCreateMetatype() ) {
             // OCD
-            ocd = new OCD();
-            container.setOCD( ocd );
+            ocd = new MetatypeContainer();
+            container.setMetatypeContainer( ocd );
             ocd.setId( componentDesc.getName() );
             if ( componentDesc.getLabel() != null ) {
                 ocd.setName( componentDesc.getLabel() );
@@ -306,15 +305,10 @@ public class SCRDescriptorGenerator {
                 ocd.setDescription( "%" + componentDesc.getName() + ".description");
             }
 
-            // Designate
-            final Designate designate = new Designate();
-            container.setDesignate( designate );
-            designate.setPid( componentDesc.getName() );
-
             // Factory pid
             if ( componentDesc.isSetMetatypeFactoryPid() ) {
                 if ( componentDesc.getFactory() == null ) {
-                    designate.setFactoryPid( componentDesc.getName() );
+                    ocd.setFactoryPid( componentDesc.getName() );
                 } else {
                     iLog.addWarning( "Component factory " + componentDesc.getName()
                         + " should not set metatype factory pid.", desc.getSource() );
@@ -424,7 +418,7 @@ public class SCRDescriptorGenerator {
     private void processProperties(
                     final ClassDescription current,
                     final ComponentContainer component,
-                    final OCD ocd) {
+                    final MetatypeContainer ocd) {
         for(final PropertyDescription pd : current.getDescriptions(PropertyDescription.class)) {
 
             if ( this.testProperty(current, component.getProperties(), pd, current == component.getClassDescription()) && ocd != null) {
@@ -448,7 +442,7 @@ public class SCRDescriptorGenerator {
                     }
                 }
                 if ( !isPrivate ) {
-                    final AttributeDefinition ad = new AttributeDefinition();
+                    final MetatypeAttributeDefinition ad = new MetatypeAttributeDefinition();
                     ocd.getProperties().add(ad);
                     ad.setId(pd.getName());
                     ad.setType(pd.getType().name());
