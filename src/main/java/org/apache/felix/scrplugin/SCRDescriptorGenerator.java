@@ -248,12 +248,7 @@ public class SCRDescriptorGenerator {
 
             // ignore component if it has errors
             if (iLog.getNumberOfErrors() == errorCount) {
-                if (!container.getComponentDescription().isCreateDs()) {
-                    logger.debug("Ignoring descriptor for DS : " + container);
-                } else if (!container.getComponentDescription().isAbstract()) {
-                    this.logger.debug("Adding descriptor for DS : " + container);
-                    module.add(container);
-                }
+                module.add(container);
             }
         }
         // log issues

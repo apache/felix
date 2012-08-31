@@ -709,12 +709,22 @@ public class ComponentDescriptorIO {
      */
     public static List<String> generateDescriptorFiles(final DescriptionContainer module, final Options options, final Log logger)
     throws SCRDescriptorException, SCRDescriptorFailureException {
+        final List<ComponentContainer> components = new ArrayList<ComponentContainer>();
+        for(final ComponentContainer container : module.getComponents()) {
+            if (!container.getComponentDescription().isCreateDs()) {
+                logger.debug("Ignoring descriptor for DS : " + container);
+            } else if (!container.getComponentDescription().isAbstract()) {
+                logger.debug("Adding descriptor for DS : " + container);
+                components.add(container);
+            }
+        }
+
         // check descriptor file
         final File descriptorDir = new File(options.getOutputDirectory(), PARENT_NAME);
         final File descriptorFile = StringUtils.isEmpty(options.getSCRName()) ? null : new File(descriptorDir, options.getSCRName());
 
         // terminate if there is nothing else to write
-        if (module.getComponents().isEmpty()) {
+        if (components.isEmpty()) {
             logger.debug("No Service Component Descriptors found in project.");
             // remove file if it exists
             if (descriptorFile != null && descriptorFile.exists()) {
@@ -729,7 +739,7 @@ public class ComponentDescriptorIO {
 
         final List<String> fileNames = new ArrayList<String>();
         if ( options.isGenerateSeparateDescriptors() ) {
-            for(final ComponentContainer component : module.getComponents() ) {
+            for(final ComponentContainer component : components ) {
                 final File file = new File(descriptorDir, component.getClassDescription().getDescribedClass().getName() + ".xml");
                 try {
                     ComponentDescriptorIO.generateXML(module, Collections.singletonList(component), file, logger);
@@ -743,7 +753,7 @@ public class ComponentDescriptorIO {
                 throw new SCRDescriptorFailureException("Descriptor file name must not be empty.");
             }
             try {
-                ComponentDescriptorIO.generateXML(module, module.getComponents(), descriptorFile, logger);
+                ComponentDescriptorIO.generateXML(module, components, descriptorFile, logger);
             } catch (final SAXException e) {
                 throw new SCRDescriptorException("Unable to generate xml", descriptorFile.toString(), e);
             }
