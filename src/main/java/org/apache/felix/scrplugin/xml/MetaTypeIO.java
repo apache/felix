@@ -19,10 +19,15 @@
 package org.apache.felix.scrplugin.xml;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scrplugin.Log;
+import org.apache.felix.scrplugin.Options;
 import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.helper.StringUtils;
 import org.apache.felix.scrplugin.om.metatype.AttributeDefinition;
 import org.apache.felix.scrplugin.om.metatype.Designate;
 import org.apache.felix.scrplugin.om.metatype.MTObject;
@@ -41,31 +46,54 @@ import org.xml.sax.helpers.AttributesImpl;
  */
 public class MetaTypeIO {
 
-    public static final String NAMESPACE_URI = "http://www.osgi.org/xmlns/metatype/v1.0.0";
+    private static final String NAMESPACE_URI = "http://www.osgi.org/xmlns/metatype/v1.0.0";
 
-    public static final String INNER_NAMESPACE_URI = "";
+    private static final String INNER_NAMESPACE_URI = "";
 
-    public static final String PREFIX = "metatype";
+    private static final String PREFIX = "metatype";
 
-    protected static final String METADATA_ELEMENT = "MetaData";
-    protected static final String METADATA_ELEMENT_QNAME = PREFIX + ':' + METADATA_ELEMENT;
+    private static final String METADATA_ELEMENT = "MetaData";
+    private static final String METADATA_ELEMENT_QNAME = PREFIX + ':' + METADATA_ELEMENT;
 
-    protected static final String OCD_ELEMENT = "OCD";
-    protected static final String OCD_ELEMENT_QNAME = OCD_ELEMENT;
+    private static final String OCD_ELEMENT = "OCD";
+    private static final String OCD_ELEMENT_QNAME = OCD_ELEMENT;
 
-    protected static final String DESIGNATE_ELEMENT = "Designate";
-    protected static final String DESIGNATE_ELEMENT_QNAME = DESIGNATE_ELEMENT;
+    private static final String DESIGNATE_ELEMENT = "Designate";
+    private static final String DESIGNATE_ELEMENT_QNAME = DESIGNATE_ELEMENT;
 
-    protected static final String OBJECT_ELEMENT = "Object";
-    protected static final String OBJECT_ELEMENT_QNAME = OBJECT_ELEMENT;
+    private static final String OBJECT_ELEMENT = "Object";
+    private static final String OBJECT_ELEMENT_QNAME = OBJECT_ELEMENT;
 
-    protected static final String AD_ELEMENT = "AD";
-    protected static final String AD_ELEMENT_QNAME = AD_ELEMENT;
+    private static final String AD_ELEMENT = "AD";
+    private static final String AD_ELEMENT_QNAME = AD_ELEMENT;
 
-    protected static final String OPTION_ELEMENT = "Option";
-    protected static final String OPTION_ELEMENT_QNAME = OPTION_ELEMENT;
+    private static final String OPTION_ELEMENT = "Option";
+    private static final String OPTION_ELEMENT_QNAME = OPTION_ELEMENT;
 
-    public static void write(final MetaData metaData, final File file)
+    public static List<String> generateDescriptors(final MetaData metaData, final Options options, final Log logger)
+    throws SCRDescriptorException {
+        // write meta type info if there is a file name
+        if (!StringUtils.isEmpty(options.getMetaTypeName())) {
+            final String path = "OSGI-INF" + File.separator + "metatype" + File.separator + options.getMetaTypeName();
+            final File mtFile = new File(options.getOutputDirectory(), path);
+            final int size = metaData.getOCDs().size() + metaData.getDesignates().size();
+            if (size > 0) {
+                logger.info("Generating " + size + " MetaType Descriptors to " + mtFile);
+                mtFile.getParentFile().mkdirs();
+                MetaTypeIO.write(metaData, mtFile);
+                return Collections.singletonList(path.replace(File.separatorChar, '/'));
+            }
+            if (mtFile.exists()) {
+                mtFile.delete();
+            }
+
+        } else {
+            logger.info("Meta type file name is not set: meta type info is not written.");
+        }
+        return null;
+    }
+
+    private static void write(final MetaData metaData, final File file)
     throws SCRDescriptorException {
         try {
             generateXML(metaData, IOUtils.getSerializer(file));
@@ -81,7 +109,7 @@ public class MetaTypeIO {
      * @param contentHandler
      * @throws SAXException
      */
-    protected static void generateXML(MetaData metaData, ContentHandler contentHandler)
+    private static void generateXML(final MetaData metaData, final ContentHandler contentHandler)
     throws SAXException {
         contentHandler.startDocument();
         contentHandler.startPrefixMapping(PREFIX, NAMESPACE_URI);
@@ -106,7 +134,7 @@ public class MetaTypeIO {
         contentHandler.endDocument();
     }
 
-    protected static void generateXML(OCD ocd, ContentHandler contentHandler)
+    private static void generateXML(OCD ocd, ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "id", ocd.getId());
@@ -129,7 +157,7 @@ public class MetaTypeIO {
         IOUtils.newline(contentHandler);
     }
 
-    protected static void generateXML(AttributeDefinition ad, ContentHandler contentHandler)
+    private static void generateXML(AttributeDefinition ad, ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "id", ad.getId());
@@ -171,7 +199,7 @@ public class MetaTypeIO {
         IOUtils.newline(contentHandler);
     }
 
-    protected static void generateXML(Designate designate, ContentHandler contentHandler)
+    private static void generateXML(Designate designate, ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "pid", designate.getPid());
@@ -187,7 +215,7 @@ public class MetaTypeIO {
         IOUtils.newline(contentHandler);
     }
 
-    protected static void generateXML(MTObject obj, ContentHandler contentHandler)
+    private static void generateXML(MTObject obj, ContentHandler contentHandler)
     throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "ocdref", obj.getOcdref());
