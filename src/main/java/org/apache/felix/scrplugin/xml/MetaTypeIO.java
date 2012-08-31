@@ -19,6 +19,7 @@
 package org.apache.felix.scrplugin.xml;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -88,10 +89,24 @@ public class MetaTypeIO {
             final File mtFile = new File(mtDir, options.getMetaTypeName());
 
             if (metatypeCount > 0) {
-                logger.info("Generating " + metatypeCount + " MetaType Descriptors to " + mtFile);
-                mtFile.getParentFile().mkdirs();
-                MetaTypeIO.write(module, mtFile);
-                return Collections.singletonList(parentDir.getName() + '/' + mtDir.getName() + '/' + mtFile.getName());
+                mtDir.mkdirs();
+
+                final List<String> fileNames = new ArrayList<String>();
+                if ( options.isGenerateSeparateDescriptors() ) {
+                    for(final ComponentContainer component : module.getComponents() ) {
+                        if ( component.getMetatypeContainer() != null ) {
+                            final File file = new File(mtDir, component.getClassDescription().getDescribedClass().getName() + ".xml");
+                            logger.info("Generating 1 MetaType Descriptor in " + file);
+                            MetaTypeIO.write(module, Collections.singletonList(component), file);
+                            fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + file.getName());
+                        }
+                    }
+                } else {
+                    logger.info("Generating " + metatypeCount + " MetaType Descriptors in " + mtFile);
+                    MetaTypeIO.write(module, module.getComponents(), mtFile);
+                    fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + mtFile.getName());
+                }
+                return fileNames;
             }
             if (mtFile.exists()) {
                 mtFile.delete();
@@ -105,15 +120,6 @@ public class MetaTypeIO {
         return null;
     }
 
-    private static void write(final DescriptionContainer metaData, final File file)
-    throws SCRDescriptorException {
-        try {
-            generateXML(metaData, IOUtils.getSerializer(file));
-        } catch (final SAXException e) {
-            throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
-        }
-    }
-
     /**
      * Generate the xml top level element and start streaming
      * the meta data.
@@ -121,29 +127,35 @@ public class MetaTypeIO {
      * @param contentHandler
      * @throws SAXException
      */
-    private static void generateXML(final DescriptionContainer metaData, final ContentHandler contentHandler)
-    throws SAXException {
-        contentHandler.startDocument();
-        contentHandler.startPrefixMapping(PREFIX, NAMESPACE_URI);
+    private static void write(final DescriptionContainer metaData, final List<ComponentContainer> components, final File file)
+    throws SCRDescriptorException {
+        try {
+            final ContentHandler contentHandler = IOUtils.getSerializer(file);
 
-        final AttributesImpl ai = new AttributesImpl();
-        IOUtils.addAttribute(ai, "localization", MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype");
+            contentHandler.startDocument();
+            contentHandler.startPrefixMapping(PREFIX, NAMESPACE_URI);
 
-        contentHandler.startElement(NAMESPACE_URI, METADATA_ELEMENT, METADATA_ELEMENT_QNAME, ai);
-        IOUtils.newline(contentHandler);
+            final AttributesImpl ai = new AttributesImpl();
+            IOUtils.addAttribute(ai, "localization", MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype");
 
-        for(final ComponentContainer comp : metaData.getComponents()) {
-            if ( comp.getMetatypeContainer() != null ) {
-                generateOCDXML(comp.getMetatypeContainer(), contentHandler);
-                generateDesignateXML(comp.getMetatypeContainer(), contentHandler);
+            contentHandler.startElement(NAMESPACE_URI, METADATA_ELEMENT, METADATA_ELEMENT_QNAME, ai);
+            IOUtils.newline(contentHandler);
+
+            for(final ComponentContainer comp : metaData.getComponents()) {
+                if ( comp.getMetatypeContainer() != null ) {
+                    generateOCDXML(comp.getMetatypeContainer(), contentHandler);
+                    generateDesignateXML(comp.getMetatypeContainer(), contentHandler);
+                }
             }
-        }
 
-        // end wrapper element
-        contentHandler.endElement(NAMESPACE_URI, METADATA_ELEMENT, METADATA_ELEMENT_QNAME);
-        IOUtils.newline(contentHandler);
-        contentHandler.endPrefixMapping(PREFIX);
-        contentHandler.endDocument();
+            // end wrapper element
+            contentHandler.endElement(NAMESPACE_URI, METADATA_ELEMENT, METADATA_ELEMENT_QNAME);
+            IOUtils.newline(contentHandler);
+            contentHandler.endPrefixMapping(PREFIX);
+            contentHandler.endDocument();
+        } catch (final SAXException e) {
+            throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
+        }
     }
 
     private static void generateOCDXML(final MetatypeContainer ocd, final ContentHandler contentHandler)
