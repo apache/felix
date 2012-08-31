@@ -18,15 +18,31 @@
  */
 package org.apache.felix.scrplugin.xml;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import javax.xml.transform.*;
-import javax.xml.transform.sax.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXResult;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.xml.sax.*;
+import org.xml.sax.Attributes;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.Locator;
+import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
@@ -54,30 +70,33 @@ public class IOUtils {
         transformer.transform( new StreamSource( file ), new SAXResult( handler ) );
     }
 
-    public static ContentHandler getSerializer(File file)
-    throws IOException, TransformerException {
-        final FileWriter writer = new FileWriter(file);
-
-        final TransformerHandler transformerHandler = FACTORY.newTransformerHandler();
-        final Transformer transformer = transformerHandler.getTransformer();
-
-        final Properties format = new Properties();
-        format.put(OutputKeys.METHOD, "xml");
-        format.put(OutputKeys.OMIT_XML_DECLARATION, "no");
-        format.put(OutputKeys.ENCODING, "UTF-8");
-        format.put(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperties(format);
-
-        transformerHandler.setResult(new StreamResult(writer));
-
+    public static ContentHandler getSerializer(final File file)
+    throws SAXException {
         try {
+            final FileWriter writer = new FileWriter(file);
+
+            final TransformerHandler transformerHandler = FACTORY.newTransformerHandler();
+            final Transformer transformer = transformerHandler.getTransformer();
+
+            final Properties format = new Properties();
+            format.put(OutputKeys.METHOD, "xml");
+            format.put(OutputKeys.OMIT_XML_DECLARATION, "no");
+            format.put(OutputKeys.ENCODING, "UTF-8");
+            format.put(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperties(format);
+
+            transformerHandler.setResult(new StreamResult(writer));
+
             if ( needsNamespacesAsAttributes(format) ) {
                 return new NamespaceAsAttributes(transformerHandler);
             }
-        } catch (SAXException se) {
-            throw new TransformerException("Unable to detect of namespace support for sax works properly.", se);
+
+            return transformerHandler;
+        } catch (final IOException se) {
+            throw new SAXException("Unable to detect if namespace support for sax works properly.", se);
+        } catch (final TransformerException se) {
+            throw new SAXException("Unable to detect if namespace support for sax works properly.", se);
         }
-        return transformerHandler;
     }
 
     /**

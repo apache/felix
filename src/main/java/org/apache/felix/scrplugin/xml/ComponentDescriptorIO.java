@@ -20,16 +20,19 @@ package org.apache.felix.scrplugin.xml;
 
 import java.awt.Component;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.security.Provider.Service;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import javax.xml.transform.TransformerException;
 
+import org.apache.felix.scrplugin.Log;
+import org.apache.felix.scrplugin.Options;
 import org.apache.felix.scrplugin.SCRDescriptorException;
+import org.apache.felix.scrplugin.SCRDescriptorFailureException;
 import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentConfigurationPolicy;
@@ -46,6 +49,7 @@ import org.apache.felix.scrplugin.description.ServiceDescription;
 import org.apache.felix.scrplugin.helper.ComponentContainer;
 import org.apache.felix.scrplugin.helper.DescriptionContainer;
 import org.apache.felix.scrplugin.helper.IssueLog;
+import org.apache.felix.scrplugin.helper.StringUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -169,25 +173,6 @@ public class ComponentDescriptorIO {
     }
 
     /**
-     * Write the component descriptors to the file.
-     *
-     * @param module
-     * @param file
-     * @throws SCRDescriptorException
-     */
-    public static void write(final DescriptionContainer module, final File file) throws SCRDescriptorException {
-        try {
-            generateXML(module, IOUtils.getSerializer(file));
-        } catch (final TransformerException e) {
-            throw new SCRDescriptorException("Unable to write xml", file.toString(), e);
-        } catch (final SAXException e) {
-            throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
-        } catch (final IOException e) {
-            throw new SCRDescriptorException("Unable to write xml", file.toString(), e);
-        }
-    }
-
-    /**
      * Generate the xml top level element and start streaming
      * the components.
      *
@@ -196,7 +181,12 @@ public class ComponentDescriptorIO {
      * @throws SAXException
      */
     protected static void generateXML(final DescriptionContainer module,
-                    final ContentHandler contentHandler) throws SAXException {
+                    final List<ComponentContainer> components,
+                    final File descriptorFile,
+                    final Log logger) throws SAXException {
+        logger.info("Writing " + components.size() + " Service Component Descriptors to "
+                        + descriptorFile);
+        final ContentHandler contentHandler = IOUtils.getSerializer(descriptorFile);
         // detect namespace to use
         final String namespace = module.getOptions().getSpecVersion().getNamespaceUrl();
 
@@ -207,7 +197,7 @@ public class ComponentDescriptorIO {
         contentHandler.startElement("", ComponentDescriptorIO.COMPONENTS, ComponentDescriptorIO.COMPONENTS, new AttributesImpl());
         IOUtils.newline(contentHandler);
 
-        for (final ComponentContainer component : module.getComponents()) {
+        for (final ComponentContainer component : components) {
             generateXML(namespace, module, component, contentHandler);
         }
 
@@ -710,5 +700,56 @@ public class ComponentDescriptorIO {
                 }
             }
         }
+    }
+
+    private static final String PARENT_NAME = "OSGI-INF";
+
+    /**
+     * Generate descriptor file(s)
+     */
+    public static List<String> generateDescriptorFiles(final DescriptionContainer module, final Options options, final Log logger)
+    throws SCRDescriptorException, SCRDescriptorFailureException {
+        // check descriptor file
+        final File descriptorDir = new File(options.getOutputDirectory(), PARENT_NAME);
+        final File descriptorFile = StringUtils.isEmpty(options.getSCRName()) ? null : new File(descriptorDir, options.getSCRName());
+
+        // terminate if there is nothing else to write
+        if (module.getComponents().isEmpty()) {
+            logger.debug("No Service Component Descriptors found in project.");
+            // remove file if it exists
+            if (descriptorFile != null && descriptorFile.exists()) {
+                logger.debug("Removing obsolete service descriptor " + descriptorFile);
+                descriptorFile.delete();
+            }
+            return null;
+        }
+
+        // finally the descriptors have to be written ....
+        descriptorDir.mkdirs(); // ensure parent dir
+
+        final List<String> fileNames = new ArrayList<String>();
+        if ( options.isGenerateSeparateDescriptors() ) {
+            for(final ComponentContainer component : module.getComponents() ) {
+                final File file = new File(descriptorDir, component.getClassDescription().getDescribedClass().getName() + ".xml");
+                try {
+                    ComponentDescriptorIO.generateXML(module, Collections.singletonList(component), file, logger);
+                } catch (final SAXException e) {
+                    throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
+                }
+                fileNames.add(PARENT_NAME + '/' + file.getName());
+            }
+        } else {
+            if (descriptorFile == null) {
+                throw new SCRDescriptorFailureException("Descriptor file name must not be empty.");
+            }
+            try {
+                ComponentDescriptorIO.generateXML(module, module.getComponents(), descriptorFile, logger);
+            } catch (final SAXException e) {
+                throw new SCRDescriptorException("Unable to generate xml", descriptorFile.toString(), e);
+            }
+            fileNames.add(PARENT_NAME + '/' + descriptorFile.getName());
+
+        }
+        return fileNames;
     }
 }

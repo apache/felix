@@ -133,6 +133,7 @@ public class SCRDescriptorGenerator {
         this.logger.debug("..using metatype name: " + this.options.getMetaTypeName());
         this.logger.debug("..strict mode: " + this.options.isStrictMode());
         this.logger.debug("..generating accessors: " + this.options.isGenerateAccessors());
+        this.logger.debug("..generating separate descs: " + this.options.isGenerateSeparateDescriptors());
 
         // check speck version configuration
         SpecVersion specVersion = options.getSpecVersion();
@@ -295,30 +296,9 @@ public class SCRDescriptorGenerator {
         }
 
         // check descriptor file
-        final String descriptorPath = "OSGI-INF" + File.separator + this.options.getSCRName();
-        final File descriptorFile = StringUtils.isEmpty(this.options.getSCRName()) ? null : new File(this.options.getOutputDirectory(), descriptorPath);
-
-        // terminate if there is nothing else to write
-        if (module.getComponents().isEmpty()) {
-            this.logger.debug("No Service Component Descriptors found in project.");
-            // remove file if it exists
-            if (descriptorFile != null && descriptorFile.exists()) {
-                this.logger.debug("Removing obsolete service descriptor " + descriptorFile);
-                descriptorFile.delete();
-            }
-        } else {
-            if (descriptorFile == null) {
-                throw new SCRDescriptorFailureException("Descriptor file name must not be empty.");
-            }
-
-            // finally the descriptors have to be written ....
-            descriptorFile.getParentFile().mkdirs(); // ensure parent dir
-
-            this.logger.info("Writing " + module.getComponents().size() + " Service Component Descriptors to "
-                            + descriptorFile);
-
-            ComponentDescriptorIO.write(module, descriptorFile);
-            result.setScrFiles(Collections.singletonList(descriptorPath.replace(File.separatorChar, '/')));
+        final List<String> descriptorFiles = ComponentDescriptorIO.generateDescriptorFiles(module, this.options, logger);
+        if ( descriptorFiles != null ) {
+            result.setScrFiles(descriptorFiles);
         }
 
         return result;
