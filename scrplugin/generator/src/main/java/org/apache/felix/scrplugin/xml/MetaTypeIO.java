@@ -19,11 +19,8 @@
 package org.apache.felix.scrplugin.xml;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
-
-import javax.xml.transform.TransformerException;
 
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.om.metatype.AttributeDefinition;
@@ -68,16 +65,12 @@ public class MetaTypeIO {
     protected static final String OPTION_ELEMENT = "Option";
     protected static final String OPTION_ELEMENT_QNAME = OPTION_ELEMENT;
 
-    public static void write(MetaData metaData, File file)
+    public static void write(final MetaData metaData, final File file)
     throws SCRDescriptorException {
         try {
             generateXML(metaData, IOUtils.getSerializer(file));
-        } catch (TransformerException e) {
-            throw new SCRDescriptorException("Unable to write xml", file.toString(), e);
-        } catch (SAXException e) {
+        } catch (final SAXException e) {
             throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
-        } catch (IOException e) {
-            throw new SCRDescriptorException("Unable to write xml", file.toString(), e);
         }
     }
 

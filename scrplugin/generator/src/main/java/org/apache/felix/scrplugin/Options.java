@@ -49,6 +49,9 @@ public class Options {
     /** The name of the metatype file. */
     private String metaTypeName = "metatype.xml";
 
+    /** Flag for generating separate descriptor files. */
+    private boolean generateSeparateDescriptors = false;
+
     /**
      * @see #setGenerateAccessors(boolean)
      * @return Whether accessor methods should be generated.
@@ -186,5 +189,20 @@ public class Options {
      */
     public void setMetaTypeName(final String metaTypeName) {
         this.metaTypeName = metaTypeName;
+    }
+
+    /**
+     * Should separate descriptor files be generated?
+     */
+    public boolean isGenerateSeparateDescriptors() {
+        return generateSeparateDescriptors;
+    }
+
+    /**
+     * Set whether separate descriptor files should be generated.
+     * @param generateSeparateDescriptors
+     */
+    public void setGenerateSeparateDescriptors(boolean generateSeparateDescriptors) {
+        this.generateSeparateDescriptors = generateSeparateDescriptors;
     }
 }
