@@ -128,7 +128,14 @@ public class SCRDescriptorMojo extends AbstractMojo {
      *
      * @parameter default-value="false"
      */
-    protected boolean strictMode;
+    private boolean strictMode;
+
+    /**
+     * If set to false, a single descriptor will be created.
+     *
+     * @parameter default-value="true"
+     */
+    private boolean generateSeparateDescriptors;
 
     /**
      * The comma separated list of tokens to include when processing sources.
@@ -201,6 +208,8 @@ public class SCRDescriptorMojo extends AbstractMojo {
         options.setStrictMode(strictMode);
         options.setProperties(properties);
         options.setSpecVersion(SpecVersion.fromName(specVersion));
+        options.setGenerateSeparateDescriptors(this.generateSeparateDescriptors);
+
         if ( specVersion != null && options.getSpecVersion() == null ) {
             throw new MojoExecutionException("Unknown spec version specified: " + specVersion);
         }
