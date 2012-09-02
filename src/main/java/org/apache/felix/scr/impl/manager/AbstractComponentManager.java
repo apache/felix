@@ -552,6 +552,11 @@ public abstract class AbstractComponentManager implements Component
         return m_componentMetadata.getConfigurationPid();
     }
 
+    public boolean isConfigurationPidDeclared()
+    {
+        return m_componentMetadata.isConfigurationPidDeclared();
+    }
+
     public boolean isServiceFactory()
     {
         return m_componentMetadata.getServiceMetadata() != null
