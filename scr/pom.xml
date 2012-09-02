@@ -277,9 +277,10 @@
                                 be of the same minor version as we export, because
                                 we implement that exact version. This import is
                                 only used if the framework decides to wire the
-                                bundle to another API provider. 
+                                bundle to another API provider.
+                                (version is automatically deduced from export) 
                             -->
-                            org.osgi.service.component;version="[1.2,1.3)";provide:=true,
+                            org.osgi.service.component;provide:=true,
 
                             <!--
                                 SCR Admin API is required (we also export it) and
