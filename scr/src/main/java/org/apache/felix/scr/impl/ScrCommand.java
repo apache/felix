@@ -230,6 +230,14 @@ class ScrCommand
             }
             out.println();
 
+            out.print("Configuration Pid: ");
+            out.print(component.getConfigurationPid());
+            if (component.isConfigurationPidDeclared())
+            {
+                out.print(" (declared in the descriptor)");
+            }
+            out.println();
+
             if (component.getFactory() != null)
             {
                 out.print("Factory: ");

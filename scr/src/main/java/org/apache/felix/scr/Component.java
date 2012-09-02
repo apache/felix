@@ -360,6 +360,16 @@ public interface Component
     String getConfigurationPid();
 
     /**
+     * Returns whether the configuration-pid has been declared in the descriptor
+     * or not.
+     *
+     * @return whether the configuration-pid has method has been declared in the descriptor
+     *      or not.
+     * @since DS 1.2
+     */
+    boolean isConfigurationPidDeclared();
+
+    /**
      * Enables this Component if it is disabled. If the Component is not
      * currently {@link #STATE_DISABLED disabled} this method has no effect. If
      * the Component is {@link #STATE_DESTROYED destroyed}, this method throws

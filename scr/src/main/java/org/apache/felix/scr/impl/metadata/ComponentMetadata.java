@@ -448,6 +448,18 @@ public class ComponentMetadata
         return getName();
     }
 
+    /**
+     * Returns whether the configuration-pid has been declared in the descriptor
+     * or not.
+     *
+     * @return whether the configuration-pid has method has been declared in the descriptor
+     *      or not.
+     * @since DS 1.2
+     */
+    public boolean isConfigurationPidDeclared()
+    {
+        return m_configurationPid != null;
+    }
 
     /**
      * Returns the value of the enabled flag
