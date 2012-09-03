@@ -61,6 +61,21 @@
       <version>1.2.0</version>
       <scope>provided</scope>
     </dependency>
+      <!-- sources -->
+      <dependency>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.apache.felix.configadmin</artifactId>
+          <version>1.2.8</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.apache.felix.utils</artifactId>
+          <version>1.2.0</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+      </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -98,6 +113,55 @@
             </Embed-Dependency>
           </instructions>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>org.apache.felix:org.apache.felix.configadmin</include>
+                  <include>org.apache.felix:org.apache.felix.utils</include>
+                </includes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>org.apache.felix:org.apache.felix.configadmin</artifact>
+                  <includes>
+                    <include>**/ConfigurationHandler.*</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>org.apache.felix:org.apache.felix.utils</artifact>
+                  <includes>
+                    <include>**/DictionaryAsMap.*</include>
+                  </includes>
+                </filter>
+              </filters>
+              <createSourcesJar>true</createSourcesJar>
+              <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+              <createDependencyReducedPom>true</createDependencyReducedPom>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
