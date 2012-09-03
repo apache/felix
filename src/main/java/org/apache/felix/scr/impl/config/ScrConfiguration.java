@@ -22,7 +22,6 @@ package org.apache.felix.scr.impl.config;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.scr.impl.Activator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -63,9 +62,6 @@ public class ScrConfiguration
     public static final String PROP_DELAYED_KEEP_INSTANCES = "ds.delayed.keepInstances";
 
     public static final String PROP_LOGLEVEL = "ds.loglevel";
-
-    // framework property to enable the CT workarounds (see FELIX-2526)
-    private static final String PROP_CT_WORKAROUND = "ds.ctworkaround";
 
     private static final String LOG_LEVEL_DEBUG = "debug";
 
@@ -164,28 +160,6 @@ public class ScrConfiguration
     public boolean keepInstances()
     {
         return keepInstances;
-    }
-
-
-    public static boolean hasCtWorkaround( final BundleContext bundleContext )
-    {
-        boolean ctWorkaround = VALUE_TRUE.equals( bundleContext.getProperty( PROP_CT_WORKAROUND ) );
-        if ( ctWorkaround )
-        {
-            Activator
-                .log(
-                    LogService.LOG_WARNING,
-                    bundleContext.getBundle(),
-                    "OSGi CT Workaround enabled. This Declarative Services instance is not operating specification compliant:",
-                    null );
-            Activator.log( LogService.LOG_WARNING, bundleContext.getBundle(),
-                " - Dictionary returned from ComponentContext.getProperties() is writeable", null );
-            Activator.log( LogService.LOG_WARNING, bundleContext.getBundle(),
-                " - Location Binding of Configuration is ignored", null );
-            Activator.log( LogService.LOG_WARNING, bundleContext.getBundle(), "Remove " + PROP_CT_WORKAROUND
-                + " framework property to operate specification compliant", null );
-        }
-        return ctWorkaround;
     }
 
 

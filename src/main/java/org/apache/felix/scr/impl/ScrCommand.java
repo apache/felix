@@ -358,11 +358,6 @@ class ScrCommand
         out.println(scrConfiguration.getLogLevel());
         out.print("Component Factory with Factory Configuration: ");
         out.println(scrConfiguration.isFactoryEnabled() ? "Supported" : "Unsupported");
-
-        if (ScrConfiguration.hasCtWorkaround(bundleContext))
-        {
-            out.println("CT Issue workaround enabled");
-        }
     }
 
     private String pad(String value, int size)

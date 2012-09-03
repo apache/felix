@@ -69,10 +69,6 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     //  thread acting upon configurations
     private ComponentActorThread m_componentActor;
 
-    // whether to support two workarounds to run the OSGi R 4.2 CT
-    // See hasCtWorkaround()
-    private static boolean m_ctWorkaround;
-
     /**
      * Registers this instance as a (synchronous) bundle listener and loads the
      * components of already registered bundles.
@@ -98,9 +94,6 @@ public class Activator implements BundleActivator, SynchronousBundleListener
         // log SCR startup
         log( LogService.LOG_INFO, context.getBundle(), " Version = "
             + context.getBundle().getHeaders().get( Constants.BUNDLE_VERSION ), null );
-
-        // check whether we workaround OSGi CT issues
-        m_ctWorkaround = ScrConfiguration.hasCtWorkaround( context );
 
         // create and start the component actor
         m_componentActor = new ComponentActorThread();
@@ -454,34 +447,5 @@ public class Activator implements BundleActivator, SynchronousBundleListener
         }
 
         return m_packageAdmin.getService();
-    }
-
-
-    /**
-     * Returns <code>true</code> if the <code>ds.ctworkaround</code> framework
-     * property has been set to <code>true</code>. Otherwise <code>false</code>
-     * is returned.
-     * <p>
-     * If this method returns <code>true</code>, two workarounds for the OSGi
-     * Compendium R 4.2 CT for Declarative Services are active:
-     * <ul>
-     * <li>The <code>ComponentContext.getProperties()</code> implementation
-     * always returns the same writeable <code>Dictionary</code> instead of
-     * a read-only dictionary</li>
-     * <li>Location binding of <code>Configuration</code> objects supplied to
-     * components is ignored.</li>
-     * </ul>
-     * <p>
-     * Setting the <code>ds.ctworkaround</code> framework property is required
-     * to pass the CT but setting the property in a productive environment
-     * is strongly discouraged.
-     *
-     * @return <code>true</code> if the <code>ds.ctworkaround</code> framework
-     *      property is set to <code>true</code>.
-     * @see <a href="https://issues.apache.org/jira/browse/FELIX-2526">FELIX-2526</a>
-     */
-    public static boolean hasCtWorkaround()
-    {
-        return m_ctWorkaround;
     }
 }
