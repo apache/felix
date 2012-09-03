@@ -606,7 +606,7 @@ public abstract class AbstractComponentManager implements Component
      */
     public final void disposeInternal( int reason )
     {
-        m_state.dispose( this );
+        m_state.dispose( this, reason );
     }
 
 
@@ -1172,9 +1172,9 @@ public abstract class AbstractComponentManager implements Component
         }
 
 
-        void dispose( AbstractComponentManager acm )
+        void dispose( AbstractComponentManager acm, int reason )
         {
-//            log( acm, "dispose" );
+//            log( acm, "dispose (reason: " + reason + ")" );
             throw new IllegalStateException("dispose" + this);
         }
 
@@ -1265,9 +1265,9 @@ public abstract class AbstractComponentManager implements Component
             doDeactivate( acm, reason );
         }
 
-        void dispose( AbstractComponentManager acm )
+        void dispose( AbstractComponentManager acm, int reason )
         {
-            acm.log( LogService.LOG_DEBUG, "Disposing component", null );
+            acm.log( LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null );
             acm.clear();
             acm.changeState( Disposed.getInstance() );
 
@@ -1380,7 +1380,7 @@ public abstract class AbstractComponentManager implements Component
             acm.log( LogService.LOG_DEBUG, "Component disabled", null );
         }
 
-        void dispose( AbstractComponentManager acm )
+        void dispose( AbstractComponentManager acm, int reason )
         {
             doDisable( acm );
             acm.clear();   //content of Disabled.dispose
@@ -1422,9 +1422,9 @@ public abstract class AbstractComponentManager implements Component
             acm.changeState( Disabled.getInstance() );
         }
 
-        void dispose( AbstractComponentManager acm )
+        void dispose( AbstractComponentManager acm, int reason )
         {
-            doDeactivate( acm, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+            doDeactivate( acm, reason );
             doDisable(acm);
             acm.clear();   //content of Disabled.dispose
             acm.changeState( Disposed.getInstance() );
@@ -1620,7 +1620,7 @@ public abstract class AbstractComponentManager implements Component
             throw new IllegalStateException( "disable: " + this );
         }
 
-        void dispose( AbstractComponentManager acm )
+        void dispose( AbstractComponentManager acm, int reason )
         {
             //factory instance can have dispose called with no effect. 112.5.5
         }
@@ -1636,13 +1636,13 @@ public abstract class AbstractComponentManager implements Component
         boolean tryReadLock( long milliseconds ) throws InterruptedException;
         long getReadHoldCount();
         void unlockReadLock();
-        
+
         boolean tryWriteLock( long milliseconds ) throws InterruptedException;
         long getWriteHoldCount();
         void unlockWriteLock();
         void deescalate();
 
-        
+
     }
 
     private static class JLock implements LockWrapper
