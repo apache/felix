@@ -35,6 +35,10 @@ import org.sonatype.plexus.build.incremental.BuildContext;
 
 public class MavenProjectScanner {
 
+	private enum ScanKind {
+		ADDED_OR_UPDATED, DELETED;
+	}
+	
     private final MavenProject project;
 
     private final String includeString;
@@ -61,7 +65,13 @@ public class MavenProjectScanner {
      * Return all sources.
      */
     public Collection<Source> getSources() {
-        final ArrayList<Source> files = new ArrayList<Source>();
+    	
+    	return getSourcesForScanKind(ScanKind.ADDED_OR_UPDATED);
+    }
+
+	private Collection<Source> getSourcesForScanKind(ScanKind scanKind)
+			throws AssertionError {
+		final ArrayList<Source> files = new ArrayList<Source>();
 
         @SuppressWarnings("unchecked")
         final Iterator<String> i = project.getCompileSourceRoots().iterator();
@@ -87,7 +97,23 @@ public class MavenProjectScanner {
                 continue;
             }
             log.debug( "Scanning source tree " + tree );
-            final Scanner scanner = this.buildContext.newScanner(directory, false);
+            
+            final Scanner scanner;
+            switch ( scanKind ) {
+            
+            	case ADDED_OR_UPDATED:
+            		scanner = this.buildContext.newScanner(directory, false);
+            		break;
+            		
+            	case DELETED:
+            		scanner = this.buildContext.newDeleteScanner(directory);
+            		break;
+            		
+            	default:
+            		throw new AssertionError("Unhandled ScanKind " + scanKind);
+            	
+            }
+            
 
             if ( excludes != null && excludes.length > 0 ) {
                 scanner.setExcludes( excludes );
@@ -114,6 +140,16 @@ public class MavenProjectScanner {
         }
 
         return files;
+	}
+    
+	/**
+	 * Returns all sources which were deleted since the previous build
+	 * 
+	 * @return the deleted sources
+	 */
+    public Collection<Source> getDeletedSources() {
+    	
+    	return getSourcesForScanKind(ScanKind.DELETED);
     }
 
     /**

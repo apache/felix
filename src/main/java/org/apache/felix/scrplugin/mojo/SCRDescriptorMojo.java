@@ -24,6 +24,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -38,6 +39,7 @@ import org.apache.felix.scrplugin.Result;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.SCRDescriptorFailureException;
 import org.apache.felix.scrplugin.SCRDescriptorGenerator;
+import org.apache.felix.scrplugin.Source;
 import org.apache.felix.scrplugin.SpecVersion;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
@@ -191,13 +193,13 @@ public class SCRDescriptorMojo extends AbstractMojo {
         }
 
         // create the log for the generator
-        final org.apache.felix.scrplugin.Log scrLog = new MavenLog(getLog());
+        final org.apache.felix.scrplugin.Log scrLog = new MavenLog(getLog(), buildContext);
 
         // create project
         final MavenProjectScanner scanner = new MavenProjectScanner(
                         this.buildContext,
                 this.project, this.sourceIncludes, this.sourceExcludes, scrLog);
-
+        
         final Project project = new Project();
         // create the class loader
         project.setClassLoader(new URLClassLoader(getClassPath(), this
@@ -233,9 +235,15 @@ public class SCRDescriptorMojo extends AbstractMojo {
             final Result result = generator.execute();
             this.setServiceComponentHeader(result.getScrFiles());
             this.updateProjectResources();
-
-            // refreshing the target files does not seem to be the right thing
+            
+            // TODO - should we skip performing these operations just one descriptor file is generated?
+            this.cleanUpDeletedSources(scanner.getDeletedSources());
+            this.refreshMessages(result.getProcessedSourceFiles());
+            
+            // TODO - refreshing the target files does not seem to be the right thing ; however, new files
+            // are not refresh in Eclipse right now
             //this.updateBuildContext(result);
+            
         } catch (final SCRDescriptorException sde) {
             throw new MojoExecutionException(sde.getSourceLocation() + " : " + sde.getMessage(), sde);
         } catch (final SCRDescriptorFailureException sdfe) {
@@ -244,7 +252,40 @@ public class SCRDescriptorMojo extends AbstractMojo {
         }
     }
 
-    private void updateBuildContext(final Result result) {
+	/**
+	 * @param scrFiles
+	 */
+	private void refreshMessages(List<String> scrFiles) {
+		
+		for ( String scrFile : scrFiles )
+			buildContext.removeMessages(new File(scrFile));
+		
+	}
+	
+	private void cleanUpDeletedSources(Collection<Source> deletedSources) {
+		
+		// TODO remove duplication of file name selection - MetaTypeIO, ComponentDescriptorIO
+		
+        final File parentDir = new File(this.outputDirectory, "OSGI-INF");
+        final File mtDir = new File(parentDir, "metatype");
+		
+		for ( Source deletedSource : deletedSources ) {
+			
+			File metaTypeFile = new File(mtDir, deletedSource.getClassName() + ".xml");
+			boolean deleted = metaTypeFile.delete();
+			if ( deleted )
+				buildContext.refresh(metaTypeFile);
+			
+			File componentDescriptorFile = new File(parentDir, deletedSource.getClassName()+".xml");
+			deleted = componentDescriptorFile.delete();
+			if ( deleted )
+				buildContext.refresh(componentDescriptorFile);
+		}
+	}
+
+	
+
+	private void updateBuildContext(final Result result) {
         if ( result.getMetatypeFiles() != null ) {
             for(final String name : result.getMetatypeFiles() ) {
                 this.buildContext.refresh(new File(this.outputDirectory, name.replace('/', File.separatorChar)));
