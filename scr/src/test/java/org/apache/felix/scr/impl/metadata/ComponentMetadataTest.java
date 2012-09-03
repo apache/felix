@@ -474,12 +474,8 @@ public class ComponentMetadataTest extends TestCase
         final ComponentMetadata cm3 = createComponentMetadata( Boolean.TRUE, null );
         cm3.addDependency( rm3 );
 
-        // validates fine (though logging a warning) and sets field to null
-        cm3.validate( logger );
-
-        assertTrue( "Expected warning for unsupported updated method name",
-            logger.messageContains( "Ignoring updated method definition" ) );
-        assertNull( rm3.getUpdated() );
+        // according to DS 1.2 must fail validation (FELIX-3648)
+        failDS10Validation( cm3, "updated", logger );
     }
 
 
@@ -491,12 +487,8 @@ public class ComponentMetadataTest extends TestCase
         final ComponentMetadata cm3 = createComponentMetadata11( Boolean.TRUE, null );
         cm3.addDependency( rm3 );
 
-        // validates fine (though logging a warning) and sets field to null
-        cm3.validate( logger );
-
-        assertTrue( "Expected warning for unsupported updated method name",
-            logger.messageContains( "Ignoring updated method definition" ) );
-        assertNull( rm3.getUpdated() );
+        // according to DS 1.2 must fail validation (FELIX-3648)
+        failDS10Validation( cm3, "updated", logger );
     }
 
 
@@ -506,6 +498,21 @@ public class ComponentMetadataTest extends TestCase
         final ReferenceMetadata rm3 = createReferenceMetadata( "test" );
         rm3.setUpdated( "my_updated_method" );
         final ComponentMetadata cm3 = createComponentMetadata( XmlHandler.DS_VERSION_1_1_FELIX, Boolean.TRUE, null );
+        cm3.addDependency( rm3 );
+
+        // validates fine and logs no message
+        cm3.validate( logger );
+
+        assertEquals( "my_updated_method", rm3.getUpdated() );
+    }
+
+
+    public void test_reference_updated_ds12()
+    {
+        // updated method accepted for DS 1.2
+        final ReferenceMetadata rm3 = createReferenceMetadata( "test" );
+        rm3.setUpdated( "my_updated_method" );
+        final ComponentMetadata cm3 = createComponentMetadata( XmlHandler.DS_VERSION_1_2, Boolean.TRUE, null );
         cm3.addDependency( rm3 );
 
         // validates fine and logs no message
@@ -710,7 +717,7 @@ public class ComponentMetadataTest extends TestCase
         {
             // expected
         }
-        
+
         cm = createComponentMetadata12( null, null );
         try
         {
@@ -730,16 +737,16 @@ public class ComponentMetadataTest extends TestCase
         doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_1);
         doTest_get_configuration_pid_method(XmlHandler.DS_VERSION_1_2);
     }
-    
+
     private void doTest_get_configuration_pid_method(int specVersion)
-    {            
+    {
         // Make sure that getConfigurationPid returns the default component name (implementation class name).
         // We only do this kind of test if spec is greater than ds 1.0, because in ds 1.0, the component name is mandatory.
         if (specVersion > XmlHandler.DS_VERSION_1_0)
         {
             ComponentMetadata cm = new ComponentMetadata( specVersion );
             try
-            {          
+            {
                 cm.setImplementationClassName("implementation.class");
                 cm.setName( null );
                 cm.validate( logger );
@@ -750,14 +757,14 @@ public class ComponentMetadataTest extends TestCase
             }
             String pid = cm.getConfigurationPid();
             assertNotNull( "Expect non-null configuration pid when component name is not specified", pid );
-            assertEquals( "Expect configuration-pid to be equals to component implementation", 
+            assertEquals( "Expect configuration-pid to be equals to component implementation",
                           "implementation.class", cm.getConfigurationPid() );
         }
-        
+
         // Make sure that getConfigurationPid returns the name of the component, if specified
         ComponentMetadata cm = new ComponentMetadata( specVersion );
         try
-        {     
+        {
             cm.setImplementationClassName("implementation.class");
             cm.setName("my.component.name");
             cm.validate( logger );
@@ -768,7 +775,7 @@ public class ComponentMetadataTest extends TestCase
         }
         String pid = cm.getConfigurationPid();
         assertNotNull( "Expect non-null configuration pid when component name is specified", pid );
-        assertEquals( "Expect configuration-pid to be equals to component name", 
+        assertEquals( "Expect configuration-pid to be equals to component name",
                       "my.component.name", cm.getConfigurationPid() );
     }
 
