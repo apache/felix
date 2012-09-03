@@ -167,8 +167,8 @@ public class ConfigurationSupport implements ConfigurationListener
 
         // iterate over all components which must be configured with this pid
         // (since DS 1.2, components may specify a specific configuration PID (112.4.4 configuration-pid)
-        Iterator it; 
-              
+        Iterator it;
+
         if (factoryPid == null)
         {
             it = this.m_registry.getComponentHoldersByPid(pid);
@@ -236,6 +236,11 @@ public class ConfigurationSupport implements ConfigurationListener
                                 ise);
                         }
                     }
+                    break;
+
+                case ConfigurationEvent.CM_LOCATION_CHANGED:
+                    // FELIX-3650: Don't log WARNING message
+                    // FELIX-3584: Implement event support
                     break;
 
                 default:
