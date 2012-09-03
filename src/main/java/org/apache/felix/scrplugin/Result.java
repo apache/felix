@@ -18,6 +18,7 @@
  */
 package org.apache.felix.scrplugin;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -32,6 +33,9 @@ public class Result {
     /** The list of scr files. */
     private List<String> scrFiles;
 
+    /** The list of processed source files. */
+    private List<String> processedSourceFiles = new ArrayList<String>();
+    
     /**
      * Set the list of metatype files
      */
@@ -47,6 +51,16 @@ public class Result {
     }
 
     /**
+     * Adds a source file to the list of processed source files
+     * 
+	 * @param source the processed source file
+	 */
+	public void addProcessedSourceFile(String processedSourceFile) {
+		
+		this.processedSourceFiles.add(processedSourceFile);
+	}
+    
+    /**
      * Return a list of generated metatype files
      * @return A list of relative paths or <code>null</code>
      */
@@ -61,4 +75,14 @@ public class Result {
     public List<String> getScrFiles() {
         return scrFiles;
     }
+
+
+    /**
+     * Returns a list of processed source files
+     * 
+	 * @return the list of processed source files
+	 */
+	public List<String> getProcessedSourceFiles() {
+		return processedSourceFiles;
+	}
 }

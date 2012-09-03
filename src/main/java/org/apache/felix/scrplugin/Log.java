@@ -109,7 +109,6 @@ public interface Log {
      */
     void warn( String content );
 
-
     /**
      * Send a message (and accompanying exception) to the user in the <b>warn</b> error level.
      * <br/>
@@ -120,6 +119,18 @@ public interface Log {
      * @param lineNumber The line number at which the error occurred
      */
     void warn( String content, String location, int lineNumber );
+
+    /**
+     * Send a message (and accompanying exception) to the user in the <b>warn</b> error level.
+     * <br/>
+     * The error's stacktrace will be output when this error level is enabled.
+     *
+     * @param content
+     * @param location The location at which the error occurred
+     * @param lineNumber The line number at which the error occurred
+     * @param columnNumber The column number at which the error occurred
+     */
+    void warn( String content, String location, int lineNumber, int columnNumber );
 
 
     /**
@@ -168,6 +179,18 @@ public interface Log {
      */
     void error( String content, String location, int lineNumber );
 
+    /**
+     * Send a message (and accompanying exception) to the user in the <b>error</b> error level.
+     * <br/>
+     * The error's stacktrace will be output when this error level is enabled.
+     *
+     * @param content
+     * @param location The location at which the error occurred
+     * @param lineNumber The line number at which the error occurred
+     * @param columnNumber The column number at which the error occurred
+     */
+    void error( String content, String location, int lineNumber, int columnNumber );
+    
 
     /**
      * Send a message (and accompanying exception) to the user in the <b>error</b> error level.
