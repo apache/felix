@@ -543,8 +543,10 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         // invariant: modify method existing and no static bound service changes
 
         // 4. call method (nothing to do when failed, since it has already been logged)
+        //   (call with non-null default result to continue even if the
+        //    modify method call failed)
         final MethodResult result = m_modifyMethod.invoke( getInstance(),
-                new ActivatorParameter( m_componentContext, -1 ), null );
+                new ActivatorParameter( m_componentContext, -1 ), MethodResult.VOID );
         if ( result == null )
         {
             // log an error if the declared method cannot be found
