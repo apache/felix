@@ -256,7 +256,7 @@ public class ConfigurationSupport implements ConfigurationListener
         try
         {
             final Configuration cfg = ca.getConfiguration(pid);
-            if (bundleLocation.equals(cfg.getBundleLocation()) || Activator.hasCtWorkaround())
+            if (bundleLocation.equals(cfg.getBundleLocation()))
             {
                 return cfg.getProperties();
             }
