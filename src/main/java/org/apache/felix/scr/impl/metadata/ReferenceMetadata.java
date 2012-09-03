@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.felix.scr.impl.helper.Logger;
-import org.osgi.service.log.LogService;
 
 /**
  * Information associated to a dependency
@@ -494,11 +493,8 @@ public class ReferenceMetadata
         // updated method is only supported in namespace xxx and later
         if ( m_updated != null && !componentMetadata.isDS11Felix() )
         {
-            logger
-                .log( LogService.LOG_WARNING,
-                    "Ignoring updated method definition, DS 1.1-felix or later namespace required", componentMetadata,
-                    null );
-            m_updated = null;
+            // FELIX-3648 validation must fail (instead of just ignore)
+            throw componentMetadata.validationFailure( "updated method declaration requires DS 1.2 or later namespace " );
         }
 
         m_validated = true;
