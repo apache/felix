@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -85,11 +85,11 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     private static volatile SecurityManagerEx m_sm = null;
     private static volatile URLHandlers m_handler = null;
 
-    // This maps classloaders of URLHandlers in other classloaders to lists of 
+    // This maps classloaders of URLHandlers in other classloaders to lists of
     // their frameworks.
     private static Map m_classloaderToFrameworkLists = new HashMap();
 
-    // The list to hold all enabled frameworks registered with this handlers 
+    // The list to hold all enabled frameworks registered with this handlers
     private static final List m_frameworks = new ArrayList();
     private static int m_counter = 0;
 
@@ -104,8 +104,8 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     private static final String m_streamPkgs;
     private static final Map m_builtIn = new HashMap();
     private static final boolean m_loaded;
-    
-    static 
+
+    static
     {
         String pkgs = new SecureAction().getSystemProperty(STREAM_HANDLER_PACKAGE_PROP, "");
         m_streamPkgs = (pkgs.equals(""))
@@ -115,7 +115,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             (null != URLHandlersContentHandlerProxy.class) && (null != URLStreamHandlerService.class);
     }
 
-    
+
     private static final Map m_handlerToURL = new HashMap();
     private void init(String protocol, URLStreamHandlerFactory factory)
     {
@@ -133,14 +133,14 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             // Ignore, this is a best effort (maybe log it or something).
         }
     }
-    
+
     /**
      * <p>
-     * Only one instance of this class is created per classloader 
+     * Only one instance of this class is created per classloader
      * and that one instance is registered as the stream and content handler
      * factories for the JVM. Unless, we already register one from a different
      * classloader. In this case we attach to this root.
-     * </p> 
+     * </p>
     **/
     private URLHandlers()
     {
@@ -157,7 +157,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             {
                 // Ignore, this is a best effort (maybe log it or something)
             }
-    
+
             init("file", currentFactory);
             init("ftp", currentFactory);
             init("http", currentFactory);
@@ -170,7 +170,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             {
                 // Ignore, this is a best effort (maybe log it or something)
             }
-    
+
             if (currentFactory != null)
             {
                 try
@@ -182,7 +182,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                     // Ignore, this is a best effort (maybe log it or something)
                 }
             }
-            
+
             try
             {
                 URL.setURLStreamHandlerFactory(this);
@@ -204,9 +204,9 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                 {
                     // there already is a factory set so try to swap it with ours.
                     m_streamHandlerFactory = (URLStreamHandlerFactory)
-                        m_secureAction.swapStaticFieldIfNotClass(URL.class, 
+                        m_secureAction.swapStaticFieldIfNotClass(URL.class,
                         URLStreamHandlerFactory.class, URLHANDLERS_CLASS, "streamHandlerLock");
-                    
+
                     if (m_streamHandlerFactory == null)
                     {
                         throw err;
@@ -221,10 +221,10 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                         try
                         {
                             m_secureAction.invoke(
-                                m_secureAction.getDeclaredMethod(m_streamHandlerFactory.getClass(), 
-                                "registerFrameworkListsForContextSearch", 
-                                new Class[]{ClassLoader.class, List.class}), 
-                                m_streamHandlerFactory, new Object[]{ URLHANDLERS_CLASS.getClassLoader(), 
+                                m_secureAction.getDeclaredMethod(m_streamHandlerFactory.getClass(),
+                                "registerFrameworkListsForContextSearch",
+                                new Class[]{ClassLoader.class, List.class}),
+                                m_streamHandlerFactory, new Object[]{ URLHANDLERS_CLASS.getClassLoader(),
                                     m_frameworks });
                             m_rootURLHandlers = m_streamHandlerFactory;
                         }
@@ -239,7 +239,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                     throw err;
                 }
             }
-            
+
             try
             {
                 URLConnection.setContentHandlerFactory(this);
@@ -258,10 +258,10 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             {
                 // there already is a factory set so try to swap it with ours.
                 try
-                {   
-                    m_contentHandlerFactory = (ContentHandlerFactory) 
+                {
+                    m_contentHandlerFactory = (ContentHandlerFactory)
                         m_secureAction.swapStaticFieldIfNotClass(
-                            URLConnection.class, ContentHandlerFactory.class, 
+                            URLConnection.class, ContentHandlerFactory.class,
                             URLHANDLERS_CLASS, null);
                     if (m_contentHandlerFactory == null)
                     {
@@ -289,7 +289,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         }
     }
 
-    static void registerFrameworkListsForContextSearch(ClassLoader index, 
+    static void registerFrameworkListsForContextSearch(ClassLoader index,
         List frameworkLists)
     {
         synchronized (URL.class)
@@ -316,7 +316,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                         {
                             try
                             {
-                                m_secureAction.swapStaticFieldIfNotClass(URL.class, 
+                                m_secureAction.swapStaticFieldIfNotClass(URL.class,
                                     URLStreamHandlerFactory.class, null, "streamHandlerLock");
                             }
                             catch (Exception ex)
@@ -324,7 +324,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                                 // TODO log this
                                 ex.printStackTrace();
                             }
-                            
+
                             if (m_streamHandlerFactory.getClass() != URLHANDLERS_CLASS)
                             {
                                 URL.setURLStreamHandlerFactory(m_streamHandlerFactory);
@@ -332,7 +332,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                             try
                             {
                                 m_secureAction.swapStaticFieldIfNotClass(
-                                    URLConnection.class, ContentHandlerFactory.class, 
+                                    URLConnection.class, ContentHandlerFactory.class,
                                     null, null);
                             }
                             catch (Exception ex)
@@ -340,7 +340,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                                 // TODO log this
                                 ex.printStackTrace();
                             }
-                            
+
                             if (m_contentHandlerFactory.getClass() != URLHANDLERS_CLASS)
                             {
                                 URLConnection.setContentHandlerFactory(m_contentHandlerFactory);
@@ -388,7 +388,48 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             try
             {
                 // If a built-in handler is found then cache and return it
-                Class handler = m_secureAction.forName(className, classLoader); 
+                Class handler = m_secureAction.forName(className, classLoader);
+                if (handler != null)
+                {
+                    return (URLStreamHandler) handler.newInstance();
+                }
+            }
+            catch (Throwable ex)
+            {
+                // This could be a class not found exception or an
+                // instantiation exception, not much we can do in either
+                // case other than ignore it.
+            }
+        }
+        // This is a workaround for android - Starting with 4.1 the built-in core handler
+        // are not following the normal naming nore package schema :-(
+        String androidHandler = null;
+        if ("file".equalsIgnoreCase(protocol))
+        {
+            androidHandler = "libcore.net.url.FileHandler";
+        }
+        else if ("ftp".equalsIgnoreCase(protocol))
+        {
+            androidHandler = "libcore.net.url.FtpHandler";
+        }
+        else if ("http".equalsIgnoreCase(protocol))
+        {
+            androidHandler = "libcore.net.http.HttpHandler";
+        }
+        else if ("https".equalsIgnoreCase(protocol))
+        {
+            androidHandler = "libcore.net.http.HttpsHandler";
+        }
+        else if ("jar".equalsIgnoreCase(protocol))
+        {
+            androidHandler = "libcore.net.url.JarHandler";
+        }
+        if (androidHandler != null)
+        {
+            try
+            {
+                // If a built-in handler is found then cache and return it
+                Class handler = m_secureAction.forName(androidHandler, classLoader);
                 if (handler != null)
                 {
                     return (URLStreamHandler) handler.newInstance();
@@ -413,7 +454,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             }
         return (URLStreamHandler) m_builtIn.get(protocol);
     }
-    
+
     /**
      * <p>
      * This is a method implementation for the <tt>URLStreamHandlerFactory</tt>
@@ -433,7 +474,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         // handlers and also because caching behavior may not be guaranteed
         // across different JRE implementations.
         URLStreamHandler handler = getFromStreamCache(protocol);
-        
+
         if (handler != null)
         {
             return handler;
@@ -443,16 +484,16 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         // allowed to deal with it.
         if (protocol.equals(FelixConstants.BUNDLE_URL_PROTOCOL))
         {
-            return addToStreamCache(protocol, 
+            return addToStreamCache(protocol,
                 new URLHandlersBundleStreamHandler(m_secureAction));
         }
 
-       handler = getBuiltInStreamHandler(protocol, 
+       handler = getBuiltInStreamHandler(protocol,
            (m_streamHandlerFactory != this) ? m_streamHandlerFactory : null);
 
         // If built-in content handler, then create a proxy handler.
-        return addToStreamCache(protocol, 
-            new URLHandlersStreamHandlerProxy(protocol, m_secureAction, 
+        return addToStreamCache(protocol,
+            new URLHandlersStreamHandlerProxy(protocol, m_secureAction,
                 handler, (URL) m_handlerToURL.get(handler)));
     }
 
@@ -475,14 +516,14 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         // handlers and also because caching behavior may not be guaranteed
         // across different JRE implementations.
         ContentHandler handler = getFromContentCache(mimeType);
-        
+
         if (handler != null)
         {
             return handler;
         }
 
-        return addToContentCache(mimeType, 
-            new URLHandlersContentHandlerProxy(mimeType, m_secureAction, 
+        return addToContentCache(mimeType,
+            new URLHandlersContentHandlerProxy(mimeType, m_secureAction,
             (m_contentHandlerFactory != this) ? m_contentHandlerFactory : null));
     }
 
@@ -494,10 +535,10 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         }
         return (ContentHandler) addToCache(m_contentHandlerCache, mimeType, handler);
     }
-    
+
     private synchronized ContentHandler getFromContentCache(String mimeType)
     {
-        return (ContentHandler) ((m_contentHandlerCache != null) ? 
+        return (ContentHandler) ((m_contentHandlerCache != null) ?
             m_contentHandlerCache.get(mimeType) : null);
     }
 
@@ -509,22 +550,22 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         }
         return (URLStreamHandler) addToCache(m_streamHandlerCache, protocol, handler);
     }
-    
+
     private synchronized URLStreamHandler getFromStreamCache(String protocol)
     {
-        return (URLStreamHandler) ((m_streamHandlerCache != null) ? 
+        return (URLStreamHandler) ((m_streamHandlerCache != null) ?
             m_streamHandlerCache.get(protocol) : null);
     }
-    
+
     private Object addToCache(Map cache, String key, Object value)
     {
         if (value == null)
         {
             return null;
         }
-        
+
         Object result = cache.get(key);
-            
+
         if (result == null)
         {
             cache.put(key, value);
@@ -579,7 +620,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         {
             m_counter--;
             if (m_frameworks.remove(framework))
-            {    
+            {
                 if (m_frameworks.isEmpty())
                 {
                     unregister = true;
@@ -592,9 +633,9 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
              try
              {
                  m_secureAction.invoke(m_secureAction.getDeclaredMethod(
-                     m_rootURLHandlers.getClass(), 
-                     "unregisterFrameworkListsForContextSearch", 
-                     new Class[]{ ClassLoader.class}), 
+                     m_rootURLHandlers.getClass(),
+                     "unregisterFrameworkListsForContextSearch",
+                     new Class[]{ ClassLoader.class}),
                      m_rootURLHandlers,
                      new Object[] {URLHANDLERS_CLASS.getClassLoader()});
              }
@@ -639,7 +680,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         Class targetClass = null;
         for (int i = 0; i < stack.length; i++)
         {
-            if (stack[i].getClassLoader() != null) 
+            if (stack[i].getClassLoader() != null)
             {
                 String name = stack[i].getClassLoader().getClass().getName();
                 if (name.startsWith("org.apache.felix.framework.ModuleImpl$ModuleClassLoader")
@@ -651,7 +692,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                 }
             }
         }
-        
+
         // If we found a class loaded from a bundle, then iterate
         // over the framework instances and see which framework owns
         // the bundle that loaded the class.
@@ -660,11 +701,11 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
             synchronized (m_classloaderToFrameworkLists)
             {
                 ClassLoader index = targetClass.getClassLoader().getClass().getClassLoader();
-                
+
                 List frameworks = (List) m_classloaderToFrameworkLists.get(
                     index);
-                
-                if ((frameworks == null) && (index == URLHANDLERS_CLASS.getClassLoader())) 
+
+                if ((frameworks == null) && (index == URLHANDLERS_CLASS.getClassLoader()))
                 {
                     frameworks = m_frameworks;
                 }
@@ -679,7 +720,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                             try
                             {
                                 if (m_secureAction.invoke(
-                                    m_secureAction.getDeclaredMethod(framework.getClass(), 
+                                    m_secureAction.getDeclaredMethod(framework.getClass(),
                                     "getBundle", CLASS_TYPE),
                                     framework, new Object[]{targetClass}) != null)
                                 {
@@ -688,7 +729,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                             }
                             catch (Exception ex)
                             {
-                                // This should not happen but if it does there is 
+                                // This should not happen but if it does there is
                                 // not much we can do other then ignore it.
                                 // Maybe log this or something.
                                 ex.printStackTrace();
