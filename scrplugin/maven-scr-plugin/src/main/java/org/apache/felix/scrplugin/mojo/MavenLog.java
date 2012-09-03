@@ -18,7 +18,10 @@
  */
 package org.apache.felix.scrplugin.mojo;
 
+import java.io.File;
+
 import org.apache.felix.scrplugin.Log;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
  * The <code>MavenLog</code> class implements the {@link Log} interface using
@@ -26,10 +29,14 @@ import org.apache.felix.scrplugin.Log;
  */
 public class MavenLog implements Log {
 
+	private static final int COLUMN_NUMBER_UNKNOWN = 0;
+	
     private final org.apache.maven.plugin.logging.Log mavenLog;
+    private final BuildContext buildContext;
 
-    MavenLog(final org.apache.maven.plugin.logging.Log mavenLog) {
+    MavenLog(final org.apache.maven.plugin.logging.Log mavenLog, BuildContext buildContext) {
         this.mavenLog = mavenLog;
+        this.buildContext = buildContext;
     }
 
     /**
@@ -67,9 +74,17 @@ public class MavenLog implements Log {
     public void error(final String content,
             final String location,
             final int lineNumber) {
-        final String message = formatMessage(content, location, lineNumber);
-        mavenLog.error(message);
+    	error(content, location, lineNumber, COLUMN_NUMBER_UNKNOWN);
     }
+    
+    /**
+     * @see org.apache.felix.scrplugin.Log#error(java.lang.String, java.lang.String, int, int)
+     */
+    public void error(final String content, final String location,
+    		final int lineNumber, final int columnNumber) {
+    	buildContext.addMessage(new File(location), lineNumber, columnNumber, 
+    			content, BuildContext.SEVERITY_ERROR, null);
+    }    
 
     /**
      * @see org.apache.felix.scrplugin.Log#error(java.lang.String)
@@ -146,10 +161,19 @@ public class MavenLog implements Log {
      */
     public void warn(final String content, final String location,
             final int lineNumber) {
-        final String message = formatMessage(content, location, lineNumber);
-        mavenLog.warn(message);
+        this.warn(content, location, lineNumber, COLUMN_NUMBER_UNKNOWN);
     }
 
+    /**
+     * @see org.apache.felix.scrplugin.Log#warn(java.lang.String, java.lang.String, int, int)
+     */
+    public void warn(final String content, final String location,
+    		final int lineNumber, final int columnNumber) {
+    	buildContext.addMessage(new File(location), lineNumber, columnNumber, 
+    			content, BuildContext.SEVERITY_WARNING, null);
+    }
+    
+    
     /**
      * @see org.apache.felix.scrplugin.Log#warn(java.lang.String)
      */
@@ -162,10 +186,5 @@ public class MavenLog implements Log {
      */
     public void warn(final Throwable error) {
         mavenLog.warn(error);
-    }
-
-    private String formatMessage(final String content, final String location,
-            final int lineNumber) {
-        return content + " at " + location + ":" + lineNumber;
     }
 }

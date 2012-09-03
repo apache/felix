@@ -68,9 +68,9 @@ public class IssueLog {
         while (depWarnings.hasNext()) {
             final Entry entry = depWarnings.next();
             if (strictMode) {
-                log.error(entry.toString());
+                log.error(entry.message, entry.location, entry.lineNumber, entry.columnNumber);
             } else {
-                log.warn(entry.toString());
+                log.warn(entry.message, entry.location, entry.lineNumber, entry.columnNumber);
             }
         }
         if (this.deprecationWarnings.size() > 0) {
@@ -87,31 +87,44 @@ public class IssueLog {
         while (warnings.hasNext()) {
             final Entry entry = warnings.next();
             if (strictMode) {
-                log.error(entry.toString());
+                log.error(entry.message, entry.location, entry.lineNumber, entry.columnNumber);
             } else {
-                log.warn(entry.toString());
+                log.warn(entry.message, entry.location, entry.lineNumber, entry.columnNumber);
             }
         }
 
         final Iterator<Entry> errors = this.errors.iterator();
         while (errors.hasNext()) {
             final Entry entry = errors.next();
-            log.error(entry.toString());
+            log.error(entry.message, entry.location, entry.lineNumber, entry.columnNumber);
         }
     }
 
     private static class Entry {
+    	
+    	static final int LINE_NUMBER_UNKNOWN = 0; 
+    	static final int COLUMN_NUMBER_UNKNOWN = 0; 
+    	
         final String message;
         final String location;
+        final int lineNumber;
+        final int columnNumber;
 
         Entry(final String message, final String location) {
-            this.message = message;
-            this.location = location;
+        	this(message, location, LINE_NUMBER_UNKNOWN, COLUMN_NUMBER_UNKNOWN);
         }
 
+        Entry(final String message, final String location, final int lineNumber, final int columnNumber) {
+        	this.message = message;
+        	this.location = location;
+        	this.lineNumber = lineNumber;
+        	this.columnNumber = columnNumber;
+        }
+        
+        
         @Override
         public String toString() {
-            return this.location + " : " + this.message;
+            return this.location + " [" + this.lineNumber+ "," + this.columnNumber+"] : " + this.message;
         }
     }
 }

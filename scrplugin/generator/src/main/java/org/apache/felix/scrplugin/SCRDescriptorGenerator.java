@@ -148,9 +148,12 @@ public class SCRDescriptorGenerator {
         this.scanner = new ClassScanner(logger, iLog, project, aProcessor);
         final List<ClassDescription> scannedDescriptions = scanner.scanSources();
 
+        // create the result to hold the list of processed source files
+        final Result result = new Result();
         final List<ComponentContainer> processedContainers = new ArrayList<ComponentContainer>();
         for (final ClassDescription desc : scannedDescriptions) {
             this.logger.debug("Processing component class " + desc.getSource());
+            result.addProcessedSourceFile(desc.getSource());
 
             // check if there is more than one component definition
             if (desc.getDescriptions(ComponentDescription.class).size() > 1) {
@@ -259,9 +262,7 @@ public class SCRDescriptorGenerator {
             throw new SCRDescriptorFailureException("SCR Descriptor parsing had failures (see log)");
         }
 
-        // create result and generate files
-        final Result result = new Result();
-
+        // and generate files
         result.setMetatypeFiles(MetaTypeIO.generateDescriptors(module, this.options, this.logger));
         result.setScrFiles(ComponentDescriptorIO.generateDescriptorFiles(module, this.options, logger));
 

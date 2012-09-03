@@ -104,6 +104,11 @@ public class AntLog implements Log
         warn( String.format( "%s [%s,%d]", content, location, lineNumber ) );
     }
 
+    public void warn( String content, String location, int lineNumber, int columNumber )
+    {
+    	warn( String.format( "%s [%s,%d:%d]", content, location, lineNumber , columNumber) );
+    }
+
 
     public void warn( String content, Throwable error )
     {
@@ -135,6 +140,11 @@ public class AntLog implements Log
         error( String.format( "%s [%s,%d]", content, location, lineNumber ) );
     }
 
+    public void error( String content, String location, int lineNumber, int columnNumber )
+    {
+    	error( String.format( "%s [%s,%d:%d]", content, location, lineNumber, columnNumber ) );
+    }
+    
 
     public void error( String content, Throwable error )
     {
