@@ -398,11 +398,12 @@ public class Validator {
         // validate interface
         if (StringUtils.isEmpty(ref.getInterfaceName())) {
             this.logError(ref, "Missing interface name");
-        }
-        try {
-            this.project.getClassLoader().loadClass(ref.getInterfaceName());
-        } catch (final ClassNotFoundException e) {
-            this.logError(ref, "Interface class can't be loaded: " + ref.getInterfaceName());
+        } else {
+            try {
+                this.project.getClassLoader().loadClass(ref.getInterfaceName());
+            } catch (final ClassNotFoundException e) {
+                this.logError(ref, "Interface class can't be loaded: " + ref.getInterfaceName());
+            }
         }
 
         // validate cardinality
