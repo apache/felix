@@ -20,12 +20,10 @@ package org.apache.felix.eventadmin.impl.tasks;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.eventadmin.impl.handler.EventHandlerProxy;
 import org.osgi.service.event.Event;
 
 /**
@@ -69,6 +67,7 @@ public class AsyncDeliverTasks
      */
     public void execute(final Collection tasks, final Event event)
     {
+        /*
         final Iterator i = tasks.iterator();
         boolean hasOrdered = false;
         while ( i.hasNext() )
@@ -85,7 +84,7 @@ public class AsyncDeliverTasks
 
         }
         if ( hasOrdered )
-        {
+        {*/
             final Thread currentThread = Thread.currentThread();
             TaskExecuter executer = null;
             synchronized (m_running_threads )
@@ -105,7 +104,7 @@ public class AsyncDeliverTasks
             {
                 m_pool.executeTask(executer);
             }
-        }
+        //}
     }
 
     private final class TaskExecuter implements Runnable

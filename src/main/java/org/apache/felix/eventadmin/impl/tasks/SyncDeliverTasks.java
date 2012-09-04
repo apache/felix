@@ -110,8 +110,8 @@ public class SyncDeliverTasks
         while ( i.hasNext() )
         {
             final EventHandlerProxy task = (EventHandlerProxy)i.next();
-            if ( !filterAsyncUnordered || task.isAsyncOrderedDelivery() )
-            {
+//            if ( !filterAsyncUnordered || task.isAsyncOrderedDelivery() )
+//            {
                 if ( !useTimeout(task) )
                 {
                     // no timeout, we can directly execute
@@ -168,7 +168,7 @@ public class SyncDeliverTasks
                     }
 
                 }
-            }
+//            }
         }
     }
 }
