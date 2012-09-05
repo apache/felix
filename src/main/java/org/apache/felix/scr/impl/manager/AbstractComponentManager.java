@@ -27,9 +27,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -89,6 +91,9 @@ public abstract class AbstractComponentManager implements Component
     // The dependency managers that manage every dependency
     private final List m_dependencyManagers;
 
+    //<Map<DependencyManager, Map<ServiceReference, Object[]>>>
+    private final AtomicReferenceWrapper m_dependencies_map;
+
     // A reference to the BundleComponentActivator
     private BundleComponentActivator m_activator;
 
@@ -121,11 +126,13 @@ public abstract class AbstractComponentManager implements Component
         if (JUC_AVAILABLE)
         {
             m_stateLock = new JLock();
+            m_dependencies_map = new JAtomicReferenceWrapper();
             m_serviceRegistration = new JAtomicReferenceWrapper();
         }
         else
         {
             m_stateLock = new EDULock();
+            m_dependencies_map = new EDUAtomicReferenceWrapper();
             m_serviceRegistration = new EDUAtomicReferenceWrapper();
         }
 
@@ -580,9 +587,9 @@ public abstract class AbstractComponentManager implements Component
         m_state.enable( this );
     }
 
-    final void activateInternal()
+    final boolean activateInternal()
     {
-        m_state.activate( this );
+        return m_state.activate( this );
     }
 
     final void deactivateInternal( int reason )
@@ -678,7 +685,7 @@ public abstract class AbstractComponentManager implements Component
 
     protected void registerService( String[] provides )
     {
-        ServiceRegistration existing = m_serviceRegistration.get();
+        ServiceRegistration existing = ( ServiceRegistration ) m_serviceRegistration.get();
         if ( existing == null )
         {
             log( LogService.LOG_DEBUG, "registering services", null );
@@ -713,7 +720,7 @@ public abstract class AbstractComponentManager implements Component
 
     final void unregisterComponentService()
     {
-        ServiceRegistration sr = m_serviceRegistration.get();
+        ServiceRegistration sr = ( ServiceRegistration ) m_serviceRegistration.get();
 
         if ( sr != null && m_serviceRegistration.compareAndSet( sr, null ) )
         {
@@ -722,6 +729,96 @@ public abstract class AbstractComponentManager implements Component
         }
     }
 
+    protected final boolean collectDependencies()
+    {
+        Map old = ( Map ) m_dependencies_map.get();
+        if ( old != null)
+        {
+            return false;
+        }
+        Class implementationObjectClass = null;
+        try
+        {
+            implementationObjectClass = getActivator().getBundleContext().getBundle().loadClass(
+                    getComponentMetadata().getImplementationClassName() );
+        }
+        catch ( ClassNotFoundException e )
+        {
+            log( LogService.LOG_ERROR, "Could not load implementation object class", e );
+            return false;
+        }
+        Map newDeps = new HashMap( );//<DependencyManager, Map<ServiceReference, RefPair>
+        for (Iterator it = m_dependencyManagers.iterator(); it.hasNext(); )
+        {
+            DependencyManager dependencyManager = ( DependencyManager ) it.next();
+
+            dependencyManager.initBindingMethods( implementationObjectClass );
+            if (!dependencyManager.prebind( newDeps) )
+            {
+                //not actually satisfied any longer
+                returnServices( newDeps );
+                return false;
+            }
+        }
+        if ( !m_dependencies_map.compareAndSet( old, newDeps ))
+        {
+            returnServices(newDeps);
+            return false;
+        }
+        return true;
+    }
+
+    private void returnServices( Map deps )
+    {
+         for (Iterator it = deps.values().iterator(); it.hasNext(); )
+         {
+             Map refs = ( Map ) it.next();
+             if ( refs != null )
+             {
+                 for (Iterator ri = refs.entrySet().iterator(); ri.hasNext(); )
+                 {
+                     Map.Entry entry = ( Map.Entry ) ri.next();
+                     RefPair args = ( RefPair ) entry.getValue();
+                     if ( args.getServiceObject() != null )
+                     {
+                         getActivator().getBundleContext().ungetService( (ServiceReference) entry.getKey() );
+                     }
+                 }
+             }
+         }
+    }
+
+    public static class RefPair
+    {
+        private final ServiceReference ref;
+        private Object serviceObject;
+
+        public RefPair( ServiceReference ref, Object serviceObject )
+        {
+            this.ref = ref;
+            this.serviceObject = serviceObject;
+        }
+
+        public ServiceReference getRef()
+        {
+            return ref;
+        }
+
+        public Object getServiceObject()
+        {
+            return serviceObject;
+        }
+
+        public void setServiceObject( Object serviceObject )
+        {
+            this.serviceObject = serviceObject;
+        }
+    }
+
+    Map getDependencyMap()
+    {
+        return ( Map ) m_dependencies_map.get();
+    }
 
     //**********************************************************************************************************
     public BundleComponentActivator getActivator()
@@ -739,7 +836,7 @@ public abstract class AbstractComponentManager implements Component
 
     final ServiceRegistration getServiceRegistration()
     {
-        return m_serviceRegistration.get();
+        return ( ServiceRegistration ) m_serviceRegistration.get();
     }
 
 
@@ -753,6 +850,12 @@ public abstract class AbstractComponentManager implements Component
         }
 
         m_dependencyManagers.clear();
+    }
+
+    //<DepeendencyManager, Map<ServiceReference, Object[]>>
+    protected Map getParameterMap()
+    {
+        return ( Map ) m_dependencies_map.get();
     }
 
 
@@ -1151,9 +1254,10 @@ public abstract class AbstractComponentManager implements Component
         }
 
 
-        void activate( AbstractComponentManager acm )
+        boolean activate( AbstractComponentManager acm )
         {
             log( acm, "activate" );
+            return false;
 //            throw new IllegalStateException("activate" + this);
         }
 
@@ -1291,14 +1395,19 @@ public abstract class AbstractComponentManager implements Component
             return m_inst;
         }
 
-
-        void activate( AbstractComponentManager acm )
+        /**
+         * returns true if this thread succeeds in activating the component, or the component is not able to be activated.
+         * Returns false if some other thread succeeds in activating the component.
+         * @param acm
+         * @return
+         */
+        boolean activate( AbstractComponentManager acm )
         {
             if ( !acm.isActivatorActive() )
             {
                 acm.log( LogService.LOG_DEBUG, "Bundle's component activator is not active; not activating component",
                     null );
-                return;
+                return true;
             }
 
             acm.log( LogService.LOG_DEBUG, "Activating component", null );
@@ -1308,15 +1417,7 @@ public abstract class AbstractComponentManager implements Component
             if ( !acm.hasConfiguration() && acm.getComponentMetadata().isConfigurationRequired() )
             {
                 acm.log( LogService.LOG_DEBUG, "Missing required configuration, cannot activate", null );
-                return;
-            }
-
-            // Before creating the implementation object, we are going to
-            // test if all the mandatory dependencies are satisfied
-            if ( !acm.verifyDependencyManagers( acm.getProperties() ) )
-            {
-                acm.log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
-                return;
+                return true;
             }
 
             // Before creating the implementation object, we are going to
@@ -1325,7 +1426,15 @@ public abstract class AbstractComponentManager implements Component
             {
                 acm.log( LogService.LOG_DEBUG, "Component is not permitted to register all services, cannot activate",
                     null );
-                return;
+                return true;
+            }
+
+            // Before creating the implementation object, we are going to
+            // test if all the mandatory dependencies are satisfied
+            if ( !acm.verifyDependencyManagers( acm.getProperties() ) )
+            {
+                acm.log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
+                return true;
             }
 
             // set satisfied state before registering the service because
@@ -1348,6 +1457,10 @@ public abstract class AbstractComponentManager implements Component
             // 4. Call the activate method, if present
             if ( ( acm.isImmediate() || acm.getComponentMetadata().isFactory() ) )
             {
+                 if ( !acm.collectDependencies() )
+                 {
+                     return false;
+                 }
                 acm.escalateLock( "AbstractComponentManager.Unsatisifed.activate.1" );
                 try
                 {
@@ -1365,6 +1478,7 @@ public abstract class AbstractComponentManager implements Component
                 }
 
             }
+            return true;
 
         }
 
@@ -1605,7 +1719,7 @@ public abstract class AbstractComponentManager implements Component
             return m_inst;
         }
 
-        void activate( AbstractComponentManager acm )
+        boolean activate( AbstractComponentManager acm )
         {
             throw new IllegalStateException( "activate: " + this );
         }
@@ -1735,9 +1849,9 @@ public abstract class AbstractComponentManager implements Component
 
     private interface AtomicReferenceWrapper
     {
-        ServiceRegistration get();
+        Object get();
 
-        boolean compareAndSet(ServiceRegistration expected, ServiceRegistration replacement);
+        boolean compareAndSet(Object expected, Object replacement);
 
     }
 
@@ -1745,12 +1859,12 @@ public abstract class AbstractComponentManager implements Component
     {
         private final AtomicReference ref = new AtomicReference(  );
 
-        public ServiceRegistration get()
+        public Object get()
         {
-            return ( ServiceRegistration ) ref.get();
+            return ref.get();
         }
 
-        public boolean compareAndSet(ServiceRegistration expected, ServiceRegistration replacement)
+        public boolean compareAndSet(Object expected, Object replacement)
         {
             return ref.compareAndSet( expected, replacement );
         }
@@ -1760,12 +1874,12 @@ public abstract class AbstractComponentManager implements Component
     {
         private final EDU.oswego.cs.dl.util.concurrent.SynchronizedRef ref = new EDU.oswego.cs.dl.util.concurrent.SynchronizedRef( null );
 
-        public ServiceRegistration get()
+        public Object get()
         {
-            return ( ServiceRegistration ) ref.get();
+            return ref.get();
         }
 
-        public boolean compareAndSet(ServiceRegistration expected, ServiceRegistration replacement)
+        public boolean compareAndSet(Object expected, Object replacement)
         {
             return ref.commit( expected, replacement );
         }

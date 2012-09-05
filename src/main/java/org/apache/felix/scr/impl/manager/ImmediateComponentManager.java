@@ -23,6 +23,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
@@ -204,6 +205,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         }
 
         // 3. Bind the target services
+        Map parameters = getParameterMap();
         Iterator it = getDependencyManagers();
         while ( it.hasNext() )
         {
@@ -211,7 +213,8 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             // creating the instance fails here, so we deactivate and return
             // null.
             DependencyManager dm = ( DependencyManager ) it.next();
-            if ( !dm.open( implementationObject ) )
+            Map params = ( Map ) parameters.get( dm );  //<ServiceReference, RefPair>
+            if ( !dm.open( implementationObject, params ) )
             {
                 log( LogService.LOG_ERROR, "Cannot create component instance due to failure to bind reference {0}",
                         new Object[]

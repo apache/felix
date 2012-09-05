@@ -21,9 +21,11 @@ package org.apache.felix.scr.impl.helper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.ExportedPackage;
@@ -39,6 +41,12 @@ public class BindMethod extends BaseMethod
     private static final Class OBJECT_CLASS = Object.class;
 
     private final String m_referenceClassName;
+
+    private static final int SERVICE_REFERENCE = 1;
+    private static final int SERVICE_OBJECT = 2;
+    private static final int SERVICE_OBJECT_AND_MAP = 3;
+
+    private int m_paramStyle;
 
 
     public BindMethod( final AbstractComponentManager componentManager, final String methodName,
@@ -95,6 +103,7 @@ public class BindMethod extends BaseMethod
                 {
                     getComponentManager().log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                 }
+                m_paramStyle = SERVICE_REFERENCE;
                 return method;
             }
         }
@@ -122,6 +131,7 @@ public class BindMethod extends BaseMethod
                 method = getServiceObjectMethod( targetClass, parameterClass, acceptPrivate, acceptPackage );
                 if ( method != null )
                 {
+                    m_paramStyle = SERVICE_OBJECT;
                     return method;
                 }
             }
@@ -136,6 +146,7 @@ public class BindMethod extends BaseMethod
                 method = getServiceObjectAssignableMethod( targetClass, parameterClass, acceptPrivate, acceptPackage );
                 if ( method != null )
                 {
+                    m_paramStyle = SERVICE_OBJECT;
                     return method;
                 }
             }
@@ -154,6 +165,7 @@ public class BindMethod extends BaseMethod
                     method = getServiceObjectWithMapMethod( targetClass, parameterClass, acceptPrivate, acceptPackage );
                     if ( method != null )
                     {
+                        m_paramStyle = SERVICE_OBJECT_AND_MAP;
                         return method;
                     }
                 }
@@ -169,6 +181,7 @@ public class BindMethod extends BaseMethod
                         acceptPackage );
                     if ( method != null )
                     {
+                        m_paramStyle = SERVICE_OBJECT_AND_MAP;
                         return method;
                     }
                 }
@@ -541,34 +554,71 @@ public class BindMethod extends BaseMethod
         return null;
     }
 
+    public AbstractComponentManager.RefPair getServiceObject( ServiceReference ref, BundleContext context )
+    {
+        //??? this resolves which we need.... better way?
+        if ( methodExists() )
+        {
+            if (m_paramStyle == SERVICE_OBJECT || m_paramStyle == SERVICE_OBJECT_AND_MAP) {
+                Object service = context.getService( ref );
+                if ( service == null )
+                {
+                    getComponentManager().log(
+                         LogService.LOG_WARNING,
+                         "Could not get service from ref " + ref, null );
+                    return null;
+                }
+
+                return new AbstractComponentManager.RefPair(ref, service);
+            }
+        }
+        return new AbstractComponentManager.RefPair(ref, null);
+//        final Class[] paramTypes = getMethod( ).getParameterTypes();
+//        final Object[] params = new Object[paramTypes.length];
+//        boolean service = false;
+//        for ( int i = 0; i < params.length; i++ )
+//        {
+//            if ( paramTypes[i] == SERVICE_REFERENCE_CLASS )
+//            {
+//                params[i] = ref;
+//            }
+//            else if ( paramTypes[i] == MAP_CLASS )
+//            {
+//                params[i] = new ReadOnlyDictionary( ref );
+//            }
+//            else
+//            {
+//                params[i] = context.getService( ref );
+//                if ( params[i] == null )
+//                {
+//                    getComponentManager().log(
+//                        LogService.LOG_WARNING,
+//                        "Could not get service from ref " + ref, null );
+//                    return null;
+//                }
+//                service = true;
+//            }
+//        }
+//
+//        return new AbstractComponentManager.RefPair(params, service);
+    }
 
     protected Object[] getParameters( Method method, Object rawParameter )
     {
-        final Service service = ( Service ) rawParameter;
-        final Class[] paramTypes = method.getParameterTypes();
-        final Object[] params = new Object[paramTypes.length];
-        for ( int i = 0; i < params.length; i++ )
+        AbstractComponentManager.RefPair refPair = ( AbstractComponentManager.RefPair ) rawParameter; //{ServiceReference, Object}
+        if (m_paramStyle == SERVICE_REFERENCE )
         {
-            if ( paramTypes[i] == SERVICE_REFERENCE_CLASS )
-            {
-                params[i] = service.getReference();
-            }
-            else if ( paramTypes[i] == MAP_CLASS )
-            {
-                params[i] = new ReadOnlyDictionary( service.getReference() );
-            }
-            else
-            {
-                params[i] = service.getInstance();
-                if ( params[i] == null )
-                {
-                    throw new IllegalStateException( "Dependency Manager: Service " + service.getReference()
-                        + " has already gone, will not " + getMethodNamePrefix() );
-                }
-            }
+            return new Object[] {refPair.getRef()};
         }
-
-        return params;
+        if (m_paramStyle == SERVICE_OBJECT)
+        {
+            return new Object[] {refPair.getServiceObject()};
+        }
+        if (m_paramStyle == SERVICE_OBJECT_AND_MAP  )
+        {
+            return new Object[] {refPair.getServiceObject(), new ReadOnlyDictionary( refPair.getRef() )};
+        }
+        throw new IllegalStateException( "Unexpected m_paramStyle of " + m_paramStyle );
     }
 
 
