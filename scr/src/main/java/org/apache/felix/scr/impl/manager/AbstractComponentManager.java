@@ -169,7 +169,10 @@ public abstract class AbstractComponentManager implements Component
     //ImmediateComponentHolder should be in this manager package and this should be default access.
     public final boolean obtainReadLock( String source )
     {
-        lockingActivity.add( "obtainReadLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+        if ( isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            lockingActivity.add( "obtainReadLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+        }
         if (m_stateLock.getReadHoldCount() >0)
         {
             return false;
@@ -200,7 +203,10 @@ public abstract class AbstractComponentManager implements Component
 
     public final void releaseReadLock( String source )
     {
-        lockingActivity.add( "releaseReadLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+        if ( isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            lockingActivity.add( "releaseReadLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+        }
         try
         {
             m_stateLock.unlockReadLock();
@@ -220,7 +226,10 @@ public abstract class AbstractComponentManager implements Component
 
     final void obtainWriteLock( String source )
     {
-        lockingActivity.add( "obtainWriteLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+        if ( isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            lockingActivity.add( "obtainWriteLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+        }
         try
         {
             if (!m_stateLock.tryWriteLock( m_timeout ) )
@@ -240,7 +249,10 @@ public abstract class AbstractComponentManager implements Component
 
     final void deescalateLock( String source )
     {
-        lockingActivity.add( "deescalateLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+        if ( isLogEnabled( LogService.LOG_DEBUG ) )
+        {
+            lockingActivity.add( "deescalateLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+        }
         m_stateLock.deescalate();
         lockingThread = null;
         lockingStackTrace = null;
