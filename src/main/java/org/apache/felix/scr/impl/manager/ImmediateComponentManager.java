@@ -472,6 +472,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         if ( getState() == STATE_UNSATISFIED && configuration != null
                 && !getComponentMetadata().isConfigurationIgnored() )
         {
+            log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
             activateInternal();
             return;
         }
@@ -619,6 +620,14 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         {
             if ( m_useCount == 0 )
             {
+                if ( !collectDependencies() )
+                {
+                    log(
+                            LogService.LOG_INFO,
+                            "getService did not win collecting dependencies, try creating object anyway.",
+                            null );
+
+                }
                 escalateLock( "ImmediateComponentManager.getService.1" );
                 try
                 {

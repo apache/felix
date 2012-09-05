@@ -19,7 +19,9 @@
 package org.apache.felix.scr.impl.manager;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -91,6 +93,8 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     public ComponentInstance newInstance( Dictionary dictionary )
     {
         final ImmediateComponentManager cm = createComponentManager();
+        log( LogService.LOG_DEBUG, "Creating new instance from component factory {0} with configuration {1}",
+                new Object[] { getComponentMetadata().getName(), dictionary }, null );
 
         ComponentInstance instance;
         final boolean release = cm.obtainReadLock( "ComponentFactoryImpl.newInstance.1" );
@@ -253,6 +257,21 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     State getActiveState()
     {
         return Factory.getInstance();
+    }
+
+    protected boolean collectDependencies()
+    {
+        Map old = getDependencyMap();
+        if ( old == null )
+        {
+            Map dependenciesMap = new HashMap();
+            for (Iterator i = getDependencyManagers(); i.hasNext(); )
+            {
+                dependenciesMap.put( i.next(), Collections.EMPTY_MAP );
+            }
+            setDependencyMap( old, dependenciesMap );
+        }
+        return true;
     }
 
     //---------- Component interface
