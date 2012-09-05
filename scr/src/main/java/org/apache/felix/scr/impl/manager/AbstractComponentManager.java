@@ -211,6 +211,7 @@ public abstract class AbstractComponentManager implements Component
                 b.append( "  " ).append( i.next() ).append( "\n" );
             }
             log( LogService.LOG_ERROR, b.toString(), null );
+            dumpThreads();
             throw e;
         }
     }
@@ -223,6 +224,7 @@ public abstract class AbstractComponentManager implements Component
         {
             if (!m_stateLock.tryWriteLock( m_timeout ) )
             {
+                lockingActivity.add( "escalateLock failure from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis() + " Could not obtain write lock.");
                 throw new IllegalStateException( "Could not obtain lock" );
             }
             lockingThread = Thread.currentThread();
@@ -263,7 +265,14 @@ public abstract class AbstractComponentManager implements Component
         ThreadInfo[] infos = threadMXBean.dumpAllThreads( threadMXBean.isObjectMonitorUsageSupported(), threadMXBean.isSynchronizerUsageSupported() );
         for ( int i = 0; i < infos.length; i++ )
         {
-            b.append( infos[i] ).append( "\n\n" );
+            ThreadInfo ti = infos[i];
+            b.append( "\n\nThreadId: " ).append( ti.getThreadId() ).append( " : name: " ).append( ti.getThreadName() ).append( " State: " ).append( ti.getThreadState() );
+            b.append( "\n  LockInfo: " ).append( ti.getLockInfo() ).append( " LockOwnerId: " ).append( ti.getLockOwnerId() ).append( " LockOwnerName: ").append( ti.getLockOwnerName() );
+            StackTraceElement[] stackTrace = ti.getStackTrace();
+            for (int j = 0; j < stackTrace.length; j++ )
+            {
+                b.append( "\n  " ).append( stackTrace[j] );
+            }
         }
         log( LogService.LOG_ERROR, b.toString(), null );
     }
@@ -729,11 +738,12 @@ public abstract class AbstractComponentManager implements Component
         }
     }
 
-    protected final boolean collectDependencies()
+    protected boolean collectDependencies()
     {
         Map old = ( Map ) m_dependencies_map.get();
         if ( old != null)
         {
+            log( LogService.LOG_DEBUG, "dependency map already present, do not collect dependencies", null );
             return false;
         }
         Class implementationObjectClass = null;
@@ -757,15 +767,24 @@ public abstract class AbstractComponentManager implements Component
             {
                 //not actually satisfied any longer
                 returnServices( newDeps );
+                log( LogService.LOG_DEBUG, "Could not get dependency for dependency manager: {0}",
+                        new Object[] {dependencyManager}, null );
                 return false;
             }
         }
-        if ( !m_dependencies_map.compareAndSet( old, newDeps ))
+        if ( !setDependencyMap( old, newDeps ) )
         {
             returnServices(newDeps);
+            log( LogService.LOG_DEBUG, "Another thread set the dependency map already present, do not keep collected dependencies", null );
             return false;
         }
+        log( LogService.LOG_DEBUG, "This thread collected dependencies", null );
         return true;
+    }
+
+    protected boolean setDependencyMap( Map old, Map newDeps )
+    {
+        return m_dependencies_map.compareAndSet( old, newDeps );
     }
 
     private void returnServices( Map deps )
@@ -1299,6 +1318,7 @@ public abstract class AbstractComponentManager implements Component
                 {
                     acm.deleteComponent( reason );
                     acm.deactivateDependencyManagers();
+                    acm.m_dependencies_map.set( null );
                 }
                 finally
                 {
@@ -1457,8 +1477,10 @@ public abstract class AbstractComponentManager implements Component
             // 4. Call the activate method, if present
             if ( ( acm.isImmediate() || acm.getComponentMetadata().isFactory() ) )
             {
+                //don't collect dependencies for a factory component.
                  if ( !acm.collectDependencies() )
                  {
+                     acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object", null );
                      return false;
                  }
                 acm.escalateLock( "AbstractComponentManager.Unsatisifed.activate.1" );
@@ -1851,6 +1873,8 @@ public abstract class AbstractComponentManager implements Component
     {
         Object get();
 
+        void set(Object o);
+
         boolean compareAndSet(Object expected, Object replacement);
 
     }
@@ -1862,6 +1886,11 @@ public abstract class AbstractComponentManager implements Component
         public Object get()
         {
             return ref.get();
+        }
+
+        public void set(Object o)
+        {
+            ref.set( o );
         }
 
         public boolean compareAndSet(Object expected, Object replacement)
@@ -1878,6 +1907,11 @@ public abstract class AbstractComponentManager implements Component
         {
             return ref.get();
         }
+
+        public void set(Object o)
+         {
+             ref.set( o );
+         }
 
         public boolean compareAndSet(Object expected, Object replacement)
         {
