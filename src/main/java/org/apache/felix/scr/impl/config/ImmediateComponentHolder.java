@@ -31,6 +31,7 @@ import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.log.LogService;
 
 
 /**
@@ -270,6 +271,8 @@ public class ImmediateComponentHolder implements ComponentHolder
      */
     public void configurationUpdated( final String pid, final Dictionary props )
     {
+        log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration updated for pid {0} with properties {1}",
+                new Object[] {pid, props}, null);
         // FELIX-2231: nothing to do any more, all components have been disposed off
         if (m_singleComponent == null) {
             return;
@@ -277,10 +280,12 @@ public class ImmediateComponentHolder implements ComponentHolder
 
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
+            log( LogService.LOG_DEBUG, "ImmediateComponentHolder reconfiguring single component for pid {0} ",
+                    new Object[] {pid}, null);
             final boolean release = m_singleComponent.obtainReadLock( "ImmediateComponentHolder.configurationUpdated.1" );
             try
             {
-// singleton configuration has pid equal to component name
+                // singleton configuration has pid equal to component name
                 m_singleComponent.reconfigure( props );
             }
             finally
@@ -297,6 +302,8 @@ public class ImmediateComponentHolder implements ComponentHolder
             final ImmediateComponentManager icm = getComponentManager( pid );
             if ( icm != null )
             {
+                log( LogService.LOG_DEBUG, "ImmediateComponentHolder reconfiguring existing component for pid {0} ",
+                        new Object[] {pid}, null);
                 final boolean release = icm.obtainReadLock( "ImmediateComponentHolder.configurationUpdated.2" );
                 try
                 {
@@ -318,11 +325,15 @@ public class ImmediateComponentHolder implements ComponentHolder
                 if ( !m_singleComponent.hasConfiguration() )
                 {
                     // configure the single instance if this is not configured
+                    log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuring the unconfigured single component for pid {0} ",
+                            new Object[] {pid}, null);
                     newIcm = m_singleComponent;
                 }
                 else
                 {
                     // otherwise create a new instance to provide the config to
+                    log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuring a new component for pid {0} ",
+                            new Object[] {pid}, null);
                     newIcm = createComponentManager();
                 }
 
@@ -548,4 +559,23 @@ public class ImmediateComponentHolder implements ComponentHolder
             return cm;
         }
     }
+
+    private void log( int level, String message, Throwable ex )
+    {
+        BundleComponentActivator activator = getActivator();
+        if ( activator != null )
+        {
+            activator.log( level, message, getComponentMetadata(), ex );
+        }
+    }
+
+    private void log( int level, String message, Object[] arguments, Throwable ex )
+    {
+        BundleComponentActivator activator = getActivator();
+        if ( activator != null )
+        {
+            activator.log( level, message, arguments, getComponentMetadata(), ex );
+        }
+    }
+
 }
