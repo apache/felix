@@ -27,16 +27,25 @@ import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeSet;
 
 import javax.inject.Inject;
@@ -58,7 +67,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.log.LogEntry;
+import org.osgi.service.log.LogListener;
+import org.osgi.service.log.LogReaderService;
 import org.osgi.util.tracker.ServiceTracker;
 
 
@@ -95,6 +108,9 @@ public abstract class ComponentTestBase
     protected static String descriptorFile = "/integration_test_simple_components.xml";
 
     protected static boolean NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
+    private PrintStream out;
+    private PrintStream err;
+    protected Log log;
 
     static
     {
@@ -124,12 +140,13 @@ public abstract class ComponentTestBase
         final Option[] base = options(
             provision(
                 CoreOptions.bundle( bundleFile.toURI().toString() ),
+                    mavenBundle( "org.apache.felix", "org.apache.felix.log", "1.0.1" ),
                 mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
-                mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", "1.0.10" ),
-                mavenBundle( "org.apache.felix", "org.apache.felix.log", "1.0.1" )
+                mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", "1.0.10" )
              ),
              junitBundles(),
-             systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) )
+             systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
+             systemProperty( "ds.loglevel" ).value( "debug" )
 
         );
         final Option vmOption = ( paxRunnerVmOption != null ) ? CoreOptions.vmOption( paxRunnerVmOption ) : null;
@@ -140,6 +157,18 @@ public abstract class ComponentTestBase
     @Before
     public void setUp() throws BundleException
     {
+        out = System.out;
+        err = System.err;
+        System.setOut(new NullStdout());
+        System.setErr( new NullStdout() );
+
+        log = new Log();
+            ServiceReference sr = bundleContext.getServiceReference(LogReaderService.class.getName());
+            TestCase.assertNotNull(sr);
+            LogReaderService logReader = (LogReaderService) bundleContext.getService(sr);
+            TestCase.assertNotNull(logReader);
+            logReader.addLogListener( log );
+
         scrTracker = new ServiceTracker( bundleContext, "org.apache.felix.scr.ScrService", null );
         scrTracker.open();
         configAdminTracker = new ServiceTracker( bundleContext, "org.osgi.service.cm.ConfigurationAdmin", null );
@@ -163,6 +192,8 @@ public abstract class ComponentTestBase
         configAdminTracker = null;
         scrTracker.close();
         scrTracker = null;
+        System.setOut(out);
+        System.setErr(err);
     }
 
 
@@ -545,5 +576,57 @@ public abstract class ComponentTestBase
                 return String.valueOf( state );
         }
     }
+
+    // Used to ignore logs displayed by the framework from stdout.
+    // (the log service will log it because it listen to fwk error
+    // events ...).
+    static class NullStdout extends PrintStream
+    {
+        NullStdout()
+        {
+            super(new OutputStream()
+            {
+                @Override
+                public void write(int b) throws IOException
+                {
+                }
+            });
+        }
+    }
+
+    public static class Log implements LogListener
+    {
+        private final List m_warnings = Collections.synchronizedList( new ArrayList() );//<LogEntry>
+        private final static PrintStream _out =
+                new PrintStream(new BufferedOutputStream(new FileOutputStream( FileDescriptor.err), 128));
+
+        public void logged(LogEntry entry)
+        {
+            if (entry.getLevel() <= 2)
+            {
+                m_warnings.add( entry );
+            }
+            StringWriter sw = new StringWriter();
+            sw.append( "log level: " + entry.getLevel() );
+            sw.append(" D=");
+            sw.append(new Date(entry.getTime()).toString());
+            sw.append(", T=" + Thread.currentThread().getName());
+            sw.append(": ");
+            sw.append(entry.getMessage());
+            if (entry.getException() != null)
+            {
+                sw.append(System.getProperty("line.separator"));
+                PrintWriter pw = new PrintWriter(sw);
+                entry.getException().printStackTrace(pw);
+            }
+            _out.println(sw.toString());
+        }
+
+        List foundWarnings()
+        {
+            return m_warnings;
+        }
+    }
+
 
 }

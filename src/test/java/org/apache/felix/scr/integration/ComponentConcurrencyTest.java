@@ -26,6 +26,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Iterator;
 
 import javax.inject.Inject;
 
@@ -50,7 +51,7 @@ public class ComponentConcurrencyTest extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-        //  paxRunnerVmOption = DEBUG_VM_OPTION;
+//        paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_component_concurrency.xml";
     }
 
@@ -68,91 +69,34 @@ public class ComponentConcurrencyTest extends ComponentTestBase
         }
     }
 
-    // Used to ignore logs displayed by the framework from stdout.
-    // (the log service will log it because it listen to fwk error 
-    // events ...).
-    static class NullStdout extends PrintStream
-    {
-        NullStdout()
-        {
-            super(new OutputStream()
-            {
-                @Override
-                public void write(int b) throws IOException
-                {
-                }
-            });
-        }
-    }
-
-    public static class Log implements LogListener
-    {
-        private volatile boolean _foundWarnings;
-        private final static PrintStream _out =
-                new PrintStream(new BufferedOutputStream(new FileOutputStream(FileDescriptor.err), 128));
-
-        public void logged(LogEntry entry)
-        {
-            if (entry.getLevel() <= 2)
-            {
-                _foundWarnings = true;
-            }
-            StringWriter sw = new StringWriter();
-            sw.append("D=");
-            sw.append(new Date(entry.getTime()).toString());
-            sw.append(", T=" + Thread.currentThread().getName());
-            sw.append(": ");
-            sw.append(entry.getMessage());
-            if (entry.getException() != null)
-            {
-                sw.append(System.getProperty("line.separator"));
-                PrintWriter pw = new PrintWriter(sw);
-                entry.getException().printStackTrace(pw);
-            }
-            _out.println(sw.toString());
-        }
-
-        boolean foundWarnings()
-        {
-            return _foundWarnings;
-        }
-    }
-
     @Test
     public void test_concurrent_component_activation_using_componentFactories()
     {
-        final PrintStream out = System.out;
-        final PrintStream err = System.err;
-        System.setOut(new NullStdout());
-        System.setErr(new NullStdout());
-        
-        try
+
+
+        final Component AFactory =
+                findComponentByName( "org.apache.felix.scr.integration.components.concurrency.AFactory" );
+        TestCase.assertNotNull( AFactory );
+        AFactory.enable();
+
+        final Component CFactory =
+                findComponentByName( "org.apache.felix.scr.integration.components.concurrency.CFactory" );
+        TestCase.assertNotNull( CFactory );
+        CFactory.enable();
+
+        delay( 30 );
+        for ( Iterator it = log.foundWarnings().iterator(); it.hasNext();)
         {
-            Log log = new Log();
-            ServiceReference sr = bundleContext.getServiceReference(LogReaderService.class.getName());
-            TestCase.assertNotNull(sr);
-            LogReaderService logReader = (LogReaderService) bundleContext.getService(sr);
-            TestCase.assertNotNull(logReader);
-            logReader.addLogListener(log);
-
-            final Component AFactory =
-                    findComponentByName("org.apache.felix.scr.integration.components.concurrency.AFactory");
-            TestCase.assertNotNull(AFactory);
-            AFactory.enable();
-
-            final Component CFactory =
-                    findComponentByName("org.apache.felix.scr.integration.components.concurrency.CFactory");
-            TestCase.assertNotNull(CFactory);
-            CFactory.enable();
-
-            delay(30);
-            TestCase.assertFalse(log.foundWarnings());
-        }
-
-        finally
-        {
-            System.setOut(out);
-            System.setErr(err);
+            LogEntry entry = ( LogEntry ) it.next();
+            String message = entry.getMessage();
+            if ( message.contains( "FrameworkEvent ERROR" ) ||
+                    message.contains( "Could not get service from ref" ) ||
+                    message.contains( "Failed creating the component instance; see log for reason" ) ||
+                    message.contains( "Cannot create component instance due to failure to bind reference" ))
+            {
+                continue;
+            }
+            TestCase.fail( "unexpected warning or error logged: " + message );
         }
     }
 }
