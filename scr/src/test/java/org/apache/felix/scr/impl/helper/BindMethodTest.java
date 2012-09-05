@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.helper;
 
 import junit.framework.TestCase;
 
+import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.manager.components.FakeService;
 import org.apache.felix.scr.impl.manager.components.T1;
@@ -29,6 +30,7 @@ import org.apache.felix.scr.impl.manager.components.T3;
 import org.apache.felix.scr.impl.manager.components2.T2;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.easymock.EasyMock;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -38,32 +40,24 @@ public class BindMethodTest extends TestCase
 
     private ServiceReference m_serviceReference;
     private FakeService m_serviceInstance;
-    private BindMethod.Service m_service;
+    private BundleContext m_context;
 
 
     public void setUp()
     {
         m_serviceReference = (ServiceReference) EasyMock.createNiceMock( ServiceReference.class );
         m_serviceInstance = (FakeService) EasyMock.createNiceMock( FakeService.class );
-        m_service = new BindMethod.Service()
-        {
-            public ServiceReference getReference()
-            {
-                return m_serviceReference;
-            }
+        m_context = ( BundleContext ) EasyMock.createNiceMock( BundleContext.class );
 
+        EasyMock.expect( m_context.getService( m_serviceReference ) ).andReturn( m_serviceInstance )
+                .anyTimes();
 
-            public Object getInstance()
-            {
-                return m_serviceInstance;
-            }
-        };
         EasyMock.expect( m_serviceReference.getPropertyKeys() ).andReturn( new String[]
             { Constants.SERVICE_ID } ).anyTimes();
         EasyMock.expect( m_serviceReference.getProperty( Constants.SERVICE_ID ) ).andReturn( "Fake Service" )
             .anyTimes();
         EasyMock.replay( new Object[]
-            { m_serviceReference } );
+            { m_serviceReference, m_context } );
     }
 
 
@@ -441,7 +435,8 @@ public class BindMethodTest extends TestCase
         ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata );
         BindMethod bm = new BindMethod( icm, methodName, component.getClass(),
                 FakeService.class.getName() );
-        bm.invoke( component, m_service, null );
+        AbstractComponentManager.RefPair refPair = bm.getServiceObject( m_serviceReference, m_context );
+        bm.invoke( component, refPair, null );
         assertEquals( expectCallPerformed, component.callPerformed );
     }
 }

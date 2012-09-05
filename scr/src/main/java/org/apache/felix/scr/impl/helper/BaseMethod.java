@@ -103,6 +103,10 @@ abstract class BaseMethod
         return m_methodName;
     }
 
+    protected final Method getMethod()
+    {
+        return m_method;
+    }
 
     protected final Class getComponentClass()
     {
