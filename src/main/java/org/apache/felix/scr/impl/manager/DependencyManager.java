@@ -1091,8 +1091,10 @@ public class DependencyManager implements ServiceListener, Reference
         for ( Iterator i = parameters.entrySet().iterator(); i.hasNext(); )
         {
             Map.Entry entry = ( Map.Entry ) i.next();
-            invokeBindMethod( ( AbstractComponentManager.RefPair ) entry.getValue());
-            success = true;
+            if ( invokeBindMethod( ( AbstractComponentManager.RefPair ) entry.getValue() ) )
+            {
+                success = true;
+            }
         }
         return success;
     }
