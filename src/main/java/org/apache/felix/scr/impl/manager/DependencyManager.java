@@ -59,17 +59,11 @@ public class DependencyManager implements ServiceListener, Reference
     private static final int STATE_MASK = //Component.STATE_UNSATISFIED |
          Component.STATE_ACTIVE | Component.STATE_REGISTERED | Component.STATE_FACTORY;
 
-    // pseudo service to mark a bound service without actual service instance
-//    private static final Object BOUND_SERVICE_SENTINEL = new Object();
-
     // the component to which this dependency belongs
     private final AbstractComponentManager m_componentManager;
 
     // Reference to the metadata
     private final ReferenceMetadata m_dependencyMetadata;
-
-    // The map of bound services indexed by their ServiceReference
-//    private final Map m_bound;
 
     // the number of matching services registered in the system
     private volatile int m_size;
@@ -102,8 +96,6 @@ public class DependencyManager implements ServiceListener, Reference
     {
         m_componentManager = componentManager;
         m_dependencyMetadata = dependency;
-//        m_bound = Collections.synchronizedMap( new HashMap() );
-
 
         // dump the reference information if DEBUG is enabled
         if ( m_componentManager.isLogEnabled( LogService.LOG_DEBUG ) )
@@ -321,8 +313,8 @@ public class DependencyManager implements ServiceListener, Reference
                 return;
             }
             //release our read lock and wait for activation to complete
-            m_componentManager.escalateLock( "DependencyManager.serviceAdded.nothandled.1" );
-            m_componentManager.deescalateLock( "DependencyManager.serviceAdded.nothandled.2" );
+            m_componentManager.releaseReadLock( "DependencyManager.serviceAdded.nothandled.1" );
+            m_componentManager.obtainReadLock( "DependencyManager.serviceAdded.nothandled.2" );
             m_componentManager.log( LogService.LOG_DEBUG,
                     "Dependency Manager: Service {0} activation on other thread: after releasing lock, component instance is: {1}", new Object[]
                     {m_dependencyMetadata.getName(), m_componentManager.getInstance()}, null );
@@ -613,12 +605,15 @@ public class DependencyManager implements ServiceListener, Reference
     void deactivate()
     {
         // unget all services we once got
-        ServiceReference[] boundRefs = getBoundServiceReferences();
-        if ( boundRefs != null )
+        if ( m_componentManager.getDependencyMap() != null )
         {
-            for ( int i = 0; i < boundRefs.length; i++ )
+            ServiceReference[] boundRefs = getBoundServiceReferences();
+            if ( boundRefs != null )
             {
-                ungetService( boundRefs[i] );
+                for ( int i = 0; i < boundRefs.length; i++ )
+                {
+                    ungetService( boundRefs[i] );
+                }
             }
         }
     }
@@ -807,29 +802,14 @@ public class DependencyManager implements ServiceListener, Reference
      */
     private boolean isBound()
     {
-        Map bound = ( Map ) m_componentManager.getDependencyMap().get( this );
+        Map dependencyMap = m_componentManager.getDependencyMap();
+        if (dependencyMap  == null )
+        {
+            return false;
+        }
+        Map bound = ( Map ) dependencyMap.get( this );
         return !bound.isEmpty();
     }
-
-
-    /**
-     * Adds the {@link #BOUND_SERVICE_SENTINEL} object as a pseudo service to
-     * the map of bound services. This method allows keeping track of services
-     * which have been bound but not retrieved from the service registry, which
-     * is the case if the bind method is called with a ServiceReference instead
-     * of the service object itself.
-     * <p>
-     * We have to keep track of all services for which we called the bind
-     * method to be able to call the unbind method in case the service is
-     * unregistered.
-     *
-     * @param serviceReference The reference to the service being marked as
-     *      bound.
-     */
-//    private void bindService( ServiceReference serviceReference )
-//    {
-//        m_bound.put( serviceReference, BOUND_SERVICE_SENTINEL );
-//    }
 
 
     /**
@@ -890,7 +870,7 @@ public class DependencyManager implements ServiceListener, Reference
             return null;
         }
 
-        // keep the service for latter ungetting
+        // keep the service for later ungetting
         if ( serviceObject != null )
         {
             if (refPair != null)
@@ -989,7 +969,6 @@ public class DependencyManager implements ServiceListener, Reference
 
     boolean open( Object instance, Map parameters )
     {
-//        initBindingMethods( instance.getClass() );
         m_componentInstance = instance;
         return bind(parameters);
     }
@@ -1008,9 +987,6 @@ public class DependencyManager implements ServiceListener, Reference
         finally
         {
             m_componentInstance = null;
-//            m_bind = null;
-//            m_unbind = null;
-//            m_updated = null;
         }
     }
 
@@ -1172,16 +1148,34 @@ public class DependencyManager implements ServiceListener, Reference
     private boolean invokeBindMethod( ServiceReference ref )
     {
         //event driven, and we already checked this ref is not yet handled.
-        Map dependencyMap = m_componentManager.getDependencyMap();
-        if ( dependencyMap != null )
+        if ( m_componentInstance != null )
         {
-            Map deps = ( Map ) dependencyMap.get( this );
-            BundleContext bundleContext = m_componentManager.getActivator().getBundleContext();
-            AbstractComponentManager.RefPair refPair = m_bind.getServiceObject( ref, bundleContext );
-            deps.put( ref, refPair );
-            return invokeBindMethod( refPair );
+            Map dependencyMap = m_componentManager.getDependencyMap();
+            if ( dependencyMap != null )
+            {
+                if (m_bind == null)
+                {
+                    m_componentManager.log( LogService.LOG_ERROR,
+                        "For dependency {0}, bind method not set: component state {1}",
+                        new Object[]
+                            { new Integer(m_componentManager.getState())  }, null );
+
+                }
+                Map deps = ( Map ) dependencyMap.get( this );
+                BundleContext bundleContext = m_componentManager.getActivator().getBundleContext();
+                AbstractComponentManager.RefPair refPair = m_bind.getServiceObject( ref, bundleContext );
+                deps.put( ref, refPair );
+                return invokeBindMethod( refPair );
+            }
+            return false;
         }
-        return false;
+        else
+        {
+            m_componentManager.log( LogService.LOG_DEBUG,
+                "DependencyManager : component not yet created, assuming bind method call succeeded",
+                null );
+            return true;
+        }
     }
 
     /**
