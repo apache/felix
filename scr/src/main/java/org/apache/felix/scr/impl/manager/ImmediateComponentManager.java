@@ -615,20 +615,29 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
     public Object getService( Bundle bundle, ServiceRegistration serviceRegistration )
     {
-        final boolean release = obtainReadLock( "ImmediateComponentManager.getService.1" );
+        boolean release = obtainReadLock( "ImmediateComponentManager.getService.1" );
         try
         {
             if ( m_useCount == 0 )
             {
-                if ( !collectDependencies() )
+                releaseReadLock( "ImmediateComponentManager.getService.1" );
+                try
                 {
-                    log(
-                            LogService.LOG_INFO,
-                            "getService did not win collecting dependencies, try creating object anyway.",
-                            null );
+                    if ( !collectDependencies() )
+                    {
+                        log(
+                                LogService.LOG_INFO,
+                                "getService did not win collecting dependencies, try creating object anyway.",
+                                null );
 
+                    }
                 }
-                escalateLock( "ImmediateComponentManager.getService.1" );
+                catch ( IllegalStateException e )
+                {
+                    release = false;
+                    return null;
+                }
+                obtainWriteLock( "ImmediateComponentManager.getService.1" );
                 try
                 {
                     if ( m_useCount == 0 )
@@ -675,7 +684,8 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 // be kept (FELIX-3039)
                 if ( m_useCount == 0 && !isImmediate() && !getActivator().getConfiguration().keepInstances() )
                 {
-                    escalateLock( "ImmediateComponentManager.ungetService.1" );
+                    releaseReadLock( "ImmediateComponentManager.ungetService.1" );
+                    obtainWriteLock( "ImmediateComponentManager.ungetService.1" );
                     try
                     {
                         if ( m_useCount == 0 )

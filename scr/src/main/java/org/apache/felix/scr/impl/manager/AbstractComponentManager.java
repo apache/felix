@@ -91,7 +91,9 @@ public abstract class AbstractComponentManager implements Component
     // The dependency managers that manage every dependency
     private final List m_dependencyManagers;
 
-    //<Map<DependencyManager, Map<ServiceReference, Object[]>>>
+    private boolean m_dependencyManagersInitialized;
+
+    //<Map<DependencyManager, Map<ServiceReference, RefPair>>>
     private final AtomicReferenceWrapper m_dependencies_map;
 
     // A reference to the BundleComponentActivator
@@ -216,15 +218,14 @@ public abstract class AbstractComponentManager implements Component
         }
     }
 
-    final void escalateLock( String source )
+    final void obtainWriteLock( String source )
     {
-        lockingActivity.add( "escalateLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
-        m_stateLock.unlockReadLock();
+        lockingActivity.add( "obtainWriteLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
         try
         {
             if (!m_stateLock.tryWriteLock( m_timeout ) )
             {
-                lockingActivity.add( "escalateLock failure from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis() + " Could not obtain write lock.");
+                lockingActivity.add( "obtainWriteLock failure from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis() + " Could not obtain write lock.");
                 throw new IllegalStateException( "Could not obtain lock" );
             }
             lockingThread = Thread.currentThread();
@@ -694,24 +695,33 @@ public abstract class AbstractComponentManager implements Component
 
     protected void registerService( String[] provides )
     {
-        ServiceRegistration existing = ( ServiceRegistration ) m_serviceRegistration.get();
-        if ( existing == null )
+        releaseReadLock( "register.service.1" );
+        try
         {
-            log( LogService.LOG_DEBUG, "registering services", null );
-
-            // get a copy of the component properties as service properties
-            final Dictionary serviceProperties = getServiceProperties();
-
-            ServiceRegistration newRegistration = getActivator().getBundleContext().registerService(
-                provides,
-                getService(), serviceProperties );
-            boolean weWon = m_serviceRegistration.compareAndSet( existing, newRegistration );
-            if (weWon)
+            ServiceRegistration existing = ( ServiceRegistration ) m_serviceRegistration.get();
+            if ( existing == null )
             {
-                return;
+                log( LogService.LOG_DEBUG, "registering services", null );
+
+                // get a copy of the component properties as service properties
+                final Dictionary serviceProperties = getServiceProperties();
+
+                ServiceRegistration newRegistration = getActivator().getBundleContext().registerService(
+                    provides,
+                    getService(), serviceProperties );
+                boolean weWon = m_serviceRegistration.compareAndSet( existing, newRegistration );
+                if (weWon)
+                {
+                    return;
+                }
+                newRegistration.unregister();
             }
-            newRegistration.unregister();
         }
+        finally
+        {
+            obtainReadLock( "register.service.1" );
+        }
+
     }
 
     /**
@@ -738,15 +748,13 @@ public abstract class AbstractComponentManager implements Component
         }
     }
 
-    protected boolean collectDependencies()
+    boolean initDependencyManagers()
     {
-        Map old = ( Map ) m_dependencies_map.get();
-        if ( old != null)
+        if ( m_dependencyManagersInitialized )
         {
-            log( LogService.LOG_DEBUG, "dependency map already present, do not collect dependencies", null );
-            return false;
+            return true;
         }
-        Class implementationObjectClass = null;
+        Class implementationObjectClass;
         try
         {
             implementationObjectClass = getActivator().getBundleContext().getBundle().loadClass(
@@ -757,19 +765,46 @@ public abstract class AbstractComponentManager implements Component
             log( LogService.LOG_ERROR, "Could not load implementation object class", e );
             return false;
         }
-        Map newDeps = new HashMap( );//<DependencyManager, Map<ServiceReference, RefPair>
         for (Iterator it = m_dependencyManagers.iterator(); it.hasNext(); )
         {
             DependencyManager dependencyManager = ( DependencyManager ) it.next();
 
             dependencyManager.initBindingMethods( implementationObjectClass );
+        }
+        m_dependencyManagersInitialized = true;
+        return true;
+    }
+
+    /**
+     * Collect and store in m_dependencies_map all the services for dependencies, outside of any locks.
+     * Throwing IllegalStateException on failure to collect all the dependencies is needed so getService can
+     * know to return null.
+     *
+     * @return true if this thread collected the dependencies;
+     *   false if some other thread successfully collected the dependencies;
+     * @throws IllegalStateException if some dependency is no longer available.
+     */
+    protected boolean collectDependencies() throws IllegalStateException
+    {
+        Map old = ( Map ) m_dependencies_map.get();
+        if ( old != null)
+        {
+            log( LogService.LOG_DEBUG, "dependency map already present, do not collect dependencies", null );
+            return false;
+        }
+        initDependencyManagers();
+        Map newDeps = new HashMap( );//<DependencyManager, Map<ServiceReference, RefPair>
+        for (Iterator it = m_dependencyManagers.iterator(); it.hasNext(); )
+        {
+            DependencyManager dependencyManager = ( DependencyManager ) it.next();
+
             if (!dependencyManager.prebind( newDeps) )
             {
                 //not actually satisfied any longer
                 returnServices( newDeps );
                 log( LogService.LOG_DEBUG, "Could not get dependency for dependency manager: {0}",
                         new Object[] {dependencyManager}, null );
-                return false;
+                throw new IllegalStateException( "Missing dependencies, not satisfied" );
             }
         }
         if ( !setDependencyMap( old, newDeps ) )
@@ -871,7 +906,7 @@ public abstract class AbstractComponentManager implements Component
         m_dependencyManagers.clear();
     }
 
-    //<DepeendencyManager, Map<ServiceReference, Object[]>>
+    //<DependencyManager, Map<ServiceReference, RefPair>>
     protected Map getParameterMap()
     {
         return ( Map ) m_dependencies_map.get();
@@ -1246,22 +1281,18 @@ public abstract class AbstractComponentManager implements Component
 
         ServiceReference getServiceReference( AbstractComponentManager acm )
         {
-//            return null;
             throw new IllegalStateException("getServiceReference" + this);
         }
 
 
         Object getService( ImmediateComponentManager dcm )
         {
-//            log( dcm, "getService" );
-//            return null;
             throw new IllegalStateException("getService" + this);
         }
 
 
         void ungetService( ImmediateComponentManager dcm )
         {
-//            log( dcm, "ungetService" );
             throw new IllegalStateException("ungetService" + this);
         }
 
@@ -1269,7 +1300,6 @@ public abstract class AbstractComponentManager implements Component
         void enable( AbstractComponentManager acm )
         {
             log( acm, "enable" );
-//            throw new IllegalStateException("enable" + this);
         }
 
 
@@ -1277,27 +1307,23 @@ public abstract class AbstractComponentManager implements Component
         {
             log( acm, "activate" );
             return false;
-//            throw new IllegalStateException("activate" + this);
         }
 
 
         void deactivate( AbstractComponentManager acm, int reason )
         {
             log( acm, "deactivate (reason: " + reason + ")" );
-//            throw new IllegalStateException("deactivate" + this);
         }
 
 
         void disable( AbstractComponentManager acm )
         {
-//            log( acm, "disable" );
             throw new IllegalStateException("disable" + this);
         }
 
 
         void dispose( AbstractComponentManager acm, int reason )
         {
-//            log( acm, "dispose (reason: " + reason + ")" );
             throw new IllegalStateException("dispose" + this);
         }
 
@@ -1312,8 +1338,9 @@ public abstract class AbstractComponentManager implements Component
         {
             try
             {
+                acm.releaseReadLock( "AbstractComponentManager.State.doDeactivate.1" );
                 acm.unregisterComponentService();
-                acm.escalateLock( "AbstractComponentManager.State.doDeactivate.1" );
+                acm.obtainWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
                 try
                 {
                     acm.deleteComponent( reason );
@@ -1477,13 +1504,24 @@ public abstract class AbstractComponentManager implements Component
             // 4. Call the activate method, if present
             if ( ( acm.isImmediate() || acm.getComponentMetadata().isFactory() ) )
             {
+                acm.releaseReadLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                 //don't collect dependencies for a factory component.
-                 if ( !acm.collectDependencies() )
-                 {
-                     acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object", null );
-                     return false;
-                 }
-                acm.escalateLock( "AbstractComponentManager.Unsatisifed.activate.1" );
+                try
+                {
+                    if ( !acm.collectDependencies() )
+                    {
+                        acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object (1)", null );
+                        acm.obtainReadLock( "AbstractComponentManager.Unsatisfied.activate.1" );
+                        return false;
+                    }
+                }
+                catch ( IllegalStateException e )
+                {
+                    acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object (2)", null );
+                    acm.obtainReadLock( "AbstractComponentManager.Unsatisfied.activate.1" );
+                    return false;
+                }
+                acm.obtainWriteLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                 try
                 {
                     acm.changeState( acm.getActiveState() );
@@ -1496,7 +1534,7 @@ public abstract class AbstractComponentManager implements Component
                 }
                 finally
                 {
-                    acm.deescalateLock( "AbstractComponentManager.Unsatisifed.activate.1" );
+                    acm.deescalateLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                 }
 
             }
