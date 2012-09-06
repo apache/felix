@@ -7,8 +7,10 @@ import java.util.regex.*;
 import aQute.bnd.osgi.*;
 import aQute.bnd.service.*;
 import aQute.bnd.version.*;
+import aQute.lib.collections.*;
+import aQute.libg.glob.*;
 
-public class WorkspaceRepository implements RepositoryPlugin {
+public class WorkspaceRepository implements RepositoryPlugin, Actionable {
 	private final Workspace	workspace;
 
 	public WorkspaceRepository(Workspace workspace) {
@@ -87,10 +89,10 @@ public class WorkspaceRepository implements RepositoryPlugin {
 	}
 
 	public PutResult put(InputStream stream, PutOptions options) throws Exception {
-		return null;
+		throw new UnsupportedOperationException("Read only repository");
 	}
 
-	public List<String> list(String regex) throws Exception {
+	public List<String> list(String pattern) throws Exception {
 		List<String> names = new ArrayList<String>();
 		Collection<Project> projects = workspace.getAllProjects();
 		for (Project project : projects) {
@@ -99,9 +101,9 @@ public class WorkspaceRepository implements RepositoryPlugin {
 				for (File file : build) {
 					Jar jar = new Jar(file);
 					String bsn = jar.getBsn();
-					if (regex != null) {
-						Pattern pattern = Pattern.compile(regex);
-						Matcher matcher = pattern.matcher(bsn);
+					if (pattern != null) {
+						Glob glob = new Glob(pattern);
+						Matcher matcher = glob.matcher(bsn);
 						if (matcher.matches()) {
 							if (!names.contains(bsn)) {
 								names.add(bsn);
@@ -119,7 +121,7 @@ public class WorkspaceRepository implements RepositoryPlugin {
 		return names;
 	}
 
-	public List<Version> versions(String bsn) throws Exception {
+	public SortedSet<Version> versions(String bsn) throws Exception {
 		List<Version> versions = new ArrayList<Version>();
 		Collection<Project> projects = workspace.getAllProjects();
 		for (Project project : projects) {
@@ -127,22 +129,66 @@ public class WorkspaceRepository implements RepositoryPlugin {
 			if (build != null) {
 				for (File file : build) {
 					Jar jar = new Jar(file);
-					if (bsn.equals(jar.getBsn())) {
-						versions.add(new Version(jar.getVersion()));
+					try {
+						if (bsn.equals(jar.getBsn())) {
+							String v  = jar.getVersion();
+							if ( v == null)
+								v = "0";
+							else if (!Verifier.isVersion(v))
+								continue; // skip
+							
+							versions.add(new Version(v));
+						}
+					}
+					finally {
+						jar.close();
 					}
 				}
 			}
 		}
-
-		return versions;
+		if ( versions.isEmpty())
+			return SortedList.empty();
+		
+		return new SortedList<Version>(versions);
 	}
 
 	public String getName() {
-		return "Workspace";
+		return "Workspace " + workspace.getBase().getName();
 	}
 
 	public String getLocation() {
-		return "Workspace";
+		return workspace.getBase().getAbsolutePath();
+	}
+
+	public File get(String bsn, Version version, Map<String,String> properties, DownloadListener ... listeners) throws Exception {
+		File file = get(bsn, version.toString(), Strategy.EXACT, properties);
+		if ( file == null)
+			return null;
+		for (DownloadListener l : listeners) {
+			try {
+				l.success(file);
+			}
+			catch (Exception e) {
+				workspace.exception(e, "Workspace repo listener callback for %s" ,file);
+			}
+		}
+		return file;
+	}
+
+	
+	public Map<String,Runnable> actions(Object... target) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String tooltip(Object... target) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String title(Object... target) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

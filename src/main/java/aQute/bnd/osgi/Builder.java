@@ -9,7 +9,6 @@ import java.util.zip.*;
 
 import aQute.bnd.component.*;
 import aQute.bnd.differ.*;
-import aQute.bnd.differ.Baseline.Info;
 import aQute.bnd.header.*;
 import aQute.bnd.make.*;
 import aQute.bnd.make.component.*;
@@ -18,7 +17,6 @@ import aQute.bnd.maven.*;
 import aQute.bnd.osgi.Descriptors.PackageRef;
 import aQute.bnd.osgi.Descriptors.TypeRef;
 import aQute.bnd.service.*;
-import aQute.bnd.service.RepositoryPlugin.Strategy;
 import aQute.bnd.service.diff.*;
 import aQute.lib.collections.*;
 import aQute.libg.generics.*;
@@ -309,8 +307,10 @@ public class Builder extends Analyzer {
 				}
 			}
 		}
-		if (jar.getDirectories().size() == 0)
+		if (jar.getDirectories().size() == 0) {
+			trace("extra dirs %s", jar.getDirectories());
 			return null;
+		}
 		return jar;
 	}
 
@@ -860,6 +860,7 @@ public class Builder extends Analyzer {
 
 		if (!destination.contains("${@}")) {
 			cr = new CombinedResource();
+			cr.lastModified = lastModified;
 		}
 		trace("last modified requires %s", lastModified);
 
@@ -869,9 +870,10 @@ public class Builder extends Analyzer {
 				String path = getReplacer().process(destination);
 				String command = getReplacer().process(cmd);
 				File file = getFile(item);
-
-				Resource r = new CommandResource(command, this, Math.max(lastModified,
-						file.exists() ? file.lastModified() : 0L));
+				if ( file.exists())
+					lastModified = Math.max(lastModified, file.lastModified());
+				
+				Resource r = new CommandResource(command, this, lastModified, getBase());
 
 				if (preprocess)
 					r = new PreprocessResource(this, r);
@@ -890,6 +892,8 @@ public class Builder extends Analyzer {
 		// to update the modified time.
 		if (cr != null)
 			jar.putResource(destination, cr);
+		
+		updateModified(lastModified, "Include-Resource: cmd");
 	}
 
 	private String doResourceDirectory(Jar jar, Map<String,String> extra, boolean preprocess, File sourceFile,
@@ -944,6 +948,10 @@ public class Builder extends Analyzer {
 					warning("Include-Resource overwrites entry %s from file %s", p, file);
 				files.put(p, file);
 			}
+		}
+		if (fs.length == 0) {
+			File empty = new File(dir, Constants.EMPTY_HEADER);
+			files.put(appendPath(path, empty.getName()), empty);
 		}
 	}
 
@@ -1065,6 +1073,8 @@ public class Builder extends Analyzer {
 				if (isTrue(extra.get(LIB_DIRECTIVE))) {
 					setProperty(BUNDLE_CLASSPATH, append(getProperty(BUNDLE_CLASSPATH), path));
 				}
+			} else if (from.getName().equals(Constants.EMPTY_HEADER)) {
+				jar.putResource(path, new EmbeddedResource(new byte[0], 0));
 			} else {
 				error("Input file does not exist: " + from);
 			}
@@ -1159,7 +1169,7 @@ public class Builder extends Analyzer {
 		Parameters subsMap = parseHeader(sub);
 		for (Iterator<String> i = subsMap.keySet().iterator(); i.hasNext();) {
 			File file = getFile(i.next());
-			if (file.isFile()) {
+			if (file.isFile() && !file.getName().startsWith(".")) {
 				builders.add(getSubBuilder(file));
 				i.remove();
 			}
@@ -1500,84 +1510,18 @@ public class Builder extends Analyzer {
 			show(c, indent, warning);
 	}
 
-	/**
-	 * Base line against a previous version
-	 * 
-	 * @throws Exception
-	 */
-
-	private void doBaseline(Jar dot) throws Exception {
-		Parameters diffs = parseHeader(getProperty("-baseline"));
-		if (diffs.isEmpty())
-			return;
-
-		System.err.printf("baseline %s%n", diffs);
-
-		Jar other = getBaselineJar();
-		if (other == null) {
-			return;
-		}
-		Baseline baseline = new Baseline(this, differ);
-		Set<Info> infos = baseline.baseline(dot, other, null);
-		for (Info info : infos) {
-			if (info.mismatch) {
-				error("%s %-50s %-10s %-10s %-10s %-10s %-10s\n", info.mismatch ? '*' : ' ', info.packageName,
-						info.packageDiff.getDelta(), info.newerVersion, info.olderVersion, info.suggestedVersion,
-						info.suggestedIfProviders == null ? "-" : info.suggestedIfProviders);
-			}
-		}
-	}
-
+	
 	public void addSourcepath(Collection<File> sourcepath) {
 		for (File f : sourcepath) {
 			addSourcepath(f);
 		}
 	}
 
-	public Jar getBaselineJar() throws Exception {
+	/**
+	 * Base line against a previous version. Should be overridden in the ProjectBuilder where we have access to the repos
+	 * 
+	 * @throws Exception
+	 */
 
-		List<RepositoryPlugin> repos = getPlugins(RepositoryPlugin.class);
-
-		Parameters diffs = parseHeader(getProperty("-baseline"));
-		File baselineFile = null;
-		if (diffs.isEmpty()) {
-			String repoName = getProperty("-baseline-repo");
-			if (repoName == null) {
-				return null;
-			}
-			for (RepositoryPlugin repo : repos) {
-				if (repoName.equals(repo.getName())) {
-					baselineFile = repo.get(getBsn(), null, Strategy.HIGHEST, null);
-					break;
-				}
-			}
-		} else {
-
-			String bsn = null;
-			String version = null;
-			for (Entry<String,Attrs> entry : diffs.entrySet()) {
-				bsn = entry.getKey();
-				if ("@".equals(bsn)) {
-					bsn = getBsn();
-				}
-				version = entry.getValue().get(Constants.VERSION_ATTRIBUTE);
-				break;
-			}
-	
-			for (RepositoryPlugin repo : repos) {
-				if (version == null) {
-					baselineFile = repo.get(bsn, null, Strategy.HIGHEST, null);
-				} else {
-					baselineFile = repo.get(bsn, version, Strategy.EXACT, null);
-				}
-				if (baselineFile != null) {
-					break;
-				}
-			}
-		}
-		if (baselineFile == null) {
-			return new Jar(".");
-		}
-		return new Jar(baselineFile);
-	}
+	protected void doBaseline(Jar dot) throws Exception {}
 }

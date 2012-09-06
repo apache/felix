@@ -8,7 +8,7 @@ import java.util.jar.*;
 
 import aQute.bnd.header.*;
 import aQute.bnd.osgi.*;
-import aQute.bnd.service.RepositoryPlugin.Strategy;
+import aQute.bnd.service.*;
 import aQute.libg.command.*;
 import aQute.libg.generics.*;
 
@@ -97,8 +97,7 @@ public abstract class ProjectLauncher {
 		timeout = Processor.getDuration(project.getProperty(Constants.RUNTIMEOUT), 0);
 		trace = Processor.isTrue(project.getProperty(Constants.RUNTRACE));
 
-		// For backward compatibility with bndtools launcher
-		List<Container> fws = project.getBundles(Strategy.HIGHEST, project.getProperty("-runfw"), "-runfw");
+		List<Container> fws = project.getBundles(Strategy.HIGHEST, project.getProperty(Constants.RUNFW), Constants.RUNFW);
 		runpath.addAll(fws);
 
 		for (Container c : runpath) {
