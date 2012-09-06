@@ -3,11 +3,16 @@ package aQute.bnd.build;
 import java.io.*;
 import java.util.*;
 
+import aQute.bnd.differ.*;
+import aQute.bnd.differ.Baseline.Info;
 import aQute.bnd.osgi.*;
+import aQute.bnd.service.*;
+import aQute.bnd.version.*;
 
 public class ProjectBuilder extends Builder {
-	Project	project;
-	boolean	initialized;
+	private final DiffPluginImpl	differ	= new DiffPluginImpl();
+	Project							project;
+	boolean							initialized;
 
 	public ProjectBuilder(Project project) {
 		super(project);
@@ -80,5 +85,93 @@ public class ProjectBuilder extends Builder {
 	@Override
 	protected void changedFile(File f) {
 		project.getWorkspace().changedFile(f);
+	}
+
+	/**
+	 * Compare this builder's JAR with a baseline
+	 * 
+	 * @throws Exception
+	 */
+	@Override
+	protected void doBaseline(Jar dot) throws Exception {
+
+		Jar jar = getBaselineJar(false);
+		if (jar == null) {
+			return;
+		}
+		try {
+			Baseline baseline = new Baseline(this, differ);
+
+			Set<Info> infos = baseline.baseline(dot, jar, null);
+			for (Info info : infos) {
+				if (info.mismatch) {
+					error("%s %-50s %-10s %-10s %-10s %-10s %-10s\n", info.mismatch ? '*' : ' ', info.packageName,
+							info.packageDiff.getDelta(), info.newerVersion, info.olderVersion, info.suggestedVersion,
+							info.suggestedIfProviders == null ? "-" : info.suggestedIfProviders);
+				}
+			}
+		}
+		finally {
+			jar.close();
+		}
+	}
+
+	protected Jar getBaselineJar(boolean fallback) throws Exception {
+
+		String baseline = getProperty(Constants.BASELINE);
+		if ((baseline == null || baseline.trim().length() == 0) && !fallback)
+			return null;
+
+		trace("baseline %s", baseline);
+
+		File baselineFile = null;
+		if ((baseline == null || baseline.trim().length() == 0) && fallback) {
+
+			String repoName = getProperty(Constants.BASELINEREPO);
+			if (repoName == null) {
+				repoName = getProperty(Constants.RELEASEREPO);
+				if (repoName == null) {
+					return null;
+				}
+			}
+
+			List<RepositoryPlugin> repos = getPlugins(RepositoryPlugin.class);
+			for (RepositoryPlugin repo : repos) {
+				if (repoName.equals(repo.getName())) {
+					SortedSet<Version> versions = repo.versions(getBsn());
+					if (!versions.isEmpty()) {
+						baselineFile = repo.get(getBsn(), versions.last(), null);
+					}
+					break;
+				}
+			}
+		} else {
+
+			Collection<Container> bundles = project.getBundles(Strategy.LOWEST, baseline);
+			for (Container c : bundles) {
+
+				if (c.getError() != null || c.getFile() == null) {
+					error("Erroneous baseline bundle %s", c);
+					continue;
+				}
+
+				baselineFile = c.getFile();
+				break;
+			}
+		}
+		if (fallback && baselineFile == null) {
+			return new Jar(".");
+		}
+		return new Jar(baselineFile);
+	}
+
+	/** 
+	 * Gets the baseline Jar. 
+	 * 
+	 * @return the baseline jar
+	 * @throws Exception
+	 */
+	public Jar getBaselineJar() throws Exception {
+		return getBaselineJar(true);
 	}
 }

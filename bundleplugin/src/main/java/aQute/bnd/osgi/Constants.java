@@ -69,6 +69,8 @@ public interface Constants {
 			PROVIDE_CAPABILITY, BUNDLE_ICON
 																				};
 
+	String							BASELINE									= "-baseline";
+	String							BASELINEREPO								= "-baselinerepo";
 	String							BUILDPATH									= "-buildpath";
 	String							BUILDPACKAGES								= "-buildpackages";
 	String							BUMPPOLICY									= "-bumppolicy";
@@ -90,6 +92,7 @@ public interface Constants {
 	String							MAKE										= "-make";
 	String							METATYPE									= "-metatype";
 	String							MANIFEST									= "-manifest";
+	String							PROFILE										= "-profile";
 	String							SAVEMANIFEST								= "-savemanifest";
 	String							NAMESECTION									= "-namesection";
 	String							NODEFAULTVERSION							= "-nodefaultversion";
@@ -130,6 +133,7 @@ public interface Constants {
 	String							RUNVM										= "-runvm";
 	String							RUNTRACE									= "-runtrace";
 	String							RUNFRAMEWORK								= "-runframework";
+	String							RUNFW										= "-runfw";
 	String							RUNTIMEOUT									= "-runtimeout";
 	String							SNAPSHOT									= "-snapshot";
 	String							RUNFRAMEWORK_SERVICES						= "services";
@@ -153,12 +157,12 @@ public interface Constants {
 	String							OUTPUT										= "-output";
 
 	String							options[]									= {
-			BUILDPATH, BUMPPOLICY, CONDUIT, CLASSPATH, CONSUMER_POLICY, DEPENDSON, DONOTCOPY, EXPORT_CONTENTS, FAIL_OK,
+			BASELINE, BUILDPATH, BUMPPOLICY, CONDUIT, CLASSPATH, CONSUMER_POLICY, DEPENDSON, DONOTCOPY, EXPORT_CONTENTS, FAIL_OK,
 			INCLUDE, INCLUDERESOURCE, MAKE, MANIFEST, NOEXTRAHEADERS, NOUSES, NOBUNDLES, PEDANTIC, PLUGIN, POM,
 			PROVIDER_POLICY, REMOVEHEADERS, RESOURCEONLY, SOURCES, SOURCEPATH, SOURCES, SOURCEPATH, SUB, RUNBUNDLES,
 			RUNPATH, RUNSYSTEMPACKAGES, RUNPROPERTIES, REPORTNEWER, UNDERTEST, TESTPATH, TESTPACKAGES, TESTREPORT,
-			VERBOSE, NOMANIFEST, DEPLOYREPO, RELEASEREPO, SAVEMANIFEST, RUNVM, WAB, WABLIB, RUNFRAMEWORK, RUNTRACE,
-			TESTCONTINUOUS, SNAPSHOT, NAMESECTION, DIGESTS, DSANNOTATIONS, EXPERIMENTS
+			VERBOSE, NOMANIFEST, DEPLOYREPO, RELEASEREPO, SAVEMANIFEST, RUNVM, WAB, WABLIB, RUNFRAMEWORK, RUNFW, RUNTRACE,
+			TESTCONTINUOUS, SNAPSHOT, NAMESECTION, DIGESTS, DSANNOTATIONS, EXPERIMENTS, BASELINE, BASELINEREPO, PROFILE
 																				};
 
 	// Ignore bundle specific headers. These bundles do not make
