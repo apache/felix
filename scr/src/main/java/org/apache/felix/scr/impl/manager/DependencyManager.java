@@ -419,6 +419,12 @@ public class DependencyManager implements ServiceListener, Reference
         // otherwise check whether the component is in a state to handle the event
         else if ( handleServiceEvent() )
         {
+            Map dependencyMap = m_componentManager.getDependencyMap();
+            Map referenceMap = null;
+            if (dependencyMap != null)
+            {
+                referenceMap = ( Map ) dependencyMap.get( this );
+            }
             // if the dependency is static, we have to deactivate the component
             // to "remove" the dependency
             if ( m_dependencyMetadata.isStatic() )
@@ -429,6 +435,11 @@ public class DependencyManager implements ServiceListener, Reference
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                             { m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface() }, null );
                     m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE );
+                    if ( referenceMap != null )
+                    {
+                        referenceMap.remove( reference );
+                    }
+
                     // FELIX-2368: immediately try to reactivate
                     m_componentManager.activateInternal();
                 }
@@ -478,6 +489,11 @@ public class DependencyManager implements ServiceListener, Reference
 
                 // make sure the service is returned
                 ungetService( reference );
+                //service is no longer available, don't track it any longer.
+                if ( referenceMap != null )
+                {
+                    referenceMap.remove( reference );
+                }
             }
         }
 
@@ -899,7 +915,7 @@ public class DependencyManager implements ServiceListener, Reference
         Map dependencyMap = m_componentManager.getDependencyMap();
         if ( dependencyMap != null )
         {
-            AbstractComponentManager.RefPair refPair  = ( AbstractComponentManager.RefPair ) ((Map ) dependencyMap.get( this )).remove( serviceReference );
+            AbstractComponentManager.RefPair refPair  = ( AbstractComponentManager.RefPair ) ((Map ) dependencyMap.get( this )).get( serviceReference );
             if ( refPair != null && refPair.getServiceObject() != null )
             {
                 BundleComponentActivator activator = m_componentManager.getActivator();
@@ -1072,6 +1088,9 @@ public class DependencyManager implements ServiceListener, Reference
         // is optional, if it is not then the dependency is invalid
         if ( !isSatisfied() )
         {
+            m_componentManager.log( LogService.LOG_DEBUG,
+                "For dependency {0}, no longer satisfied, bind fails",
+                new Object[]{ m_dependencyMetadata.getName() }, null );
             return false;
         }
 
@@ -1088,12 +1107,22 @@ public class DependencyManager implements ServiceListener, Reference
         // flag being set in the loop below
         boolean success = m_dependencyMetadata.isOptional();
 
+        m_componentManager.log( LogService.LOG_DEBUG,
+            "For dependency {0}, optional: {1}; to bind: {2}",
+            new Object[]{ m_dependencyMetadata.getName(), new Boolean( success ), parameters }, null );
         for ( Iterator i = parameters.entrySet().iterator(); i.hasNext(); )
         {
             Map.Entry entry = ( Map.Entry ) i.next();
             if ( invokeBindMethod( ( AbstractComponentManager.RefPair ) entry.getValue() ) )
             {
                 success = true;
+            }
+            else
+            {
+                m_componentManager.log( LogService.LOG_DEBUG,
+                    "For dependency {0}, failed to invoke bind method on object {1}; success: {2}",
+                    new Object[]{ m_dependencyMetadata.getName(), entry.getValue(), new Boolean( success )}, null );
+
             }
         }
         return success;
@@ -1160,7 +1189,7 @@ public class DependencyManager implements ServiceListener, Reference
                     m_componentManager.log( LogService.LOG_ERROR,
                         "For dependency {0}, bind method not set: component state {1}",
                         new Object[]
-                            { new Integer(m_componentManager.getState())  }, null );
+                            { m_dependencyMetadata.getName(), new Integer(m_componentManager.getState())  }, null );
 
                 }
                 Map deps = ( Map ) dependencyMap.get( this );
