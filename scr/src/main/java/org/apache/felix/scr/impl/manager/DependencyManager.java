@@ -21,7 +21,6 @@ package org.apache.felix.scr.impl.manager;
 
 import java.security.Permission;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -67,9 +66,6 @@ public class DependencyManager implements ServiceListener, Reference
 
     // the number of matching services registered in the system
     private volatile int m_size;
-
-    // the object on which the bind/undind methods are to be called
-    private volatile Object m_componentInstance;
 
     // the bind method
     private volatile BindMethod m_bind;
@@ -220,7 +216,7 @@ public class DependencyManager implements ServiceListener, Reference
                     else
                     {
                         // update the service binding due to the new properties
-                        update( ref );
+                        m_componentManager.update( this, ref );
                     }
 
                     break;
@@ -356,7 +352,7 @@ public class DependencyManager implements ServiceListener, Reference
                 if ( m_dependencyMetadata.isMultiple() || !isBound() )
                 {
                     // bind the service, getting it if required
-                    invokeBindMethod( reference );
+                    m_componentManager.invokeBindMethod( this, reference );
                 }
                 else if ( !isReluctant() )
                 {
@@ -365,8 +361,8 @@ public class DependencyManager implements ServiceListener, Reference
                     ServiceReference oldRef = ( ServiceReference ) bound.keySet().iterator().next();
                     if ( reference.compareTo( oldRef ) > 0 )
                     {
-                        invokeBindMethod( reference );
-                        invokeUnbindMethod( oldRef );
+                        m_componentManager.invokeBindMethod( this, reference );
+                        m_componentManager.invokeUnbindMethod( this, oldRef );
                     }
                 }
             }
@@ -477,14 +473,14 @@ public class DependencyManager implements ServiceListener, Reference
                     }
                     else
                     {
-                        invokeBindMethod( ref );
+                        m_componentManager.invokeBindMethod( this, ref );
                     }
                 }
 
                 // call the unbind method if one is defined
                 if ( m_dependencyMetadata.getUnbind() != null )
                 {
-                    invokeUnbindMethod( reference );
+                    m_componentManager.invokeUnbindMethod( this, reference );
                 }
 
                 // make sure the service is returned
@@ -983,27 +979,20 @@ public class DependencyManager implements ServiceListener, Reference
     }
 
 
-    boolean open( Object instance, Map parameters )
+    boolean open( Object componentInstance, Map parameters )
     {
-        m_componentInstance = instance;
-        return bind(parameters);
+        return bind( componentInstance, parameters);
     }
 
 
     /**
      * Revoke all bindings. This method cannot throw an exception since it must
      * try to complete all that it can
+     * @param componentInstance
      */
-    void close( )
+    void close( Object componentInstance )
     {
-        try
-        {
-            unbind( getBoundServiceReferences() );
-        }
-        finally
-        {
-            m_componentInstance = null;
-        }
+        unbind( componentInstance, getBoundServiceReferences() );
     }
 
     //returns Map<ServiceReference, Object[]>
@@ -1082,7 +1071,7 @@ public class DependencyManager implements ServiceListener, Reference
      * @return true if the dependency is satisfied and at least the minimum
      *      number of services could be bound. Otherwise false is returned.
      */
-    private boolean bind( Map parameters )
+    private boolean bind( Object componentInstance, Map parameters )
     {
         // If no references were received, we have to check if the dependency
         // is optional, if it is not then the dependency is invalid
@@ -1096,7 +1085,7 @@ public class DependencyManager implements ServiceListener, Reference
 
         // if no bind method is configured or if this is a delayed component,
         // we have nothing to do and just signal success
-        if ( m_componentInstance == null || m_dependencyMetadata.getBind() == null )
+        if ( componentInstance == null || m_dependencyMetadata.getBind() == null )
         {
             return true;
         }
@@ -1113,7 +1102,7 @@ public class DependencyManager implements ServiceListener, Reference
         for ( Iterator i = parameters.entrySet().iterator(); i.hasNext(); )
         {
             Map.Entry entry = ( Map.Entry ) i.next();
-            if ( invokeBindMethod( ( AbstractComponentManager.RefPair ) entry.getValue() ) )
+            if ( invokeBindMethod( componentInstance, ( AbstractComponentManager.RefPair ) entry.getValue() ) )
             {
                 success = true;
             }
@@ -1132,18 +1121,18 @@ public class DependencyManager implements ServiceListener, Reference
     /**
      * Handles an update in the service reference properties of a bound service.
      * <p>
-     * This just calls the {@link #invokeUpdatedMethod(ServiceReference)}
+     * This just calls the {@link #invokeUpdatedMethod(Object, org.osgi.framework.ServiceReference)}
      * method if the method has been configured in the component metadata. If
      * the method is not configured, this method does nothing.
      *
+     * @param componentInstance
      * @param ref The <code>ServiceReference</code> representing the updated
-     *      service.
      */
-    private void update( final ServiceReference ref )
+    void update( Object componentInstance, final ServiceReference ref )
     {
         if ( m_dependencyMetadata.getUpdated() != null )
         {
-            invokeUpdatedMethod( ref );
+            invokeUpdatedMethod( componentInstance, ref );
         }
     }
 
@@ -1152,19 +1141,19 @@ public class DependencyManager implements ServiceListener, Reference
      * Revoke the given bindings. This method cannot throw an exception since
      * it must try to complete all that it can
      */
-    private void unbind( ServiceReference[] boundRefs )
+    private void unbind( Object componentInstance, ServiceReference[] boundRefs )
     {
         if ( boundRefs != null )
         {
             // only invoke the unbind method if there is an instance (might be null
             // in the delayed component situation) and the unbind method is declared.
-            boolean doUnbind = m_componentInstance != null && m_dependencyMetadata.getUnbind() != null;
+            boolean doUnbind = componentInstance != null && m_dependencyMetadata.getUnbind() != null;
 
             for ( int i = 0; i < boundRefs.length; i++ )
             {
                 if ( doUnbind )
                 {
-                    invokeUnbindMethod( boundRefs[i] );
+                    invokeUnbindMethod( componentInstance, boundRefs[i] );
                 }
 
                 // unget the service, we call it here since there might be a
@@ -1176,10 +1165,10 @@ public class DependencyManager implements ServiceListener, Reference
         }
     }
 
-    private boolean invokeBindMethod( ServiceReference ref )
+    boolean invokeBindMethod( Object componentInstance, ServiceReference ref )
     {
         //event driven, and we already checked this ref is not yet handled.
-        if ( m_componentInstance != null )
+        if ( componentInstance != null )
         {
             Map dependencyMap = m_componentManager.getDependencyMap();
             if ( dependencyMap != null )
@@ -1196,7 +1185,7 @@ public class DependencyManager implements ServiceListener, Reference
                 BundleContext bundleContext = m_componentManager.getActivator().getBundleContext();
                 AbstractComponentManager.RefPair refPair = m_bind.getServiceObject( ref, bundleContext );
                 deps.put( ref, refPair );
-                return invokeBindMethod( refPair );
+                return invokeBindMethod( componentInstance, refPair );
             }
             return false;
         }
@@ -1217,6 +1206,8 @@ public class DependencyManager implements ServiceListener, Reference
      * If the reference is singular and a service has already been bound to the
      * component this method has no effect and just returns <code>true</code>.
      *
+     *
+     * @param componentInstance
      * @param refPair the service reference, service object tuple.
      *
      * @return true if the service should be considered bound. If no bind
@@ -1225,15 +1216,15 @@ public class DependencyManager implements ServiceListener, Reference
      *      be handed over to the bind method but the service cannot be
      *      retrieved using the service reference.
      */
-    private boolean invokeBindMethod( AbstractComponentManager.RefPair refPair )
+    private boolean invokeBindMethod( Object componentInstance, AbstractComponentManager.RefPair refPair )
     {
         // The bind method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
-        if( m_componentInstance != null )
+        if( componentInstance != null )
         {
             if ( m_bind != null )
             {
-                MethodResult result = m_bind.invoke( m_componentInstance, refPair, MethodResult.VOID );
+                MethodResult result = m_bind.invoke( componentInstance, refPair, MethodResult.VOID );
                 if ( result == null )
                 {
                     return false;
@@ -1263,17 +1254,17 @@ public class DependencyManager implements ServiceListener, Reference
     /**
      * Calls the updated method.
      *
+     * @param componentInstance
      * @param ref A service reference corresponding to the service whose service
-     *      registration properties have been updated
      */
-    private void invokeUpdatedMethod( final ServiceReference ref )
+    private void invokeUpdatedMethod( Object componentInstance, final ServiceReference ref )
     {
         // The updated method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
-        if ( m_componentInstance != null )
+        if ( componentInstance != null )
         {
             AbstractComponentManager.RefPair refPair = ( AbstractComponentManager.RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
-            MethodResult methodResult = m_updated.invoke( m_componentInstance, refPair, MethodResult.VOID );
+            MethodResult methodResult = m_updated.invoke( componentInstance, refPair, MethodResult.VOID );
             if ( methodResult != null)
             {
                 m_componentManager.setServiceProperties( methodResult );
@@ -1297,17 +1288,17 @@ public class DependencyManager implements ServiceListener, Reference
      * to the component this method has no effect and just returns
      * <code>true</code>.
      *
+     * @param componentInstance
      * @param ref A service reference corresponding to the service that will be
-     *            unbound
      */
-    private void invokeUnbindMethod( final ServiceReference ref )
+    void invokeUnbindMethod( Object componentInstance, final ServiceReference ref )
     {
         // The unbind method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
-        if ( m_componentInstance != null )
+        if ( componentInstance != null )
         {
             AbstractComponentManager.RefPair refPair = ( AbstractComponentManager.RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
-            MethodResult methodResult = m_unbind.invoke( m_componentInstance, refPair, MethodResult.VOID );
+            MethodResult methodResult = m_unbind.invoke( componentInstance, refPair, MethodResult.VOID );
             if ( methodResult != null )
             {
                 m_componentManager.setServiceProperties( methodResult );

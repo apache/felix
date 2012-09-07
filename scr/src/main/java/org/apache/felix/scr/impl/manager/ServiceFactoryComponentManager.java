@@ -20,11 +20,13 @@ package org.apache.felix.scr.impl.manager;
 
 
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
@@ -190,6 +192,33 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
             {
                 releaseReadLock( "ServiceFactoryComponentManager.ungetService.1" );
             }
+        }
+    }
+
+    void update( DependencyManager dependencyManager, ServiceReference ref )
+    {
+        for ( Iterator it = serviceContexts.keySet().iterator(); it.hasNext(); )
+        {
+            Object implementationObject = it.next();
+            dependencyManager.update( implementationObject, ref );
+        }
+    }
+
+    void invokeBindMethod( DependencyManager dependencyManager, ServiceReference reference )
+    {
+        for ( Iterator it = serviceContexts.keySet().iterator(); it.hasNext(); )
+        {
+            Object implementationObject = it.next();
+            dependencyManager.invokeBindMethod( implementationObject, reference);
+        }
+    }
+
+    void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef )
+    {
+        for ( Iterator it = serviceContexts.keySet().iterator(); it.hasNext(); )
+        {
+            Object implementationObject = it.next();
+            dependencyManager.invokeUnbindMethod( implementationObject, oldRef);
         }
     }
 

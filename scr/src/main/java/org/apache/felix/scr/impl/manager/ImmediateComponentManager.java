@@ -36,6 +36,7 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
@@ -225,7 +226,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 while ( it.hasNext() )
                 {
                     dm = ( DependencyManager ) it.next();
-                    dm.close();
+                    dm.close( implementationObject );
                 }
 
                 return null;
@@ -250,7 +251,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             while ( it.hasNext() )
             {
                 DependencyManager dm = ( DependencyManager ) it.next();
-                dm.close();
+                dm.close( implementationObject );
             }
 
             return null;
@@ -291,7 +292,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         while ( it.hasNext() )
         {
             DependencyManager dm = ( DependencyManager ) it.next();
-            dm.close();
+            dm.close( implementationObject );
         }
 
         // 3. Release all references
@@ -306,6 +307,21 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
     State getActiveState()
     {
         return Active.getInstance();
+    }
+
+    void update( DependencyManager dependencyManager, ServiceReference ref )
+    {
+        dependencyManager.update( m_implementationObject, ref );
+    }
+
+    void invokeBindMethod( DependencyManager dependencyManager, ServiceReference reference )
+    {
+        dependencyManager.invokeBindMethod( m_implementationObject, reference);
+    }
+
+    void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef )
+    {
+        dependencyManager.invokeUnbindMethod( m_implementationObject, oldRef);
     }
 
     protected void setFactoryProperties( Dictionary dictionary )

@@ -854,6 +854,12 @@ public abstract class AbstractComponentManager implements Component
          }
     }
 
+    abstract void update( DependencyManager dependencyManager, ServiceReference ref );
+
+    abstract void invokeBindMethod( DependencyManager dependencyManager, ServiceReference reference );
+
+    abstract void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef );
+
     public static class RefPair
     {
         private final ServiceReference ref;
