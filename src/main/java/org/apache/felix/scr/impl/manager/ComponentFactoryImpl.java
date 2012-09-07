@@ -277,17 +277,14 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
 
     void update( DependencyManager dependencyManager, ServiceReference ref )
     {
-        throw new IllegalStateException( "Should not be called" );
     }
 
     void invokeBindMethod( DependencyManager dependencyManager, ServiceReference reference )
     {
-        throw new IllegalStateException( "Should not be called" );
     }
 
     void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef )
     {
-        throw new IllegalStateException( "Should not be called" );
     }
 
     //---------- Component interface
