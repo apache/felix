@@ -34,6 +34,7 @@ import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.component.ComponentFactory;
@@ -272,6 +273,21 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
             setDependencyMap( old, dependenciesMap );
         }
         return true;
+    }
+
+    void update( DependencyManager dependencyManager, ServiceReference ref )
+    {
+        throw new IllegalStateException( "Should not be called" );
+    }
+
+    void invokeBindMethod( DependencyManager dependencyManager, ServiceReference reference )
+    {
+        throw new IllegalStateException( "Should not be called" );
+    }
+
+    void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef )
+    {
+        throw new IllegalStateException( "Should not be called" );
     }
 
     //---------- Component interface
