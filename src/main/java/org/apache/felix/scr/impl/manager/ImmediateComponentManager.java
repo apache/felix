@@ -631,6 +631,14 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                                 null );
 
                     }
+                    else
+                    {
+                        log(
+                                LogService.LOG_DEBUG,
+                                "getService won collecting dependencies, proceed to creating object.",
+                                null );
+
+                    }
                 }
                 catch ( IllegalStateException e )
                 {

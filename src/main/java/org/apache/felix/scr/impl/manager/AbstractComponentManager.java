@@ -814,7 +814,7 @@ public abstract class AbstractComponentManager implements Component
             {
                 //not actually satisfied any longer
                 returnServices( newDeps );
-                log( LogService.LOG_DEBUG, "Could not get dependency for dependency manager: {0}",
+                log( LogService.LOG_DEBUG, "Could not get required dependency for dependency manager: {0}",
                         new Object[] {dependencyManager}, null );
                 throw new IllegalStateException( "Missing dependencies, not satisfied" );
             }
@@ -1525,6 +1525,12 @@ public abstract class AbstractComponentManager implements Component
                         acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object (1)", null );
                         acm.obtainReadLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                         return false;
+                    }
+                    else
+                    {
+                        acm.log( LogService.LOG_DEBUG,
+                                "activate won collecting dependencies, proceed to creating object.", null );
+
                     }
                 }
                 catch ( IllegalStateException e )

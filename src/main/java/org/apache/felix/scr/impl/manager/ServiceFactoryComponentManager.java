@@ -95,10 +95,37 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
 
         // When the getServiceMethod is called, the implementation object must be created
 
-        final boolean release = obtainReadLock( "ServiceFactoryComponentManager.getService.1" );
+        boolean release = obtainReadLock( "ServiceFactoryComponentManager.getService.1" );
         try
         {
-// private ComponentContext and implementation instances
+            releaseReadLock( "ServiceFactoryComponentManager.getService.1" );
+            try
+            {
+                if ( !collectDependencies() )
+                {
+                    log(
+                            LogService.LOG_INFO,
+                            "getService (ServiceFactory) did not win collecting dependencies, try creating object anyway.",
+                            null );
+
+                }
+                else
+                {
+                    log(
+                            LogService.LOG_DEBUG,
+                            "getService (ServiceFactory) won collecting dependencies, proceed to creating object.",
+                            null );
+
+                }
+            }
+            catch ( IllegalStateException e )
+            {
+                //cannot obtain service from a required reference
+                release = false;
+                return null;
+            }
+            obtainReadLock( "ServiceFactoryComponentManager.getService.1" );
+            // private ComponentContext and implementation instances
             BundleComponentContext serviceContext = new BundleComponentContext( this, bundle );
             Object service = createImplementationObject( serviceContext );
 
