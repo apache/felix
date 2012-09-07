@@ -1544,6 +1544,12 @@ public abstract class AbstractComponentManager implements Component
                     acm.obtainReadLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                     return false;
                 }
+                catch ( Throwable t )
+                {
+                    acm.log( LogService.LOG_ERROR, "Unexpected throwable from attempt to collect dependencies", t );
+                    acm.obtainReadLock( "AbstractComponentManager.Unsatisfied.activate.1" );
+                    return false;
+                }
                 acm.obtainWriteLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                 try
                 {
