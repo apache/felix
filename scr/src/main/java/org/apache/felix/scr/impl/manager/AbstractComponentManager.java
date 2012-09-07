@@ -1428,6 +1428,11 @@ public abstract class AbstractComponentManager implements Component
             doDeactivate( acm, reason );
         }
 
+        void ungetService( ImmediateComponentManager dcm )
+        {
+            //do nothing, deactivate will unget all the services.
+        }
+
         void dispose( AbstractComponentManager acm, int reason )
         {
             acm.log( LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null );
