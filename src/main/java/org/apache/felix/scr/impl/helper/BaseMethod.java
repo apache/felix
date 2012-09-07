@@ -538,23 +538,23 @@ abstract class BaseMethod
         private void resolve( final BaseMethod baseMethod )
         {
             baseMethod.getComponentManager().log( LogService.LOG_DEBUG, "getting {0}: {1}", new Object[]
-                { baseMethod.getMethodNamePrefix(), baseMethod.getMethodName() }, null );
+                    {baseMethod.getMethodNamePrefix(), baseMethod.getMethodName()}, null );
 
-                // resolve the method
-                Method method;
-                try
-                {
-                    method = baseMethod.findMethod();
-                }
-                catch ( InvocationTargetException ex )
-                {
-                    method = null;
-                    baseMethod.getComponentManager().log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
-                        { baseMethod.getMethodName() }, ex.getTargetException() );
-                }
-
-                baseMethod.setMethod( method );
+            // resolve the method
+            Method method;
+            try
+            {
+                method = baseMethod.findMethod();
             }
+            catch ( InvocationTargetException ex )
+            {
+                method = null;
+                baseMethod.getComponentManager().log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
+                        {baseMethod.getMethodName()}, ex.getTargetException() );
+            }
+
+            baseMethod.setMethod( method );
+        }
 
 
         public MethodResult invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
