@@ -432,9 +432,15 @@ public class ComponentMetadataTest extends TestCase
         final ComponentMetadata cm2 = createComponentMetadata( Boolean.TRUE, null );
         cm2.addDependency( createReferenceMetadata( "name1" ) );
         cm2.addDependency( createReferenceMetadata( "name1" ) );
-        cm2.validate( logger );
-        assertTrue( "Expected warning for duplicate reference name",
-            logger.messageContains( "Detected duplicate reference name" ) );
+        try
+        {
+            cm2.validate( logger );
+            fail( "Expect validation failure for duplicate reference name" );
+        }
+        catch ( ComponentException ee )
+        {
+             //expected
+        }
     }
 
 

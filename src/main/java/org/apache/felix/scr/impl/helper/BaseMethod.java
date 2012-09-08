@@ -24,7 +24,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Map;
-import org.apache.felix.scr.impl.manager.AbstractComponentManager;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -44,31 +44,35 @@ abstract class BaseMethod
     protected static final Class MAP_CLASS = Map.class;
     protected static final Class INTEGER_CLASS = Integer.class;
 
-    private final AbstractComponentManager m_componentManager;
+    private final SimpleLogger m_logger;
+    private final boolean isDS11;
+    private final boolean isDS12Felix;
 
     private final String m_methodName;
     private final Class m_componentClass;
 
-    private Method m_method;
+    private volatile Method m_method;
 
     private final boolean m_methodRequired;
 
-    private State m_state;
+    private volatile State m_state;
 
-    protected BaseMethod( final AbstractComponentManager componentManager, final String methodName,
-        final Class componentClass )
+    protected BaseMethod( final SimpleLogger logger, final String methodName,
+            final Class componentClass, final boolean ds11, final boolean ds12Felix )
     {
-        this( componentManager, methodName, methodName != null, componentClass );
+        this( logger, methodName, methodName != null, componentClass, ds11, ds12Felix );
     }
 
 
-    protected BaseMethod( final AbstractComponentManager componentManager, final String methodName,
-        final boolean methodRequired, final Class componentClass )
+    protected BaseMethod( final SimpleLogger logger, final String methodName,
+            final boolean methodRequired, final Class componentClass, final boolean ds11, final boolean ds12Felix )
     {
-        m_componentManager = componentManager;
+        m_logger = logger;
         m_methodName = methodName;
         m_methodRequired = methodRequired;
         m_componentClass = componentClass;
+        isDS11 = ds11;
+        isDS12Felix = ds12Felix;
         if ( m_methodName == null )
         {
             m_state = NotApplicable.INSTANCE;
@@ -80,21 +84,21 @@ abstract class BaseMethod
     }
 
 
-    protected final AbstractComponentManager getComponentManager()
+    protected final SimpleLogger getLogger()
     {
-        return m_componentManager;
+        return m_logger;
     }
 
 
     protected final boolean isDS11()
     {
-        return getComponentManager().getComponentMetadata().isDS11();
+        return isDS11;
     }
 
 
     protected final boolean isDS12Felix()
     {
-        return getComponentManager().getComponentMetadata().isDS12Felix();
+        return isDS12Felix;
     }
 
 
@@ -121,20 +125,20 @@ abstract class BaseMethod
         if ( method != null )
         {
             m_state = Resolved.INSTANCE;
-            getComponentManager().log( LogService.LOG_DEBUG, "Found {0} method: {1}", new Object[]
+            getLogger().log( LogService.LOG_DEBUG, "Found {0} method: {1}", new Object[]
                 { getMethodNamePrefix(), method }, null );
         }
         else if ( m_methodRequired )
         {
             m_state = NotFound.INSTANCE;
-            getComponentManager().log(LogService.LOG_ERROR, "{0} method [{1}] not found; Component will fail",
+            getLogger().log(LogService.LOG_ERROR, "{0} method [{1}] not found; Component will fail",
                 new Object[]
                     { getMethodNamePrefix(), getMethodName() }, null);
         }
         else
         {
             // optional method not found, log as DEBUG and ignore
-            getComponentManager().log( LogService.LOG_DEBUG, "{0} method [{1}] not found, ignoring", new Object[]
+            getLogger().log( LogService.LOG_DEBUG, "{0} method [{1}] not found, ignoring", new Object[]
                 { getMethodNamePrefix(), getMethodName() }, null );
             m_state = NotApplicable.INSTANCE;
         }
@@ -170,9 +174,9 @@ abstract class BaseMethod
         for ( Class theClass = targetClass; theClass != null; )
         {
 
-            if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+            if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
             {
-                getComponentManager().log( LogService.LOG_DEBUG,
+                getLogger().log( LogService.LOG_DEBUG,
                     "Locating method " + getMethodName() + " in class " + theClass.getName(), null );
             }
 
@@ -187,7 +191,7 @@ abstract class BaseMethod
             catch ( SuitableMethodNotAccessibleException ex )
             {
                 // log and return null
-                getComponentManager().log( LogService.LOG_ERROR,
+                getLogger().log( LogService.LOG_ERROR,
                     "findMethod: Suitable but non-accessible method {0} found in class {1}, subclass of {2}", new Object[]
                         { getMethodName(), theClass.getName(), targetClass.getName() }, null );
                 break;
@@ -232,14 +236,14 @@ abstract class BaseMethod
             }
             else
             {
-                getComponentManager().log( LogService.LOG_WARNING, "Method {0} cannot be called on null object",
+                getLogger().log( LogService.LOG_WARNING, "Method {0} cannot be called on null object",
                     new Object[]
                         { getMethodName() }, null );
             }
         }
         catch ( IllegalStateException ise )
         {
-            getComponentManager().log( LogService.LOG_DEBUG, ise.getMessage(), null );
+            getLogger().log( LogService.LOG_DEBUG, ise.getMessage(), null );
             return null;
         }
         catch ( IllegalAccessException ex )
@@ -247,7 +251,7 @@ abstract class BaseMethod
             // 112.3.1 If the method is not is not declared protected or
             // public, SCR must log an error message with the log service,
             // if present, and ignore the method
-            getComponentManager().log( LogService.LOG_DEBUG, "Method {0} cannot be called", new Object[]
+            getLogger().log( LogService.LOG_DEBUG, "Method {0} cannot be called", new Object[]
                 { getMethodName() }, ex );
         }
         catch ( InvocationTargetException ex )
@@ -332,10 +336,10 @@ abstract class BaseMethod
         {
             // thrown if no method is declared with the given name and
             // parameters
-            if ( getComponentManager().isLogEnabled( LogService.LOG_DEBUG ) )
+            if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
             {
                 String argList = ( parameterTypes != null ) ? Arrays.asList( parameterTypes ).toString() : "";
-                getComponentManager().log( LogService.LOG_DEBUG, "Declared Method {0}.{1}({2}) not found", new Object[]
+                getLogger().log( LogService.LOG_DEBUG, "Declared Method {0}.{1}({2}) not found", new Object[]
                     { clazz.getName(), name, argList }, null );
             }
         }
@@ -344,7 +348,7 @@ abstract class BaseMethod
             // may be thrown if a method would be found but the signature
             // contains throws declaration for an exception which cannot
             // be loaded
-            if ( getComponentManager().isLogEnabled( LogService.LOG_WARNING ) )
+            if ( getLogger().isLogEnabled( LogService.LOG_WARNING ) )
             {
                 StringBuffer buf = new StringBuffer();
                 buf.append( "Failure loooking up method " ).append( name ).append( '(' );
@@ -357,7 +361,7 @@ abstract class BaseMethod
                     }
                 }
                 buf.append( ") in class class " ).append( clazz.getName() ).append( ". Assuming no such method." );
-                getComponentManager().log( LogService.LOG_WARNING, buf.toString(), cdfe );
+                getLogger().log( LogService.LOG_WARNING, buf.toString(), cdfe );
             }
         }
         catch ( SuitableMethodNotAccessibleException e)
@@ -489,7 +493,7 @@ abstract class BaseMethod
         }
         catch ( InvocationTargetException ite )
         {
-            getComponentManager().log( LogService.LOG_ERROR, "The {0} method has thrown an exception", new Object[]
+            getLogger().log( LogService.LOG_ERROR, "The {0} method has thrown an exception", new Object[]
                 { getMethodName() }, ite.getCause() );
         }
 
@@ -537,7 +541,7 @@ abstract class BaseMethod
 
         private void resolve( final BaseMethod baseMethod )
         {
-            baseMethod.getComponentManager().log( LogService.LOG_DEBUG, "getting {0}: {1}", new Object[]
+            baseMethod.getLogger().log( LogService.LOG_DEBUG, "getting {0}: {1}", new Object[]
                     {baseMethod.getMethodNamePrefix(), baseMethod.getMethodName()}, null );
 
             // resolve the method
@@ -549,7 +553,7 @@ abstract class BaseMethod
             catch ( InvocationTargetException ex )
             {
                 method = null;
-                baseMethod.getComponentManager().log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
+                baseMethod.getLogger().log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
                         {baseMethod.getMethodName()}, ex.getTargetException() );
             }
 
@@ -582,7 +586,7 @@ abstract class BaseMethod
             // 112.3.1 If the method is not found , SCR must log an error
             // message with the log service, if present, and ignore the
             // method
-            baseMethod.getComponentManager().log( LogService.LOG_ERROR, "{0} method [{1}] not found", new Object[]
+            baseMethod.getLogger().log( LogService.LOG_ERROR, "{0} method [{1}] not found", new Object[]
                 { baseMethod.getMethodNamePrefix(), baseMethod.getMethodName() }, null );
             return null;
         }
@@ -602,7 +606,7 @@ abstract class BaseMethod
         public MethodResult invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
             throws InvocationTargetException
         {
-            baseMethod.getComponentManager().log( LogService.LOG_DEBUG, "invoking {0}: {1}", new Object[]
+            baseMethod.getLogger().log( LogService.LOG_DEBUG, "invoking {0}: {1}", new Object[]
                 { baseMethod.getMethodNamePrefix(), baseMethod.getMethodName() }, null );
             return baseMethod.invokeMethod( componentInstance, rawParameter );
         }

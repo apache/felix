@@ -29,6 +29,7 @@ import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.helper.ActivateMethod;
 import org.apache.felix.scr.impl.helper.ActivateMethod.ActivatorParameter;
+import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.DeactivateMethod;
 import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ModifiedMethod;
@@ -63,15 +64,6 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
     // the component holder responsible for managing this component
     private ComponentHolder m_componentHolder;
 
-    // the activate method
-    private ActivateMethod m_activateMethod;
-
-    // the deactivate method
-    private DeactivateMethod m_deactivateMethod;
-
-    // the modify method
-    private ModifiedMethod m_modifyMethod;
-
     // optional properties provided in the ComponentFactory.newInstance method
     private Dictionary m_factoryProperties;
 
@@ -92,11 +84,12 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
      *
      * @param activator
      * @param metadata
+     * @param componentMethods
      */
     public ImmediateComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
-            ComponentMetadata metadata )
+            ComponentMetadata metadata, ComponentMethods componentMethods )
     {
-        super( activator, metadata );
+        super( activator, metadata, componentMethods );
 
         m_componentHolder = componentHolder;
     }
@@ -233,15 +226,8 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             }
         }
 
-        // get the method
-        if ( m_activateMethod == null )
-        {
-            m_activateMethod = new ActivateMethod( this, getComponentMetadata().getActivate(), getComponentMetadata()
-                    .isActivateDeclared(), implementationObjectClass );
-        }
-
         // 4. Call the activate method, if present
-        final MethodResult result = m_activateMethod.invoke( implementationObject, new ActivatorParameter(
+        final MethodResult result = getComponentMethods().getActivateMethod().invoke( implementationObject, new ActivatorParameter(
                 componentContext, 1 ), null );
         if ( result == null )
         {
@@ -269,18 +255,11 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             int reason )
     {
 
-        // get the method
-        if ( m_deactivateMethod == null )
-        {
-            m_deactivateMethod = new DeactivateMethod( this, getComponentMetadata().getDeactivate(),
-                    getComponentMetadata().isDeactivateDeclared(), implementationObject.getClass() );
-        }
-
         // 1. Call the deactivate method, if present
         // don't care for the result, the error (acccording to 112.5.12 If the deactivate
         // method throws an exception, SCR must log an error message containing the
         // exception with the Log Service and continue) has already been logged
-        final MethodResult result = m_deactivateMethod.invoke( implementationObject, new ActivatorParameter( componentContext,
+        final MethodResult result = getComponentMethods().getDeactivateMethod().invoke( implementationObject, new ActivatorParameter( componentContext,
                 reason ), null );
         if ( result != null )
         {
@@ -538,10 +517,6 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         // invariant: we have a modified method name
 
         // 2. get and check configured method
-        if ( m_modifyMethod == null )
-        {
-            m_modifyMethod = new ModifiedMethod( this, getComponentMetadata().getModified(), getInstance().getClass() );
-        }
         // invariant: modify method is configured and found
 
         // 3. check whether we can dynamically apply the configuration if
@@ -565,7 +540,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         // 4. call method (nothing to do when failed, since it has already been logged)
         //   (call with non-null default result to continue even if the
         //    modify method call failed)
-        final MethodResult result = m_modifyMethod.invoke( getInstance(),
+        final MethodResult result = getComponentMethods().getModifiedMethod().invoke( getInstance(),
                 new ActivatorParameter( m_componentContext, -1 ), MethodResult.VOID );
         if ( result == null )
         {

@@ -504,11 +504,11 @@ public class ComponentRegistry implements ScrService, ServiceListener
             // as soon as the component factory is satisfied
             if ( !activator.getConfiguration().isFactoryEnabled() )
             {
-                holder = new ComponentFactoryImpl(activator, metadata);
+                holder = new ComponentFactoryImpl(activator, metadata );
             }
             else
             {
-                holder = new ConfigurationComponentFactoryImpl(activator, metadata);
+                holder = new ConfigurationComponentFactoryImpl(activator, metadata );
             }
         }
         else

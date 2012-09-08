@@ -300,7 +300,7 @@
             unbind="unbindSimpleService"
         />
         <reference
-            name="ref"
+            name="ref2"
             interface="org.apache.felix.scr.integration.components.SimpleService2"
             cardinality="0..n"
             policy="static"

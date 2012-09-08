@@ -26,6 +26,8 @@ import java.util.Map;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.DelayedComponentManager;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
@@ -55,7 +57,7 @@ import org.osgi.service.log.LogService;
  * <code>service.factoryPid</code> equals the component name.</li>
  * </ul>
  */
-public class ImmediateComponentHolder implements ComponentHolder
+public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
 {
 
     /**
@@ -102,6 +104,7 @@ public class ImmediateComponentHolder implements ComponentHolder
      * enabled. Otherwise they are not enabled immediately.
      */
     private boolean m_enabled;
+    private final ComponentMethods m_componentMethods;
 
 
     public ImmediateComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
@@ -109,6 +112,7 @@ public class ImmediateComponentHolder implements ComponentHolder
         this.m_activator = activator;
         this.m_componentMetadata = metadata;
         this.m_components = new HashMap();
+        this.m_componentMethods = new ComponentMethods();
         this.m_singleComponent = createComponentManager();
         this.m_enabled = false;
     }
@@ -123,17 +127,17 @@ public class ImmediateComponentHolder implements ComponentHolder
         }
         else if ( m_componentMetadata.isImmediate() )
         {
-            manager = new ImmediateComponentManager( m_activator, this, m_componentMetadata );
+            manager = new ImmediateComponentManager( m_activator, this, m_componentMetadata, m_componentMethods );
         }
         else if ( m_componentMetadata.getServiceMetadata() != null )
         {
             if ( m_componentMetadata.getServiceMetadata().isServiceFactory() )
             {
-                manager = new ServiceFactoryComponentManager( m_activator, this, m_componentMetadata );
+                manager = new ServiceFactoryComponentManager( m_activator, this, m_componentMetadata, m_componentMethods );
             }
             else
             {
-                manager = new DelayedComponentManager( m_activator, this, m_componentMetadata );
+                manager = new DelayedComponentManager( m_activator, this, m_componentMetadata, m_componentMethods );
             }
         }
         else
@@ -560,7 +564,19 @@ public class ImmediateComponentHolder implements ComponentHolder
         }
     }
 
-    private void log( int level, String message, Throwable ex )
+    public boolean isLogEnabled( int level )
+    {
+        BundleComponentActivator activator = getActivator();
+        if ( activator != null )
+        {
+            return activator.isLogEnabled( level );
+        }
+
+        // bundle activator has already been removed, so no logging
+        return false;
+    }
+
+    public void log( int level, String message, Throwable ex )
     {
         BundleComponentActivator activator = getActivator();
         if ( activator != null )
@@ -569,7 +585,7 @@ public class ImmediateComponentHolder implements ComponentHolder
         }
     }
 
-    private void log( int level, String message, Object[] arguments, Throwable ex )
+    public void log( int level, String message, Object[] arguments, Throwable ex )
     {
         BundleComponentActivator activator = getActivator();
         if ( activator != null )

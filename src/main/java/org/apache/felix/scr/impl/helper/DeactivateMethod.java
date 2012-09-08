@@ -29,10 +29,10 @@ public class DeactivateMethod extends ActivateMethod
         { COMPONENT_CONTEXT_CLASS, BUNDLE_CONTEXT_CLASS, MAP_CLASS, Integer.TYPE, INTEGER_CLASS };
 
 
-    public DeactivateMethod( final AbstractComponentManager componentManager, final String methodName,
-        final boolean methodRequired, final Class componentClass )
+    public DeactivateMethod( final SimpleLogger logger, final String methodName,
+        final boolean methodRequired, final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
     {
-        super( componentManager, methodName, methodRequired, componentClass );
+        super( logger, methodName, methodRequired, componentClass, isDS11, isDS12Felix );
     }
 
 
