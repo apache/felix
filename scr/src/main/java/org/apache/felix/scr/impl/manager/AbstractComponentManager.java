@@ -39,7 +39,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
@@ -58,7 +60,7 @@ import org.osgi.service.log.LogService;
  * implementation object's lifecycle.
  *
  */
-public abstract class AbstractComponentManager implements Component
+public abstract class AbstractComponentManager implements Component, SimpleLogger
 {
 
     private static final boolean JUC_AVAILABLE;
@@ -88,6 +90,8 @@ public abstract class AbstractComponentManager implements Component
     // The metadata
     private final ComponentMetadata m_componentMetadata;
 
+    private final ComponentMethods m_componentMethods;
+
     // The dependency managers that manage every dependency
     private final List m_dependencyManagers;
 
@@ -115,11 +119,13 @@ public abstract class AbstractComponentManager implements Component
      *
      * @param activator
      * @param metadata
+     * @param componentMethods
      */
-    protected AbstractComponentManager( BundleComponentActivator activator, ComponentMetadata metadata )
+    protected AbstractComponentManager( BundleComponentActivator activator, ComponentMetadata metadata, ComponentMethods componentMethods )
     {
         m_activator = activator;
         m_componentMetadata = metadata;
+        this.m_componentMethods = componentMethods;
         m_componentId = -1;
 
         m_state = Disabled.getInstance();
@@ -690,6 +696,10 @@ public abstract class AbstractComponentManager implements Component
 
     abstract State getActiveState();
 
+    ComponentMethods getComponentMethods()
+    {
+        return m_componentMethods;
+    }
     /**
      * Registers the service on behalf of the component.
      *
@@ -777,11 +787,13 @@ public abstract class AbstractComponentManager implements Component
             log( LogService.LOG_ERROR, "Could not load implementation object class", e );
             return false;
         }
+        m_componentMethods.initComponentMethods( this, m_componentMetadata, implementationObjectClass );
+
         for (Iterator it = m_dependencyManagers.iterator(); it.hasNext(); )
         {
             DependencyManager dependencyManager = ( DependencyManager ) it.next();
 
-            dependencyManager.initBindingMethods( implementationObjectClass );
+            dependencyManager.initBindingMethods( m_componentMethods.getBindMethods( dependencyManager.getName() ) );
         }
         m_dependencyManagersInitialized = true;
         return true;

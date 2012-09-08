@@ -31,6 +31,7 @@ import java.util.Map;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Constants;
@@ -82,7 +83,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
 
     public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
-        super( activator, metadata );
+        super( activator, metadata, new ComponentMethods() );
         m_componentInstances = new IdentityHashMap();
         m_configuration = new Hashtable();
     }
@@ -410,7 +411,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
      */
     private ImmediateComponentManager createComponentManager()
     {
-        return new ComponentFactoryNewInstance( getActivator(), this, getComponentMetadata() );
+        return new ComponentFactoryNewInstance( getActivator(), this, getComponentMetadata(), getComponentMethods() );
     }
 
 
@@ -428,9 +429,9 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     static class ComponentFactoryNewInstance extends ImmediateComponentManager {
 
         public ComponentFactoryNewInstance( BundleComponentActivator activator, ComponentHolder componentHolder,
-            ComponentMetadata metadata )
+                ComponentMetadata metadata, ComponentMethods componentMethods )
         {
-            super( activator, componentHolder, metadata );
+            super( activator, componentHolder, metadata, componentMethods );
         }
 
         State getActiveState()

@@ -30,10 +30,8 @@ import java.util.Map;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
-import org.apache.felix.scr.impl.helper.BindMethod;
+import org.apache.felix.scr.impl.helper.BindMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
-import org.apache.felix.scr.impl.helper.UnbindMethod;
-import org.apache.felix.scr.impl.helper.UpdatedMethod;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -67,14 +65,7 @@ public class DependencyManager implements ServiceListener, Reference
     // the number of matching services registered in the system
     private volatile int m_size;
 
-    // the bind method
-    private volatile BindMethod m_bind;
-
-    // the updated method
-    private volatile UpdatedMethod m_updated;
-
-    // the unbind method
-    private volatile UnbindMethod m_unbind;
+    private BindMethods m_bindMethods;
 
     // the target service filter string
     private volatile String m_target;
@@ -109,29 +100,9 @@ public class DependencyManager implements ServiceListener, Reference
     /**
      * Initialize binding methods.
      */
-    void initBindingMethods(Class instanceClass)
+    void initBindingMethods(BindMethods bindMethods)
     {
-        if (m_bind != null)
-        {
-            return;
-        }
-        m_bind = new BindMethod( m_componentManager,
-                                 m_dependencyMetadata.getBind(),
-                                 instanceClass,
-                m_dependencyMetadata.getInterface()
-        );
-        m_updated = new UpdatedMethod( m_componentManager,
-                m_dependencyMetadata.getUpdated(),
-                instanceClass,
-                m_dependencyMetadata.getName(),
-                m_dependencyMetadata.getInterface()
-        );
-        m_unbind = new UnbindMethod( m_componentManager,
-            m_dependencyMetadata.getUnbind(),
-            instanceClass,
-            m_dependencyMetadata.getName(),
-            m_dependencyMetadata.getInterface()
-        );
+       m_bindMethods = bindMethods;
     }
 
 
@@ -1029,7 +1000,7 @@ public class DependencyManager implements ServiceListener, Reference
             {
                 for ( int index = 0; index < refs.length; index++ )
                 {
-                    AbstractComponentManager.RefPair refPair = m_bind.getServiceObject( refs[index], m_componentManager.getActivator().getBundleContext() );
+                    AbstractComponentManager.RefPair refPair = m_bindMethods.getBind().getServiceObject( refs[index], m_componentManager.getActivator().getBundleContext() );
                     // success is if we have the minimal required number of services bound
                     if ( refPair != null )
                     {
@@ -1046,7 +1017,7 @@ public class DependencyManager implements ServiceListener, Reference
             ServiceReference ref = getFrameworkServiceReference();
             if ( ref != null )
             {
-                AbstractComponentManager.RefPair refPair = m_bind.getServiceObject( ref, m_componentManager.getActivator().getBundleContext() );
+                AbstractComponentManager.RefPair refPair = m_bindMethods.getBind().getServiceObject( ref, m_componentManager.getActivator().getBundleContext() );
                 // success is if we have the minimal required number of services bound
                 if ( refPair != null )
                 {
@@ -1173,7 +1144,7 @@ public class DependencyManager implements ServiceListener, Reference
             Map dependencyMap = m_componentManager.getDependencyMap();
             if ( dependencyMap != null )
             {
-                if (m_bind == null)
+                if (m_bindMethods == null)
                 {
                     m_componentManager.log( LogService.LOG_ERROR,
                         "For dependency {0}, bind method not set: component state {1}",
@@ -1183,7 +1154,7 @@ public class DependencyManager implements ServiceListener, Reference
                 }
                 Map deps = ( Map ) dependencyMap.get( this );
                 BundleContext bundleContext = m_componentManager.getActivator().getBundleContext();
-                AbstractComponentManager.RefPair refPair = m_bind.getServiceObject( ref, bundleContext );
+                AbstractComponentManager.RefPair refPair = m_bindMethods.getBind().getServiceObject( ref, bundleContext );
                 deps.put( ref, refPair );
                 return invokeBindMethod( componentInstance, refPair );
             }
@@ -1222,9 +1193,9 @@ public class DependencyManager implements ServiceListener, Reference
         // null. This is valid for both immediate and delayed components
         if( componentInstance != null )
         {
-            if ( m_bind != null )
+            if ( m_bindMethods != null )
             {
-                MethodResult result = m_bind.invoke( componentInstance, refPair, MethodResult.VOID );
+                MethodResult result = m_bindMethods.getBind().invoke( componentInstance, refPair, MethodResult.VOID );
                 if ( result == null )
                 {
                     return false;
@@ -1264,7 +1235,7 @@ public class DependencyManager implements ServiceListener, Reference
         if ( componentInstance != null )
         {
             AbstractComponentManager.RefPair refPair = ( AbstractComponentManager.RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
-            MethodResult methodResult = m_updated.invoke( componentInstance, refPair, MethodResult.VOID );
+            MethodResult methodResult = m_bindMethods.getUpdated().invoke( componentInstance, refPair, MethodResult.VOID );
             if ( methodResult != null)
             {
                 m_componentManager.setServiceProperties( methodResult );
@@ -1298,7 +1269,7 @@ public class DependencyManager implements ServiceListener, Reference
         if ( componentInstance != null )
         {
             AbstractComponentManager.RefPair refPair = ( AbstractComponentManager.RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
-            MethodResult methodResult = m_unbind.invoke( componentInstance, refPair, MethodResult.VOID );
+            MethodResult methodResult = m_bindMethods.getUnbind().invoke( componentInstance, refPair, MethodResult.VOID );
             if ( methodResult != null )
             {
                 m_componentManager.setServiceProperties( methodResult );

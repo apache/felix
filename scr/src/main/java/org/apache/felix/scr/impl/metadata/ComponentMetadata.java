@@ -793,8 +793,7 @@ public class ComponentMetadata
             // flag duplicates
             if ( !refs.add( refMeta.getName() ) )
             {
-                logger.log( LogService.LOG_WARNING, "Detected duplicate reference name: ''{0}''", new Object[]
-                    { refMeta.getName() }, this, null );
+                throw validationFailure( "Detected duplicate reference name: ''" + refMeta.getName() + "''" );
             }
         }
 

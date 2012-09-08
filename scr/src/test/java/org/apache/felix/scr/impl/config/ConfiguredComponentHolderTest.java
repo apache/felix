@@ -27,6 +27,7 @@ import java.util.Hashtable;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.XmlHandler;
@@ -233,7 +234,7 @@ public class ConfiguredComponentHolderTest extends TestCase
 
         public MockImmediateComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder, ComponentMetadata metadata )
         {
-            super( activator, componentHolder, metadata );
+            super( activator, componentHolder, metadata, new ComponentMethods() );
         }
 
 

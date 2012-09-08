@@ -21,7 +21,7 @@ package org.apache.felix.scr.impl.helper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import org.apache.felix.scr.impl.manager.AbstractComponentManager;
+
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
@@ -35,10 +35,10 @@ public class ActivateMethod extends BaseMethod
         { COMPONENT_CONTEXT_CLASS };
 
 
-    public ActivateMethod( final AbstractComponentManager componentManager, final String methodName,
-        final boolean methodRequired, final Class componentClass )
+    public ActivateMethod( final SimpleLogger logger, final String methodName,
+        final boolean methodRequired, final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
     {
-        super( componentManager, methodName, methodRequired, componentClass );
+        super( logger, methodName, methodRequired, componentClass, isDS11, isDS12Felix );
     }
 
 
@@ -185,7 +185,7 @@ public class ActivateMethod extends BaseMethod
             }
             catch ( SuitableMethodNotAccessibleException thrown )
             {
-                getComponentManager().log( LogService.LOG_DEBUG, "SuitableMethodNotAccessible", thrown );
+                getLogger().log( LogService.LOG_DEBUG, "SuitableMethodNotAccessible", thrown );
                 ex = thrown;
             }
         }

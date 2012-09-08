@@ -432,9 +432,9 @@ public class BindMethodTest extends TestCase
                 return isDS11;
             }
         };
-        ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata );
+        ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata, new ComponentMethods() );
         BindMethod bm = new BindMethod( icm, methodName, component.getClass(),
-                FakeService.class.getName() );
+                FakeService.class.getName(), isDS11, false );
         AbstractComponentManager.RefPair refPair = bm.getServiceObject( m_serviceReference, m_context );
         bm.invoke( component, refPair, null );
         assertEquals( expectCallPerformed, component.callPerformed );

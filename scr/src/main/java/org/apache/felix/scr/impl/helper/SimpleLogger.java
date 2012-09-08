@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,28 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+
 package org.apache.felix.scr.impl.helper;
 
-
-import org.apache.felix.scr.impl.manager.AbstractComponentManager;
-
-
 /**
- * Component method to be invoked on service unbinding.
+ * @version $Rev:$ $Date:$
  */
-public class UnbindMethod extends BindMethod
+public interface SimpleLogger
 {
+    void log( int level, String message, Throwable ex );
 
-    public UnbindMethod( final SimpleLogger logger, final String methodName,
-        final Class componentClass, final String referenceName, final String referenceClassName, final boolean isDS11, final boolean isDS12Felix )
-    {
-        super( logger, methodName, componentClass, referenceClassName, isDS11, isDS12Felix );
-    }
+    void log( int level, String message, Object[] arguments, Throwable ex );
 
-
-    protected String getMethodNamePrefix()
-    {
-        return "unbind";
-    }
-
+    boolean isLogEnabled( int level );
 }

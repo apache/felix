@@ -24,6 +24,7 @@ import java.util.Iterator;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
@@ -50,11 +51,12 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
      * @param activator BundleComponentActivator for this DS implementation
 	 * @param componentHolder ComponentHolder for configuration management
      * @param metadata ComponentMetadata for this component
+     * @param componentMethods
      */
     public ServiceFactoryComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
-        ComponentMetadata metadata )
+            ComponentMetadata metadata, ComponentMethods componentMethods )
     {
-        super( activator, componentHolder, metadata );
+        super( activator, componentHolder, metadata, componentMethods );
     }
 
 

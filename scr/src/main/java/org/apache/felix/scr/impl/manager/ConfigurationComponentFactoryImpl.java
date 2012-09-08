@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.service.log.LogService;
 
@@ -247,15 +248,15 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
      */
     private ImmediateComponentManager createConfigurationComponentManager()
     {
-        return new ComponentFactoryConfiguredInstance( getActivator(), this, getComponentMetadata() );
+        return new ComponentFactoryConfiguredInstance( getActivator(), this, getComponentMetadata(), getComponentMethods() );
     }
 
     static class ComponentFactoryConfiguredInstance extends ImmediateComponentManager {
 
         public ComponentFactoryConfiguredInstance( BundleComponentActivator activator, ComponentHolder componentHolder,
-            ComponentMetadata metadata )
+                ComponentMetadata metadata, ComponentMethods componentMethods )
         {
-            super( activator, componentHolder, metadata );
+            super( activator, componentHolder, metadata, componentMethods );
         }
 
         public boolean isImmediate()

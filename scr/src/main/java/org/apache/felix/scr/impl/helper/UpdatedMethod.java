@@ -28,10 +28,10 @@ import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 public class UpdatedMethod extends BindMethod
 {
 
-    public UpdatedMethod( final AbstractComponentManager componentManager, final String methodName,
-        final Class componentClass, final String referenceName, final String referenceClassName )
+    public UpdatedMethod( final SimpleLogger logger, final String methodName,
+        final Class componentClass, final String referenceName, final String referenceClassName, final boolean isDS11, final boolean isDS12Felix )
     {
-        super( componentManager, methodName, componentClass, referenceClassName );
+        super( logger, methodName, componentClass, referenceClassName, isDS11, isDS12Felix );
     }
 
 
