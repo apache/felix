@@ -219,15 +219,25 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         }
         catch ( IllegalMonitorStateException e )
         {
-            StringBuffer b = new StringBuffer( "Locking activity before IllegalMonitorStateException: \n" );
-            for (Iterator i = lockingActivity.iterator(); i.hasNext();)
-            {
-                b.append( "  " ).append( i.next() ).append( "\n" );
-            }
-            log( LogService.LOG_ERROR, b.toString(), null );
-            dumpThreads();
+            logLockingInfo();
             throw e;
         }
+        catch ( IllegalStateException e ) //for EDU lock
+        {
+            logLockingInfo();
+            throw e;
+        }
+    }
+
+    private void logLockingInfo()
+    {
+        StringBuffer b = new StringBuffer( "Locking activity before IllegalMonitorStateException: \n" );
+        for (Iterator i = lockingActivity.iterator(); i.hasNext();)
+        {
+            b.append( "  " ).append( i.next() ).append( "\n" );
+        }
+        log( LogService.LOG_ERROR, b.toString(), null );
+        dumpThreads();
     }
 
     final void obtainWriteLock( String source )

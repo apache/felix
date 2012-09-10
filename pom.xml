@@ -305,7 +305,7 @@
                         </DynamicImport-Package>
                         <Embed-Dependency>
                             kxml2;inline=org/kxml2/io/KXmlParser.class|org/xmlpull/v1/XmlPull**,
-                            concurrent;inline=EDU/oswego/cs/dl/util/concurrent/ReentrantLock.class|EDU/oswego/cs/dl/util/concurrent/Sync.class
+                            concurrent;inline=EDU/oswego/cs/dl/util/concurrent/ReentrantWriterPreferenceReadWriteLock.class|EDU/oswego/cs/dl/util/concurrent/WriterPreferenceReadWriteLock*|EDU/oswego/cs/dl/util/concurrent/ReadWriteLock.class|EDU/oswego/cs/dl/util/concurrent/SynchronizedRef.class|EDU/oswego/cs/dl/util/concurrent/SynchronizedVariable.class|EDU/oswego/cs/dl/util/concurrent/Sync.class|EDU/oswego/cs/dl/util/concurrent/Executor.class
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
