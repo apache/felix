@@ -770,6 +770,10 @@ public class DependencyManager implements ServiceListener, Reference
     private ServiceReference[] getBoundServiceReferences()
     {
         Map dependencyMap = m_componentManager.getDependencyMap();
+        if ( dependencyMap == null )
+        {
+            return null;
+        }
         Map bound = ( Map ) dependencyMap.get( this );
         if ( bound.isEmpty() )
         {
