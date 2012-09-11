@@ -19,6 +19,7 @@
 package org.apache.felix.eventadmin.impl.handler;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.apache.felix.eventadmin.impl.security.PermissionsUtil;
 import org.apache.felix.eventadmin.impl.util.LogWrapper;
@@ -107,6 +108,33 @@ public class EventHandlerProxy {
             for(int i=0;i<values.length;i++)
             {
                 if ( "*".equals(values[i]) )
+                {
+                    matchAll = true;
+                }
+            }
+            if ( matchAll )
+            {
+                this.topics = null;
+            }
+            else
+            {
+                this.topics = values;
+            }
+        }
+        else if (topicObj instanceof Collection)
+        {
+            final Collection col = (Collection)topicObj;
+            final String[] values = new String[col.size()];
+            int index = 0;
+            // check if one value matches '*'
+            final Iterator i = col.iterator();
+            boolean matchAll = false;
+            while ( i.hasNext() )
+            {
+                final String v = i.next().toString();
+                values[index] = v;
+                index++;
+                if ( "*".equals(v) )
                 {
                     matchAll = true;
                 }
