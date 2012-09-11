@@ -1917,50 +1917,44 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         }
     }
 
-    private static class EDULock extends EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock implements LockWrapper
+    private static class EDULock  implements LockWrapper
     {
+        private final edu.emory.mathcs.backport.java.util.concurrent.locks.ReentrantReadWriteLock lock = new edu.emory.mathcs.backport.java.util.concurrent.locks.ReentrantReadWriteLock( );
+
         public boolean tryReadLock( long milliseconds ) throws InterruptedException
         {
-            return readLock().attempt( milliseconds );
+             return lock.readLock().tryLock( milliseconds, edu.emory.mathcs.backport.java.util.concurrent.TimeUnit.MILLISECONDS );
         }
 
         public long getReadHoldCount()
         {
-            return readers_.size();
+            return lock.getReadHoldCount();
         }
 
         public void unlockReadLock()
         {
-            readLock().release();
+            lock.readLock().unlock();
         }
 
         public boolean tryWriteLock( long milliseconds ) throws InterruptedException
         {
-            return writeLock().attempt( milliseconds );
+            return lock.writeLock().tryLock( milliseconds, edu.emory.mathcs.backport.java.util.concurrent.TimeUnit.MILLISECONDS );
         }
 
         public long getWriteHoldCount()
         {
-            return writeHolds_;
+            return lock.getWriteHoldCount();
         }
 
         public void unlockWriteLock()
         {
-            writeLock().release();
+            lock.writeLock().unlock();
         }
 
         public void deescalate()
         {
-            try
-            {
-                readLock().acquire();
-            }
-            catch ( InterruptedException e )
-            {
-                //should not happen, we have the write lock
-                throw ( IllegalStateException ) new IllegalStateException( "Unexpected InterruptedException while acquiring read lock and holding write lock" ).initCause( e );
-            }
-            writeLock().release();
+            lock.readLock().lock();
+            lock.writeLock().unlock();
         }
     }
 
@@ -1996,7 +1990,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     private static class EDUAtomicReferenceWrapper implements AtomicReferenceWrapper
     {
-        private final EDU.oswego.cs.dl.util.concurrent.SynchronizedRef ref = new EDU.oswego.cs.dl.util.concurrent.SynchronizedRef( null );
+        private final edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicReference ref = new edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicReference(  );
 
         public Object get()
         {
@@ -2004,13 +1998,13 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         }
 
         public void set(Object o)
-         {
-             ref.set( o );
-         }
+        {
+            ref.set( o );
+        }
 
         public boolean compareAndSet(Object expected, Object replacement)
         {
-            return ref.commit( expected, replacement );
+            return ref.compareAndSet( expected, replacement );
         }
     }
 
