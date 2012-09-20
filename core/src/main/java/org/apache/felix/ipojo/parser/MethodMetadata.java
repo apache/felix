@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.metadata.Element;
+import org.objectweb.asm.Type;
 
 /**
  * A Method Metadata represents a method from the implementation class.
@@ -99,13 +100,16 @@ public class MethodMetadata {
         StringBuffer identifier = new StringBuffer(m_name);
         for (int i = 0; i < m_arguments.length; i++) {
             String arg = m_arguments[i];
-            identifier.append('$');
             if (arg.endsWith("[]")) {
-                arg = arg.substring(0, arg.length() - 2);
-                identifier.append(arg.replace('.', '_'));
-                identifier.append("__"); // Replace [] by __
+                // We have to replace all []
+                String acc = "";
+                while (arg.endsWith("[]")) {
+                    arg = arg.substring(0, arg.length() - 2);
+                    acc += "__";
+                }
+                identifier.append("$" + arg.replace('.', '_') + acc);
             } else {
-                identifier.append(arg.replace('.', '_'));
+                identifier.append("$" + arg.replace('.', '_'));
             }
         }
         return identifier.toString();
@@ -122,14 +126,27 @@ public class MethodMetadata {
         for (int i = 0; i < args.length; i++) {
             identifier.append('$'); // Argument separator.
             if (args[i].isArray()) {
+                String acc = "__";
                 if (args[i].getComponentType().isPrimitive()) {
                     // Primitive array
                     identifier.append(FieldMetadata.getPrimitiveTypeByClass(args[i].getComponentType()));
+                } else if (args[i].getComponentType().isArray()) {
+                    // Multi-directional array.
+                    Class current = args[i].getComponentType();
+                    while (current.isArray()) {
+                        acc += "__";
+                        current = current.getComponentType();
+                    }
+                    if (current.isPrimitive()) {
+                        acc = FieldMetadata.getPrimitiveTypeByClass(current) + acc;
+                    } else {
+                        acc = current.getName().replace('.', '_') + acc;
+                    }
                 } else {
                     // Object array
                     identifier.append(args[i].getComponentType().getName().replace('.', '_')); // Replace '.' by '_'
                 }
-                identifier.append("__"); // Add __ (array)
+                identifier.append(acc); // Add __ (array)
             } else {
                 if (args[i].isPrimitive()) {
                     // Primitive type
@@ -160,14 +177,22 @@ public class MethodMetadata {
 
             identifier.append('$'); // Argument separator.
             if (args[i].isArray()) {
+                String acc = "__";
                 if (args[i].getComponentType().isPrimitive()) {
                     // Primitive array
                     identifier.append(FieldMetadata.getPrimitiveTypeByClass(args[i].getComponentType()));
+                } else if (args[i].getComponentType().isArray()) {
+                    // Multi-directional array.
+                    Class current = args[i].getComponentType();
+                    while (current.isArray()) {
+                        acc += "__";
+                        current = current.getComponentType();
+                    }
                 } else {
                     // Object array
                     identifier.append(args[i].getComponentType().getName().replace('.', '_')); // Replace '.' by '_'
                 }
-                identifier.append("__"); // Add __ (array)
+                identifier.append(acc); // Add __ (array)
             } else {
                 if (args[i].isPrimitive()) {
                     // Primitive type
