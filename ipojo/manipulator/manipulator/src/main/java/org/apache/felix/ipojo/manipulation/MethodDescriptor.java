@@ -183,8 +183,13 @@ public class MethodDescriptor {
     private String getType(Type type) {
         switch (type.getSort()) {
             case Type.ARRAY:
+                // Append brackets.
+                String brackets = "";
+                for (int i = 0; i < type.getDimensions(); i++) {
+                    brackets += "[]";
+                }
                 Type elemType = type.getElementType();
-                return getType(elemType) + "[]";
+                return getType(elemType) + brackets;
             case Type.BOOLEAN:
                 return "boolean";
             case Type.BYTE:
