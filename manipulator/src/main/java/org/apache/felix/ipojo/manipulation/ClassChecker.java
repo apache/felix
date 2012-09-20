@@ -645,7 +645,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * Visits the content of the array. This method is called for
          * nested arrays (arrays contained in the array).
          * @param arg0 <code>null</code>
-         * @return an {@link ArrayDescriptor} which creates a copy of
+         * @return an {@link AnnotationVisitor} which creates a copy of
          * the contained array.
          * @see org.objectweb.asm.AnnotationVisitor#visitArray(String)
          */

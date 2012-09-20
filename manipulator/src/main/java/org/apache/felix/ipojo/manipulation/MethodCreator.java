@@ -523,8 +523,13 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         for (int i = 0; i < args.length; i++) {
             String arg = args[i].getClassName();
             if (arg.endsWith("[]")) {
-                arg = arg.substring(0, arg.length() - 2);
-                id.append("$" + arg.replace('.', '_') + "__");
+                // We have to replace all []
+                String acc = "";
+                while (arg.endsWith("[]")) {
+                    arg = arg.substring(0, arg.length() - 2);
+                    acc += "__";
+                }
+                id.append("$" + arg.replace('.', '_') + acc);
             } else {
                 id.append("$" + arg.replace('.', '_'));
             }

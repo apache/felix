@@ -336,6 +336,62 @@ public class ManipulatorTest extends TestCase {
         Assert.assertEquals("toto", f.get(o));
      }
 
+    /**
+     * https://issues.apache.org/jira/browse/FELIX-3621
+     */
+    public void testManipulatingDoubleArray() throws Exception {
+        Manipulator manipulator = new Manipulator();
+        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/DoubleArray.class")
+        ));
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.DoubleArray", clazz);
+        Class cl = classloader.findClass("test.DoubleArray");
+        Assert.assertNotNull(cl);
+        Assert.assertNotNull(manipulator.getManipulationMetadata());
+
+        System.out.println(manipulator.getManipulationMetadata());
+        Assert.assertTrue(manipulator.getManipulationMetadata().toString().contains("arguments=\"{int[][]}\""));
+
+        // The manipulation add stuff to the class.
+        Assert.assertTrue(clazz.length > getBytesFromFile(new File("target/test-classes/test/DoubleArray.class")).length);
+
+
+        boolean found = false;
+        Constructor cst = null;
+        Constructor[] csts = cl.getDeclaredConstructors();
+        for(int i = 0; i < csts.length; i++) {
+            System.out.println(Arrays.asList(csts[i].getParameterTypes()));
+            if (csts[i].getParameterTypes().length == 1  &&
+                    csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
+                found = true;
+                cst = csts[i];
+            }
+        }
+        Assert.assertTrue(found);
+
+        // We still have the empty constructor
+        found = false;
+        csts = cl.getDeclaredConstructors();
+        for (int i = 0; i < csts.length; i++) {
+            System.out.println(Arrays.asList(csts[i].getParameterTypes()));
+            if (csts[i].getParameterTypes().length == 0) {
+                found = true;
+            }
+        }
+        Assert.assertTrue(found);
+
+        // Check the POJO interface
+        Assert.assertTrue(Arrays.asList(cl.getInterfaces()).contains(Pojo.class));
+
+        cst.setAccessible(true);
+        Object pojo = cst.newInstance(new Object[] {new InstanceManager()});
+        Assert.assertNotNull(pojo);
+        Assert.assertTrue(pojo instanceof Pojo);
+
+        Method method = cl.getMethod("start", new Class[0]);
+        Assert.assertTrue(((Boolean) method.invoke(pojo, new Object[0])).booleanValue());
+
+    }
+
 
 
     public static byte[] getBytesFromFile(File file) throws IOException {
