@@ -109,13 +109,20 @@ public class InstanceCreator implements FactoryStateListener {
      */
     void removeInstancesFromBundle(long bundle) {
         // Disposes instance from attached instances
-        Collection col = m_attached.keySet();
+        Map copy = null;
+
+        // To avoid concurrent modification exception, we create a copy.
+        synchronized (this) {
+            copy = new HashMap(m_attached);
+        }
+
+        Collection col = copy.keySet();
         Iterator iterator = col.iterator();
         List instanceToRemove = new ArrayList();
         List factoryToRemove = new ArrayList();
         while (iterator.hasNext()) {
             IPojoFactory factory = (IPojoFactory) iterator.next();
-            List list = (List) m_attached.get(factory);
+            List list = (List) copy.get(factory);
             for (int i = 0; i < list.size(); i++) {
                 ManagedInstance managed = (ManagedInstance) list.get(i);
                 if (managed.m_bundleId == bundle) {
@@ -132,14 +139,19 @@ public class InstanceCreator implements FactoryStateListener {
             }
         }
 
+        // We remove from the original map
         for (int i = 0; i < factoryToRemove.size(); i++) {
             m_attached.remove(factoryToRemove.get(i));
         }
 
         // Delete idle instances
+        List list = null;
+        synchronized (this) {
+            list = new ArrayList(m_idle);
+        }
         instanceToRemove.clear();
-        for (int i = 0; i < m_idle.size(); i++) {
-            ManagedInstance managed = (ManagedInstance) m_idle.get(i);
+        for (int i = 0; i < list.size(); i++) {
+            ManagedInstance managed = (ManagedInstance) list.get(i);
             if (managed.m_bundleId == bundle) {
                 instanceToRemove.add(managed);
             }
