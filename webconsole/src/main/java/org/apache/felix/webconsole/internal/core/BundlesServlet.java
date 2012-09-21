@@ -17,9 +17,26 @@
 package org.apache.felix.webconsole.internal.core;
 
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
@@ -31,14 +48,29 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.felix.framework.util.VersionRange;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Parser;
-import org.apache.felix.webconsole.*;
+import org.apache.felix.webconsole.AbstractWebConsolePlugin;
+import org.apache.felix.webconsole.ConfigurationPrinter;
+import org.apache.felix.webconsole.DefaultVariableResolver;
+import org.apache.felix.webconsole.SimpleWebConsolePlugin;
+import org.apache.felix.webconsole.WebConsoleConstants;
+import org.apache.felix.webconsole.WebConsoleUtil;
 import org.apache.felix.webconsole.bundleinfo.BundleInfo;
 import org.apache.felix.webconsole.bundleinfo.BundleInfoProvider;
-import org.apache.felix.webconsole.bundleinfo.BundleInfoType;
 import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
 import org.apache.felix.webconsole.internal.Util;
-import org.json.*;
-import org.osgi.framework.*;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONWriter;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogService;
@@ -105,7 +137,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     public void activate( BundleContext bundleContext )
     {
         super.activate( bundleContext );
-        
+
         bundleInfoTracker = new ServiceTracker( bundleContext, BundleInfoProvider.class.getName(), null);
         bundleInfoTracker.open();
 
@@ -143,7 +175,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             configurationPrinter.unregister();
             configurationPrinter = null;
         }
-        
+
         if ( bundleInfoTracker != null)
         {
             bundleInfoTracker.close();
@@ -299,14 +331,9 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             final Bundle bundle = reqInfo.bundle;
             if ( bundle != null )
             {
-                if ( action == null )
-                {
-                    success = true;
-                }
-                else if ( "start".equals( action ) )
+                if ( "start".equals( action ) )
                 {
                     // start bundle
-                    success = true;
                     try
                     {
                         bundle.start();
@@ -320,7 +347,6 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 else if ( "stop".equals( action ) )
                 {
                     // stop bundle
-                    success = true;
                     try
                     {
                         bundle.stop();
@@ -335,18 +361,15 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 {
                     // refresh bundle wiring
                     refresh( bundle );
-                    success = true;
                 }
                 else if ( "update".equals( action ) )
                 {
                     // update the bundle
                     update( bundle );
-                    success = true;
                 }
                 else if ( "uninstall".equals( action ) )
                 {
                     // uninstall bundle
-                    success = true;
                     try
                     {
                         bundle.uninstall();
@@ -369,7 +392,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 // write the state only
                 resp.setContentType( "application/json" ); //$NON-NLS-1$
                 resp.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
-                resp.getWriter().print("{\"fragment\":" + isFragmentBundle(bundle) // //$NON-NLS-1$
+                final boolean isFragment = (bundle.getState() == Bundle.UNINSTALLED ? false : isFragmentBundle(bundle));
+                resp.getWriter().print("{\"fragment\":" + isFragment // //$NON-NLS-1$
                     + ",\"stateRaw\":" + bundle.getState() + "}"); //$NON-NLS-1$ //$NON-NLS-2$
                 return;
             }
@@ -777,7 +801,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         jw.endArray();
     }
 
-    
+
     private final void bundleInfoDetails( JSONWriter jw, Bundle bundle, String appRoot, final Locale locale)
 	        throws JSONException
     {
@@ -795,7 +819,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             {
         	jw.key( infoProvider.getName(locale) );
         	jw.array();
-        	for ( int j = 0; j < infos.length; j++ ) 
+        	for ( int j = 0; j < infos.length; j++ )
         	{
         	    bundleInfo( jw, infos[j] );
         	}
@@ -805,7 +829,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         jw.endObject(); // value
         jw.endObject();
     }
-    
+
     private static final void bundleInfo( JSONWriter jw, BundleInfo info ) throws JSONException
     {
 	jw.object();
