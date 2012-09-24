@@ -20,11 +20,13 @@ package org.apache.felix.scr.impl;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -78,18 +80,18 @@ public class ComponentRegistry implements ScrService, ServiceListener
      * @see #registerComponentHolder(String, ComponentHolder)
      * @see #unregisterComponentHolder(String)
      */
-    private final Map m_componentHoldersByName;
+    private final Map /* <ComponentRegistryKey, Object> */ m_componentHoldersByName;
 
     /**
      * The map of known components indexed by component configuration pid. The values are
      * Sets of the {@link ComponentHolder} interface. Normally, the configuration pid
-     * is the component name, but since DS 1.2 (OSGi 4.3), a component may specify a specific 
-     * pid, and it is possible that different components refer to the same pid. That's why 
+     * is the component name, but since DS 1.2 (OSGi 4.3), a component may specify a specific
+     * pid, and it is possible that different components refer to the same pid. That's why
      * the values of this map are Sets of ComponentHolders, allowing to lookup all components
      * which are using a given configuration pid.
-     * This map is used when the ConfigurationSupport detects that a CM pid is updated. When 
-     * a PID is updated, the ConfigurationSupport listener class invokes the 
-     * {@link #getComponentHoldersByPid(String)} method which returns an iterator over all 
+     * This map is used when the ConfigurationSupport detects that a CM pid is updated. When
+     * a PID is updated, the ConfigurationSupport listener class invokes the
+     * {@link #getComponentHoldersByPid(String)} method which returns an iterator over all
      * components that are using the given pid for configuration.
      * <p>
      *
@@ -129,7 +131,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
     protected ComponentRegistry( BundleContext context )
     {
         m_bundleContext = context;
-        m_componentHoldersByName = new HashMap();
+        m_componentHoldersByName = new HashMap /* <ComponentRegistryKey, Object> */ ();
         m_componentHoldersByPid = new HashMap();
         m_componentsById = new HashMap();
         m_componentCounter = -1;
@@ -248,13 +250,20 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
     public Component[] getComponents( String componentName )
     {
-        final ComponentHolder holder = getComponentHolder( componentName );
-        if ( holder != null )
+        List /* <ComponentHolder */list = new ArrayList/* <ComponentHolder> */();
+        synchronized ( m_componentHoldersByName )
         {
-            return holder.getComponents();
+            for ( Iterator ci = m_componentHoldersByName.values().iterator(); ci.hasNext(); )
+            {
+                ComponentHolder c = ( ComponentHolder ) ci.next();
+                if ( componentName.equals( c.getComponentMetadata().getName() ) )
+                {
+                    list.addAll( Arrays.asList( c.getComponents() ) );
+                }
+            }
         }
 
-        return null;
+        return ( list.isEmpty() ) ? null : ( Component[] ) list.toArray( new Component[list.size()] );
     }
 
 
@@ -311,20 +320,22 @@ public class ComponentRegistry implements ScrService, ServiceListener
      * If a component with the same name has already been reserved or registered
      * a ComponentException is thrown with a descriptive message.
      *
+     * @param bundle the bundle registering the component
      * @param name the component name to check and reserve
      * @throws ComponentException if the name is already in use by another
      *      component.
      */
-    final void checkComponentName( String name )
+    final ComponentRegistryKey checkComponentName( final Bundle bundle, final String name )
     {
         // register the name if no registration for that name exists already
+        final ComponentRegistryKey key = new ComponentRegistryKey( bundle, name );
         final Object existingRegistration;
         synchronized ( m_componentHoldersByName )
         {
-            existingRegistration = m_componentHoldersByName.get( name );
+            existingRegistration = m_componentHoldersByName.get( key );
             if ( existingRegistration == null )
             {
-                m_componentHoldersByName.put( name, name );
+                m_componentHoldersByName.put( key, key );
             }
         }
 
@@ -352,6 +363,8 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
             throw new ComponentException( message );
         }
+
+        return key;
     }
 
 
@@ -366,18 +379,19 @@ public class ComponentRegistry implements ScrService, ServiceListener
      * @throws ComponentException if the name has not been reserved through
      *      {@link #checkComponentName(String)} yet.
      */
-    final void registerComponentHolder( String name, ComponentHolder component )
+    final void registerComponentHolder( final ComponentRegistryKey key, ComponentHolder component )
     {
         synchronized ( m_componentHoldersByName )
         {
             // only register the component if there is a m_registration for it !
-            if ( !name.equals( m_componentHoldersByName.get( name ) ) )
+            if ( !key.equals( m_componentHoldersByName.get( key ) ) )
             {
                 // this is not expected if all works ok
-                throw new ComponentException( "The component name '" + name + "' has already been registered." );
+                throw new ComponentException( "The component name '" + component.getComponentMetadata().getName()
+                    + "' has already been registered." );
             }
 
-            m_componentHoldersByName.put( name, component );
+            m_componentHoldersByName.put( key, component );
         }
 
         synchronized (m_componentHoldersByPid)
@@ -387,7 +401,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
             // Since several components may refer to the same configuration pid, we have to
             // store the component holder in a Set, in order to be able to lookup every
-            // components from a given pid.            
+            // components from a given pid.
             Set set = (Set) m_componentHoldersByPid.get(configurationPid);
             if (set == null)
             {
@@ -402,12 +416,12 @@ public class ComponentRegistry implements ScrService, ServiceListener
      * Returns the component registered under the given name or <code>null</code>
      * if no component is registered yet.
      */
-    public final ComponentHolder getComponentHolder( String name )
+    public final ComponentHolder getComponentHolder( final Bundle bundle, final String name )
     {
         Object entry;
         synchronized ( m_componentHoldersByName )
         {
-            entry = m_componentHoldersByName.get( name );
+            entry = m_componentHoldersByName.get( new ComponentRegistryKey( bundle, name ) );
         }
 
         // only return the entry if non-null and not a reservation
@@ -420,10 +434,10 @@ public class ComponentRegistry implements ScrService, ServiceListener
     }
 
     /**
-     * Returns the list of ComponentHolder instances whose configuration pids are matching 
+     * Returns the list of ComponentHolder instances whose configuration pids are matching
      * the given pid.
      * @param pid the pid candidate
-     * @return a iterator of ComponentHolder, or an empty iterator if no ComponentHolders 
+     * @return a iterator of ComponentHolder, or an empty iterator if no ComponentHolders
      * are found
      */
     public final Iterator getComponentHoldersByPid(String pid)
@@ -462,14 +476,26 @@ public class ComponentRegistry implements ScrService, ServiceListener
      * <p>
      * After calling this method, the name can be reused by other components.
      */
-    final void unregisterComponentHolder( String name )
+    final void unregisterComponentHolder( final Bundle bundle, final String name )
+    {
+        unregisterComponentHolder( new ComponentRegistryKey( bundle, name ) );
+    }
+
+
+    /**
+     * Removes the component registered under that name. If no component is
+     * yet registered but the name is reserved, it is unreserved.
+     * <p>
+     * After calling this method, the name can be reused by other components.
+     */
+    final void unregisterComponentHolder( final ComponentRegistryKey key )
     {
         Object component;
         synchronized ( m_componentHoldersByName )
         {
-            component = m_componentHoldersByName.remove(name);
+            component = m_componentHoldersByName.remove( key );
         }
-        
+
         if (component instanceof ComponentHolder) {
             synchronized (m_componentHoldersByPid)
             {
@@ -478,7 +504,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
                 if (componentsForPid != null)
                 {
                     componentsForPid.remove(component);
-                    if (componentsForPid.size() == 0) 
+                    if (componentsForPid.size() == 0)
                     {
                         m_componentHoldersByPid.remove(configurationPid);
                     }
