@@ -220,10 +220,14 @@ public class BundleComponentActivator implements Logger
             while ( i.hasNext() )
             {
                 ComponentMetadata metadata = ( ComponentMetadata ) i.next();
+                ComponentRegistryKey key = null;
                 try
                 {
-                    // check and reserve the component name
-                    m_componentRegistry.checkComponentName( metadata.getName() );
+                    // check and reserve the component name (if not null)
+                    if ( metadata.getName() != null )
+                    {
+                        key = m_componentRegistry.checkComponentName( m_context.getBundle(), metadata.getName() );
+                    }
 
                     // validate the component metadata
                     metadata.validate( this );
@@ -232,7 +236,7 @@ public class BundleComponentActivator implements Logger
                     ComponentHolder holder = m_componentRegistry.createComponentHolder( this, metadata );
 
                     // register the component after validation
-                    m_componentRegistry.registerComponentHolder( metadata.getName(), holder );
+                    m_componentRegistry.registerComponentHolder( key, holder );
                     m_managers.add( holder );
 
                     // enable the component
@@ -248,7 +252,10 @@ public class BundleComponentActivator implements Logger
                     log( LogService.LOG_ERROR, "Cannot register Component", metadata, t );
 
                     // make sure the name is not reserved any more
-                    m_componentRegistry.unregisterComponentHolder( metadata.getName() );
+                    if ( key != null )
+                    {
+                        m_componentRegistry.unregisterComponentHolder( key );
+                    }
                 }
             }
         }
@@ -313,7 +320,8 @@ public class BundleComponentActivator implements Logger
             }
             finally
             {
-                m_componentRegistry.unregisterComponentHolder( holder.getComponentMetadata().getName() );
+                m_componentRegistry.unregisterComponentHolder( m_context.getBundle(), holder.getComponentMetadata()
+                    .getName() );
             }
 
         }
@@ -449,7 +457,7 @@ public class BundleComponentActivator implements Logger
             return ( ComponentHolder[] ) m_managers.toArray( new ComponentHolder[m_managers.size()] );
         }
 
-        if ( m_componentRegistry.getComponentHolder( name ) != null )
+        if ( m_componentRegistry.getComponentHolder( m_context.getBundle(), name ) != null )
         {
             // otherwise just find it
             Iterator it = m_managers.iterator();
