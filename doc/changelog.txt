@@ -1,3 +1,11 @@
+Version 3.2.6
+-------------
+** Bug
+    * [FELIX-3635] - Unnecessary processing in DirectoryWatcher
+
+** Improvement
+    * [FELIX-3597] - Hard to debug fileinstall because shaded classes lack source in -sources.jar
+
 Version 3.2.4
 -------------
 ** Bug
