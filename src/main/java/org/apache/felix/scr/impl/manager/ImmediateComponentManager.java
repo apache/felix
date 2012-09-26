@@ -131,6 +131,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             // otherwise set the context and component instance and return true
             m_componentContext = tmpContext;
             m_implementationObject = tmpComponent;
+            log( LogService.LOG_DEBUG, "Set implementation object for component {0}", new Object[] { getName() },  null );
         }
         return true;
     }
@@ -147,6 +148,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             disposeImplementationObject( m_implementationObject, m_componentContext, reason );
             m_useCount = 0;
             m_implementationObject = null;
+            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent", new Object[] { getName() },  null );
             m_componentContext = null;
             m_properties = null;
             m_serviceProperties = null;

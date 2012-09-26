@@ -226,12 +226,16 @@ abstract class BaseMethod
     private MethodResult invokeMethod( final Object componentInstance, final Object rawParameter )
         throws InvocationTargetException
     {
+        getLogger().log( LogService.LOG_DEBUG, "invoking {0}: {1}", new Object[]
+            { getMethodNamePrefix(), getMethodName() }, null );
         try
         {
             if ( componentInstance != null )
             {
                 final Object[] params = getParameters(m_method, rawParameter);
                 Object result = m_method.invoke(componentInstance, params);
+                getLogger().log( LogService.LOG_DEBUG, "invoked {0}: {1}", new Object[]
+                    { getMethodNamePrefix(), getMethodName() }, null );
                 return new MethodResult((m_method.getReturnType() != Void.TYPE), (Map) result);
             }
             else
@@ -606,8 +610,6 @@ abstract class BaseMethod
         public MethodResult invoke( final BaseMethod baseMethod, final Object componentInstance, final Object rawParameter )
             throws InvocationTargetException
         {
-            baseMethod.getLogger().log( LogService.LOG_DEBUG, "invoking {0}: {1}", new Object[]
-                { baseMethod.getMethodNamePrefix(), baseMethod.getMethodName() }, null );
             return baseMethod.invokeMethod( componentInstance, rawParameter );
         }
 
