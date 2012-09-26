@@ -856,6 +856,11 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         return m_dependencies_map.compareAndSet( old, newDeps );
     }
 
+    protected void unsetDependencyMap()
+    {
+        m_dependencies_map.set( null );
+    }
+
     private void returnServices( Map deps )
     {
          for (Iterator it = deps.values().iterator(); it.hasNext(); )
@@ -1385,7 +1390,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                 {
                     acm.deleteComponent( reason );
                     acm.deactivateDependencyManagers();
-                    acm.m_dependencies_map.set( null );
+                    acm.unsetDependencyMap();
                 }
                 finally
                 {

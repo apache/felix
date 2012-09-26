@@ -692,6 +692,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                         if ( m_useCount == 0 )
                         {
                             state().ungetService( this );
+                            unsetDependencyMap();
                         }
                     }
                     finally
