@@ -34,6 +34,7 @@ import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 
 /**
  * The <code>ScrCommand</code> class provides the implementations for the
@@ -282,6 +283,14 @@ class ScrCommand
                     out.println(refs[i].isStatic() ? "static" : "dynamic");
                     out.print("    Policy option: ");
                     out.println(refs[i].isReluctant() ? "reluctant" : "greedy");
+                    ServiceReference[] serviceRefs = refs[i].getBoundServiceReferences();
+                    if (serviceRefs != null) {
+                        out.print("    Bound to:");
+                        for (int k = 0; k< serviceRefs.length; k++) {
+                            out.print("        " );
+                            out.println(serviceRefs[k]);
+                        }
+                    }
                 }
             }
 
