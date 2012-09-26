@@ -767,7 +767,7 @@ public class DependencyManager implements ServiceListener, Reference
      * services this instance is bound to or <code>null</code> if no services
      * are actually bound.
      */
-    private ServiceReference[] getBoundServiceReferences()
+    public ServiceReference[] getBoundServiceReferences()
     {
         Map dependencyMap = m_componentManager.getDependencyMap();
         if ( dependencyMap == null )
