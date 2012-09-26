@@ -611,7 +611,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         boolean release = obtainReadLock( "ImmediateComponentManager.getService.1" );
         try
         {
-            if ( m_useCount == 0 )
+            if ( m_implementationObject == null )
             {
                 releaseReadLock( "ImmediateComponentManager.getService.1" );
                 try
@@ -619,7 +619,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                     if ( !collectDependencies() )
                     {
                         log(
-                                LogService.LOG_INFO,
+                                LogService.LOG_DEBUG,
                                 "getService did not win collecting dependencies, try creating object anyway.",
                                 null );
 
@@ -641,7 +641,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 obtainWriteLock( "ImmediateComponentManager.getService.1" );
                 try
                 {
-                    if ( m_useCount == 0 )
+                    if ( m_implementationObject == null )
                     {
                         //state should be "Registered"
                         Object result = state().getService( this );
