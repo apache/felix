@@ -186,6 +186,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
             if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
             {
                 changeState( Registered.getInstance() );
+                unsetDependencyMap();
             }
         }
         finally
