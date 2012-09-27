@@ -611,7 +611,8 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         boolean release = obtainReadLock( "ImmediateComponentManager.getService.1" );
         try
         {
-            if ( m_implementationObject == null )
+            Object implementationObject = m_implementationObject;
+            if ( implementationObject == null )
             {
                 releaseReadLock( "ImmediateComponentManager.getService.1" );
                 try
@@ -658,7 +659,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 }
             }
             m_useCount++;
-            return state().getService( this );
+            return implementationObject;
         }
         finally
         {
