@@ -23,6 +23,7 @@ import javax.servlet.ServletContext;
 import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.dispatch.Dispatcher;
 import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.apache.felix.http.base.internal.handler.HttpServicePlugin;
 import org.apache.felix.http.base.internal.listener.HttpSessionAttributeListenerManager;
 import org.apache.felix.http.base.internal.listener.HttpSessionListenerManager;
 import org.apache.felix.http.base.internal.listener.ServletContextAttributeListenerManager;
@@ -65,6 +66,7 @@ public final class HttpServiceController
     private final HttpSessionListenerManager sessionListener;
     private final HttpSessionAttributeListenerManager sessionAttributeListener;
     private final boolean sharedContextAttributes;
+    private final HttpServicePlugin plugin;
     private ServiceRegistration serviceReg;
 
     public HttpServiceController(BundleContext bundleContext)
@@ -79,6 +81,7 @@ public final class HttpServiceController
         this.sessionListener = new HttpSessionListenerManager(bundleContext);
         this.sessionAttributeListener = new HttpSessionAttributeListenerManager(bundleContext);
         this.sharedContextAttributes = getBoolean(FELIX_HTTP_SHARED_SERVLET_CONTEXT_ATTRIBUTES);
+        this.plugin = new HttpServicePlugin(bundleContext,registry);
     }
 
     public Dispatcher getDispatcher()
@@ -128,6 +131,7 @@ public final class HttpServiceController
         this.requestAttributeListener.open();
         this.sessionListener.open();
         this.sessionAttributeListener.open();
+        this.plugin.register();
 
         HttpServiceFactory factory = new HttpServiceFactory(servletContext, this.registry,
             this.contextAttributeListener, this.sharedContextAttributes);
@@ -146,6 +150,7 @@ public final class HttpServiceController
         this.contextAttributeListener.close();
         this.requestListener.close();
         this.requestAttributeListener.close();
+        this.plugin.unregister();
 
         try {
             this.serviceReg.unregister();
