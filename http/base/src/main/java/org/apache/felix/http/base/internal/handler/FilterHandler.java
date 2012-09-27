@@ -93,4 +93,14 @@ public final class FilterHandler
     {
         return other.ranking - this.ranking;
     }
+
+    public int getRanking()
+    {
+        return ranking;
+    }
+
+    public String getPattern()
+    {
+        return regex.toString();
+    }
 }
