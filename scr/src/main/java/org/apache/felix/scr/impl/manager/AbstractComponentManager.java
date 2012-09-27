@@ -1461,6 +1461,11 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             doDeactivate( acm, reason );
         }
 
+        Object getService( ImmediateComponentManager dcm )
+        {
+            return null;
+        }
+
         void ungetService( ImmediateComponentManager dcm )
         {
             //do nothing, deactivate will unget all the services.
@@ -1623,6 +1628,17 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             acm.changeState( Disposed.getInstance() );
         }
 
+        Object getService( ImmediateComponentManager dcm )
+        {
+            //concurrent attempt to get service and remove dependency
+            return null;
+        }
+
+        void ungetService( ImmediateComponentManager dcm )
+        {
+            //do nothing.  This can arise if component is deactivated concurrently with ungetService on a delayed component.
+        }
+
     }
 
     protected static abstract class Satisfied extends State
@@ -1753,6 +1769,11 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
             // no service can be returned (be prepared for more logging !!)
             return null;
+        }
+
+        void ungetService( ImmediateComponentManager dcm )
+        {
+            //do nothing.  This can arise if component is deactivated concurrently with ungetService on a delayed component.
         }
     }
 
