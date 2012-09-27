@@ -41,10 +41,10 @@ public class Activator extends DependencyActivatorBase
 {
 
     /** the bundle context */
-    private BundleContext m_context;
+    private volatile BundleContext m_context;
 
     /** the dependency manager */
-    private DependencyManager m_manager;
+    private volatile DependencyManager m_manager;
 
     /** the device manager */
     private DeviceManager m_deviceManager;
@@ -96,7 +96,7 @@ public class Activator extends DependencyActivatorBase
             .setCallbacks( "locatorAdded", "locatorRemoved" ) );
         
         svc.add( createServiceDependency().setService( Driver.class, driverFilter ).setRequired( false )
-    		.setCallbacks( "driverAdded", "driverRemoved" ) );
+    		.setCallbacks( "driverAdded", "driverModified", "driverRemoved" ) );
         
         svc.add( createServiceDependency().setService( deviceFilter ).setRequired( false )
     		.setCallbacks( "deviceAdded", "deviceModified", "deviceRemoved" ) );

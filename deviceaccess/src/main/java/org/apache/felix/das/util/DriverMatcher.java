@@ -27,6 +27,7 @@ import java.util.TreeMap;
 
 import org.apache.felix.das.DriverAttributes;
 import org.apache.felix.das.Log;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.device.Constants;
 import org.osgi.service.device.DriverSelector;
@@ -109,9 +110,20 @@ public class DriverMatcher
 
     public Match selectBestMatch( ServiceReference deviceRef, DriverSelector selector )
     {
-        Match[] matches = m_matches.toArray( new Match[0] );
+//        Match[] matches = m_matches.toArray( new Match[0] );
+        
+        //(re)check bundle status
+        List<Match> activeMatches = new ArrayList<Match>();
+        for (Match match : m_matches) {
+            if (match.getDriver().getBundle().getState() == Bundle.ACTIVE) {
+                activeMatches.add(match);
+            } else {
+                m_log.debug("skipping: " + match + ", it's bundle is: " + match.getDriver().getBundle().getState());
+            }
+        }
         try
         {
+          Match[] matches = activeMatches.toArray( new Match[0] );
             int index = selector.select( deviceRef, matches );
             if ( index != DriverSelector.SELECT_NONE && index >= 0 && index < matches.length )
             {

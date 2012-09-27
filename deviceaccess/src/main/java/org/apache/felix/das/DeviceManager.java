@@ -211,15 +211,26 @@ public class DeviceManager implements Log
         debug( "driver appeared: " + Util.showDriver( ref ) );
         
         //immediately check for idle devices
-//        submit( new CheckForIdleDevices() );
+        submit( new CheckForIdleDevices() );
     }
 
+    public void driverModified( ServiceReference ref, Object obj )
+    {
+        final Driver driver = Driver.class.cast( obj );
+        
+        debug( "driver modified: " + Util.showDriver( ref ) );
+        m_drivers.remove( ref );
+        m_drivers.put( ref , new DriverAttributes( ref, driver ) );
+
+        // check if devices have become idle
+        // after some time
+        schedule( new CheckForIdleDevices() );
+    }
 
     public void driverRemoved( ServiceReference ref )
     {
-        String driverId = String.class.cast( ref.getProperty( Constants.DRIVER_ID ) );
         debug( "driver lost: " + Util.showDriver( ref ) );
-        m_drivers.remove( driverId );
+        m_drivers.remove( ref );
 
         // check if devices have become idle
         // after some time
@@ -464,6 +475,11 @@ public class DeviceManager implements Log
     private boolean isDriverBundle( Bundle bundle )
     {
         ServiceReference[] refs = bundle.getRegisteredServices();
+        
+        if (refs == null) {
+            return false;
+        }
+        
         for ( ServiceReference ref : refs )
         {
             if ( m_driverImplFilter.match( ref ) )
@@ -491,7 +507,14 @@ public class DeviceManager implements Log
             {
                 // just call the tryUninstall; the da itself
                 // will know if it should really uninstall the driver.
-                da.tryUninstall();
+                try 
+                { 
+                	da.tryUninstall(); 
+                }
+                catch (Exception e) 
+                {
+                	debug(da.getDriverId() + " uninstall failed");
+                }
             }
 
             return null;
@@ -557,7 +580,7 @@ public class DeviceManager implements Log
 
             // first find matching driver bundles
             // if there are no driver locators
-            // we'll have to do with the drivers that where
+            // we'll have to do with the drivers that were
             // added 'manually'
             Set<String> driverIds = m_driverLoader.findDrivers( m_locators, dict );
 
@@ -673,8 +696,7 @@ public class DeviceManager implements Log
                 // its a referral
                 info( "attach led to a referral to: " + newDriverId );
                 m_excluded.add( m_finalDriver );
-                return driverAttachment( dict, new String[]
-                    { newDriverId } );
+                return driverAttachment( dict, new String[]{ newDriverId } );
             }
             catch ( Throwable t )
             {
