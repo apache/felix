@@ -26,7 +26,7 @@
         <relativePath>../../../pom/pom.xml</relativePath>
 	</parent>
 	<artifactId>org.apache.felix.useradmin.filestore</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 	<description>Provides a file-based repository store for the UserAdmin OSGi compendium service.</description>
 	<dependencies>
@@ -44,7 +44,7 @@
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.useradmin</artifactId>
-			<version>1.0.2</version>
+			<version>1.0.3-SNAPSHOT</version>
 			<type>bundle</type>
 		</dependency>
 	</dependencies>
