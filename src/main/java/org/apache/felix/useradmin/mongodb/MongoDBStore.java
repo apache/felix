@@ -164,11 +164,6 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
     }
 
     @Override
-    public void flush() throws IOException {
-        // Nop
-    }
-
-    @Override
     public Role[] getAllRoles() throws IOException {
         try {
             List<Role> roles = new ArrayList<Role>();
