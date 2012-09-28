@@ -108,7 +108,8 @@
                         </Export-Service>
                         <!-- Include concurrent lib but not sub packages -->
                         <Embed-Dependency>
-                            concurrent;inline="EDU/oswego/cs/dl/util/concurrent/[A-Z]*"
+                            concurrent;inline="EDU/oswego/cs/dl/util/concurrent/[A-Z]*",
+                            org.osgi.compendium;inline="org/osgi/util/tracker/*"
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
