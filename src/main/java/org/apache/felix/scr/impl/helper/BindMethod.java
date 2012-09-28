@@ -572,39 +572,11 @@ public class BindMethod extends BaseMethod
             }
         }
         return new AbstractComponentManager.RefPair(ref, null);
-//        final Class[] paramTypes = getMethod( ).getParameterTypes();
-//        final Object[] params = new Object[paramTypes.length];
-//        boolean service = false;
-//        for ( int i = 0; i < params.length; i++ )
-//        {
-//            if ( paramTypes[i] == SERVICE_REFERENCE_CLASS )
-//            {
-//                params[i] = ref;
-//            }
-//            else if ( paramTypes[i] == MAP_CLASS )
-//            {
-//                params[i] = new ReadOnlyDictionary( ref );
-//            }
-//            else
-//            {
-//                params[i] = context.getService( ref );
-//                if ( params[i] == null )
-//                {
-//                    getComponentManager().log(
-//                        LogService.LOG_WARNING,
-//                        "Could not get service from ref " + ref, null );
-//                    return null;
-//                }
-//                service = true;
-//            }
-//        }
-//
-//        return new AbstractComponentManager.RefPair(params, service);
     }
 
     protected Object[] getParameters( Method method, Object rawParameter )
     {
-        AbstractComponentManager.RefPair refPair = ( AbstractComponentManager.RefPair ) rawParameter; //{ServiceReference, Object}
+        AbstractComponentManager.RefPair refPair = ( AbstractComponentManager.RefPair ) rawParameter;
         if (m_paramStyle == SERVICE_REFERENCE )
         {
             return new Object[] {refPair.getRef()};
