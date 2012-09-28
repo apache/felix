@@ -30,7 +30,9 @@ import org.osgi.service.useradmin.UserAdminPermission;
  */
 public class GroupImpl extends UserImpl implements Group {
 
-    private static final String BASIC_MEMBER = "basicMember";
+    private static final long serialVersionUID = 1515097730006454140L;
+    
+	private static final String BASIC_MEMBER = "basicMember";
     private static final String REQUIRED_MEMBER = "requiredMember";
 
     private final Object m_lock = new Object();

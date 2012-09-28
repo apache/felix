@@ -28,7 +28,9 @@ import org.osgi.service.useradmin.UserAdminPermission;
  */
 public class UserImpl extends RoleImpl implements User {
 
-    private final ObservableProperties m_credentials;
+    private static final long serialVersionUID = 8639414204247841034L;
+    
+	private final ObservableProperties m_credentials;
 
     /**
      * Creates a new {@link UserImpl} instance with type {@link Role#USER}.

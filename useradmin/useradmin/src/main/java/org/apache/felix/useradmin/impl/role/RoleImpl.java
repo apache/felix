@@ -16,6 +16,7 @@
  */
 package org.apache.felix.useradmin.impl.role;
 
+import java.io.Serializable;
 import java.util.Dictionary;
 
 
@@ -27,9 +28,11 @@ import org.osgi.service.useradmin.UserAdminPermission;
 /**
  * Provides an implementation of {@link Role}.
  */
-public class RoleImpl implements Role, DictionaryChangeListener {
+public class RoleImpl implements Serializable, Role, DictionaryChangeListener {
+	
+    private static final long serialVersionUID = -6292833161748591485L;
 
-    private final ObservableProperties m_properties;
+	private final ObservableProperties m_properties;
     private final String m_name;
     private final int m_type;
     
