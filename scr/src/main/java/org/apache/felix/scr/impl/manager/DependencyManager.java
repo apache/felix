@@ -1159,6 +1159,11 @@ public class DependencyManager implements ServiceListener, Reference
                 Map deps = ( Map ) dependencyMap.get( this );
                 BundleContext bundleContext = m_componentManager.getActivator().getBundleContext();
                 AbstractComponentManager.RefPair refPair = m_bindMethods.getBind().getServiceObject( ref, bundleContext );
+                if ( refPair == null )
+                {
+                    //reference deactivated while we are processing.
+                    return false;
+                }
                 deps.put( ref, refPair );
                 return invokeBindMethod( componentInstance, refPair );
             }
