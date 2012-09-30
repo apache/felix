@@ -159,22 +159,12 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
             Bundle bundle = this.getBundle( config.getBundleLocation() );
             if ( bundle != null )
             {
-                MetaTypeService mts = this.getMetaTypeService();
-                if ( mts != null )
+                String id = config.getFactoryPid();
+                if ( null == id )
                 {
-                    MetaTypeInformation mti = mts.getMetaTypeInformation( bundle );
-                    if ( mti != null )
-                    {
-                        // check by factory PID
-                        if ( config.getFactoryPid() != null )
-                        {
-                            return mti.getObjectClassDefinition( config.getFactoryPid(), locale );
-                        }
-
-                        // otherwise check by configuration PID
-                        return mti.getObjectClassDefinition( config.getPid(), locale );
-                    }
+                    id = config.getPid();
                 }
+                return getObjectClassDefinition(bundle, id, locale);
             }
         }
 
@@ -209,7 +199,11 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
                     }
                     catch (IllegalArgumentException e)
                     {
-                        // ignore - return null
+                        // MetaTypeProvider.getObjectClassDefinition might throw illegal
+                        // argument exception. So we must catch it here, otherwise the
+                        // other configurations will not be shown
+                        // See https://issues.apache.org/jira/browse/FELIX-2390
+                        // https://issues.apache.org/jira/browse/FELIX-3694
                     }
                 }
             }
@@ -281,7 +275,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
     }
 
 
-    protected Locale getLocale( HttpServletRequest request )
+    protected static final Locale getLocale( HttpServletRequest request )
     {
         try
         {
