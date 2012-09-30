@@ -35,7 +35,6 @@ import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.Vector;
-import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -63,17 +62,20 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 
 
 /**
- * The <code>ConfigManager</code> TODO
+ * The <code>ConfigManager</code>
  */
 public class ConfigManager extends ConfigManagerBase
 {
-    private static final String LABEL = "configMgr"; // was name
-    private static final String TITLE = "%configMgr.pluginTitle";
-    private static final String CSS[] = { "/res/ui/config.css" };
 
-    private static final String PID_FILTER = "pidFilter";
-    private static final String PID = "pid";
-    private static final String factoryPID = "factoryPid";
+    private static final long serialVersionUID = 5021174538498622428L;
+
+    private static final String LABEL = "configMgr"; // was name //$NON-NLS-1$
+    private static final String TITLE = "%configMgr.pluginTitle"; //$NON-NLS-1$
+    private static final String CSS[] = { "/res/ui/config.css" }; //$NON-NLS-1$
+
+    private static final String PID_FILTER = "pidFilter"; //$NON-NLS-1$
+    private static final String PID = "pid"; //$NON-NLS-1$
+    private static final String factoryPID = "factoryPid"; //$NON-NLS-1$
 
     private static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]";
 
@@ -89,7 +91,7 @@ public class ConfigManager extends ConfigManagerBase
      * Marker value of password fields used as dummy values and
      * indicating unmodified values.
      */
-    private static final String PASSWORD_PLACEHOLDER_VALUE = "unmodified";
+    private static final String PASSWORD_PLACEHOLDER_VALUE = "unmodified"; //$NON-NLS-1$
 
     // templates
     private final String TEMPLATE;
@@ -100,10 +102,10 @@ public class ConfigManager extends ConfigManagerBase
         super(LABEL, TITLE, CSS);
 
         // load templates
-        TEMPLATE = readTemplateFile( "/templates/config.html" );
+        TEMPLATE = readTemplateFile( "/templates/config.html" ); //$NON-NLS-1$
     }
 
-    private boolean isAllowedPid(final String pid)
+    private static final boolean isAllowedPid(final String pid)
     {
         for(int i = 0; i < pid.length(); i++)
         {
@@ -134,14 +136,14 @@ public class ConfigManager extends ConfigManagerBase
 
         final ConfigurationAdmin ca = this.getConfigurationAdmin();
 
-        // ignore this request if the pid and/or configuration admin is missing
+        // ignore this request if the PID and/or configuration admin is missing
         if ( pid == null || pid.length() == 0 || ca == null )
         {
             // should log this here !!
             return;
         }
 
-        // ignore this request, if the pid is invalud
+        // ignore this request, if the PID is invalid
         if ( ! isAllowedPid(pid) )
         {
             response.sendError(500);
@@ -157,26 +159,26 @@ public class ConfigManager extends ConfigManagerBase
         Configuration config = null;
 
         // should actually apply the configuration before redirecting
-        if ( request.getParameter( "create" ) != null )
+        if ( request.getParameter( "create" ) != null ) //$NON-NLS-1$
         {
             config = new PlaceholderConfiguration( pid ); // ca.createFactoryConfiguration( pid, null );
             pid = config.getPid();
         }
-        else if ( request.getParameter( "apply" ) != null )
+        else if ( request.getParameter( "apply" ) != null ) //$NON-NLS-1$
         {
             String redirect = applyConfiguration( request, ca, pid );
             if ( redirect != null )
             {
                 if (pidFilter != null) {
-                    redirect += "?" + PID_FILTER + "=" + pidFilter;
+                    redirect += '?' + PID_FILTER + '=' + pidFilter;
                 }
 
                 WebConsoleUtil.sendRedirect(request, response, redirect);
             }
             else
             {
-                response.setContentType("text/plain");
-                response.getWriter().print("true");
+                response.setContentType("text/plain"); //$NON-NLS-1$
+                response.getWriter().print("true"); //$NON-NLS-1$
             }
 
             return;
@@ -188,7 +190,7 @@ public class ConfigManager extends ConfigManagerBase
         }
 
         // check for configuration unbinding
-        if ( request.getParameter( "unbind" ) != null )
+        if ( request.getParameter( "unbind" ) != null ) //$NON-NLS-1$
         {
             if ( config != null && config.getBundleLocation() != null )
             {
@@ -200,19 +202,19 @@ public class ConfigManager extends ConfigManagerBase
                 // dynamic bundle location and then try to set both to null
                 if ( config.getBundleLocation() != null )
                 {
-                    config.setBundleLocation( "??invalid:bundle/location" );
+                    config.setBundleLocation( "??invalid:bundle/location" ); //$NON-NLS-1$
                     config.setBundleLocation( null );
                 }
             }
-            response.setContentType( "application/json" );
-            response.setCharacterEncoding( "UTF-8" );
-            response.getWriter().print( "{ \"status\": true }" );
+            response.setContentType( "application/json" ); //$NON-NLS-1$
+            response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
+            response.getWriter().print( "{ \"status\": true }" ); //$NON-NLS-1$
             return;
         }
 
         // send the result
-        response.setContentType( "application/json" );
-        response.setCharacterEncoding( "UTF-8" );
+        response.setContentType( "application/json" ); //$NON-NLS-1$
+        response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
         final Locale loc = getLocale( request );
         final String locale = ( loc != null ) ? loc.toString() : null;
         printConfigurationJson( response.getWriter(), pid, config, pidFilter, locale );
@@ -225,16 +227,16 @@ public class ConfigManager extends ConfigManagerBase
     protected void doGet( HttpServletRequest request, HttpServletResponse response )
     throws ServletException, IOException
     {
-        // let's check for a json request
+        // let's check for a JSON request
         final String info = request.getPathInfo();
-        if ( info.endsWith( ".json" ) )
+        if ( info.endsWith( ".json" ) ) //$NON-NLS-1$
         {
-            response.setContentType( "application/json" );
-            response.setCharacterEncoding( "UTF-8" );
+            response.setContentType( "application/json" ); //$NON-NLS-1$
+            response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
 
             // after last slash and without extension
             String pid = info.substring( info.lastIndexOf( '/' ) + 1, info.length() - 5 );
-            // check whether the pid is actually a filter for the selection
+            // check whether the PID is actually a filter for the selection
             // of configurations to display, if the filter correctly converts
             // into an OSGi filter, we use it to select configurations
             // to display
@@ -247,7 +249,7 @@ public class ConfigManager extends ConfigManagerBase
             {
                 getBundleContext().createFilter( pidFilter );
 
-                // if the pidFilter was set from the pid, clear the pid
+                // if the pidFilter was set from the PID, clear the PID
                 if ( pid == pidFilter )
                 {
                     pid = null;
@@ -255,16 +257,16 @@ public class ConfigManager extends ConfigManagerBase
             }
             catch ( InvalidSyntaxException ise )
             {
-                // its ok, if the pid is just a single PID
+                // its OK, if the PID is just a single PID
                 pidFilter = null;
             }
 
-            // check both pid and pid filter
-            if ( pid != null && !this.isAllowedPid(pid) )
+            // check both PID and PID filter
+            if ( pid != null && !isAllowedPid(pid) )
             {
                 response.sendError(500);
             }
-            if ( pidFilter != null && !this.isAllowedPid(pidFilter) )
+            if ( pidFilter != null && !isAllowedPid(pidFilter) )
             {
                 response.sendError(500);
             }
@@ -278,7 +280,7 @@ public class ConfigManager extends ConfigManagerBase
 
             try
             {
-                pw.write( "[" );
+                pw.write( "[" ); //$NON-NLS-1$
                 final Map services = this.getServices( pid, pidFilter, locale, false );
                 boolean printColon = false;
                 for ( Iterator spi = services.keySet().iterator(); spi.hasNext(); )
@@ -295,7 +297,7 @@ public class ConfigManager extends ConfigManagerBase
                         printColon = true;
                     }
                 }
-                pw.write( "]" );
+                pw.write( "]" ); //$NON-NLS-1$
             }
             catch ( InvalidSyntaxException e )
             {
@@ -315,14 +317,14 @@ public class ConfigManager extends ConfigManagerBase
     protected void renderContent( HttpServletRequest request, HttpServletResponse response ) throws IOException
     {
 
-        // extract the configuration pid from the request path
+        // extract the configuration PID from the request path
         String pid = request.getPathInfo().substring(this.getLabel().length() + 1);
         if ( pid.length() == 0 ) {
             pid = null;
         } else {
             pid = pid.substring( pid.lastIndexOf( '/' ) + 1 );
         }
-        // check whether the pid is actually a filter for the selection
+        // check whether the PID is actually a filter for the selection
         // of configurations to display, if the filter correctly converts
         // into an OSGi filter, we use it to select configurations
         // to display
@@ -337,7 +339,7 @@ public class ConfigManager extends ConfigManagerBase
             {
                 getBundleContext().createFilter( pidFilter );
 
-                // if the pidFilter was set from the pid, clear the pid
+                // if the pidFilter was set from the PID, clear the PID
                 if ( pid == pidFilter )
                 {
                     pid = null;
@@ -345,17 +347,17 @@ public class ConfigManager extends ConfigManagerBase
             }
             catch ( InvalidSyntaxException ise )
             {
-                // its ok, if the pid is just a single PID
+                // its OK, if the PID is just a single PID
                 pidFilter = null;
             }
         }
 
-        // check both pid and pid filter
-        if ( pid != null && !this.isAllowedPid(pid) )
+        // check both PID and PID filter
+        if ( pid != null && !isAllowedPid(pid) )
         {
             response.sendError(500);
         }
-        if ( pidFilter != null && !this.isAllowedPid(pidFilter) )
+        if ( pidFilter != null && !isAllowedPid(pidFilter) )
         {
             response.sendError(500);
         }
@@ -368,7 +370,7 @@ public class ConfigManager extends ConfigManagerBase
         JSONObject json = new JSONObject();
         try
         {
-            json.put("status", ca != null ? Boolean.TRUE : Boolean.FALSE);
+            json.put("status", ca != null ? Boolean.TRUE : Boolean.FALSE); //$NON-NLS-1$
             if ( ca != null )
             {
                 listConfigurations( json, ca, pidFilter, locale, loc );
@@ -381,7 +383,7 @@ public class ConfigManager extends ConfigManagerBase
         }
 
         // if a configuration is addressed, display it immediately
-        if ( request.getParameter( "create" ) != null && pid != null )
+        if ( request.getParameter( "create" ) != null && pid != null ) //$NON-NLS-1$
         {
             pid = new PlaceholderConfiguration( pid ).getPid();
         }
@@ -389,8 +391,8 @@ public class ConfigManager extends ConfigManagerBase
 
         // prepare variables
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
-        vars.put( "__data__", json.toString() );
-        vars.put( "selectedPid", pid != null ? pid : "");
+        vars.put( "__data__", json.toString() ); //$NON-NLS-1$
+        vars.put( "selectedPid", pid != null ? pid : ""); //$NON-NLS-1$ //$NON-NLS-2$
 
         response.getWriter().print(TEMPLATE);
     }
@@ -405,7 +407,7 @@ public class ConfigManager extends ConfigManagerBase
                 // we use listConfigurations to not create configuration
                 // objects persistently without the user providing actual
                 // configuration
-                String filter = "(" + Constants.SERVICE_PID + "=" + pid + ")";
+                String filter = '(' + Constants.SERVICE_PID + '=' + pid + ')';
                 Configuration[] configs = ca.listConfigurations( filter );
                 if ( configs != null && configs.length > 0 )
                 {
@@ -440,7 +442,9 @@ public class ConfigManager extends ConfigManagerBase
             {
                 String id = ( String ) ii.next();
                 Object name = optionsFactory.get( id );
-                json.append( "fpids", new JSONObject().put( "id", id ).put( "name", name ) );
+                json.append( "fpids", new JSONObject() //$NON-NLS-1$
+                    .put( "id", id ) //$NON-NLS-1$
+                    .put( "name", name ) ); //$NON-NLS-1$
             }
         }
         catch (Exception e)
@@ -470,7 +474,7 @@ public class ConfigManager extends ConfigManagerBase
                 // ignore configuration object if an entry already exists in the map
                 // or if it is invalid
                 final String pid = cfgs[i].getPid();
-                if (optionsPlain.containsKey(pid) || !this.isAllowedPid(pid) )
+                if (optionsPlain.containsKey(pid) || !isAllowedPid(pid) )
                 {
                     continue;
                 }
@@ -505,24 +509,26 @@ public class ConfigManager extends ConfigManagerBase
                 Object name = optionsPlain.get( id );
 
                 final Configuration config = getConfiguration( ca, id );
-                JSONObject data = new JSONObject().put( "id", id ).put( "name", name );
+                JSONObject data = new JSONObject() //
+                    .put( "id", id ) //$NON-NLS-1$
+                    .put( "name", name ); //$NON-NLS-1$
                 if ( null != config )
                 {
                     final String fpid = config.getFactoryPid();
                     if ( null != fpid )
                     {
-                        data.put( "fpid", fpid );
+                        data.put( "fpid", fpid ); //$NON-NLS-1$
                     }
 
                     final Bundle bundle = getBoundBundle( config );
                     if ( null != bundle )
                     {
-                        data.put( "bundle", bundle.getBundleId() );
-                        data.put( "bundle_name", Util.getName( bundle, loc ) );
+                        data.put( "bundle", bundle.getBundleId() ); //$NON-NLS-1$
+                        data.put( "bundle_name", Util.getName( bundle, loc ) ); //$NON-NLS-1$
                     }
                 }
 
-                json.append( "pids", data );
+                json.append( "pids", data ); //$NON-NLS-1$
             }
         }
         catch (Exception e)
@@ -561,8 +567,8 @@ public class ConfigManager extends ConfigManagerBase
         for ( int i = 0; refs != null && i < refs.length; i++ )
         {
             Object pidObject = refs[i].getProperty( Constants.SERVICE_PID );
-            // only include valid pids
-            if ( pidObject instanceof String && this.isAllowedPid((String)pidObject) )
+            // only include valid PIDs
+            if ( pidObject instanceof String && isAllowedPid((String)pidObject) )
             {
                 String pid = ( String ) pidObject;
                 String name;
@@ -660,13 +666,13 @@ public class ConfigManager extends ConfigManagerBase
         }
 
         Dictionary props = null;
-        ObjectClassDefinition ocd;
+        ObjectClassDefinition ocd = null;
         if ( config != null )
         {
             props = config.getProperties(); // unchecked
             ocd = this.getObjectClassDefinition( config, locale );
         }
-        else
+        if (ocd == null)
         {
             ocd = this.getObjectClassDefinition( pid, locale );
         }
@@ -678,17 +684,17 @@ public class ConfigManager extends ConfigManagerBase
 
         if ( ocd != null )
         {
-            this.mergeWithMetaType( props, ocd, json );
+            mergeWithMetaType( props, ocd, json );
         }
         else
         {
-            json.key( "title" ).value( pid );
-            json.key( "description" ).value(
+            json.key( "title" ).value( pid ); //$NON-NLS-1$
+            json.key( "description" ).value( //$NON-NLS-1$
                 "This form is automatically generated from existing properties because no property "
                     + "descriptors are available for this configuration. This may be cause by the absence "
                     + "of the OSGi Metatype Service or the absence of a MetaType descriptor for this configuration." );
 
-            json.key( "properties" ).object();
+            json.key( "properties" ).object(); //$NON-NLS-1$
             for ( Enumeration pe = props.keys(); pe.hasMoreElements(); )
             {
                 final String id = ( String ) pe.nextElement();
@@ -715,19 +721,19 @@ public class ConfigManager extends ConfigManagerBase
     }
 
 
-    private void mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json ) throws JSONException
+    private static final void mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json ) throws JSONException
     {
-        json.key( "title" ).value( ocd.getName() );
+        json.key( "title" ).value( ocd.getName() ); //$NON-NLS-1$
 
         if ( ocd.getDescription() != null )
         {
-            json.key( "description" ).value( ocd.getDescription() );
+            json.key( "description" ).value( ocd.getDescription() ); //$NON-NLS-1$
         }
 
         AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
         if ( ad != null )
         {
-            json.key( "properties" ).object();
+            json.key( "properties" ).object(); //$NON-NLS-1$
             for ( int i = 0; i < ad.length; i++ )
             {
                 final AttributeDefinition adi = ad[i];
@@ -752,7 +758,7 @@ public class ConfigManager extends ConfigManagerBase
         String location;
         if ( config.getBundleLocation() == null )
         {
-            location = "";
+            location = ""; //$NON-NLS-1$
         }
         else
         {
@@ -774,24 +780,24 @@ public class ConfigManager extends ConfigManagerBase
                 }
                 else
                 {
-                    location = name + " (" + bundle.getSymbolicName() + ")";
+                    location = name + " (" + bundle.getSymbolicName() + ')'; //$NON-NLS-1$
                 }
 
                 Version v = Version.parseVersion( ( String ) headers.get( Constants.BUNDLE_VERSION ) );
                 location += ", Version " + v.toString();
             }
         }
-        json.key( "bundleLocation" );
+        json.key( "bundleLocation" ); //$NON-NLS-1$
         json.value( location );
         // raw bundle location and service locations
         final String pid = config.getPid();
-        String serviceLocation = "";
+        String serviceLocation = ""; //$NON-NLS-1$
         try
         {
             final ServiceReference[] refs = getBundleContext().getServiceReferences(
                 null,
-                "(&(" + Constants.OBJECTCLASS + '=' + ManagedService.class.getName()
-                    + ")(" + Constants.SERVICE_PID + '=' + pid + "))");
+                "(&(" + Constants.OBJECTCLASS + '=' + ManagedService.class.getName() //$NON-NLS-1$
+                    + ")(" + Constants.SERVICE_PID + '=' + pid + "))"); //$NON-NLS-1$ //$NON-NLS-2$
             if ( refs != null && refs.length > 0 )
             {
                 serviceLocation = refs[0].getBundle().getLocation();
@@ -801,9 +807,9 @@ public class ConfigManager extends ConfigManagerBase
         {
             log( "Error getting service associated with configuration " + pid, t );
         }
-        json.key( "bundle_location" );
+        json.key( "bundle_location" ); //$NON-NLS-1$
         json.value ( config.getBundleLocation() );
-        json.key( "service_location" );
+        json.key( "service_location" ); //$NON-NLS-1$
         json.value ( serviceLocation );
     }
 
@@ -811,7 +817,7 @@ public class ConfigManager extends ConfigManagerBase
     private String applyConfiguration( HttpServletRequest request, ConfigurationAdmin ca, String pid )
         throws IOException
     {
-        if ( request.getParameter( "delete" ) != null )
+        if ( request.getParameter( "delete" ) != null ) //$NON-NLS-1$
         {
             // only delete if the PID is not our place holder
             if ( !PLACEHOLDER_PID.equals( pid ) )
@@ -826,7 +832,7 @@ public class ConfigManager extends ConfigManagerBase
         String factoryPid = request.getParameter( ConfigManager.factoryPID );
         Configuration config = null;
 
-        String propertyList = request.getParameter( "propertylist" );
+        String propertyList = request.getParameter( "propertylist" ); //$NON-NLS-1$
         if ( propertyList == null )
         {
             // FIXME: this would be a bug !!
@@ -842,7 +848,7 @@ public class ConfigManager extends ConfigManagerBase
             }
 
             Map adMap = this.getAttributeDefinitionMap( config, null );
-            StringTokenizer propTokens = new StringTokenizer( propertyList, "," );
+            StringTokenizer propTokens = new StringTokenizer( propertyList, "," ); //$NON-NLS-1$
             while ( propTokens.hasMoreTokens() )
             {
                 String propName = propTokens.nextToken();
@@ -942,7 +948,7 @@ public class ConfigManager extends ConfigManagerBase
         }
 
         // redirect to the new configuration (if existing)
-        return (config != null) ? config.getPid() : "";
+        return (config != null) ? config.getPid() : ""; //$NON-NLS-1$
     }
 
 
@@ -973,14 +979,14 @@ public class ConfigManager extends ConfigManagerBase
         }
         else if ( ad.getCardinality() == 0 )
         {
-            value = "";
+            value = ""; //$NON-NLS-1$
         }
         else
         {
             value = new String[0];
         }
 
-        json.key( "name" );
+        json.key( "name" ); //$NON-NLS-1$
         json.value( ad.getName() );
 
         // attribute type - overwrite metatype provided type
@@ -988,13 +994,13 @@ public class ConfigManager extends ConfigManagerBase
         // type is string
         int propertyType = getAttributeType( ad );
 
-        json.key( "type" );
+        json.key( "type" ); //$NON-NLS-1$
         if ( ad.getOptionLabels() != null && ad.getOptionLabels().length > 0 )
         {
             json.object();
-            json.key( "labels" );
+            json.key( "labels" ); //$NON-NLS-1$
             json.value( Arrays.asList( ad.getOptionLabels() ) );
-            json.key( "values" );
+            json.key( "values" ); //$NON-NLS-1$
             json.value( Arrays.asList( ad.getOptionValues() ) );
             json.endObject();
         }
@@ -1020,7 +1026,7 @@ public class ConfigManager extends ConfigManagerBase
             {
                 value = Array.get( value, 0 );
             }
-            json.key( "value" );
+            json.key( "value" ); //$NON-NLS-1$
             json.value( value );
         }
         else
@@ -1034,14 +1040,14 @@ public class ConfigManager extends ConfigManagerBase
                     tmp.put( tmpI, PASSWORD_PLACEHOLDER_VALUE );
                 }
             }
-            json.key( "values" );
+            json.key( "values" ); //$NON-NLS-1$
             json.value( value );
         }
 
         if ( ad.getDescription() != null )
         {
-            json.key( "description" );
-            json.value( ad.getDescription() + " (" + ad.getID() + ")" );
+            json.key( "description" ); //$NON-NLS-1$
+            json.value( ad.getDescription() + " (" + ad.getID() + ")" ); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         json.endObject();
