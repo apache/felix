@@ -46,15 +46,17 @@ import org.osgi.service.startlevel.StartLevel;
 public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
 
-    private static final String LABEL = "vmstat";
-    private static final String TITLE = "%vmstat.pluginTitle";
+    private static final long serialVersionUID = 2293375003997163600L;
+
+    private static final String LABEL = "vmstat"; //$NON-NLS-1$
+    private static final String TITLE = "%vmstat.pluginTitle"; //$NON-NLS-1$
     private static final String CSS[] = null;
 
-    private static final String ATTR_TERMINATED = "terminated";
+    private static final String ATTR_TERMINATED = "terminated"; //$NON-NLS-1$
 
-    private static final String PARAM_SHUTDOWN_TIMER = "shutdown_timer";
-    private static final String PARAM_SHUTDOWN_TYPE = "shutdown_type";
-    private static final String PARAM_SHUTDOWN_TYPE_RESTART = "Restart";
+    private static final String PARAM_SHUTDOWN_TIMER = "shutdown_timer"; //$NON-NLS-1$
+    private static final String PARAM_SHUTDOWN_TYPE = "shutdown_type"; //$NON-NLS-1$
+    private static final String PARAM_SHUTDOWN_TYPE_RESTART = "Restart"; //$NON-NLS-1$
     //private static final String PARAM_SHUTDOWN_TYPE_STOP = "Stop";
 
     private static final long startDate = System.currentTimeMillis();
@@ -74,9 +76,9 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         super( LABEL, TITLE, CSS );
 
         // load templates
-        TPL_VM_MAIN = readTemplateFile(  "/templates/vmstat.html"  );
-        TPL_VM_STOP = readTemplateFile( "/templates/vmstat_stop.html" );
-        TPL_VM_RESTART = readTemplateFile( "/templates/vmstat_restart.html" );
+        TPL_VM_MAIN = readTemplateFile(  "/templates/vmstat.html"  ); //$NON-NLS-1$
+        TPL_VM_STOP = readTemplateFile( "/templates/vmstat_stop.html" ); //$NON-NLS-1$
+        TPL_VM_RESTART = readTemplateFile( "/templates/vmstat_restart.html" ); //$NON-NLS-1$
     }
 
 
@@ -86,9 +88,9 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
     protected void doPost( HttpServletRequest request, HttpServletResponse response ) throws ServletException,
         IOException
     {
-        final String action = request.getParameter( "action");
+        final String action = request.getParameter( "action"); //$NON-NLS-1$
 
-        if ( "setStartLevel".equals( action ))
+        if ( "setStartLevel".equals( action )) //$NON-NLS-1$
         {
             StartLevel sl = getStartLevel();
             if ( sl != null )
@@ -106,7 +108,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
                 }
             }
         }
-        else if ( "gc".equals( action ) )
+        else if ( "gc".equals( action ) ) //$NON-NLS-1$
         {
             System.gc();
             System.gc(); // twice for sure
@@ -199,7 +201,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         DateFormat format = DateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG, request.getLocale() );
         final String startTime = format.format( new Date( startDate ) );
         final String upTime = formatPeriod( System.currentTimeMillis() - startDate );
-
+        
         JSONObject json = new JSONObject();
         try
         {
@@ -207,10 +209,10 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
             json.put( "bundleStartLevel", getStartLevel().getInitialBundleStartLevel() );
             json.put( "lastStarted", startTime );
             json.put( "upTime", upTime );
-            json.put( "runtime", System.getProperty( "java.runtime.name" ) + "(build "
-                + System.getProperty( "java.runtime.version" ) + ")" );
-            json.put( "jvm", System.getProperty( "java.vm.name" ) + "(build " + System.getProperty( "java.vm.version" )
-                + ", " + System.getProperty( "java.vm.info" ) + ")" );
+            json.put( "runtime", sysProp( "java.runtime.name" ) + "(build "
+                + sysProp( "java.runtime.version" ) + ")" );
+            json.put( "jvm", sysProp( "java.vm.name" ) + "(build " + sysProp( "java.vm.version" )
+                + ", " + sysProp( "java.vm.info" ) + ")" );
             json.put( "shutdownTimer", shutdownTimer );
             json.put( "mem_total", totalMem );
             json.put( "mem_free", freeMem );
@@ -234,9 +236,18 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
 
         response.getWriter().print( body );
     }
+    
+    private static final String sysProp( String name )
+    {
+        String ret = System.getProperty( name );
+        if ( null == ret || ret.length() == 0 ) {
+            ret = "n/a"; //$NON-NLS-1$
+        }
+        return ret;
+    }
 
 
-    private String formatPeriod( final long period )
+    private static final String formatPeriod( final long period )
     {
         final Long msecs = new Long( period % 1000 );
         final Long secs = new Long( period / 1000 % 60 );
@@ -261,7 +272,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
      * If the Runtime.availableProcessors() method is not available, this
      * method returns -1.
      */
-    private int getAvailableProcessors()
+    private static final int getAvailableProcessors()
     {
         try
         {
