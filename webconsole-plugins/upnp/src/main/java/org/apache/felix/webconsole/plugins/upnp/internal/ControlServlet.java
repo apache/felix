@@ -55,6 +55,8 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 public class ControlServlet extends HttpServlet implements ServiceTrackerCustomizer
 {
 
+    private static final long serialVersionUID = -5789642544511401813L;
+
     private static final SimpleDateFormat DATA_FORMAT = new SimpleDateFormat(
         "EEE, d MMM yyyy HH:mm:ss Z"); //$NON-NLS-1$
 
@@ -227,8 +229,11 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
 
     private final JSONObject deviceTreeToJSON(ServiceReference ref) throws JSONException
     {
-        UPnPDevice device = (UPnPDevice) tracker.getService(ref);
-        Object[] refs = tracker.getServiceReferences();
+        final UPnPDevice device = (UPnPDevice) tracker.getService(ref);
+        if (null == device)
+        {
+            return null; // the device is dynamically removed
+        }
 
         Object parentUdn = ref.getProperty(UPnPDevice.UDN);
         if (parentUdn == null)
@@ -241,6 +246,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         JSONObject json = deviceToJSON(ref, device);
 
         // add child devices
+        final Object[] refs = tracker.getServiceReferences();
         for (int i = 0; refs != null && i < refs.length; i++)
         {
             ref = (ServiceReference) refs[i];
@@ -257,7 +263,6 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
             }
             else if (parentUdn.equals(parent))
             {
-                device = (UPnPDevice) tracker.getService(ref);
                 JSONObject deviceJSON = deviceTreeToJSON(ref);
                 if (null != deviceJSON)
                 {
@@ -456,14 +461,19 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
             _udn = (String) refs[i].getProperty(UPnPDevice.UDN);
             if (_udn != null && _udn.equals(udn))
             {
-                return (UPnPDevice) tracker.getService(refs[i]);
+                UPnPDevice upnpDevice = (UPnPDevice) tracker.getService(refs[i]);
+                if (null == upnpDevice)
+                {
+                    break; // device not found
+                }
+                return upnpDevice;
             }
         }
 
         throw new IllegalArgumentException("Device '" + udn + "' not found!");
     }
 
-    private final UPnPService getService(UPnPDevice device, String urn)
+    private static final UPnPService getService(UPnPDevice device, String urn)
     {
         UPnPService[] services = device.getServices();
         for (int i = 0; services != null && i < services.length; i++)
