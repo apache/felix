@@ -189,7 +189,7 @@ public class Main implements Runnable
                     System.out.println("Did not get A injected timely ... see logs.txt");
                     _logService.log(LogService.LOG_ERROR, "enableLatch TIMEOUT");
                     dumpComponents();
-                    System.exit(1);
+                    return;
                 }
             }
             catch (InterruptedException e)
@@ -204,7 +204,7 @@ public class Main implements Runnable
                     System.out.println("Could not disable components timely ... see logs.txt");
                     _logService.log(LogService.LOG_ERROR, "disableLatch TIMEOUT");
                     dumpComponents();
-                    System.exit(1);
+                    return;
                 }
             }
             catch (InterruptedException e)
