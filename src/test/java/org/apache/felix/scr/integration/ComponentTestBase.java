@@ -120,7 +120,7 @@ public abstract class ComponentTestBase
 
     @ProbeBuilder
     public TestProbeBuilder extendProbe(TestProbeBuilder builder) {
-        builder.setHeader("Export-Package", "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature,org.apache.felix.scr.integration.components.circular,org.apache.felix.scr.integration.components.concurrency");
+        builder.setHeader("Export-Package", "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature,org.apache.felix.scr.integration.components.circular,org.apache.felix.scr.integration.components.concurrency,org.apache.felix.scr.integration.components.felix3680");
         builder.setHeader("Import-Package", "org.apache.felix.scr,org.apache.felix.scr.component;mandatory:=\"status\"; status=\"provisional\"");
         builder.setHeader("Bundle-ManifestVersion", "2");
         return builder;
@@ -146,7 +146,7 @@ public abstract class ComponentTestBase
              ),
              junitBundles(),
              systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
-             systemProperty( "ds.loglevel" ).value( "debug" )
+             systemProperty( "ds.loglevel" ).value( "warn" )
 
         );
         final Option vmOption = ( paxRunnerVmOption != null ) ? CoreOptions.vmOption( paxRunnerVmOption ) : null;
@@ -390,7 +390,7 @@ public abstract class ComponentTestBase
                 .set(Constants.BUNDLE_SYMBOLICNAME, "simplecomponent")
                 .set(Constants.BUNDLE_VERSION, "0.0.11")
                 .set(Constants.IMPORT_PACKAGE,
-                        "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature,org.apache.felix.scr.integration.components.circular,org.apache.felix.scr.integration.components.concurrency")
+                        "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature,org.apache.felix.scr.integration.components.circular,org.apache.felix.scr.integration.components.concurrency,org.apache.felix.scr.integration.components.felix3680")
                 .set("Service-Component", "OSGI-INF/components.xml")
             .build(withBnd());
 
