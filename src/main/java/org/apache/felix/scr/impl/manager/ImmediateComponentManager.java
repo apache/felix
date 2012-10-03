@@ -636,6 +636,10 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 }
                 catch ( IllegalStateException e )
                 {
+                    log(
+                            LogService.LOG_INFO,
+                            "Could not obtain all required dependencies, getService returning null",
+                            null );
                     release = false;
                     return null;
                 }

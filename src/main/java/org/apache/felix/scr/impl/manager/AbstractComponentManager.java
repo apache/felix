@@ -388,6 +388,11 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                         }
                     }
                 }
+
+                public String toString()
+                {
+                    return "Async Activate: " + getComponentMetadata().getName();
+                }
             } );
         }
     }
@@ -442,6 +447,12 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                         }
                     }
                 }
+
+                public String toString()
+                {
+                    return "Async Deactivate: " + getComponentMetadata().getName();
+                }
+
             } );
         }
     }
@@ -775,7 +786,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
         if ( sr != null && m_serviceRegistration.compareAndSet( sr, null ) )
         {
-            log( LogService.LOG_DEBUG, "Unregistering the services", null );
+            log( LogService.LOG_DEBUG, "Unregistering services", null );
             sr.unregister();
         }
     }
