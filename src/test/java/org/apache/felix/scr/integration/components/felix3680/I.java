@@ -23,4 +23,13 @@ public class I
     void bindJ(J j)
     {
     }
+    void start()
+    {
+        Main._enabledLatch.countDown();
+    }
+
+    void stop()
+    {
+        Main._disabledLatch.countDown();
+    }
 }

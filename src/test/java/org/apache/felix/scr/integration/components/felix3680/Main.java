@@ -35,10 +35,11 @@ import org.osgi.service.log.LogService;
 
 public class Main implements Runnable
 {
+    public static volatile CountDownLatch _enabledLatch;
+    public static volatile CountDownLatch _disabledLatch;
+
     private volatile ComponentContext _ctx;
     private volatile AtomicInteger _counter = new AtomicInteger();
-    private volatile CountDownLatch _enabledLatch;
-    private volatile CountDownLatch _disabledLatch;
     private volatile Random _rnd = new Random();
     private volatile LogService _logService;
     private ScrService _scr;
@@ -79,13 +80,11 @@ public class Main implements Runnable
                         {
                             //_logService.log(LogService.LOG_INFO, "enabling component " + _componentNames[i]);
                             _ctx.enableComponent(_componentNames[i]);
-                            _enabledLatch.countDown();
                         }
                         else
                         {
                             //_logService.log(LogService.LOG_INFO, "disabling component " + _componentNames[i]);
                             _ctx.disableComponent(_componentNames[i]);
-                            _disabledLatch.countDown();
                         }
                     }
                 });
@@ -170,9 +169,8 @@ public class Main implements Runnable
         int loop = 0;
         while (_running)
         {
-            _logService.log(LogService.LOG_WARNING, "Performed " + loop + " tests.");            
-            _enabledLatch = new CountDownLatch(11); // 10 to make sure all enable tasks are executed + 1 to make sure Main.bindA has been called
-            _disabledLatch = new CountDownLatch(11); // 10 to make sure all disable tasks are executed + 1 to make sure Main.unbindA has been called
+            _enabledLatch = new CountDownLatch(11); // for B,C,D,E,F,G,H,I,J,K and Main.bindA()
+            _disabledLatch = new CountDownLatch(11); // for B,C,D,E,F,G,H,I,J,K and Main.unbindA()
 
             EnableManager manager =
                     new EnableManager(new String[] { "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" });
@@ -206,6 +204,8 @@ public class Main implements Runnable
             catch (InterruptedException e)
             {
             }
+            
+            _logService.log(LogService.LOG_WARNING, "******* Performed " + (++loop) + " tests.");            
         }
     }
 
