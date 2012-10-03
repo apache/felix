@@ -79,11 +79,13 @@ public class Main implements Runnable
                         {
                             //_logService.log(LogService.LOG_INFO, "enabling component " + _componentNames[i]);
                             _ctx.enableComponent(_componentNames[i]);
+                            _enabledLatch.countDown();
                         }
                         else
                         {
                             //_logService.log(LogService.LOG_INFO, "disabling component " + _componentNames[i]);
                             _ctx.disableComponent(_componentNames[i]);
+                            _disabledLatch.countDown();
                         }
                     }
                 });
@@ -169,8 +171,8 @@ public class Main implements Runnable
         while (_running)
         {
             _logService.log(LogService.LOG_WARNING, "Performed " + loop + " tests.");            
-            _enabledLatch = new CountDownLatch(1);
-            _disabledLatch = new CountDownLatch(1);
+            _enabledLatch = new CountDownLatch(11); // 10 to make sure all enable tasks are executed + 1 to make sure Main.bindA has been called
+            _disabledLatch = new CountDownLatch(11); // 10 to make sure all disable tasks are executed + 1 to make sure Main.unbindA has been called
 
             EnableManager manager =
                     new EnableManager(new String[] { "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" });
