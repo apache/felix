@@ -461,19 +461,10 @@ public class BundleComponentActivator implements Logger
             return ( ComponentHolder[] ) m_managers.toArray( new ComponentHolder[m_managers.size()] );
         }
 
-        if ( m_componentRegistry.getComponentHolder( m_context.getBundle(), name ) != null )
+        ComponentHolder componentHolder = m_componentRegistry.getComponentHolder( m_context.getBundle(), name );
+        if (componentHolder != null)
         {
-            // otherwise just find it
-            Iterator it = m_managers.iterator();
-            while ( it.hasNext() )
-            {
-                ComponentHolder cm = ( ComponentHolder ) it.next();
-                if ( name.equals( cm.getComponentMetadata().getName() ) )
-                {
-                    return new ComponentHolder[]
-                        { cm };
-                }
-            }
+            return new ComponentHolder[] { componentHolder };
         }
 
         // if the component is not known
