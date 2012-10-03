@@ -759,6 +759,9 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                 }
                 newRegistration.unregister();
             }
+            else {
+                log( LogService.LOG_DEBUG, "Existing service registration, not registering", null );
+            }
         }
         finally
         {
@@ -788,6 +791,14 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         {
             log( LogService.LOG_DEBUG, "Unregistering services", null );
             sr.unregister();
+        }
+        else if (sr == null)
+        {
+            log( LogService.LOG_DEBUG, "Service already unregistered", null);
+        }
+        else
+        {
+            log( LogService.LOG_DEBUG, "Service unregistered concurrently by another thread", null);
         }
     }
 
@@ -1274,8 +1285,8 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
      */
     void changeState( State newState )
     {
-        log( LogService.LOG_DEBUG, "State transition : {0} -> {1}", new Object[]
-            { m_state, newState }, null );
+        log( LogService.LOG_DEBUG, "State transition : {0} -> {1} : service reg: {2}", new Object[]
+            { m_state, newState, m_serviceRegistration.get() }, null );
         m_state = newState;
     }
 
@@ -1386,8 +1397,8 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
         private void log( AbstractComponentManager acm, String event )
         {
-            acm.log( LogService.LOG_DEBUG, "Current state: {0}, Event: {1}", new Object[]
-                { m_name, event }, null );
+            acm.log( LogService.LOG_DEBUG, "Current state: {0}, Event: {1}, Service registration: {2}", new Object[]
+                { m_name, event, acm.m_serviceRegistration.get() }, null );
         }
 
         void doDeactivate( AbstractComponentManager acm, int reason )
@@ -1620,6 +1631,16 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
         }
 
+        void deactivate( AbstractComponentManager acm, int reason )
+        {
+            acm.log( LogService.LOG_DEBUG, "Deactivating component", null );
+
+            // catch any problems from deleting the component to prevent the
+            // component to remain in the deactivating state !
+            doDeactivate(acm, reason);
+
+            acm.log( LogService.LOG_DEBUG, "Component deactivated", null );
+        }
 
         void disable( AbstractComponentManager acm )
         {
@@ -1675,7 +1696,10 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             // component to remain in the deactivating state !
             doDeactivate(acm, reason);
 
-            acm.changeState( Unsatisfied.getInstance() );
+            if ( acm.state() == this )
+            {
+                acm.changeState( Unsatisfied.getInstance() );
+            }
             acm.log( LogService.LOG_DEBUG, "Component deactivated", null );
         }
 
