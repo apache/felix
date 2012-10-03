@@ -12,7 +12,7 @@
 <components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
 	<scr:component
 		name='org.apache.felix.scr.integration.components.concurrency.A'
-		factory='AFactory' activate='start'>
+		factory='AFactory' activate='start' enabled='false'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.concurrency.A' />
 		<reference name='b'
