@@ -146,7 +146,7 @@ public abstract class ComponentTestBase
              ),
              junitBundles(),
              systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
-             systemProperty( "ds.loglevel" ).value( "warn" )
+             systemProperty( "ds.loglevel" ).value( "debug" )
 
         );
         final Option vmOption = ( paxRunnerVmOption != null ) ? CoreOptions.vmOption( paxRunnerVmOption ) : null;

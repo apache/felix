@@ -11,7 +11,7 @@
 	language governing permissions and limitations under the License. -->
 <components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
-		name='A' activate='start' enabled='false'>
+		name='A' activate='start'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.A' />
 		<service>
@@ -34,8 +34,8 @@
 			bind='bindF' />
 	</scr:component>
 
-	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.0.0'
-		name='B' enabled='false'>
+	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
+		name='B' enabled='false' activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.B' />
 		<service>
@@ -43,8 +43,8 @@
 		</service>
 	</scr:component>
 
-	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.0.0'
-		name='C' enabled='false'>
+	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
+		name='C' enabled='false' activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.C' />
 		<service>
@@ -52,8 +52,8 @@
 		</service>
 	</scr:component>
 
-	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.0.0'
-		name='D' enabled='false'>
+	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
+		name='D' enabled='false' activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.D' />
 		<service>
@@ -61,8 +61,8 @@
 		</service>
 	</scr:component>
 
-	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.0.0'
-		name='E' enabled='false'>
+	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
+		name='E' enabled='false' activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.E' />
 		<service>
@@ -71,7 +71,7 @@
 	</scr:component>
 
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
-		name='F' enabled='false'>
+		name='F' enabled='false' activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.F' />
 		<service>
@@ -83,7 +83,7 @@
 	</scr:component>
 
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
-		name='G' enabled='false'>
+		name='G' enabled='false' activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.G' />
 		<service>
@@ -95,7 +95,7 @@
 	</scr:component>
 
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
-		name='H' enabled='false'>
+		name='H' enabled='false' activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.H' />
 		<service>
@@ -107,7 +107,7 @@
 	</scr:component>
 
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
-		name='I' enabled='false'>
+		name='I' enabled='false' activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.I' />
 		<service>
@@ -119,7 +119,7 @@
 	</scr:component>
 
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
-		name='J' enabled='false'>
+		name='J' enabled='false' activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.J' />
 		<service>
@@ -130,8 +130,8 @@
 			bind='bindK' />
 	</scr:component>
 
-	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.0.0'
-		name='K' enabled='false'>
+	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
+		name='K' enabled='false' activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.K' />
 		<service>

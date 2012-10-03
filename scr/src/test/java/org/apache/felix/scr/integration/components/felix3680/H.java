@@ -23,4 +23,13 @@ public class H
     void bindI(I i)
     {
     }
+    void start()
+    {
+        Main._enabledLatch.countDown();
+    }
+
+    void stop()
+    {
+        Main._disabledLatch.countDown();
+    }
 }
