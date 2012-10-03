@@ -1500,4 +1500,10 @@ public class DependencyManager implements ServiceListener, Reference
     {
         return m_targetFilter == null || m_targetFilter.match( ref );
     }
+
+
+    public String toString()
+    {
+        return "DependencyManager: Component [" + m_componentManager + "] reference [" + m_dependencyMetadata.getName() + "]";
+    }
 }
