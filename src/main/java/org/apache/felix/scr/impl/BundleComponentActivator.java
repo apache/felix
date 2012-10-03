@@ -147,6 +147,15 @@ public class BundleComponentActivator implements Logger
                 loadDescriptor( descriptorURLs[i] );
             }
         }
+        //enable all the enabled components
+        for (Iterator it = m_managers.iterator(); it.hasNext();)
+        {
+            ComponentHolder componentHolder = ( ComponentHolder ) it.next();
+            if (componentHolder.getComponentMetadata().isEnabled())
+            {
+                componentHolder.enableComponents( false );
+            }
+        }
     }
 
 
@@ -239,11 +248,6 @@ public class BundleComponentActivator implements Logger
                     m_componentRegistry.registerComponentHolder( key, holder );
                     m_managers.add( holder );
 
-                    // enable the component
-                    if ( metadata.isEnabled() )
-                    {
-                        holder.enableComponents( false );
-                    }
                 }
                 catch ( Throwable t )
                 {
