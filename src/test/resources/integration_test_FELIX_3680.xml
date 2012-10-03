@@ -25,10 +25,10 @@
 			bind='bindC' />
 		<reference name='d'
 			interface='org.apache.felix.scr.integration.components.felix3680.D'
-			cardinality='0..n' bind='bindD' policy='dynamic' />
+			bind='bindD' />
 		<reference name='e'
 			interface='org.apache.felix.scr.integration.components.felix3680.E'
-			cardinality='0..n' bind='bindE' policy='dynamic' />
+			bind='bindE' />
 		<reference name='f'
 			interface='org.apache.felix.scr.integration.components.felix3680.F'
 			bind='bindF' />
@@ -115,7 +115,7 @@
 		</service>
 		<reference name='j'
 			interface='org.apache.felix.scr.integration.components.felix3680.J'
-			cardinality='1..n' bind='bindJ' policy='dynamic' />
+			bind='bindJ' />
 	</scr:component>
 
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
@@ -127,7 +127,7 @@
 		</service>
 		<reference name='k'
 			interface='org.apache.felix.scr.integration.components.felix3680.K'
-			cardinality='1..n' bind='bindK' policy='dynamic' />
+			bind='bindK' />
 	</scr:component>
 
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.0.0'
