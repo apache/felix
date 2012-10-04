@@ -161,8 +161,8 @@ public class ComponentDescriptorIO {
     private static final String PROPERTIES = "properties";
 
     public static List<ClassDescription> read(final InputStream file,
-                    final ClassLoader classLoader,
-                    final IssueLog iLog, final String location) throws SCRDescriptorException {
+            final ClassLoader classLoader,
+            final IssueLog iLog, final String location) throws SCRDescriptorException {
         try {
             final XmlHandler xmlHandler = new XmlHandler(classLoader, iLog, location);
             IOUtils.parse(file, xmlHandler);
@@ -181,11 +181,11 @@ public class ComponentDescriptorIO {
      * @throws SAXException
      */
     protected static void generateXML(final DescriptionContainer module,
-                    final List<ComponentContainer> components,
-                    final File descriptorFile,
-                    final Log logger) throws SAXException {
+            final List<ComponentContainer> components,
+            final File descriptorFile,
+            final Log logger) throws SAXException {
         logger.info("Writing " + components.size() + " Service Component Descriptors to "
-                        + descriptorFile);
+                + descriptorFile);
         final ContentHandler contentHandler = IOUtils.getSerializer(descriptorFile);
         // detect namespace to use
         final String namespace = module.getOptions().getSpecVersion().getNamespaceUrl();
@@ -216,10 +216,10 @@ public class ComponentDescriptorIO {
      * @throws SAXException
      */
     protected static void generateXML(final String namespace,
-                    final DescriptionContainer module,
-                    final ComponentContainer container,
-                    final ContentHandler contentHandler)
-    throws SAXException {
+            final DescriptionContainer module,
+            final ComponentContainer container,
+            final ContentHandler contentHandler)
+                    throws SAXException {
         final ComponentDescription component = container.getComponentDescription();
 
         final AttributesImpl ai = new AttributesImpl();
@@ -276,9 +276,9 @@ public class ComponentDescriptorIO {
         IOUtils.addAttribute(ai, IMPLEMENTATION_ATTR_CLASS, component.getClassDescription().getDescribedClass().getName());
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.IMPLEMENTATION,
-                        ComponentDescriptorIO.IMPLEMENTATION_QNAME, ai);
+                ComponentDescriptorIO.IMPLEMENTATION_QNAME, ai);
         contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.IMPLEMENTATION,
-                        ComponentDescriptorIO.IMPLEMENTATION_QNAME);
+                ComponentDescriptorIO.IMPLEMENTATION_QNAME);
         IOUtils.newline(contentHandler);
     }
 
@@ -290,9 +290,9 @@ public class ComponentDescriptorIO {
      * @throws SAXException
      */
     protected static void generateServiceXML(
-                    final ServiceDescription service,
-                    final ContentHandler contentHandler)
-    throws SAXException {
+            final ServiceDescription service,
+            final ContentHandler contentHandler)
+                    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, SERVICE_ATTR_FACTORY, String.valueOf(service.isServiceFactory()));
         IOUtils.indent(contentHandler, 2);
@@ -316,12 +316,12 @@ public class ComponentDescriptorIO {
      * @throws SAXException
      */
     private static void generateServiceXML(final String interfaceName, final ContentHandler contentHandler)
-    throws SAXException {
+            throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, INTERFACE_ATTR_NAME, interfaceName);
         IOUtils.indent(contentHandler, 3);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME,
-                        ai);
+                ai);
         contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.INTERFACE, ComponentDescriptorIO.INTERFACE_QNAME);
         IOUtils.newline(contentHandler);
     }
@@ -365,10 +365,10 @@ public class ComponentDescriptorIO {
      * @throws SAXException
      */
     protected static void generateReferenceXML(final ComponentDescription component,
-                    final DescriptionContainer module,
-                    final ReferenceDescription reference,
-                    final ContentHandler contentHandler)
-    throws SAXException {
+            final DescriptionContainer module,
+            final ReferenceDescription reference,
+            final ContentHandler contentHandler)
+                    throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, ATTR_NAME, reference.getName());
         IOUtils.addAttribute(ai, INTERFACE_ATTR_NAME, reference.getInterfaceName());
@@ -392,7 +392,7 @@ public class ComponentDescriptorIO {
 
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.REFERENCE, ComponentDescriptorIO.REFERENCE_QNAME,
-                        ai);
+                ai);
         contentHandler.endElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.REFERENCE, ComponentDescriptorIO.REFERENCE_QNAME);
         IOUtils.newline(contentHandler);
     }
@@ -448,8 +448,9 @@ public class ComponentDescriptorIO {
         /**
          * @see org.xml.sax.helpers.DefaultHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
          */
+        @Override
         public void startElement(String uri, final String localName, final String name, final Attributes attributes)
-        throws SAXException {
+                throws SAXException {
             // according to the spec, the elements should have the namespace,
             // except when the root element is the "component" element
             // So we check this for the first element, we receive.
@@ -654,6 +655,7 @@ public class ComponentDescriptorIO {
         /**
          * @see org.xml.sax.helpers.DefaultHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
          */
+        @Override
         public void endElement(String uri, String localName, String name) throws SAXException {
             if (this.overrideNamespace != null && "".equals(uri)) {
                 uri = this.overrideNamespace;
@@ -690,6 +692,7 @@ public class ComponentDescriptorIO {
         /**
          * @see org.xml.sax.helpers.DefaultHandler#characters(char[], int, int)
          */
+        @Override
         public void characters(char[] ch, int start, int length) throws SAXException {
             if (this.pendingProperty != null) {
                 final String text = new String(ch, start, length);
@@ -708,7 +711,7 @@ public class ComponentDescriptorIO {
      * Generate descriptor file(s)
      */
     public static List<String> generateDescriptorFiles(final DescriptionContainer module, final Options options, final Log logger)
-    throws SCRDescriptorException, SCRDescriptorFailureException {
+            throws SCRDescriptorException, SCRDescriptorFailureException {
         final List<ComponentContainer> components = new ArrayList<ComponentContainer>();
         for(final ComponentContainer container : module.getComponents()) {
             if (!container.getComponentDescription().isCreateDs()) {
@@ -720,7 +723,7 @@ public class ComponentDescriptorIO {
         }
 
         // check descriptor file
-        final File descriptorDir = new File(options.getOutputDirectory(), PARENT_NAME);
+        final File descriptorDir = options.getComponentDescriptorDirectory();
         final File descriptorFile = StringUtils.isEmpty(options.getSCRName()) ? null : new File(descriptorDir, options.getSCRName());
 
         // terminate if there is nothing else to write

@@ -175,7 +175,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      * @parameter
      */
     private List<String> supportedProjectTypes = Arrays.asList( new String[]
-        { "jar", "bundle" } );
+            { "jar", "bundle" } );
 
     /**
      * @component
@@ -188,7 +188,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         // ignore unsupported project types, useful when bundleplugin is configured in parent pom
         if ( !supportedProjectTypes.contains( projectType ) ) {
             getLog().debug(
-                "Ignoring project type " + projectType + " - supportedProjectTypes = " + supportedProjectTypes );
+                    "Ignoring project type " + projectType + " - supportedProjectTypes = " + supportedProjectTypes );
             return;
         }
 
@@ -197,13 +197,13 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         // create project
         final MavenProjectScanner scanner = new MavenProjectScanner(
-                        this.buildContext,
+                this.buildContext,
                 this.project, this.sourceIncludes, this.sourceExcludes, scrLog);
-        
+
         final Project project = new Project();
         // create the class loader
         project.setClassLoader(new URLClassLoader(getClassPath(), this
-                                .getClass().getClassLoader()));
+                .getClass().getClassLoader()));
         project.setDependencies(scanner.getDependencies());
         project.setSources(scanner.getSources());
         project.setClassesDirectory(this.project.getBuild().getOutputDirectory());
@@ -234,16 +234,14 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
             final Result result = generator.execute();
             this.setServiceComponentHeader(result.getScrFiles());
+
             this.updateProjectResources();
-            
-            // TODO - should we skip performing these operations just one descriptor file is generated?
-            this.cleanUpDeletedSources(scanner.getDeletedSources());
+            // don't try to delete per-class descriptors if only one descriptor is generated
+            if ( options.isGenerateSeparateDescriptors() )
+                this.cleanUpDeletedSources(scanner.getDeletedSources(), options);
             this.refreshMessages(result.getProcessedSourceFiles());
-            
-            // TODO - refreshing the target files does not seem to be the right thing ; however, new files
-            // are not refresh in Eclipse right now
-            //this.updateBuildContext(result);
-            
+            this.updateBuildContext(result);
+
         } catch (final SCRDescriptorException sde) {
             throw new MojoExecutionException(sde.getSourceLocation() + " : " + sde.getMessage(), sde);
         } catch (final SCRDescriptorFailureException sdfe) {
@@ -252,48 +250,50 @@ public class SCRDescriptorMojo extends AbstractMojo {
         }
     }
 
-	/**
-	 * @param scrFiles
-	 */
-	private void refreshMessages(List<String> scrFiles) {
-		
-		for ( String scrFile : scrFiles )
-			buildContext.removeMessages(new File(scrFile));
-		
-	}
-	
-	private void cleanUpDeletedSources(Collection<Source> deletedSources) {
-		
-		// TODO remove duplication of file name selection - MetaTypeIO, ComponentDescriptorIO
-		
-        final File parentDir = new File(this.outputDirectory, "OSGI-INF");
-        final File mtDir = new File(parentDir, "metatype");
-		
-		for ( Source deletedSource : deletedSources ) {
-			
-			File metaTypeFile = new File(mtDir, deletedSource.getClassName() + ".xml");
-			boolean deleted = metaTypeFile.delete();
-			if ( deleted )
-				buildContext.refresh(metaTypeFile);
-			
-			File componentDescriptorFile = new File(parentDir, deletedSource.getClassName()+".xml");
-			deleted = componentDescriptorFile.delete();
-			if ( deleted )
-				buildContext.refresh(componentDescriptorFile);
-		}
-	}
+    /**
+     * @param scrFiles
+     */
+    private void refreshMessages(List<String> scrFiles) {
 
-	
+        for ( String scrFile : scrFiles )
+            buildContext.removeMessages(new File(scrFile));
+    }
 
-	private void updateBuildContext(final Result result) {
+    private void cleanUpDeletedSources(final Collection<Source> deletedSources, final Options options) {
+
+        final File componentDir = options.getComponentDescriptorDirectory();
+        final File mtDir = options.getMetaTypeDirectory();
+
+        for ( Source deletedSource : deletedSources ) {
+
+            File metaTypeFile = new File(mtDir, deletedSource.getClassName() + ".xml");
+            getLog().debug("Deleting " + metaTypeFile + " ");
+            boolean deleted = metaTypeFile.delete();
+            if ( deleted )
+                buildContext.refresh(metaTypeFile);
+
+            File componentDescriptorFile = new File(componentDir, deletedSource.getClassName() + ".xml");
+            getLog().debug("Deleting " + componentDescriptorFile);
+            deleted = componentDescriptorFile.delete();
+            if ( deleted )
+                buildContext.refresh(componentDescriptorFile);
+        }
+    }
+
+    private void updateBuildContext(final Result result) {
+
         if ( result.getMetatypeFiles() != null ) {
             for(final String name : result.getMetatypeFiles() ) {
-                this.buildContext.refresh(new File(this.outputDirectory, name.replace('/', File.separatorChar)));
+                File metaTypeFile = new File(this.outputDirectory, name.replace('/', File.separatorChar));
+                getLog().debug("Refreshing " + metaTypeFile);
+                this.buildContext.refresh(metaTypeFile);
             }
         }
         if ( result.getScrFiles() != null ) {
             for(final String name : result.getScrFiles() ) {
-                this.buildContext.refresh(new File(this.outputDirectory, name.replace('/', File.separatorChar)));
+                File scrFile = new File(this.outputDirectory, name.replace('/', File.separatorChar));
+                getLog().debug("Refreshing " + scrFile);
+                this.buildContext.refresh(scrFile);
             }
         }
     }
@@ -305,7 +305,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
         try {
             path.add(new File(this.project.getBuild().getOutputDirectory())
-                    .toURI().toURL());
+            .toURI().toURL());
         } catch (final IOException ioe) {
             throw new MojoFailureException(
                     "Unable to add target directory to classloader.");
@@ -401,7 +401,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         boolean found = false;
         @SuppressWarnings("unchecked")
         final Iterator<Resource> rsrcIterator = this.project.getResources()
-                .iterator();
+        .iterator();
         while (!found && rsrcIterator.hasNext()) {
             final Resource rsrc = rsrcIterator.next();
             found = rsrc.getDirectory().equals(ourRsrcPath);

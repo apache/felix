@@ -72,9 +72,9 @@ public class MetaTypeIO {
     private static final String OPTION_ELEMENT_QNAME = OPTION_ELEMENT;
 
     public static List<String> generateDescriptors(final DescriptionContainer module,
-                    final Options options,
-                    final Log logger)
-    throws SCRDescriptorException {
+            final Options options,
+            final Log logger)
+                    throws SCRDescriptorException {
         int metatypeCount = 0;
         for(final ComponentContainer component : module.getComponents()) {
             if ( component.getMetatypeContainer() != null ) {
@@ -83,8 +83,8 @@ public class MetaTypeIO {
         }
         // write meta type info if there is a file name
         if (!StringUtils.isEmpty(options.getMetaTypeName())) {
-            final File parentDir = new File(options.getOutputDirectory(), "OSGI-INF");
-            final File mtDir = new File(parentDir, "metatype");
+            final File mtDir = options.getMetaTypeDirectory();
+            final File parentDir = mtDir.getParentFile();
 
             final File mtFile = new File(mtDir, options.getMetaTypeName());
 
@@ -128,7 +128,7 @@ public class MetaTypeIO {
      * @throws SAXException
      */
     private static void write(final DescriptionContainer metaData, final List<ComponentContainer> components, final File file)
-    throws SCRDescriptorException {
+            throws SCRDescriptorException {
         try {
             final ContentHandler contentHandler = IOUtils.getSerializer(file);
 
@@ -159,7 +159,7 @@ public class MetaTypeIO {
     }
 
     private static void generateOCDXML(final MetatypeContainer ocd, final ContentHandler contentHandler)
-    throws SAXException {
+            throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "id", ocd.getId());
         IOUtils.addAttribute(ai, "name", ocd.getName());
@@ -182,7 +182,7 @@ public class MetaTypeIO {
     }
 
     private static void generateAttributeXML(final MetatypeAttributeDefinition ad, final ContentHandler contentHandler)
-    throws SAXException {
+            throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "id", ad.getId());
         IOUtils.addAttribute(ai, "type", ad.getType());
@@ -224,7 +224,7 @@ public class MetaTypeIO {
     }
 
     private static void generateDesignateXML(final MetatypeContainer designate, final ContentHandler contentHandler)
-    throws SAXException {
+            throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "pid", designate.getId());
         IOUtils.addAttribute(ai, "factoryPid", designate.getFactoryPid());
@@ -240,7 +240,7 @@ public class MetaTypeIO {
     }
 
     private static void generateObjectXML(final MetatypeContainer obj, final ContentHandler contentHandler)
-    throws SAXException {
+            throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, "ocdref", obj.getId());
         IOUtils.indent(contentHandler, 2);

@@ -205,4 +205,21 @@ public class Options {
     public void setGenerateSeparateDescriptors(boolean generateSeparateDescriptors) {
         this.generateSeparateDescriptors = generateSeparateDescriptors;
     }
+
+    private static final String PARENT_NAME = "OSGI-INF";
+
+    /**
+     * Convenience method to get the meta type directory.
+     */
+    public File getMetaTypeDirectory() {
+        final File parentDir = new File(this.getOutputDirectory(), PARENT_NAME);
+        return new File(parentDir, "metatype");
+    }
+
+    /**
+     * Convenience method to get the component descriptor directory.
+     */
+    public File getComponentDescriptorDirectory() {
+        return new File(this.getOutputDirectory(), PARENT_NAME);
+    }
 }
