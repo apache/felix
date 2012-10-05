@@ -38,6 +38,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -596,6 +597,7 @@ public abstract class ComponentTestBase
 
     public static class Log implements LogListener
     {
+        private final SimpleDateFormat _sdf = new SimpleDateFormat("HH:mm:ss,S");
         private final List m_warnings = Collections.synchronizedList( new ArrayList() );//<LogEntry>
         private final static PrintStream _out =
                 new PrintStream(new BufferedOutputStream(new FileOutputStream( FileDescriptor.err), 128));
@@ -609,7 +611,7 @@ public abstract class ComponentTestBase
             StringWriter sw = new StringWriter();
             sw.append( "log level: " + entry.getLevel() );
             sw.append(" D=");
-            sw.append(new Date(entry.getTime()).toString());
+            sw.append(_sdf.format( new Date(entry.getTime())));
             sw.append(", T=" + Thread.currentThread().getName());
             sw.append(": ");
             sw.append(entry.getMessage());
