@@ -69,7 +69,11 @@ public class Activator implements BundleActivator, Runnable
     {
         try
         {
-            Thread.sleep(100);    // wait for gosh command to be registered
+            // wait for gosh command to be registered
+            for (int i = 0; (i < 100) && session.get("gogo:gosh") == null; ++i) {
+	            Thread.sleep(10);
+            }
+            
             String args = context.getProperty("gosh.args");
             args = (args == null) ? "" : args;
             session.execute("gosh --login " + args);
