@@ -106,8 +106,8 @@ class Candidates
      *       fragments and will only resolve a fragment if its host is already
      *       selected as a candidate.</li>
      * </ul>
-     * @param state the resolver state used for populating the candidates.
-     * @param revision the revision whose candidates should be populated.
+     * @param rc the resolve context used for populating the candidates.
+     * @param resource the resource whose candidates should be populated.
      * @param resolution indicates the resolution type.
      */
     public final void populate(
@@ -564,11 +564,11 @@ class Candidates
     }
 
     /**
-     * Returns the wrapped module associated with the given module. If the module
-     * was not wrapped, then the module itself is returned. This is really only
-     * needed to determine if the root modules of the resolve have been wrapped.
-     * @param m the module whose wrapper is desired.
-     * @return the wrapper module or the module itself if it was not wrapped.
+     * Returns the wrapped resource associated with the given resource. If the resource
+     * was not wrapped, then the resource itself is returned. This is really only
+     * needed to determine if the root resources of the resolve have been wrapped.
+     * @param r the resource whose wrapper is desired.
+     * @return the wrapper resource or the resource itself if it was not wrapped.
     **/
     public Resource getWrappedHost(Resource r)
     {
@@ -598,8 +598,7 @@ class Candidates
      * can attach to two hosts effectively gets multiplied across the two hosts.
      * So, any modules being satisfied by the fragment will end up having the
      * two hosts as potential candidates, rather than the single fragment.
-     * @param existingSingletons existing resolved singletons.
-     * @throws ResolveException if the removal of any unselected fragments result
+     * @throws ResolutionException if the removal of any unselected fragments result
      *         in the root module being unable to resolve.
     **/
     public void prepare(ResolveContext rc) throws ResolutionException
