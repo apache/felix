@@ -19,6 +19,8 @@
 package org.apache.felix.scr.integration.components;
 
 
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Properties;
 
 import org.osgi.framework.BundleContext;
@@ -47,7 +49,7 @@ public class SimpleService2Impl implements SimpleService2
     public static SimpleService2Impl create( BundleContext bundleContext, String value, int ranking )
     {
         SimpleService2Impl instance = new SimpleService2Impl( value, ranking );
-        Properties props = instance.getProperties();
+        Dictionary<String,?> props = instance.getProperties();
         instance.setRegistration( bundleContext.registerService( SimpleService2.class.getName(), instance, props ) );
         return instance;
     }
@@ -61,9 +63,9 @@ public class SimpleService2Impl implements SimpleService2
     }
 
 
-    private Properties getProperties()
+    private Dictionary<String,?> getProperties()
     {
-        final Properties props = new Properties();
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put( "value", m_value );
         props.put( "filterprop", m_filterProp );
         if ( m_ranking != 0 )
