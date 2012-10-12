@@ -21,12 +21,14 @@ package org.apache.felix.scr.impl.manager;
 
 import java.security.Permission;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -72,6 +74,8 @@ public class DependencyManager implements ServiceListener, Reference
 
     // the target service filter
     private volatile Filter m_targetFilter;
+
+    private final Collection<ServiceReference> added = new ArrayList<ServiceReference>();
 
 
     /**
@@ -130,8 +134,17 @@ public class DependencyManager implements ServiceListener, Reference
                     // consider the service if the filter matches
                     if ( targetFilterMatch( ref ) )
                     {
-                        m_size++;
-                        serviceAdded( ref );
+                        added.add( ref );
+                        synchronized (added)
+                        {
+                            //wait for enable to complete
+                        }
+                        if (added.contains( ref ))
+                        {
+                            added.remove( ref );
+                            m_size++;
+                            serviceAdded( ref );
+                        }
                     }
                     else
                     {
@@ -547,13 +560,24 @@ public class DependencyManager implements ServiceListener, Reference
 
         if ( hasGetPermission() )
         {
-            // get the current number of registered services available
-            ServiceReference refs[] = getFrameworkServiceReferences();
-            m_size = ( refs == null ) ? 0 : refs.length;
+            synchronized ( added )
+            {
+                // register the service listener
+                String filterString = "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")";
+                m_componentManager.getActivator().getBundleContext().addServiceListener( this, filterString );
 
-            // register the service listener
-            String filterString = "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")";
-            m_componentManager.getActivator().getBundleContext().addServiceListener( this, filterString );
+                // get the current number of registered services available
+                ServiceReference refs[] = getFrameworkServiceReferences();
+                if (refs != null)
+                {
+                    for (ServiceReference ref: refs)
+                    {
+                        added.remove( ref );
+                    }
+                }
+                m_size = ( refs == null ) ? 0 : refs.length;
+            }
+
 
             m_componentManager.log( LogService.LOG_DEBUG,
                 "Registered for service events, currently {0} service(s) match the filter", new Object[]
@@ -565,8 +589,8 @@ public class DependencyManager implements ServiceListener, Reference
             m_size = 0;
 
             m_componentManager.log( LogService.LOG_DEBUG,
-                "Not registered for service events since the bundle has no permission to get service {0}", new Object[]
-                    { m_dependencyMetadata.getInterface() }, null );
+                    "Not registered for service events since the bundle has no permission to get service {0}", new Object[]
+                    {m_dependencyMetadata.getInterface()}, null );
         }
     }
 
@@ -1256,7 +1280,7 @@ public class DependencyManager implements ServiceListener, Reference
             // if the component instance has already been cleared by the
             // close() method
             m_componentManager.log( LogService.LOG_DEBUG,
-                "DependencyManager : Component not set, no need to call updated method", null );
+                    "DependencyManager : Component not set, no need to call updated method", null );
         }
     }
 
