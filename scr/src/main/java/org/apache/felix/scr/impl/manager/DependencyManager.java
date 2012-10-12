@@ -810,14 +810,14 @@ public class DependencyManager implements ServiceListener, Reference
      *      if the service is bound or <code>null</code> if the service is not
      *      bound.
      */
-    private AbstractComponentManager.RefPair getBoundService( ServiceReference serviceReference )
+    private RefPair getBoundService( ServiceReference serviceReference )
     {
         Map dependencyMap = m_componentManager.getDependencyMap();
         if (dependencyMap == null)
         {
             return null;
         }
-        return ( AbstractComponentManager.RefPair ) (( Map ) dependencyMap.get( this )).get(serviceReference);
+        return ( RefPair ) (( Map ) dependencyMap.get( this )).get(serviceReference);
     }
 
 
@@ -835,7 +835,7 @@ public class DependencyManager implements ServiceListener, Reference
     Object getService( ServiceReference serviceReference )
     {
         // check whether we already have the service and return that one
-        AbstractComponentManager.RefPair refPair = getBoundService( serviceReference );
+        RefPair refPair = getBoundService( serviceReference );
         if ( refPair != null && refPair.getServiceObject() != null )
         {
             return refPair.getServiceObject();
@@ -866,7 +866,7 @@ public class DependencyManager implements ServiceListener, Reference
             }
             else
             {
-                refPair = new AbstractComponentManager.RefPair( serviceReference,  serviceObject );
+                refPair = new RefPair( serviceReference,  serviceObject );
                 ((Map)m_componentManager.getDependencyMap().get( this )).put( serviceReference, refPair );
             }
         }
@@ -886,7 +886,7 @@ public class DependencyManager implements ServiceListener, Reference
         Map dependencyMap = m_componentManager.getDependencyMap();
         if ( dependencyMap != null )
         {
-            AbstractComponentManager.RefPair refPair  = ( AbstractComponentManager.RefPair ) ((Map ) dependencyMap.get( this )).get( serviceReference );
+            RefPair refPair  = ( RefPair ) ((Map ) dependencyMap.get( this )).get( serviceReference );
             if ( refPair != null && refPair.getServiceObject() != null )
             {
                 BundleComponentActivator activator = m_componentManager.getActivator();
@@ -1004,7 +1004,7 @@ public class DependencyManager implements ServiceListener, Reference
             {
                 for ( int index = 0; index < refs.length; index++ )
                 {
-                    AbstractComponentManager.RefPair refPair = m_bindMethods.getBind().getServiceObject( refs[index], m_componentManager.getActivator().getBundleContext() );
+                    RefPair refPair = m_bindMethods.getBind().getServiceObject( refs[index], m_componentManager.getActivator().getBundleContext() );
                     // success is if we have the minimal required number of services bound
                     if ( refPair != null )
                     {
@@ -1021,7 +1021,7 @@ public class DependencyManager implements ServiceListener, Reference
             ServiceReference ref = getFrameworkServiceReference();
             if ( ref != null )
             {
-                AbstractComponentManager.RefPair refPair = m_bindMethods.getBind().getServiceObject( ref, m_componentManager.getActivator().getBundleContext() );
+                RefPair refPair = m_bindMethods.getBind().getServiceObject( ref, m_componentManager.getActivator().getBundleContext() );
                 // success is if we have the minimal required number of services bound
                 if ( refPair != null )
                 {
@@ -1077,7 +1077,7 @@ public class DependencyManager implements ServiceListener, Reference
         for ( Iterator i = parameters.entrySet().iterator(); i.hasNext(); )
         {
             Map.Entry entry = ( Map.Entry ) i.next();
-            if ( invokeBindMethod( componentInstance, ( AbstractComponentManager.RefPair ) entry.getValue() ) )
+            if ( invokeBindMethod( componentInstance, ( RefPair ) entry.getValue() ) )
             {
                 success = true;
             }
@@ -1158,7 +1158,7 @@ public class DependencyManager implements ServiceListener, Reference
                 }
                 Map deps = ( Map ) dependencyMap.get( this );
                 BundleContext bundleContext = m_componentManager.getActivator().getBundleContext();
-                AbstractComponentManager.RefPair refPair = m_bindMethods.getBind().getServiceObject( ref, bundleContext );
+                RefPair refPair = m_bindMethods.getBind().getServiceObject( ref, bundleContext );
                 if ( refPair == null )
                 {
                     //reference deactivated while we are processing.
@@ -1196,7 +1196,7 @@ public class DependencyManager implements ServiceListener, Reference
      *      be handed over to the bind method but the service cannot be
      *      retrieved using the service reference.
      */
-    private boolean invokeBindMethod( Object componentInstance, AbstractComponentManager.RefPair refPair )
+    private boolean invokeBindMethod( Object componentInstance, RefPair refPair )
     {
         // The bind method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
@@ -1243,7 +1243,7 @@ public class DependencyManager implements ServiceListener, Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
-            AbstractComponentManager.RefPair refPair = ( AbstractComponentManager.RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
+            RefPair refPair = ( RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
             MethodResult methodResult = m_bindMethods.getUpdated().invoke( componentInstance, refPair, MethodResult.VOID );
             if ( methodResult != null)
             {
@@ -1277,7 +1277,7 @@ public class DependencyManager implements ServiceListener, Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
-            AbstractComponentManager.RefPair refPair = ( AbstractComponentManager.RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
+            RefPair refPair = ( RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
             MethodResult methodResult = m_bindMethods.getUnbind().invoke( componentInstance, refPair, MethodResult.VOID );
             if ( methodResult != null )
             {
