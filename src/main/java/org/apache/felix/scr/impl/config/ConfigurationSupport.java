@@ -126,7 +126,7 @@ public class ConfigurationSupport implements ConfigurationListener
 
     // ---------- ServiceListener
 
-    public void configureComponentHolders(final ServiceReference configurationAdminReference,
+    public void configureComponentHolders(final ServiceReference<ConfigurationAdmin> configurationAdminReference,
         final Object configurationAdmin)
     {
         if (configurationAdmin instanceof ConfigurationAdmin)

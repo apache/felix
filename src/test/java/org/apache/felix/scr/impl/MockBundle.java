@@ -19,14 +19,19 @@
 package org.apache.felix.scr.impl;
 
 
+import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 
 
 public class MockBundle implements Bundle
@@ -39,6 +44,26 @@ public class MockBundle implements Bundle
 
 
     public BundleContext getBundleContext()
+    {
+        return null;
+    }
+
+    public Map<X509Certificate, List<X509Certificate>> getSignerCertificates( int i )
+    {
+        return null;
+    }
+
+    public Version getVersion()
+    {
+        return null;
+    }
+
+    public <A> A adapt( Class<A> aClass )
+    {
+        return null;
+    }
+
+    public File getDataFile( String s )
     {
         return null;
     }
@@ -175,4 +200,8 @@ public class MockBundle implements Bundle
 
     }
 
+    public int compareTo( Bundle bundle )
+    {
+        return 0;
+    }
 }
