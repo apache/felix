@@ -64,6 +64,8 @@ public class Felix3680Test extends ComponentTestBase
         // uncomment to enable debugging of this test class
         //        paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_FELIX_3680.xml";
+        //comment to get debug logging if the test fails.
+        DS_LOGLEVEL = "info";
     }
 
     @Inject
@@ -89,6 +91,8 @@ public class Felix3680Test extends ComponentTestBase
         main.enable();
 
         delay(30);
+        main.disable();
+        delay( ); //async deactivate
         for (Iterator it = log.foundWarnings().iterator(); it.hasNext();)
         {
             LogEntry entry = (LogEntry) it.next();

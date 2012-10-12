@@ -105,6 +105,8 @@ public abstract class ComponentTestBase
     // method include it when starting the OSGi framework JVM
     protected static String paxRunnerVmOption = null;
 
+    protected static String DS_LOGLEVEL = "debug";
+
     // the descriptor file to use for the installed test bundle
     protected static String descriptorFile = "/integration_test_simple_components.xml";
 
@@ -147,7 +149,7 @@ public abstract class ComponentTestBase
              ),
              junitBundles(),
              systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
-             systemProperty( "ds.loglevel" ).value( "debug" )
+             systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL )
 
         );
         final Option vmOption = ( paxRunnerVmOption != null ) ? CoreOptions.vmOption( paxRunnerVmOption ) : null;
