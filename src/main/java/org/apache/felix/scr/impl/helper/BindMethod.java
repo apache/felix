@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
+import org.apache.felix.scr.impl.manager.RefPair;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
@@ -553,7 +554,7 @@ public class BindMethod extends BaseMethod
         return null;
     }
 
-    public AbstractComponentManager.RefPair getServiceObject( ServiceReference ref, BundleContext context )
+    public RefPair getServiceObject( ServiceReference ref, BundleContext context )
     {
         //??? this resolves which we need.... better way?
         if ( methodExists() )
@@ -568,15 +569,15 @@ public class BindMethod extends BaseMethod
                     return null;
                 }
 
-                return new AbstractComponentManager.RefPair(ref, service);
+                return new RefPair(ref, service);
             }
         }
-        return new AbstractComponentManager.RefPair(ref, null);
+        return new RefPair(ref, null);
     }
 
     protected Object[] getParameters( Method method, Object rawParameter )
     {
-        AbstractComponentManager.RefPair refPair = ( AbstractComponentManager.RefPair ) rawParameter;
+        RefPair refPair = ( RefPair ) rawParameter;
         if (m_paramStyle == SERVICE_REFERENCE )
         {
             return new Object[] {refPair.getRef()};

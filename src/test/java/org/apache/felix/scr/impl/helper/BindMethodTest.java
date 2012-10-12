@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
+import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.manager.components.FakeService;
 import org.apache.felix.scr.impl.manager.components.T1;
 import org.apache.felix.scr.impl.manager.components.T1a;
@@ -435,7 +436,7 @@ public class BindMethodTest extends TestCase
         ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata, new ComponentMethods() );
         BindMethod bm = new BindMethod( icm, methodName, component.getClass(),
                 FakeService.class.getName(), isDS11, false );
-        AbstractComponentManager.RefPair refPair = bm.getServiceObject( m_serviceReference, m_context );
+        RefPair refPair = bm.getServiceObject( m_serviceReference, m_context );
         bm.invoke( component, refPair, null );
         assertEquals( expectCallPerformed, component.callPerformed );
     }
