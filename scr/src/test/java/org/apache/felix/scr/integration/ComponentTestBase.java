@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 import javax.inject.Inject;
+
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
@@ -73,6 +74,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogListener;
 import org.osgi.service.log.LogReaderService;
+import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
 
@@ -606,6 +608,11 @@ public abstract class ComponentTestBase
 
         public void logged(LogEntry entry)
         {
+            if ( entry.getLevel() > getEnabledLogLevel() )
+            {
+                return;
+            }
+
             if (entry.getLevel() <= 2)
             {
                 m_warnings.add( entry );
@@ -624,11 +631,31 @@ public abstract class ComponentTestBase
                 entry.getException().printStackTrace(pw);
             }
             _out.println(sw.toString());
+            _out.flush();
         }
 
         List foundWarnings()
         {
             return m_warnings;
+        }
+        
+        public int getEnabledLogLevel() {
+            if ( DS_LOGLEVEL.regionMatches( true, 0, "err", 0, "err".length() ) )
+            {
+                return LogService.LOG_ERROR;
+            }
+            else if ( DS_LOGLEVEL.regionMatches( true, 0, "warn", 0, "warn".length() ) )
+            {
+                return LogService.LOG_WARNING;
+            }
+            else if ( DS_LOGLEVEL.regionMatches( true, 0, "info", 0, "info".length() ) )
+            {
+                return LogService.LOG_INFO;
+            }
+            else
+            {
+                return LogService.LOG_DEBUG;
+            }
         }
     }
 
