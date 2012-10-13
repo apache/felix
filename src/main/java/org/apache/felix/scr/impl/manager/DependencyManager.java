@@ -176,38 +176,74 @@ public class DependencyManager implements ServiceListener, Reference
                         // service not currently bound --- what to do ?
                         // if static
                         //    if inactive and target match: activate
-                        // if dynamic
+                        // if dynamic or greedy
                         //    if multiple and target match: bind
                         if ( targetFilterMatch( ref ) )
                         {
-                            // new filter match, so increase the counter
-                            m_size.incrementAndGet();
-
-                            if ( isStatic() )
+                            synchronized ( added )
                             {
-                                // if static reference: activate if currentl unsatisifed, otherwise no influence
-                                if ( m_componentManager.getState() == AbstractComponentManager.STATE_UNSATISFIED )
+                                added.add( ref );
+                            }
+                            synchronized (enableLock)
+                            {
+                                //wait for enable to complete
+                            }
+                            boolean process;
+                            synchronized ( added )
+                            {
+                                if (process = added.contains( ref ))
                                 {
-                                    m_componentManager.log( LogService.LOG_DEBUG,
-                                        "Dependency Manager: Service {0} registered, activate component", new Object[]
-                                            { m_dependencyMetadata.getName() }, null );
-
-                                    // immediately try to activate the component (FELIX-2368)
-                                    m_componentManager.activateInternal();
+                                    added.remove( ref );
+                                    m_size.incrementAndGet();
                                 }
                             }
-                            else if ( isMultiple() || !isReluctant())
+                            if (process)
                             {
-                                // if dynamic and multiple reference, bind, otherwise ignore
-                                serviceAdded( ref );
+                                if ( isStatic() )
+                                {
+                                    // if static reference: activate if currentl unsatisifed, otherwise no influence
+                                    if ( m_componentManager.getState() == AbstractComponentManager.STATE_UNSATISFIED )
+                                    {
+                                        m_componentManager.log( LogService.LOG_DEBUG,
+                                            "Dependency Manager: Service {0} registered, activate component", new Object[]
+                                                { m_dependencyMetadata.getName() }, null );
+
+                                        // immediately try to activate the component (FELIX-2368)
+                                        m_componentManager.activateInternal();
+                                    }
+                                }
+                                else if ( isMultiple() || !isReluctant())
+                                {
+                                    // if dynamic and multiple reference, bind, otherwise ignore
+                                    serviceAdded( ref );
+                                }
                             }
+
                         }
                     }
                     else if ( !targetFilterMatch( ref ) )
                     {
-                        // service reference does not match target any more, remove
-                        m_size.decrementAndGet();
-                        serviceRemoved( ref );
+                        synchronized ( removed )
+                        {
+                            removed.add( ref );
+                        }
+                        synchronized (enableLock)
+                        {
+                            //wait for enable to complete
+                        }
+                        boolean process;
+                        synchronized ( removed )
+                        {
+                            if (process = removed.contains( ref ))
+                            {
+                                removed.remove( ref );
+                                m_size.decrementAndGet();
+                            }
+                        }
+                        if (process)
+                        {
+                            serviceRemoved( ref );
+                        }
                     }
                     else
                     {
