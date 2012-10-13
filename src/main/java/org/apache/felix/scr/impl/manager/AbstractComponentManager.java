@@ -1057,6 +1057,15 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         }
     }
 
+    protected void updateTargets(Dictionary properties)
+    {
+        for (Object o: m_dependencyManagers)
+        {
+            DependencyManager dependencyManager = ( DependencyManager ) o;
+            dependencyManager.setTargetFilter( properties );
+        }
+    }
+
     protected boolean verifyDependencyManagers( Dictionary properties )
     {
         // indicates whether all dependencies are satisfied
@@ -1068,7 +1077,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             DependencyManager dm = ( DependencyManager ) it.next();
 
             // ensure the target filter is correctly set
-            dm.setTargetFilter( properties );
+//            dm.setTargetFilter( properties );
 
             if ( !dm.hasGetPermission() )
             {
