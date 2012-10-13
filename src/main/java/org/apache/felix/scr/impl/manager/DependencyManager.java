@@ -196,7 +196,7 @@ public class DependencyManager implements ServiceListener, Reference
                                     m_componentManager.activateInternal();
                                 }
                             }
-                            else if ( isMultiple() )
+                            else if ( isMultiple() || !isReluctant())
                             {
                                 // if dynamic and multiple reference, bind, otherwise ignore
                                 serviceAdded( ref );
