@@ -103,10 +103,11 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         try
         {
             cm.setFactoryProperties( dictionary );
-            cm.reconfigure( m_configuration );
-
-            // enable and activate immediately
+            // enable
             cm.enableInternal();
+            //configure the properties
+            cm.reconfigure( m_configuration );
+            //activate immediately
             cm.activateInternal();
 
             instance = cm.getComponentInstance();

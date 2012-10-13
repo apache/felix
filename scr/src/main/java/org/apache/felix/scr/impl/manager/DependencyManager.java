@@ -296,6 +296,7 @@ public class DependencyManager implements ServiceListener, Reference
                 synchronized ( changes )
                 {
                     changes.remove( ref );
+                    changes.notify();
                 }
             }
             if ( release )
@@ -619,49 +620,14 @@ public class DependencyManager implements ServiceListener, Reference
      */
     void enable() throws InvalidSyntaxException
     {
-        // setup the target filter from component descriptor
-        setTargetFilter( m_dependencyMetadata.getTarget() );
-
         if ( hasGetPermission() )
         {
-            // register the service listener
-            String filterString = "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")";
-            m_componentManager.getActivator().getBundleContext().addServiceListener( this, filterString );
-
-            synchronized ( enableLock )
-            {
-                // get the current number of registered services available
-                ServiceReference refs[] = getFrameworkServiceReferences();
-                synchronized ( added )
-                {
-                    if (refs != null)
-                    {
-                        for (ServiceReference ref: refs)
-                        {
-                            added.remove( ref );
-                        }
-                    }
-                }
-                synchronized ( removed )
-                {
-                    if (refs != null)
-                    {
-                        for (ServiceReference ref: refs)
-                        {
-                            if (!removed.contains( ref ))
-                            {
-                                removed.remove( ref );
-                            }
-                        }
-                    }
-                }
-                m_size.set( ( refs == null ) ? 0 : refs.length);
-            }
-
+            // setup the target filter from component descriptor
+            setTargetFilter( m_dependencyMetadata.getTarget() );
 
             m_componentManager.log( LogService.LOG_DEBUG,
-                "Registered for service events, currently {0} service(s) match the filter", new Object[]
-                    { new Integer( m_size.get() ) }, null );
+                    "Registered for service events, currently {0} service(s) match the filter", new Object[]
+                    {new Integer( m_size.get() )}, null );
         }
         else
         {
@@ -1483,7 +1449,15 @@ public class DependencyManager implements ServiceListener, Reference
      */
     void setTargetFilter( Dictionary properties )
     {
-        setTargetFilter( ( String ) properties.get( m_dependencyMetadata.getTargetPropertyName() ) );
+        try
+        {
+            setTargetFilter( ( String ) properties.get( m_dependencyMetadata.getTargetPropertyName() ) );
+        }
+        catch ( InvalidSyntaxException e )
+        {
+            // this should not occur.  The only choice would be if the filter for the object class was invalid,
+            // but we already set this once when we enabled.
+        }
     }
 
 
@@ -1497,85 +1471,134 @@ public class DependencyManager implements ServiceListener, Reference
      * @param target The new target filter to be set. This may be
      *      <code>null</code> if no target filtering is to be used.
      */
-    private void setTargetFilter( String target )
+    private void setTargetFilter( String target ) throws InvalidSyntaxException
     {
         m_componentManager.checkLocked();
         // do nothing if target filter does not change
         if ( ( m_target == null && target == null ) || ( m_target != null && m_target.equals( target ) ) )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "No change in target property for dependency {0}", new Object[]
-                { m_dependencyMetadata.getName() }, null );
-            return;
-        }
-
-        m_target = target;
-        if ( target != null )
-        {
-            m_componentManager.log( LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}", new Object[]
-                { m_dependencyMetadata.getName(), target }, null );
-            try
-            {
-                m_targetFilter = m_componentManager.getActivator().getBundleContext().createFilter( target );
-            }
-            catch ( InvalidSyntaxException ise )
-            {
-                m_componentManager.log( LogService.LOG_ERROR, "Invalid syntax in target property for dependency {0} to {1}", new Object[]
-                    { m_dependencyMetadata.getName(), target }, null );
-                // log
-                m_targetFilter = null;
-            }
+                    {m_dependencyMetadata.getName()}, null );
         }
         else
         {
-            m_componentManager.log( LogService.LOG_DEBUG, "Clearing target property for dependency {0}", new Object[]
-                { m_dependencyMetadata.getName() }, null );
-            m_targetFilter = null;
+            m_target = target;
+
+            m_componentManager.getActivator().getBundleContext().removeServiceListener( this );
+            //compute the new target filter while we wait for other threads to complete.
+            if ( target != null )
+            {
+                m_componentManager.log( LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}", new Object[]
+                        {m_dependencyMetadata.getName(), target}, null );
+                try
+                {
+                    m_targetFilter = m_componentManager.getActivator().getBundleContext().createFilter( target );
+                }
+                catch ( InvalidSyntaxException ise )
+                {
+                    m_componentManager.log( LogService.LOG_ERROR, "Invalid syntax in target property for dependency {0} to {1}", new Object[]
+                            {m_dependencyMetadata.getName(), target}, null );
+                    // log
+                    m_targetFilter = null;
+                }
+            }
+            else
+            {
+                m_componentManager.log( LogService.LOG_DEBUG, "Clearing target property for dependency {0}", new Object[]
+                        {m_dependencyMetadata.getName()}, null );
+                m_targetFilter = null;
+            }
+        }
+        //wait for events to finish processing
+        synchronized ( added )
+        {
+            while ( !added.isEmpty() )
+            {
+                try
+                {
+                    added.wait();
+                }
+                catch ( InterruptedException e )
+                {
+                    //??
+                }
+            }
+        }
+        synchronized ( removed )
+        {
+            while ( !removed.isEmpty() )
+            {
+                try
+                {
+                    removed.wait();
+                }
+                catch ( InterruptedException e )
+                {
+                    //??
+                }
+            }
         }
 
-        if ( m_componentManager.getDependencyMap() != null )
+        //we are now done processing all the events received before we removed the listener.
+        ServiceReference[] boundRefs = getBoundServiceReferences();
+        if ( boundRefs != null && m_targetFilter != null )
         {
-            //component is active, we need to check what might have changed.
-            // check for services to be removed
-            if ( m_targetFilter != null )
+            for ( ServiceReference boundRef : boundRefs )
             {
-                ServiceReference[] refs = getBoundServiceReferences();
-                if ( refs != null )
+                if ( !m_targetFilter.match( boundRef ) )
                 {
-                    for ( int i = 0; i < refs.length; i++ )
+                    serviceRemoved( boundRef );
+                }
+            }
+        }
+        boolean active = m_componentManager.getDependencyMap() != null;
+        // register the service listener
+        String filterString = "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")";
+        m_componentManager.getActivator().getBundleContext().addServiceListener( this, filterString );
+        Collection<ServiceReference> toAdd = new ArrayList<ServiceReference>();
+
+        synchronized ( enableLock )
+        {
+            // get the current number of registered services available
+            ServiceReference refs[] = getFrameworkServiceReferences();
+            if ( refs != null )
+            {
+                synchronized ( added )
+                {
+                    for ( ServiceReference ref : refs )
                     {
-                        if ( !m_targetFilter.match( refs[i] ) )
+                        added.remove( ref );
+                    }
+                }
+                synchronized ( removed )
+                {
+                    for ( ServiceReference ref : refs )
+                    {
+                        if ( !removed.contains( ref ) )
                         {
-                            // might want to do this asynchronously ??
-                            serviceRemoved( refs[i] );
+                            removed.remove( ref );
+                        }
+                    }
+                }
+                if ( active )
+                {
+                    for ( ServiceReference ref : refs )
+                    {
+                        if ( getBoundService( ref ) == null )
+                        {
+                            toAdd.add( ref );
                         }
                     }
                 }
             }
+            m_size.set( ( refs == null ) ? 0 : refs.length );
         }
 
-        // check for new services to be added and set the number of
-        // matching services
-        ServiceReference[] refs = getFrameworkServiceReferences();
-        if ( refs != null )
+        for ( ServiceReference ref : toAdd )
         {
-            if ( m_componentManager.getDependencyMap() != null )
-            {
-                for ( int i = 0; i < refs.length; i++ )
-                {
-                    if ( getBoundService( refs[i] ) == null )
-                    {
-                        // might want to do this asynchronously ??
-                        serviceAdded( refs[i] );
-                    }
-                }
-            }
-            m_size.set( refs.length );
+            serviceAdded( ref );
         }
-        else
-        {
-            // no services currently match the filter
-            m_size.set( 0 );
-        }
+
     }
 
 
