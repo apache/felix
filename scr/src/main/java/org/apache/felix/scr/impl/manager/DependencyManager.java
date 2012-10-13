@@ -77,6 +77,7 @@ public class DependencyManager implements ServiceListener, Reference
 
     private final Object enableLock = new Object();
     private final Collection<ServiceReference> added = new ArrayList<ServiceReference>();
+    private final Collection<ServiceReference> removed = new ArrayList<ServiceReference>();
 
 
     /**
@@ -223,7 +224,27 @@ public class DependencyManager implements ServiceListener, Reference
                     // manage the service counter if the filter matchs
                     if ( targetFilterMatch( ref ) )
                     {
-                        m_size.decrementAndGet();
+                        synchronized ( removed )
+                        {
+                            removed.add( ref );
+                        }
+                        synchronized (enableLock)
+                        {
+                            //wait for enable to complete
+                        }
+                        boolean process;
+                        synchronized ( removed )
+                        {
+                            if (process = removed.contains( ref ))
+                            {
+                                removed.remove( ref );
+                                m_size.decrementAndGet();
+                            }
+                        }
+                        if (process)
+                        {
+                            serviceRemoved( ref );
+                        }
                     }
                     else
                     {
@@ -234,11 +255,11 @@ public class DependencyManager implements ServiceListener, Reference
                                 new Object[]
                                     { m_dependencyMetadata.getName(), ref.getProperty( Constants.SERVICE_ID ), getTarget() },
                                 null );
+                        // remove the service ignoring the filter match because if the
+                        // service is bound, it has to be removed no matter what
+                        serviceRemoved( ref );
                     }
 
-                    // remove the service ignoring the filter match because if the
-                    // service is bound, it has to be removed no matter what
-                    serviceRemoved( ref );
 
                     break;
             }
@@ -586,6 +607,19 @@ public class DependencyManager implements ServiceListener, Reference
                         for (ServiceReference ref: refs)
                         {
                             added.remove( ref );
+                        }
+                    }
+                }
+                synchronized ( removed )
+                {
+                    if (refs != null)
+                    {
+                        for (ServiceReference ref: refs)
+                        {
+                            if (!removed.contains( ref ))
+                            {
+                                removed.remove( ref );
+                            }
                         }
                     }
                 }
