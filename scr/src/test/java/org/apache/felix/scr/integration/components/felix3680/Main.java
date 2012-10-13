@@ -205,7 +205,10 @@ public class Main implements Runnable
             {
             }
             
-            _logService.log(LogService.LOG_WARNING, "Performed " + (++loop) + " tests.");
+            loop ++;
+            if ((loop % 500) == 0) {
+                _logService.log(LogService.LOG_WARNING, "Performed " + loop + " tests.");
+            }
         }
     }
 
