@@ -125,6 +125,7 @@ public class DependencyManager implements ServiceListener, Reference
         final String serviceString = "Service " + m_dependencyMetadata.getInterface() + "/"
             + ref.getProperty( Constants.SERVICE_ID );
         final boolean release = m_componentManager.obtainReadLock( "DependencyManager.serviceChanged.1" );
+        Collection<ServiceReference> changes = null;
         try
         {
             switch ( event.getType() )
@@ -144,19 +145,16 @@ public class DependencyManager implements ServiceListener, Reference
                         {
                             //wait for enable to complete
                         }
-                        boolean process;
                         synchronized ( added )
                         {
-                            if (process = added.contains( ref ))
+                            if (!added.contains( ref ))
                             {
-                                added.remove( ref );
-                                m_size.incrementAndGet();
+                                break;
                             }
                         }
-                        if (process)
-                        {
-                            serviceAdded( ref );
-                        }
+                        m_size.incrementAndGet();
+                        changes = added;
+                        serviceAdded( ref );
                     }
                     else
                     {
@@ -188,17 +186,15 @@ public class DependencyManager implements ServiceListener, Reference
                             {
                                 //wait for enable to complete
                             }
-                            boolean process;
                             synchronized ( added )
                             {
-                                if (process = added.contains( ref ))
+                                if (!added.contains( ref ))
                                 {
-                                    added.remove( ref );
-                                    m_size.incrementAndGet();
+                                    break;
                                 }
                             }
-                            if (process)
-                            {
+                            changes = added;
+                            m_size.incrementAndGet();
                                 if ( isStatic() )
                                 {
                                     // if static reference: activate if currentl unsatisifed, otherwise no influence
@@ -219,7 +215,6 @@ public class DependencyManager implements ServiceListener, Reference
                                 }
                             }
 
-                        }
                     }
                     else if ( !targetFilterMatch( ref ) )
                     {
@@ -231,19 +226,16 @@ public class DependencyManager implements ServiceListener, Reference
                         {
                             //wait for enable to complete
                         }
-                        boolean process;
                         synchronized ( removed )
                         {
-                            if (process = removed.contains( ref ))
+                            if (!removed.contains( ref ))
                             {
-                                removed.remove( ref );
-                                m_size.decrementAndGet();
+                                break;
                             }
                         }
-                        if (process)
-                        {
-                            serviceRemoved( ref );
-                        }
+                        changes = removed;
+                        m_size.decrementAndGet();
+                        serviceRemoved( ref );
                     }
                     else
                     {
@@ -268,19 +260,16 @@ public class DependencyManager implements ServiceListener, Reference
                         {
                             //wait for enable to complete
                         }
-                        boolean process;
                         synchronized ( removed )
                         {
-                            if (process = removed.contains( ref ))
+                            if (!removed.contains( ref ))
                             {
-                                removed.remove( ref );
-                                m_size.decrementAndGet();
+                                break;
                             }
                         }
-                        if (process)
-                        {
-                            serviceRemoved( ref );
-                        }
+                        changes = removed;
+                        m_size.decrementAndGet();
+                        serviceRemoved( ref );
                     }
                     else
                     {
@@ -302,6 +291,13 @@ public class DependencyManager implements ServiceListener, Reference
         }
         finally
         {
+            if ( changes != null)
+            {
+                synchronized ( changes )
+                {
+                    changes.remove( ref );
+                }
+            }
             if ( release )
             {
                 m_componentManager.releaseReadLock( "DependencyManager.serviceChanged.1" );
