@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -65,7 +65,7 @@ public class DependencyManager implements ServiceListener, Reference
     private final ReferenceMetadata m_dependencyMetadata;
 
     // the number of matching services registered in the system
-    private volatile int m_size;
+    private final AtomicInteger m_size = new AtomicInteger();
 
     private BindMethods m_bindMethods;
 
@@ -75,6 +75,7 @@ public class DependencyManager implements ServiceListener, Reference
     // the target service filter
     private volatile Filter m_targetFilter;
 
+    private final Object enableLock = new Object();
     private final Collection<ServiceReference> added = new ArrayList<ServiceReference>();
 
 
@@ -134,15 +135,25 @@ public class DependencyManager implements ServiceListener, Reference
                     // consider the service if the filter matches
                     if ( targetFilterMatch( ref ) )
                     {
-                        added.add( ref );
-                        synchronized (added)
+                        synchronized ( added )
+                        {
+                            added.add( ref );
+                        }
+                        synchronized (enableLock)
                         {
                             //wait for enable to complete
                         }
-                        if (added.contains( ref ))
+                        boolean process;
+                        synchronized ( added )
                         {
-                            added.remove( ref );
-                            m_size++;
+                            if (process = added.contains( ref ))
+                            {
+                                added.remove( ref );
+                                m_size.incrementAndGet();
+                            }
+                        }
+                        if (process)
+                        {
                             serviceAdded( ref );
                         }
                     }
@@ -169,7 +180,7 @@ public class DependencyManager implements ServiceListener, Reference
                         if ( targetFilterMatch( ref ) )
                         {
                             // new filter match, so increase the counter
-                            m_size++;
+                            m_size.incrementAndGet();
 
                             if ( isStatic() )
                             {
@@ -194,7 +205,7 @@ public class DependencyManager implements ServiceListener, Reference
                     else if ( !targetFilterMatch( ref ) )
                     {
                         // service reference does not match target any more, remove
-                        m_size--;
+                        m_size.decrementAndGet();
                         serviceRemoved( ref );
                     }
                     else
@@ -212,7 +223,7 @@ public class DependencyManager implements ServiceListener, Reference
                     // manage the service counter if the filter matchs
                     if ( targetFilterMatch( ref ) )
                     {
-                        m_size--;
+                        m_size.decrementAndGet();
                     }
                     else
                     {
@@ -560,33 +571,36 @@ public class DependencyManager implements ServiceListener, Reference
 
         if ( hasGetPermission() )
         {
-            synchronized ( added )
-            {
-                // register the service listener
-                String filterString = "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")";
-                m_componentManager.getActivator().getBundleContext().addServiceListener( this, filterString );
+            // register the service listener
+            String filterString = "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")";
+            m_componentManager.getActivator().getBundleContext().addServiceListener( this, filterString );
 
+            synchronized ( enableLock )
+            {
                 // get the current number of registered services available
                 ServiceReference refs[] = getFrameworkServiceReferences();
-                if (refs != null)
+                synchronized ( added )
                 {
-                    for (ServiceReference ref: refs)
+                    if (refs != null)
                     {
-                        added.remove( ref );
+                        for (ServiceReference ref: refs)
+                        {
+                            added.remove( ref );
+                        }
                     }
                 }
-                m_size = ( refs == null ) ? 0 : refs.length;
+                m_size.set( ( refs == null ) ? 0 : refs.length);
             }
 
 
             m_componentManager.log( LogService.LOG_DEBUG,
                 "Registered for service events, currently {0} service(s) match the filter", new Object[]
-                    { new Integer( m_size ) }, null );
+                    { new Integer( m_size.get() ) }, null );
         }
         else
         {
             // no services available
-            m_size = 0;
+            m_size.set( 0 );
 
             m_componentManager.log( LogService.LOG_DEBUG,
                     "Not registered for service events since the bundle has no permission to get service {0}", new Object[]
@@ -606,7 +620,7 @@ public class DependencyManager implements ServiceListener, Reference
         BundleContext context = m_componentManager.getActivator().getBundleContext();
         context.removeServiceListener( this );
 
-        m_size = 0;
+        m_size.set( 0 );
     }
 
     void deactivate()
@@ -638,7 +652,7 @@ public class DependencyManager implements ServiceListener, Reference
      */
     int size()
     {
-        return m_size;
+        return m_size.get();
     }
 
 
@@ -1489,12 +1503,12 @@ public class DependencyManager implements ServiceListener, Reference
                     }
                 }
             }
-            m_size = refs.length;
+            m_size.set( refs.length );
         }
         else
         {
             // no services currently match the filter
-            m_size = 0;
+            m_size.set( 0 );
         }
     }
 
