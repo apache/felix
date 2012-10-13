@@ -1049,11 +1049,14 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     private void enableDependencyManagers() throws InvalidSyntaxException
     {
-        Iterator it = getDependencyManagers();
-        while ( it.hasNext() )
+        if ( !m_componentMetadata.isConfigurationRequired() )
         {
-            DependencyManager dm = (DependencyManager) it.next();
-            dm.enable();
+            Iterator it = getDependencyManagers();
+            while ( it.hasNext() )
+            {
+                DependencyManager dm = (DependencyManager) it.next();
+                dm.enable();
+            }
         }
     }
 
