@@ -79,6 +79,8 @@ public class DependencyManager implements ServiceListener, Reference
     private final Collection<ServiceReference> added = new ArrayList<ServiceReference>();
     private final Collection<ServiceReference> removed = new ArrayList<ServiceReference>();
 
+    private boolean registered;
+
 
     /**
      * Constructor that receives several parameters.
@@ -649,8 +651,7 @@ public class DependencyManager implements ServiceListener, Reference
      */
     void disable()
     {
-        BundleContext context = m_componentManager.getActivator().getBundleContext();
-        context.removeServiceListener( this );
+        unregisterServiceListener();
 
         m_size.set( 0 );
     }
@@ -1479,35 +1480,39 @@ public class DependencyManager implements ServiceListener, Reference
         {
             m_componentManager.log( LogService.LOG_DEBUG, "No change in target property for dependency {0}", new Object[]
                     {m_dependencyMetadata.getName()}, null );
+            if (registered)
+            {
+                return;
+            }
+        }
+        m_target = target;
+
+        if ( registered )
+        {
+            unregisterServiceListener();
+        }
+        //compute the new target filter while we wait for other threads to complete.
+        if ( target != null )
+        {
+            m_componentManager.log( LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}", new Object[]
+                    {m_dependencyMetadata.getName(), target}, null );
+            try
+            {
+                m_targetFilter = m_componentManager.getActivator().getBundleContext().createFilter( target );
+            }
+            catch ( InvalidSyntaxException ise )
+            {
+                m_componentManager.log( LogService.LOG_ERROR, "Invalid syntax in target property for dependency {0} to {1}", new Object[]
+                        {m_dependencyMetadata.getName(), target}, null );
+                // log
+                m_targetFilter = null;
+            }
         }
         else
         {
-            m_target = target;
-
-            m_componentManager.getActivator().getBundleContext().removeServiceListener( this );
-            //compute the new target filter while we wait for other threads to complete.
-            if ( target != null )
-            {
-                m_componentManager.log( LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}", new Object[]
-                        {m_dependencyMetadata.getName(), target}, null );
-                try
-                {
-                    m_targetFilter = m_componentManager.getActivator().getBundleContext().createFilter( target );
-                }
-                catch ( InvalidSyntaxException ise )
-                {
-                    m_componentManager.log( LogService.LOG_ERROR, "Invalid syntax in target property for dependency {0} to {1}", new Object[]
-                            {m_dependencyMetadata.getName(), target}, null );
-                    // log
-                    m_targetFilter = null;
-                }
-            }
-            else
-            {
-                m_componentManager.log( LogService.LOG_DEBUG, "Clearing target property for dependency {0}", new Object[]
-                        {m_dependencyMetadata.getName()}, null );
-                m_targetFilter = null;
-            }
+            m_componentManager.log( LogService.LOG_DEBUG, "Clearing target property for dependency {0}", new Object[]
+                    {m_dependencyMetadata.getName()}, null );
+            m_targetFilter = null;
         }
         //wait for events to finish processing
         synchronized ( added )
@@ -1553,8 +1558,7 @@ public class DependencyManager implements ServiceListener, Reference
         }
         boolean active = m_componentManager.getDependencyMap() != null;
         // register the service listener
-        String filterString = "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")";
-        m_componentManager.getActivator().getBundleContext().addServiceListener( this, filterString );
+        registerServiceListener();
         Collection<ServiceReference> toAdd = new ArrayList<ServiceReference>();
 
         synchronized ( enableLock )
@@ -1599,6 +1603,19 @@ public class DependencyManager implements ServiceListener, Reference
             serviceAdded( ref );
         }
 
+    }
+
+    private void registerServiceListener() throws InvalidSyntaxException
+    {
+        String filterString = "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")";
+        m_componentManager.getActivator().getBundleContext().addServiceListener( this, filterString );
+        registered = true;
+    }
+
+    private void unregisterServiceListener()
+    {
+        m_componentManager.getActivator().getBundleContext().removeServiceListener( this );
+        registered = false;
     }
 
 
