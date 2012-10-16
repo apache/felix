@@ -1315,6 +1315,13 @@ public class DependencyManager implements ServiceListener, Reference
         if ( componentInstance != null )
         {
             RefPair refPair = ( RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
+            if (refPair == null)
+            {
+
+                //TODO should this be possible? If so, reduce or eliminate logging
+                m_componentManager.log( LogService.LOG_WARNING,
+                        "DependencyManager : invokeUpdatedMethod : Component set, but reference not present", null );
+            }
             MethodResult methodResult = m_bindMethods.getUpdated().invoke( componentInstance, refPair, MethodResult.VOID );
             if ( methodResult != null)
             {
@@ -1349,6 +1356,12 @@ public class DependencyManager implements ServiceListener, Reference
         if ( componentInstance != null )
         {
             RefPair refPair = ( RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
+            if (refPair == null)
+            {
+                //TODO should this be possible? If so, reduce or eliminate logging
+                m_componentManager.log( LogService.LOG_WARNING,
+                        "DependencyManager : invokeUnbindMethod : Component set, but reference not present", null );
+            }
             MethodResult methodResult = m_bindMethods.getUnbind().invoke( componentInstance, refPair, MethodResult.VOID );
             if ( methodResult != null )
             {
