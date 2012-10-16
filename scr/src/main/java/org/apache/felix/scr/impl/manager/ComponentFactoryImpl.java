@@ -78,8 +78,14 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
      * supplied as the base configuration for each component instance created
      * by the {@link #newInstance(Dictionary)} method.
      */
-    private Dictionary m_configuration;
-
+    private volatile Dictionary m_configuration;
+    
+    /**
+     * Flag telling if our component factory is configured.
+     * We are configured when configuration policy is required and we have received the
+     * config admin properties, or when configuration policy is optional or ignored.
+     */
+    public volatile boolean m_isConfigured;
 
     public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
@@ -205,7 +211,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
 
     public boolean hasConfiguration()
     {
-        return m_configuration != null;
+        return m_isConfigured;
     }
 
 
@@ -322,7 +328,57 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     {
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            m_configuration = configuration;
+            log( LogService.LOG_INFO, "Configuration PID updated for Component Factory", null );
+
+            // Ignore the configuration is our policy is 'ignore'
+            if ( getComponentMetadata().isConfigurationIgnored() )
+            {
+                return;
+            }
+            
+            boolean release = obtainReadLock( "ComponentFactoryImpl.configurationUpdated" );
+            try
+            {
+                // Store the config admin configuration
+                m_configuration = configuration;
+                
+                // We are now configured from config admin.
+                m_isConfigured = true;
+                
+                // if configuration is required and if we not active (that is: either disabled or unsatisfied),
+                // Then we then must activate our dependency target filters.
+                // Please check  AbstractComponentManager.enableDependencyManagers() method, which doesn't set
+                // target filters in case the configuration is required.
+                
+                log( LogService.LOG_INFO, "Current ComponentFactory state={0}", new Object[]
+                    { getState() }, null );
+
+                if ( ( getState() == STATE_DISABLED || getState() == STATE_UNSATISFIED ) && configuration != null
+                    && getComponentMetadata().isConfigurationRequired() )
+                {
+                    // Enable dependency managers, and also update any target filters from config admin. 
+                    log( LogService.LOG_DEBUG, "Updating target filters", null );                    
+                    super.updateTargets( m_configuration ); 
+                }
+                
+                // unsatisfied component and required configuration may change targets
+                // to satisfy references. Or the configuration was just required.
+
+                if ( getState() == STATE_UNSATISFIED && configuration != null
+                    && getComponentMetadata().isConfigurationRequired() )
+                {                   
+                    // try to activate our component factory, if all dependnecies are satisfied
+                    log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
+                    activateInternal();
+                }
+            }
+            finally
+            {
+                if (release) 
+                {
+                    releaseReadLock( "ComponentFactoryImpl.configurationUpdated" );
+                }
+            }
         }
         else
         {
