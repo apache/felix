@@ -78,7 +78,6 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
     // this is null, if none exist or none are provided
     private Dictionary m_configurationProperties;
 
-
     /**
      * The constructor receives both the activator and the metadata
      *
@@ -132,6 +131,9 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             m_componentContext = tmpContext;
             m_implementationObject = tmpComponent;
             log( LogService.LOG_DEBUG, "Set implementation object for component {0}", new Object[] { getName() },  null );
+
+            //notify that component was successfully created so any optional circular dependencies can be retried
+            getActivator().missingServicePresent(getServiceReference());
         }
         return true;
     }

@@ -38,6 +38,7 @@ import org.apache.felix.scr.impl.config.ImmediateComponentHolder;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
 import org.apache.felix.scr.impl.manager.ConfigurationComponentFactoryImpl;
+import org.apache.felix.scr.impl.manager.DependencyManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -47,6 +48,7 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 
 
@@ -127,6 +129,8 @@ public class ComponentRegistry implements ScrService, ServiceListener
     // ConfigurationAdmin support -- created on demand upon availability of
     // the ConfigurationAdmin service
     private ConfigurationSupport configurationSupport;
+
+    private final Map m_missingDependencies = new HashMap( );
 
     protected ComponentRegistry( BundleContext context )
     {
@@ -648,4 +652,41 @@ public class ComponentRegistry implements ScrService, ServiceListener
             this.configurationSupport = null;
         }
     }
+
+    public void missingServicePresent( final ServiceReference serviceReference, ComponentActorThread actor )
+    {
+        final List dependencyManagers = ( List ) m_missingDependencies.remove( serviceReference );
+        if ( dependencyManagers != null )
+        {
+            actor.schedule( new Runnable()
+            {
+
+                public void run()
+                {
+                    for ( Iterator i = dependencyManagers.iterator(); i.hasNext(); )
+                    {
+                        DependencyManager dm = ( DependencyManager ) i.next();
+                        dm.invokeBindMethodLate( serviceReference );
+                    }
+                }
+            } );
+        }
+    }
+
+    public synchronized void registerMissingDependency( DependencyManager dependencyManager, ServiceReference serviceReference )
+    {
+        //check that the service reference is from scr
+        if ( serviceReference.getProperty( ComponentConstants.COMPONENT_NAME ) == null || serviceReference.getProperty( ComponentConstants.COMPONENT_ID ) == null )
+        {
+            return;
+        }
+        List dependencyManagers = ( List ) m_missingDependencies.get( serviceReference );
+        if ( dependencyManagers == null )
+        {
+            dependencyManagers = new ArrayList();
+            m_missingDependencies.put( serviceReference, dependencyManagers );
+        }
+        dependencyManagers.add( dependencyManager );
+    }
+
 }
