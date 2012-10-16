@@ -260,29 +260,25 @@ public class ComponentFactoryTest extends ComponentTestBase
         component.enable();
         delay();
 
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
+        // At this point, since we don't have created the configuration, then the ComponentFactory
+        // should not be available.
+        
+        ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
+        TestCase.assertNull( refs );
+        
         // supply configuration now and ensure active
         configure( componentname );
-        delay();
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
+        delay();        
 
-        // ensure component factory still active if config is deleted
-        deleteConfig( componentname );
-        delay();
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        // supply configuration now and ensure active
-        configure( componentname );
-        delay();
         TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // get the component factory service
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+        refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
             + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
         TestCase.assertNotNull( refs );
         TestCase.assertEquals( 1, refs.length );
@@ -299,7 +295,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertNotNull( instanceObject );
         TestCase.assertEquals( SimpleComponent.INSTANCE, instanceObject );
         TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
-        TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
+        TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );                        
 
         final Map<?, ?> instanceMap = ( Map<?, ?> ) getFieldValue( component, "m_componentInstances" );
         TestCase.assertNotNull( instanceMap );
@@ -327,7 +323,6 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertEquals( 0, instanceMap.size() );
         TestCase.assertFalse( instanceMap.containsValue( instanceManager ) );
     }
-
 
     @Test
     public void test_component_factory_reference() throws InvalidSyntaxException
