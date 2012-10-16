@@ -24,7 +24,10 @@ import java.util.Iterator;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
+import org.apache.felix.scr.impl.helper.ActivateMethod;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
+import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.helper.ModifiedMethod;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
@@ -75,7 +78,17 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
      */
     protected void deleteComponent( int reason )
     {
-        // nothing to do, this is handled by ungetService
+        if ( !isWriteLocked() )
+        {
+            throw new IllegalStateException( "need write lock (deleteComponent)" );
+        }
+        for (Iterator i = serviceContexts.values().iterator(); i.hasNext(); )
+        {
+            BundleComponentContext componentContext = ( BundleComponentContext ) i.next();
+            i.remove();
+            disposeImplementationObject( componentContext.getInstance(), componentContext, reason );
+            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent", new Object[] { getName() },  null );
+        }
     }
 
 
@@ -223,6 +236,26 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
             Object implementationObject = it.next();
             dependencyManager.invokeUnbindMethod( implementationObject, oldRef);
         }
+    }
+
+    protected MethodResult invokeModifiedMethod()
+    {
+        ModifiedMethod modifiedMethod = getComponentMethods().getModifiedMethod();
+        MethodResult result = null;
+        for (Iterator i = serviceContexts.values().iterator(); i.hasNext(); )
+        {
+            BundleComponentContext componentContext = ( BundleComponentContext ) i.next();
+            Object instance = componentContext.getInstance();
+            result = modifiedMethod.invoke( instance,
+                    new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID );
+
+        }
+        return result;
+    }
+
+    protected boolean hasInstance()
+    {
+        return !serviceContexts.isEmpty();
     }
 
     //---------- Component interface

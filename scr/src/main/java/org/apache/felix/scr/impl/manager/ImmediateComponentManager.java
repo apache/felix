@@ -510,7 +510,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
     private boolean modify()
     {
         // 0. no live update if there is no instance
-        if ( getInstance() == null )
+        if ( hasInstance() )
         {
             return false;
         }
@@ -546,8 +546,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         // 4. call method (nothing to do when failed, since it has already been logged)
         //   (call with non-null default result to continue even if the
         //    modify method call failed)
-        final MethodResult result = getComponentMethods().getModifiedMethod().invoke( getInstance(),
-                new ActivatorParameter( m_componentContext, -1 ), MethodResult.VOID );
+        final MethodResult result = invokeModifiedMethod();
         if ( result == null )
         {
             // log an error if the declared method cannot be found
@@ -581,6 +580,17 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
         // 7. everything set and done, the component has been updated
         return true;
+    }
+
+    protected MethodResult invokeModifiedMethod()
+    {
+        return getComponentMethods().getModifiedMethod().invoke( getInstance(),
+                    new ActivatorParameter( m_componentContext, -1 ), MethodResult.VOID );
+    }
+
+    protected boolean hasInstance()
+    {
+        return getInstance() == null;
     }
 
 
