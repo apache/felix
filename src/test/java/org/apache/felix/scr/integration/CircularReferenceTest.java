@@ -86,7 +86,7 @@ public class CircularReferenceTest extends ComponentTestBase
         TestCase.assertNotNull( componentB );
         TestCase.assertEquals( Component.STATE_ACTIVE, componentB.getState() );
         B b = ( B ) componentB.getComponentInstance().getInstance();
-        assertEquals( 0, b.getAs().size() );
+        assertEquals( 1, b.getAs().size() );
     }
     /**
      * A > 1.1 > B > 0..n > A Both should start (B first), and B should have an A reference.
@@ -130,11 +130,12 @@ public class CircularReferenceTest extends ComponentTestBase
         Object service = bundleContext.getService( serviceReference );
         assertNotNull( service );
 
+        delay();
 
         A a = ( A ) componentA.getComponentInstance().getInstance();
         assertEquals( 1, a.getBs().size() );
         B b = ( B ) componentB.getComponentInstance().getInstance();
-        assertEquals( 0, b.getAs().size() );
+        assertEquals( 1, b.getAs().size() );
     }
     /**
      * A > 1.1 > B > 0..n > A Both should start, but B should not have an A reference.
@@ -164,11 +165,11 @@ public class CircularReferenceTest extends ComponentTestBase
         Object serviceA = bundleContext.getService( serviceReferenceA );
         assertNotNull( serviceA );
 
-
+        delay();
         A a = ( A ) componentA.getComponentInstance().getInstance();
         assertEquals( 1, a.getBs().size() );
         B b = ( B ) componentB.getComponentInstance().getInstance();
-        assertEquals( 0, b.getAs().size() );
+        assertEquals( 1, b.getAs().size() );
 
 
         //disabling (removing the A service registration) and re-enabling will
@@ -207,7 +208,7 @@ public class CircularReferenceTest extends ComponentTestBase
         TestCase.assertNotNull( componentB );
         TestCase.assertEquals( Component.STATE_ACTIVE, componentB.getState() );
         B b = ( B ) componentB.getComponentInstance().getInstance();
-        assertEquals( 0, b.getAs().size() );
+        assertEquals( 1, b.getAs().size() );
     }
     /**
      * A > 1.1 > B > 0..1 > A Both should start (B first), and B should have an A reference.

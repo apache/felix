@@ -1059,7 +1059,7 @@ public class DependencyManager implements ServiceListener, Reference
             return true;
         }
 
-        Map result = new HashMap(); //<ServiceReference, Object[]>
+        Map result = new HashMap(); //<ServiceReference, RefPair>
         // assume success to begin with: if the dependency is optional,
         // we don't care, whether we can bind a service. Otherwise, we
         // require at least one service to be bound, thus we require
@@ -1083,6 +1083,10 @@ public class DependencyManager implements ServiceListener, Reference
                         // of course, we have success if the service is bound
                         success = true;
                     }
+                    else
+                    {
+                        m_componentManager.getActivator().registerMissingDependency(this, refs[index]);
+                    }
                 }
             }
         }
@@ -1099,6 +1103,10 @@ public class DependencyManager implements ServiceListener, Reference
                     result.put( ref, refPair );
                     // of course, we have success if the service is bound
                     success = true;
+                }
+                else if ( isOptional() )
+                {
+                    m_componentManager.getActivator().registerMissingDependency(this, ref);
                 }
             }
         }
@@ -1247,6 +1255,33 @@ public class DependencyManager implements ServiceListener, Reference
                 null );
             return true;
         }
+    }
+
+    public void invokeBindMethodLate( final ServiceReference ref )
+    {
+        if ( !isSatisfied() )
+        {
+            return;
+        }
+        if ( !isMultiple() )
+        {
+            ServiceReference[] refs = getFrameworkServiceReferences();
+            if ( refs == null )
+            {
+                return; // should not happen, we have one!
+            }
+            // find the service with the highest ranking
+            for ( int i = 1; i < refs.length; i++ )
+            {
+                ServiceReference test = refs[i];
+                if ( test.compareTo( ref ) > 0 )
+                {
+                    return; //another ref is better
+                }
+            }
+        }
+        //TODO static and dynamic reluctant
+        m_componentManager.invokeBindMethod( this, ref );
     }
 
     /**
