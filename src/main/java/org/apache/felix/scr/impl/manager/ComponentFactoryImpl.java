@@ -374,27 +374,32 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
                 // We are now configured from config admin.
                 m_isConfigured = true;
                 
-                // if configuration is required and if we not active (that is: either disabled or unsatisfied),
-                // Then we then must activate our dependency target filters.
-                // Please check  AbstractComponentManager.enableDependencyManagers() method, which doesn't set
-                // target filters in case the configuration is required.
-                
                 log( LogService.LOG_INFO, "Current ComponentFactory state={0}", new Object[]
                     { getState() }, null );
 
-                if ( ( getState() == STATE_DISABLED || getState() == STATE_UNSATISFIED ) && configuration != null
-                    && getComponentMetadata().isConfigurationRequired() )
+                // Update our target filters.
+                log( LogService.LOG_DEBUG, "Updating target filters", null );                    
+                super.updateTargets( m_configuration ); 
+                                    
+                // If we are active, but if some config target filters don't match anymore 
+                // any required references, then deactivate.                
+                if ( getState() == STATE_FACTORY )
                 {
-                    // Enable dependency managers, and also update any target filters from config admin. 
-                    log( LogService.LOG_DEBUG, "Updating target filters", null );                    
-                    super.updateTargets( m_configuration ); 
+                    if ( !verifyDependencyManagers( getProperties() ) )
+                    {
+                        if ( ( getState() & STATE_DISPOSED ) == 0 )
+                        {
+                            log( LogService.LOG_DEBUG,
+                                "Component Factory target filters not satisfied anymore: deactivating", null );
+                            deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE );
+                        }
+                        return;
+                    }
                 }
-                
-                // unsatisfied component and required configuration may change targets
-                // to satisfy references. Or the configuration was just required.
-
-                if ( getState() == STATE_UNSATISFIED && configuration != null
-                    && getComponentMetadata().isConfigurationRequired() )
+                    
+                // Unsatisfied component and required configuration may change targets
+                // to satisfy references.
+                if ( getState() == STATE_UNSATISFIED && getComponentMetadata().isConfigurationRequired() )
                 {                   
                     // try to activate our component factory, if all dependnecies are satisfied
                     log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
