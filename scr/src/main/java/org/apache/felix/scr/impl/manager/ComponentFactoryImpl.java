@@ -385,7 +385,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
                 // any required references, then deactivate.                
                 if ( getState() == STATE_FACTORY )
                 {
-                    if ( !verifyDependencyManagers( getProperties() ) )
+                    if ( !verifyDependencyManagers( m_configuration ) )
                     {
                         if ( ( getState() & STATE_DISPOSED ) == 0 )
                         {
