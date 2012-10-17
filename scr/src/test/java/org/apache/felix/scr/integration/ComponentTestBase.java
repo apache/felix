@@ -48,6 +48,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Inject;
 
@@ -68,12 +69,11 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.log.LogEntry;
-import org.osgi.service.log.LogListener;
-import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -113,9 +113,7 @@ public abstract class ComponentTestBase
     protected static String descriptorFile = "/integration_test_simple_components.xml";
 
     protected static boolean NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
-    private PrintStream out;
-    private PrintStream err;
-    protected Log log;
+    protected volatile Log log;
 
     static
     {
@@ -125,7 +123,11 @@ public abstract class ComponentTestBase
 
     @ProbeBuilder
     public TestProbeBuilder extendProbe(TestProbeBuilder builder) {
-        builder.setHeader("Export-Package", "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature,org.apache.felix.scr.integration.components.circular,org.apache.felix.scr.integration.components.concurrency,org.apache.felix.scr.integration.components.felix3680");
+        builder.setHeader("Export-Package", "org.apache.felix.scr.integration.components," +
+                                            "org.apache.felix.scr.integration.components.activatesignature," +
+                                            "org.apache.felix.scr.integration.components.circular," +
+                                            "org.apache.felix.scr.integration.components.concurrency," +
+                                            "org.apache.felix.scr.integration.components.felix3680");
         builder.setHeader("Import-Package", "org.apache.felix.scr,org.apache.felix.scr.component;mandatory:=\"status\"; status=\"provisional\"");
         builder.setHeader("Bundle-ManifestVersion", "2");
         return builder;
@@ -145,7 +147,6 @@ public abstract class ComponentTestBase
         final Option[] base = options(
             provision(
                 CoreOptions.bundle( bundleFile.toURI().toString() ),
-                    mavenBundle( "org.apache.felix", "org.apache.felix.log", "1.0.1" ),
                 mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
                 mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", "1.0.10" )
              ),
@@ -162,18 +163,11 @@ public abstract class ComponentTestBase
     @Before
     public void setUp() throws BundleException
     {
-        out = System.out;
-        err = System.err;
-        System.setOut(new NullStdout());
-        System.setErr( new NullStdout() );
-
         log = new Log();
-            ServiceReference sr = bundleContext.getServiceReference(LogReaderService.class.getName());
-            TestCase.assertNotNull(sr);
-            LogReaderService logReader = (LogReaderService) bundleContext.getService(sr);
-            TestCase.assertNotNull(logReader);
-            logReader.addLogListener( log );
-
+        log.start();
+        bundleContext.addFrameworkListener( log );
+        bundleContext.registerService( LogService.class.getName(), log, null );
+        
         scrTracker = new ServiceTracker( bundleContext, "org.apache.felix.scr.ScrService", null );
         scrTracker.open();
         configAdminTracker = new ServiceTracker( bundleContext, "org.osgi.service.cm.ConfigurationAdmin", null );
@@ -187,18 +181,23 @@ public abstract class ComponentTestBase
     @After
     public void tearDown() throws BundleException
     {
-        if ( bundle != null && bundle.getState() != Bundle.UNINSTALLED )
+        try
         {
-            bundle.uninstall();
-            bundle = null;
-        }
+            if ( bundle != null && bundle.getState() != Bundle.UNINSTALLED )
+            {
+                bundle.uninstall();
+                bundle = null;
+            }
 
-        configAdminTracker.close();
-        configAdminTracker = null;
-        scrTracker.close();
-        scrTracker = null;
-        System.setOut(out);
-        System.setErr(err);
+            configAdminTracker.close();
+            configAdminTracker = null;
+            scrTracker.close();
+            scrTracker = null;
+        }
+        finally
+        {
+            log.stop();
+        }
     }
 
 
@@ -395,7 +394,11 @@ public abstract class ComponentTestBase
                 .set(Constants.BUNDLE_SYMBOLICNAME, "simplecomponent")
                 .set(Constants.BUNDLE_VERSION, "0.0.11")
                 .set(Constants.IMPORT_PACKAGE,
-                        "org.apache.felix.scr.integration.components,org.apache.felix.scr.integration.components.activatesignature,org.apache.felix.scr.integration.components.circular,org.apache.felix.scr.integration.components.concurrency,org.apache.felix.scr.integration.components.felix3680")
+                        "org.apache.felix.scr.integration.components," +
+                        "org.apache.felix.scr.integration.components.activatesignature," +
+                        "org.apache.felix.scr.integration.components.circular," +
+                        "org.apache.felix.scr.integration.components.concurrency," +
+                        "org.apache.felix.scr.integration.components.felix3680")
                 .set("Service-Component", "OSGI-INF/components.xml")
             .build(withBnd());
 
@@ -599,47 +602,208 @@ public abstract class ComponentTestBase
         }
     }
 
-    public static class Log implements LogListener
+    public static class LogEntry
     {
-        private final SimpleDateFormat _sdf = new SimpleDateFormat("HH:mm:ss,S");
-        private final List m_warnings = Collections.synchronizedList( new ArrayList() );//<LogEntry>
-        private final static PrintStream _out =
-                new PrintStream(new BufferedOutputStream(new FileOutputStream( FileDescriptor.err), 128));
+        private final String m_msg;
+        private final int m_level;
+        private final Throwable m_err;
+        private final long m_time;
+        private final Thread m_thread;
 
-        public void logged(LogEntry entry)
+
+        LogEntry( int level, String msg, Throwable t )
         {
-            if ( entry.getLevel() > getEnabledLogLevel() )
-            {
-                return;
-            }
-
-            if (entry.getLevel() <= 2)
-            {
-                m_warnings.add( entry );
-            }
-            StringWriter sw = new StringWriter();
-            sw.append( "log level: " + entry.getLevel() );
-            sw.append(" D=");
-            sw.append(_sdf.format( new Date(entry.getTime())));
-            sw.append(", T=" + Thread.currentThread().getName());
-            sw.append(": ");
-            sw.append(entry.getMessage());
-            if (entry.getException() != null)
-            {
-                sw.append(System.getProperty("line.separator"));
-                PrintWriter pw = new PrintWriter(sw);
-                entry.getException().printStackTrace(pw);
-            }
-            _out.println(sw.toString());
-            _out.flush();
+            m_level = level;
+            m_msg = msg;
+            m_err = t;
+            m_time = System.currentTimeMillis();
+            m_thread = Thread.currentThread();
         }
 
-        List foundWarnings()
+
+        public String toString()
+        {
+            return m_msg;
+        }
+
+
+        public int getLevel()
+        {
+            return m_level;
+        }
+
+
+        public String getMessage()
+        {
+            return m_msg;
+        }
+
+
+        public Throwable getError()
+        {
+            return m_err;
+        }
+
+
+        public long getTime()
+        {
+            return m_time;
+        }
+
+
+        public Thread getThread()
+        {
+            return m_thread;
+        }
+    }
+    
+    public static class Log implements LogService, FrameworkListener, Runnable
+    {
+        private final SimpleDateFormat m_sdf = new SimpleDateFormat( "HH:mm:ss,S" );
+        private final static PrintStream m_out = new PrintStream( new BufferedOutputStream( new FileOutputStream(
+            FileDescriptor.err ), 128 ) );
+        private final List<String> m_warnings = Collections.synchronizedList( new ArrayList<String>() );//<String>
+        private LinkedBlockingQueue<LogEntry> m_logQueue = new LinkedBlockingQueue<LogEntry>();
+        private volatile Thread m_logThread;
+        private volatile PrintStream m_realOut;
+        private volatile PrintStream m_realErr;
+
+        public void start()
+        {
+            m_realOut = System.out;
+            m_realErr = System.err;
+            System.setOut( new NullStdout() );
+            System.setErr( new NullStdout() );
+            m_logThread = new Thread( this );
+            m_logThread.start();
+        }
+
+        
+        public void stop()
+        {
+            System.setOut(m_realOut);
+            System.setErr(m_realErr);
+            m_out.flush();
+            m_warnings.clear();
+            m_logThread.interrupt();
+            try
+            {
+                m_logThread.join();
+            }
+            catch ( InterruptedException e )
+            {
+            }
+        }
+
+
+        List<String> foundWarnings()
         {
             return m_warnings;
         }
-        
-        public int getEnabledLogLevel() {
+
+
+        public void run()
+        {
+            try
+            {
+                LogEntry entry = null;
+                while ( true )
+                {
+                    entry = m_logQueue.take();
+                    if ( entry.getLevel() <= 2 )
+                    {
+                        if ( m_warnings.size() < 1024 )
+                        {
+                            m_warnings.add( entry.getMessage() );
+                        }
+                        else
+                        {
+                            // Avoid out of memory ...
+                            m_warnings.add( 1024, "Unexpected errors logged. Please look at previous logs" );
+                        }
+                    }
+
+                    StringWriter sw = new StringWriter();
+                    sw.append( "log level: " + entry.getLevel() );
+                    sw.append( " D=" );
+                    sw.append( m_sdf.format( new Date( entry.getTime() ) ) );
+                    sw.append( " T=" + entry.getThread() );
+                    sw.append( ": " );
+                    sw.append( entry.getMessage() );
+                    if ( entry.getError() != null )
+                    {
+                        sw.append( System.getProperty( "line.separator" ) );
+                        PrintWriter pw = new PrintWriter( sw );
+                        entry.getError().printStackTrace( pw );
+                    }
+                    m_out.println( sw.toString() );
+
+                }
+            }
+            catch ( InterruptedException e )
+            {
+                return;
+            }
+        }
+
+
+        // ------------- FrameworkListener -----------------------------------------------------------
+
+        public void frameworkEvent( final FrameworkEvent event )
+        {
+            int eventType = event.getType();
+            String msg = getFrameworkEventMessage( eventType );
+            int level = ( eventType == FrameworkEvent.ERROR ) ? LogService.LOG_ERROR : LogService.LOG_WARNING;
+            log( level, msg, event.getThrowable() );
+        }
+
+
+        // ------------ LogService ----------------------------------------------------------------
+
+        public void log( int level, String message )
+        {
+            log( level, message, null );
+        }
+
+
+        public void log( int level, String message, Throwable exception )
+        {
+            if ( level > getEnabledLogLevel() )
+            {
+                return;
+            }
+            m_logQueue.offer( new LogEntry( level, message, exception ) );
+        }
+
+
+        public void log( ServiceReference sr, int osgiLevel, String message )
+        {
+            log( sr, osgiLevel, message, null );
+        }
+
+
+        public void log( ServiceReference sr, int level, String msg, Throwable exception )
+        {
+            if ( sr != null )
+            {
+                StringBuilder sb = new StringBuilder();
+                Object serviceId = sr.getProperty( Constants.SERVICE_ID );
+                if ( serviceId != null )
+                {
+                    sb.append( "[" + serviceId.toString() + "] " );
+                }
+                sb.append( msg );
+                log( level, sb.toString(), exception );
+            }
+            else
+            {
+                log( level, msg, exception );
+            }
+        }
+
+
+        private int getEnabledLogLevel()
+        {
             if ( DS_LOGLEVEL.regionMatches( true, 0, "err", 0, "err".length() ) )
             {
                 return LogService.LOG_ERROR;
@@ -657,7 +821,27 @@ public abstract class ComponentTestBase
                 return LogService.LOG_DEBUG;
             }
         }
+
+
+        private String getFrameworkEventMessage( int event )
+        {
+            switch ( event )
+            {
+                case FrameworkEvent.ERROR:
+                    return "FrameworkEvent: ERROR";
+                case FrameworkEvent.INFO:
+                    return "FrameworkEvent INFO";
+                case FrameworkEvent.PACKAGES_REFRESHED:
+                    return "FrameworkEvent: PACKAGE REFRESHED";
+                case FrameworkEvent.STARTED:
+                    return "FrameworkEvent: STARTED";
+                case FrameworkEvent.STARTLEVEL_CHANGED:
+                    return "FrameworkEvent: STARTLEVEL CHANGED";
+                case FrameworkEvent.WARNING:
+                    return "FrameworkEvent: WARNING";
+                default:
+                    return null;
+            }
+        }
     }
-
-
 }
