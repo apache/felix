@@ -11,7 +11,7 @@
 	language governing permissions and limitations under the License. -->
 <components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
-		name='A' activate='start'>
+		name='org.apache.felix.scr.integration.components.felix3680.A' activate='start'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.A' />
 		<service>
