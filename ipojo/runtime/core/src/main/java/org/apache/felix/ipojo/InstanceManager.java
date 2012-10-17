@@ -231,6 +231,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         for(int i=0; i < constructors.length; i++ )
         {
         	String[] ctorArguments = constructors[i].getMethodArguments();
+        	
         	for(int index = 0; index < ctorArguments.length; index++ )
         	{
         		if(ctorArguments[index].equals(BundleContext.class.getName()))
@@ -250,7 +251,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         							(ConstructorInjector)m_constructorRegistration.get(new Integer(siblingIndex));
         					Class injectorClass = siblingInjector.getConstructorParameterType(siblingIndex);
         					
-        					if(injectorClass == null && ! injectorClass.getName().equals(injectionType))
+        					if(injectorClass != null && ! injectorClass.getName().equals(injectionType))
         					{
         						injectionsConsistent = false;
         						break;
