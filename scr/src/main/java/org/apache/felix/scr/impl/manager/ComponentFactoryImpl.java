@@ -312,9 +312,38 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     {
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            // deleting configuration of a component factory is like
-            // providing an empty configuration
-            m_configuration = new Hashtable();
+            log( LogService.LOG_DEBUG, "Handling configuration removal", null );
+
+            boolean release = obtainReadLock( "ComponentFactoryImpl.configurationDeleted" );
+            try
+            {
+                // nothing to do if there is no configuration currently known.
+                if (! m_isConfigured)
+                {
+                    log( LogService.LOG_DEBUG, "ignoring configuration removal: not currently configured", null );
+                    return;
+                }
+                
+                // So far, we were configured: clear the current configuration.
+                m_isConfigured = false;
+                m_configuration = new Hashtable();
+
+                log( LogService.LOG_DEBUG, "Current component factory state={0}", new Object[] { getState() }, null );
+
+                // And deactivate if we are not currently disposed and if configuration is required
+                if ( ( getState() & STATE_DISPOSED ) == 0 && getComponentMetadata().isConfigurationRequired() )
+                {
+                    log( LogService.LOG_DEBUG, "Deactivating component factory (required configuration has gone)", null );
+                    deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
+                }
+            }
+            finally
+            {
+                if ( release )
+                {
+                    releaseReadLock( "ComponentFactoryImpl.configurationDeleted" );
+                }
+            }
         }
         else
         {

@@ -304,10 +304,10 @@ public class ComponentFactoryTest extends ComponentTestBase
         final Object instanceManager = getFieldValue( instance, "m_componentManager" );
         TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
 
-        // delete config, ensure factory still active and component instance, not changed
+        // delete config, ensure factory is not active anymore and component instance not changed
         deleteConfig( componentname );
         delay();
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
 
         TestCase.assertNotNull( instance.getInstance() );
         TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
