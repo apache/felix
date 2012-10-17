@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.felix.resolver.Logger;
 import org.apache.felix.resolver.ResolverImpl;
+import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Namespace;
@@ -61,6 +62,34 @@ public class Main
         rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.EMPTY_LIST);
         wireMap = resolver.resolve(rci);
         System.out.println("RESULT " + wireMap);
+
+        System.out.println("\nSCENARIO 4\n");
+        mandatory = populateScenario4(wirings, candMap);
+        rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.EMPTY_LIST);
+        try
+        {
+            wireMap = resolver.resolve(rci);
+            System.err.println("UNEXPECTED RESULT " + wireMap);
+        }
+        catch (ResolutionException e)
+        {
+            System.out.println("EXPECTED ResolutionException:");
+            e.printStackTrace(System.out);
+        }
+
+        System.out.println("\nSCENARIO 5\n");
+        mandatory = populateScenario5(wirings, candMap);
+        rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.EMPTY_LIST);
+        try
+        {
+            wireMap = resolver.resolve(rci);
+            System.err.println("UNEXPECTED RESULT " + wireMap);
+        }
+        catch (ResolutionException e)
+        {
+            System.out.println("EXPECTED ResolutionException:");
+            e.printStackTrace(System.out);
+        }
     }
 
     private static List<Resource> populateScenario1(
@@ -175,6 +204,93 @@ public class Main
         // Mandatory resources
         List<Resource> resources = new ArrayList<Resource>();
         resources.add(e);
+        return resources;
+    }
+
+    private static List<Resource> populateScenario4(
+            Map<Resource, Wiring> wirings, Map<Requirement, List<Capability>> candMap)
+    {
+        wirings.clear();
+        candMap.clear();
+
+        ResourceImpl a = new ResourceImpl("A");
+        a.addRequirement(new BundleRequirement(a, "B"));
+        a.addRequirement(new BundleRequirement(a, "C"));
+
+        ResourceImpl b = new ResourceImpl("B");
+        b.addCapability(new BundleCapability(b, "B"));
+        b.addCapability(new PackageCapability(b, "p1"));
+
+        ResourceImpl c = new ResourceImpl("C");
+        c.addRequirement(new BundleRequirement(c, "D"));
+        c.addCapability(new BundleCapability(c, "C"));
+        PackageCapability p2 = new PackageCapability(c, "p1");
+        p2.addDirective(Namespace.CAPABILITY_USES_DIRECTIVE, "p1");
+        c.addCapability(p2);
+
+        ResourceImpl d = new ResourceImpl("D");
+        d.addCapability(new BundleCapability(d, "D"));
+        d.addCapability(new PackageCapability(d, "p1"));
+
+        candMap.put(
+            a.getRequirements(null).get(0),
+            b.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE));
+        candMap.put(
+            a.getRequirements(null).get(1),
+            c.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE));
+        candMap.put(
+            c.getRequirements(null).get(0),
+            d.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE));
+
+        List<Resource> resources = new ArrayList<Resource>();
+        resources.add(a);
+        return resources;
+    }
+
+    private static List<Resource> populateScenario5(
+        Map<Resource, Wiring> wirings, Map<Requirement, List<Capability>> candMap)
+    {
+        wirings.clear();
+        candMap.clear();
+
+        ResourceImpl x = new ResourceImpl("X");
+        x.addRequirement(new BundleRequirement(x, "A"));
+
+        ResourceImpl a = new ResourceImpl("A");
+        a.addCapability(new BundleCapability(a, "A"));
+        a.addRequirement(new BundleRequirement(a, "B"));
+        a.addRequirement(new BundleRequirement(a, "C"));
+
+        ResourceImpl b = new ResourceImpl("B");
+        b.addCapability(new BundleCapability(b, "B"));
+        b.addCapability(new PackageCapability(b, "p1"));
+
+        ResourceImpl c = new ResourceImpl("C");
+        c.addRequirement(new BundleRequirement(c, "D"));
+        c.addCapability(new BundleCapability(c, "C"));
+        PackageCapability p2 = new PackageCapability(c, "p1");
+        p2.addDirective(Namespace.CAPABILITY_USES_DIRECTIVE, "p1");
+        c.addCapability(p2);
+
+        ResourceImpl d = new ResourceImpl("D");
+        d.addCapability(new BundleCapability(d, "D"));
+        d.addCapability(new PackageCapability(d, "p1"));
+
+        candMap.put(
+                x.getRequirements(null).get(0),
+                a.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE));
+        candMap.put(
+            a.getRequirements(null).get(0),
+            b.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE));
+        candMap.put(
+            a.getRequirements(null).get(1),
+            c.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE));
+        candMap.put(
+            c.getRequirements(null).get(0),
+            d.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE));
+
+        List<Resource> resources = new ArrayList<Resource>();
+        resources.add(x);
         return resources;
     }
 }
