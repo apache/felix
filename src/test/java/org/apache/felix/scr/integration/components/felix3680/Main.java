@@ -28,6 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.felix.scr.Component;
 import org.apache.felix.scr.ScrService;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -241,8 +242,17 @@ public class Main implements Runnable
 
     private void dumpState(StringWriter sw, String name)
     {
-        org.apache.felix.scr.Component a = _scr.getComponents(name)[0];
-        sw.append(name).append("[").append(getState(a)).append("] ");
+        org.apache.felix.scr.Component[] comps = _scr.getComponents(name);
+        if (comps == null || comps.length == 0) 
+        {
+            _logService.log(LogService.LOG_ERROR, "could not find component state " + name, null);
+            return;
+        }
+        org.apache.felix.scr.Component c = comps[0];
+        if ( c != null )
+        {
+            sw.append( name ).append( "[" ).append( getState( c ) ).append( "] " );
+        }
     }
 
     private CharSequence getState(org.apache.felix.scr.Component c)
