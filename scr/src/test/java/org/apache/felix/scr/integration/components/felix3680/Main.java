@@ -173,7 +173,17 @@ public class Main implements Runnable
             _disabledLatch = new CountDownLatch(11); // for B,C,D,E,F,G,H,I,J,K and Main.unbindA()
 
             EnableManager manager =
-                    new EnableManager(new String[] { "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" });
+                    new EnableManager(new String[] { 
+                        "org.apache.felix.scr.integration.components.felix3680.B", 
+                        "org.apache.felix.scr.integration.components.felix3680.C", 
+                        "org.apache.felix.scr.integration.components.felix3680.D", 
+                        "org.apache.felix.scr.integration.components.felix3680.E", 
+                        "org.apache.felix.scr.integration.components.felix3680.F", 
+                        "org.apache.felix.scr.integration.components.felix3680.G", 
+                        "org.apache.felix.scr.integration.components.felix3680.H", 
+                        "org.apache.felix.scr.integration.components.felix3680.I", 
+                        "org.apache.felix.scr.integration.components.felix3680.J", 
+                        "org.apache.felix.scr.integration.components.felix3680.K" });
             manager.enableComponents(exec);
 
             try
@@ -215,17 +225,17 @@ public class Main implements Runnable
     private void dumpComponents()
     {
         StringWriter sw = new StringWriter();
-        dumpState(sw, "A");
-        dumpState(sw, "B");
-        dumpState(sw, "C");
-        dumpState(sw, "D");
-        dumpState(sw, "E");
-        dumpState(sw, "F");
-        dumpState(sw, "G");
-        dumpState(sw, "H");
-        dumpState(sw, "I");
-        dumpState(sw, "J");
-        dumpState(sw, "K");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.A");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.B");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.C");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.D");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.E");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.F");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.G");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.H");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.I");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.J");
+        dumpState(sw, "org.apache.felix.scr.integration.components.felix3680.K");
         _logService.log(LogService.LOG_WARNING, sw.toString());
     }
 
