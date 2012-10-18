@@ -36,6 +36,7 @@ import java.util.Random;
 import org.apache.felix.cm.PersistenceManager;
 import org.apache.felix.cm.file.FilePersistenceManager;
 import org.apache.felix.cm.impl.helper.BaseTracker;
+import org.apache.felix.cm.impl.helper.ConfigurationMap;
 import org.apache.felix.cm.impl.helper.ManagedServiceFactoryTracker;
 import org.apache.felix.cm.impl.helper.ManagedServiceTracker;
 import org.apache.felix.cm.impl.helper.TargetedPID;
@@ -903,7 +904,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
      *      be a <code>ManagedServiceFactory</code>. Otherwise the service
      *      is considered to be a <code>ManagedService</code>.
      */
-    public void configure( String[] pid, ServiceReference sr, final boolean factory )
+    public void configure( String[] pid, ServiceReference sr, final boolean factory, final ConfigurationMap<?> configs )
     {
         if ( this.isLogEnabled( LogService.LOG_DEBUG ) )
         {
@@ -914,11 +915,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         Runnable r;
         if ( factory )
         {
-            r = new ManagedServiceFactoryUpdate( pid, sr );
+            r = new ManagedServiceFactoryUpdate( pid, sr, configs );
         }
         else
         {
-            r = new ManagedServiceUpdate( pid, sr );
+            r = new ManagedServiceUpdate( pid, sr, configs );
         }
         updateThread.schedule( r );
         log( LogService.LOG_DEBUG, "[{0}] scheduled", new Object[]
@@ -1370,10 +1371,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private final ServiceReference sr;
 
-        ManagedServiceUpdate( String[] pids, ServiceReference sr )
+        private final ConfigurationMap<?> configs;
+
+
+        ManagedServiceUpdate( String[] pids, ServiceReference sr, ConfigurationMap<?> configs )
         {
             this.pids = pids;
             this.sr = sr;
+            this.configs = configs;
         }
 
 
@@ -1428,7 +1433,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             log( LogService.LOG_DEBUG, "Updating service {0} with configuration {1}@{2}", new Object[]
                 { servicePid, configPid, new Long( revision ) } );
 
-            managedServiceTracker.provideConfiguration( sr, configPid, null, properties, revision);
+            managedServiceTracker.provideConfiguration( sr, configPid, null, properties, revision, this.configs );
         }
 
         public String toString()
@@ -1450,11 +1455,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         private final ServiceReference sr;
 
+        private final ConfigurationMap<?> configs;
 
-        ManagedServiceFactoryUpdate( String[] factoryPids, ServiceReference sr )
+
+        ManagedServiceFactoryUpdate( String[] factoryPids, ServiceReference sr, final ConfigurationMap<?> configs )
         {
             this.factoryPids = factoryPids;
             this.sr = sr;
+            this.configs = configs;
         }
 
 
@@ -1583,7 +1591,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 log( LogService.LOG_DEBUG, "{0}: Updating configuration pid={1}", new Object[]
                     { ConfigurationManager.toString( sr ), config.getPid() } );
                 managedServiceFactoryTracker.provideConfiguration( sr, config.getPid(), config.getFactoryPid(),
-                    rawProperties, revision );
+                    rawProperties, revision, this.configs );
             }
         }
 
@@ -1647,7 +1655,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                             revision = rc.getRevision();
                         }
 
-                        helper.provideConfiguration( sr, configPid, null, properties, -revision );
+                        helper.provideConfiguration( sr, configPid, null, properties, -revision, null );
 
                         return true;
                     }
@@ -1713,7 +1721,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     else if ( canReceive( refBundle, configBundleLocation ) )
                     {
                         helper.provideConfiguration( ref, this.config.getPid(), this.config.getFactoryPid(),
-                            this.properties, this.revision );
+                            this.properties, this.revision, null );
                     }
                     else
                     {
@@ -1879,7 +1887,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     {
                         // call updated method
                         helper.provideConfiguration( sr, this.config.getPid(), this.config.getFactoryPid(),
-                            this.properties, this.revision );
+                            this.properties, this.revision, null );
                         log( LogService.LOG_DEBUG, "Configuration {0} provided to {1} (new visibility)", new Object[]
                             { config.getPid(), ConfigurationManager.toString( sr ) } );
                     }
