@@ -935,7 +935,8 @@ public class DependencyManager implements ServiceListener, Reference
             }
             else
             {
-                refPair = new RefPair( serviceReference,  serviceObject );
+                refPair = new RefPair( serviceReference );
+                refPair.setServiceObject( serviceObject );
                 ((Map)m_componentManager.getDependencyMap().get( this )).put( serviceReference, refPair );
             }
         }
@@ -1039,7 +1040,7 @@ public class DependencyManager implements ServiceListener, Reference
         unbind( componentInstance, getBoundServiceReferences() );
     }
 
-    //returns Map<ServiceReference, Object[]>
+    //returns Map<ServiceReference, RefPair>
     boolean prebind( Map dependencyMap)
     {
         // If no references were received, we have to check if the dependency
@@ -1073,9 +1074,9 @@ public class DependencyManager implements ServiceListener, Reference
             {
                 for ( int index = 0; index < refs.length; index++ )
                 {
-                    RefPair refPair = m_bindMethods.getBind().getServiceObject( refs[index], m_componentManager.getActivator().getBundleContext() );
+                    RefPair refPair = new RefPair( refs[index] );
                     // success is if we have the minimal required number of services bound
-                    if ( refPair != null )
+                    if ( m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ) )
                     {
                         result.put( refs[index], refPair );
                         // of course, we have success if the service is bound
@@ -1094,9 +1095,9 @@ public class DependencyManager implements ServiceListener, Reference
             ServiceReference ref = getFrameworkServiceReference();
             if ( ref != null )
             {
-                RefPair refPair = m_bindMethods.getBind().getServiceObject( ref, m_componentManager.getActivator().getBundleContext() );
+                RefPair refPair = new RefPair( ref );
                 // success is if we have the minimal required number of services bound
-                if ( refPair != null )
+                if ( m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ) )
                 {
                     result.put( ref, refPair );
                     // of course, we have success if the service is bound
@@ -1104,7 +1105,7 @@ public class DependencyManager implements ServiceListener, Reference
                 }
                 else if ( isOptional() )
                 {
-                    m_componentManager.getActivator().registerMissingDependency(this, ref);
+                    m_componentManager.getActivator().registerMissingDependency( this, ref );
                 }
             }
         }
@@ -1234,9 +1235,8 @@ public class DependencyManager implements ServiceListener, Reference
 
                 }
                 Map deps = ( Map ) dependencyMap.get( this );
-                BundleContext bundleContext = m_componentManager.getActivator().getBundleContext();
-                RefPair refPair = m_bindMethods.getBind().getServiceObject( ref, bundleContext );
-                if ( refPair == null )
+                RefPair refPair = new RefPair( ref );
+                if ( !m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ) )
                 {
                     //reference deactivated while we are processing.
                     return false;
@@ -1354,6 +1354,15 @@ public class DependencyManager implements ServiceListener, Reference
                 //TODO should this be possible? If so, reduce or eliminate logging
                 m_componentManager.log( LogService.LOG_WARNING,
                         "DependencyManager : invokeUpdatedMethod : Component set, but reference not present", null );
+                return;
+            }
+            if ( !m_bindMethods.getUpdated().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ))
+            {
+                m_componentManager.log( LogService.LOG_WARNING,
+                        "DependencyManager : invokeUpdatedMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
+                        new Object[] {ref, getName()}, null );
+                return;
+
             }
             MethodResult methodResult = m_bindMethods.getUpdated().invoke( componentInstance, refPair, MethodResult.VOID );
             if ( methodResult != null)
@@ -1394,6 +1403,15 @@ public class DependencyManager implements ServiceListener, Reference
                 //TODO should this be possible? If so, reduce or eliminate logging
                 m_componentManager.log( LogService.LOG_WARNING,
                         "DependencyManager : invokeUnbindMethod : Component set, but reference not present", null );
+                return;
+            }
+            if ( !m_bindMethods.getUnbind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ))
+            {
+                m_componentManager.log( LogService.LOG_WARNING,
+                        "DependencyManager : invokeUnbindMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
+                        new Object[] {ref, getName()}, null );
+                return;
+
             }
             MethodResult methodResult = m_bindMethods.getUnbind().invoke( componentInstance, refPair, MethodResult.VOID );
             if ( methodResult != null )

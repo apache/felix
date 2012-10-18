@@ -554,25 +554,25 @@ public class BindMethod extends BaseMethod
         return null;
     }
 
-    public RefPair getServiceObject( ServiceReference ref, BundleContext context )
+    public boolean getServiceObject( RefPair refPair, BundleContext context )
     {
         //??? this resolves which we need.... better way?
-        if ( methodExists() )
+        if ( refPair.getServiceObject() == null && methodExists() )
         {
             if (m_paramStyle == SERVICE_OBJECT || m_paramStyle == SERVICE_OBJECT_AND_MAP) {
-                Object service = context.getService( ref );
+                Object service = context.getService( refPair.getRef() );
                 if ( service == null )
                 {
                     getLogger().log(
                          LogService.LOG_WARNING,
-                         "Could not get service from ref " + ref, null );
-                    return null;
+                         "Could not get service from ref " + refPair.getRef(), null );
+                    return false;
                 }
-
-                return new RefPair(ref, service);
+                refPair.setServiceObject( service );
+                return true;
             }
         }
-        return new RefPair(ref, null);
+        return true;
     }
 
     protected Object[] getParameters( Method method, Object rawParameter )
