@@ -379,6 +379,10 @@ public class AD extends OptionalAttributes
         {
             return AttributeDefinition.SHORT;
         }
+        else if ( "Password".equals( typeString ) )
+        {
+            return AttributeDefinition.PASSWORD;
+        }
 
         // finally fall back to string for illegal values
         return AttributeDefinition.STRING;
@@ -469,6 +473,7 @@ public class AD extends OptionalAttributes
                     case AttributeDefinition.DOUBLE:
                         return Double.valueOf( value );
                     case AttributeDefinition.STRING:
+                    case AttributeDefinition.PASSWORD:
                     default:
                         return value;
                 }
