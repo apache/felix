@@ -30,10 +30,9 @@ public class RefPair
     private final ServiceReference ref;
     private Object serviceObject;
 
-    public RefPair( ServiceReference ref, Object serviceObject )
+    public RefPair( ServiceReference ref )
     {
         this.ref = ref;
-        this.serviceObject = serviceObject;
     }
 
     public ServiceReference getRef()
