@@ -87,7 +87,14 @@ public class MetaData extends OptionalAttributes
                 designates = new HashMap();
             }
 
-            designates.put( designate.getPid(), designate );
+            if ( designate.getFactoryPid() != null )
+            {
+                designates.put( designate.getFactoryPid(), designate );
+            }
+            else
+            {
+                designates.put( designate.getPid(), designate );
+            }
         }
     }
 
