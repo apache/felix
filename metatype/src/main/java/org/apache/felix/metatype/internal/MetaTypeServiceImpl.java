@@ -100,7 +100,8 @@ class MetaTypeServiceImpl implements MetaTypeService
             try
             {
                 MetaData metaData = reader.parse( doc );
-                if (metaData != null) {
+                if ( metaData != null )
+                {
                     cmti.addMetaData( metaData );
                 }
             }

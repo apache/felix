@@ -120,6 +120,7 @@ public class Activator implements BundleActivator
         BundleResources.clearResourcesCache();
     }
 
+
     //---------- Logging Support ----------------------------------------------
     // log to stdout or use LogService
 

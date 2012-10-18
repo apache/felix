@@ -18,22 +18,28 @@
  */
 package org.apache.felix.metatype;
 
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class OptionalAttributes {
+
+public class OptionalAttributes
+{
     private Map optionalAttributes;
-    
-    public void addOptionalAttribute(String name, String value)
+
+
+    public void addOptionalAttribute( String name, String value )
     {
-        if (optionalAttributes == null)
+        if ( optionalAttributes == null )
         {
             optionalAttributes = new HashMap();
         }
-        optionalAttributes.put(name, value);
+        optionalAttributes.put( name, value );
     }
-    
-    public Map getOptionalAttributes() {
+
+
+    public Map getOptionalAttributes()
+    {
         return optionalAttributes;
     }
 }

@@ -66,6 +66,7 @@ public class MetaDataReaderTest extends TestCase
         assertNull( mti.getObjectClassDefinitions() );
     }
 
+
     public void testOptionalAttributesInMetaData() throws IOException, XmlPullParserException
     {
         String name = "myattribute";
@@ -78,8 +79,9 @@ public class MetaDataReaderTest extends TestCase
         assertNull( mti.getObjectClassDefinitions() );
         assertNotNull( mti.getOptionalAttributes() );
         assertEquals( 1, mti.getOptionalAttributes().size() );
-        assertEquals( value, mti.getOptionalAttributes().get(name) );
+        assertEquals( value, mti.getOptionalAttributes().get( name ) );
     }
+
 
     public void testWithNamespace_1_0_0() throws IOException, XmlPullParserException
     {

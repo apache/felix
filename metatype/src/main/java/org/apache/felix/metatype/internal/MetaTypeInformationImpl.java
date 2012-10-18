@@ -18,6 +18,7 @@
  */
 package org.apache.felix.metatype.internal;
 
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
+
 /**
  * The <code>MetaTypeInformationImpl</code> class implements the
  * <code>MetaTypeInformation</code> interface returned from the
@@ -43,7 +45,8 @@ import org.osgi.service.metatype.ObjectClassDefinition;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class MetaTypeInformationImpl implements MetaTypeInformation {
+public class MetaTypeInformationImpl implements MetaTypeInformation
+{
 
     // also defined in org.osgi.service.cm.ConfigurationAdmin, but copied
     // here to not create a synthetic dependency
@@ -59,59 +62,73 @@ public class MetaTypeInformationImpl implements MetaTypeInformation {
 
     private Map metaTypeProviders;
 
-    protected MetaTypeInformationImpl(Bundle bundle) {
+
+    protected MetaTypeInformationImpl( Bundle bundle )
+    {
         this.bundle = bundle;
         this.pids = new TreeSet();
         this.factoryPids = new TreeSet();
         this.metaTypeProviders = new HashMap();
     }
 
+
     /*
      * (non-Javadoc)
      *
      * @see org.osgi.service.metatype.MetaTypeInformation#getBundle()
      */
-    public Bundle getBundle() {
+    public Bundle getBundle()
+    {
         return this.bundle;
     }
+
 
     /*
      * (non-Javadoc)
      *
      * @see org.osgi.service.metatype.MetaTypeInformation#getFactoryPids()
      */
-    public String[] getFactoryPids() {
-        return (String[]) this.factoryPids.toArray(new String[this.factoryPids.size()]);
+    public String[] getFactoryPids()
+    {
+        return ( String[] ) this.factoryPids.toArray( new String[this.factoryPids.size()] );
     }
+
 
     /*
      * (non-Javadoc)
      *
      * @see org.osgi.service.metatype.MetaTypeInformation#getPids()
      */
-    public String[] getPids() {
-        return (String[]) this.pids.toArray(new String[this.pids.size()]);
+    public String[] getPids()
+    {
+        return ( String[] ) this.pids.toArray( new String[this.pids.size()] );
     }
+
 
     /*
      * (non-Javadoc)
      *
      * @see org.osgi.service.metatype.MetaTypeProvider#getLocales()
      */
-    public String[] getLocales() {
-        if (this.locales == null) {
-            synchronized (this) {
+    public String[] getLocales()
+    {
+        if ( this.locales == null )
+        {
+            synchronized ( this )
+            {
                 Set newLocales = new TreeSet();
-                for (Iterator mi = this.metaTypeProviders.values().iterator(); mi.hasNext();) {
-                    MetaTypeProvider mtp = (MetaTypeProvider) mi.next();
-                    this.addValues(newLocales, mtp.getLocales());
+                for ( Iterator mi = this.metaTypeProviders.values().iterator(); mi.hasNext(); )
+                {
+                    MetaTypeProvider mtp = ( MetaTypeProvider ) mi.next();
+                    this.addValues( newLocales, mtp.getLocales() );
                 }
                 this.locales = newLocales;
             }
         }
 
-        return (String[]) this.locales.toArray(new String[this.locales.size()]);
+        return ( String[] ) this.locales.toArray( new String[this.locales.size()] );
     }
+
 
     /*
      * (non-Javadoc)
@@ -119,8 +136,8 @@ public class MetaTypeInformationImpl implements MetaTypeInformation {
      * @see org.osgi.service.metatype.MetaTypeProvider#getObjectClassDefinition(java.lang.String,
      *      java.lang.String)
      */
-    public ObjectClassDefinition getObjectClassDefinition(String id,
-            String locale) {
+    public ObjectClassDefinition getObjectClassDefinition( String id, String locale )
+    {
 
         if ( id == null || id.length() == 0 )
         {
@@ -142,6 +159,7 @@ public class MetaTypeInformationImpl implements MetaTypeInformation {
         return ocd;
     }
 
+
     // ---------- internal support for metadata -------------------------------
 
     Designate getDesignate( String pid )
@@ -155,27 +173,33 @@ public class MetaTypeInformationImpl implements MetaTypeInformation {
         return null;
     }
 
+
     // ---------- setters to fill the values -----------------------------------
 
-    protected void addMetaData(MetaData md) {
-        if (md.getDesignates() != null) {
+    protected void addMetaData( MetaData md )
+    {
+        if ( md.getDesignates() != null )
+        {
             // meta type provide to register by PID
-            DefaultMetaTypeProvider dmtp = new DefaultMetaTypeProvider(this.bundle, md);
+            DefaultMetaTypeProvider dmtp = new DefaultMetaTypeProvider( this.bundle, md );
 
             Iterator designates = md.getDesignates().values().iterator();
-            while (designates.hasNext()) {
-                Designate designate = (Designate) designates.next();
+            while ( designates.hasNext() )
+            {
+                Designate designate = ( Designate ) designates.next();
 
                 // get the OCD reference, ignore the designate if none
                 DesignateObject object = designate.getObject();
-                String ocdRef = (object == null) ? null : object.getOcdRef();
-                if (ocdRef == null) {
+                String ocdRef = ( object == null ) ? null : object.getOcdRef();
+                if ( ocdRef == null )
+                {
                     continue;
                 }
 
                 // get ocd for the reference, ignore designate if none
-                OCD ocd = (OCD) md.getObjectClassDefinitions().get(ocdRef);
-                if (ocd == null) {
+                OCD ocd = ( OCD ) md.getObjectClassDefinitions().get( ocdRef );
+                if ( ocd == null )
+                {
                     continue;
                 }
 
@@ -194,41 +218,58 @@ public class MetaTypeInformationImpl implements MetaTypeInformation {
         }
     }
 
-    protected void addPids(String[] pids) {
-        this.addValues(this.pids, pids);
+
+    protected void addPids( String[] pids )
+    {
+        this.addValues( this.pids, pids );
     }
 
-    protected void removePid(String pid) {
-        this.pids.remove(pid);
+
+    protected void removePid( String pid )
+    {
+        this.pids.remove( pid );
     }
 
-    protected void addFactoryPids(String[] factoryPids) {
-        this.addValues(this.factoryPids, factoryPids);
+
+    protected void addFactoryPids( String[] factoryPids )
+    {
+        this.addValues( this.factoryPids, factoryPids );
     }
 
-    protected void removeFactoryPid(String factoryPid) {
-        this.factoryPids.remove(factoryPid);
+
+    protected void removeFactoryPid( String factoryPid )
+    {
+        this.factoryPids.remove( factoryPid );
     }
 
-    protected void addMetaTypeProvider(String key, MetaTypeProvider mtp) {
-        if (key != null && mtp != null) {
-            this.metaTypeProviders.put(key, mtp);
+
+    protected void addMetaTypeProvider( String key, MetaTypeProvider mtp )
+    {
+        if ( key != null && mtp != null )
+        {
+            this.metaTypeProviders.put( key, mtp );
             this.locales = null;
         }
     }
 
-    protected MetaTypeProvider removeMetaTypeProvider(String key) {
-        if (key != null) {
+
+    protected MetaTypeProvider removeMetaTypeProvider( String key )
+    {
+        if ( key != null )
+        {
             this.locales = null;
-            return (MetaTypeProvider) this.metaTypeProviders.remove(key);
+            return ( MetaTypeProvider ) this.metaTypeProviders.remove( key );
         }
 
         return null;
     }
 
-    private void addValues(Collection dest, Object[] values) {
-        if (values != null && values.length > 0) {
-            dest.addAll(Arrays.asList(values));
+
+    private void addValues( Collection dest, Object[] values )
+    {
+        if ( values != null && values.length > 0 )
+        {
+            dest.addAll( Arrays.asList( values ) );
         }
     }
 }

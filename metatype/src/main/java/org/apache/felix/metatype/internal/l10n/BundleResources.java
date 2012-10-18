@@ -163,13 +163,13 @@ public class BundleResources
 
         Properties props = new Properties( parentProperties );
         URL resURL = bundle.getEntry( resourceName );
-        
+
         // FELIX-607 backwards compatibility, support
         if ( resURL == null )
         {
             resURL = bundle.getEntry( MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/" + resourceName );
         }
-        
+
         if ( resURL != null )
         {
             InputStream ins = null;
