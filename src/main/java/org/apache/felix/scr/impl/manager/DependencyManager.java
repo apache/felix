@@ -1155,17 +1155,14 @@ public class DependencyManager implements ServiceListener, Reference
         for ( Iterator i = parameters.entrySet().iterator(); i.hasNext(); )
         {
             Map.Entry entry = ( Map.Entry ) i.next();
-            if ( invokeBindMethod( componentInstance, ( RefPair ) entry.getValue() ) )
-            {
-                success = true;
-            }
-            else
+            if ( !invokeBindMethod( componentInstance, ( RefPair ) entry.getValue() ) )
             {
                 m_componentManager.log( LogService.LOG_DEBUG,
-                    "For dependency {0}, failed to invoke bind method on object {1}; success: {2}",
-                    new Object[]{ m_dependencyMetadata.getName(), entry.getValue(), new Boolean( success )}, null );
+                        "For dependency {0}, failed to invoke bind method on object {1}",
+                        new Object[] {m_dependencyMetadata.getName(), entry.getValue()}, null );
 
             }
+            success = true;
         }
         return success;
     }
