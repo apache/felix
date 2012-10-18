@@ -18,7 +18,9 @@
  */
 package org.apache.felix.metatype.internal.l10n;
 
+
 import java.util.Properties;
+
 
 /**
  * The <code>Resources</code> TODO
@@ -30,21 +32,29 @@ public class Resources
 
     private String locale;
     private Properties resources;
-    
-    Resources(String locale, Properties resources) {
+
+
+    Resources( String locale, Properties resources )
+    {
         this.locale = locale;
         this.resources = resources;
     }
-    
-    public String getLocale() {
+
+
+    public String getLocale()
+    {
         return locale;
     }
-    
-    Properties getResources() {
+
+
+    Properties getResources()
+    {
         return resources;
     }
-    
-    public String getResource(String resourceName) {
-        return  resources.getProperty( resourceName, resourceName );
+
+
+    public String getResource( String resourceName )
+    {
+        return resources.getProperty( resourceName, resourceName );
     }
 }

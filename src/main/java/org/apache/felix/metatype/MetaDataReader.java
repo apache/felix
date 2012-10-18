@@ -78,12 +78,18 @@ public class MetaDataReader
     private KXmlParser parser = new KXmlParser();
 
     /** Sets of attributes belonging to XML elements. */
-    private final Set AD_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "name", "description", "id", "type", "cardinality", "min", "max", "default", "required" }));
-    private final Set ATTRIBUTE_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "adref", "content" }));
-    private final Set DESIGNATE_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "pid", "factoryPid", "bundle", "optional", "merge" }));
-    private final Set DESIGNATEOBJECT_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "ocdref" }));
-    private final Set METADATA_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "localization" }));
-    private final Set OCD_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "name", "description", "id" }));
+    private final Set AD_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "name", "description", "id", "type", "cardinality", "min", "max", "default", "required" } ) );
+    private final Set ATTRIBUTE_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "adref", "content" } ) );
+    private final Set DESIGNATE_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "pid", "factoryPid", "bundle", "optional", "merge" } ) );
+    private final Set DESIGNATEOBJECT_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "ocdref" } ) );
+    private final Set METADATA_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "localization" } ) );
+    private final Set OCD_ATTRIBUTES = new HashSet( Arrays.asList( new String[]
+        { "name", "description", "id" } ) );
 
 
     /**
@@ -183,7 +189,7 @@ public class MetaDataReader
                 if ( "MetaData".equals( this.parser.getName() ) )
                 {
                     checkMetatypeNamespace();
-                    mti = this.readMetaData( );
+                    mti = this.readMetaData();
                 }
                 else
                 {
@@ -197,15 +203,16 @@ public class MetaDataReader
     }
 
 
-    private void readOptionalAttributes(OptionalAttributes entity, Set attributes) {
+    private void readOptionalAttributes( OptionalAttributes entity, Set attributes )
+    {
         int count = this.parser.getAttributeCount();
-        for (int i = 0; i < count; i++)
+        for ( int i = 0; i < count; i++ )
         {
-            String name = this.parser.getAttributeName(i);
-            if (!attributes.contains(name))
+            String name = this.parser.getAttributeName( i );
+            if ( !attributes.contains( name ) )
             {
-                String value = this.parser.getAttributeValue(i);
-                entity.addOptionalAttribute(name, value);
+                String value = this.parser.getAttributeValue( i );
+                entity.addOptionalAttribute( name, value );
             }
         }
     }
@@ -216,7 +223,7 @@ public class MetaDataReader
         MetaData mti = this.createMetaData();
         mti.setLocalePrefix( this.getOptionalAttribute( "localization" ) );
 
-        readOptionalAttributes(mti, METADATA_ATTRIBUTES);
+        readOptionalAttributes( mti, METADATA_ATTRIBUTES );
 
         int eventType = this.parser.next();
         while ( eventType != XmlPullParser.END_DOCUMENT )
@@ -259,7 +266,7 @@ public class MetaDataReader
         ocd.setName( this.getRequiredAttribute( "name" ) );
         ocd.setDescription( this.getOptionalAttribute( "description" ) );
 
-        readOptionalAttributes(ocd, OCD_ATTRIBUTES);
+        readOptionalAttributes( ocd, OCD_ATTRIBUTES );
 
         int eventType = this.parser.next();
         while ( eventType != XmlPullParser.END_DOCUMENT )
@@ -324,7 +331,7 @@ public class MetaDataReader
         designate.setOptional( this.getOptionalAttribute( "optional", false ) );
         designate.setMerge( this.getOptionalAttribute( "merge", false ) );
 
-        readOptionalAttributes(designate, DESIGNATE_ATTRIBUTES);
+        readOptionalAttributes( designate, DESIGNATE_ATTRIBUTES );
 
         int eventType = this.parser.next();
         while ( eventType != XmlPullParser.END_DOCUMENT )
@@ -369,7 +376,7 @@ public class MetaDataReader
         ad.setDefaultValue( this.getOptionalAttribute( "default" ) );
         ad.setRequired( this.getOptionalAttribute( "required", true ) );
 
-        readOptionalAttributes(ad, AD_ATTRIBUTES);
+        readOptionalAttributes( ad, AD_ATTRIBUTES );
 
         Map options = new LinkedHashMap();
         int eventType = this.parser.next();
@@ -413,7 +420,7 @@ public class MetaDataReader
         DesignateObject oh = this.createDesignateObject();
         oh.setOcdRef( this.getRequiredAttribute( "ocdref" ) );
 
-        readOptionalAttributes(oh, DESIGNATEOBJECT_ATTRIBUTES);
+        readOptionalAttributes( oh, DESIGNATEOBJECT_ATTRIBUTES );
 
         int eventType = this.parser.next();
         while ( eventType != XmlPullParser.END_DOCUMENT )
@@ -450,7 +457,7 @@ public class MetaDataReader
         ah.setAdRef( this.getRequiredAttribute( "adref" ) );
         ah.addContent( this.getOptionalAttribute( "content" ), true );
 
-        readOptionalAttributes(ah, ATTRIBUTE_ATTRIBUTES);
+        readOptionalAttributes( ah, ATTRIBUTE_ATTRIBUTES );
 
         int eventType = this.parser.next();
         while ( eventType != XmlPullParser.END_DOCUMENT )

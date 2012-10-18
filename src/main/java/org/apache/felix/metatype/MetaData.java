@@ -39,6 +39,7 @@ public class MetaData extends OptionalAttributes
     private Map designates;
     private URL source;
 
+
     public String getLocalePrefix()
     {
         return localePrefix;
