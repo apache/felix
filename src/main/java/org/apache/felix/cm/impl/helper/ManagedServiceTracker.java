@@ -75,10 +75,10 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
      */
     @Override
     public void provideConfiguration( ServiceReference<ManagedService> service, TargetedPID configPid,
-        TargetedPID factoryPid, Dictionary<String, ?> properties, long revision )
+        TargetedPID factoryPid, Dictionary<String, ?> properties, long revision, ConfigurationMap<?> configs )
     {
         Dictionary<String, ?> supplied = ( properties == null ) ? INITIAL_MARKER : properties;
-        updateService( service, configPid, supplied, revision );
+        updateService( service, configPid, supplied, revision, configs );
     }
 
 
@@ -86,57 +86,75 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
     public void removeConfiguration( ServiceReference<ManagedService> service, TargetedPID configPid,
         TargetedPID factoryPid )
     {
-        updateService( service, configPid, null, -1 );
+        updateService( service, configPid, null, -1, null );
     }
 
 
     private void updateService( ServiceReference<ManagedService> service, final TargetedPID configPid,
-        Dictionary<String, ?> properties, long revision )
+        Dictionary<String, ?> properties, long revision, ConfigurationMap<?> configs)
     {
+        // Get the ManagedService and terminate here if already
+        // unregistered from the framework concurrently
         final ManagedService srv = this.getRealService( service );
-        final ConfigurationMap configs = this.getService( service );
-        if ( srv != null && configs != null )
-        {
-            boolean doUpdate = false;
-            if ( properties == null )
-            {
-                doUpdate = configs.removeConfiguration( configPid, null );
-            }
-            else if ( properties == INITIAL_MARKER )
-            {
-                // initial call to ManagedService may supply null properties
-                properties = null;
-                revision = -1;
-                doUpdate = true;
-            }
-            else if ( revision < 0 || configs.shallTake( configPid, null, revision ) )
-            {
-                // run the plugins and cause the update
-                properties = getProperties( properties, service, configPid.toString(), null );
-                doUpdate = true;
-                revision = Math.abs( revision );
-            }
-            else
-            {
-                // new configuration is not a better match, don't update
-                doUpdate = false;
-            }
+        if (srv == null) {
+            return;
+        }
 
-            if ( doUpdate )
+        // Get the Configuration-to-PID map from the parameter or from
+        // the service tracker. If not available, the service tracker
+        // already unregistered this service concurrently
+        if ( configs == null )
+        {
+            configs = this.getService( service );
+            if ( configs == null )
             {
-                try
-                {
-                    srv.updated( properties );
-                    configs.record( configPid, null, revision );
-                }
-                catch ( Throwable t )
-                {
-                    this.handleCallBackError( t, service, configPid );
-                }
-                finally
-                {
-                    this.ungetRealService( service );
-                }
+                return;
+            }
+        }
+
+        // Both the ManagedService to update and the Configuration-to-PID
+        // are available, so the service can be updated with the
+        // configuration (which may be null)
+
+        boolean doUpdate = false;
+        if ( properties == null )
+        {
+            doUpdate = configs.removeConfiguration( configPid, null );
+        }
+        else if ( properties == INITIAL_MARKER )
+        {
+            // initial call to ManagedService may supply null properties
+            properties = null;
+            revision = -1;
+            doUpdate = true;
+        }
+        else if ( revision < 0 || configs.shallTake( configPid, null, revision ) )
+        {
+            // run the plugins and cause the update
+            properties = getProperties( properties, service, configPid.toString(), null );
+            doUpdate = true;
+            revision = Math.abs( revision );
+        }
+        else
+        {
+            // new configuration is not a better match, don't update
+            doUpdate = false;
+        }
+
+        if ( doUpdate )
+        {
+            try
+            {
+                srv.updated( properties );
+                configs.record( configPid, null, revision );
+            }
+            catch ( Throwable t )
+            {
+                this.handleCallBackError( t, service, configPid );
+            }
+            finally
+            {
+                this.ungetRealService( service );
             }
         }
    }

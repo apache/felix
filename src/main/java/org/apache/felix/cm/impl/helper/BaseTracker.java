@@ -67,8 +67,9 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
             { ConfigurationManager.toString( reference ) } );
 
         final String[] pids = getServicePid( reference );
-        configure( reference, pids );
-        return createConfigurationMap( pids );
+        final ConfigurationMap<?> configurations = createConfigurationMap( pids );
+        configure( reference, pids, configurations );
+        return configurations;
     }
 
 
@@ -81,7 +82,7 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
         String[] pids = getServicePid( reference );
         if ( service.isDifferentPids( pids ) )
         {
-            configure( reference, pids );
+            configure( reference, pids, service );
             service.setConfiguredPids( pids );
         }
     }
@@ -96,11 +97,11 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     }
 
 
-    private void configure( ServiceReference<S> reference, String[] pids )
+    private void configure( ServiceReference<S> reference, String[] pids, ConfigurationMap<?> configurations )
     {
         if ( pids != null )
         {
-            this.cm.configure( pids, reference, managedServiceFactory );
+            this.cm.configure( pids, reference, managedServiceFactory, configurations );
         }
     }
 
@@ -165,17 +166,33 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
      * @param factoryPid The targeted factory PID or <code>null</code> for
      *      a non-factory configuration
      * @param properties The configuration properties, which may be
-     *      <code>null</code> for a non-factory configuration
-     * @param revision The configuration revision
+     *      <code>null</code> if this is the provisioning call upon
+     *      service registration of a ManagedService
+     * @param revision The configuration revision or -1 if there is no
+     *      configuration actually to provide.
+     * @param configurationMap The PID to configuration map for PIDs
+     *      used by the service to update
      *
      * @see {@link ManagedServiceTracker#provideConfiguration(ServiceReference, TargetedPID, TargetedPID, Dictionary, long)}
      * @see {@link ManagedServiceFactoryTracker#provideConfiguration(ServiceReference, TargetedPID, TargetedPID, Dictionary, long)}
      */
     public abstract void provideConfiguration( ServiceReference<S> service, TargetedPID configPid,
-        TargetedPID factoryPid, Dictionary<String, ?> properties, long revision );
+        TargetedPID factoryPid, Dictionary<String, ?> properties, long revision,
+        ConfigurationMap<?> configurationMap);
 
 
-    public abstract void removeConfiguration( ServiceReference<S> service, TargetedPID configPid, TargetedPID factoryPid );
+    /**
+     * Remove the configuration indicated by the {@code configPid} from
+     * the service.
+     *
+     * @param service The reference to the service from which the
+     *      configuration is to be removed.
+     * @param configPid The {@link TargetedPID} of the configuration
+     * @param factoryPid The {@link TargetedPID factory PID} of the
+     *      configuration. This may be {@code null} for a non-factory
+     *      configuration.
+     */
+    public abstract void removeConfiguration( ServiceReference<S> service, TargetedPID configPid, TargetedPID factoryPid);
 
 
     protected final S getRealService( ServiceReference<S> reference )

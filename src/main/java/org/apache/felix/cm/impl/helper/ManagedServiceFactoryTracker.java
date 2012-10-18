@@ -54,29 +54,47 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
 
     @Override
     public void provideConfiguration( ServiceReference<ManagedServiceFactory> reference, TargetedPID configPid,
-        TargetedPID factoryPid, Dictionary<String, ?> properties, long revision )
+        TargetedPID factoryPid, Dictionary<String, ?> properties, long revision, ConfigurationMap<?> configs )
     {
+        // Get the ManagedServiceFactory and terminate here if already
+        // unregistered from the framework concurrently
         ManagedServiceFactory service = getRealService( reference );
-        final ConfigurationMap configs = this.getService( reference );
-        if ( service != null && configs != null )
+        if (service == null) {
+            return;
+        }
+
+        // Get the Configuration-to-PID map from the parameter or from
+        // the service tracker. If not available, the service tracker
+        // already unregistered this service concurrently
+        if ( configs == null )
         {
-            if ( configs.shallTake( configPid, factoryPid, revision ) )
+            configs =  this.getService( reference );
+            if ( configs == null )
             {
-                try
-                {
-                    Dictionary props = getProperties( properties, reference, configPid.toString(),
-                        factoryPid.toString() );
-                    service.updated( configPid.toString(), props );
-                    configs.record( configPid, factoryPid, revision );
-                }
-                catch ( Throwable t )
-                {
-                    this.handleCallBackError( t, reference, configPid );
-                }
-                finally
-                {
-                    this.ungetRealService( reference );
-                }
+                return;
+            }
+        }
+
+        // Both the ManagedService to update and the Configuration-to-PID
+        // are available, so the service can be updated with the
+        // configuration (which may be null)
+
+        if ( configs.shallTake( configPid, factoryPid, revision ) )
+        {
+            try
+            {
+                Dictionary props = getProperties( properties, reference, configPid.toString(),
+                    factoryPid.toString() );
+                service.updated( configPid.toString(), props );
+                configs.record( configPid, factoryPid, revision );
+            }
+            catch ( Throwable t )
+            {
+                this.handleCallBackError( t, reference, configPid );
+            }
+            finally
+            {
+                this.ungetRealService( reference );
             }
         }
     }

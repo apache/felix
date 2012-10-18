@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 
-abstract class ConfigurationMap<T>
+public abstract class ConfigurationMap<T>
 {
     private Map<String, T> configurations;
 
