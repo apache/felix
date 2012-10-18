@@ -119,7 +119,7 @@ public class MetaDataReaderTest extends TestCase
     }
 
 
-    public void testWithInvalidNamespaceUri() throws IOException
+    public void testWithInvalidNamespaceUri()
     {
         String empty = "<metatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/datatype/v1.0.0\" "
             + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></metatype:MetaData>";
@@ -129,14 +129,14 @@ public class MetaDataReaderTest extends TestCase
             read( empty );
             fail( "Parse failure expected for unsupported namespace URI" );
         }
-        catch ( XmlPullParserException e )
+        catch ( IOException e )
         {
             // expected due to unsupported namespace URI
         }
     }
 
 
-    public void testWithInvalidNamespaceName() throws IOException
+    public void testWithInvalidNamespaceName()
     {
         String empty = "<datatype:MetaData xmlns:metatype=\"http://www.osgi.org/xmlns/metatype/v1.0.0\" "
             + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ></datatype:MetaData>";
@@ -146,7 +146,7 @@ public class MetaDataReaderTest extends TestCase
             read( empty );
             fail( "Parse failure expected for undefined namespace prefix" );
         }
-        catch ( XmlPullParserException e )
+        catch ( IOException e )
         {
             // expected due to undefined namespace prefix used
         }
@@ -230,7 +230,7 @@ public class MetaDataReaderTest extends TestCase
     }
 
 
-    private MetaData read( String data ) throws IOException, XmlPullParserException
+    private MetaData read( String data ) throws IOException
     {
         InputStream input = new ByteArrayInputStream( data.getBytes( "UTF-8" ) );
         return reader.parse( input );

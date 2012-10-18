@@ -30,7 +30,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeService;
-import org.xmlpull.v1.XmlPullParserException;
 
 
 /**
@@ -104,10 +103,6 @@ class MetaTypeServiceImpl implements MetaTypeService
                 {
                     cmti.addMetaData( metaData );
                 }
-            }
-            catch ( XmlPullParserException xppe )
-            {
-                Activator.log( LogService.LOG_ERROR, "fromDocuments: Error parsing document " + doc, xppe );
             }
             catch ( IOException ioe )
             {

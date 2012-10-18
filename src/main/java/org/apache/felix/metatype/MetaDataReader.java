@@ -105,11 +105,10 @@ public class MetaDataReader
      * @return A {@link MetaData} providing access to the
      *      raw contents of the XML document.
      *
-     * @throws IOException If an I/O error occurs accessing the stream.
-     * @throws XmlPullParserException If an error occurs parsing the XML
-     *      document.
+     * @throws IOException If an I/O error occurs accessing the stream or
+     *      parsing the XML document.
      */
-    public MetaData parse( URL url ) throws IOException, XmlPullParserException
+    public MetaData parse( URL url ) throws IOException
     {
         InputStream ins = null;
         try
@@ -122,6 +121,10 @@ public class MetaDataReader
                 md.setSource( url );
             }
             return md;
+        }
+        catch ( XmlPullParserException e )
+        {
+            throw new IOException( "XML parsing exception while reading metadata: " + e.getMessage() );
         }
         finally
         {
@@ -143,15 +146,15 @@ public class MetaDataReader
     /**
      * Checks if this document has a meta type name space.
      *
-     * @throws XmlPullParserException when there the meta type name space is not valid
+     * @throws IOException when there the meta type name space is not valid
      */
-    private void checkMetatypeNamespace() throws XmlPullParserException
+    private void checkMetatypeNamespace() throws IOException
     {
         final String namespace = this.parser.getNamespace();
         if ( namespace != null && namespace.length() > 0 && !NAMESPACE_1_0.equals( namespace )
             && !NAMESPACE_1_1.equals( namespace ) && !NAMESPACE_1_2.equals( namespace ) )
         {
-            throw new XmlPullParserException( "Unsupported Namespace " + namespace );
+            throw new IOException( "Unsupported Namespace " + namespace );
         }
     }
 
@@ -168,35 +171,40 @@ public class MetaDataReader
      * @return A {@link MetaData} providing access to the
      *      raw contents of the XML document.
      *
-     * @throws IOException If an I/O error occurrs accessing the stream.
-     * @throws XmlPullParserException If an error occurrs parsing the XML
-     *      document.
+     * @throws IOException If an I/O error occurs accessing the stream or
+     *      parsing the XML document.
      */
-    public MetaData parse( InputStream ins ) throws IOException, XmlPullParserException
+    public MetaData parse( InputStream ins ) throws IOException
     {
-        this.parser.setFeature( KXmlParser.FEATURE_PROCESS_NAMESPACES, true );
-
-        // set the parser input, use null encoding to force detection with <?xml?>
-        this.parser.setInput( ins, null );
-
         MetaData mti = null;
-
-        int eventType = this.parser.getEventType();
-        while ( eventType != XmlPullParser.END_DOCUMENT )
+        try
         {
-            if ( eventType == XmlPullParser.START_TAG )
+            this.parser.setFeature( KXmlParser.FEATURE_PROCESS_NAMESPACES, true );
+
+            // set the parser input, use null encoding to force detection with <?xml?>
+            this.parser.setInput( ins, null );
+
+            int eventType = this.parser.getEventType();
+            while ( eventType != XmlPullParser.END_DOCUMENT )
             {
-                if ( "MetaData".equals( this.parser.getName() ) )
+                if ( eventType == XmlPullParser.START_TAG )
                 {
-                    checkMetatypeNamespace();
-                    mti = this.readMetaData();
+                    if ( "MetaData".equals( this.parser.getName() ) )
+                    {
+                        checkMetatypeNamespace();
+                        mti = this.readMetaData();
+                    }
+                    else
+                    {
+                        this.ignoreElement();
+                    }
                 }
-                else
-                {
-                    this.ignoreElement();
-                }
+                eventType = this.parser.next();
             }
-            eventType = this.parser.next();
+        }
+        catch ( XmlPullParserException e )
+        {
+            throw new IOException( "XML parsing exception while reading metadata: " + e.getMessage() );
         }
 
         return mti;
