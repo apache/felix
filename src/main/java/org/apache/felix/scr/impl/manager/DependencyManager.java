@@ -652,8 +652,6 @@ public class DependencyManager implements ServiceListener, Reference
     void disable()
     {
         unregisterServiceListener();
-
-        m_size.set( 0 );
     }
 
     void deactivate()
