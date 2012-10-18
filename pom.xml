@@ -1,0 +1,230 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+     <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>2.1</version>
+        <relativePath>../pom/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>org.apache.felix.jaas</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+
+    <name>Apache Felix JAAS Support</name>
+    <description />
+
+     <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/jaas</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/jaas</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/jaas</url>
+    </scm>
+
+    <properties>
+    </properties>
+    
+    <build>
+        <plugins>
+            <!--
+                We do not use DS but the SCR plugin is used to generate the
+                metatype.xml from the SCR annotations
+            -->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+                <version>1.7.4</version>
+                <executions>
+                    <execution>
+                        <id>generate-scr-scrdescriptor</id>
+                        <goals>
+                            <goal>scr</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5.1</version>
+                <!-- We use the new JDK 1.6 ConfigurationSpi API so can set the version to 1.6-->
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>
+                            ${project.artifactId}
+                        </Bundle-SymbolicName>
+                        <Bundle-Vendor>
+                            The Apache Software Foundation
+                        </Bundle-Vendor>
+                        <Bundle-Activator>
+                            org.apache.felix.jaas.internal.Activator
+                        </Bundle-Activator>
+                        <_removeheaders>
+                            Embed-Dependency,Private-Package,Include-Resource
+                        </_removeheaders>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <!-- Create jar which can be put in boot classpath to enable use of
+            ProxyLoginModule in normal JAAS mode of authentication -->
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                <execution>
+                    <id>boot-library</id>
+                    <goals><goal>jar</goal></goals>
+                    <phase>package</phase>
+                    <configuration>
+                        <classifier>boot</classifier>
+                        <includes>
+                            <include>org/apache/felix/jaas/boot/*.class</include>
+                            <include>META-INF/NOTICE</include>
+                            <include>META-INF/DEPENDENCIES</include>
+                            <include>META-INF/LICENSE</include>
+                        </includes>
+                    </configuration>
+                </execution>
+            </executions>
+            </plugin>
+
+            <!-- Required for pax exam-->
+            <plugin>
+                <groupId>org.apache.servicemix.tooling</groupId>
+                <artifactId>depends-maven-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <id>generate-depends-file</id>
+                        <goals>
+                            <goal>generate-depends-file</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>1.50.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.3</version>
+        </dependency>
+
+        <!-- testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+            <version>4.10</version>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <!--
+            copy the package such that IDEs may easily use it without
+            setting the system property
+        -->
+        <profile>
+            <id>ide</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>scr-file-create</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <copy file="${project.build.directory}/${project.build.finalName}.jar"
+                                              tofile="${project.build.directory}/jaas.jar" />
+                                        <copy file="${project.build.directory}/${project.build.finalName}-boot.jar"
+                                              tofile="${project.build.directory}/jaas-boot.jar" />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>felix</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.framework</artifactId>
+                    <version>4.0.2</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>equinox</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.eclipse</groupId>
+                    <artifactId>osgi</artifactId>
+                    <version>3.7.1.R37x_v20110808-1106</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+</project>
