@@ -122,6 +122,7 @@
         <module>webconsole-plugins/event</module>
         <module>fileinstall</module>
         <module>useradmin</module>
+        <module>jaas</module>
 
 		<module>gogo</module>
 
