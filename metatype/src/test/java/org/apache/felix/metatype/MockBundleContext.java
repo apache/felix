@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -425,6 +425,12 @@ public class MockBundleContext implements BundleContext
         public boolean isAssignableTo( Bundle arg0, String arg1 )
         {
             return false;
+        }
+
+
+        public int compareTo( Object reference )
+        {
+            return -1;
         }
 
     }
