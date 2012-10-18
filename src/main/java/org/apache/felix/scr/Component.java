@@ -43,7 +43,7 @@ public interface Component
      * The Component is being enabled (value is 512). After the component has
      * been enabled it enters the {@link #STATE_UNSATISFIED} state.
      * @since 1.2
-     * @deprecated since 7.0
+     * @deprecated since 1.8.0
      */
     static final int STATE_ENABLING = 512;
 
@@ -66,7 +66,7 @@ public interface Component
      * The Component is currently being activated either because it has been
      * enabled or because any dependency which was previously unsatisfied has
      * become satisfied (value is 8).
-     * @deprecated since 7.0
+     * @deprecated since 1.8.0 transient states are no longer used
      */
     static final int STATE_ACTIVATING = 8;
 
@@ -98,7 +98,7 @@ public interface Component
      * The Component is being deactivated either because it is being disabled
      * or because a dependency is not satisfied any more (value is 128). After
      * deactivation the Component enters the {@link #STATE_UNSATISFIED} state.
-     * @deprecated since 7.0
+     * @deprecated since 1.8.0 transient states are no longer used
      */
     static final int STATE_DEACTIVATING = 128;
 
@@ -106,7 +106,7 @@ public interface Component
      * The Component is being disabled (value is 1024). After the component has
      * been disabled it enters the {@link #STATE_DISABLED} state.
      * @since 1.2
-     * @deprecated since 7.0
+     * @deprecated since 1.8.0 transient states are no longer used
      */
     static final int STATE_DISABLING = 1024;
 
@@ -114,7 +114,7 @@ public interface Component
      * The Component is being disposed off (value is 2048). After the component
      * has been disposed off it enters the {@link #STATE_DESTROYED} state.
      * @since 1.2
-     * @deprecated since 7.0
+     * @deprecated since 1.8.0 transient states are no longer used
      */
     static final int STATE_DISPOSING = 2048;
 
