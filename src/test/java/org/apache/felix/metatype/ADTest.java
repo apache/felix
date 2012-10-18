@@ -130,6 +130,7 @@ public class ADTest extends TestCase
         assertEquals( AttributeDefinition.CHARACTER, AD.toType( "Char" ) );
         assertEquals( AttributeDefinition.BOOLEAN, AD.toType( "Boolean" ) );
         assertEquals( AttributeDefinition.SHORT, AD.toType( "Short" ) );
+        assertEquals( AttributeDefinition.PASSWORD, AD.toType( "Password" ) );
         assertEquals( AttributeDefinition.STRING, AD.toType( "JohnDoe" ) );
     }
 }
