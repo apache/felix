@@ -50,4 +50,10 @@ public class RefPair
     {
         this.serviceObject = serviceObject;
     }
+
+    @Override
+    public String toString()
+    {
+        return "[RefPair: ref: [" + ref + "] service: [" + serviceObject + "]]";
+    }
 }
