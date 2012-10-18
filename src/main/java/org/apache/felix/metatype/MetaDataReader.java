@@ -84,7 +84,7 @@ public class MetaDataReader
     private final Set DESIGNATEOBJECT_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "ocdref" }));
     private final Set METADATA_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "localization" }));
     private final Set OCD_ATTRIBUTES = new HashSet(Arrays.asList(new String[] { "name", "description", "id" }));
-    
+
 
     /**
      * Parses the XML document provided by the <code>url</code>. The XML document
@@ -196,7 +196,7 @@ public class MetaDataReader
         return mti;
     }
 
-    
+
     private void readOptionalAttributes(OptionalAttributes entity, Set attributes) {
         int count = this.parser.getAttributeCount();
         for (int i = 0; i < count; i++)
@@ -209,13 +209,13 @@ public class MetaDataReader
             }
         }
     }
-    
+
 
     private MetaData readMetaData() throws IOException, XmlPullParserException
     {
         MetaData mti = this.createMetaData();
         mti.setLocalePrefix( this.getOptionalAttribute( "localization" ) );
-        
+
         readOptionalAttributes(mti, METADATA_ATTRIBUTES);
 
         int eventType = this.parser.next();
@@ -258,7 +258,7 @@ public class MetaDataReader
         ocd.setId( this.getRequiredAttribute( "id" ) );
         ocd.setName( this.getRequiredAttribute( "name" ) );
         ocd.setDescription( this.getOptionalAttribute( "description" ) );
-        
+
         readOptionalAttributes(ocd, OCD_ATTRIBUTES);
 
         int eventType = this.parser.next();
@@ -310,13 +310,20 @@ public class MetaDataReader
 
     private Designate readDesignate() throws IOException, XmlPullParserException
     {
+        final String pid = this.getOptionalAttribute( "pid" );
+        final String factoryPid = this.getOptionalAttribute( "factoryPid" );
+        if ( pid == null && factoryPid == null )
+        {
+            missingAttribute( "pid or factoryPid" );
+        }
+
         Designate designate = this.createDesignate();
-        designate.setPid( this.getRequiredAttribute( "pid" ) );
-        designate.setFactoryPid( this.getOptionalAttribute( "factoryPid" ) );
+        designate.setPid( pid );
+        designate.setFactoryPid( factoryPid );
         designate.setBundleLocation( this.getOptionalAttribute( "bundle" ) );
         designate.setOptional( this.getOptionalAttribute( "optional", false ) );
         designate.setMerge( this.getOptionalAttribute( "merge", false ) );
-        
+
         readOptionalAttributes(designate, DESIGNATE_ATTRIBUTES);
 
         int eventType = this.parser.next();
@@ -363,7 +370,7 @@ public class MetaDataReader
         ad.setRequired( this.getOptionalAttribute( "required", true ) );
 
         readOptionalAttributes(ad, AD_ATTRIBUTES);
-        
+
         Map options = new LinkedHashMap();
         int eventType = this.parser.next();
         while ( eventType != XmlPullParser.END_DOCUMENT )
@@ -405,7 +412,7 @@ public class MetaDataReader
     {
         DesignateObject oh = this.createDesignateObject();
         oh.setOcdRef( this.getRequiredAttribute( "ocdref" ) );
-        
+
         readOptionalAttributes(oh, DESIGNATEOBJECT_ATTRIBUTES);
 
         int eventType = this.parser.next();
