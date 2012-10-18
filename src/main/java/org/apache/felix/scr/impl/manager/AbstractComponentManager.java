@@ -1418,6 +1418,11 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             // reset the component id now (a disabled component has none)
             acm.unregisterComponentId();
         }
+
+        public boolean isSatisfied()
+        {
+            return false;
+        }
     }
 
     protected static final class Disabled extends State
@@ -1681,7 +1686,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             // component to remain in the deactivating state !
             doDeactivate(acm, reason);
 
-            if ( acm.state() == this )
+            if ( acm.state().isSatisfied() )
             {
                 acm.changeState( Unsatisfied.getInstance() );
             }
@@ -1702,6 +1707,11 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             acm.changeState( Disposed.getInstance() );
         }
 
+        @Override
+        public boolean isSatisfied()
+        {
+            return true;
+        }
     }
 
     /**
