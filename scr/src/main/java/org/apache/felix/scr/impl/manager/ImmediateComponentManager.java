@@ -150,7 +150,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             disposeImplementationObject( m_implementationObject, m_componentContext, reason );
             m_useCount = 0;
             m_implementationObject = null;
-            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent", new Object[] { getName() },  null );
+            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), reason },  null );
             m_componentContext = null;
             m_properties = null;
             m_serviceProperties = null;

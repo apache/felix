@@ -234,8 +234,8 @@ abstract class BaseMethod
             {
                 final Object[] params = getParameters(m_method, rawParameter);
                 Object result = m_method.invoke(componentInstance, params);
-                getLogger().log( LogService.LOG_DEBUG, "invoked {0}: {1}", new Object[]
-                    { getMethodNamePrefix(), getMethodName() }, null );
+                getLogger().log( LogService.LOG_DEBUG, "invoked {0}: {1}: parameters {2}", new Object[]
+                    { getMethodNamePrefix(), getMethodName(), Arrays.asList( params ) }, null );
                 return new MethodResult((m_method.getReturnType() != Void.TYPE), (Map) result);
             }
             else
