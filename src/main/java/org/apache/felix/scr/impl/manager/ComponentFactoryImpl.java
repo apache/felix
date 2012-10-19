@@ -81,7 +81,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     private volatile Dictionary m_configuration;
     
     /**
-     * Flag telling if our component factory is configured.
+     * Flag telling if our component factory is configured from config admin.
      * We are configured when configuration policy is required and we have received the
      * config admin properties, or when configuration policy is optional or ignored.
      */
@@ -230,9 +230,18 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
             }
         }
 
+        // add target properties from configuration (if we have one)        
+        for ( Object key : Collections.list( m_configuration.keys() ) )
+        {
+            if ( key.toString().endsWith( ".target" ) )
+            {
+                props.put( key, m_configuration.get( key ) );
+            }
+        }
+
         return props;
     }
-
+    
     public void setServiceProperties( Dictionary serviceProperties )
     {
         throw new IllegalStateException( "ComponentFactory service properties are immutable" );
@@ -376,23 +385,22 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
                 
                 log( LogService.LOG_INFO, "Current ComponentFactory state={0}", new Object[]
                     { getState() }, null );
-
-                // Update our target filters.
-                log( LogService.LOG_DEBUG, "Updating target filters", null );                    
-                super.updateTargets( m_configuration ); 
                                     
                 // If we are active, but if some config target filters don't match anymore 
                 // any required references, then deactivate.                
                 if ( getState() == STATE_FACTORY )
                 {
+                    log( LogService.LOG_INFO, "Verifying if Active Component Factory is still satisfied", null );
+
+                    // First update target filters.
+                    super.updateTargets( getProperties() );
+
+                    // Next, verify dependencies
                     if ( !verifyDependencyManagers( m_configuration ) )
                     {
-                        if ( ( getState() & STATE_DISPOSED ) == 0 )
-                        {
-                            log( LogService.LOG_DEBUG,
-                                "Component Factory target filters not satisfied anymore: deactivating", null );
-                            deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE );
-                        }
+                        log( LogService.LOG_DEBUG,
+                            "Component Factory target filters not satisfied anymore: deactivating", null );
+                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE );
                         return;
                     }
                 }
