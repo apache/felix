@@ -1079,9 +1079,6 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         {
             DependencyManager dm = ( DependencyManager ) it.next();
 
-            // ensure the target filter is correctly set
-//            dm.setTargetFilter( properties );
-
             if ( !dm.hasGetPermission() )
             {
                 // bundle has no service get permission
@@ -1542,6 +1539,10 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                     null );
                 return true;
             }
+
+            // Update our target filters.
+            acm.log( LogService.LOG_DEBUG, "Updating target filters", null );
+            acm.updateTargets( acm.getProperties() );
 
             // Before creating the implementation object, we are going to
             // test if all the mandatory dependencies are satisfied
