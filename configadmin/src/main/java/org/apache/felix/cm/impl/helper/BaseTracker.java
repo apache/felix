@@ -82,8 +82,8 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
         String[] pids = getServicePid( reference );
         if ( service.isDifferentPids( pids ) )
         {
-            configure( reference, pids, service );
             service.setConfiguredPids( pids );
+            configure( reference, pids, service );
         }
     }
 
