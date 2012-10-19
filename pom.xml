@@ -121,21 +121,21 @@
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-container-forked</artifactId>
-            <version>2.4.0.RC1</version>
+            <version>2.4.0</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-junit4</artifactId>
-            <version>2.4.0.RC1</version>
+            <version>2.4.0</version>
             <scope>test</scope>
         </dependency>
     
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-link-mvn</artifactId>
-            <version>2.4.0.RC1</version>
+            <version>2.4.0</version>
             <scope>test</scope>
         </dependency>
     
@@ -186,7 +186,7 @@
         <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.junit</artifactId>
-            <version>4.7_2</version>
+            <version>4.9_2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
