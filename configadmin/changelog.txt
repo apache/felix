@@ -1,3 +1,25 @@
+Changes from 1.4.0 to 1.6.0
+----------------------------
+
+** Bug
+    * [FELIX-3532] - Source artifact is not being generated
+    * [FELIX-3596] - Config Admin should track SynchronousConfigurationListeners
+    * [FELIX-3721] - Configuration not always provided upon initial service registration
+
+** Improvement
+    * [FELIX-3577] - Refactor helpers and service trackers
+    * [FELIX-3622] - ConfigurationManager.listConfigurations may not always properly log the configuration PID
+
+** Task
+    * [FELIX-3479] - [Config Admin 1.5] Implement Configuration.getChangeCount()
+    * [FELIX-3480] - [Config Admin 1.5] Implement support for SynchronousConfigurationListener
+    * [FELIX-3481] - [Config Admin 1.5] Implement support for Targeted PIDs
+    * [FELIX-3483] - [Config Admin 1.5] Export cm API at version 1.5
+    * [FELIX-3554] - Prevent same configuration to be delivered multiple times
+    * [FELIX-3562] - Use OSGi Configuration Admin 1.5 API classes
+    * [FELIX-3578] - ConfigAdmin Maven build does not have Maven convention *-sources.jar artifacts
+
+
 Changes from 1.2.8 to 1.4.0
 ----------------------------
 
