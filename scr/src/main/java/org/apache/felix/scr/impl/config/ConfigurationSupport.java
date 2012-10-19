@@ -82,30 +82,45 @@ public class ConfigurationSupport implements ConfigurationListener
             final ServiceReference caRef = bundleContext.getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
             if (caRef != null)
             {
-                final ConfigurationAdmin ca = (ConfigurationAdmin) bundleContext.getService(caRef);
-                if (ca != null)
+                final Object cao = bundleContext.getService(caRef);
+                if (cao != null)
                 {
                     try
                     {
-                        final Configuration[] factory = findFactoryConfigurations(ca, confPid);
-                        if (factory != null)
+                        if ( cao instanceof ConfigurationAdmin )
                         {
-                            for (int i = 0; i < factory.length; i++)
+                            final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
+                            final Configuration[] factory = findFactoryConfigurations(ca, confPid);
+                            if (factory != null)
                             {
-                                final String pid = factory[i].getPid();
-                                final Dictionary props = getConfiguration(ca, pid, bundleLocation);
-                                holder.configurationUpdated(pid, props);
+                                for (int i = 0; i < factory.length; i++)
+                                {
+                                    final String pid = factory[i].getPid();
+                                    final Dictionary props = getConfiguration(ca, pid, bundleLocation);
+                                    holder.configurationUpdated(pid, props);
+                                }
+                            }
+                            else
+                            {
+                                // check for configuration and configure the holder
+                                final Configuration singleton = findSingletonConfiguration(ca, confPid);
+                                if (singleton != null)
+                                {
+                                    final Dictionary props = getConfiguration(ca, confPid, bundleLocation);
+                                    holder.configurationUpdated(confPid, props);
+                                }
                             }
                         }
                         else
                         {
-                            // check for configuration and configure the holder
-                            final Configuration singleton = findSingletonConfiguration(ca, confPid);
-                            if (singleton != null)
-                            {
-                                final Dictionary props = getConfiguration(ca, confPid, bundleLocation);
-                                holder.configurationUpdated(confPid, props);
-                            }
+                            Activator.log( LogService.LOG_WARNING, null, "Cannot configure component "
+                                + holder.getComponentMetadata().getName(), null );
+                            Activator.log( LogService.LOG_WARNING, null,
+                                "Component Bundle's Configuration Admin is not compatible with "
+                                    + "ours. This happens if multiple Configuration Admin API versions "
+                                    + "are deployed and different bundles wire to different versions", null );
+
+                            Class<?> caoc = cao.getClass();
                         }
                     }
                     finally
@@ -211,21 +226,35 @@ public class ConfigurationSupport implements ConfigurationListener
                     {
                         try
                         {
-                            final ConfigurationAdmin ca = (ConfigurationAdmin) bundleContext.getService(caRef);
-                            if (ca != null)
+                            final Object cao = bundleContext.getService(caRef);
+                            if (cao != null)
                             {
                                 try
                                 {
-                                    final Dictionary dict = getConfiguration(ca, pid, bundleContext.getBundle()
-                                        .getLocation());
-                                    if (dict != null)
+                                    if ( cao instanceof ConfigurationAdmin )
                                     {
-                                        cm.configurationUpdated(pid, dict);
+                                        final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
+                                        final Dictionary dict = getConfiguration( ca, pid, bundleContext
+                                            .getBundle().getLocation() );
+                                        if ( dict != null )
+                                        {
+                                            cm.configurationUpdated( pid, dict );
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Activator.log( LogService.LOG_WARNING, null, "Cannot reconfigure component "
+                                            + cm.getComponentMetadata().getName(), null );
+                                        Activator.log( LogService.LOG_WARNING, null,
+                                            "Component Bundle's Configuration Admin is not compatible with " +
+                                            "ours. This happens if multiple Configuration Admin API versions " +
+                                            "are deployed and different bundles wire to different versions",
+                                            null );
                                     }
                                 }
                                 finally
                                 {
-                                    bundleContext.ungetService(caRef);
+                                    bundleContext.ungetService( caRef );
                                 }
                             }
                         }
