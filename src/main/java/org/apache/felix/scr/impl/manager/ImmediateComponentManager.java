@@ -670,6 +670,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                         }
                         return result;
                     }
+                    implementationObject = m_implementationObject;
                 }
                 finally
                 {
