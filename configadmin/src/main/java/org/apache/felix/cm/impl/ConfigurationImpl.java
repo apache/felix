@@ -319,7 +319,7 @@ public class ConfigurationImpl extends ConfigurationBase
      *
      * @param deepCopy
      *            <code>true</code> if a deep copy is to be returned.
-     * @return
+     * @return the configuration properties
      */
     public Dictionary getProperties( boolean deepCopy )
     {
