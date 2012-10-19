@@ -81,7 +81,7 @@ import org.osgi.framework.Constants;
  * <b>Mulithreading Issues</b>
  * <p>
  * In a multithreaded environment the {@link #store(String, Dictionary)} and
- * {@link #load(File)} methods may be called at the the quasi-same time for the
+ * {@link #load(String)} methods may be called at the the quasi-same time for the
  * same configuration PID. It may no happen, that the store method starts
  * writing the file and the load method might at the same time read from the
  * file currently being written and thus loading corrupt data (if data is
@@ -94,7 +94,7 @@ import org.osgi.framework.Constants;
  * with file extension <code>.tmp</code>. When done, the file is renamed to
  * actual configuration file name as implied by the PID. This last step of
  * renaming the file is synchronized on the FilePersistenceManager instance.</li>
- * <li>The {@link #load(File)} method is completeley synchronized on the
+ * <li>The {@link #load(String)} method is completeley synchronized on the
  * FilePersistenceManager instance such that the {@link #store} method might
  * inadvertantly try to replace the file while it is being read.</li>
  * <li>Finally the <code>Iterator</code> returned by {@link #getDictionaries()}

@@ -84,7 +84,7 @@ public class ConfigurationAdapter implements Configuration
 
     /**
      * @param bundleLocation
-     * @see org.apache.felix.cm.impl.ConfigurationImpl#setBundleLocation(java.lang.String)
+     * @see org.apache.felix.cm.impl.ConfigurationImpl#setStaticBundleLocation(String)
      */
     public void setBundleLocation( String bundleLocation )
     {

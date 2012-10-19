@@ -173,8 +173,8 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
      * @param configurationMap The PID to configuration map for PIDs
      *      used by the service to update
      *
-     * @see {@link ManagedServiceTracker#provideConfiguration(ServiceReference, TargetedPID, TargetedPID, Dictionary, long)}
-     * @see {@link ManagedServiceFactoryTracker#provideConfiguration(ServiceReference, TargetedPID, TargetedPID, Dictionary, long)}
+     * @see ManagedServiceTracker#provideConfiguration(ServiceReference, TargetedPID, TargetedPID, Dictionary, long, ConfigurationMap)
+     * @see ManagedServiceFactoryTracker#provideConfiguration(ServiceReference, TargetedPID, TargetedPID, Dictionary, long, ConfigurationMap)
      */
     public abstract void provideConfiguration( ServiceReference<S> service, TargetedPID configPid,
         TargetedPID factoryPid, Dictionary<String, ?> properties, long revision,
