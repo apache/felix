@@ -25,6 +25,7 @@ Changes from 1.6.0 to 1.6.2
     * [FELIX-3409] - with permissions enabled, AbstractComponentManager.verifyDependencyManagers is wrong.
     * [FELIX-3410] - ImmediateComponentManager should use any non-ignored configuration to try to activate a component.
     * [FELIX-3456] - Component ignores required static service addition when in Activating state
+    * [FELIX-3700] - DS Factory Components don't support configuration-policy = require
 
 ** Improvement
     * [FELIX-2895] - Allow the use of a property to tell SCR to always discover Service Component files even if there's no wildcard in the name
