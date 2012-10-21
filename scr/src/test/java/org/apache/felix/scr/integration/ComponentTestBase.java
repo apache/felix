@@ -127,7 +127,8 @@ public abstract class ComponentTestBase
                                             "org.apache.felix.scr.integration.components.activatesignature," +
                                             "org.apache.felix.scr.integration.components.circular," +
                                             "org.apache.felix.scr.integration.components.concurrency," +
-                                            "org.apache.felix.scr.integration.components.felix3680");
+                                            "org.apache.felix.scr.integration.components.felix3680," +
+                                            "org.apache.felix.scr.integration.components.felix3680_2");
         builder.setHeader("Import-Package", "org.apache.felix.scr,org.apache.felix.scr.component;mandatory:=\"status\"; status=\"provisional\"");
         builder.setHeader("Bundle-ManifestVersion", "2");
         return builder;
@@ -398,7 +399,8 @@ public abstract class ComponentTestBase
                         "org.apache.felix.scr.integration.components.activatesignature," +
                         "org.apache.felix.scr.integration.components.circular," +
                         "org.apache.felix.scr.integration.components.concurrency," +
-                        "org.apache.felix.scr.integration.components.felix3680")
+                        "org.apache.felix.scr.integration.components.felix3680," +
+                        "org.apache.felix.scr.integration.components.felix3680_2")
                 .set("Service-Component", "OSGI-INF/components.xml")
             .build(withBnd());
 
@@ -738,7 +740,6 @@ public abstract class ComponentTestBase
                     }
                     m_out.println( sw.toString() );
                     m_out.flush();
-
                 }
             }
             catch ( InterruptedException e )
