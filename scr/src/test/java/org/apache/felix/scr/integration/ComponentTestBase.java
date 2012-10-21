@@ -737,6 +737,7 @@ public abstract class ComponentTestBase
                         entry.getError().printStackTrace( pw );
                     }
                     m_out.println( sw.toString() );
+                    m_out.flush();
 
                 }
             }
