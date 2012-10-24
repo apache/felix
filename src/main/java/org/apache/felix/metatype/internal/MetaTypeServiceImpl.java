@@ -49,7 +49,6 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
     /** The <code>BundleContext</code> of the providing this service. */
     private final BundleContext bundleContext;
 
-
     private final Map bundleMetaTypeInformation;
 
 
@@ -67,14 +66,19 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
         bundleContext.addBundleListener( this );
     }
 
-    void dispose() {
+
+    void dispose()
+    {
         MetaTypeInformationImpl[] mti;
-        synchronized(bundleMetaTypeInformation) {
-            mti = (MetaTypeInformationImpl[]) this.bundleMetaTypeInformation.values().toArray(new MetaTypeInformationImpl[bundleMetaTypeInformation.values().size()]);
+        synchronized ( bundleMetaTypeInformation )
+        {
+            mti = ( MetaTypeInformationImpl[] ) this.bundleMetaTypeInformation.values().toArray(
+                new MetaTypeInformationImpl[bundleMetaTypeInformation.values().size()] );
             this.bundleMetaTypeInformation.clear();
         }
 
-        for (int i = 0; i < mti.length; i++) {
+        for ( int i = 0; i < mti.length; i++ )
+        {
             mti[i].dispose();
         }
     }
