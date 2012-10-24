@@ -113,8 +113,6 @@ public class LocalizedObjectClassDefinition extends LocalizedBase implements Obj
 
 
     /**
-     * @param size
-     * @throws IOException
      * @see org.osgi.service.metatype.ObjectClassDefinition#getIcon(int)
      */
     public InputStream getIcon( int desiredSize ) throws IOException
