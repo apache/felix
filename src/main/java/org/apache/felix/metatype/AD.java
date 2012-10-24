@@ -181,32 +181,81 @@ public class AD extends OptionalAttributes
             return null;
         }
 
-        Comparable value = convertToType( valueString );
-        if ( value == null )
+        // min/max for strings and passwords indicates the length
+        final Comparable value;
+        if ( getType() == AttributeDefinition.STRING || getType() == AttributeDefinition.PASSWORD )
         {
-            if ( isRequired() )
+            if ( valueString == null )
             {
-                return VALIDATE_MISSING;
+                if ( isRequired() )
+                {
+                    return VALIDATE_MISSING;
+                }
+
+                return ""; // accept null value
             }
 
-            return ""; // accept null value
-        }
-
-        Comparable other = convertToType( getMin() );
-        if ( other != null )
-        {
-            if ( value.compareTo( other ) < 0 )
+            if ( getMin() != null )
             {
-                return VALIDATE_LESS_THAN_MINIMUM;
+                try
+                {
+                    if ( valueString.length() < Integer.parseInt( getMin() ) )
+                    {
+                        return VALIDATE_LESS_THAN_MINIMUM;
+                    }
+                }
+                catch ( NumberFormatException nfe )
+                {
+                    // cannot check min length
+                }
             }
-        }
 
-        other = convertToType( getMax() );
-        if ( other != null )
-        {
-            if ( value.compareTo( other ) > 0 )
+            if ( getMax() != null )
             {
-                return VALIDATE_GREATER_THAN_MAXIMUM;
+                try
+                {
+                    if ( valueString.length() > Integer.parseInt( getMax() ) )
+                    {
+                        return VALIDATE_GREATER_THAN_MAXIMUM;
+                    }
+                }
+                catch ( NumberFormatException nfe )
+                {
+                    // cannot check min length
+                }
+            }
+
+            value = valueString;
+        }
+        else
+        {
+            value = convertToType( valueString );
+            if ( value == null )
+            {
+                if ( isRequired() )
+                {
+                    return VALIDATE_MISSING;
+                }
+
+                return ""; // accept null value
+            }
+
+            Comparable other = convertToType( getMin() );
+            if ( other != null )
+            {
+                if ( value.compareTo( other ) < 0 )
+                {
+                    return VALIDATE_LESS_THAN_MINIMUM;
+                }
+            }
+
+            other = convertToType( getMax() );
+            if ( other != null )
+            {
+                if ( value.compareTo( other ) > 0 )
+                {
+                    return VALIDATE_GREATER_THAN_MAXIMUM;
+                }
             }
         }
 
@@ -215,7 +264,7 @@ public class AD extends OptionalAttributes
         {
             for ( int i = 0; i < optionValues.length; i++ )
             {
-                other = convertToType( optionValues[i] );
+                Comparable other = convertToType( optionValues[i] );
                 if ( value.compareTo( other ) == 0 )
                 {
                     // one of the option values
