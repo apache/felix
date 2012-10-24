@@ -19,7 +19,15 @@
 package org.apache.felix.metatype.internal;
 
 
-import org.osgi.framework.*;
+import java.util.Collection;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.MetaTypeProvider;
 
@@ -35,6 +43,10 @@ import org.osgi.service.metatype.MetaTypeProvider;
 public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implements ServiceListener
 {
 
+    private static final String MANAGED_SERVICE = "org.osgi.service.cm.ManagedService";
+
+    private static final String MANAGED_SERVICE_FACTORY = "org.osgi.service.cm.ManagedServiceFactory";
+
     /**
      * The filter specification to find <code>ManagedService</code>s and
      * <code>ManagedServiceFactory</code>s as well as to register a service
@@ -43,7 +55,8 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
      * We use the hard coded class name here to not create a dependency on the
      * ConfigurationAdmin service, which may not be available.
      */
-    private static final String FILTER = "(|(objectClass=org.osgi.service.cm.ManagedService)(objectClass=org.osgi.service.cm.ManagedServiceFactory))";
+    private static final String FILTER = "(|(objectClass=" + MANAGED_SERVICE + ")(objectClass="
+        + MANAGED_SERVICE_FACTORY + "))";
 
     /**
      * The <code>BundleContext</code> used to get and unget services which
@@ -105,6 +118,13 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
     }
 
 
+    void dispose()
+    {
+        this.bundleContext.removeServiceListener( this );
+        super.dispose();
+    }
+
+
     // ---------- ServiceListener ----------------------------------------------
 
     /**
@@ -160,21 +180,27 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
             String factoryPid = ( String ) serviceRef.getProperty( SERVICE_FACTORYPID );
             if ( factoryPid != null )
             {
-                addFactoryPids( new String[]
-                    { factoryPid } );
-                addMetaTypeProvider( factoryPid, mtp );
+                addFactoryMetaTypeProvider( new String[]
+                    { factoryPid }, mtp );
                 ungetService = false;
             }
             else
             {
                 // 2. check for a service PID
-                String pid = ( String ) serviceRef.getProperty( Constants.SERVICE_PID );
-                if ( pid != null )
+                String[] pids = getServicePids( serviceRef );
+                if ( pids != null )
                 {
-                    addPids( new String[]
-                        { pid } );
-                    addMetaTypeProvider( pid, mtp );
-                    ungetService = false;
+                    if ( isService( serviceRef, MANAGED_SERVICE ) )
+                    {
+                        addSingletonMetaTypeProvider( pids, mtp );
+                        ungetService = false;
+                    }
+
+                    if ( isService( serviceRef, MANAGED_SERVICE_FACTORY ) )
+                    {
+                        addFactoryMetaTypeProvider( pids, mtp );
+                        ungetService = false;
+                    }
                 }
             }
         }
@@ -208,17 +234,24 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
         String factoryPid = ( String ) serviceRef.getProperty( SERVICE_FACTORYPID );
         if ( factoryPid != null )
         {
-            ungetService = removeMetaTypeProvider( factoryPid ) != null;
-            removeFactoryPid( factoryPid );
+            ungetService = removeFactoryMetaTypeProvider( new String[]
+                { factoryPid } );
         }
         else
         {
             // 2. check for a service PID
-            String pid = ( String ) serviceRef.getProperty( Constants.SERVICE_PID );
-            if ( pid != null )
+            String[] pids = getServicePids( serviceRef );
+            if ( pids != null )
             {
-                ungetService = removeMetaTypeProvider( pid ) != null;
-                removePid( pid );
+                if ( isService( serviceRef, MANAGED_SERVICE ) )
+                {
+                    ungetService |= removeSingletonMetaTypeProvider( pids );
+                }
+
+                if ( isService( serviceRef, MANAGED_SERVICE_FACTORY ) )
+                {
+                    ungetService |= removeFactoryMetaTypeProvider( pids );
+                }
             }
         }
 
@@ -227,5 +260,63 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
         {
             bundleContext.ungetService( serviceRef );
         }
+    }
+
+
+    static String[] getServicePids( final ServiceReference ref )
+    {
+        return getStringPlus( ref, Constants.SERVICE_PID );
+    }
+
+
+    static String[] getStringPlus( final ServiceReference ref, final String propertyName )
+    {
+        final String[] res;
+        Object prop = ref.getProperty( propertyName );
+        if ( prop == null )
+        {
+            res = null;
+        }
+        else if ( prop instanceof String )
+        {
+            res = new String[]
+                { ( String ) prop };
+        }
+        else if ( prop instanceof Collection )
+        {
+            final Object[] col = ( ( Collection ) prop ).toArray();
+            res = new String[col.length];
+            for ( int i = 0; i < res.length; i++ )
+            {
+                res[i] = String.valueOf( col[i] );
+            }
+        }
+        else if ( prop.getClass().isArray() && String.class.equals( prop.getClass().getComponentType() ) )
+        {
+            res = ( String[] ) prop;
+        }
+        else // unsupported type of property
+        {
+            res = null;
+        }
+
+        return res;
+    }
+
+
+    static boolean isService( final ServiceReference ref, final String type )
+    {
+        String[] oc = ( String[] ) ref.getProperty( Constants.OBJECTCLASS );
+        if ( oc != null )
+        {
+            for ( int i = 0; i < oc.length; i++ )
+            {
+                if ( oc[i].equals( type ) )
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
