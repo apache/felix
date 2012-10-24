@@ -192,8 +192,13 @@ public class Activator implements BundleActivator
 
         if ( sr != null )
         {
-            String name = ( String ) sr.getProperty( Constants.SERVICE_PID );
-            if ( name == null )
+            final String name;
+            String[] pids = ServiceMetaTypeInformation.getServicePids( sr );
+            if ( pids != null )
+            {
+                name = pids[0];
+            }
+            else
             {
                 name = ( ( String[] ) sr.getProperty( Constants.OBJECTCLASS ) )[0];
             }
