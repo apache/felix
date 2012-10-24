@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ abstract class LocalizedBase
 
     /**
      * The {@link Resources} used to localize strings.
-     * 
+     *
      * @see #localize(String)
      * @see #localize(String[])
      */
@@ -44,10 +44,10 @@ abstract class LocalizedBase
 
     /**
      * Sets up this class using the given <code>ResourceBundle</code>.
-     * 
+     *
      * @param resources The {@link Resources} used to localize return values of
      * localizable methods.
-     *      
+     *
      * @throws NullPointerException If <code>resources</code> is
      *      <code>null</code>.
      */
@@ -74,9 +74,9 @@ abstract class LocalizedBase
      * Calls {@link #localize(String)} for each string in the array and returns
      * an array of the resulting localized strings. If <code>strings</code> is
      * <code>null</code> <code>null</code> is returned.
-     * 
+     *
      * @param strings An array of non-<code>null</code> strings to localize.
-     * 
+     *
      * @return <code>null</code> if <code>strings</code> is <code>null</code> or
      *      an array of the same size as the <code>strings</code> array
      *      containing localized strings.
@@ -99,7 +99,7 @@ abstract class LocalizedBase
 
     /**
      * Localizes the string using the
-     * {@link #getResourceBundle() ResourceBundle} set on this instance if
+     * {@linkplain #getResources() resources} set on this instance if
      * string starts with the percent character (<code>%</code>). If the
      * string is <code>null</code>, does not start with a percent character
      * or the resource whose key is the string without the leading the percent
@@ -140,7 +140,7 @@ abstract class LocalizedBase
      *   <td>resource</td>
      *  </tr>
      * </table>
-     * 
+     *
      * @param string The string to localize
      * @return The localized string
      */
