@@ -22,11 +22,10 @@ package org.apache.felix.metatype.internal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
-
 import org.apache.felix.metatype.DefaultMetaTypeProvider;
 import org.apache.felix.metatype.Designate;
 import org.apache.felix.metatype.DesignateObject;
@@ -54,23 +53,36 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
 
     private final Bundle bundle;
 
-    private Set pids;
+    private final Set pids;
 
-    private Set factoryPids;
+    private final Set factoryPids;
+
+    private final Map metaTypeProviders;
+
+    private final MetaTypeProviderTracker providerTacker;
 
     private Set locales;
-
-    private Map metaTypeProviders;
-
 
     protected MetaTypeInformationImpl( Bundle bundle )
     {
         this.bundle = bundle;
-        this.pids = new TreeSet();
-        this.factoryPids = new TreeSet();
+        this.pids = new HashSet();
+        this.factoryPids = new HashSet();
         this.metaTypeProviders = new HashMap();
+
+        this.providerTacker = new MetaTypeProviderTracker( bundle.getBundleContext(), this );
+        this.providerTacker.open();
     }
 
+
+    void dispose() {
+        this.providerTacker.close();
+
+        this.pids.clear();
+        this.factoryPids.clear();
+        this.locales = null;
+        this.metaTypeProviders.clear();
+    }
 
     /*
      * (non-Javadoc)
@@ -116,7 +128,7 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
         {
             synchronized ( this )
             {
-                Set newLocales = new TreeSet();
+                Set newLocales = new HashSet();
                 for ( Iterator mi = this.metaTypeProviders.values().iterator(); mi.hasNext(); )
                 {
                     MetaTypeProvider mtp = ( MetaTypeProvider ) mi.next();
@@ -219,30 +231,6 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
     }
 
 
-    protected void addPids( String[] pids )
-    {
-        this.addValues( this.pids, pids );
-    }
-
-
-    protected void removePid( String pid )
-    {
-        this.pids.remove( pid );
-    }
-
-
-    protected void addFactoryPids( String[] factoryPids )
-    {
-        this.addValues( this.factoryPids, factoryPids );
-    }
-
-
-    protected void removeFactoryPid( String factoryPid )
-    {
-        this.factoryPids.remove( factoryPid );
-    }
-
-
     protected void addMetaTypeProvider( String key, MetaTypeProvider mtp )
     {
         if ( key != null && mtp != null )
@@ -262,6 +250,50 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
         }
 
         return null;
+    }
+
+
+    protected void addSingletonMetaTypeProvider( String[] pids, MetaTypeProvider mtp )
+    {
+        this.addValues( this.pids, pids );
+        for ( int i = 0; i < pids.length; i++ )
+        {
+            addMetaTypeProvider( pids[i], mtp );
+        }
+    }
+
+
+    protected void addFactoryMetaTypeProvider( String[] factoryPids, MetaTypeProvider mtp )
+    {
+        this.addValues( this.factoryPids, factoryPids );
+        for ( int i = 0; i < factoryPids.length; i++ )
+        {
+            addMetaTypeProvider( factoryPids[i], mtp );
+        }
+    }
+
+
+    protected boolean removeSingletonMetaTypeProvider( String[] pids )
+    {
+        boolean wasRegistered = false;
+        for ( int i = 0; i < pids.length; i++ )
+        {
+            wasRegistered |= ( removeMetaTypeProvider( pids[i] ) != null );
+            this.pids.remove( pids[i] );
+        }
+        return wasRegistered;
+    }
+
+
+    protected boolean removeFactoryMetaTypeProvider( String[] factoryPids )
+    {
+        boolean wasRegistered = false;
+        for ( int i = 0; i < factoryPids.length; i++ )
+        {
+            wasRegistered |= ( removeMetaTypeProvider( factoryPids[i] ) != null );
+            this.factoryPids.remove( factoryPids[i] );
+        }
+        return wasRegistered;
     }
 
 
