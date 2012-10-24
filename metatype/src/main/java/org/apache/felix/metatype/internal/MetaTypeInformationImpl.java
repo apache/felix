@@ -63,6 +63,7 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
 
     private Set locales;
 
+
     protected MetaTypeInformationImpl( Bundle bundle )
     {
         this.bundle = bundle;
@@ -75,7 +76,8 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
     }
 
 
-    void dispose() {
+    void dispose()
+    {
         this.providerTacker.close();
 
         this.pids.clear();
@@ -83,6 +85,7 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
         this.locales = null;
         this.metaTypeProviders.clear();
     }
+
 
     /*
      * (non-Javadoc)

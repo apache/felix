@@ -295,8 +295,9 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
         {
             res = ( String[] ) prop;
         }
-        else // unsupported type of property
+        else
         {
+            // unsupported type of property
             res = null;
         }
 
