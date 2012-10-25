@@ -375,7 +375,8 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     {
         if ( m_configuration.getLogLevel() >= level )
         {
-            Object logger = ( m_logService != null ) ? m_logService.getService() : null;
+            ServiceTracker t = m_logService;
+            Object logger = ( t != null ) ? t.getService() : null;
             if ( logger == null )
             {
                 // output depending on level
