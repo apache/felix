@@ -19,6 +19,8 @@
 package org.apache.felix.metatype.internal;
 
 
+import java.util.Arrays;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.metatype.MetaTypeProvider;
@@ -46,47 +48,92 @@ public class MetaTypeProviderTracker extends ServiceTracker
             return null;
         }
 
-        MetaTypeProvider mtp = ( MetaTypeProvider ) super.addingService( reference );
+        final MetaTypeProvider mtp = ( MetaTypeProvider ) this.context.getService( reference );
+        final RegistrationPropertyHolder rph = new RegistrationPropertyHolder( reference, mtp );
 
-        final String[] pids = ServiceMetaTypeInformation.getStringPlus( reference, MetaTypeProvider.METATYPE_PID );
-        if ( pids != null )
-        {
-            mti.addSingletonMetaTypeProvider( pids, mtp );
-        }
+        rph.addMetaTypeProvider( this.mti );
 
-        final String[] factoryPids = ServiceMetaTypeInformation.getStringPlus( reference,
-            MetaTypeProvider.METATYPE_FACTORY_PID );
-        if ( factoryPids != null )
-        {
-            mti.addFactoryMetaTypeProvider( factoryPids, mtp );
-        }
-
-        return mtp;
+        return rph;
     }
 
 
     public void modifiedService( ServiceReference reference, Object service )
     {
-        // TODO This is tricky: we must know the registration before the update !!
-        super.modifiedService( reference, service );
+        RegistrationPropertyHolder rph = ( RegistrationPropertyHolder ) service;
+        rph.update( this.mti, reference );
     }
 
 
     public void removedService( ServiceReference reference, Object service )
     {
-        final String[] pids = ServiceMetaTypeInformation.getStringPlus( reference, MetaTypeProvider.METATYPE_PID );
-        if ( pids != null )
+        RegistrationPropertyHolder rph = ( RegistrationPropertyHolder ) service;
+        rph.removeMetaTypeProvider( this.mti );
+        this.context.ungetService( reference );
+    }
+
+    private static class RegistrationPropertyHolder
+    {
+        private String[] pids;
+        private String[] factoryPids;
+        private final MetaTypeProvider provider;
+
+
+        RegistrationPropertyHolder( final ServiceReference reference, final MetaTypeProvider provider )
         {
-            mti.removeSingletonMetaTypeProvider( pids );
+            this.pids = ServiceMetaTypeInformation.getStringPlus( reference, MetaTypeProvider.METATYPE_PID );
+            this.factoryPids = ServiceMetaTypeInformation.getStringPlus( reference,
+                MetaTypeProvider.METATYPE_FACTORY_PID );
+            this.provider = provider;
         }
 
-        final String[] factoryPids = ServiceMetaTypeInformation.getStringPlus( reference,
-            MetaTypeProvider.METATYPE_FACTORY_PID );
-        if ( factoryPids != null )
+
+        MetaTypeProvider getProvider()
         {
-            mti.removeFactoryMetaTypeProvider( factoryPids );
+            return provider;
         }
 
-        super.removedService( reference, service );
+
+        void addMetaTypeProvider( final MetaTypeInformationImpl mti )
+        {
+            if ( pids != null )
+            {
+                mti.addSingletonMetaTypeProvider( pids, provider );
+            }
+
+            if ( factoryPids != null )
+            {
+                mti.addFactoryMetaTypeProvider( factoryPids, provider );
+            }
+        }
+
+
+        void removeMetaTypeProvider( final MetaTypeInformationImpl mti )
+        {
+            if ( pids != null )
+            {
+                mti.removeSingletonMetaTypeProvider( pids );
+            }
+
+            if ( factoryPids != null )
+            {
+                mti.removeFactoryMetaTypeProvider( factoryPids );
+            }
+        }
+
+
+        void update( final MetaTypeInformationImpl mti, final ServiceReference reference )
+        {
+            String[] pids = ServiceMetaTypeInformation.getStringPlus( reference, MetaTypeProvider.METATYPE_PID );
+            String[] factoryPids = ServiceMetaTypeInformation.getStringPlus( reference,
+                MetaTypeProvider.METATYPE_FACTORY_PID );
+
+            if ( !Arrays.equals( pids, this.pids ) || !Arrays.equals( factoryPids, this.factoryPids ) )
+            {
+                removeMetaTypeProvider( mti );
+                this.pids = pids;
+                this.factoryPids = factoryPids;
+                addMetaTypeProvider( mti );
+            }
+        }
     }
 }
