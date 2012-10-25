@@ -302,6 +302,11 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
             res = null;
         }
 
+        if ( res != null )
+        {
+            Arrays.sort( res );
+        }
+
         return res;
     }
 
