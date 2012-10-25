@@ -41,8 +41,9 @@ public class Felix3680_2Test extends ComponentTestBase
         //        paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_FELIX_3880_2.xml";
         
+        restrictedLogging = true;
         // Comment this for displaying debug messages
-        DS_LOGLEVEL = "debug";
+        DS_LOGLEVEL = "warn";
     }
 
     @Inject
@@ -69,6 +70,8 @@ public class Felix3680_2Test extends ComponentTestBase
         main.enable();
 
         delay( 30 );
+        main.disable();
+        delay(); //async deactivate
         for ( Iterator it = log.foundWarnings().iterator(); it.hasNext(); )
         {
             String message = ( String ) it.next();

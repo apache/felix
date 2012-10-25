@@ -12,7 +12,7 @@
 <components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
 		enabled='false' name='org.apache.felix.scr.integration.components.felix3680_2.Main'
-		activate='start'>
+		activate='start' deactivate='stop'>
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680_2.Main' />
 		<reference name='a'
