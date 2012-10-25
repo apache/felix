@@ -26,11 +26,9 @@ public class F
 
     void start()
     {
-        Main._enabledLatch.countDown();
     }
 
     void stop()
     {
-        Main._disabledLatch.countDown();
     }
 }

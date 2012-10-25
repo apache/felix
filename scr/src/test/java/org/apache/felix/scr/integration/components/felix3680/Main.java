@@ -39,6 +39,9 @@ public class Main implements Runnable
     public static volatile CountDownLatch _enabledLatch;
     public static volatile CountDownLatch _disabledLatch;
 
+    public static volatile CountDownLatch _activatedLatch;
+    public static volatile CountDownLatch _deactivatedLatch;
+
     private volatile ComponentContext _ctx;
     private volatile AtomicInteger _counter = new AtomicInteger();
     private volatile Random _rnd = new Random();
@@ -79,13 +82,15 @@ public class Main implements Runnable
                     {
                         if (enable)
                         {
-                            //_logService.log(LogService.LOG_INFO, "enabling component " + _componentNames[i]);
+                            _logService.log(LogService.LOG_INFO, "enabling component " + _componentNames[i]);
                             _ctx.enableComponent(_componentNames[i]);
+                            _enabledLatch.countDown();
                         }
                         else
                         {
-                            //_logService.log(LogService.LOG_INFO, "disabling component " + _componentNames[i]);
+                            _logService.log(LogService.LOG_INFO, "disabling component " + _componentNames[i]);
                             _ctx.disableComponent(_componentNames[i]);
+                            _disabledLatch.countDown();
                         }
                     }
                 });
@@ -172,7 +177,6 @@ public class Main implements Runnable
         {
             _enabledLatch = new CountDownLatch(11); // for B,C,D,E,F,G,H,I,J,K and Main.bindA()
             _disabledLatch = new CountDownLatch(11); // for B,C,D,E,F,G,H,I,J,K and Main.unbindA()
-
             EnableManager manager =
                     new EnableManager(new String[] { 
                         "org.apache.felix.scr.integration.components.felix3680.B", 

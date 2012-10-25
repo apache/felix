@@ -23,13 +23,12 @@ public class J
     void bindK(K k)
     {
     }
+
     void start()
     {
-        Main._enabledLatch.countDown();
     }
 
     void stop()
     {
-        Main._disabledLatch.countDown();
     }
 }

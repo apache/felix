@@ -23,11 +23,9 @@ public class B
 {
     void start()
     {
-        Main._enabledLatch.countDown();
     }
 
     void stop()
     {
-        Main._disabledLatch.countDown();
     }
 }

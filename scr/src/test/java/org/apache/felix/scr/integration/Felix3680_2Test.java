@@ -43,7 +43,7 @@ public class Felix3680_2Test extends ComponentTestBase
         
         restrictedLogging = true;
         // Comment this for displaying debug messages
-        DS_LOGLEVEL = "warn";
+//        DS_LOGLEVEL = "warn";
     }
 
     @Inject
