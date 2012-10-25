@@ -84,22 +84,29 @@ class ComponentActorThread implements Runnable
                 task = ( Runnable ) tasks.removeFirst();
             }
 
-            // return if the task is this thread itself
-            if ( task == TERMINATION_TASK )
-            {
-                Activator.log( LogService.LOG_DEBUG, null, "Shutting down ComponentActorThread", null );
-                return;
-            }
-
-            // otherwise execute the task, log any issues
             try
             {
+                // return if the task is this thread itself
+                if ( task == TERMINATION_TASK )
+                {
+                    Activator.log( LogService.LOG_DEBUG, null, "Shutting down ComponentActorThread", null );
+                    return;
+                }
+
+                // otherwise execute the task, log any issues
                 Activator.log( LogService.LOG_DEBUG, null, "Running task: " + task, null );
                 task.run();
             }
             catch ( Throwable t )
             {
                 Activator.log( LogService.LOG_ERROR, null, "Unexpected problem executing task " + task, t );
+            }
+            finally
+            {
+                synchronized ( tasks )
+                {
+                    tasks.notifyAll();
+                }
             }
         }
     }
@@ -110,6 +117,20 @@ class ComponentActorThread implements Runnable
     void terminate()
     {
         schedule( TERMINATION_TASK );
+        synchronized ( tasks )
+        {
+            while ( !tasks.isEmpty() )
+            {
+                try
+                {
+                    tasks.wait();
+                }
+                catch ( InterruptedException e )
+                {
+                    Activator.log( LogService.LOG_ERROR, null, "Interrupted exception waiting for queue to empty", e );
+                }
+            }
+        }
     }
 
 
