@@ -102,34 +102,23 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     {
         final ImmediateComponentManager cm = createComponentManager();
         log( LogService.LOG_DEBUG, "Creating new instance from component factory {0} with configuration {1}",
-                new Object[] { getComponentMetadata().getName(), dictionary }, null );
+                new Object[] {getComponentMetadata().getName(), dictionary}, null );
 
         ComponentInstance instance;
-        final boolean release = cm.obtainReadLock( "ComponentFactoryImpl.newInstance.1" );
-        try
-        {
-            cm.setFactoryProperties( dictionary );
-            // enable
-            cm.enableInternal();
-            //configure the properties
-            cm.reconfigure( m_configuration );
-            //activate immediately
-            cm.activateInternal();
+        cm.setFactoryProperties( dictionary );
+        // enable
+        cm.enableInternal();
+        //configure the properties
+        cm.reconfigure( m_configuration );
+        //activate immediately
+        cm.activateInternal();
 
-            instance = cm.getComponentInstance();
-            if ( instance == null )
-            {
-                // activation failed, clean up component manager
-                cm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
-                throw new ComponentException( "Failed activating component" );
-            }
-        }
-        finally
+        instance = cm.getComponentInstance();
+        if ( instance == null )
         {
-            if ( release )
-            {
-                cm.releaseReadLock( "ComponentFactoryImpl.newInstance.1" );
-            }
+            // activation failed, clean up component manager
+            cm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+            throw new ComponentException( "Failed activating component" );
         }
 
         synchronized ( m_componentInstances )
@@ -323,35 +312,24 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         {
             log( LogService.LOG_DEBUG, "Handling configuration removal", null );
 
-            boolean release = obtainReadLock( "ComponentFactoryImpl.configurationDeleted" );
-            try
+            // nothing to do if there is no configuration currently known.
+            if ( !m_isConfigured )
             {
-                // nothing to do if there is no configuration currently known.
-                if (! m_isConfigured)
-                {
-                    log( LogService.LOG_DEBUG, "ignoring configuration removal: not currently configured", null );
-                    return;
-                }
-                
-                // So far, we were configured: clear the current configuration.
-                m_isConfigured = false;
-                m_configuration = new Hashtable();
-
-                log( LogService.LOG_DEBUG, "Current component factory state={0}", new Object[] { getState() }, null );
-
-                // And deactivate if we are not currently disposed and if configuration is required
-                if ( ( getState() & STATE_DISPOSED ) == 0 && getComponentMetadata().isConfigurationRequired() )
-                {
-                    log( LogService.LOG_DEBUG, "Deactivating component factory (required configuration has gone)", null );
-                    deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
-                }
+                log( LogService.LOG_DEBUG, "ignoring configuration removal: not currently configured", null );
+                return;
             }
-            finally
+
+            // So far, we were configured: clear the current configuration.
+            m_isConfigured = false;
+            m_configuration = new Hashtable();
+
+            log( LogService.LOG_DEBUG, "Current component factory state={0}", new Object[] {getState()}, null );
+
+            // And deactivate if we are not currently disposed and if configuration is required
+            if ( ( getState() & STATE_DISPOSED ) == 0 && getComponentMetadata().isConfigurationRequired() )
             {
-                if ( release )
-                {
-                    releaseReadLock( "ComponentFactoryImpl.configurationDeleted" );
-                }
+                log( LogService.LOG_DEBUG, "Deactivating component factory (required configuration has gone)", null );
+                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true );
             }
         }
         else
@@ -373,53 +351,42 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
             {
                 return;
             }
-            
-            boolean release = obtainReadLock( "ComponentFactoryImpl.configurationUpdated" );
-            try
+
+            // Store the config admin configuration
+            m_configuration = configuration;
+
+            // We are now configured from config admin.
+            m_isConfigured = true;
+
+            log( LogService.LOG_INFO, "Current ComponentFactory state={0}", new Object[]
+                    {getState()}, null );
+
+            // If we are active, but if some config target filters don't match anymore
+            // any required references, then deactivate.
+            if ( getState() == STATE_FACTORY )
             {
-                // Store the config admin configuration
-                m_configuration = configuration;
-                
-                // We are now configured from config admin.
-                m_isConfigured = true;
-                
-                log( LogService.LOG_INFO, "Current ComponentFactory state={0}", new Object[]
-                    { getState() }, null );
-                                    
-                // If we are active, but if some config target filters don't match anymore 
-                // any required references, then deactivate.                
-                if ( getState() == STATE_FACTORY )
+                log( LogService.LOG_INFO, "Verifying if Active Component Factory is still satisfied", null );
+
+                // First update target filters.
+                super.updateTargets( getProperties() );
+
+                // Next, verify dependencies
+                if ( !verifyDependencyManagers( m_configuration ) )
                 {
-                    log( LogService.LOG_INFO, "Verifying if Active Component Factory is still satisfied", null );
-
-                    // First update target filters.
-                    super.updateTargets( getProperties() );
-
-                    // Next, verify dependencies
-                    if ( !verifyDependencyManagers( m_configuration ) )
-                    {
-                        log( LogService.LOG_DEBUG,
+                    log( LogService.LOG_DEBUG,
                             "Component Factory target filters not satisfied anymore: deactivating", null );
-                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE );
-                        return;
-                    }
-                }
-                    
-                // Unsatisfied component and required configuration may change targets
-                // to satisfy references.
-                if ( getState() == STATE_UNSATISFIED && getComponentMetadata().isConfigurationRequired() )
-                {                   
-                    // try to activate our component factory, if all dependnecies are satisfied
-                    log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
-                    activateInternal();
+                    deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
+                    return;
                 }
             }
-            finally
+
+            // Unsatisfied component and required configuration may change targets
+            // to satisfy references.
+            if ( getState() == STATE_UNSATISFIED && getComponentMetadata().isConfigurationRequired() )
             {
-                if (release) 
-                {
-                    releaseReadLock( "ComponentFactoryImpl.configurationUpdated" );
-                }
+                // try to activate our component factory, if all dependnecies are satisfied
+                log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
+                activateInternal();
             }
         }
         else

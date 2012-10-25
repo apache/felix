@@ -140,65 +140,42 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
         }
         else   //non-spec backwards compatible
         {
-            final boolean release = obtainReadLock( "ConfigurationComponentFactoryImpl.newInstance.1" );
-            try
+            ImmediateComponentManager cm;
+            Map configuredServices = m_configuredServices;
+            if ( configuredServices != null )
             {
-                ImmediateComponentManager cm;
-                Map configuredServices = m_configuredServices;
-                if ( configuredServices != null )
-                {
-                    cm = ( ImmediateComponentManager ) configuredServices.get( pid );
-                }
-                else
-                {
-                    m_configuredServices = new HashMap();
-                    configuredServices = m_configuredServices;
-                    cm = null;
-                }
-
-                if ( cm == null )
-                {
-                    // create a new instance with the current configuration
-                    cm = createConfigurationComponentManager();
-
-                    // this should not call component reactivation because it is
-                    // not active yet
-                    cm.reconfigure( configuration );
-
-                    // enable asynchronously if components are already enabled
-                    if ( getState() == STATE_FACTORY )
-                    {
-                        cm.enable( false );
-                    }
-
-                    // keep a reference for future updates
-                    configuredServices.put( pid, cm );
-
-                }
-                else
-                {
-                    // update the configuration as if called as ManagedService
-                    //TODO deadlock potential, we are holding our own state lock.
-                    final boolean releaseInner = cm.obtainReadLock( "ConfigurationComponentFactoryImpl.newInstance.2" );
-                    try
-                    {
-                        cm.reconfigure( configuration );
-                    }
-                    finally
-                    {
-                        if ( releaseInner )
-                        {
-                            cm.releaseReadLock( "ConfigurationComponentFactoryImpl.newInstance.2" );
-                        }
-                    }
-                }
+                cm = ( ImmediateComponentManager ) configuredServices.get( pid );
             }
-            finally
+            else
             {
-                if ( release )
+                m_configuredServices = new HashMap();
+                configuredServices = m_configuredServices;
+                cm = null;
+            }
+
+            if ( cm == null )
+            {
+                // create a new instance with the current configuration
+                cm = createConfigurationComponentManager();
+
+                // this should not call component reactivation because it is
+                // not active yet
+                cm.reconfigure( configuration );
+
+                // enable asynchronously if components are already enabled
+                if ( getState() == STATE_FACTORY )
                 {
-                    releaseReadLock( "ConfigurationComponentFactoryImpl.newInstance.1" );
+                    cm.enable( false );
                 }
+
+                // keep a reference for future updates
+                configuredServices.put( pid, cm );
+
+            }
+            else
+            {
+                // update the configuration as if called as ManagedService
+                cm.reconfigure( configuration );
             }
         }
     }

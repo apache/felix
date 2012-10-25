@@ -27,12 +27,9 @@ import java.util.Map;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
-import org.apache.felix.scr.impl.helper.ActivateMethod;
 import org.apache.felix.scr.impl.helper.ActivateMethod.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.helper.DeactivateMethod;
 import org.apache.felix.scr.impl.helper.MethodResult;
-import org.apache.felix.scr.impl.helper.ModifiedMethod;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Bundle;
@@ -53,7 +50,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 {
 
     // The object that implements the service and that is bound to other services
-    private Object m_implementationObject;
+    private volatile Object m_implementationObject;
 
     // keep the using bundles as reference "counters" for instance deactivation
     private volatile int m_useCount;
@@ -133,7 +130,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             log( LogService.LOG_DEBUG, "Set implementation object for component {0}", new Object[] { getName() },  null );
 
             //notify that component was successfully created so any optional circular dependencies can be retried
-            getActivator().missingServicePresent(getServiceReference());
+            getActivator().missingServicePresent( getServiceReference() );
         }
         return true;
     }
@@ -490,7 +487,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         // this component must be deactivated
         if ( configuration == null && getComponentMetadata().isConfigurationRequired() )
         {
-            deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
+            deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true );
         }
         else if ( configuration == null | !modify() )
         {
@@ -502,7 +499,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             // FELIX-2368: cycle component immediately, reconfigure() is
             //     called through ConfigurationListener API which itself is
             //     called asynchronously by the Configuration Admin Service
-            deactivateInternal( reason );
+            deactivateInternal( reason, false );
             activateInternal();
         }
     }
@@ -622,13 +619,9 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
     public Object getService( Bundle bundle, ServiceRegistration serviceRegistration )
     {
-        boolean release = obtainReadLock( "ImmediateComponentManager.getService.1" );
-        try
-        {
             Object implementationObject = m_implementationObject;
             if ( implementationObject == null )
             {
-                releaseReadLock( "ImmediateComponentManager.getService.1" );
                 try
                 {
                     if ( !collectDependencies() )
@@ -654,7 +647,6 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                             LogService.LOG_INFO,
                             "Could not obtain all required dependencies, getService returning null",
                             null );
-                    release = false;
                     return null;
                 }
                 obtainWriteLock( "ImmediateComponentManager.getService.1" );
@@ -674,59 +666,39 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 }
                 finally
                 {
-                    deescalateLock( "ImmediateComponentManager.getService.1" );
+                    releaseWriteLock( "ImmediateComponentManager.getService.1" );
                 }
             }
             m_useCount++;
             return implementationObject;
-        }
-        finally
-        {
-            if ( release )
-            {
-                releaseReadLock( "ImmediateComponentManager.getService.1" );
-            }
-        }
     }
 
     public void ungetService( Bundle bundle, ServiceRegistration serviceRegistration, Object o )
     {
-        final boolean release = obtainReadLock( "ImmediateComponentManager.ungetService.1" );
-        try
+        // the framework should not call ungetService more than it calls
+        // calls getService. Still, we want to be sure to not go below zero
+        if ( m_useCount > 0 )
         {
-            // the framework should not call ungetService more than it calls
-            // calls getService. Still, we want to be sure to not go below zero
-            if ( m_useCount > 0 )
-            {
-                m_useCount--;
+            m_useCount--;
 
-                // unget the service instance if no bundle is using it
-                // any longer unless delayed component instances have to
-                // be kept (FELIX-3039)
-                if ( m_useCount == 0 && !isImmediate() && !getActivator().getConfiguration().keepInstances() )
+            // unget the service instance if no bundle is using it
+            // any longer unless delayed component instances have to
+            // be kept (FELIX-3039)
+            if ( m_useCount == 0 && !isImmediate() && !getActivator().getConfiguration().keepInstances() )
+            {
+                obtainWriteLock( "ImmediateComponentManager.ungetService.1" );
+                try
                 {
-                    releaseReadLock( "ImmediateComponentManager.ungetService.1" );
-                    obtainWriteLock( "ImmediateComponentManager.ungetService.1" );
-                    try
+                    if ( m_useCount == 0 )
                     {
-                        if ( m_useCount == 0 )
-                        {
-                            state().ungetService( this );
-                            unsetDependencyMap();
-                        }
-                    }
-                    finally
-                    {
-                        deescalateLock( "ImmediateComponentManager.ungetService.1" );
+                        state().ungetService( this );
+                        unsetDependencyMap();
                     }
                 }
-            }
-        }
-        finally
-        {
-            if ( release )
-            {
-                releaseReadLock( "ImmediateComponentManager.ungetService.1" );
+                finally
+                {
+                    releaseWriteLock( "ImmediateComponentManager.ungetService.1" );
+                }
             }
         }
     }

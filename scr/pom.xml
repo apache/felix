@@ -307,8 +307,8 @@
                             kxml2;inline=org/kxml2/io/KXmlParser.class|org/xmlpull/v1/XmlPull**,
                             backport-util-concurrent;inline=edu/emory/mathcs/backport/java/util/concurrent/TimeUnit.class
                             |edu/emory/mathcs/backport/java/util/concurrent/TimeUnit*.class
-                            |edu/emory/mathcs/backport/java/util/concurrent/locks/ReentrantReadWriteLock.class
-                            |edu/emory/mathcs/backport/java/util/concurrent/locks/ReentrantReadWriteLock*.class
+                            |edu/emory/mathcs/backport/java/util/concurrent/locks/ReentrantLock.class
+                            |edu/emory/mathcs/backport/java/util/concurrent/locks/ReentrantLock*.class
                             |edu/emory/mathcs/backport/java/util/concurrent/locks/ReadWriteLock.class
                             |edu/emory/mathcs/backport/java/util/concurrent/locks/Lock.class
                             |edu/emory/mathcs/backport/java/util/concurrent/locks/Condition.class
@@ -343,9 +343,7 @@
                     </signature>
                     <ignores>
                         <ignore>java.util.concurrent.atomic.AtomicReference</ignore>
-                        <ignore>java.util.concurrent.locks.ReentrantReadWriteLock</ignore>
-                        <ignore>java.util.concurrent.locks.ReentrantReadWriteLock$ReadLock</ignore>
-                        <ignore>java.util.concurrent.locks.ReentrantReadWriteLock$WriteLock</ignore>
+                        <ignore>java.util.concurrent.locks.ReentrantLock</ignore>
                         <ignore>java.util.concurrent.TimeUnit</ignore>
                         <ignore>java.lang.management.ManagementFactory</ignore>
                         <ignore>java.lang.management.ThreadInfo</ignore>
