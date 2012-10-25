@@ -236,11 +236,7 @@ public class DependencyManager implements ServiceListener, Reference
                             }
                         }
                         changes = removed;
-                        if ( m_size.decrementAndGet() < 0 )
-                        {
-                            m_size.set( 0 );
-//                            throw new IllegalStateException( "Component: " + m_componentManager.getName() + ", Size less than zero for dependency manager " + getName() + " removed: " + removed );
-                        }
+                        m_size.set( getServiceReferenceCount() );
                         serviceRemoved( ref );
                     }
                     else
@@ -274,11 +270,7 @@ public class DependencyManager implements ServiceListener, Reference
                             }
                         }
                         changes = removed;
-                        if ( m_size.decrementAndGet() < 0 )
-                        {
-                            m_size.set( 0 );
-//                            throw new IllegalStateException( "Component: " + m_componentManager.getName() + ", Size less than zero for dependency manager " + getName() + " removed: " + removed );
-                        }
+                        m_size.set( getServiceReferenceCount() );
                         serviceRemoved( ref );
                     }
                     else
@@ -734,6 +726,12 @@ public class DependencyManager implements ServiceListener, Reference
 
         m_componentManager.log( LogService.LOG_DEBUG, "No permission to access the services", null );
         return null;
+    }
+
+    private int getServiceReferenceCount()
+    {
+        ServiceReference[] refs = getFrameworkServiceReferences();
+        return refs == null? 0: refs.length;
     }
 
 
@@ -1648,8 +1646,8 @@ public class DependencyManager implements ServiceListener, Reference
             }
             else
             {
-                m_componentManager.log( LogService.LOG_DEBUG, "Component: {0} dependency: {1} no services, removed: {2}", new Object[]
-                        {m_componentManager.getName(), getName(), removed}, null );
+                m_componentManager.log( LogService.LOG_DEBUG, "Component: {0} dependency: {1} no services", new Object[]
+                        {m_componentManager.getName(), getName()}, null );
                 removed.clear();//retainAll of empty set.
             }
             m_size.set( ( refArray == null ) ? 0 : refArray.length );
