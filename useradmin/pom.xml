@@ -32,5 +32,6 @@
         <module>useradmin</module>
         <module>filestore</module>
         <module>mongodb</module>
+        <module>itest</module>
     </modules>
 </project>
