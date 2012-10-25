@@ -30,6 +30,7 @@ import org.apache.felix.metatype.MetaDataReader;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.Constants;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.MetaTypeInformation;
@@ -116,6 +117,12 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
      */
     public MetaTypeInformation getMetaTypeInformation( Bundle bundle )
     {
+        // no information for fragments
+        if ( bundle.getHeaders().get( Constants.FRAGMENT_HOST ) != null )
+        {
+            return null;
+        }
+
         MetaTypeInformation mti;
         synchronized ( this.bundleMetaTypeInformation )
         {
@@ -165,7 +172,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
             return null;
         }
 
-        MetaTypeInformationImpl cmti = new MetaTypeInformationImpl( bundle );
+        MetaTypeInformationImpl cmti = new MetaTypeInformationImpl( bundleContext, bundle );
         while ( docs.hasMoreElements() )
         {
             URL doc = ( URL ) docs.nextElement();

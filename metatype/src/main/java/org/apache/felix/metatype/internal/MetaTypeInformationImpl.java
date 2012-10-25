@@ -26,12 +26,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.felix.metatype.DefaultMetaTypeProvider;
 import org.apache.felix.metatype.Designate;
 import org.apache.felix.metatype.DesignateObject;
 import org.apache.felix.metatype.MetaData;
 import org.apache.felix.metatype.OCD;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
@@ -64,14 +66,14 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
     private Set locales;
 
 
-    protected MetaTypeInformationImpl( Bundle bundle )
+    protected MetaTypeInformationImpl( final BundleContext serviceBundleContext, Bundle bundle )
     {
         this.bundle = bundle;
         this.pids = new HashSet();
         this.factoryPids = new HashSet();
         this.metaTypeProviders = new HashMap();
 
-        this.providerTacker = new MetaTypeProviderTracker( bundle.getBundleContext(), this );
+        this.providerTacker = new MetaTypeProviderTracker( serviceBundleContext, this );
         this.providerTacker.open();
     }
 

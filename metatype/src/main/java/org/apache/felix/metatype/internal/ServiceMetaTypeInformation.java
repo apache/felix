@@ -19,6 +19,7 @@
 package org.apache.felix.metatype.internal;
 
 
+import java.util.Arrays;
 import java.util.Collection;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -76,7 +77,7 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
      */
     public ServiceMetaTypeInformation( BundleContext bundleContext, Bundle bundle )
     {
-        super( bundle );
+        super( bundleContext, bundle );
 
         this.bundleContext = bundleContext;
 

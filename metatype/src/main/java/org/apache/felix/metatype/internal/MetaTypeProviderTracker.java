@@ -41,7 +41,7 @@ public class MetaTypeProviderTracker extends ServiceTracker
     public Object addingService( ServiceReference reference )
     {
         // only care for services of our bundle
-        if ( !this.context.getBundle().equals( reference.getBundle() ) )
+        if ( !this.mti.getBundle().equals( reference.getBundle() ) )
         {
             return null;
         }
