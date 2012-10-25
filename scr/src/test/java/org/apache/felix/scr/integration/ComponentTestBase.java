@@ -115,6 +115,10 @@ public abstract class ComponentTestBase
     protected static boolean NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
     protected volatile Log log;
 
+    //set to true to only get last 1000 lines of log.
+    protected static boolean restrictedLogging;
+
+
     static
     {
         theConfig = new Hashtable<String, String>();
@@ -164,7 +168,7 @@ public abstract class ComponentTestBase
     @Before
     public void setUp() throws BundleException
     {
-        log = new Log();
+        log = new Log(restrictedLogging);
         log.start();
         bundleContext.addFrameworkListener( log );
         bundleContext.registerService( LogService.class.getName(), log, null );
@@ -661,6 +665,7 @@ public abstract class ComponentTestBase
     
     public static class Log implements LogService, FrameworkListener, Runnable
     {
+        private static final int RESTRICTED_LOG_SIZE = 1000;
         private final SimpleDateFormat m_sdf = new SimpleDateFormat( "HH:mm:ss,S" );
         private final static PrintStream m_out = new PrintStream( new BufferedOutputStream( new FileOutputStream(
             FileDescriptor.err ), 128 ) );
@@ -669,6 +674,15 @@ public abstract class ComponentTestBase
         private volatile Thread m_logThread;
         private volatile PrintStream m_realOut;
         private volatile PrintStream m_realErr;
+
+        private final boolean restrictedLogging;
+        private final String[] log = new String[1000];
+        private int i = 0;
+
+        public Log( boolean restrictedLogging )
+        {
+            this.restrictedLogging = restrictedLogging;
+        }
 
         public void start()
         {
@@ -685,7 +699,21 @@ public abstract class ComponentTestBase
         {
             System.setOut(m_realOut);
             System.setErr(m_realErr);
-            m_out.flush();
+            if ( restrictedLogging )
+            {
+                for (int j = 0; j < RESTRICTED_LOG_SIZE; j++)
+                {
+                    if ( log[i] != null )
+                    {
+                        m_realErr.println(log[i++]);
+                    }
+                    if (i == RESTRICTED_LOG_SIZE) i = 0;
+                }
+            }
+            else
+            {
+                m_out.flush();
+            }
             m_warnings.clear();
             m_logThread.interrupt();
             try
@@ -738,8 +766,16 @@ public abstract class ComponentTestBase
                         PrintWriter pw = new PrintWriter( sw );
                         entry.getError().printStackTrace( pw );
                     }
-                    m_out.println( sw.toString() );
-                    m_out.flush();
+                    if ( restrictedLogging )
+                    {
+                        log[i++] = sw.toString();
+                        if ( i == RESTRICTED_LOG_SIZE ) i = 0;
+                    }
+                    else
+                    {
+                        m_out.println( sw.toString() );
+                        m_out.flush();
+                    }
                 }
             }
             catch ( InterruptedException e )
