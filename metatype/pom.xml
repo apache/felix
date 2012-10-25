@@ -31,7 +31,7 @@
 
     <name>Apache Felix Metatype Service</name>
     <description>
-        Implementation of the OSGi Metatype Service Specification 1.1
+        Implementation of the OSGi Metatype Service Specification 1.2
     </description>
     <version>1.0.5-SNAPSHOT</version>
     <dependencies>
