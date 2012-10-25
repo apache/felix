@@ -112,10 +112,6 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
 
         // When the getServiceMethod is called, the implementation object must be created
 
-        boolean release = obtainReadLock( "ServiceFactoryComponentManager.getService.1" );
-        try
-        {
-            releaseReadLock( "ServiceFactoryComponentManager.getService.1" );
             try
             {
                 if ( !collectDependencies() )
@@ -138,10 +134,8 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
             catch ( IllegalStateException e )
             {
                 //cannot obtain service from a required reference
-                release = false;
                 return null;
             }
-            obtainReadLock( "ServiceFactoryComponentManager.getService.1" );
             // private ComponentContext and implementation instances
             BundleComponentContext serviceContext = new BundleComponentContext( this, bundle );
             Object service = createImplementationObject( serviceContext );
@@ -167,14 +161,6 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
             }
 
             return service;
-        }
-        finally
-        {
-            if ( release )
-            {
-                releaseReadLock( "ServiceFactoryComponentManager.getService.1" );
-            }
-        }
     }
 
 
@@ -186,28 +172,17 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
         log( LogService.LOG_DEBUG, "ServiceFactory.ungetService()", null );
 
         // When the ungetServiceMethod is called, the implementation object must be deactivated
-        final boolean release = obtainReadLock( "ServiceFactoryComponentManager.ungetService.1" );
-        try
-        {
-// private ComponentContext and implementation instances
-            final ComponentContext serviceContext;
-            serviceContext = ( ComponentContext ) serviceContexts.remove( service );
+        // private ComponentContext and implementation instances
+        final ComponentContext serviceContext;
+        serviceContext = ( ComponentContext ) serviceContexts.remove( service );
 
-            disposeImplementationObject( service, serviceContext, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+        disposeImplementationObject( service, serviceContext, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
 
-            // if this was the last use of the component, go back to REGISTERED state
-            if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
-            {
-                changeState( Registered.getInstance() );
-                unsetDependencyMap();
-            }
-        }
-        finally
+        // if this was the last use of the component, go back to REGISTERED state
+        if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
         {
-            if ( release )
-            {
-                releaseReadLock( "ServiceFactoryComponentManager.ungetService.1" );
-            }
+            changeState( Registered.getInstance() );
+            unsetDependencyMap();
         }
     }
 

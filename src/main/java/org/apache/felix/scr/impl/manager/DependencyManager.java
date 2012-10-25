@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.manager;
 
 import java.security.Permission;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -126,7 +127,6 @@ public class DependencyManager implements ServiceListener, Reference
         final ServiceReference ref = event.getServiceReference();
         final String serviceString = "Service " + m_dependencyMetadata.getInterface() + "/"
             + ref.getProperty( Constants.SERVICE_ID );
-        final boolean release = m_componentManager.obtainReadLock( "DependencyManager.serviceChanged.1" );
         Collection<ServiceReference> changes = null;
         try
         {
@@ -236,7 +236,11 @@ public class DependencyManager implements ServiceListener, Reference
                             }
                         }
                         changes = removed;
-                        m_size.decrementAndGet();
+                        if ( m_size.decrementAndGet() < 0 )
+                        {
+                            m_size.set( 0 );
+//                            throw new IllegalStateException( "Component: " + m_componentManager.getName() + ", Size less than zero for dependency manager " + getName() + " removed: " + removed );
+                        }
                         serviceRemoved( ref );
                     }
                     else
@@ -270,7 +274,11 @@ public class DependencyManager implements ServiceListener, Reference
                             }
                         }
                         changes = removed;
-                        m_size.decrementAndGet();
+                        if ( m_size.decrementAndGet() < 0 )
+                        {
+                            m_size.set( 0 );
+//                            throw new IllegalStateException( "Component: " + m_componentManager.getName() + ", Size less than zero for dependency manager " + getName() + " removed: " + removed );
+                        }
                         serviceRemoved( ref );
                     }
                     else
@@ -300,10 +308,6 @@ public class DependencyManager implements ServiceListener, Reference
                     changes.remove( ref );
                     changes.notify();
                 }
-            }
-            if ( release )
-            {
-                m_componentManager.releaseReadLock( "DependencyManager.serviceChanged.1" );
             }
         }
     }
@@ -360,8 +364,8 @@ public class DependencyManager implements ServiceListener, Reference
                 return;
             }
             //release our read lock and wait for activation to complete
-            m_componentManager.releaseReadLock( "DependencyManager.serviceAdded.nothandled.1" );
-            m_componentManager.obtainReadLock( "DependencyManager.serviceAdded.nothandled.2" );
+//            m_componentManager.releaseReadLock( "DependencyManager.serviceAdded.nothandled.1" );
+//            m_componentManager.obtainReadLock( "DependencyManager.serviceAdded.nothandled.2" );
             m_componentManager.log( LogService.LOG_DEBUG,
                     "Dependency Manager: Service {0} activation on other thread: after releasing lock, component instance is: {1}", new Object[]
                     {m_dependencyMetadata.getName(), m_componentManager.getInstance()}, null );
@@ -389,7 +393,7 @@ public class DependencyManager implements ServiceListener, Reference
                                             bound.isEmpty() ||
                                             reference.compareTo( bound.keySet().iterator().next() ) > 0 )
                                     {
-                                        m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE );
+                                        m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
                                         m_componentManager.activateInternal();
                                     }
                 }
@@ -452,7 +456,7 @@ public class DependencyManager implements ServiceListener, Reference
                     { m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface() }, null );
 
             // deactivate the component now
-            m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE );
+            m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
         }
 
         // check whether we are bound to that service, do nothing if not
@@ -464,7 +468,7 @@ public class DependencyManager implements ServiceListener, Reference
         }
 
         // otherwise check whether the component is in a state to handle the event
-        else if ( handleServiceEvent() )
+        else if ( handleServiceEvent() || (m_componentManager.getState() & (Component.STATE_DISABLED | Component.STATE_DISPOSED)) != 0 )
         {
             Map dependencyMap = m_componentManager.getDependencyMap();
             Map referenceMap = null;
@@ -481,7 +485,7 @@ public class DependencyManager implements ServiceListener, Reference
                     m_componentManager.log( LogService.LOG_DEBUG,
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                             { m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface() }, null );
-                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE );
+                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
                     if ( referenceMap != null )
                     {
                         referenceMap.remove( reference );
@@ -519,7 +523,7 @@ public class DependencyManager implements ServiceListener, Reference
                                         "Dependency Manager: Deactivating component due to mandatory dependency on {0}/{1} not satisfied",
                                         new Object[]
                                                 {m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface()}, null );
-                            m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE );
+                            m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
                         }
                     }
                     else
@@ -642,17 +646,6 @@ public class DependencyManager implements ServiceListener, Reference
         }
     }
 
-
-    /**
-     * Disposes off this dependency manager by removing as a service listener
-     * and ungetting all services, which are still kept in the list of our
-     * bound services. This list will not be empty if the service lookup
-     * method is used by the component to access the service.
-     */
-    void disable()
-    {
-        unregisterServiceListener();
-    }
 
     void deactivate()
     {
@@ -1535,12 +1528,11 @@ public class DependencyManager implements ServiceListener, Reference
      */
     private void setTargetFilter( String target ) throws InvalidSyntaxException
     {
-        m_componentManager.checkLocked();
         // do nothing if target filter does not change
         if ( ( m_target == null && target == null ) || ( m_target != null && m_target.equals( target ) ) )
         {
-            m_componentManager.log( LogService.LOG_DEBUG, "No change in target property for dependency {0}", new Object[]
-                    {m_dependencyMetadata.getName()}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "No change in target property for dependency {0}: currently registered: {1}", new Object[]
+                    {m_dependencyMetadata.getName(), registered}, null );
             if (registered)
             {
                 return;
@@ -1625,25 +1617,23 @@ public class DependencyManager implements ServiceListener, Reference
         synchronized ( enableLock )
         {
             // get the current number of registered services available
-            ServiceReference refs[] = getFrameworkServiceReferences();
-            if ( refs != null )
+            ServiceReference[] refArray = getFrameworkServiceReferences();
+            if ( refArray != null )
             {
+                List<ServiceReference> refs = Arrays.asList( refArray );
+                m_componentManager.log( LogService.LOG_DEBUG, "Component: {0} dependency: {1} refs: {2}", new Object[]
+                        {m_componentManager.getName(), getName(), refs}, null );
                 synchronized ( added )
                 {
-                    for ( ServiceReference ref : refs )
-                    {
-                        added.remove( ref );
-                    }
+                    m_componentManager.log( LogService.LOG_DEBUG, "Component: {0} dependency: {1} added: {2}", new Object[]
+                            {m_componentManager.getName(), getName(), added}, null );
+                    added.removeAll( refs );
                 }
                 synchronized ( removed )
                 {
-                    for ( ServiceReference ref : refs )
-                    {
-                        if ( !removed.contains( ref ) )
-                        {
-                            removed.remove( ref );
-                        }
-                    }
+                    m_componentManager.log( LogService.LOG_DEBUG, "Component: {0} dependency: {1} removed: {2}", new Object[]
+                            {m_componentManager.getName(), getName(), removed}, null );
+                    removed.retainAll( refs );
                 }
                 if ( active )
                 {
@@ -1656,7 +1646,13 @@ public class DependencyManager implements ServiceListener, Reference
                     }
                 }
             }
-            m_size.set( ( refs == null ) ? 0 : refs.length );
+            else
+            {
+                m_componentManager.log( LogService.LOG_DEBUG, "Component: {0} dependency: {1} no services, removed: {2}", new Object[]
+                        {m_componentManager.getName(), getName(), removed}, null );
+                removed.clear();//retainAll of empty set.
+            }
+            m_size.set( ( refArray == null ) ? 0 : refArray.length );
         }
 
         for ( ServiceReference ref : toAdd )
@@ -1671,12 +1667,16 @@ public class DependencyManager implements ServiceListener, Reference
         String filterString = "(" + Constants.OBJECTCLASS + "=" + m_dependencyMetadata.getInterface() + ")";
         m_componentManager.getActivator().getBundleContext().addServiceListener( this, filterString );
         registered = true;
+        m_componentManager.log( LogService.LOG_DEBUG, "registering service listener for dependency {0}", new Object[]
+                {m_dependencyMetadata.getName()}, null );
     }
 
-    private void unregisterServiceListener()
+    void unregisterServiceListener()
     {
         m_componentManager.getActivator().getBundleContext().removeServiceListener( this );
         registered = false;
+        m_componentManager.log( LogService.LOG_DEBUG, "unregistering service listener for dependency {0}", new Object[]
+                {m_dependencyMetadata.getName()}, null );
     }
 
 

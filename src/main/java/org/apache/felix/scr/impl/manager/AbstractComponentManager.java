@@ -18,9 +18,6 @@
  */
 package org.apache.felix.scr.impl.manager;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,9 +29,11 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
@@ -110,9 +109,19 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     private long m_timeout = 5000;
 
-    private Thread lockingThread;
-    private Throwable lockingStackTrace;
-    private ArrayList lockingActivity = new ArrayList( );
+//    private Thread lockingThread;
+//    private Throwable lockingStackTrace;
+//    private ArrayList lockingActivity = new ArrayList( );
+
+    protected volatile boolean enabled;
+    protected volatile CountDownLatch enabledLatch;
+    private final Object enabledLatchLock = new Object();
+    /**
+     * synchronizing while creating the service registration is safe as long as the bundle is not stopped
+     * during some service registrations.  So, avoid synchronizing during unregister service if the component is being
+     * disposed.
+     */
+    private volatile boolean disposed;
 
     /**
      * The constructor receives both the activator and the metadata
@@ -172,89 +181,21 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         }
     }
 
-    //ImmediateComponentHolder should be in this manager package and this should be default access.
-    public final boolean obtainReadLock( String source )
-    {
-        if ( isLogEnabled( LogService.LOG_DEBUG ) )
-        {
-            lockingActivity.add( "obtainReadLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
-        }
-        if (m_stateLock.getReadHoldCount() >0)
-        {
-            return false;
-        }
-        try
-        {
-            if (!m_stateLock.tryReadLock( m_timeout ) )
-            {
-                try
-                {
-                    dumpThreads();
-                }
-                catch ( Throwable e )
-                {
-                     //we are on a pre 1.6 vm, no worries
-                }
-                throw ( IllegalStateException ) new IllegalStateException( "Could not obtain lock in " + m_timeout + " milliseconds for component " + m_componentMetadata.getName() ).initCause( lockingStackTrace );
-            }
-        }
-        catch ( InterruptedException e )
-        {
-            //TODO this is so wrong
-            throw new IllegalStateException( "Could not obtain lock (Reason: " + e + ")" );
-        }
-        return true;
-    }
-
-
-    public final void releaseReadLock( String source )
-    {
-        if ( isLogEnabled( LogService.LOG_DEBUG ) )
-        {
-            lockingActivity.add( "releaseReadLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
-        }
-        try
-        {
-            m_stateLock.unlockReadLock();
-        }
-        catch ( IllegalMonitorStateException e )
-        {
-            logLockingInfo();
-            throw e;
-        }
-        catch ( IllegalStateException e ) //for EDU lock
-        {
-            logLockingInfo();
-            throw e;
-        }
-    }
-
-    private void logLockingInfo()
-    {
-        StringBuffer b = new StringBuffer( "Locking activity before IllegalMonitorStateException: \n" );
-        for (Iterator i = lockingActivity.iterator(); i.hasNext();)
-        {
-            b.append( "  " ).append( i.next() ).append( "\n" );
-        }
-        log( LogService.LOG_ERROR, b.toString(), null );
-        dumpThreads();
-    }
-
     final void obtainWriteLock( String source )
     {
-        if ( isLogEnabled( LogService.LOG_DEBUG ) )
-        {
-            lockingActivity.add( "obtainWriteLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
-        }
+//        if ( isLogEnabled( LogService.LOG_DEBUG ) )
+//        {
+//            lockingActivity.add( "obtainWriteLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+//        }
         try
         {
-            if (!m_stateLock.tryWriteLock( m_timeout ) )
+            if (!m_stateLock.tryLock( m_timeout ) )
             {
-                lockingActivity.add( "obtainWriteLock failure from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis() + " Could not obtain write lock.");
+//                lockingActivity.add( "obtainWriteLock failure from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis() + " Could not obtain write lock.");
                 throw new IllegalStateException( "Could not obtain lock" );
             }
-            lockingThread = Thread.currentThread();
-            lockingStackTrace = new Exception("Write lock stack trace for thread: " + lockingThread);
+//            lockingThread = Thread.currentThread();
+//            lockingStackTrace = new Exception("Write lock stack trace for thread: " + lockingThread);
         }
         catch ( InterruptedException e )
         {
@@ -263,47 +204,20 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         }
     }
 
-    final void deescalateLock( String source )
+    final void releaseWriteLock( String source )
     {
-        if ( isLogEnabled( LogService.LOG_DEBUG ) )
-        {
-            lockingActivity.add( "deescalateLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
-        }
-        m_stateLock.deescalate();
-        lockingThread = null;
-        lockingStackTrace = null;
-    }
-
-    final void checkLocked()
-    {
-        if ( m_stateLock.getReadHoldCount() == 0 && m_stateLock.getWriteHoldCount() == 0 )
-        {
-            throw new IllegalStateException( "State lock should be held by current thread" );
-        }
+//        if ( isLogEnabled( LogService.LOG_DEBUG ) )
+//        {
+//            lockingActivity.add( "deescalateLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
+//        }
+        m_stateLock.unlock();
+//        lockingThread = null;
+//        lockingStackTrace = null;
     }
 
     final boolean isWriteLocked()
     {
-        return m_stateLock.getWriteHoldCount() > 0;
-    }
-
-    private void dumpThreads()
-    {
-        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-        StringBuffer b = new StringBuffer( "Thread dump\n" );
-        ThreadInfo[] infos = threadMXBean.dumpAllThreads( threadMXBean.isObjectMonitorUsageSupported(), threadMXBean.isSynchronizerUsageSupported() );
-        for ( int i = 0; i < infos.length; i++ )
-        {
-            ThreadInfo ti = infos[i];
-            b.append( "\n\nThreadId: " ).append( ti.getThreadId() ).append( " : name: " ).append( ti.getThreadName() ).append( " State: " ).append( ti.getThreadState() );
-            b.append( "\n  LockInfo: " ).append( ti.getLockInfo() ).append( " LockOwnerId: " ).append( ti.getLockOwnerId() ).append( " LockOwnerName: ").append( ti.getLockOwnerName() );
-            StackTraceElement[] stackTrace = ti.getStackTrace();
-            for (int j = 0; j < stackTrace.length; j++ )
-            {
-                b.append( "\n  " ).append( stackTrace[j] );
-            }
-        }
-        log( LogService.LOG_ERROR, b.toString(), null );
+        return m_stateLock.getHoldCount() > 0;
     }
 
 //---------- Component ID management
@@ -333,7 +247,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
 
     //---------- Asynchronous frontend to state change methods ----------------
-
+    private static final AtomicLong taskCounter = new AtomicLong( );
     /**
      * Enables this component and - if satisfied - also activates it. If
      * enabling the component fails for any reason, the component ends up
@@ -352,46 +266,61 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     public final void enable( final boolean async )
     {
-        final boolean release = obtainReadLock( "AbstractComponentManager.enable.1" );
+        if (enabled)
+        {
+            return;
+        }
         try
         {
+            synchronized ( enabledLatchLock )
+            {
+                if ( enabledLatch != null )
+                {
+                    enabledLatch.await();
+                }
+                enabledLatch  = new CountDownLatch( 1 );
+            }
             enableInternal();
             if ( !async )
             {
                 activateInternal();
             }
         }
+        catch ( InterruptedException e )
+        {
+            //??
+        }
         finally
         {
-            if ( release )
+            if ( !async )
             {
-                releaseReadLock( "AbstractComponentManager.enable.1" );
+                enabledLatch.countDown();
             }
+            enabled = true;
         }
 
         if ( async )
         {
             m_activator.schedule( new Runnable()
             {
+
+                long count = taskCounter.incrementAndGet();
+
                 public void run()
                 {
-                    final boolean release = obtainReadLock( "AbstractComponentManager.enable.2" );
                     try
                     {
                         activateInternal();
                     }
                     finally
                     {
-                        if ( release )
-                        {
-                            releaseReadLock( "AbstractComponentManager.enable.2" );
-                        }
+                        enabledLatch.countDown();
                     }
                 }
 
                 public String toString()
                 {
-                    return "Async Activate: " + getComponentMetadata().getName();
+                    return "Async Activate: " + getComponentMetadata().getName() + " id: " + count;
                 }
             } );
         }
@@ -411,46 +340,61 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     public final void disable( final boolean async )
     {
-        final boolean release = obtainReadLock( "AbstractComponentManager.disable.1" );
+        if (!enabled)
+        {
+            return;
+        }
         try
         {
+            synchronized ( enabledLatchLock )
+            {
+                if (enabledLatch != null)
+                {
+                    enabledLatch.await();
+                }
+                enabledLatch = new CountDownLatch( 1 );
+            }
             if ( !async )
             {
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED );
+                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true );
             }
             disableInternal();
         }
+        catch ( InterruptedException e )
+        {
+            //??
+        }
         finally
         {
-            if ( release )
+            if (!async)
             {
-                releaseReadLock( "AbstractComponentManager.disable.1" );
+                enabledLatch.countDown();
             }
+            enabled = false;
         }
 
         if ( async )
         {
             m_activator.schedule( new Runnable()
             {
+
+                long count = taskCounter.incrementAndGet();
+
                 public void run()
                 {
-                    final boolean release = obtainReadLock( "AbstractComponentManager.disable.2" );
                     try
                     {
-                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED );
+                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true );
                     }
                     finally
                     {
-                        if ( release )
-                        {
-                            releaseReadLock( "AbstractComponentManager.disable.2" );
-                        }
+                        enabledLatch.countDown();
                     }
                 }
 
                 public String toString()
                 {
-                    return "Async Deactivate: " + getComponentMetadata().getName();
+                    return "Async Deactivate: " + getComponentMetadata().getName() + " id: " + count;
                 }
 
             } );
@@ -481,18 +425,8 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
      */
     public void dispose( int reason )
     {
-        final boolean release = obtainReadLock( "AbstractComponentManager.dispose.1" );
-        try
-        {
-            disposeInternal( reason );
-        }
-        finally
-        {
-            if ( release )
-            {
-                releaseReadLock( "AbstractComponentManager.dispose.1" );
-            }
-        }
+        disposed = true;
+        disposeInternal( reason );
     }
 
     //---------- Component interface ------------------------------------------
@@ -641,9 +575,9 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         return m_state.activate( this );
     }
 
-    final void deactivateInternal( int reason )
+    final void deactivateInternal( int reason, boolean disable )
     {
-        m_state.deactivate( this, reason );
+        m_state.deactivate( this, reason, disable );
     }
 
     final void disableInternal()
@@ -738,8 +672,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     protected void registerService( String[] provides )
     {
-        releaseReadLock( "register.service.1" );
-        try
+        synchronized ( m_serviceRegistration )
         {
             ServiceRegistration existing = ( ServiceRegistration ) m_serviceRegistration.get();
             if ( existing == null )
@@ -750,22 +683,19 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                 final Dictionary serviceProperties = getServiceProperties();
 
                 ServiceRegistration newRegistration = getActivator().getBundleContext().registerService(
-                    provides,
-                    getService(), serviceProperties );
-                boolean weWon = m_serviceRegistration.compareAndSet( existing, newRegistration );
-                if (weWon)
+                        provides,
+                        getService(), serviceProperties );
+                boolean weWon = !disposed && m_serviceRegistration.compareAndSet( existing, newRegistration );
+                if ( weWon )
                 {
                     return;
                 }
                 newRegistration.unregister();
             }
-            else {
+            else
+            {
                 log( LogService.LOG_DEBUG, "Existing service registration, not registering", null );
             }
-        }
-        finally
-        {
-            obtainReadLock( "register.service.1" );
         }
 
     }
@@ -785,20 +715,26 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     final void unregisterComponentService()
     {
-        ServiceRegistration sr = ( ServiceRegistration ) m_serviceRegistration.get();
+        if ( !disposed || m_serviceRegistration.get() != null )
+        {
+            synchronized ( m_serviceRegistration )
+            {
+                ServiceRegistration sr = ( ServiceRegistration ) m_serviceRegistration.get();
 
-        if ( sr != null && m_serviceRegistration.compareAndSet( sr, null ) )
-        {
-            log( LogService.LOG_DEBUG, "Unregistering services", null );
-            sr.unregister();
-        }
-        else if (sr == null)
-        {
-            log( LogService.LOG_DEBUG, "Service already unregistered", null);
-        }
-        else
-        {
-            log( LogService.LOG_DEBUG, "Service unregistered concurrently by another thread", null);
+                if ( sr != null && m_serviceRegistration.compareAndSet( sr, null ) )
+                {
+                    log( LogService.LOG_DEBUG, "Unregistering services", null );
+                    sr.unregister();
+                }
+                else if (sr == null)
+                {
+                    log( LogService.LOG_DEBUG, "Service already unregistered", null);
+                }
+                else
+                {
+                    log( LogService.LOG_DEBUG, "Service unregistered concurrently by another thread", null);
+                }
+            }
         }
     }
 
@@ -1161,7 +1097,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         while ( it.hasNext() )
         {
             DependencyManager dm = (DependencyManager) it.next();
-            dm.disable();
+            dm.unregisterServiceListener();
         }
     }
 
@@ -1359,9 +1295,9 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         }
 
 
-        void deactivate( AbstractComponentManager acm, int reason )
+        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
-            log( acm, "deactivate (reason: " + reason + ")" );
+            log( acm, "deactivate (reason: " + reason + ") (dsable: " + disable + ")" );
         }
 
 
@@ -1383,22 +1319,25 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                 { m_name, event, acm.m_serviceRegistration.get() }, null );
         }
 
-        void doDeactivate( AbstractComponentManager acm, int reason )
+        void doDeactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
             try
             {
-                acm.releaseReadLock( "AbstractComponentManager.State.doDeactivate.1" );
                 acm.unregisterComponentService();
                 acm.obtainWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
                 try
                 {
                     acm.deleteComponent( reason );
                     acm.deactivateDependencyManagers();
+                    if ( disable )
+                    {
+                        acm.disableDependencyManagers();
+                    }
                     acm.unsetDependencyMap();
                 }
                 finally
                 {
-                    acm.deescalateLock( "AbstractComponentManager.State.doDeactivate.1" );
+                    acm.releaseWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
                 }
             }
             catch ( Throwable t )
@@ -1410,7 +1349,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         void doDisable( AbstractComponentManager acm )
         {
             // dispose and recreate dependency managers
-            acm.disableDependencyManagers();
+//            acm.disableDependencyManagers();
 
             // reset the component id now (a disabled component has none)
             acm.unregisterComponentId();
@@ -1465,9 +1404,9 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             }
         }
 
-        void deactivate( AbstractComponentManager acm, int reason )
+        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
-            doDeactivate( acm, reason );
+            doDeactivate( acm, reason, disable );
         }
 
         Object getService( ImmediateComponentManager dcm )
@@ -1521,7 +1460,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                 return true;
             }
 
-            acm.log( LogService.LOG_DEBUG, "Activating component", null );
+            acm.log( LogService.LOG_DEBUG, "Activating component from state ", new Object[] {this},  null );
 
             // Before creating the implementation object, we are going to
             // test if we have configuration if such is required
@@ -1572,14 +1511,12 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             // 4. Call the activate method, if present
             if ( ( acm.isImmediate() || acm.getComponentMetadata().isFactory() ) )
             {
-                acm.releaseReadLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                 //don't collect dependencies for a factory component.
                 try
                 {
                     if ( !acm.collectDependencies() )
                     {
                         acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object (1)", null );
-                        acm.obtainReadLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                         return false;
                     }
                     else
@@ -1592,13 +1529,11 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                 catch ( IllegalStateException e )
                 {
                     acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object (2)", null );
-                    acm.obtainReadLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                     return false;
                 }
                 catch ( Throwable t )
                 {
                     acm.log( LogService.LOG_ERROR, "Unexpected throwable from attempt to collect dependencies", t );
-                    acm.obtainReadLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                     return false;
                 }
                 acm.obtainWriteLock( "AbstractComponentManager.Unsatisfied.activate.1" );
@@ -1614,7 +1549,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                 }
                 finally
                 {
-                    acm.deescalateLock( "AbstractComponentManager.Unsatisfied.activate.1" );
+                    acm.releaseWriteLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                 }
 
             }
@@ -1622,13 +1557,13 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
         }
 
-        void deactivate( AbstractComponentManager acm, int reason )
+        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
             acm.log( LogService.LOG_DEBUG, "Deactivating component", null );
 
             // catch any problems from deleting the component to prevent the
             // component to remain in the deactivating state !
-            doDeactivate(acm, reason);
+            doDeactivate(acm, reason, disable );
 
             acm.log( LogService.LOG_DEBUG, "Component deactivated", null );
         }
@@ -1646,6 +1581,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
         void dispose( AbstractComponentManager acm, int reason )
         {
+            acm.disableDependencyManagers();
             doDisable( acm );
             acm.clear();   //content of Disabled.dispose
             acm.changeState( Disposed.getInstance() );
@@ -1679,13 +1615,13 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         }
 
 
-        void deactivate( AbstractComponentManager acm, int reason )
+        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
             acm.log( LogService.LOG_DEBUG, "Deactivating component", null );
 
             // catch any problems from deleting the component to prevent the
             // component to remain in the deactivating state !
-            doDeactivate(acm, reason);
+            doDeactivate(acm, reason, disable );
 
             if ( acm.state().isSatisfied() )
             {
@@ -1698,11 +1634,12 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         {
             doDisable( acm );
             acm.changeState( Disabled.getInstance() );
+            acm.log( LogService.LOG_DEBUG, "Component disabled", null );
         }
 
         void dispose( AbstractComponentManager acm, int reason )
         {
-            doDeactivate( acm, reason );
+            doDeactivate( acm, reason, true );
             doDisable(acm);
             acm.clear();   //content of Disabled.dispose
             acm.changeState( Disposed.getInstance() );
@@ -1747,7 +1684,10 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         void ungetService( ImmediateComponentManager dcm )
         {
             dcm.deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
-            dcm.changeState( Registered.getInstance() );
+            if ( dcm.enabled )
+            {
+                dcm.changeState( Registered.getInstance() );
+            }
         }
     }
 
@@ -1835,7 +1775,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
      * instances of component factory components created with the
      * <code>ComponentFactory.newInstance</code> method. This state acts the
      * same as the {@link Active} state except that the
-     * {@link #deactivate(AbstractComponentManager, int)} switches to the
+     * {@link org.apache.felix.scr.impl.manager.AbstractComponentManager.State#deactivate(AbstractComponentManager, int, boolean)} switches to the
      * real {@link Active} state before actually disposing off the component
      * because component factory instances are never reactivated after
      * deactivated due to not being satisified any longer. See section 112.5.5,
@@ -1868,7 +1808,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             dcm.changeState( Registered.getInstance() );
         }
 
-        void deactivate( AbstractComponentManager acm, int reason )
+        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
             acm.disposeInternal( reason );
         }
@@ -1898,7 +1838,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             throw new IllegalStateException( "activate: " + this );
         }
 
-        void deactivate( AbstractComponentManager acm, int reason )
+        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
             throw new IllegalStateException( "deactivate: " + this );
         }
@@ -1921,97 +1861,50 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     private static interface LockWrapper
     {
-        boolean tryReadLock( long milliseconds ) throws InterruptedException;
-        long getReadHoldCount();
-        void unlockReadLock();
-
-        boolean tryWriteLock( long milliseconds ) throws InterruptedException;
-        long getWriteHoldCount();
-        void unlockWriteLock();
-        void deescalate();
+        boolean tryLock( long milliseconds ) throws InterruptedException;
+        long getHoldCount();
+        void unlock();
 
 
     }
 
     private static class JLock implements LockWrapper
     {
-        private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock( true );
+        private final ReentrantLock lock = new ReentrantLock( true );
 
-        public boolean tryReadLock( long milliseconds ) throws InterruptedException
+        public boolean tryLock( long milliseconds ) throws InterruptedException
         {
-             return lock.readLock().tryLock( milliseconds, TimeUnit.MILLISECONDS );
+            return lock.tryLock( milliseconds, TimeUnit.MILLISECONDS );
         }
 
-        public long getReadHoldCount()
+        public long getHoldCount()
         {
-            return lock.getReadHoldCount();
+            return lock.getHoldCount();
         }
 
-        public void unlockReadLock()
+        public void unlock()
         {
-            lock.readLock().unlock();
-        }
-
-        public boolean tryWriteLock( long milliseconds ) throws InterruptedException
-        {
-            return lock.writeLock().tryLock( milliseconds, TimeUnit.MILLISECONDS );
-        }
-
-        public long getWriteHoldCount()
-        {
-            return lock.getWriteHoldCount();
-        }
-
-        public void unlockWriteLock()
-        {
-            lock.writeLock().unlock();
-        }
-
-        public void deescalate()
-        {
-            lock.readLock().lock();
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 
     private static class EDULock  implements LockWrapper
     {
-        private final edu.emory.mathcs.backport.java.util.concurrent.locks.ReentrantReadWriteLock lock = new edu.emory.mathcs.backport.java.util.concurrent.locks.ReentrantReadWriteLock( );
+        private final edu.emory.mathcs.backport.java.util.concurrent.locks.ReentrantLock lock = new edu.emory.mathcs.backport.java.util.concurrent.locks.ReentrantLock( );
 
-        public boolean tryReadLock( long milliseconds ) throws InterruptedException
+        public boolean tryLock( long milliseconds ) throws InterruptedException
         {
-             return lock.readLock().tryLock( milliseconds, edu.emory.mathcs.backport.java.util.concurrent.TimeUnit.MILLISECONDS );
+            return lock.tryLock( milliseconds, edu.emory.mathcs.backport.java.util.concurrent.TimeUnit.MILLISECONDS );
         }
 
-        public long getReadHoldCount()
+        public long getHoldCount()
         {
-            return lock.getReadHoldCount();
+            return lock.getHoldCount();
         }
 
-        public void unlockReadLock()
+        public void unlock()
         {
-            lock.readLock().unlock();
-        }
-
-        public boolean tryWriteLock( long milliseconds ) throws InterruptedException
-        {
-            return lock.writeLock().tryLock( milliseconds, edu.emory.mathcs.backport.java.util.concurrent.TimeUnit.MILLISECONDS );
-        }
-
-        public long getWriteHoldCount()
-        {
-            return lock.getWriteHoldCount();
-        }
-
-        public void unlockWriteLock()
-        {
-            lock.writeLock().unlock();
-        }
-
-        public void deescalate()
-        {
-            lock.readLock().lock();
-            lock.writeLock().unlock();
+            lock.unlock();
         }
     }
 

@@ -192,19 +192,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
 
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            // singleton configuration deleted
-            final boolean release = m_singleComponent.obtainReadLock( "ImmediateComponentHolder.configurationDeleted.1" );
-            try
-            {
-                m_singleComponent.reconfigure( null );
-            }
-            finally
-            {
-                if ( release )
-                {
-                    m_singleComponent.releaseReadLock( "ImmediateComponentHolder.configurationDeleted.1" );
-                }
-            }
+            m_singleComponent.reconfigure( null );
         }
         else
         {
@@ -213,47 +201,36 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
             if ( icm != null )
             {
                 boolean dispose = true;
-                final boolean release = icm.obtainReadLock( "ImmediateComponentHolder.configurationDeleted.2" );
-                try
+                // special casing if the single component is deconfigured
+                if ( m_singleComponent == icm )
                 {
-                    // special casing if the single component is deconfigured
-                    if ( m_singleComponent == icm )
+
+                    // if the single component is the last remaining, deconfi
+                    if ( m_components.isEmpty() )
                     {
 
-                        // if the single component is the last remaining, deconfi
-                        if ( m_components.isEmpty() )
-                        {
+                        // if the single component is the last remaining
+                        // deconfigure it
+                        icm.reconfigure( null );
+                        dispose = false;
 
-                            // if the single component is the last remaining
-                            // deconfigure it
-                            icm.reconfigure( null );
-                            dispose = false;
-
-                        }
-                        else
-                        {
-
-                            // replace the single component field with another
-                            // entry from the map
-                            m_singleComponent = ( ImmediateComponentManager ) m_components.values().iterator().next();
-
-                        }
                     }
-
-                    // icm may be null if the last configuration deleted was the
-                    // single component's configuration. Otherwise the component
-                    // is not the "last" and has to be disposed off
-                    if ( dispose )
+                    else
                     {
-                        icm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
+
+                        // replace the single component field with another
+                        // entry from the map
+                        m_singleComponent = ( ImmediateComponentManager ) m_components.values().iterator().next();
+
                     }
                 }
-                finally
+
+                // icm may be null if the last configuration deleted was the
+                // single component's configuration. Otherwise the component
+                // is not the "last" and has to be disposed off
+                if ( dispose )
                 {
-                    if ( release )
-                    {
-                        icm.releaseReadLock( "ImmediateComponentHolder.configurationDeleted.2" );
-                    }
+                    icm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
                 }
             }
         }
@@ -285,20 +262,9 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             log( LogService.LOG_DEBUG, "ImmediateComponentHolder reconfiguring single component for pid {0} ",
-                    new Object[] {pid}, null);
-            final boolean release = m_singleComponent.obtainReadLock( "ImmediateComponentHolder.configurationUpdated.1" );
-            try
-            {
-                // singleton configuration has pid equal to component name
-                m_singleComponent.reconfigure( props );
-            }
-            finally
-            {
-                if ( release )
-                {
-                    m_singleComponent.releaseReadLock( "ImmediateComponentHolder.configurationUpdated.1" );
-                }
-            }
+                    new Object[] {pid}, null );
+            // singleton configuration has pid equal to component name
+            m_singleComponent.reconfigure( props );
         }
         else
         {
@@ -307,20 +273,9 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
             if ( icm != null )
             {
                 log( LogService.LOG_DEBUG, "ImmediateComponentHolder reconfiguring existing component for pid {0} ",
-                        new Object[] {pid}, null);
-                final boolean release = icm.obtainReadLock( "ImmediateComponentHolder.configurationUpdated.2" );
-                try
-                {
-                    // factory configuration updated for existing component instance
-                    icm.reconfigure( props );
-                }
-                finally
-                {
-                    if ( release )
-                    {
-                        icm.releaseReadLock( "ImmediateComponentHolder.configurationUpdated.2" );
-                    }
-                }
+                        new Object[] {pid}, null );
+                // factory configuration updated for existing component instance
+                icm.reconfigure( props );
             }
             else
             {
@@ -330,30 +285,19 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
                 {
                     // configure the single instance if this is not configured
                     log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuring the unconfigured single component for pid {0} ",
-                            new Object[] {pid}, null);
+                            new Object[] {pid}, null );
                     newIcm = m_singleComponent;
                 }
                 else
                 {
                     // otherwise create a new instance to provide the config to
                     log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuring a new component for pid {0} ",
-                            new Object[] {pid}, null);
+                            new Object[] {pid}, null );
                     newIcm = createComponentManager();
                 }
 
                 // configure the component
-                final boolean release = newIcm.obtainReadLock( "ImmediateComponentHolder.configurationUpdated.3" );
-                try
-                {
-                    newIcm.reconfigure( props );
-                }
-                finally
-                {
-                    if ( release )
-                    {
-                        newIcm.releaseReadLock( "ImmediateComponentHolder.configurationUpdated.3" );
-                    }
-                }
+                newIcm.reconfigure( props );
 
                 // enable the component if it is initially enabled
                 if ( m_enabled && getComponentMetadata().isEnabled() )
