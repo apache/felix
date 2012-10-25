@@ -109,6 +109,46 @@ public class ManipulatorTest extends TestCase {
 
     }
 
+    public void testManipulatingTheNonSunPOJO() throws Exception {
+        Manipulator manipulator = new Manipulator();
+        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/NonSunClass.class")));
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.NonSunClass", clazz);
+        Class cl = classloader.findClass("test.NonSunClass");
+        Assert.assertNotNull(cl);
+        Assert.assertNotNull(manipulator.getManipulationMetadata());
+
+        System.out.println(manipulator.getManipulationMetadata());
+
+        // The manipulation add stuff to the class.
+        Assert.assertTrue(clazz.length > getBytesFromFile(new File("target/test-classes/test/NonSunClass.class")).length);
+
+
+        boolean found = false;
+        Constructor cst = null;
+        Constructor[] csts = cl.getDeclaredConstructors();
+        for (int i = 0; i < csts.length; i++) {
+            System.out.println(Arrays.asList(csts[i].getParameterTypes()));
+            if (csts[i].getParameterTypes().length == 1  &&
+                    csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
+                found = true;
+                cst = csts[i];
+            }
+        }
+        Assert.assertTrue(found);
+
+        // Check the POJO interface
+        Assert.assertTrue(Arrays.asList(cl.getInterfaces()).contains(Pojo.class));
+
+        cst.setAccessible(true);
+        Object pojo = cst.newInstance(new Object[] {new InstanceManager()});
+        Assert.assertNotNull(pojo);
+        Assert.assertTrue(pojo instanceof Pojo);
+
+        Method method = cl.getMethod("getS1", new Class[0]);
+        Assert.assertTrue(((Boolean) method.invoke(pojo, new Object[0])).booleanValue());
+
+    }
+
     public void testManipulatingChild() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/Child.class")));
