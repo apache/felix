@@ -141,7 +141,7 @@
 
 	<scr:component xmlns:scr='http://www.osgi.org/xmlns/scr/v1.1.0'
 		name='org.apache.felix.scr.integration.components.felix3680.Main'
-		activate='start' deactivate='stop'>
+		activate='start' deactivate='stop' enabled="false">
 		<implementation
 			class='org.apache.felix.scr.integration.components.felix3680.Main' />
 		<reference name='a'

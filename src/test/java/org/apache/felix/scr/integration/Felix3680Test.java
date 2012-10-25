@@ -41,8 +41,9 @@ public class Felix3680Test extends ComponentTestBase
         // uncomment to enable debugging of this test class
         //        paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_FELIX_3680.xml";
+        restrictedLogging = true;
         //comment to get debug logging if the test fails.
-        DS_LOGLEVEL = "warn";
+//        DS_LOGLEVEL = "warn";
     }
 
     @Inject
