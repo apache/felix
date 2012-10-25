@@ -47,6 +47,8 @@ public class Main implements Runnable
     volatile ConcurrentHashMap<Class, ServiceRegistration> m_registrations = new ConcurrentHashMap<Class, ServiceRegistration>();
     volatile Exception _bindStackTrace;
 
+    private volatile boolean running = true;
+
 
     /**
      * Helper used to randomly enable or disable a list of components.
@@ -189,19 +191,22 @@ public class Main implements Runnable
 
     void start( ComponentContext ctx )
     {
-        m_logService.log( LogService.LOG_WARNING, "Main.start" );
         m_ctx = ctx;
         m_bctx = ctx.getBundleContext();
         m_ctx.getBundleContext().registerService( Executor.class.getName(), m_exec, null );
         new Thread( this ).start();
     }
 
+    void stop()
+    {
+        running = false;
+    }
+
 
     public void run()
     {
-        m_logService.log( LogService.LOG_WARNING, "Main.run" );
         int loop = 0;
-        while ( true )
+        while ( running )
         {
             m_enabledLatch = new CountDownLatch( 11 ); // 10 for registrations of B,C,D,E,F,G,H,I,J,K + 1 for Main.bindA
             m_disabledLatch = new CountDownLatch( 11 ); // 10 for unregistrations of B,C,D,E,F,G,H,I,J,K + 1 for Main.unbindA
@@ -239,10 +244,10 @@ public class Main implements Runnable
             }
 
             ++loop;
-            //            if ( loop % 100 == 0 )
-            //            {
-            m_logService.log( LogService.LOG_WARNING, "Performed " + loop + " tests." );
-            // }
+            if ( loop % 100 == 0 )
+            {
+                m_logService.log( LogService.LOG_WARNING, "Performed " + loop + " tests." );
+            }
         }
     }
 
