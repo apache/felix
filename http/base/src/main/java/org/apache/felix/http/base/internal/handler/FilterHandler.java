@@ -91,7 +91,12 @@ public final class FilterHandler
 
     public int compareTo(FilterHandler other)
     {
-        return other.ranking - this.ranking;
+        if (other.ranking == this.ranking)
+        {
+            return 0;
+        }
+
+        return (other.ranking > this.ranking) ? 1 : -1;
     }
 
     public int getRanking()
