@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,7 +28,6 @@ import org.apache.felix.metatype.MockBundleContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.metatype.MetaTypeInformation;
@@ -123,9 +122,8 @@ public class MetaTypeServiceImplTest extends TestCase
         String factoryPid = "testAfterCreation_factory";
         MockManagedServiceFactory service = new MockManagedServiceFactory();
         Dictionary props = new Hashtable();
-        props.put( Constants.SERVICE_PID, pid );
-        props.put( ConfigurationAdmin.SERVICE_FACTORYPID, factoryPid );
-        ServiceRegistration sr = bundleContext.registerService( ManagedService.class.getName(), service, props );
+        props.put( Constants.SERVICE_PID, factoryPid );
+        ServiceRegistration sr = bundleContext.registerService( ManagedServiceFactory.class.getName(), service, props );
 
         // locales should contain MockMetaTypeProvider.LOCALES
         assertNotNull( mti.getLocales() );

@@ -49,10 +49,6 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 public class MetaTypeInformationImpl implements MetaTypeInformation
 {
 
-    // also defined in org.osgi.service.cm.ConfigurationAdmin, but copied
-    // here to not create a synthetic dependency
-    public static final String SERVICE_FACTORYPID = "service.factoryPid";
-
     private final Bundle bundle;
 
     private final Set pids;

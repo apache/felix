@@ -176,32 +176,19 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
         if ( srv instanceof MetaTypeProvider )
         {
             MetaTypeProvider mtp = ( MetaTypeProvider ) srv;
-
-            // 1. check for a service factory PID
-            String factoryPid = ( String ) serviceRef.getProperty( SERVICE_FACTORYPID );
-            if ( factoryPid != null )
+            String[] pids = getServicePids( serviceRef );
+            if ( pids != null )
             {
-                addFactoryMetaTypeProvider( new String[]
-                    { factoryPid }, mtp );
-                ungetService = false;
-            }
-            else
-            {
-                // 2. check for a service PID
-                String[] pids = getServicePids( serviceRef );
-                if ( pids != null )
+                if ( isService( serviceRef, MANAGED_SERVICE ) )
                 {
-                    if ( isService( serviceRef, MANAGED_SERVICE ) )
-                    {
-                        addSingletonMetaTypeProvider( pids, mtp );
-                        ungetService = false;
-                    }
+                    addSingletonMetaTypeProvider( pids, mtp );
+                    ungetService = false;
+                }
 
-                    if ( isService( serviceRef, MANAGED_SERVICE_FACTORY ) )
-                    {
-                        addFactoryMetaTypeProvider( pids, mtp );
-                        ungetService = false;
-                    }
+                if ( isService( serviceRef, MANAGED_SERVICE_FACTORY ) )
+                {
+                    addFactoryMetaTypeProvider( pids, mtp );
+                    ungetService = false;
                 }
             }
         }
@@ -230,33 +217,20 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
     protected void removeService( ServiceReference serviceRef )
     {
         boolean ungetService = false;
-
-        // 1. check for a service factory PID
-        String factoryPid = ( String ) serviceRef.getProperty( SERVICE_FACTORYPID );
-        if ( factoryPid != null )
+        String[] pids = getServicePids( serviceRef );
+        if ( pids != null )
         {
-            ungetService = removeFactoryMetaTypeProvider( new String[]
-                { factoryPid } );
-        }
-        else
-        {
-            // 2. check for a service PID
-            String[] pids = getServicePids( serviceRef );
-            if ( pids != null )
+            if ( isService( serviceRef, MANAGED_SERVICE ) )
             {
-                if ( isService( serviceRef, MANAGED_SERVICE ) )
-                {
-                    ungetService |= removeSingletonMetaTypeProvider( pids );
-                }
+                ungetService |= removeSingletonMetaTypeProvider( pids );
+            }
 
-                if ( isService( serviceRef, MANAGED_SERVICE_FACTORY ) )
-                {
-                    ungetService |= removeFactoryMetaTypeProvider( pids );
-                }
+            if ( isService( serviceRef, MANAGED_SERVICE_FACTORY ) )
+            {
+                ungetService |= removeFactoryMetaTypeProvider( pids );
             }
         }
 
-        // 3. drop the service reference
         if ( ungetService )
         {
             bundleContext.ungetService( serviceRef );
