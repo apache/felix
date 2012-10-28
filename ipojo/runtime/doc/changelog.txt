@@ -1,3 +1,22 @@
+Changes from the 1.8.2 to 1.8.4
+--------------------------------
+
+** Bug
+    * [FELIX-3451] - "instance.name" attribute not recognized
+    * [FELIX-3500] - InstanceManager concurrency issue: "A methodID cannot be associated with a method from the POJO class"
+    * [FELIX-3501] - IPojo FactoryStateListener doesn't get notified while stopping factory
+    * [FELIX-3545] - Memory leak when unregistering a component used by an aggregate dependency with an unbind callback
+    * [FELIX-3548] - Concurrent access during startup
+    * [FELIX-3567] - iPOJO Configuration Handler should not reuse the dictionary object from the configuration admin
+    * [FELIX-3576] - iPOJO fails when using constructor injection and expecting BundleContext in ctor
+    * [FELIX-3599] - Problem with 'subservice action="instantiate"' in ipojo composite
+    * [FELIX-3621] - Two dimensional array as argument to a method in a component
+    * [FELIX-3672] - Potential Concurrent Modification Exception when a bundle is stopped
+
+** Improvement
+    * [FELIX-3560] - Extensions to IPojo's Factory and ComponentInstance documentation for custom handlers
+
+
 Version 1.8.2
 -------------
     * Initial release
