@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.ant</artifactId>
     <groupId>org.apache.felix</groupId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.8.6</version>
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO Ant Task</name>
 
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-            <version>1.9.0-SNAPSHOT</version>
+            <version>1.8.6</version>
         </dependency>
         <dependency>
             <groupId>xerces</groupId>
@@ -169,4 +169,10 @@
             </build>
         </profile>
     </profiles>
+
+  <scm>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.8.6</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.8.6</developerConnection>
+    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.8.6</url>
+  </scm>
 </project>
