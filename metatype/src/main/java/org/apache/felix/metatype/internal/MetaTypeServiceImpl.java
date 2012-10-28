@@ -20,20 +20,24 @@ package org.apache.felix.metatype.internal;
 
 
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.metatype.MetaData;
 import org.apache.felix.metatype.MetaDataReader;
+import org.apache.felix.metatype.internal.MetaTypeProviderTracker.RegistrationPropertyHolder;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.MetaTypeInformation;
+import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.MetaTypeService;
 
 
@@ -52,6 +56,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
 
     private final Map bundleMetaTypeInformation;
 
+    private final MetaTypeProviderTracker providerTracker;
 
     /**
      * Creates an instance of this class.
@@ -62,26 +67,19 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
     MetaTypeServiceImpl( BundleContext bundleContext )
     {
         this.bundleContext = bundleContext;
-        this.bundleMetaTypeInformation = new HashMap();
+        this.bundleMetaTypeInformation = new ConcurrentHashMap();
 
         bundleContext.addBundleListener( this );
+
+        this.providerTracker = new MetaTypeProviderTracker( bundleContext, MetaTypeProvider.class.getName(), this );
+        this.providerTracker.open();
     }
 
 
     void dispose()
     {
-        MetaTypeInformationImpl[] mti;
-        synchronized ( bundleMetaTypeInformation )
-        {
-            mti = ( MetaTypeInformationImpl[] ) this.bundleMetaTypeInformation.values().toArray(
-                new MetaTypeInformationImpl[bundleMetaTypeInformation.values().size()] );
-            this.bundleMetaTypeInformation.clear();
-        }
-
-        for ( int i = 0; i < mti.length; i++ )
-        {
-            mti[i].dispose();
-        }
+        this.providerTracker.close();
+        this.bundleMetaTypeInformation.clear();
     }
 
 
@@ -89,16 +87,15 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
     {
         if ( event.getType() == BundleEvent.STOPPING )
         {
-            MetaTypeInformationImpl mti;
-            synchronized ( this.bundleMetaTypeInformation )
+            SoftReference mtir = ( SoftReference ) this.bundleMetaTypeInformation.remove( new Long( event.getBundle()
+                .getBundleId() ) );
+            if ( mtir != null )
             {
-                mti = ( MetaTypeInformationImpl ) this.bundleMetaTypeInformation.remove( new Long( event.getBundle()
-                    .getBundleId() ) );
-            }
-
-            if ( mti != null )
-            {
-                mti.dispose();
+                MetaTypeInformationImpl mti = ( MetaTypeInformationImpl ) mtir.get();
+                if ( mti != null )
+                {
+                    mti.dispose();
+                }
             }
         }
     }
@@ -123,12 +120,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
             return null;
         }
 
-        MetaTypeInformation mti;
-        synchronized ( this.bundleMetaTypeInformation )
-        {
-            mti = ( MetaTypeInformation ) this.bundleMetaTypeInformation.get( new Long( bundle.getBundleId() ) );
-        }
-
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( bundle );
         if ( mti == null )
         {
             mti = fromDocuments( bundle );
@@ -138,17 +130,14 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
             }
 
             MetaTypeInformationImpl impl = null;
-            synchronized ( this.bundleMetaTypeInformation )
+            if ( bundle.getState() == Bundle.ACTIVE )
             {
-                if ( bundle.getState() == Bundle.ACTIVE )
-                {
-                    this.bundleMetaTypeInformation.put( new Long( bundle.getBundleId() ), mti );
-                }
-                else
-                {
-                    impl = ( MetaTypeInformationImpl ) mti;
-                    mti = null;
-                }
+                putMetaTypeInformationInternal( bundle, mti );
+            }
+            else
+            {
+                impl = mti;
+                mti = null;
             }
 
             if ( impl != null )
@@ -161,7 +150,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
     }
 
 
-    private MetaTypeInformation fromDocuments( Bundle bundle )
+    private MetaTypeInformationImpl fromDocuments( Bundle bundle )
     {
         MetaDataReader reader = new MetaDataReader();
 
@@ -190,5 +179,83 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
             }
         }
         return cmti;
+    }
+
+
+    protected void addSingletonMetaTypeProvider( final Bundle bundle, final String[] pids, MetaTypeProvider mtp )
+    {
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( bundle );
+        if ( mti != null )
+        {
+            mti.addSingletonMetaTypeProvider( pids, mtp );
+        }
+    }
+
+
+    protected void addFactoryMetaTypeProvider( final Bundle bundle, final String[] factoryPids, MetaTypeProvider mtp )
+    {
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( bundle );
+        if ( mti != null )
+        {
+            mti.addFactoryMetaTypeProvider( factoryPids, mtp );
+        }
+    }
+
+
+    protected boolean removeSingletonMetaTypeProvider( final Bundle bundle, final String[] pids )
+    {
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( bundle );
+        if ( mti != null )
+        {
+            return mti.removeSingletonMetaTypeProvider( pids );
+        }
+        return false;
+    }
+
+
+    protected boolean removeFactoryMetaTypeProvider( final Bundle bundle, final String[] factoryPids )
+    {
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( bundle );
+        if ( mti != null )
+        {
+            return mti.removeFactoryMetaTypeProvider( factoryPids );
+        }
+        return false;
+    }
+
+
+    private void putMetaTypeInformationInternal( final Bundle bundle, final MetaTypeInformationImpl mti )
+    {
+        final ServiceReference refs[] = this.providerTracker.getServiceReferences();
+        if ( refs != null )
+        {
+            for ( int i = 0; i < refs.length; i++ )
+            {
+                ServiceReference ref = refs[i];
+                if ( bundle.equals( ref.getBundle() ) )
+                {
+                    final MetaTypeProviderTracker.RegistrationPropertyHolder holder = ( RegistrationPropertyHolder ) this.providerTracker
+                        .getService( ref );
+                    if ( holder.getPids() != null )
+                    {
+                        mti.addSingletonMetaTypeProvider( holder.getPids(), holder.getProvider() );
+                    }
+                    if ( holder.getFactoryPids() != null )
+                    {
+                        mti.addFactoryMetaTypeProvider( holder.getFactoryPids(), holder.getProvider() );
+                    }
+                }
+            }
+        }
+
+        this.bundleMetaTypeInformation.put( new Long( bundle.getBundleId() ),
+            new SoftReference( mti ) );
+    }
+
+
+    private MetaTypeInformationImpl getMetaTypeInformationInternal( final Bundle bundle )
+    {
+        SoftReference mtir = ( SoftReference ) this.bundleMetaTypeInformation.get( new Long( bundle.getBundleId() ) );
+        return ( MetaTypeInformationImpl ) ( ( mtir == null ) ? null : mtir.get() );
     }
 }
