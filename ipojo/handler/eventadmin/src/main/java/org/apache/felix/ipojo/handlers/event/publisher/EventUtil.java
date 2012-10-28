@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.ipojo.handlers.event;
+package org.apache.felix.ipojo.handlers.event.publisher;
 
 import org.apache.felix.ipojo.parser.ParseUtils;
 
@@ -110,7 +110,7 @@ public class EventUtil {
     /**
      * Check the given topic is valid.
      * 
-     * topic ::= token ( ’/’ token ) *
+     * topic ::= token ( ï¿½/ï¿½ token ) *
      * 
      * @param topic the topic to check.
      * 
