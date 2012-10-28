@@ -49,7 +49,7 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
             <!-- Same as the iPOJO core embedded manipulator -->
-            <version>1.8.0</version>
+            <version>1.8.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>

@@ -34,11 +34,14 @@
            1.8.2:
            * change in the MethodInterceptor interface (FELIX-3144)
            * change in the Factory interface (FELIX-3190)
+
+           1.8.4:
+           * change in ComponentTypeDescription (FELIX-3560)
         -->
-        <ipojo.package.version>1.8.2</ipojo.package.version>
+        <ipojo.package.version>1.8.4</ipojo.package.version>
 
         <!-- Embedded manipulator version -->
-        <ipojo.manipulator.version>1.8.0</ipojo.manipulator.version>
+        <ipojo.manipulator.version>1.8.6</ipojo.manipulator.version>
     </properties>
 
     <description>
@@ -116,7 +119,6 @@
                             org.osgi.framework;version=1.3, <!-- To support KF 2 -->
                             org.osgi.service.cm,
                             org.osgi.service.log,
-                            !org.objectweb.asm.tree,
                             !sun.io,
                             !net.sourceforge.cobertura.*, <!--  To support code coverage -->
 
@@ -137,7 +139,8 @@
                             <!-- ASM (Manipulator dependencies) -->
                             org.objectweb.asm.commons,
                             org.objectweb.asm.signature,
-                            org.objectweb.asm
+                            org.objectweb.asm,
+                            org.objectweb.asm.tree
                         </Private-Package>
                         <Export-Package>
                             org.apache.felix.ipojo; version="${ipojo.package.version}",
