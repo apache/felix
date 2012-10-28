@@ -57,8 +57,6 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
 
     private final Map metaTypeProviders;
 
-    private final MetaTypeProviderTracker providerTacker;
-
     private Set locales;
 
 
@@ -68,16 +66,11 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
         this.pids = new HashSet();
         this.factoryPids = new HashSet();
         this.metaTypeProviders = new HashMap();
-
-        this.providerTacker = new MetaTypeProviderTracker( serviceBundleContext, this );
-        this.providerTacker.open();
     }
 
 
     void dispose()
     {
-        this.providerTacker.close();
-
         this.pids.clear();
         this.factoryPids.clear();
         this.locales = null;
