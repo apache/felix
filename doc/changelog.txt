@@ -1,3 +1,16 @@
+Changes from the 1.8.4 to 1.8.6
+-------------------------------
+
+** Bug
+    * [FELIX-3461] - Re-manipulation with annotated component produces corrupted MANIFEST
+    * [FELIX-3466] - Pojoization.directoryManipulation() does not take MANIFEST file location into account.
+    * [FELIX-3508] - IPojo Manipulator left out 'array of enums' in generated metadata
+    * [FELIX-3539] - iPOJO Manipulator failed on classes containing expanded frames
+    * [FELIX-3573] - IPojo bytecode manipulation generates a duplicate local variable
+    * [FELIX-3574] - IPojo bytecode manipulation looses method argument names
+    * [FELIX-3621] - Two dimensional array as argument to a method in a component
+
+
 Changes from the 1.8.2 to 1.8.4
 -------------------------------
 
