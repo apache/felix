@@ -114,7 +114,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-ipojo-plugin</artifactId>
-        <version>${ipojo.core.snapshot}</version>
+        <version>${ipojo.manipulator.snapshot}</version>
         <executions>
           <execution>
             <goals>

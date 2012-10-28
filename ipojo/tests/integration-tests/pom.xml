@@ -62,34 +62,31 @@
         <dependency>
             <groupId>ipojo.tests</groupId>
             <artifactId>tests.manipulation.metadata</artifactId>
-            <version>${ipojo.core.snapshot}</version>
+            <version>${ipojo.manipulator.snapshot}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ipojo.tests</groupId>
             <artifactId>tests.manipulation</artifactId>
-            <version>${ipojo.core.snapshot}</version>
+            <version>${ipojo.manipulator.snapshot}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ipojo.tests</groupId>
-            <artifactId>tests.manipulation.primitives
-      </artifactId>
-            <version>${ipojo.core.snapshot}</version>
+            <artifactId>tests.manipulation.primitives</artifactId>
+            <version>${ipojo.manipulator.snapshot}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ipojo.tests</groupId>
-            <artifactId>tests.manipulation.creation
-      </artifactId>
-            <version>${ipojo.core.snapshot}</version>
+            <artifactId>tests.manipulation.creation</artifactId>
+            <version>${ipojo.manipulator.snapshot}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ipojo.tests</groupId>
-            <artifactId>tests.manipulation.java5
-      </artifactId>
-            <version>${ipojo.core.snapshot}</version>
+            <artifactId>tests.manipulation.java5</artifactId>
+            <version>${ipojo.manipulator.snapshot}</version>
             <scope>test</scope>
         </dependency>
 
