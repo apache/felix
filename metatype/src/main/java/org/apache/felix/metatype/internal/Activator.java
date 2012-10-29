@@ -96,7 +96,7 @@ public class Activator implements BundleActivator
         // register the MetaTypeService now, that we are ready
         Dictionary props = new Hashtable();
         props.put( Constants.SERVICE_PID, "org.apache.felix.metatype.MetaTypeService" );
-        props.put( Constants.SERVICE_DESCRIPTION, "MetaTypeService Specification 1.1 Implementation" );
+        props.put( Constants.SERVICE_DESCRIPTION, "MetaTypeService Specification 1.2 Implementation" );
         props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
         MetaTypeService metaTypeService = new MetaTypeServiceImpl( context );
         context.registerService( MetaTypeService.class.getName(), metaTypeService, props );
