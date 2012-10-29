@@ -22,14 +22,8 @@ package org.apache.felix.metatype.internal;
 import java.util.Arrays;
 import java.util.Collection;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.MetaTypeProvider;
 
 
@@ -41,116 +35,19 @@ import org.osgi.service.metatype.MetaTypeProvider;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implements ServiceListener
+public class ServiceMetaTypeInformation extends MetaTypeInformationImpl
 {
-
-    private static final String MANAGED_SERVICE = "org.osgi.service.cm.ManagedService";
-
-    private static final String MANAGED_SERVICE_FACTORY = "org.osgi.service.cm.ManagedServiceFactory";
-
-    /**
-     * The filter specification to find <code>ManagedService</code>s and
-     * <code>ManagedServiceFactory</code>s as well as to register a service
-     * listener for those services (value is
-     * "(|(objectClass=org.osgi.service.cm.ManagedService)(objectClass=org.osgi.service.cm.ManagedServiceFactory))").
-     * We use the hard coded class name here to not create a dependency on the
-     * ConfigurationAdmin service, which may not be available.
-     */
-    private static final String FILTER = "(|(objectClass=" + MANAGED_SERVICE + ")(objectClass="
-        + MANAGED_SERVICE_FACTORY + "))";
-
-    /**
-     * The <code>BundleContext</code> used to get and unget services which
-     * have to be registered and unregistered with the base class.
-     */
-    private final BundleContext bundleContext;
-
 
     /**
      * Creates an instance of this class handling services of the given
      * <code>bundle</code>.
      *
-     * @param bundleContext The <code>BundleContext</code> used to get and
-     *            unget services.
      * @param bundle The <code>Bundle</code> whose services are handled by
      *            this class.
      */
-    public ServiceMetaTypeInformation( BundleContext bundleContext, Bundle bundle )
+    public ServiceMetaTypeInformation( Bundle bundle )
     {
-        super( bundleContext, bundle );
-
-        this.bundleContext = bundleContext;
-
-        // register for service events for the bundle
-        try
-        {
-            bundleContext.addServiceListener( this, FILTER );
-        }
-        catch ( InvalidSyntaxException ise )
-        {
-            Activator.log( LogService.LOG_ERROR, "ServiceMetaTypeInformation: Cannot register for service events", ise );
-        }
-
-        // prepare the filter to select existing services
-        Filter filter;
-        try
-        {
-            filter = bundleContext.createFilter( FILTER );
-        }
-        catch ( InvalidSyntaxException ise )
-        {
-            Activator.log( LogService.LOG_ERROR, "ServiceMetaTypeInformation: Cannot create filter '" + FILTER + "'",
-                ise );
-            return;
-        }
-
-        // add current services of the bundle
-        ServiceReference[] sr = bundle.getRegisteredServices();
-        if ( sr != null )
-        {
-            for ( int i = 0; i < sr.length; i++ )
-            {
-                if ( filter.match( sr[i] ) )
-                {
-                    addService( sr[i] );
-                }
-            }
-        }
-    }
-
-
-    void dispose()
-    {
-        this.bundleContext.removeServiceListener( this );
-        super.dispose();
-    }
-
-
-    // ---------- ServiceListener ----------------------------------------------
-
-    /**
-     * Handles service registration and unregistration events ignoring all
-     * services not belonging to the <code>Bundle</code> which is handled by
-     * this instance.
-     *
-     * @param event The <code>ServiceEvent</code>
-     */
-    public void serviceChanged( ServiceEvent event )
-    {
-        // only care for services of our bundle
-        if ( !getBundle().equals( event.getServiceReference().getBundle() ) )
-        {
-            return;
-        }
-
-        if ( event.getType() == ServiceEvent.REGISTERED )
-        {
-            addService( event.getServiceReference() );
-        }
-        else if ( event.getType() == ServiceEvent.UNREGISTERING )
-        {
-            removeService( event.getServiceReference() );
-        }
+        super( bundle );
     }
 
 
@@ -167,35 +64,19 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
      * @param serviceRef The <code>ServiceReference</code> describing the
      *            service to be checked and handled.
      */
-    protected void addService( ServiceReference serviceRef )
+    protected void addService( String[] pids, boolean isSingleton, boolean isFactory, MetaTypeProvider mtp )
     {
-        Object srv = bundleContext.getService( serviceRef );
-
-        boolean ungetService = true;
-
-        if ( srv instanceof MetaTypeProvider )
+        if ( pids != null )
         {
-            MetaTypeProvider mtp = ( MetaTypeProvider ) srv;
-            String[] pids = getServicePids( serviceRef );
-            if ( pids != null )
+            if ( isSingleton )
             {
-                if ( isService( serviceRef, MANAGED_SERVICE ) )
-                {
-                    addSingletonMetaTypeProvider( pids, mtp );
-                    ungetService = false;
-                }
-
-                if ( isService( serviceRef, MANAGED_SERVICE_FACTORY ) )
-                {
-                    addFactoryMetaTypeProvider( pids, mtp );
-                    ungetService = false;
-                }
+                addSingletonMetaTypeProvider( pids, mtp );
             }
-        }
 
-        if ( ungetService )
-        {
-            bundleContext.ungetService( serviceRef );
+            if ( isFactory )
+            {
+                addFactoryMetaTypeProvider( pids, mtp );
+            }
         }
     }
 
@@ -214,26 +95,19 @@ public class ServiceMetaTypeInformation extends MetaTypeInformationImpl implemen
      * @param serviceRef The <code>ServiceReference</code> describing the
      *            service to be unregistered.
      */
-    protected void removeService( ServiceReference serviceRef )
+    protected void removeService( String[] pids, boolean isSingleton, boolean isFactory )
     {
-        boolean ungetService = false;
-        String[] pids = getServicePids( serviceRef );
         if ( pids != null )
         {
-            if ( isService( serviceRef, MANAGED_SERVICE ) )
+            if ( isSingleton )
             {
-                ungetService |= removeSingletonMetaTypeProvider( pids );
+                removeSingletonMetaTypeProvider( pids );
             }
 
-            if ( isService( serviceRef, MANAGED_SERVICE_FACTORY ) )
+            if ( isFactory )
             {
-                ungetService |= removeFactoryMetaTypeProvider( pids );
+                removeFactoryMetaTypeProvider( pids );
             }
-        }
-
-        if ( ungetService )
-        {
-            bundleContext.ungetService( serviceRef );
         }
     }
 

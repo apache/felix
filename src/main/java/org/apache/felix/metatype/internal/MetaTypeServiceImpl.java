@@ -33,6 +33,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.log.LogService;
@@ -51,10 +52,9 @@ import org.osgi.service.metatype.MetaTypeService;
 class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
 {
 
-    /** The <code>BundleContext</code> of the providing this service. */
-    private final BundleContext bundleContext;
-
     private final Map bundleMetaTypeInformation;
+
+    private final ManagedServiceTracker managedServiceTracker;
 
     private final MetaTypeProviderTracker providerTracker;
 
@@ -66,10 +66,21 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
      */
     MetaTypeServiceImpl( BundleContext bundleContext )
     {
-        this.bundleContext = bundleContext;
         this.bundleMetaTypeInformation = new ConcurrentHashMap();
 
         bundleContext.addBundleListener( this );
+
+        ManagedServiceTracker mst = null;
+        try
+        {
+            mst = new ManagedServiceTracker( bundleContext, this );
+            mst.open();
+        }
+        catch ( InvalidSyntaxException e )
+        {
+            // this is really not expected !
+        }
+        this.managedServiceTracker = mst;
 
         this.providerTracker = new MetaTypeProviderTracker( bundleContext, MetaTypeProvider.class.getName(), this );
         this.providerTracker.open();
@@ -79,6 +90,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
     void dispose()
     {
         this.providerTracker.close();
+        this.managedServiceTracker.close();
         this.bundleMetaTypeInformation.clear();
     }
 
@@ -126,7 +138,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
             mti = fromDocuments( bundle );
             if ( mti == null )
             {
-                mti = new ServiceMetaTypeInformation( bundleContext, bundle );
+                mti = new ServiceMetaTypeInformation( bundle );
             }
 
             MetaTypeInformationImpl impl = null;
@@ -161,7 +173,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
             return null;
         }
 
-        MetaTypeInformationImpl cmti = new MetaTypeInformationImpl( bundleContext, bundle );
+        MetaTypeInformationImpl cmti = new MetaTypeInformationImpl( bundle );
         while ( docs.hasMoreElements() )
         {
             URL doc = ( URL ) docs.nextElement();
@@ -181,6 +193,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
         return cmti;
     }
 
+    //-- register and unregister MetaTypeProvider services
 
     protected void addSingletonMetaTypeProvider( final Bundle bundle, final String[] pids, MetaTypeProvider mtp )
     {
@@ -224,8 +237,46 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
     }
 
 
+    //-- register and unregister ManagedService[Factory] services implementing MetaTypeProvider
+
+    protected void addService( final ManagedServiceHolder holder )
+    {
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( holder.getRef().getBundle() );
+        if ( mti != null )
+        {
+            mti.addService( holder.getPids(), holder.isSingleton(), holder.isFactory(), holder.getProvider() );
+        }
+    }
+
+
+    protected void removeService( final ManagedServiceHolder holder )
+    {
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( holder.getRef().getBundle() );
+        if ( mti != null )
+        {
+            mti.removeService( holder.getPids(), holder.isSingleton(), holder.isFactory() );
+        }
+    }
+
+
     private void putMetaTypeInformationInternal( final Bundle bundle, final MetaTypeInformationImpl mti )
     {
+        // initial ManagedService[Factory] implements MetaTypeProvider
+        final ServiceReference msRefs[] = this.managedServiceTracker.getServiceReferences();
+        if ( msRefs != null )
+        {
+            for ( int i = 0; i < msRefs.length; i++ )
+            {
+                ServiceReference ref = msRefs[i];
+                if ( bundle.equals( ref.getBundle() ) )
+                {
+                    final ManagedServiceHolder holder = (ManagedServiceHolder) this.managedServiceTracker.getService( ref );
+                    mti.addService( holder.getPids(), holder.isSingleton(), holder.isFactory(), holder.getProvider() );
+                }
+            }
+        }
+
+        // initial MetaTypeProvider
         final ServiceReference refs[] = this.providerTracker.getServiceReferences();
         if ( refs != null )
         {

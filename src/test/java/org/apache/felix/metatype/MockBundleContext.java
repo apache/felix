@@ -361,6 +361,8 @@ public class MockBundleContext implements BundleContext
         public void setProperties( Dictionary props )
         {
             serviceProps = props;
+
+            bundleContext.fireServiceEvent( serviceRef, ServiceEvent.MODIFIED );
         }
 
 

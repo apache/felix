@@ -98,6 +98,17 @@ public class MetaTypeServiceImplTest extends TestCase
         assertTrue( mti.getPids().length == 1 );
         assertEquals( pid, mti.getPids()[0] );
 
+        // change the service PID
+        String pid2 = "testAfterCreation2";
+        Dictionary props2 = new Hashtable();
+        props2.put( Constants.SERVICE_PID, pid2 );
+        sr.setProperties( props2 );
+
+        // pids must contain pid2
+        assertNotNull( mti.getPids() );
+        assertTrue( mti.getPids().length == 1 );
+        assertEquals( pid2, mti.getPids()[0] );
+
         // factoryPids must be empty
         assertTrue( mti.getFactoryPids() == null || mti.getFactoryPids().length == 0 );
 
@@ -118,7 +129,6 @@ public class MetaTypeServiceImplTest extends TestCase
         checkEmpty( mti );
 
         // register a service with PID
-        String pid = "testAfterCreation";
         String factoryPid = "testAfterCreation_factory";
         MockManagedServiceFactory service = new MockManagedServiceFactory();
         Dictionary props = new Hashtable();
@@ -137,6 +147,17 @@ public class MetaTypeServiceImplTest extends TestCase
         assertNotNull( mti.getFactoryPids() );
         assertTrue( mti.getFactoryPids().length == 1 );
         assertEquals( factoryPid, mti.getFactoryPids()[0] );
+
+        // change the service PID
+        String factoryPid2 = "testAfterCreation2";
+        Dictionary props2 = new Hashtable();
+        props2.put( Constants.SERVICE_PID, factoryPid2 );
+        sr.setProperties( props2 );
+
+        // pids must contain pid2
+        assertNotNull( mti.getFactoryPids() );
+        assertTrue( mti.getFactoryPids().length == 1 );
+        assertEquals( factoryPid2, mti.getFactoryPids()[0] );
 
         // unregister the service
         sr.unregister();

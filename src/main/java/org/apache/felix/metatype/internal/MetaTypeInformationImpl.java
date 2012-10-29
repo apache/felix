@@ -33,7 +33,6 @@ import org.apache.felix.metatype.DesignateObject;
 import org.apache.felix.metatype.MetaData;
 import org.apache.felix.metatype.OCD;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
@@ -60,7 +59,7 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
     private Set locales;
 
 
-    protected MetaTypeInformationImpl( final BundleContext serviceBundleContext, Bundle bundle )
+    protected MetaTypeInformationImpl( Bundle bundle )
     {
         this.bundle = bundle;
         this.pids = new HashSet();
@@ -288,6 +287,16 @@ public class MetaTypeInformationImpl implements MetaTypeInformation
             this.factoryPids.remove( factoryPids[i] );
         }
         return wasRegistered;
+    }
+
+
+    protected void addService( String[] pids, boolean isSingleton, boolean isFactory, final MetaTypeProvider mtp )
+    {
+    }
+
+
+    protected void removeService( String[] pids, boolean isSingleton, boolean isFactory )
+    {
     }
 
 
