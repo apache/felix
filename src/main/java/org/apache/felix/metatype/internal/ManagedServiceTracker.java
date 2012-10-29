@@ -19,7 +19,6 @@
 package org.apache.felix.metatype.internal;
 
 
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -27,11 +26,6 @@ import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.util.tracker.ServiceTracker;
 
 
-/**
- * The {@code ManagedServiceTracker} tracks ManagedService and
- * ManagedServiceFactory services on behalf of MetaTypeInformation
- * implementations not being based on a metatype descriptor.
- */
 public class ManagedServiceTracker extends ServiceTracker
 {
 
@@ -39,29 +33,12 @@ public class ManagedServiceTracker extends ServiceTracker
 
     static final String MANAGED_SERVICE_FACTORY = "org.osgi.service.cm.ManagedServiceFactory";
 
-    /**
-     * The filter specification to find <code>ManagedService</code>s and
-     * <code>ManagedServiceFactory</code>s as well as to register a service
-     * listener for those services (value is
-     * "(|(objectClass=org.osgi.service.cm.ManagedService)(objectClass=org.osgi.service.cm.ManagedServiceFactory))").
-     * We use the hard coded class name here to not create a dependency on the
-     * ConfigurationAdmin service, which may not be available.
-     */
     private static final String FILTER = "(|(objectClass=" + MANAGED_SERVICE + ")(objectClass="
         + MANAGED_SERVICE_FACTORY + "))";
 
     private final MetaTypeServiceImpl mts;
 
 
-    /**
-     * Creates an instance of this class handling services of the given
-     * <code>bundle</code>.
-     *
-     * @param bundleContext The <code>BundleContext</code> used to get and
-     *            unget services.
-     * @param bundle The <code>Bundle</code> whose services are handled by
-     *            this class.
-     */
     public ManagedServiceTracker( BundleContext bundleContext, MetaTypeServiceImpl mts ) throws InvalidSyntaxException
     {
         super( bundleContext, bundleContext.createFilter( FILTER ), null );
@@ -83,7 +60,6 @@ public class ManagedServiceTracker extends ServiceTracker
         // not a MetaTypeProvider implementation, don't track
         this.context.ungetService( reference );
         return null;
-
     }
 
 
@@ -95,8 +71,7 @@ public class ManagedServiceTracker extends ServiceTracker
 
     public void removedService( ServiceReference reference, Object service )
     {
-        final ManagedServiceHolder holder = ( ManagedServiceHolder ) service;
-        mts.removeService( holder );
+        mts.removeService( ( ManagedServiceHolder ) service );
         this.context.ungetService( reference );
     }
 }
