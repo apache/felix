@@ -84,7 +84,7 @@ public class ClassScanner {
 
     /** Source for all generated descriptions. */
     private static final String GENERATED = "<generated>";
-    
+
     /** With this syntax array pameters names are returned by reflection API */
     private static final Pattern ARRAY_PARAM_TYPE_NAME = Pattern.compile("^\\[L(.*);$");
 
@@ -110,9 +110,9 @@ public class ClassScanner {
      * Create a new scanner.
      */
     public ClassScanner(final Log log,
-                    final IssueLog iLog,
-                    final Project project,
-                    final AnnotationProcessor aProcessor) {
+            final IssueLog iLog,
+            final Project project,
+            final AnnotationProcessor aProcessor) {
         // create map for all descriptions and dummy entry for Object
         this.allDescriptions = new HashMap<String, ClassDescription>();
         allDescriptions.put(Object.class.getName(), new ClassDescription(Object.class, GENERATED));
@@ -126,7 +126,7 @@ public class ClassScanner {
      * Scan all source class files for annotations and process them.
      */
     public List<ClassDescription> scanSources()
-    throws SCRDescriptorException, SCRDescriptorFailureException {
+            throws SCRDescriptorException, SCRDescriptorFailureException {
         final List<ClassDescription> result = new ArrayList<ClassDescription>();
 
         for (final Source src : project.getSources()) {
@@ -161,7 +161,7 @@ public class ClassScanner {
      * Scan a single class.
      */
     private ClassDescription processClass(final Class<?> annotatedClass, final String location)
-    throws SCRDescriptorFailureException, SCRDescriptorException {
+            throws SCRDescriptorFailureException, SCRDescriptorException {
         log.debug("Processing " + annotatedClass.getName());
         try {
             // get the class file for ASM
@@ -196,7 +196,7 @@ public class ClassScanner {
      * Extract annotations
      */
     private final List<ScannedAnnotation> extractAnnotation(final ClassNode classNode, final Class<?> annotatedClass)
-                    throws SCRDescriptorException {
+            throws SCRDescriptorException {
         final List<ScannedAnnotation> descriptions = new ArrayList<ScannedAnnotation>();
         // first parse class annotations
         @SuppressWarnings("unchecked")
@@ -234,7 +234,8 @@ public class ClassScanner {
                                         if (matcher.matches()) {
                                             parameterTypeName = matcher.group(1) + "[]";
                                         }
-                                        if (!parameterTypeName.equals(signature[index].getClassName())) {
+                                        if (!parameterTypeName.equals(signature[index].getClassName()) &&
+                                                !m.getParameterTypes()[index].getSimpleName().equals(signature[index].getClassName())) {
                                             found = null;
                                         }
                                     }
@@ -247,7 +248,7 @@ public class ClassScanner {
                         }
                         if (found == null) {
                             throw new SCRDescriptorException("Annotated method " + name + " not found.",
-                                            annotatedClass.getName());
+                                    annotatedClass.getName());
                         }
                         for (final AnnotationNode annotation : annos) {
                             parseAnnotation(descriptions, annotation, found);
@@ -275,7 +276,7 @@ public class ClassScanner {
                         }
                         if (found == null) {
                             throw new SCRDescriptorException("Annotated field " + name + " not found.",
-                                            annotatedClass.getName());
+                                    annotatedClass.getName());
                         }
                         for (final AnnotationNode annotation : annos) {
                             parseAnnotation(descriptions, annotation, found);
@@ -317,7 +318,7 @@ public class ClassScanner {
      * Parse annotation and create a description.
      */
     private void parseAnnotation(final List<ScannedAnnotation> descriptions, final AnnotationNode annotation,
-                    final Object annotatedObject) {
+            final Object annotatedObject) {
         // desc has the format 'L' + className.replace('.', '/') + ';'
         final String name = annotation.desc.substring(1, annotation.desc.length() - 1).replace('/', '.');
         Map<String, Object> values = null;
@@ -383,7 +384,7 @@ public class ClassScanner {
      * Get a description for the class
      */
     public ClassDescription getDescription(final Class<?> clazz)
-    throws SCRDescriptorException, SCRDescriptorFailureException {
+            throws SCRDescriptorException, SCRDescriptorFailureException {
         final String name = clazz.getName();
         ClassDescription result = this.allDescriptions.get(name);
         if ( result == null ) {
@@ -419,7 +420,7 @@ public class ClassScanner {
      *             gethering the component descriptors.
      */
     private Map<String, ClassDescription> getComponentDescriptors()
-    throws SCRDescriptorException {
+            throws SCRDescriptorException {
         if ( loadedDependencies == null ) {
             loadedDependencies = new HashMap<String, ClassDescription>();
 
@@ -438,7 +439,7 @@ public class ClassScanner {
                         this.log.debug( "Artifact has no scrinfo file (it's optional): " + artifact );
                     } catch ( final IOException ioe ) {
                         throw new SCRDescriptorException( "Unable to get scrinfo from artifact", artifact.toString(),
-                            ioe );
+                                ioe );
                     } finally {
                         if ( scrInfoFile != null ) {
                             try { scrInfoFile.close(); } catch ( final IOException ignore ) {}
@@ -467,7 +468,7 @@ public class ClassScanner {
                     }
                 } catch ( IOException ioe ) {
                     throw new SCRDescriptorException( "Unable to get manifest from artifact", artifact.toString(),
-                        ioe );
+                            ioe );
                 }
 
             }
@@ -484,8 +485,8 @@ public class ClassScanner {
      *             descriptors from the stream.
      */
     private void readServiceComponentDescriptor(
-                    final InputStream file, final String location )
-    throws SCRDescriptorException {
+            final InputStream file, final String location )
+                    throws SCRDescriptorException {
         final List<ClassDescription> list = ComponentDescriptorIO.read( file, this.project.getClassLoader(), iLog, location );
         if ( list != null ) {
             for(final ClassDescription cd : list) {
