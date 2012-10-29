@@ -193,7 +193,7 @@ public class Activator implements BundleActivator
         if ( sr != null )
         {
             final String name;
-            String[] pids = ServiceMetaTypeInformation.getServicePids( sr );
+            String[] pids = BaseProviderHolder.getServicePids( sr );
             if ( pids != null )
             {
                 name = pids[0];

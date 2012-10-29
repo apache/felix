@@ -28,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.metatype.MetaData;
 import org.apache.felix.metatype.MetaDataReader;
-import org.apache.felix.metatype.internal.MetaTypeProviderTracker.RegistrationPropertyHolder;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -82,7 +81,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
         }
         this.managedServiceTracker = mst;
 
-        this.providerTracker = new MetaTypeProviderTracker( bundleContext, MetaTypeProvider.class.getName(), this );
+        this.providerTracker = new MetaTypeProviderTracker( bundleContext, this );
         this.providerTracker.open();
     }
 
@@ -195,45 +194,39 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
 
     //-- register and unregister MetaTypeProvider services
 
-    protected void addSingletonMetaTypeProvider( final Bundle bundle, final String[] pids, MetaTypeProvider mtp )
+    protected void addService( final MetaTypeProviderHolder holder )
     {
-        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( bundle );
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( holder.getReference().getBundle() );
         if ( mti != null )
         {
-            mti.addSingletonMetaTypeProvider( pids, mtp );
+            if ( holder.getPids() != null )
+            {
+                mti.addSingletonMetaTypeProvider( holder.getPids(), holder.getProvider() );
+            }
+
+            if ( holder.getFactoryPids() != null )
+            {
+                mti.addFactoryMetaTypeProvider( holder.getFactoryPids(), holder.getProvider() );
+            }
         }
     }
 
 
-    protected void addFactoryMetaTypeProvider( final Bundle bundle, final String[] factoryPids, MetaTypeProvider mtp )
+    protected void removeService( final MetaTypeProviderHolder holder )
     {
-        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( bundle );
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( holder.getReference().getBundle() );
         if ( mti != null )
         {
-            mti.addFactoryMetaTypeProvider( factoryPids, mtp );
+            if ( holder.getPids() != null )
+            {
+                mti.removeSingletonMetaTypeProvider( holder.getPids() );
+            }
+
+            if ( holder.getFactoryPids() != null )
+            {
+                mti.removeFactoryMetaTypeProvider( holder.getFactoryPids() );
+            }
         }
-    }
-
-
-    protected boolean removeSingletonMetaTypeProvider( final Bundle bundle, final String[] pids )
-    {
-        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( bundle );
-        if ( mti != null )
-        {
-            return mti.removeSingletonMetaTypeProvider( pids );
-        }
-        return false;
-    }
-
-
-    protected boolean removeFactoryMetaTypeProvider( final Bundle bundle, final String[] factoryPids )
-    {
-        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( bundle );
-        if ( mti != null )
-        {
-            return mti.removeFactoryMetaTypeProvider( factoryPids );
-        }
-        return false;
     }
 
 
@@ -241,7 +234,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
 
     protected void addService( final ManagedServiceHolder holder )
     {
-        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( holder.getRef().getBundle() );
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( holder.getReference().getBundle() );
         if ( mti != null )
         {
             mti.addService( holder.getPids(), holder.isSingleton(), holder.isFactory(), holder.getProvider() );
@@ -251,7 +244,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
 
     protected void removeService( final ManagedServiceHolder holder )
     {
-        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( holder.getRef().getBundle() );
+        MetaTypeInformationImpl mti = getMetaTypeInformationInternal( holder.getReference().getBundle() );
         if ( mti != null )
         {
             mti.removeService( holder.getPids(), holder.isSingleton(), holder.isFactory() );
@@ -285,7 +278,7 @@ class MetaTypeServiceImpl implements MetaTypeService, SynchronousBundleListener
                 ServiceReference ref = refs[i];
                 if ( bundle.equals( ref.getBundle() ) )
                 {
-                    final MetaTypeProviderTracker.RegistrationPropertyHolder holder = ( RegistrationPropertyHolder ) this.providerTracker
+                    final MetaTypeProviderHolder holder = ( MetaTypeProviderHolder ) this.providerTracker
                         .getService( ref );
                     if ( holder.getPids() != null )
                     {
