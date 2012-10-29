@@ -8,11 +8,17 @@ Changes from 1.0.4 to 1.0.6
     * [FELIX-2867] - getIcon() in LocalizedObjectClassDefinition keyset iteration incorrect
     * [FELIX-2868] - Icon only works if absolute path specified, but specification allows for relative urls
     * [FELIX-3183] - Attribute requirement is not validated
+    * [FELIX-3364] - MetaDataReader exposes a private exception class on the public API
     * [FELIX-3720] - Designate's pid attribute is optional and not mandatory
+    * [FELIX-3730] - AD.validate of string attributes must validate the string length
+    * [FELIX-3732] - service.pid properties of ManagedServiceFactory services must be used as factory PIDs
+    * [FELIX-3734] - MetaType: NPE in ServiceTracker for fragment bundle
 
 ** Improvement
     * [FELIX-3167] - Add support for new PASSWORD attribute type
     * [FELIX-3338] - Add support for optional attributes in the MetaDataReader as defined in the XML schema for metatype
+    * [FELIX-3736] - Add support for MetaTypeProvider service modifications
+    * [FELIX-3740] - Maintain the MetaTypeProvider service tracker on the MetaTypeService
 
 ** New Feature
     * [FELIX-2719] - Add name space support to the meta type implementation
@@ -21,6 +27,8 @@ Changes from 1.0.4 to 1.0.6
     * [FELIX-2096] - Check MetaTypeProvider.getObjectClassDefinition(String, String) specification compliance
     * [FELIX-3182] - Update to use parent POM 2.1
     * [FELIX-3184] - Add support for metatype extension by MetatypeProvider services
+    * [FELIX-3731] - Multi-Value service.pid service properties must be supported
+    * [FELIX-3733] - Clarify icon location
 
 
 Changes from 1.0.2 to 1.0.4
