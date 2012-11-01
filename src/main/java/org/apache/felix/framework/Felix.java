@@ -1227,6 +1227,14 @@ public class Felix extends BundleImpl implements Framework
                                 Logger.LOG_ERROR,
                                 "Error locking " + tuple.m_bundle._getLocation(), ex);
                         }
+                        else
+                        {
+                            synchronized (m_startLevelBundles)
+                            {
+                                m_startLevelBundles.remove(tuple);
+                                bundlesRemaining = !m_startLevelBundles.isEmpty();
+                            }
+                        }
                         continue;
                     }
 
