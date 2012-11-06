@@ -112,40 +112,39 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
 
         // When the getServiceMethod is called, the implementation object must be created
 
-            try
+        try
+        {
+            if ( !collectDependencies() )
             {
-                if ( !collectDependencies() )
-                {
-                    log(
-                            LogService.LOG_INFO,
-                            "getService (ServiceFactory) did not win collecting dependencies, try creating object anyway.",
-                            null );
+                log(
+                        LogService.LOG_INFO,
+                        "getService (ServiceFactory) did not win collecting dependencies, try creating object anyway.",
+                        null );
 
-                }
-                else
-                {
-                    log(
-                            LogService.LOG_DEBUG,
-                            "getService (ServiceFactory) won collecting dependencies, proceed to creating object.",
-                            null );
-
-                }
             }
-            catch ( IllegalStateException e )
+            else
             {
-                //cannot obtain service from a required reference
-                return null;
+                log(
+                        LogService.LOG_DEBUG,
+                        "getService (ServiceFactory) won collecting dependencies, proceed to creating object.",
+                        null );
+
             }
-            // private ComponentContext and implementation instances
-            BundleComponentContext serviceContext = new BundleComponentContext( this, bundle );
-            Object service = createImplementationObject( serviceContext );
-
-            // register the components component context if successfull
-            if ( service != null )
+        }
+        catch ( IllegalStateException e )
+        {
+            //cannot obtain service from a required reference
+            return null;
+        }
+        // private ComponentContext and implementation instances
+        final BundleComponentContext serviceContext = new BundleComponentContext( this, bundle );
+        Object service = createImplementationObject( serviceContext, new SetImplementationObject()
+        {
+            public void setImplementationObject( Object implementationObject )
             {
-                serviceContext.setImplementationObject( service );
+                serviceContext.setImplementationObject( implementationObject );
 
-                serviceContexts.put( service, serviceContext );
+                serviceContexts.put( implementationObject, serviceContext );
 
                 // if this is the first use of this component, switch to ACTIVE state
                 if ( getState() == STATE_REGISTERED )
@@ -153,14 +152,17 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
                     changeState( Active.getInstance() );
                 }
             }
-            else
-            {
-                // log that the service factory component cannot be created (we don't
-                // know why at this moment; this should already have been logged)
-                log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
-            }
+        } );
 
-            return service;
+        // register the components component context if successfull
+        if ( service == null )
+        {
+            // log that the service factory component cannot be created (we don't
+            // know why at this moment; this should already have been logged)
+            log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
+        }
+
+        return service;
     }
 
 

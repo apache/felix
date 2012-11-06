@@ -59,7 +59,7 @@ Changes from 1.6.0 to 1.6.2
     * [FELIX-3725] - [DS] hidden dependency on spring junit wrapper from pax exam
     * [FELIX-3726] - Reference target filters defined as component properties are ignored
     * [FELIX-3727] - [DS] NPE during shutdown
-
+    * [FELIX-3744] -  set implementation object before modifying service properties
 ** Improvement
     * [FELIX-2895] - Allow the use of a property to tell SCR to always discover Service Component files even if there's no wildcard in the name
     * [FELIX-3016] - Activator log level cannot be changed dynamically through Configuration Admin

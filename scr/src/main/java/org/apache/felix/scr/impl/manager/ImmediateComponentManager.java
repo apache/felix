@@ -115,8 +115,15 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         }
         if ( m_implementationObject == null )
         {
-            ComponentContextImpl tmpContext = new ComponentContextImpl( this );
-            Object tmpComponent = createImplementationObject( tmpContext );
+            final ComponentContextImpl tmpContext = new ComponentContextImpl( this );
+            Object tmpComponent = createImplementationObject( tmpContext, new SetImplementationObject()
+            {
+                public void setImplementationObject( Object implementationObject )
+                {
+                    m_componentContext = tmpContext;
+                    m_implementationObject = implementationObject;
+                }
+            } );
 
             // if something failed creating the component instance, return false
             if ( tmpComponent == null )
@@ -125,8 +132,6 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             }
 
             // otherwise set the context and component instance and return true
-            m_componentContext = tmpContext;
-            m_implementationObject = tmpComponent;
             log( LogService.LOG_DEBUG, "Set implementation object for component {0}", new Object[] { getName() },  null );
 
             //notify that component was successfully created so any optional circular dependencies can be retried
@@ -173,8 +178,11 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         return m_implementationObject;
     }
 
+    protected interface SetImplementationObject {
+        void setImplementationObject(Object implementationObject);
+    }
 
-    protected Object createImplementationObject( ComponentContext componentContext )
+    protected Object createImplementationObject( ComponentContext componentContext, SetImplementationObject setter )
     {
         final Class implementationObjectClass;
         final Object implementationObject;
@@ -245,6 +253,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         }
         else
         {
+            setter.setImplementationObject( implementationObject );
             setServiceProperties( result );
         }
 
