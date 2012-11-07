@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix Declarative Services</name>
     <description>
-        Implementation of the Declarative Services specification 1.1
+        Implementation of the Declarative Services specification 1.2
     </description>
     <artifactId>org.apache.felix.scr</artifactId>
     <version>1.6.1-SNAPSHOT</version>
@@ -77,13 +77,13 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.3.0</version>
+            <version>4.3.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <version>4.3.0</version>
+            <version>4.3.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
