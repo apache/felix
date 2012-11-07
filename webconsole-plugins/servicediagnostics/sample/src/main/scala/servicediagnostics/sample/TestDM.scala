@@ -23,8 +23,11 @@ import org.apache.felix.dm.DependencyActivatorBase
 import org.apache.felix.dm.DependencyManager
 import org.apache.felix.servicediagnostics.ServiceDiagnostics
 
+import java.util. { Hashtable => jHT }
+
 /**
  * This class is a basic DependencyManager based demonstration
+ * 
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
@@ -48,11 +51,16 @@ class TestDM extends DependencyActivatorBase
                 .setRequired(true)))
 
         // initialize some sample services for testing purpose (see also TestDS)
+
+        //
+        // test1:
+        //  DM1 -> DS1 -> DM2 -> Unavail
+
         dm.add(createComponent
             .setInterface(classOf[DM1].getName, null)
             .setImplementation(classOf[DM1])
             .add(createServiceDependency
-                .setService(classOf[DM2])
+                .setService(classOf[DS1])
                 .setAutoConfig(false)
                 .setCallbacks(null, null, null)
                 .setRequired(true)))
@@ -61,16 +69,65 @@ class TestDM extends DependencyActivatorBase
             .setInterface(classOf[DM2].getName, null)
             .setImplementation(classOf[DM2])
             .add(createServiceDependency
-                .setService(classOf[DM3])
+                .setService(classOf[Runnable]) //Unavail
+                .setAutoConfig(false)
+                .setCallbacks(null, null, null)
+                .setRequired(true)))
+
+        // test2: properties
+        // DMP(0,1) -> DSP(0) -> DMP(2) -> Unavail
+
+        dm.add(createComponent
+            .setInterface(classOf[DMP].getName, new jHT[String,String]() {{
+              put("p", "0")
+              put("q", "1")
+            }})
+            .setImplementation(classOf[DMP])
+            .add(createServiceDependency
+                .setService(classOf[DSP], "(p=0)")
                 .setAutoConfig(false)
                 .setCallbacks(null, null, null)
                 .setRequired(true)))
 
         dm.add(createComponent
-            .setInterface(classOf[DM3].getName, null)
-            .setImplementation(classOf[DM3])
+            .setInterface(classOf[DMP].getName, new jHT[String,String]() {{
+              put("p", "2")
+            }})
+            .setImplementation(classOf[DMP])
             .add(createServiceDependency
-                .setService(classOf[Runnable]) //missing dependency
+                .setService(classOf[Runnable]) // Unavail
+                .setAutoConfig(false)
+                .setCallbacks(null, null, null)
+                .setRequired(true)))
+
+        // test3: loop
+        // DML1 -> DSL1 -> DML2 -> DML1
+
+        dm.add(createComponent
+            .setInterface(classOf[DML1].getName, new jHT[String,String]() {{
+              put("p", "1")
+              put("q", "1")
+            }})
+            .setImplementation(classOf[DML1])
+            .add(createServiceDependency
+                .setService(classOf[DSL1], "(q=1)")
+                .setAutoConfig(false)
+                .setCallbacks(null, null, null)
+                .setRequired(true)))
+
+        dm.add(createComponent
+            .setInterface(classOf[DML2].getName, new jHT[String,String]() {{
+              put("p", "2")
+              put("q", "2")
+            }})
+            .setImplementation(classOf[DML2])
+            .add(createServiceDependency
+                .setService(classOf[DML1]) //Loop
+                .setAutoConfig(false)
+                .setCallbacks(null, null, null)
+                .setRequired(true))
+            .add(createServiceDependency
+                .setService(classOf[TestDS]) //Available with no deps
                 .setAutoConfig(false)
                 .setCallbacks(null, null, null)
                 .setRequired(true)))
@@ -78,14 +135,20 @@ class TestDM extends DependencyActivatorBase
 
     override def destroy(bc:BundleContext, dm:DependencyManager) = {}
 
-    def start = 
+    def start = try 
     {
         println("unavail="+diagnostics.notavail)
         println("all="+diagnostics.allServices)
+    }
+    catch 
+    {
+      case (e:Exception) => e.printStackTrace
     }
 }
 
 //sample service classes
 class DM1
 class DM2
-class DM3
+class DMP
+class DML1
+class DML2

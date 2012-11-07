@@ -36,30 +36,25 @@ class DSNotAvail extends ServiceDiagnosticsPlugin
 
     var scrService:ScrService = _ //dependency injection
 
-    /**
-     * implements ServiceDiagnosticsPlugin.getUnresolvedDependencies.
-     */
-    override def getUnresolvedDependencies:Map[String, List[Dependency]] = 
+    def components:List[Comp] = 
     {
-        /*
-         * Same algorithm as DMNotAvail with the SCR API. 
-         * Please refer to DMNotAvail for comments.
-         */
-        val comps:Map[String, Component] = 
-            (for (c <- Option(scrService.getComponents).flatten;
-            s <- Option(c.getServices).flatten)
-        yield (s, c)).toMap
-
-        val compNames = comps.keySet
-
-        (for (kv <- comps.filter(kv => kv._2.getState == Component.STATE_UNSATISFIED);
-            unavail = kv._2.getReferences.view
-                .filterNot(_ isSatisfied)
-                .filterNot(_ isOptional)
-                .filterNot(ref => compNames.contains(ref.getName))
-                .map(ref => new Dependency(ref.getServiceName, ref.getTarget)).force.toList;
-            if (unavail nonEmpty))
-            yield (kv._1, unavail)).toMap
+        // this involves a bit of type casting gymnastics because the underlying 
+        // API uses mutables and no generic types
+        // Option is used to avoid null pointers
+        (for {
+            comp <- Option(scrService.getComponents).flatten.map(_.asInstanceOf[Component])
+            service <- Option(comp.getServices).flatten
+            deps = Option(comp.getReferences).flatten
+                          .filterNot(_.isOptional)
+                          .map(dep => new Dependency(dep.getServiceName,
+                                                     dep.getTarget,
+                                                     dep.isSatisfied)).toList
+          }
+            // yield Comp builds a list of Comp out of the for comprehension
+            yield new Comp(service,
+                           comp.getProperties,
+                           comp.getState != Component.STATE_UNSATISFIED,
+                           deps)) toList
     }
 }
 

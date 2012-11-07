@@ -19,6 +19,7 @@
 package org.apache.felix.servicediagnostics.impl
 
 import scala.collection.mutable.Buffer
+import scala.collection.mutable.{Set => mSet}
 
 import org.osgi.framework.BundleContext
 import org.osgi.framework.ServiceReference
@@ -40,18 +41,85 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
     /**
      * Implements ServiceDiagnostics.notavail.
      * 
-     * This method gathers "notavail" information from all plugins
-     * and performs the final merge by removing known unregistered services
+     * This method gathers components information from all plugins
+     * and filters all intermediate known unregistered services
+     * to keep only missing "leaf" dependencies
      */
-    override def notavail = 
+    override def notavail :Map[String, List[String]] = 
     {
-        // merge all notavails from plugins 
-        // (kv stands for each key/value pair in a map)
-        val merged = (for(p <- plugins; kv <- p.getUnresolvedDependencies) yield kv) toMap
+        val unavail :List[Comp] = for {
+                          plugin <- plugins.toList
+                          comp <- plugin.components
+                          if (! comp.registered)
+                      } yield comp
+        (for {
+            comp <- unavail
+            dep <- comp.deps.filterNot(_.available)
+            if (! unavail.exists(c => dep.matchedBy(c)))
+        } yield comp.toString -> comp.deps.filterNot(_.available).map(_.toString) ) toMap
 
-        // remove remaining intermediates. ex: unresolved in DS -> unavailable in DM
-        // and return the resulting map
-        (for(kv <- merged; dep <- kv._2; if (merged.get(dep.name) isEmpty)) yield kv) toMap
+    }
+    
+    class Node(val comp:Comp, val edges:mSet[Node] = mSet[Node]()) {
+      def name = comp.toString
+      override def toString = name + " -> " + edges.map(_.name)
+    }
+
+    /**
+     * returns a map of (component.name -> list(component.name)) of unresolvable services, if any
+     */
+    override def unresolved :Map[String, List[String]] = 
+    {
+        // first build a traversable graph from all found component and dependencies
+        def buildGraph(link:(Node,Node)=>Unit) = {
+            // concatenate component nodes from all plugins
+            val allnodes = for ( p <- plugins; comp <- p.components ) yield new Node(comp)
+
+            // and connect the nodes according to component dependencies
+            // the 'link' method gives the direction of the link
+            for ( node <- allnodes; dep <- node.comp.deps )
+            {
+                allnodes.filter(n => dep.matchedBy(n.comp)).foreach(n => link(node, n) )
+            }
+
+            allnodes.toList //return the graph
+        }
+
+        // a "forward" graph of who depends on who
+        val graph = buildGraph((n1,n2) => n1.edges += n2)
+        // and the reverse graph of who "triggers" who
+        val triggers = buildGraph((n1,n2) => n2.edges += n1)
+
+        // recursive helper method used to traverse the graph and detect loops
+        def resolve(node:Node, visited:List[Node] = Nil) :List[Node] = 
+        {
+            // if a node has no dependency, it is resolved
+            if (node.edges isEmpty) node::visited
+            else // replace ("map") each dependency with its resolution
+            {
+                val resolved = node.edges.map { e => 
+                    if (visited contains e) 
+                    { 
+                        println("!!!LOOP {"+node.name+" -> "+e+"} in "+visited)
+                        Nil // return an empty list
+                    } 
+                    else resolve(e, node::visited)
+                }
+                if (resolved.contains(Nil)) Nil // there were some loops; resolution failed
+                else resolved.flatten.toList
+            }
+        }
+
+        // now traverse the graph starting from border nodes (nodes not pointed by anyone)
+        val resolved:Set[Node] = (for { 
+            border <- triggers filter (_.edges.size == 0)
+            node <- graph.find(_.name == border.name)
+        } yield resolve(node)).flatten.toSet
+
+        // finally filter the original graph by removing all resolved nodes
+        // and format the result
+        (for (node <- graph.filterNot(n => resolved.contains(n)))
+          yield (node.name -> node.edges.map(_.name).toList)).toMap
     }
 
     /**

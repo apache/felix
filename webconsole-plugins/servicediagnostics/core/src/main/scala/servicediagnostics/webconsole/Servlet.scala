@@ -25,6 +25,7 @@ import java.io.PrintStream
 import javax.servlet.http._
 
 import org.json.JSONObject
+import org.json.JSONArray
 
 import org.osgi.service.http.HttpContext
 import org.osgi.service.http.HttpService
@@ -55,18 +56,20 @@ class Servlet extends HttpServlet
     override def service(req:HttpServletRequest, resp:HttpServletResponse) = 
     {
         val cmd = req.getPathInfo
-        if(cmd.endsWith("all")) reply(resp, engine.allServices)
-        else if(cmd.endsWith("notavail")) reply(resp, engine.notavail)
+        if(cmd.endsWith("all")) reply(resp, json(engine.allServices))
+        else if(cmd.endsWith("notavail")) reply(resp, new JSONObject()
+          .put("notavail", json(engine.notavail))
+          .put("unresolved", json(engine.unresolved)))
         else println("Unrecognized cmd: "+cmd)
     }
 
+    private def reply(resp:HttpServletResponse, json:JSONObject) = 
+      new PrintStream(resp.getOutputStream, true).println(json)
+
     /** 
-    * turn the ServiceDiagnostics output into a JSON representation.
-    */
-    private def reply(resp:HttpServletResponse, map:Map[String,List[AnyRef]]) = 
-    {
-        new PrintStream(resp.getOutputStream, true).println(
-            new JSONObject(asJavaMap(mMap() ++ map.map(kv => (kv._1, asJavaList(kv._2))))))
-    }
+     * turn the ServiceDiagnostics output into a JSON representation.
+     */
+    private def json(map:Map[String,List[AnyRef]]) = 
+      new JSONObject(asJavaMap(mMap() ++ map.map(kv => (kv._1, asJavaList(kv._2)))))
 }
 

@@ -1,7 +1,7 @@
 OSGi Service Diagnostics and WebConsole Plugin
 ==============================================
 
-This projects aims at easing diagnostics of OSGi services and finding about missing dependencies.
+This projects aims at easing diagnostics of OSGi services and finding about missing and/or circular dependencies.
 
 Typically in a large system with many cascading dependencies managed by different trackers such as DeclarativeService, DependencyManager or others, tracking the root cause of a top level service not being started can become very cumbersome. When building service oriented architectures, it is often the case that a single missing requirement will lock a full stack of services, but to find that one requirement is like finding a needle in a haystack!
 
@@ -48,5 +48,4 @@ On the "Unavail" view, arrows point from a leaf component to its missing depende
 Issues & TODOs:
 ===============
 * use of JSONObject in Servlet.scala is a bit awkward, but Scala's native json is still incomplete.. 
-* no support for service properties; needs to be added.
 * no support for iPojo, Blueprint, basic ServiceTrackers... more plugins could be developed. I only wrote the ones i'm using.

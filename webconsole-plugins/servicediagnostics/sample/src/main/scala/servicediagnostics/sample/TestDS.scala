@@ -27,17 +27,36 @@ import aQute.bnd.annotation.component._
  */
 @Component(immediate=true, provide=Array(classOf[TestDS])) class TestDS 
 
-@Component(provide=Array(classOf[DS1])) class DS1 
+//  DM1 -> DS1 -> DM2 -> Unavail
+@Component(provide=Array(classOf[DS1])) 
+class DS1 
 {
-    @Reference def setDS2(s:DS2) = {}
+    @Reference def bind(s:DM2) = {}
 }
 
-@Component(provide=Array(classOf[DS2])) class DS2 
+// DMP(0,1) -> DSP(0) -> DMP(2) -> Unavail
+@Component(provide=Array(classOf[DSP]), properties=Array("p=0")) 
+class DSP
 {
-    @Reference def setDM3(s:DM3) = {}
+    @Reference(target="(p=2)") def bind(s:DMP) = {}
 }
 
-@Component(provide=Array(classOf[DS3])) class DS3 
+// DML1 -> DSL1 -> DML2 -> DML1
+@Component(provide=Array(classOf[DSL1]), properties=Array("p=0","q=1")) 
+class DSL1 
 {
-    @Reference def setMap(s:java.util.Map[String,String]) = {} //not available
+    @Reference(target="(p=2)") def bind(s:DML2) = {}
 }
+
+/* DSL2 -> DML2 -x-> DSL3 -> DSL2
+@Component(provide=Array(classOf[DSL2]), properties=Array("p=1","q=0")) 
+class DSL2 
+{
+    @Reference(target="(p=2)") def bind(s:DML2) = {}
+}
+@Component(provide=Array(classOf[DSL3]), properties=Array("p=1","q=0")) 
+class DSL3 
+{
+    @Reference(target="(q=0)") def bind(s:DSL2) = {}
+}*/
+

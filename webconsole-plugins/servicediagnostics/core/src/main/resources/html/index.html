@@ -41,11 +41,12 @@ function graphUnavail(json) {
   var g = new Graph();
 
   var empty = true;
-  for (s in json) {
+  notavail = json.notavail;
+  for (s in notavail) {
     empty = false;
-    for (i = 0; i < json[s].length; i++) {
+    for (i = 0; i < notavail[s].length; i++) {
       // point unregistered service to dependency name
-      var dep = json[s][i];
+      var dep = notavail[s][i];
       g.addNode(dep, {
         getShape : function(r,x,y) {
           // create a dashed square shape to differentiate the missing dependency
@@ -58,6 +59,14 @@ function graphUnavail(json) {
         }
       });
       g.addEdge(s, dep, { directed : true } );
+    }
+  }
+  // show unresolved
+  var unresolved = json.unresolved
+  if (unresolved) for (s in unresolved) {
+    $("#warning").html("unresolvable components detected!");
+    for (i = 0; i < unresolved[s].length; i++) {
+      g.addEdge(s, unresolved[s][i], { directed : true } );
     }
   }
 
@@ -152,17 +161,22 @@ function loadAllServices() {
 /* only do all this when document has finished loading (needed for RaphaelJS) */
 $(document).ready(function(){
   $("#actions")
-  	.append($("<a>").attr("href", "javascript:loadAllServices()").html("All"))
+  	.append($("<a>").attr("href", "javascript:loadAllServices()").html("Show Service Registry"))
   	.append($("<span>").html("&nbsp;|&nbsp;"))
-  	.append($("<a>").attr("href", "javascript:loadUnavail()").html("Unavail"))
+  	.append($("<a>").attr("href", "javascript:loadUnavail()").html("Show Not Avail"))
 });
 
 -->
     </script>
+    <style>
+      #actions a { color:black; font-weight:bold; text-decoration:none; }
+      #warning { color:red; font-weight:bold; }
+    </style>
 </header>
 <body>
 Filter:&nbsp;<input type="text" id="filter"/><button id="redraw" onclick="redraw();">redraw</button>
 &nbsp;&nbsp;<span id="actions"></span>
+&nbsp;&nbsp;<span id="warning"></span>
 <div id="canvas"></div>
 </body>
 </html>

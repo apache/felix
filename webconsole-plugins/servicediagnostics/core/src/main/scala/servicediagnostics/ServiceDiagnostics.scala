@@ -28,10 +28,16 @@ trait ServiceDiagnostics
     /**
      * returns a map of component name to list of leaf unresolved dependencies.
      */
-    def notavail:Map[String, List[Dependency]]
+    def notavail:Map[String, List[String]]
+
+    /**
+     * returns a graph of unresolvable components (typically loops)
+     */
+    def unresolved :Map[String, List[String]]
 
     /**
      * returns a map of resolved service names to list of bundles using the service
      */
     def allServices:Map[String, List[String]]
 }
+
