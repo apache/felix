@@ -18,29 +18,67 @@
  */
 package org.apache.felix.servicediagnostics
 
+import org.osgi.framework.FrameworkUtil
+import collection.JavaConversions._
+
+import Util._
+
 /**
  * This is the interface to be implemented by participating service injection frameworks
  * such as SCR or DependencyManager. 
- * Each plugin implementation is responsible for returning its own set of leaf unresolved dependencies.
+ * Each plugin implementation is responsible for returning its own set of components.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 trait ServiceDiagnosticsPlugin 
 {
-    /** 
-     * returns a map of unresolved service name -&gt; list of missing deps 
-     * leafs only: should not include intermediates
-     * @return the unresolved service names
+    /**
+     * returns a list of all known components for this plugin
      */
-    def getUnresolvedDependencies:Map[String, List[Dependency]] 
+    def components:List[Comp]
+}
+
+/**
+ * This class represents a service component.
+ * @param name the service interface name 
+ *   (use different instances for objects registering multiple services)
+ * @param props the service properties
+ * @param registered true if the component is already registered in the Service Registry
+ * @param deps the list of declared dependencies
+ */
+class Comp(val name:String, val props:java.util.Dictionary[_,_], val registered:Boolean, val deps:List[Dependency])
+{
+    override def toString = {if (registered) "[registered]" else "[unregistered]"}+shorten(name)+{
+        if (props != null && !props.isEmpty) " "+props else ""}
 }
 
 /**
  * This class represents a service dependency.
- * @param name the service name
+ * @param name the service interface name
  * @param filter the optional service filter
+ * @param available true if the dependency is already available in the Service Registry
  */
-class Dependency(val name:String, val filter:String) 
+class Dependency(val name:String, val filter:String, val available:Boolean = false) 
 {
-    override def toString = name//+"("+filter+")" FIXME
+    private val compiled = if (filter != null && !filter.isEmpty) FrameworkUtil.createFilter(filter) else null
+
+    def matchedBy(comp:Comp):Boolean = comp.name == name && 
+        !(compiled != null && comp.props == null) && //filter and no props, doesn't match
+        (compiled == null || compiled.`match`(comp.props))
+    
+    override def toString = shorten(name)+{if (filter != null) filter else ""}
+}
+
+/** 
+ * utility methods
+ */
+object Util
+{
+    /**
+     * shorten "org.apache.felix.servicediagnostics.ServiceDiagnostics" to "o.a.f.s.ServiceDiagnostics"
+     */
+    def shorten(classname:String) :String = { 
+        val l = classname.split('.').toList
+        l.map(_.take(1)).mkString(".") + l.last.drop(1)
+    }
 }

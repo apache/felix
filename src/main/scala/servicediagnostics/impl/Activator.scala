@@ -18,8 +18,7 @@
  */
 package org.apache.felix.servicediagnostics.impl
 
-import scala.collection.mutable.Map
-import scala.collection.JavaConversions._
+import java.util. { Hashtable => jHT }
 
 import javax.servlet.http.HttpServlet
 
@@ -78,7 +77,9 @@ class Activator extends DependencyActivatorBase
 
         // and the webconsole plugin itself
         dm.add(createComponent
-            .setInterface(classOf[javax.servlet.Servlet].getName, Map("felix.webconsole.label" -> "servicegraph"))
+            .setInterface(classOf[javax.servlet.Servlet].getName, new jHT[String,String]() {{
+                  put("felix.webconsole.label", "servicegraph")
+              }})
             .setImplementation(classOf[WebConsolePlugin]))
     }
 

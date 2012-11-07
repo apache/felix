@@ -27,7 +27,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>3.1.8</version>
+      <version>4.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
@@ -71,11 +71,8 @@
               org.apache.felix.servicediagnostics.webconsole
             </Private-Package>
             <Include-Resource>
-              {maven-resources}, json-20090211.jar, scala-library-2.9.1.jar
+              {maven-resources}
             </Include-Resource>
-            <Bundle-ClassPath>
-              ., json-20090211.jar, scala-library-2.9.1.jar
-            </Bundle-ClassPath>
           </instructions>
         </configuration>
       </plugin>
