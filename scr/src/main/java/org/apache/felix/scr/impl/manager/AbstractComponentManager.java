@@ -62,22 +62,6 @@ import org.osgi.service.log.LogService;
 public abstract class AbstractComponentManager implements Component, SimpleLogger
 {
 
-    private static final boolean JUC_AVAILABLE;
-
-    static {
-        boolean juc_available;
-        try
-        {
-            new JLock();
-            juc_available = true;
-        }
-        catch (Throwable t)
-        {
-            juc_available = false;
-        }
-        JUC_AVAILABLE = juc_available;
-    }
-
     // the ID of this component
     private long m_componentId;
 
@@ -97,15 +81,15 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
     private boolean m_dependencyManagersInitialized;
 
     //<Map<DependencyManager, Map<ServiceReference, RefPair>>>
-    private final AtomicReferenceWrapper m_dependencies_map;
+    private final AtomicReference m_dependencies_map;
 
     // A reference to the BundleComponentActivator
     private BundleComponentActivator m_activator;
 
     // The ServiceRegistration
-    private final AtomicReferenceWrapper m_serviceRegistration;
+    private final AtomicReference m_serviceRegistration;
 
-    private final LockWrapper m_stateLock;
+    private final ReentrantLock m_stateLock;
 
     private long m_timeout = 5000;
 
@@ -140,18 +124,9 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         m_state = Disabled.getInstance();
         m_dependencyManagers = loadDependencyManagers( metadata );
 
-        if (JUC_AVAILABLE)
-        {
-            m_stateLock = new JLock();
-            m_dependencies_map = new JAtomicReferenceWrapper();
-            m_serviceRegistration = new JAtomicReferenceWrapper();
-        }
-        else
-        {
-            m_stateLock = new EDULock();
-            m_dependencies_map = new EDUAtomicReferenceWrapper();
-            m_serviceRegistration = new EDUAtomicReferenceWrapper();
-        }
+        m_stateLock = new ReentrantLock( true );
+        m_dependencies_map = new AtomicReference();
+        m_serviceRegistration = new AtomicReference();
 
         // dump component details
         if ( isLogEnabled( LogService.LOG_DEBUG ) )
@@ -189,7 +164,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 //        }
         try
         {
-            if (!m_stateLock.tryLock( m_timeout ) )
+            if (!m_stateLock.tryLock( m_timeout, TimeUnit.MILLISECONDS ) )
             {
 //                lockingActivity.add( "obtainWriteLock failure from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis() + " Could not obtain write lock.");
                 throw new IllegalStateException( "Could not obtain lock" );
@@ -1858,104 +1833,4 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
             throw new IllegalStateException( "enable: " + this );
         }
     }
-
-    private static interface LockWrapper
-    {
-        boolean tryLock( long milliseconds ) throws InterruptedException;
-        long getHoldCount();
-        void unlock();
-
-
-    }
-
-    private static class JLock implements LockWrapper
-    {
-        private final ReentrantLock lock = new ReentrantLock( true );
-
-        public boolean tryLock( long milliseconds ) throws InterruptedException
-        {
-            return lock.tryLock( milliseconds, TimeUnit.MILLISECONDS );
-        }
-
-        public long getHoldCount()
-        {
-            return lock.getHoldCount();
-        }
-
-        public void unlock()
-        {
-            lock.unlock();
-        }
-    }
-
-    private static class EDULock  implements LockWrapper
-    {
-        private final edu.emory.mathcs.backport.java.util.concurrent.locks.ReentrantLock lock = new edu.emory.mathcs.backport.java.util.concurrent.locks.ReentrantLock( );
-
-        public boolean tryLock( long milliseconds ) throws InterruptedException
-        {
-            return lock.tryLock( milliseconds, edu.emory.mathcs.backport.java.util.concurrent.TimeUnit.MILLISECONDS );
-        }
-
-        public long getHoldCount()
-        {
-            return lock.getHoldCount();
-        }
-
-        public void unlock()
-        {
-            lock.unlock();
-        }
-    }
-
-    private interface AtomicReferenceWrapper
-    {
-        Object get();
-
-        void set(Object o);
-
-        boolean compareAndSet(Object expected, Object replacement);
-
-    }
-
-    private static class JAtomicReferenceWrapper implements AtomicReferenceWrapper
-    {
-        private final AtomicReference ref = new AtomicReference(  );
-
-        public Object get()
-        {
-            return ref.get();
-        }
-
-        public void set(Object o)
-        {
-            ref.set( o );
-        }
-
-        public boolean compareAndSet(Object expected, Object replacement)
-        {
-            return ref.compareAndSet( expected, replacement );
-        }
-    }
-
-    private static class EDUAtomicReferenceWrapper implements AtomicReferenceWrapper
-    {
-        private final edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicReference ref = new edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicReference(  );
-
-        public Object get()
-        {
-            return ref.get();
-        }
-
-        public void set(Object o)
-        {
-            ref.set( o );
-        }
-
-        public boolean compareAndSet(Object expected, Object replacement)
-        {
-            return ref.compareAndSet( expected, replacement );
-        }
-    }
-
 }
