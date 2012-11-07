@@ -5,5 +5,3 @@ This project is using third party javascript libraries, under core/src/main/reso
 - graph.js
 
 In my understanding, these are all MIT licences.
-
-This project also uses and embeds org.json, and the scala programming language. 
