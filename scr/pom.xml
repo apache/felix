@@ -21,7 +21,7 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
         <version>2.1</version>
-        <relativePath/>
+        <relativePath />
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
@@ -30,11 +30,11 @@
         Implementation of the Declarative Services specification 1.2
     </description>
     <artifactId>org.apache.felix.scr</artifactId>
-    <version>1.6.1-SNAPSHOT</version>
+    <version>1.6.2</version>
     <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr</url>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr-1.6.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr-1.6.2</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr-1.6.2</url>
     </scm>
     
     <!--
