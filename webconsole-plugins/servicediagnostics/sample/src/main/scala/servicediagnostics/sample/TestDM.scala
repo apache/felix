@@ -100,7 +100,7 @@ class TestDM extends DependencyActivatorBase
                 .setCallbacks(null, null, null)
                 .setRequired(true)))
 
-        // test3: loop
+        // test3: loop (required)
         // DML1 -> DSL1 -> DML2 -> DML1
 
         dm.add(createComponent
@@ -131,6 +131,22 @@ class TestDM extends DependencyActivatorBase
                 .setAutoConfig(false)
                 .setCallbacks(null, null, null)
                 .setRequired(true)))
+
+        // test4: loop (optional)
+        // DSL2 -(opt)-> DML3 --> DSL3 -> DSL2
+
+        dm.add(createComponent
+            .setInterface(classOf[DML3].getName, new jHT[String,String]() {{
+              put("p", "3")
+              put("q", "3")
+            }})
+            .setImplementation(classOf[DML3])
+            .add(createServiceDependency
+                .setService(classOf[DSL3], "(q=3)")
+                .setAutoConfig(false)
+                .setCallbacks(null, null, null)
+                .setRequired(true)))
+
     }
 
     override def destroy(bc:BundleContext, dm:DependencyManager) = {}
@@ -152,3 +168,4 @@ class DM2
 class DMP
 class DML1
 class DML2
+class DML3

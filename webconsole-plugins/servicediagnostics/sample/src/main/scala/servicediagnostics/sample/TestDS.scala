@@ -48,15 +48,15 @@ class DSL1
     @Reference(target="(p=2)") def bind(s:DML2) = {}
 }
 
-/* DSL2 -> DML2 -x-> DSL3 -> DSL2
-@Component(provide=Array(classOf[DSL2]), properties=Array("p=1","q=0")) 
+// DSL2 -(opt)-> DML3 --> DSL3 -> DSL2
+@Component(provide=Array(classOf[DSL2]), properties=Array("p=1","q=2")) 
 class DSL2 
 {
-    @Reference(target="(p=2)") def bind(s:DML2) = {}
+    @Reference(target="(p=3)", optional=true, dynamic=true) def bind(s:DML3) = {}
 }
-@Component(provide=Array(classOf[DSL3]), properties=Array("p=1","q=0")) 
+@Component(provide=Array(classOf[DSL3]), properties=Array("p=0","q=3")) 
 class DSL3 
 {
-    @Reference(target="(q=0)") def bind(s:DSL2) = {}
-}*/
+    @Reference(target="(q=2)") def bind(s:DSL2) = {}
+}
 

@@ -45,7 +45,6 @@ class DSNotAvail extends ServiceDiagnosticsPlugin
             comp <- Option(scrService.getComponents).flatten.map(_.asInstanceOf[Component])
             service <- Option(comp.getServices).flatten
             deps = Option(comp.getReferences).flatten
-                          .filterNot(_.isOptional)
                           .map(dep => new Dependency(dep.getServiceName,
                                                      dep.getTarget,
                                                      dep.isSatisfied)).toList

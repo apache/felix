@@ -64,7 +64,7 @@ function graphUnavail(json) {
   // show unresolved
   var unresolved = json.unresolved
   if (unresolved) for (s in unresolved) {
-    $("#warning").html("unresolvable components detected!");
+    $("#warning").html("circular dependencies detected!");
     for (i = 0; i < unresolved[s].length; i++) {
       g.addEdge(s, unresolved[s][i], { directed : true } );
     }
