@@ -339,10 +339,10 @@ public class Junit4osgiPlugin extends AbstractMojo {
         int count2 = 0;
         while (! serviceStability && count < 500) {
             try {
-                ServiceReference[] refs = context.getServiceReferences(null, null);
+                ServiceReference[] refs = context.getServiceReferences((String) null, null);
                 count1 = refs.length;
                 Thread.sleep(500);
-                refs = context.getServiceReferences(null, null);
+                refs = context.getServiceReferences((String) null, null);
                 count2 = refs.length;
                 serviceStability = count1 == count2;
             } catch (Exception e) {
@@ -360,7 +360,7 @@ public class Junit4osgiPlugin extends AbstractMojo {
         }
 
         try {
-            ServiceReference[] refs = context.getServiceReferences(null, null);
+            ServiceReference[] refs = context.getServiceReferences((String) null, null);
             getLog().debug("Service List");
             for (int i = 0; i < refs.length; i++) {
                 String[] itfs = (String[]) refs[i].getProperty(Constants.OBJECTCLASS);
