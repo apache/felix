@@ -41,7 +41,7 @@
         <ipojo.package.version>1.8.4</ipojo.package.version>
 
         <!-- Embedded manipulator version -->
-        <ipojo.manipulator.version>1.8.6</ipojo.manipulator.version>
+        <ipojo.manipulator.version>1.9.0-SNAPSHOT</ipojo.manipulator.version>
     </properties>
 
     <description>
@@ -136,6 +136,7 @@
                             org.apache.felix.ipojo.handlers.architecture,
                             org.apache.felix.ipojo.handlers.lifecycle.callback,
                             org.apache.felix.ipojo.handlers.lifecycle.controller,
+                            META-INF.services.*,
                             <!-- ASM (Manipulator dependencies) -->
                             org.objectweb.asm.commons,
                             org.objectweb.asm.signature,
