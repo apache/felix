@@ -20,14 +20,11 @@ package org.apache.felix.ipojo.manipulation;
 
 import java.util.Set;
 
-import org.apache.felix.ipojo.manipulation.ClassChecker.AnnotationDescriptor;
-import org.apache.felix.ipojo.manipulation.annotations.CustomAnnotationVisitor;
-import org.apache.felix.ipojo.manipulation.annotations.MetadataCollector;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Names;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 
@@ -126,7 +123,7 @@ public class ConstructorCodeAdapter extends GeneratorAdapter implements Opcodes 
          */
         if (desc.equals("Lorg/apache/felix/ipojo/annotations/Property;")
                 || desc.equals("Lorg/apache/felix/ipojo/annotations/Requires;")
-                || CustomAnnotationVisitor.isCustomAnnotation(desc)) {
+                || Names.isCustomAnnotation(desc)) {
             return null;
         } else {
             return super.visitParameterAnnotation(parameter, desc, visible);

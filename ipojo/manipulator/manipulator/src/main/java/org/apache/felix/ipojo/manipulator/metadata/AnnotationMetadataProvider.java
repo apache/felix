@@ -22,13 +22,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.ipojo.manipulation.annotations.MetadataCollector;
 import org.apache.felix.ipojo.manipulator.MetadataProvider;
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
 import org.apache.felix.ipojo.manipulator.ResourceVisitor;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.ClassMetadataCollector;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.BindingRegistry;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.ClassReader;
+
+import static org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Bindings.newBindingRegistry;
 
 /**
  * A {@code AnnotationMetadataProvider} loads iPOJO metadata from bytecode of classes.
@@ -40,10 +43,18 @@ public class AnnotationMetadataProvider implements MetadataProvider {
     private ResourceStore m_store;
 
     private Reporter m_reporter;
+    private BindingRegistry m_registry;
 
     public AnnotationMetadataProvider(final ResourceStore store,
                                       final Reporter reporter) {
+        this(store, newBindingRegistry(reporter), reporter);
+    }
+
+    public AnnotationMetadataProvider(final ResourceStore store,
+                                      final BindingRegistry registry,
+                                      final Reporter reporter) {
         this.m_store = store;
+        this.m_registry = registry;
         this.m_reporter = reporter;
     }
 
@@ -61,15 +72,15 @@ public class AnnotationMetadataProvider implements MetadataProvider {
                     try {
                         data = m_store.read(name);
                     } catch (IOException e) {
-                        m_reporter.warn("Cannot read content of " + name);
+                        m_reporter.warn("Cannot read content of %s", name);
                     }
 
                     // We check the array size to avoid manipulating empty files
                     // produced by incremental compilers (like Eclipse Compiler)
                     if (data != null && data.length > 0) {
-                        computeAnnotations(data, metadata);
+                        computeAnnotations(name, data, metadata);
                     } else {
-                        m_reporter.error("Cannot compute annotations from " + name + " : Empty file");
+                        m_reporter.error("Cannot compute annotations from %s : Empty file", name);
                     }
                 }
             }
@@ -80,27 +91,24 @@ public class AnnotationMetadataProvider implements MetadataProvider {
 
     /**
      * Parse the content of the class to detect annotated classes.
-     * @param bytecode the class to inspect.
-     * @param metadata
+     * @param name Resource's name
+     * @param bytecode the class' content to inspect.
+     * @param metadata list of metadata to be filled
      */
-    private void computeAnnotations(byte[] bytecode, List<Element> metadata) {
+    private void computeAnnotations(String name, byte[] bytecode, List<Element> metadata) {
 
         ClassReader cr = new ClassReader(bytecode);
-        MetadataCollector collector = new MetadataCollector();
+        ClassMetadataCollector collector = new ClassMetadataCollector(m_registry, m_reporter);
         cr.accept(collector, 0);
 
-        if (collector.isIgnoredBecauseOfMissingComponent()) {
-            // No @Component, just skip.
-            //warn("Annotation processing ignored in " + collector.getClassName() + " - @Component missing");
-        } else if (collector.isComponentType()) {
-
-            // if no metadata or empty one, create a new array.
-            metadata.add(collector.getComponentTypeDeclaration());
+        if (collector.getComponentMetadata() != null) {
+            metadata.add(collector.getComponentMetadata());
 
             // Instantiate ?
-            if (collector.getInstanceDeclaration() != null) {
-                //warn("Declaring an empty instance of " + elem.getAttribute("classname"));
-                metadata.add(collector.getInstanceDeclaration());
+            Element instance = collector.getInstanceMetadata();
+            if (instance != null) {
+                m_reporter.trace("Declaring an empty instance of %s", instance.getAttribute("component"));
+                metadata.add(instance);
             }
         }
     }
