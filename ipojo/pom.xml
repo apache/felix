@@ -45,8 +45,7 @@
     <module>api</module>
 	<module>arch-gogo</module>
     <module>webconsole-plugin</module>
-    <!-- remove junit4osgi during the release process
-    <module>junit4osgi</module> -->
+    <module>junit4osgi</module>
   </modules>
 
   <profiles>
