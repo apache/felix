@@ -142,9 +142,8 @@ public class ProxyTest extends OSGiTestCase {
     }
     
     public void testImmediateNoService() throws UnacceptableConfiguration, MissingHandlerException, ConfigurationException {
-        
         Properties i1 = new Properties();
-        i1.put("instance.name","Delegator");
+        i1.put("instance.name","Delegator-with-no-service");
         ComponentInstance instance1 = Utils.getFactoryByName(getContext(), 
                 "org.apache.felix.ipojo.test.scenarios.service.dependency.proxy.CheckServiceNoDelegate").createComponentInstance(i1);
         
