@@ -123,6 +123,14 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                     m_componentContext = tmpContext;
                     m_implementationObject = implementationObject;
                 }
+
+
+                public void unsetImplementationObject( Object implementationObject )
+                {
+                    m_componentContext = null;
+                    m_implementationObject = null;
+                }
+
             } );
 
             // if something failed creating the component instance, return false
@@ -180,6 +188,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
     protected interface SetImplementationObject {
         void setImplementationObject(Object implementationObject);
+        void unsetImplementationObject(Object implementationObject);
     }
 
     protected Object createImplementationObject( ComponentContext componentContext, SetImplementationObject setter )
@@ -235,11 +244,17 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             }
         }
 
-        // 4. Call the activate method, if present
+        // 4. set the implementation object prematurely
+        setter.setImplementationObject( implementationObject );
+
+        // 5. Call the activate method, if present
         final MethodResult result = getComponentMethods().getActivateMethod().invoke( implementationObject, new ActivatorParameter(
                 componentContext, 1 ), null );
         if ( result == null )
         {
+            // make sure the implementation object is not available
+            setter.unsetImplementationObject( implementationObject );
+
             // 112.5.8 If the activate method throws an exception, SCR must log an error message
             // containing the exception with the Log Service and activation fails
             it = getDependencyManagers();
@@ -253,7 +268,6 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         }
         else
         {
-            setter.setImplementationObject( implementationObject );
             setServiceProperties( result );
         }
 

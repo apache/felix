@@ -152,6 +152,13 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
                     changeState( Active.getInstance() );
                 }
             }
+
+
+            public void unsetImplementationObject( Object implementationObject )
+            {
+                serviceContexts.remove( implementationObject );
+                serviceContext.setImplementationObject( null );
+            }
         } );
 
         // register the components component context if successfull

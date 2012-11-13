@@ -22,6 +22,7 @@ package org.apache.felix.scr.integration;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
+import org.apache.felix.scr.integration.components.ActivatorComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -179,6 +180,33 @@ public class ComponentActivationTest extends ComponentTestBase
         delay();
 
         TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+
+        component.disable();
+
+        delay();
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+    }
+
+
+    @Test
+    public void test_activate_register_service()
+    {
+        final String componentname = "ActivatorComponent.activate.with.bind";
+
+        final Component component = findComponentByName( componentname );
+
+        TestCase.assertNotNull( component );
+        TestCase.assertFalse( component.isDefaultEnabled() );
+
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+
+        component.enable();
+        delay();
+
+        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+
+        ActivatorComponent ac = (ActivatorComponent) component.getComponentInstance().getInstance();
+        TestCase.assertNotNull( ac.getSimpleService() );
 
         component.disable();
 
