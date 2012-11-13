@@ -23,7 +23,6 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
 
-import com.sun.org.apache.xerces.internal.impl.dv.ValidatedInfo;
 import junit.framework.TestCase;
 
 /**
