@@ -153,7 +153,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                 currentFactory = (URLStreamHandlerFactory) m_secureAction.swapStaticFieldIfNotClass(URL.class,
                     URLStreamHandlerFactory.class, URLHANDLERS_CLASS, "streamHandlerLock");
             }
-            catch (Exception ex)
+            catch (Throwable ex)
             {
                 // Ignore, this is a best effort (maybe log it or something)
             }
@@ -177,7 +177,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                 {
                     URL.setURLStreamHandlerFactory(currentFactory);
                 }
-                catch (Exception ex)
+                catch (Throwable ex)
                 {
                     // Ignore, this is a best effort (maybe log it or something)
                 }
