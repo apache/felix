@@ -70,4 +70,21 @@
         <implementation class="org.apache.felix.scr.integration.components.ActivatorComponent" />
         <property name="failDeactivate" value="true" />
     </scr:component>
+
+    <!-- bind service during activate -->
+    <scr:component name="ActivatorComponent.activate.with.bind"
+        enabled="false"
+        activate="myActivate"
+        deactivate="myDeactivate">
+        <implementation class="org.apache.felix.scr.integration.components.ActivatorComponent" />
+        <property name="registerService" value="true" />
+        <reference
+            name="service"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+            policy="dynamic"
+            cardinality="0..n"
+        />
+    </scr:component>
 </components>

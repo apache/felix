@@ -21,6 +21,9 @@ package org.apache.felix.scr.integration.components;
 
 import java.util.Map;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+
 
 public class ActivatorComponent
 {
@@ -29,13 +32,22 @@ public class ActivatorComponent
 
     public static final String FLAG_FAIL_DEACTIVATE = "failDeactivate";
 
+    public static final String FLAG_REGISTER_SERVICE = "registerService";
+
+    private ServiceRegistration registration;
+
+    private SimpleService simpleService;
 
     @SuppressWarnings("unused")
-    private void myActivate( Map<?, ?> configuration )
+    private void myActivate( BundleContext context, Map<?, ?> configuration )
     {
         if ( configuration.containsKey( FLAG_FAIL_ACTIVATE ) )
         {
             throw new IllegalStateException( "myActivate fails" );
+        }
+        if ( configuration.containsKey( FLAG_REGISTER_SERVICE ) )
+        {
+            registration = context.registerService( SimpleService.class.getName(), new SimpleServiceImpl(), null );
         }
     }
 
@@ -46,6 +58,34 @@ public class ActivatorComponent
         if ( configuration.containsKey( FLAG_FAIL_DEACTIVATE ) )
         {
             throw new IllegalStateException( "myDeactivate fails" );
+        }
+        if ( registration != null )
+        {
+            registration.unregister();
+            registration = null;
+        }
+    }
+
+
+    public SimpleService getSimpleService()
+    {
+        return simpleService;
+    }
+
+
+    @SuppressWarnings("unused")
+    private void bindSimpleService( SimpleService simpleService )
+    {
+        this.simpleService = simpleService;
+    }
+
+
+    @SuppressWarnings("unused")
+    private void unbindSimpleService( SimpleService simpleService )
+    {
+        if ( this.simpleService == simpleService )
+        {
+            this.simpleService = null;
         }
     }
 }
