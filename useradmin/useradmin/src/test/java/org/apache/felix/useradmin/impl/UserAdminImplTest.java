@@ -245,19 +245,6 @@ public class UserAdminImplTest extends TestCase {
     }
 
     /**
-     * Tests that creating a role with an invalid type does not succeed and yields an exception.
-     */
-    public void testCreateInvalidRoleTypeFail() {
-        try {
-            m_userAdmin.createRole("role1", Role.ROLE);
-            
-            fail("Expected an IllegalArgumentException!");
-        } catch (IllegalArgumentException e) {
-            // Ok; expected
-        }
-    }
-
-    /**
      * Tests that creating a role without a name does not succeed and yields an exception.
      */
     public void testCreateInvalidRoleNameFail() {
@@ -271,11 +258,11 @@ public class UserAdminImplTest extends TestCase {
     }
 
     /**
-     * Tests that creating a role without a name does not succeed and yields an exception.
+     * Tests that creating a role with an invalid type does not succeed and yields an exception.
      */
-    public void testCreateRoleWithEmptyNameFail() {
+    public void testCreateInvalidRoleTypeFail() {
         try {
-            m_userAdmin.createRole("", Role.USER);
+            m_userAdmin.createRole("role1", Role.ROLE);
             
             fail("Expected an IllegalArgumentException!");
         } catch (IllegalArgumentException e) {
@@ -303,6 +290,19 @@ public class UserAdminImplTest extends TestCase {
         role = m_userAdmin.createRole("user1", Role.USER);
         assertNotNull(role);
         assertEquals("user1", role.getName());
+    }
+
+    /**
+     * Tests that creating a role without a name does not succeed and yields an exception.
+     */
+    public void testCreateRoleWithEmptyNameFail() {
+        try {
+            m_userAdmin.createRole("", Role.USER);
+            
+            fail("Expected an IllegalArgumentException!");
+        } catch (IllegalArgumentException e) {
+            // Ok; expected
+        }
     }
 
     /**
@@ -687,6 +687,75 @@ public class UserAdminImplTest extends TestCase {
         user1.getProperties().remove("key");
 
         assertNull(user1.getProperties().get("key"));
+    }
+
+    /**
+     * Tests that remove of a role also removes that role as member from any group (FELIX-3755).
+     */
+    public void testRemoveRoleRemovesItAsGroupMemberOk() {
+        Role user1 = m_userAdmin.createRole("user1", Role.USER);
+        Role user2 = m_userAdmin.createRole("user2", Role.USER);
+
+        Group group1 = (Group) m_userAdmin.createRole("group1", Role.GROUP);
+        group1.addMember(user1);
+
+        Group group2 = (Group) m_userAdmin.createRole("group2", Role.GROUP);
+        group2.addMember(user1);
+        group2.addMember(user2);
+        
+        // Remove user...
+        m_userAdmin.removeRole(user1.getName());
+
+        // Retrieve an up-to-date instance of the first group...
+        group1 = (Group) m_userAdmin.getRole("group1");
+        assertNull(group1.getMembers());
+
+        // Retrieve an up-to-date instance of the second group...
+        group2 = (Group) m_userAdmin.getRole("group2");
+
+        Role[] members = group2.getMembers();
+		assertNotNull(members);
+		assertEquals(1, members.length);
+        assertEquals(user2, members[0]);
+    }
+
+    /**
+     * Tests that remove of a role also removes that role as required member from any group (FELIX-3755).
+     */
+    public void testRemoveRoleRemovesItAsRequiredGroupMemberOk() {
+        Role user1 = m_userAdmin.createRole("user1", Role.USER);
+        Role user2 = m_userAdmin.createRole("user2", Role.USER);
+
+        Group group1 = (Group) m_userAdmin.createRole("group1", Role.GROUP);
+        group1.addRequiredMember(user1);
+        group1.addMember(user2);
+
+        Group group2 = (Group) m_userAdmin.createRole("group2", Role.GROUP);
+        group2.addRequiredMember(user1);
+        group2.addRequiredMember(user2);
+
+        // Remove user...
+        m_userAdmin.removeRole(user1.getName());
+        
+        // Retrieve an up-to-date instance of the group...
+        group1 = (Group) m_userAdmin.getRole("group1");
+        
+        assertNull(group1.getRequiredMembers());
+
+        Role[] members = group1.getMembers();
+		assertNotNull(members);
+        assertEquals(1, members.length);
+        assertEquals(user2, members[0]);
+        
+        // Retrieve an up-to-date instance of the group...
+        group2 = (Group) m_userAdmin.getRole("group2");
+        
+        assertNull(group2.getMembers());
+
+        members = group2.getRequiredMembers();
+		assertNotNull(members);
+        assertEquals(1, members.length);
+        assertEquals(user2, members[0]);
     }
 
     /**

@@ -64,23 +64,6 @@ public class RoleImpl implements Serializable, Role, DictionaryChangeListener {
     }
 
     /**
-     * Creates a new {@link RoleImpl} instance with a given type, name and properties.
-     * 
-     * @param type the type of this role, should be {@link Role#ROLE}, {@link Role#USER} or {@link Role#GROUP};
-     * @param name the name of this role, cannot be <code>null</code> or empty;
-     * @param properties the initial properties of this role, cannot be <code>null</code>.
-     */
-    protected RoleImpl(int type, String name, Dictionary properties) {
-        if (name == null || "".equals(name.trim())) {
-            throw new IllegalArgumentException("Name cannot be null or empty!");
-        }
-        m_type = type;
-        m_name = name;
-        m_properties = new ObservableProperties(null, UserAdminPermission.CHANGE_PROPERTY, properties);
-        m_properties.setDictionaryChangeListener(this);
-    }
-
-    /**
      * {@inheritDoc}
      */
     public final void entryAdded(Object key, Object value) {

@@ -17,7 +17,6 @@
 package org.apache.felix.useradmin.impl.role;
 
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,29 +52,19 @@ public class GroupImpl extends UserImpl implements Group {
     }
 
     /**
-     * Creates a new {@link GroupImpl} instance of type {@link Role#GROUP}.
-     * 
-     * @param name the name of this group role, cannot be <code>null</code> or empty.
-     */
-    public GroupImpl(String name, Dictionary properties, Dictionary credentials) {
-        super(Role.GROUP, name, properties, credentials);
-
-        m_members = new HashMap();
-        m_requiredMembers = new HashMap();
-    }
-
-    /**
      * {@inheritDoc}
      */
     public boolean addMember(Role role) {
         checkPermissions();
         
+        String name = role.getName();
+
         Object result;
         synchronized (m_lock) {
-            if (m_members.containsKey(role.getName()) || m_requiredMembers.containsKey(role.getName())) {
+			if (m_members.containsKey(name) || m_requiredMembers.containsKey(name)) {
                 return false;
             }
-            result = m_members.put(role.getName(), role);
+            result = m_members.put(name, role);
         }
 
         if (result == null) {
@@ -92,12 +81,14 @@ public class GroupImpl extends UserImpl implements Group {
     public boolean addRequiredMember(Role role) {
         checkPermissions();
 
+        String name = role.getName();
+
         Object result;
         synchronized (m_lock) {
-            if (m_requiredMembers.containsKey(role.getName()) || m_members.containsKey(role.getName())) {
+			if (m_requiredMembers.containsKey(name) || m_members.containsKey(name)) {
                 return false;
             }
-            result = m_requiredMembers.put(role.getName(), role);
+            result = m_requiredMembers.put(name, role);
         }
 
         if (result == null) {
@@ -140,17 +131,19 @@ public class GroupImpl extends UserImpl implements Group {
     public boolean removeMember(Role role) {
         checkPermissions();
 
+        String name = role.getName();
+
         String key = null;
         Object result = null;
         
         synchronized (m_lock) {
-            if (m_requiredMembers.containsKey(role.getName())) {
+			if (m_requiredMembers.containsKey(name)) {
                 key = REQUIRED_MEMBER;
-                result = m_requiredMembers.remove(role.getName());
+                result = m_requiredMembers.remove(name);
             }
-            else if (m_members.containsKey(role.getName())) {
+            else if (m_members.containsKey(name)) {
                 key = BASIC_MEMBER;
-                result = m_members.remove(role.getName());
+                result = m_members.remove(name);
             }
         }
 

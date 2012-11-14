@@ -55,18 +55,6 @@ public class UserImpl extends RoleImpl implements User {
     }
 
     /**
-     * Creates a new {@link UserImpl} instance with type {@link Role#USER}.
-     * 
-     * @param name the name of this user role, cannot be <code>null</code> or empty.
-     */
-    protected UserImpl(int type, String name, Dictionary properties, Dictionary credentials) {
-        super(type, name, properties);
-
-        m_credentials = new ObservableProperties(UserAdminPermission.GET_CREDENTIAL, UserAdminPermission.CHANGE_CREDENTIAL, credentials);
-        m_credentials.setDictionaryChangeListener(this);
-    }
-
-    /**
      * {@inheritDoc}
      */
     public Dictionary getCredentials() {
@@ -89,7 +77,7 @@ public class UserImpl extends RoleImpl implements User {
             } else if (value instanceof String) {
                 s2 = (String) value;
             } else {
-                // Not a string or a byte-array!
+                // Not a string, nor a byte-array!
                 return false;
             }
             
@@ -102,7 +90,7 @@ public class UserImpl extends RoleImpl implements User {
             } else if (value instanceof String) {
                 b2 = ((String) value).getBytes();
             } else {
-                // Not a string or a byte-array!
+                // Not a string, nor a byte-array!
                 return false;
             }
 
