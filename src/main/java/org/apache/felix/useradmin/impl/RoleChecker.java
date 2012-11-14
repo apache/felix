@@ -19,11 +19,8 @@ package org.apache.felix.useradmin.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-
-import org.apache.felix.useradmin.impl.role.UserImpl;
 import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
-import org.osgi.service.useradmin.User;
 
 /**
  * Helper class to check for implied role memberships.
@@ -40,9 +37,7 @@ final class RoleChecker {
     public boolean isImpliedBy(Role role, Role impliedRole) {
         if (role instanceof Group) {
             return isGroupImpliedBy((Group) role, impliedRole, new ArrayList());
-        } else if (role instanceof User) {
-            return isUserImpliedBy((User) role, impliedRole);
-        } else {
+        } else /* if ((role instanceof User) || (role instanceof Role)) */ {
             return isRoleImpliedBy(role, impliedRole);
         }
     }
@@ -72,10 +67,8 @@ final class RoleChecker {
             if (requiredRole instanceof Group) {
                 seenGroups.add(requiredRole);
                 isImplied = isGroupImpliedBy((Group) requiredRole, impliedRole, seenGroups);
-            } else if (requiredRole instanceof User) {
-                isImplied  = isUserImpliedBy((User) requiredRole, impliedRole);
-            } else /* if (requiredRoles[i] instanceof RoleImpl) */ {
-                isImplied = isRoleImpliedBy(requiredRole, impliedRole);
+            } else /* if ((requiredRole instanceof User) || (requiredRole instanceof Role)) */ {
+                isImplied  = isRoleImpliedBy(requiredRole, impliedRole);
             }
         }
 
@@ -98,25 +91,12 @@ final class RoleChecker {
             if (basicRole instanceof Group) {
                 seenGroups.add(basicRole);
                 isImplied = isGroupImpliedBy((Group) basicRole, impliedRole, seenGroups);
-            } else if (basicRole instanceof UserImpl) {
-                isImplied = isUserImpliedBy((User) basicRole, impliedRole);
-            } else /* if (requiredRoles[i] instanceof RoleImpl) */ {
+            } else /* if ((basicRole instanceof User) || (basicRole instanceof Role)) */ {
                 isImplied = isRoleImpliedBy(basicRole, impliedRole);
             }
         }
 
         return isImplied;
-    }
-
-    /**
-     * Verifies whether the given user is implied by the given role.
-     * 
-     * @param user the user to check, cannot be <code>null</code>;
-     * @param impliedRole the implied role to check for, cannot be <code>null</code>;
-     * @return <code>true</code> if the given user is implied by the given role, <code>false</code> otherwise.
-     */
-    private boolean isUserImpliedBy(User user, Role impliedRole) {
-        return Role.USER_ANYONE.equals(user.getName()) || (impliedRole != null && impliedRole.getName().equals(user.getName()));
     }
 
     /**

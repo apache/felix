@@ -29,6 +29,7 @@ import org.apache.felix.useradmin.RoleFactory;
 import org.apache.felix.useradmin.RoleRepositoryStore;
 import org.apache.felix.useradmin.impl.role.RoleImpl;
 import org.osgi.framework.Filter;
+import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.UserAdminPermission;
 
@@ -44,33 +45,23 @@ public final class RoleRepository {
         /**
          * {@inheritDoc}
          */
-        public void roleAdded(Role role) {
-            Iterator iterator = createListenerIterator();
-            while (iterator.hasNext()) {
-                ((RoleChangeListener) iterator.next()).roleAdded(role);
-            }
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        public void roleRemoved(Role role) {
-            Iterator iterator = createListenerIterator();
-            while (iterator.hasNext()) {
-                ((RoleChangeListener) iterator.next()).roleRemoved(role);
-            }
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
         public void propertyAdded(Role role, Object key, Object value) {
             Iterator iterator = createListenerIterator();
             while (iterator.hasNext()) {
                 ((RoleChangeListener) iterator.next()).propertyAdded(role, key, value);
             }
         }
-
+        
+        /**
+         * {@inheritDoc}
+         */
+        public void propertyChanged(Role role, Object key, Object oldValue, Object newValue) {
+            Iterator iterator = createListenerIterator();
+            while (iterator.hasNext()) {
+                ((RoleChangeListener) iterator.next()).propertyChanged(role, key, oldValue, newValue);
+            }
+        }
+        
         /**
          * {@inheritDoc}
          */
@@ -84,10 +75,20 @@ public final class RoleRepository {
         /**
          * {@inheritDoc}
          */
-        public void propertyChanged(Role role, Object key, Object oldValue, Object newValue) {
+        public void roleAdded(Role role) {
             Iterator iterator = createListenerIterator();
             while (iterator.hasNext()) {
-                ((RoleChangeListener) iterator.next()).propertyChanged(role, key, oldValue, newValue);
+                ((RoleChangeListener) iterator.next()).roleAdded(role);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void roleRemoved(Role role) {
+            Iterator iterator = createListenerIterator();
+            while (iterator.hasNext()) {
+                ((RoleChangeListener) iterator.next()).roleRemoved(role);
             }
         }
     }
@@ -251,6 +252,9 @@ public final class RoleRepository {
 
         try {
             if (m_store.removeRole(role)) {
+            	// FELIX-3755: Remove the role as (required)member from all groups...
+            	removeRoleFromAllGroups(role);
+            	
                 unwireChangeListener(role);
                 m_roleChangeReflector.roleRemoved(role);
                 
@@ -278,7 +282,7 @@ public final class RoleRepository {
         m_listeners.remove(listener);
     }
 
-    /**
+	/**
      * Starts this repository.
      */
     public void start() {
@@ -292,7 +296,7 @@ public final class RoleRepository {
             e.printStackTrace();
         }
     }
-    
+
     /**
      * Stops this repository, allowing it to clean up.
      */
@@ -304,7 +308,7 @@ public final class RoleRepository {
             // Ignore; nothing we can do about this here...
         }
     }
-
+    
     /**
      * Creates a new iterator for iterating over all listeners.
      * 
@@ -325,7 +329,7 @@ public final class RoleRepository {
             securityManager.checkPermission(new UserAdminPermission(UserAdminPermission.ADMIN, null));
         }
     }
-    
+
     /**
      * Returns whether or not the given role is a predefined role.
      * <p>
@@ -337,6 +341,39 @@ public final class RoleRepository {
      */
     private boolean isPredefinedRole(Role role) {
         return Role.USER_ANYONE.equals(role.getName());
+    }
+    
+    /**
+     * Removes a given role as (required)member from any groups it is member of.
+     * 
+	 * @param removedRole the role that is removed from the store already, cannot be <code>null</code>.
+	 * @throws BackendException in case of problems accessing the store.
+	 */
+	private void removeRoleFromAllGroups(Role removedRole) {
+        try {
+            Role[] roles = m_store.getAllRoles();
+            for (int i = 0; i < roles.length; i++) {
+                if (roles[i].getType() == Role.GROUP) {
+                	Group group = (Group) roles[i];
+                	// Don't check whether the given role is actually a member 
+                	// of the group, but let the group itself figure this out...
+                	group.removeMember(removedRole);
+                }
+            }
+        }
+        catch (IOException e) {
+            throw new BackendException("Failed to get all roles!", e);
+        }
+	}
+
+    /**
+     * Unwires the given role to this repository so it no longer listens for its changes.
+     * 
+     * @param role the role to unwire, cannot be <code>null</code>.
+     * @throws IllegalArgumentException in case the given object was not a {@link RoleImpl} instance.
+     */
+    private void unwireChangeListener(Object role) {
+        ((RoleImpl) role).setRoleChangeListener(null);
     }
 
     /**
@@ -352,16 +389,5 @@ public final class RoleRepository {
             result.setRoleChangeListener(m_roleChangeReflector);
         }
         return result;
-    }
-
-    /**
-     * Unwires the given role to this repository so it no longer listens for its changes.
-     * 
-     * @param role the role to unwire, cannot be <code>null</code>.
-     * @throws IllegalArgumentException in case the given object was not a {@link RoleImpl} instance.
-     */
-    private void unwireChangeListener(Object role) {
-        RoleImpl result = (RoleImpl) role;
-        result.setRoleChangeListener(null);
     }
 }

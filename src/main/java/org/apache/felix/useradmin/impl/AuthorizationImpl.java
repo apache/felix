@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
-import org.apache.felix.useradmin.impl.role.RoleImpl;
 import org.osgi.service.useradmin.Authorization;
 import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.User;
@@ -86,7 +84,7 @@ public class AuthorizationImpl implements Authorization {
 
         Iterator rolesIter = m_roleManager.getRoles(null /* filter */).iterator();
         while (rolesIter.hasNext()) {
-            RoleImpl role = (RoleImpl) rolesIter.next();
+            Role role = (Role) rolesIter.next();
             if (!Role.USER_ANYONE.equals(role.getName()) && m_roleChecker.isImpliedBy(role, m_user)) {
                 result.add(role.getName());
             }
