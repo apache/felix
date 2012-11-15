@@ -78,6 +78,31 @@ public class ADTest extends TestCase
     }
 
 
+    public void testEmptySecond()
+    {
+        String value0 = "value0";
+        String value1 = "";
+        String listString = value0 + ",";
+        String[] list = AD.splitList( listString );
+        assertNotNull( list );
+        assertEquals( 2, list.length );
+        assertEquals( value0, list[0] );
+        assertEquals( value1, list[1] );
+    }
+
+    public void testSpacedSecond()
+    {
+        String value0 = "value0";
+        String value1 = "";
+        String listString = value0 + ", ";
+        String[] list = AD.splitList( listString );
+        assertNotNull( list );
+        assertEquals( 2, list.length );
+        assertEquals( value0, list[0] );
+        assertEquals( value1, list[1] );
+    }
+
+
     public void testSingleBlanks()
     {
         String value0 = "value";
@@ -106,9 +131,9 @@ public class ADTest extends TestCase
     {
         String value0 = "a,b";
         String value1 = "b,c";
-        String value2 = "c\\";
+        String value2 = " c\\";
         String value3 = "d";
-        String listString = "a\\,b,b\\,c, c\\\\,d";
+        String listString = "a\\,b,b\\,c,\\ c\\\\,d";
         String[] list = AD.splitList( listString );
         assertNotNull( list );
         assertEquals( 4, list.length );
@@ -132,5 +157,43 @@ public class ADTest extends TestCase
         assertEquals( AttributeDefinition.SHORT, AD.toType( "Short" ) );
         assertEquals( AttributeDefinition.PASSWORD, AD.toType( "Password" ) );
         assertEquals( AttributeDefinition.STRING, AD.toType( "JohnDoe" ) );
+    }
+    
+    /**
+     * FELIX-3757: if an AD has only its 'required' property set, but no 
+     * min/max or option values defined, the validation still should detect 
+     * empty values. 
+     */
+    public void testValidateRequiredValueWithMinimalOptions() {
+    	AD ad = new AD();
+    	ad.setType("Integer");
+    	ad.setRequired(true);
+
+    	assertEquals(AD.VALIDATE_MISSING, ad.validate(null));
+    }
+    
+    /**
+     * FELIX-3756: if an AD is optional, but its validate method is called
+     * with invalid data, the value is regarded missing.
+     */
+    public void testValidateOptionalValueWithInvalidData() {
+    	AD ad = new AD();
+    	ad.setType("Integer");
+    	ad.setRequired(false);
+    	
+    	assertEquals(AD.VALIDATE_INVALID_VALUE, ad.validate("abc"));
+    }
+    
+    /**
+     * FELIX-3758: if an AD has a cardinality != 0, the validation method
+     * cannot handle a comma-separated input.
+     */
+    public void testValidateValueWithMultiValueCardinality() {
+    	AD ad = new AD();
+    	ad.setType("Integer");
+    	ad.setCardinality(2);
+    	ad.setRequired(true);
+    	
+    	assertEquals("", ad.validate("1,2"));
     }
 }

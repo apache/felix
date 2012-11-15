@@ -47,6 +47,12 @@ public class AD extends OptionalAttributes
 
     /**
      * The message returned from the {@link #validate(String)} method if the
+     * value is invalid considering its type (value is "%invalid value").
+     */
+    public static final String VALIDATE_INVALID_VALUE = "%invalid value";
+
+    /**
+     * The message returned from the {@link #validate(String)} method if the
      * value is greater than the specified {@link #getMax() maximum value}
      * (value is "%greater than maximum").
      */
@@ -175,109 +181,7 @@ public class AD extends OptionalAttributes
      */
     public String validate( String valueString )
     {
-        // no validation if no min and max
-        if ( getMin() == null && getMax() == null && getOptionValues() == null )
-        {
-            return null;
-        }
-
-        // min/max for strings and passwords indicates the length
-        final Comparable value;
-        if ( getType() == AttributeDefinition.STRING || getType() == AttributeDefinition.PASSWORD )
-        {
-            if ( valueString == null )
-            {
-                if ( isRequired() )
-                {
-                    return VALIDATE_MISSING;
-                }
-
-                return ""; // accept null value
-            }
-
-            if ( getMin() != null )
-            {
-                try
-                {
-                    if ( valueString.length() < Integer.parseInt( getMin() ) )
-                    {
-                        return VALIDATE_LESS_THAN_MINIMUM;
-                    }
-                }
-                catch ( NumberFormatException nfe )
-                {
-                    // cannot check min length
-                }
-            }
-
-            if ( getMax() != null )
-            {
-                try
-                {
-                    if ( valueString.length() > Integer.parseInt( getMax() ) )
-                    {
-                        return VALIDATE_GREATER_THAN_MAXIMUM;
-                    }
-                }
-                catch ( NumberFormatException nfe )
-                {
-                    // cannot check min length
-                }
-            }
-
-            value = valueString;
-        }
-        else
-        {
-            value = convertToType( valueString );
-            if ( value == null )
-            {
-                if ( isRequired() )
-                {
-                    return VALIDATE_MISSING;
-                }
-
-                return ""; // accept null value
-            }
-
-            Comparable other = convertToType( getMin() );
-            if ( other != null )
-            {
-                if ( value.compareTo( other ) < 0 )
-                {
-                    return VALIDATE_LESS_THAN_MINIMUM;
-                }
-            }
-
-            other = convertToType( getMax() );
-            if ( other != null )
-            {
-                if ( value.compareTo( other ) > 0 )
-                {
-                    return VALIDATE_GREATER_THAN_MAXIMUM;
-                }
-            }
-        }
-
-        String[] optionValues = getOptionValues();
-        if ( optionValues != null && optionValues.length > 0 )
-        {
-            for ( int i = 0; i < optionValues.length; i++ )
-            {
-                Comparable other = convertToType( optionValues[i] );
-                if ( value.compareTo( other ) == 0 )
-                {
-                    // one of the option values
-                    return "";
-                }
-            }
-
-            // not any of the option values, fail
-            return VALIDATE_NOT_A_VALID_OPTION;
-        }
-
-        // finally, we accept the value
-        return "";
+    	return ADValidator.validate(this, valueString);
     }
 
 
@@ -440,59 +344,50 @@ public class AD extends OptionalAttributes
 
     public static String[] splitList( String listString )
     {
-        // check for non-existing or empty lists
-        if ( listString == null )
-        {
-            return null;
-        }
-        else if ( listString.length() == 0 )
-        {
-            return new String[]
-                { "" };
-        }
+		if (listString == null) {
+			return null;
+		} else if (listString.length() == 0) {
+			return new String[] { "" };
+		}
 
-        List values = new ArrayList();
-        boolean escape = false;
-        StringBuffer buf = new StringBuffer();
-        for ( int i = 0; i < listString.length(); i++ )
-        {
-            char c = listString.charAt( i );
+		List strings = new ArrayList();
+		StringBuffer sb = new StringBuffer();
 
-            if ( escape )
-            {
-                // just go ahead
-                escape = false;
-            }
-            else if ( c == ',' )
-            {
-                String value = buf.toString().trim();
-                if ( value.length() > 0 )
-                {
-                    values.add( value );
-                }
-                buf.delete( 0, buf.length() );
-                continue;
-            }
-            else if ( c == '\\' )
-            {
-                escape = true;
-                continue;
-            }
+		int length = listString.length();
+		boolean escaped = false;
+		
+		for (int i = 0; i < length; i++) {
+			char ch = listString.charAt(i);
+			if (ch == '\\') {
+				if (!escaped) {
+					escaped = true;
+					continue;
+				}
+			} else if (ch == ',') {
+				if (!escaped) {
+					// unescaped comma, this is a string delimiter...
+					strings.add(sb.toString());
+					sb.setLength(0);
+					continue;
+				}
+			} else if (ch == ' ') {
+				// we should ignore spaces normally, unless they are escaped...
+				if (!escaped) {
+					continue;
+				}
+			} else if (Character.isWhitespace(ch)) {
+				// Other whitespaces are ignored...
+				continue;
+			}
 
-            buf.append( c );
-        }
+			sb.append(ch);
+			escaped = false;
+		}
 
-        // add last string
-        if ( buf.length() > 0 )
-        {
-            String value = buf.toString().trim();
-            if ( value.length() > 0 )
-            {
-                values.add( value );
-            }
-        }
+		// Always add the last string, as it contains everything after the last comma...
+		strings.add(sb.toString());
 
-        return values.isEmpty() ? null : ( String[] ) values.toArray( new String[values.size()] );
+		return (String[]) strings.toArray(new String[strings.size()]);
     }
 
 
