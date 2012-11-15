@@ -87,4 +87,44 @@
             cardinality="0..n"
         />
     </scr:component>
+
+    <!-- bind service during activate -->
+    <scr:component name="ActivatorComponent.activate.delayed.with.bind"
+        enabled="false"
+        activate="myActivate"
+        deactivate="myDeactivate">
+        <implementation class="org.apache.felix.scr.integration.components.ActivatorComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.ActivatorComponent"/>
+        </service>
+        <property name="registerService" value="true" />
+        <reference
+            name="service"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+            policy="dynamic"
+            cardinality="0..n"
+        />
+    </scr:component>
+
+    <!-- bind service during activate -->
+    <scr:component name="ActivatorComponent.activate.service.factory.with.bind"
+        enabled="false"
+        activate="myActivate"
+        deactivate="myDeactivate">
+        <implementation class="org.apache.felix.scr.integration.components.ActivatorComponent" />
+        <service factory="true">
+            <provide interface="org.apache.felix.scr.integration.components.ActivatorComponent"/>
+        </service>
+        <property name="registerService" value="true" />
+        <reference
+            name="service"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+            policy="dynamic"
+            cardinality="0..n"
+        />
+    </scr:component>
 </components>

@@ -26,6 +26,7 @@ import org.apache.felix.scr.integration.components.ActivatorComponent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.osgi.framework.ServiceReference;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -207,6 +208,64 @@ public class ComponentActivationTest extends ComponentTestBase
 
         ActivatorComponent ac = (ActivatorComponent) component.getComponentInstance().getInstance();
         TestCase.assertNotNull( ac.getSimpleService() );
+
+        component.disable();
+
+        delay();
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+    }
+
+
+    @Test
+    public void test_activate_register_service_delayed()
+    {
+        final String componentname = "ActivatorComponent.activate.delayed.with.bind";
+
+        final Component component = findComponentByName( componentname );
+
+        TestCase.assertNotNull( component );
+        TestCase.assertFalse( component.isDefaultEnabled() );
+
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+
+        component.enable();
+        delay();
+
+        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+
+        ServiceReference<ActivatorComponent> ref = bundleContext.getServiceReference( ActivatorComponent.class );
+        ActivatorComponent ac = bundleContext.getService( ref );
+        TestCase.assertNotNull( ac.getSimpleService() );
+
+        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+
+        component.disable();
+
+        delay();
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+    }
+    @Test
+    public void test_activate_service_factory_register_service()
+    {
+        final String componentname = "ActivatorComponent.activate.service.factory.with.bind";
+
+        final Component component = findComponentByName( componentname );
+
+        TestCase.assertNotNull( component );
+        TestCase.assertFalse( component.isDefaultEnabled() );
+
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+
+        component.enable();
+        delay();
+
+        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+
+        ServiceReference<ActivatorComponent> ref = bundleContext.getServiceReference( ActivatorComponent.class );
+        ActivatorComponent ac = bundleContext.getService( ref );
+        TestCase.assertNotNull( ac.getSimpleService() );
+
+        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
 
         component.disable();
 
