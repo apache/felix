@@ -18,7 +18,6 @@
  */
 package org.apache.felix.metatype;
 
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +26,6 @@ import java.util.Map;
 import org.apache.felix.metatype.internal.Activator;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.AttributeDefinition;
-
 
 /**
  * The <code>AD</code> class represents the <code>AD</code> element of the
@@ -84,255 +82,221 @@ public class AD extends OptionalAttributes
     private String max;
     private boolean isRequired = true;
 
-
     public String getID()
     {
         return id;
     }
-
 
     public String getName()
     {
         return name;
     }
 
-
     public String getDescription()
     {
         return description;
     }
-
 
     public int getType()
     {
         return type;
     }
 
-
     public int getCardinality()
     {
         return cardinality;
     }
-
 
     public String[] getOptionLabels()
     {
         return optionLabels;
     }
 
-
     public String[] getOptionValues()
     {
         return optionValues;
     }
-
 
     public String[] getDefaultValue()
     {
         return defaultValue;
     }
 
-
     public String getMin()
     {
         return min;
     }
-
 
     public String getMax()
     {
         return max;
     }
 
-
     public boolean isRequired()
     {
         return isRequired;
     }
 
-
     /**
      * Implements validation of the <code>valueString</code> and returns an
-     * indication of the success:
-     * <dl>
-     * <dt><code>null</code>
-     * <dd>If neither a {@link #getMin() minimal value} nor a
-     *      {@link #getMax() maximal value} nor any
-     *      {@link #getOptionValues() optional values} are defined in this
-     *      instance, validation cannot be performed.
-     * <dt>Empty String
-     * <dd>If validation succeeds. This value is also returned if the
-     *      <code>valueString</code> is empty or <code>null</code> or cannot be
-     *      converted into a numeric type.
-     * <dt><b>%</b>message
-     * <dd>If the value falls below the minimum, higher than the maximum or is
-     *      not any of the option values, an explanatory message, which may be
-     *      localized is returned. If any of the minimum, maximum or option
-     *      values is <code>null</code>, the respective value is not checked.
-     * </dl>
+     * indication of the validation result.
      *
-     * @param valueString The string representation of the value to validate.
+     * @param valueString The string representation of the value to validate,
+     *        can be <code>null</code>.
      *
-     * @return As explained above.
+     * @return <code>null</code> if no validation is performed, <tt>""</tt> if
+     *         the value is accepted as valid, or a non-empty string 
+     *         indicating a validation problem was found.
      *
+     * @see ADValidator#validate(AD, String)
      * @see #VALIDATE_GREATER_THAN_MAXIMUM
-     * @see #VALIDATE_LESS_THAN_MINIMUM
      * @see #VALIDATE_NOT_A_VALID_OPTION
+     * @see #VALIDATE_LESS_THAN_MINIMUM
+     * @see #VALIDATE_INVALID_VALUE
+     * @see #VALIDATE_MISSING
      */
-    public String validate( String valueString )
+    public String validate(String valueString)
     {
-    	return ADValidator.validate(this, valueString);
+        return ADValidator.validate(this, valueString);
     }
-
 
     //--------- Setters for setting up this instance --------------------------
 
     /**
      * @param id the id to set
      */
-    public void setID( String id )
+    public void setID(String id)
     {
         this.id = id;
     }
 
-
     /**
      * @param name the name to set
      */
-    public void setName( String name )
+    public void setName(String name)
     {
         this.name = name;
     }
 
-
     /**
      * @param description the description to set
      */
-    public void setDescription( String description )
+    public void setDescription(String description)
     {
         this.description = description;
     }
 
-
     /**
      * @param typeString the type to set
      */
-    public void setType( String typeString )
+    public void setType(String typeString)
     {
-        this.type = toType( typeString );
+        this.type = toType(typeString);
     }
-
 
     /**
      * @param cardinality the cardinality to set
      */
-    public void setCardinality( int cardinality )
+    public void setCardinality(int cardinality)
     {
         this.cardinality = cardinality;
     }
 
-
     /**
      * @param options the options to set
      */
-    public void setOptions( Map options )
+    public void setOptions(Map options)
     {
         optionLabels = new String[options.size()];
         optionValues = new String[options.size()];
         int i = 0;
-        for ( Iterator oi = options.entrySet().iterator(); oi.hasNext(); i++ )
+        for (Iterator oi = options.entrySet().iterator(); oi.hasNext(); i++)
         {
-            Map.Entry entry = ( Map.Entry ) oi.next();
-            optionValues[i] = String.valueOf( entry.getKey() );
-            optionLabels[i] = String.valueOf( entry.getValue() );
+            Map.Entry entry = (Map.Entry) oi.next();
+            optionValues[i] = String.valueOf(entry.getKey());
+            optionLabels[i] = String.valueOf(entry.getValue());
         }
     }
-
 
     /**
      * @param defaultValue the defaultValue to set
      */
-    public void setDefaultValue( String defaultValue )
+    public void setDefaultValue(String defaultValue)
     {
-        this.defaultValue = splitList( defaultValue );
+        this.defaultValue = splitList(defaultValue);
     }
-
 
     /**
      * @param min the min to set
      */
-    public void setMin( String min )
+    public void setMin(String min)
     {
         this.min = min;
     }
 
-
     /**
      * @param max the max to set
      */
-    public void setMax( String max )
+    public void setMax(String max)
     {
         this.max = max;
     }
 
-
     /**
      * @param defaultValue the defaultValue to set
      */
-    public void setDefaultValue( String[] defaultValue )
+    public void setDefaultValue(String[] defaultValue)
     {
-        this.defaultValue = ( String[] ) defaultValue.clone();
+        this.defaultValue = (String[]) defaultValue.clone();
     }
-
 
     /**
      * @param isRequired the isRequired to set
      */
-    public void setRequired( boolean isRequired )
+    public void setRequired(boolean isRequired)
     {
         this.isRequired = isRequired;
     }
 
-
-    public static int toType( String typeString )
+    public static int toType(String typeString)
     {
-        if ( "String".equals( typeString ) )
+        if ("String".equals(typeString))
         {
             return AttributeDefinition.STRING;
         }
-        else if ( "Long".equals( typeString ) )
+        else if ("Long".equals(typeString))
         {
             return AttributeDefinition.LONG;
         }
-        else if ( "Double".equals( typeString ) )
+        else if ("Double".equals(typeString))
         {
             return AttributeDefinition.DOUBLE;
         }
-        else if ( "Float".equals( typeString ) )
+        else if ("Float".equals(typeString))
         {
             return AttributeDefinition.FLOAT;
         }
-        else if ( "Integer".equals( typeString ) )
+        else if ("Integer".equals(typeString))
         {
             return AttributeDefinition.INTEGER;
         }
-        else if ( "Byte".equals( typeString ) )
+        else if ("Byte".equals(typeString))
         {
             return AttributeDefinition.BYTE;
         }
-        else if ( "Char".equals( typeString ) )
+        else if ("Char".equals(typeString))
         {
             return AttributeDefinition.CHARACTER;
         }
-        else if ( "Boolean".equals( typeString ) )
+        else if ("Boolean".equals(typeString))
         {
             return AttributeDefinition.BOOLEAN;
         }
-        else if ( "Short".equals( typeString ) )
+        else if ("Short".equals(typeString))
         {
             return AttributeDefinition.SHORT;
         }
-        else if ( "Password".equals( typeString ) )
+        else if ("Password".equals(typeString))
         {
             return AttributeDefinition.PASSWORD;
         }
@@ -341,90 +305,102 @@ public class AD extends OptionalAttributes
         return AttributeDefinition.STRING;
     }
 
-
-    public static String[] splitList( String listString )
+    public static String[] splitList(String listString)
     {
-		if (listString == null) {
-			return null;
-		} else if (listString.length() == 0) {
-			return new String[] { "" };
-		}
+        if (listString == null)
+        {
+            return null;
+        }
+        else if (listString.length() == 0)
+        {
+            return new String[] { "" };
+        }
 
-		List strings = new ArrayList();
-		StringBuffer sb = new StringBuffer();
+        List strings = new ArrayList();
+        StringBuffer sb = new StringBuffer();
 
-		int length = listString.length();
-		boolean escaped = false;
-		
-		for (int i = 0; i < length; i++) {
-			char ch = listString.charAt(i);
-			if (ch == '\\') {
-				if (!escaped) {
-					escaped = true;
-					continue;
-				}
-			} else if (ch == ',') {
-				if (!escaped) {
-					// unescaped comma, this is a string delimiter...
-					strings.add(sb.toString());
-					sb.setLength(0);
-					continue;
-				}
-			} else if (ch == ' ') {
-				// we should ignore spaces normally, unless they are escaped...
-				if (!escaped) {
-					continue;
-				}
-			} else if (Character.isWhitespace(ch)) {
-				// Other whitespaces are ignored...
-				continue;
-			}
+        int length = listString.length();
+        boolean escaped = false;
 
-			sb.append(ch);
-			escaped = false;
-		}
+        for (int i = 0; i < length; i++)
+        {
+            char ch = listString.charAt(i);
+            if (ch == '\\')
+            {
+                if (!escaped)
+                {
+                    escaped = true;
+                    continue;
+                }
+            }
+            else if (ch == ',')
+            {
+                if (!escaped)
+                {
+                    // unescaped comma, this is a string delimiter...
+                    strings.add(sb.toString());
+                    sb.setLength(0);
+                    continue;
+                }
+            }
+            else if (ch == ' ')
+            {
+                // we should ignore spaces normally, unless they are escaped...
+                if (!escaped)
+                {
+                    continue;
+                }
+            }
+            else if (Character.isWhitespace(ch))
+            {
+                // Other whitespaces are ignored...
+                continue;
+            }
 
-		// Always add the last string, as it contains everything after the last comma...
-		strings.add(sb.toString());
+            sb.append(ch);
+            escaped = false;
+        }
 
-		return (String[]) strings.toArray(new String[strings.size()]);
+        // Always add the last string, as it contains everything after the last comma...
+        strings.add(sb.toString());
+
+        return (String[]) strings.toArray(new String[strings.size()]);
     }
 
-
-    protected Comparable convertToType( final String value )
+    protected Comparable convertToType(final String value)
     {
-        if ( value != null && value.length() > 0 )
+        if (value != null && value.length() > 0)
         {
             try
             {
-                switch ( getType() )
+                switch (getType())
                 {
                     case AttributeDefinition.BOOLEAN:
                         // Boolean is only Comparable starting with Java 5
-                        return new ComparableBoolean( value );
+                        return new ComparableBoolean(value);
                     case AttributeDefinition.CHARACTER:
-                        return new Character( value.charAt( 0 ) );
+                        return new Character(value.charAt(0));
                     case AttributeDefinition.BYTE:
-                        return Byte.valueOf( value );
+                        return Byte.valueOf(value);
                     case AttributeDefinition.SHORT:
-                        return Short.valueOf( value );
+                        return Short.valueOf(value);
                     case AttributeDefinition.INTEGER:
-                        return Integer.valueOf( value );
+                        return Integer.valueOf(value);
                     case AttributeDefinition.LONG:
-                        return Long.valueOf( value );
+                        return Long.valueOf(value);
                     case AttributeDefinition.FLOAT:
-                        return Float.valueOf( value );
+                        return Float.valueOf(value);
                     case AttributeDefinition.DOUBLE:
-                        return Double.valueOf( value );
+                        return Double.valueOf(value);
                     case AttributeDefinition.STRING:
                     case AttributeDefinition.PASSWORD:
                     default:
                         return value;
                 }
             }
-            catch ( NumberFormatException nfe )
+            catch (NumberFormatException nfe)
             {
-                Activator.log( LogService.LOG_INFO, "Cannot convert value '" + value + "'", nfe );
+                Activator.log(LogService.LOG_INFO, "Cannot convert value '" + value + "'", nfe);
             }
         }
 
@@ -435,17 +411,15 @@ public class AD extends OptionalAttributes
     {
         private boolean value;
 
-
-        ComparableBoolean( String boolValue )
+        ComparableBoolean(String boolValue)
         {
-            value = Boolean.valueOf( boolValue ).booleanValue();
+            value = Boolean.valueOf(boolValue).booleanValue();
         }
 
-
-        public int compareTo( Object obj )
+        public int compareTo(Object obj)
         {
-            ComparableBoolean cb = ( ComparableBoolean ) obj;
-            return ( cb.value == value ? 0 : ( value ? 1 : -1 ) );
+            ComparableBoolean cb = (ComparableBoolean) obj;
+            return (cb.value == value ? 0 : (value ? 1 : -1));
         }
     }
 }
