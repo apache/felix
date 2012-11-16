@@ -30,240 +30,348 @@ import junit.framework.TestCase;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ADValidatorTest extends TestCase {
+public class ADValidatorTest extends TestCase
+{
+    /**
+     * Tests the validation of boolean is only done minimally.
+     */
+    public void testValidateBoolean()
+    {
+        AD ad = new AD();
+        ad.setType("Boolean");
+        ad.setRequired(false);
 
-	/**
-	 * Tests the validation of boolean is only done minimally.
-	 */
-	public void testValidateBoolean() {
-		AD ad = new AD();
-		ad.setType("Boolean");
-		ad.setRequired(false);
+        // optional value
+        assertEquals("", ADValidator.validate(ad, null));
+        // adhere minimal value
+        assertEquals("", ADValidator.validate(ad, "true"));
+        // adhere maximal value
+        assertEquals("", ADValidator.validate(ad, "false"));
+        // not a valid value
+        assertEquals(AD.VALIDATE_INVALID_VALUE, ADValidator.validate(ad, "foobar"));
 
-		// optional value
-		assertEquals("", ADValidator.validate(ad, null));
-		// adhere minimal value
-		assertEquals("", ADValidator.validate(ad, "true"));
-		// adhere maximal value
-		assertEquals("", ADValidator.validate(ad, "false"));
-		// not a valid value
-		assertEquals(AD.VALIDATE_INVALID_VALUE, ADValidator.validate(ad, "foobar"));
+        ad.setCardinality(3); // up to three values are allowed...
 
-		ad.setCardinality(3); // up to three values are allowed...
-		
-		// mandatory value
-		assertEquals("", ADValidator.validate(ad, null));
-		// 2nd value is missing
-		assertEquals("", ADValidator.validate(ad, "true,,false"));
+        // optional value
+        assertEquals("", ADValidator.validate(ad, null));
+        // 2nd value is missing, but that's ok...
+        assertEquals("", ADValidator.validate(ad, "true,,false"));
 
-		ad.setRequired(true);
+        ad.setRequired(true);
 
-		// mandatory value
-		assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
-		// 2nd value is missing
-		assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, "false,,true"));
-		assertEquals("", ADValidator.validate(ad, "false, true, false"));
+        // mandatory value
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
+        // 2nd value is missing
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, "false,,true"));
+        // correct values
+        assertEquals("", ADValidator.validate(ad, "false, true, false"));
+        // correct values
+        assertEquals(AD.VALIDATE_INVALID_VALUE, ADValidator.validate(ad, "false, yessir, false"));
 
-		ad.setOptions(Collections.singletonMap("true", "Yes!"));
+        ad.setOptions(Collections.singletonMap("true", "Yes!"));
 
-		assertEquals(null, ADValidator.validate(ad, "false, true, false"));
-	}
+        assertEquals(null, ADValidator.validate(ad, "false, true, false"));
+    }
 
-	/**
-	 * Tests the validation of characters with only limited set of options.
-	 */
-	public void testValidateCharacterOptionValues() {
-		AD ad = new AD();
-		ad.setType("Char");
-		ad.setRequired(false);
+    /**
+     * Tests the validation of bytes works and uses the correct minimum and maximum values.
+     */
+    public void testValidateByte()
+    {
+        AD ad = new AD();
+        ad.setType("Byte");
+        ad.setRequired(false);
 
-		// optional value
-		assertEquals("", ADValidator.validate(ad, null));
-		// option too long
-		assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "ab"));
-		// adhere first option value
-		assertEquals("", ADValidator.validate(ad, "b"));
-		// adhere last option value
-		assertEquals("", ADValidator.validate(ad, "e"));
+        // optional value
+        assertEquals("", ADValidator.validate(ad, null));
+        assertEquals("", ADValidator.validate(ad, ""));
 
-		ad.setCardinality(3); // up to three values are allowed...
+        ad.setRequired(true);
 
-		// mandatory value
-		assertEquals("", ADValidator.validate(ad, ""));
-		// 2nd value is missing
-		assertEquals("", ADValidator.validate(ad, "b,,c"));
+        // mandatory value
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, ""));
+        // value too small
+        assertEquals(AD.VALIDATE_INVALID_VALUE, ADValidator.validate(ad, "-129"));
+        // value too small
+        assertEquals("", ADValidator.validate(ad, "-128"));
+        // value within bounds
+        assertEquals("", ADValidator.validate(ad, "0"));
+        // value within bounds
+        assertEquals("", ADValidator.validate(ad, "127"));
+        // value is invalid
+        assertEquals(AD.VALIDATE_INVALID_VALUE, ADValidator.validate(ad, "128"));
 
-		ad.setRequired(true);
+        ad.setMin("0");
+        ad.setMax("128"); // !!! this is an invalid value for maximum, this means that we cannot do this validation...
 
-		// mandatory value
-		assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
-		// 2nd value is missing
-		assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, "b,,c"));
-		// adhere minimal values
-		assertEquals("", ADValidator.validate(ad, "b, c, d"));
-		// adhere maximal values
-		assertEquals("", ADValidator.validate(ad, "c, d, e"));
+        // value too small
+        assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "-1"));
+        // value within bounds
+        assertEquals("", ADValidator.validate(ad, "0"));
+        // value within bounds
+        assertEquals("", ADValidator.validate(ad, "127"));
+        // value is invalid
+        assertEquals(AD.VALIDATE_INVALID_VALUE, ADValidator.validate(ad, "128"));
+    }
 
-		Map options = new HashMap();
-		options.put("b", "B");
-		options.put("c", "C");
-		options.put("d", "D");
-		options.put("e", "E");
+    /**
+     * Tests the validation of characters with only limited set of options.
+     */
+    public void testValidateCharacter()
+    {
+        AD ad = new AD();
+        ad.setType("Char");
+        ad.setRequired(false);
 
-		ad.setOptions(options);
-		// no option given
-		assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, ""));
-		// invalid option
-		assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "a"));
-		// too great
-		assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "f"));
-		// 2nd value is too less
-		assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "b,a,c"));
-		// 3rd value is too great
-		assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "d, e, f"));
+        // optional value
+        assertEquals("", ADValidator.validate(ad, null));
+        // option too long
+        assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "ab"));
+        // adhere first option value
+        assertEquals("", ADValidator.validate(ad, "b"));
+        // adhere last option value
+        assertEquals("", ADValidator.validate(ad, "e"));
 
-		ad.setMin("b");
-		ad.setMax("c");
-		ad.setOptions(Collections.emptyMap());
+        ad.setCardinality(3); // up to three values are allowed...
 
-		// adhere minimal values
-		assertEquals("", ADValidator.validate(ad, "b, c, b"));
-		// d is too great
-		assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "b, c, d"));
-		// a is too less
-		assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "a, b, c"));
-	}
+        // mandatory value
+        assertEquals("", ADValidator.validate(ad, ""));
+        // 2nd value is missing
+        assertEquals("", ADValidator.validate(ad, "b,,c"));
 
-	/**
-	 * Tests the validation of characters with only limited set of options.
-	 */
-	public void testValidateDoubleOptionValues() {
-		Map options = new HashMap();
-		options.put("1.1", "B");
-		options.put("2.2", "C");
-		options.put("3.3", "D");
-		options.put("4.4", "E");
+        ad.setRequired(true);
 
-		AD ad = new AD();
-		ad.setType("Double");
-		ad.setOptions(options);
-		ad.setRequired(false);
+        // mandatory value
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
+        // 2nd value is missing
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, "b,,c"));
+        // adhere minimal values
+        assertEquals("", ADValidator.validate(ad, "b, c, d"));
+        // adhere maximal values
+        assertEquals("", ADValidator.validate(ad, "c, d, e"));
 
-		// optional value
-		assertEquals("", ADValidator.validate(ad, null));
-		// invalid option
-		assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "1.0"));
-		// adhere first option value
-		assertEquals("", ADValidator.validate(ad, "1.1"));
-		// adhere last option value
-		assertEquals("", ADValidator.validate(ad, "4.4"));
-		// too great
-		assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "4.5"));
+        Map options = new HashMap();
+        options.put("b", "B");
+        options.put("c", "C");
+        options.put("d", "D");
+        options.put("e", "E");
 
-		ad.setCardinality(3); // up to three values are allowed...
-		ad.setRequired(true);
+        ad.setOptions(options);
+        // no option given
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, ""));
+        // invalid option
+        assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "a"));
+        // too great
+        assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "f"));
+        // 2nd value is too less
+        assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "b,a,c"));
+        // 3rd value is too great
+        assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "d, e, f"));
 
-		// mandatory value
-		assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
-		// 2nd value is too less
-		assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "1.1,1.0,2.2"));
-		// adhere minimal values
-		assertEquals("", ADValidator.validate(ad, "1.1, 2.2, 3.3"));
-		// adhere maximal values
-		assertEquals("", ADValidator.validate(ad, "2.2, 3.3, 4.4"));
-		// 3rd value is too great
-		assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "3.3, 4.4, 5.5"));
-	}
+        ad.setMin("b");
+        ad.setMax("c");
+        ad.setOptions(Collections.emptyMap());
 
-	/**
-	 * Tests the validation of integers is based on the minimum and maximum values.
-	 */
-	public void testValidateInteger() {
-		AD ad = new AD();
-		ad.setType("Integer");
-		ad.setMin("3"); // only values greater than 2
-		ad.setMax("6"); // only values less than 7
-		ad.setRequired(false);
+        // adhere minimal values
+        assertEquals("", ADValidator.validate(ad, "b, c, b"));
+        // d is too great
+        assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "b, c, d"));
+        // a is too small
+        assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "a, b, c"));
+    }
 
-		// optional value
-		assertEquals("", ADValidator.validate(ad, null));
-		// too less
-		assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "2"));
-		// adhere minimal value
-		assertEquals("", ADValidator.validate(ad, "3"));
-		// adhere maximal value
-		assertEquals("", ADValidator.validate(ad, "6"));
-		// too great
-		assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "7"));
+    /**
+     * Tests the validation of double value works as expected.
+     */
+    public void testValidateDouble()
+    {
+        AD ad = new AD();
+        ad.setType("Double");
+        ad.setRequired(false);
 
-		ad.setCardinality(3); // up to three values are allowed...
-		
-		// mandatory value
-		assertEquals("", ADValidator.validate(ad, null));
-		// 2nd value is missing
-		assertEquals("", ADValidator.validate(ad, "3,,3"));
+        ad.setMin("-123.45");
+        ad.setMax("+123.45");
 
-		ad.setRequired(true);
+        // Value is too small...
+        assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "-123.4501"));
+        // Value is within range...
+        assertEquals("", ADValidator.validate(ad, "-123.45000"));
+        // Value is within range...
+        assertEquals("", ADValidator.validate(ad, "123.45000"));
+        // Value is too great...
+        assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "123.4501"));
 
-		// mandatory value
-		assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
-		// 2nd value is missing
-		assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, "3,,3"));
-		// 2nd value is invalid
-		assertEquals(AD.VALIDATE_INVALID_VALUE, ADValidator.validate(ad, "3,a,3"));
-		// 2nd value is too less
-		assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "3,2,3"));
-		// adhere minimal values
-		assertEquals("", ADValidator.validate(ad, "3, 4, 5"));
-		// adhere maximal values
-		assertEquals("", ADValidator.validate(ad, "6, 5, 4"));
-		// 3rd value is too great
-		assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "5, 6, 7"));
-	}
+        Map options = new HashMap();
+        options.put("1.1", "B");
+        options.put("2.2", "C");
+        options.put("3.3", "D");
+        options.put("4.4", "E");
 
-	/**
-	 * Tests the validation of strings is based on the minimum and maximum lengths.
-	 */
-	public void testValidateString() {
-		AD ad = new AD();
-		ad.setType("String");
-		ad.setRequired(false);
+        ad.setOptions(options);
 
-		// optional value
-		assertEquals("", ADValidator.validate(ad, null));
-		// any length of input is accepted
-		assertEquals("", ADValidator.validate(ad, "1234567890"));
+        // optional value
+        assertEquals("", ADValidator.validate(ad, null));
+        // invalid option
+        assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "1.0"));
+        // adhere first option value
+        assertEquals("", ADValidator.validate(ad, "1.1"));
+        // adhere last option value
+        assertEquals("", ADValidator.validate(ad, "4.4"));
+        // too great
+        assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "4.5"));
 
-		ad.setMin("3"); // minimal length == 3
-		ad.setMax("6"); // maximum length == 6
+        ad.setCardinality(3); // up to three values are allowed...
+        ad.setRequired(true);
 
-		// too short
-		assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "12"));
-		// adhere minimum length
-		assertEquals("", ADValidator.validate(ad, "123"));
-		// adhere maximum length
-		assertEquals("", ADValidator.validate(ad, "12356"));
-		// too long
-		assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "1234567"));
+        // mandatory value
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
+        // 2nd value is too less
+        assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "1.1,1.0,2.2"));
+        // adhere minimal values
+        assertEquals("", ADValidator.validate(ad, "1.1, 2.2, 3.3"));
+        // adhere maximal values
+        assertEquals("", ADValidator.validate(ad, "2.2, 3.3, 4.4"));
+        // 3rd value is too great
+        assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "3.3, 4.4, 5.5"));
+    }
 
-		ad.setCardinality(3); // up to three values are allowed...
-		ad.setRequired(true);
+    /**
+     * Tests the validation of integers is based on the minimum and maximum values.
+     */
+    public void testValidateInteger()
+    {
+        AD ad = new AD();
+        ad.setType("Integer");
+        ad.setMin("3"); // only values greater than 2
+        ad.setMax("6"); // only values less than 7
+        ad.setRequired(false);
 
-		// mandatory value
-		assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
-		// 2nd value is too short
-		assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "321,12,123"));
-		// adhere minimum lengths
-		assertEquals("", ADValidator.validate(ad, "123, 123, 123"));
-		// adhere maximum lengths
-		assertEquals("", ADValidator.validate(ad, "12356, 654321, 123456"));
-		// 3rd value is too long
-		assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "123, 123, 1234567"));
-		
-		ad.setOptions(Collections.singletonMap("123", "foo"));
+        // optional value
+        assertEquals("", ADValidator.validate(ad, null));
+        assertEquals("", ADValidator.validate(ad, ""));
+        // too less
+        assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "2"));
+        // adhere minimal value
+        assertEquals("", ADValidator.validate(ad, "3"));
+        // adhere maximal value
+        assertEquals("", ADValidator.validate(ad, "6"));
+        // too great
+        assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "7"));
 
-		// adhere minimum lengths
-		assertEquals("", ADValidator.validate(ad, "123, 123, 123"));
-		assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "2134"));
-	}
+        ad.setCardinality(3); // up to three values are allowed...
+
+        // mandatory value
+        assertEquals("", ADValidator.validate(ad, null));
+        // 2nd value is missing
+        assertEquals("", ADValidator.validate(ad, "3,,3"));
+
+        ad.setRequired(true);
+
+        // mandatory value
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
+        // 2nd value is missing
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, "3,,3"));
+        // 2nd value is invalid
+        assertEquals(AD.VALIDATE_INVALID_VALUE, ADValidator.validate(ad, "3,a,3"));
+        // 2nd value is too less
+        assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "3,2,3"));
+        // adhere minimal values
+        assertEquals("", ADValidator.validate(ad, "3, 4, 5"));
+        // adhere maximal values
+        assertEquals("", ADValidator.validate(ad, "6, 5, 4"));
+        // 3rd value is too great
+        assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "5, 6, 7"));
+    }
+
+    /**
+     * Tests the validation of long values works as expected.
+     */
+    public void testValidateLong()
+    {
+        AD ad = new AD();
+        ad.setType("Long");
+        ad.setRequired(true);
+
+        ad.setMin("-20");
+        ad.setMax("-15");
+
+        // value too small
+        assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "-21"));
+        // value within bounds
+        assertEquals("", ADValidator.validate(ad, "-15"));
+        // value within bounds
+        assertEquals("", ADValidator.validate(ad, "-20"));
+        // value too great
+        assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "-14"));
+
+        // Set minimum and maximum beyond the range of plain integers...
+        ad.setMin("2147483650");
+        ad.setMax("2147483655");
+
+        // value too small
+        assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "2147483649"));
+        // value within bounds
+        assertEquals("", ADValidator.validate(ad, "2147483650"));
+        // value within bounds
+        assertEquals("", ADValidator.validate(ad, "2147483655"));
+        // value too great
+        assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "2147483656"));
+    }
+
+    /**
+     * Tests the validation of strings is based on the minimum and maximum lengths.
+     */
+    public void testValidateString()
+    {
+        AD ad = new AD();
+        ad.setType("String");
+        ad.setRequired(false);
+
+        // optional value
+        assertEquals("", ADValidator.validate(ad, null));
+        // any length of input is accepted
+        assertEquals("", ADValidator.validate(ad, "1234567890"));
+
+        ad.setMin("3"); // minimal length == 3
+        ad.setMax("6"); // maximum length == 6
+
+        // too short
+        assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "12"));
+        // adhere minimum length
+        assertEquals("", ADValidator.validate(ad, "123"));
+        // adhere maximum length
+        assertEquals("", ADValidator.validate(ad, "12356"));
+        // too long
+        assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "1234567"));
+
+        ad.setCardinality(3); // up to three values are allowed...
+        ad.setMin("");
+
+        // optional value
+        assertEquals("", ADValidator.validate(ad, null));
+        // 2nd value is missing; but that's ok
+        assertEquals("", ADValidator.validate(ad, "321, , 123"));
+
+        ad.setRequired(true);
+        ad.setMin("3");
+
+        // mandatory value
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, null));
+        // 2nd value is missing
+        assertEquals(AD.VALIDATE_MISSING, ADValidator.validate(ad, "321, , 123"));
+        // 2nd value is too short
+        assertEquals(AD.VALIDATE_LESS_THAN_MINIMUM, ADValidator.validate(ad, "321,12,123"));
+        // adhere minimum lengths
+        assertEquals("", ADValidator.validate(ad, "123, 123, 123"));
+        // adhere maximum lengths
+        assertEquals("", ADValidator.validate(ad, "12356, 654321, 123456"));
+        // 3rd value is too long
+        assertEquals(AD.VALIDATE_GREATER_THAN_MAXIMUM, ADValidator.validate(ad, "123, 123, 1234567"));
+
+        ad.setOptions(Collections.singletonMap("123", "foo"));
+
+        // adhere minimum lengths
+        assertEquals("", ADValidator.validate(ad, "123, 123, 123"));
+        assertEquals(AD.VALIDATE_NOT_A_VALID_OPTION, ADValidator.validate(ad, "2134"));
+    }
 }
