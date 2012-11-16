@@ -52,6 +52,11 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
     // The object that implements the service and that is bound to other services
     private volatile Object m_implementationObject;
 
+    // The component implementation object temporarily set to allow
+    // for service updates during activation. This field is only set
+    // to a non-null value while calling the activate method
+    private volatile Object m_tmpImplementationObject;
+
     // keep the using bundles as reference "counters" for instance deactivation
     private volatile int m_useCount;
 
@@ -122,15 +127,20 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 {
                     m_componentContext = tmpContext;
                     m_implementationObject = implementationObject;
+                    m_tmpImplementationObject = null;
                 }
 
 
-                public void unsetImplementationObject( Object implementationObject )
+                public void presetImplementationObject( Object implementationObject )
                 {
-                    m_componentContext = null;
-                    m_implementationObject = null;
+                    m_tmpImplementationObject = implementationObject;
                 }
 
+
+                public void resetImplementationObject( Object implementationObject )
+                {
+                    m_tmpImplementationObject = null;
+                }
             } );
 
             // if something failed creating the component instance, return false
@@ -186,10 +196,43 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         return m_implementationObject;
     }
 
-    protected interface SetImplementationObject {
-        void setImplementationObject(Object implementationObject);
-        void unsetImplementationObject(Object implementationObject);
+    /**
+     * The <code>SetImplementationObject</code> interface provides an
+     * API for component managers to setup the implementation object and
+     * potentially other parts as part of the {@link #createImplementationObject} method
+     * processing.
+     */
+    protected interface SetImplementationObject
+    {
+
+        /**
+         * Presets the implementation object. This method is called before
+         * the component's activator method is called and is intended to
+         * temporarily set the implementation object during the activator
+         * call.
+         */
+        void presetImplementationObject( Object implementationObject );
+
+
+        /**
+         * Resets the implementation object. This method is called after
+         * the activator method terminates with an error and is intended to
+         * revert any temporary settings done in the {@link #presetImplementationObject(Object)}
+         * method.
+         */
+        void resetImplementationObject( Object implementationObject );
+
+
+        /**
+         * Sets the implementation object. This method is called after
+         * the activator methid terminates successfully and is intended to
+         * complete setting the implementation object. Temporary presets done
+         * by the {@link #presetImplementationObject(Object)} should be
+         * removed and the implementation object is now accessible.
+         */
+        void setImplementationObject( Object implementationObject );
     }
+
 
     protected Object createImplementationObject( ComponentContext componentContext, SetImplementationObject setter )
     {
@@ -245,7 +288,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         }
 
         // 4. set the implementation object prematurely
-        setter.setImplementationObject( implementationObject );
+        setter.presetImplementationObject( implementationObject );
 
         // 5. Call the activate method, if present
         final MethodResult result = getComponentMethods().getActivateMethod().invoke( implementationObject, new ActivatorParameter(
@@ -253,7 +296,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         if ( result == null )
         {
             // make sure the implementation object is not available
-            setter.unsetImplementationObject( implementationObject );
+            setter.resetImplementationObject( implementationObject );
 
             // 112.5.8 If the activate method throws an exception, SCR must log an error message
             // containing the exception with the Log Service and activation fails
@@ -268,6 +311,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         }
         else
         {
+            setter.setImplementationObject( implementationObject );
             setServiceProperties( result );
         }
 
@@ -314,17 +358,20 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
     void update( DependencyManager dependencyManager, ServiceReference ref )
     {
-        dependencyManager.update( m_implementationObject, ref );
+        final Object impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
+        dependencyManager.update( impl, ref );
     }
 
     void invokeBindMethod( DependencyManager dependencyManager, ServiceReference reference )
     {
-        dependencyManager.invokeBindMethod( m_implementationObject, reference);
+        final Object impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
+        dependencyManager.invokeBindMethod( impl, reference);
     }
 
     void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef )
     {
-        dependencyManager.invokeUnbindMethod( m_implementationObject, oldRef);
+        final Object impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
+        dependencyManager.invokeUnbindMethod( impl, oldRef);
     }
 
     protected void setFactoryProperties( Dictionary dictionary )

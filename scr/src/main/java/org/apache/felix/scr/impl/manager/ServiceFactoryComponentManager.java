@@ -49,6 +49,11 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
     // service instances
     private IdentityHashMap serviceContexts = new IdentityHashMap();
 
+    // pseudo map of implementation objects to be used for service
+    // binding while calling the activate method. The map's keys and values
+    // are just the implementation objects. The objects will only be
+    // contained while the activate method is being called.
+    private IdentityHashMap tmpImplementationObjects = new IdentityHashMap();
 
     /**
      * @param activator BundleComponentActivator for this DS implementation
@@ -140,11 +145,18 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
         final BundleComponentContext serviceContext = new BundleComponentContext( this, bundle );
         Object service = createImplementationObject( serviceContext, new SetImplementationObject()
         {
-            public void setImplementationObject( Object implementationObject )
+            public void presetImplementationObject( Object implementationObject )
             {
                 serviceContext.setImplementationObject( implementationObject );
+                tmpImplementationObjects.put( implementationObject, serviceContext );
 
+            }
+
+
+            public void setImplementationObject( Object implementationObject )
+            {
                 serviceContexts.put( implementationObject, serviceContext );
+                tmpImplementationObjects.remove( implementationObject );
 
                 // if this is the first use of this component, switch to ACTIVE state
                 if ( getState() == STATE_REGISTERED )
@@ -154,11 +166,12 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
             }
 
 
-            public void unsetImplementationObject( Object implementationObject )
+            public void resetImplementationObject( Object implementationObject )
             {
-                serviceContexts.remove( implementationObject );
+                tmpImplementationObjects.remove( implementationObject );
                 serviceContext.setImplementationObject( null );
             }
+
         } );
 
         // register the components component context if successfull
@@ -211,11 +224,21 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
             Object implementationObject = it.next();
             dependencyManager.invokeBindMethod( implementationObject, reference);
         }
+        for ( Iterator it = tmpImplementationObjects.keySet().iterator(); it.hasNext(); )
+        {
+            Object implementationObject = it.next();
+            dependencyManager.invokeBindMethod( implementationObject, reference);
+        }
     }
 
     void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef )
     {
         for ( Iterator it = serviceContexts.keySet().iterator(); it.hasNext(); )
+        {
+            Object implementationObject = it.next();
+            dependencyManager.invokeUnbindMethod( implementationObject, oldRef);
+        }
+        for ( Iterator it = tmpImplementationObjects.keySet().iterator(); it.hasNext(); )
         {
             Object implementationObject = it.next();
             dependencyManager.invokeUnbindMethod( implementationObject, oldRef);
@@ -232,6 +255,14 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
             Object instance = componentContext.getInstance();
             result = modifiedMethod.invoke( instance,
                     new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID );
+
+        }
+        for (Iterator i = tmpImplementationObjects.values().iterator(); i.hasNext(); )
+        {
+            BundleComponentContext componentContext = ( BundleComponentContext ) i.next();
+            Object instance = componentContext.getInstance();
+            result = modifiedMethod.invoke( instance,
+                new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID );
 
         }
         return result;
