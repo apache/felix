@@ -1608,7 +1608,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         protected final ConfigurationImpl config;
         protected final long revision;
         protected final Dictionary<String, ?> properties;
-        protected final BaseTracker<T> helper;
+        private BaseTracker<T> helper;
 
 
         protected ConfigurationProvider( final ConfigurationImpl config )
@@ -1619,8 +1619,6 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 this.revision = config.getRevision();
                 this.properties = config.getProperties( true );
             }
-            this.helper = ( BaseTracker<T> ) ( ( config.getFactoryPid() == null ) ? managedServiceTracker
-                : managedServiceFactoryTracker );
         }
 
 
@@ -1635,13 +1633,24 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         }
 
 
+        protected BaseTracker<T> getHelper()
+        {
+            if ( this.helper == null )
+            {
+                this.helper = ( BaseTracker<T> ) ( ( this.config.getFactoryPid() == null ) ? ConfigurationManager.this.managedServiceTracker
+                    : ConfigurationManager.this.managedServiceFactoryTracker );
+            }
+            return this.helper;
+        }
+
+
         protected boolean provideReplacement( ServiceReference<T> sr )
         {
             if ( this.config.getFactoryPid() == null )
             {
                 try
                 {
-                    final String configPidString = this.helper.getServicePid( sr, this.config.getPid() );
+                    final String configPidString = this.getHelper().getServicePid( sr, this.config.getPid() );
                     final ConfigurationImpl rc = getTargetedConfiguration( configPidString, sr );
                     if ( rc != null )
                     {
@@ -1655,7 +1664,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                             revision = rc.getRevision();
                         }
 
-                        helper.provideConfiguration( sr, configPid, null, properties, -revision, null );
+                        this.getHelper().provideConfiguration( sr, configPid, null, properties, -revision, null );
 
                         return true;
                     }
@@ -1698,7 +1707,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             log( LogService.LOG_DEBUG, "Updating configuration {0} to revision #{1}", new Object[]
                 { config.getPid(), new Long( revision ) } );
 
-            final List<ServiceReference<?>> srList = this.helper.getServices( getTargetedServicePid() );
+            final List<ServiceReference<?>> srList = this.getHelper().getServices( getTargetedServicePid() );
             if ( !srList.isEmpty() )
             {
                 // optionally bind dynamically to the first service
@@ -1720,7 +1729,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     }
                     else if ( canReceive( refBundle, configBundleLocation ) )
                     {
-                        helper.provideConfiguration( ref, this.config.getPid(), this.config.getFactoryPid(),
+                        this.getHelper().provideConfiguration( ref, this.config.getPid(), this.config.getFactoryPid(),
                             this.properties, this.revision, null );
                     }
                     else
@@ -1775,7 +1784,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         public void run()
         {
-            List<ServiceReference<?>> srList = this.helper.getServices( getTargetedServicePid() );
+            List<ServiceReference<?>> srList = this.getHelper().getServices( getTargetedServicePid() );
             if ( !srList.isEmpty() )
             {
                 for (ServiceReference<?> sr : srList)
@@ -1794,7 +1803,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                         // configuration can be provided
                         if ( !this.provideReplacement( sr ) )
                         {
-                            this.helper.removeConfiguration( sr, this.config.getPid(), this.config.getFactoryPid() );
+                            this.getHelper().removeConfiguration( sr, this.config.getPid(), this.config.getFactoryPid() );
                         }
                     }
                     else
@@ -1847,7 +1856,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         public void run()
         {
-            List<ServiceReference<?>> srList = helper.getServices( getTargetedServicePid() );
+            List<ServiceReference<?>> srList = this.getHelper().getServices( getTargetedServicePid() );
             if ( !srList.isEmpty() )
             {
                 for (final ServiceReference<?> sr : srList)
@@ -1877,7 +1886,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                         // configuration can be provided
                         if ( !this.provideReplacement( sr ) )
                         {
-                            helper.removeConfiguration( sr, this.config.getPid(), this.config.getFactoryPid() );
+                            this.getHelper().removeConfiguration( sr, this.config.getPid(), this.config.getFactoryPid() );
                             log( LogService.LOG_DEBUG, "Configuration {0} revoked from {1} (no more visibility)",
                                 new Object[]
                                     { config.getPid(), ConfigurationManager.toString( sr ) } );
@@ -1886,7 +1895,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                     else if ( !wasVisible && isVisible )
                     {
                         // call updated method
-                        helper.provideConfiguration( sr, this.config.getPid(), this.config.getFactoryPid(),
+                        this.getHelper().provideConfiguration( sr, this.config.getPid(), this.config.getFactoryPid(),
                             this.properties, this.revision, null );
                         log( LogService.LOG_DEBUG, "Configuration {0} provided to {1} (new visibility)", new Object[]
                             { config.getPid(), ConfigurationManager.toString( sr ) } );
