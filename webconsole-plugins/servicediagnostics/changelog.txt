@@ -2,17 +2,16 @@ Changes from 0.1.1 to 0.2.0
 ---------------------------
 
 ** Bug
+  * [FELIX-3764] servicediagnostics plugin does not append the correct context path info to it's javascript files
+  * [FELIX-3767] servicediagnostics plugin should properly handle service properties
 
 ** Improvement
-
-* complete rewrite
-* support for service properties
-* detection of circular dependencies
-* doesn't embedd scala and json anymore
+  * complete rewrite
+  * [FELIX-3768] servicediagnostics plugin should detect circular dependencies
+  * doesn't embedd scala, json or jquery anymore
 
 ** Backward compatibility
-
-* broken: plugin API changed
+  * broken: plugin API changed
 
 Release 0.1.1
 -------------

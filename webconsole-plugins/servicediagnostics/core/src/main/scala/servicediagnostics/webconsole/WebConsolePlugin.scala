@@ -18,9 +18,19 @@
  */
 package org.apache.felix.servicediagnostics.webconsole
 
+import scala.collection.JavaConversions._
+import scala.collection.mutable.{Map => mMap}
+
+import java.io.PrintStream
+
 import javax.servlet.http._
 
+import org.json.JSONObject
+import org.json.JSONArray
+
 import org.apache.felix.webconsole.SimpleWebConsolePlugin
+
+import org.apache.felix.servicediagnostics.ServiceDiagnostics
 
 /**
  * This is the Apache Felix WebConsolePlugin implementation.
@@ -30,7 +40,32 @@ import org.apache.felix.webconsole.SimpleWebConsolePlugin
  */
 class WebConsolePlugin extends SimpleWebConsolePlugin("servicegraph", "Service Graph", Array[String]()) 
 {
+    var engine:ServiceDiagnostics = _ //dependency injection. see Activator.
+
     val TEMPLATE = readTemplateFile("/html/index.html")
 
-    override def renderContent(req:HttpServletRequest, resp:HttpServletResponse) = resp.getWriter().print( TEMPLATE )
+    /**
+     * used for initial request, returns the contents of index.html.
+     * the rest is done via ajax calls
+     */
+    override def renderContent(req:HttpServletRequest, resp:HttpServletResponse) = 
+        resp.getWriter.print(TEMPLATE)
+
+    /**
+     * override doGet to handle ajax requests
+     */
+    override def doGet(req:HttpServletRequest, resp:HttpServletResponse) = 
+        req.getPathInfo match {
+            case "/servicegraph/all" => resp.getWriter.println(json(engine.allServices))
+            case "/servicegraph/notavail" => resp.getWriter.println(new JSONObject()
+                                  .put("notavail", json(engine.notavail))
+                                  .put("unresolved", json(engine.unresolved)))
+            case x => super.doGet(req, resp)
+          }
+
+    /** 
+     * turn the ServiceDiagnostics output into a JSON representation.
+     */
+    private def json(map:Map[String,List[AnyRef]]) = 
+      new JSONObject(asJavaMap(mMap() ++ map.map(kv => (kv._1, asJavaList(kv._2)))))
 }
