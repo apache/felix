@@ -20,15 +20,13 @@ package org.apache.felix.servicediagnostics.impl
 
 import java.util. { Hashtable => jHT }
 
-import javax.servlet.http.HttpServlet
-
 import org.osgi.framework.BundleContext
-import org.osgi.service.http.HttpService
 
 import org.apache.felix.dm.DependencyActivatorBase
 import org.apache.felix.dm.DependencyManager
 
-import org.apache.felix.servicediagnostics._
+import org.apache.felix.servicediagnostics.ServiceDiagnostics
+import org.apache.felix.servicediagnostics.ServiceDiagnosticsPlugin
 import org.apache.felix.servicediagnostics.webconsole.WebConsolePlugin
 
 /**
