@@ -29,7 +29,6 @@ import org.apache.felix.dm.DependencyActivatorBase
 import org.apache.felix.dm.DependencyManager
 
 import org.apache.felix.servicediagnostics._
-import org.apache.felix.servicediagnostics.webconsole.Servlet
 import org.apache.felix.servicediagnostics.webconsole.WebConsolePlugin
 
 /**
@@ -62,25 +61,16 @@ class Activator extends DependencyActivatorBase
                 .setCallbacks("addPlugin", null, null)
                 .setRequired(false)))
 
-        // register the servlet used by webconsole plugin
-        dm.add(createComponent
-            .setInterface(classOf[HttpServlet].getName, null)
-            .setImplementation(classOf[Servlet])
-            .add(createServiceDependency
-                .setService(classOf[ServiceDiagnostics])
-                .setRequired(true)
-                .setAutoConfig("engine"))
-            .add(createServiceDependency
-                .setService(classOf[HttpService])
-                .setRequired(true)
-                .setCallbacks("setHttpService", null, null)))
-
-        // and the webconsole plugin itself
+        // register the webconsole plugin 
         dm.add(createComponent
             .setInterface(classOf[javax.servlet.Servlet].getName, new jHT[String,String]() {{
                   put("felix.webconsole.label", "servicegraph")
               }})
-            .setImplementation(classOf[WebConsolePlugin]))
+            .setImplementation(classOf[WebConsolePlugin])
+            .add(createServiceDependency
+                .setService(classOf[ServiceDiagnostics])
+                .setRequired(true)
+                .setAutoConfig("engine")))
     }
 
     override def destroy(bc:BundleContext, dm:DependencyManager) = {}
