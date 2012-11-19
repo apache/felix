@@ -66,11 +66,19 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
     }
 
     /**
-     * returns a map of (component.name -> list(component.name)) of unresolvable services, if any
+     * Implements ServiceDiagnostics.unresolved.
+     * 
+     * Returns a map of (component.name -> list(component.name)) of unresolvable services, if any.
+     * 
+     * This methods first attempts to resolve all possible paths by traversing the graph 
+     * of components dependencies, entering the graph from its outer nodes. 
+     * Then it returns the list of unresolvable components by subtraction of the resolved components
+     * from the original graph. This is done because "perfect loops" have no border node and are 
+     * therefore "invisible" to the traversing algorithm.
      */
     override def unresolved :Map[String, List[String]] = 
     {
-        // first build a traversable graph from all found component and dependencies
+        // first build a traversable graph from all found components and dependencies
         def buildGraph(link:(Node,Node)=>Unit) = {
             // concatenate component nodes from all plugins
             val allnodes = for ( p <- plugins; comp <- p.components ) yield new Node(comp)
@@ -117,31 +125,27 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
         } yield resolve(node)).flatten.toSet
 
         // finally filter the original graph by removing all resolved nodes
-        // and format the result
+        // and format the result (keeping only the names)
         (for (node <- graph.filterNot(n => resolved.contains(n)))
-          yield (node.name -> node.edges.map(_.name).toList)).toMap
+            yield (node.name -> node.edges.map(_.name).toList)).toMap
     }
 
     /**
-    * Implements ServiceDiagnostics.allServices.
-    */
+     * Implements ServiceDiagnostics.allServices.
+     */
     override def allServices:Map[String,List[String]] = 
     {
         val allrefs = bc.getAllServiceReferences(null, null)
         if (allrefs == null) return Map()
 
-        /*
-         * inner method used to return all the interface names a ServiceReference was registered under
-         */
+        // inner method used to return all the interface names a ServiceReference was registered under
         def names(ref:ServiceReference):Array[String] = 
         {
             val n = ref.getProperty(OBJECTCLASS)
             if (n != null) n.asInstanceOf[Array[String]] else Array()
         }
 
-        /*
-         * inner method used to return all the bundles using a given ServiceReference
-         */
+        // inner method used to return all the bundles using a given ServiceReference
         def using(ref:ServiceReference):List[String] = 
         {
             val u = ref.getUsingBundles
