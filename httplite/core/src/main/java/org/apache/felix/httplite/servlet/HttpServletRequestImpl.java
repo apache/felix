@@ -83,7 +83,7 @@ public class HttpServletRequestImpl implements HttpServletRequest
     private final Socket m_socket;
     private Cookie[] m_cookies;
     //TODO: Make locale static and perhaps global to the service.
-    private final Locale m_locale = new Locale( System.getProperty( "user.language" ), System.getProperty( "user.country" ) );
+    private final Locale m_locale = Locale.getDefault();
     private Map m_attributes;
     private final ServiceRegistrationResolver m_resolver;
     private String m_servletPath;
