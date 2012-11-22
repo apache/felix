@@ -47,30 +47,33 @@ import com.mongodb.WriteResult;
  * The configuration options recognized by this service are:
  * </p>
  * <dl>
- * <dt>"useradmin.mongodb.server"</dt>
- * <dd>A space separated string containing the MongoDB servers. The format for this string is: "<code>&lt;host1:port1&gt; &lt;host2:port2&gt;</code>". This value is mandatory;</dd>
- * <dt>"useradmin.mongodb.name"</dt>
- * <dd>A string containing the name of the database to use for this store. This value is mandatory;</dd>
- * <dt>"useradmin.mongodb.collection"</dt>
- * <dd>The name of the database collection to use for this store. This value is mandatory;</dd>
- * <dt>"useradmin.mongodb.username"</dt>
- * <dd>An optional string value representing the name of the user to authenticate against MongoDB;</dd>
- * <dt>"useradmin.mongodb.password"</dt>
- * <dd>An optional string value representing the password to authenticate against MongoDB.</dd>
+ * <dt>server</dt>
+ * <dd>A space separated string containing the MongoDB servers. The format for this string is: "<code>&lt;host1:port1&gt; &lt;host2:port2&gt;</code>". This value is optional;</dd>
+ * <dt>dbname</dt>
+ * <dd>A string value containing the name of the database to use for this store. This value is optional;</dd>
+ * <dt>collection</dt>
+ * <dd>The name of the database collection to use for this store. This value is optional;</dd>
+ * <dt>username</dt>
+ * <dd>A string value representing the name of the user to authenticate against MongoDB. This value is optional;</dd>
+ * <dt>password</dt>
+ * <dd>A string value representing the password to authenticate against MongoDB. This value is optional.</dd>
  * </dl>
  * <p>
- * Alternatively, one can also supply the above mentioned configuration keys as system properties. However,
- * this implies that only a single store can be configured on a system!
+ * Alternatively, one can also supply the above mentioned configuration keys prefixed with 
+ * "<tt>org.apache.felix.useradmin.mongodb.</tt>" as system properties (e.g.: 
+ * <tt>-Dorg.apache.felix.useradmin.mongodb.server=my.mongo.server:27017</tt>). However, this 
+ * implies that only a single store can be configured on a system (which could be a sensible
+ * default for some situations)!
  * </p>
  * <p>
  * By default, the following values are used:
  * </p>
  * <table>
- * <tr><td>"<tt>useradmin.mongodb.server</tt>"</td><td>"<tt>localhost:27017</tt>"</td></tr>
- * <tr><td>"<tt>useradmin.mongodb.name</tt>"</td><td>"<tt>ua_repo</tt>"</td></tr>
- * <tr><td>"<tt>useradmin.mongodb.collection</tt>"</td><td>"<tt>useradmin</tt>"</td></tr>
- * <tr><td>"<tt>useradmin.mongodb.username</tt>"</td><td>&lt;none&gt;</td></tr>
- * <tr><td>"<tt>useradmin.mongodb.password</tt>"</td><td>&lt;none&gt;</td></tr>
+ * <tr><td><tt>server</tt></td><td>"<tt>localhost:27017</tt>"</td></tr>
+ * <tr><td><tt>dbname</tt></td><td>"<tt>ua_repo</tt>"</td></tr>
+ * <tr><td><tt>collection</tt></td><td>"<tt>useradmin</tt>"</td></tr>
+ * <tr><td><tt>username</tt></td><td>&lt;none&gt;</td></tr>
+ * <tr><td><tt>password</tt></td><td>&lt;none&gt;</td></tr>
  * </table>
  * <p>
  * This class is thread-safe.
@@ -85,26 +88,27 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
      * A space-separated array with server definitions to access MongoDB. 
      * Format = "&lt;host1:port1&gt; &lt;host2:port2&gt;". 
      * */
-    private static final String KEY_MONGODB_SERVER = "useradmin.mongodb.server";
+    private static final String KEY_MONGODB_SERVER = "server";
     /** The name of the MongoDB database instance. */
-    private static final String KEY_MONGODB_NAME = "useradmin.mongodb.name";
+    private static final String KEY_MONGODB_DBNAME = "dbname";
     /** The username of the MongoDB database instance. */
-    private static final String KEY_MONGODB_USERNAME = "useradmin.mongodb.username";
+    private static final String KEY_MONGODB_USERNAME = "username";
     /** The password of the MongoDB database instance. */
-    private static final String KEY_MONGODB_PASSWORD = "useradmin.mongodb.password";
+    private static final String KEY_MONGODB_PASSWORD = "password";
     /** The name of the MongoDB collection to use. */
-    private static final String KEY_MONGODB_COLLECTION_NAME = "useradmin.mongodb.collection";
+    private static final String KEY_MONGODB_COLLECTION_NAME = "collection";
 
+    private static final String PREFIX = PID.concat(".");
     /** Default MongoDB server; first checks a system property */
-    private static final String DEFAULT_MONGODB_SERVER = System.getProperty(KEY_MONGODB_SERVER, "localhost:27017");
+    private static final String DEFAULT_MONGODB_SERVER = System.getProperty(PREFIX.concat(KEY_MONGODB_SERVER), "localhost:27017");
     /** Default MongoDB name */
-    private static final String DEFAULT_MONGODB_NAME = System.getProperty(KEY_MONGODB_NAME, "ua_repo");
+    private static final String DEFAULT_MONGODB_DBNAME = System.getProperty(PREFIX.concat(KEY_MONGODB_DBNAME), "ua_repo");
     /** Default MongoDB collection */
-    private static final String DEFAULT_MONGODB_COLLECTION = System.getProperty(KEY_MONGODB_COLLECTION_NAME, "useradmin");
+    private static final String DEFAULT_MONGODB_COLLECTION = System.getProperty(PREFIX.concat(KEY_MONGODB_COLLECTION_NAME), "useradmin");
     /** Default MongoDB username */
-    private static final String DEFAULT_MONGODB_USERNAME = System.getProperty(KEY_MONGODB_USERNAME);
+    private static final String DEFAULT_MONGODB_USERNAME = System.getProperty(PREFIX.concat(KEY_MONGODB_USERNAME));
     /** Default MongoDB password */
-    private static final String DEFAULT_MONGODB_PASSWORD = System.getProperty(KEY_MONGODB_PASSWORD);
+    private static final String DEFAULT_MONGODB_PASSWORD = System.getProperty(PREFIX.concat(KEY_MONGODB_PASSWORD));
 
     private final AtomicReference<MongoDB> m_mongoDbRef;
     private final MongoSerializerHelper m_helper;
@@ -220,7 +224,7 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
         // already done by the #updated method...
         MongoDB oldMongoDB = m_mongoDbRef.get();
         if (oldMongoDB == null) {
-            MongoDB mongoDB = new MongoDB(DEFAULT_MONGODB_SERVER, DEFAULT_MONGODB_NAME, DEFAULT_MONGODB_COLLECTION);
+            MongoDB mongoDB = new MongoDB(DEFAULT_MONGODB_SERVER, DEFAULT_MONGODB_DBNAME, DEFAULT_MONGODB_COLLECTION);
             
             do {
                 oldMongoDB = m_mongoDbRef.get();
@@ -290,21 +294,16 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
     
     @Override
     public void updated(Dictionary properties) throws ConfigurationException {
-        String newServers = DEFAULT_MONGODB_SERVER;
-        String newDbName = DEFAULT_MONGODB_NAME;
-        String newCollectionName = DEFAULT_MONGODB_COLLECTION;
-        String newUsername = DEFAULT_MONGODB_USERNAME;
-        String newPassword = DEFAULT_MONGODB_PASSWORD;
-        
-        if (properties != null) {
-            // Use values supplied...
-            newServers = getMandatoryProperty(properties, KEY_MONGODB_SERVER);
-            newDbName = getMandatoryProperty(properties, KEY_MONGODB_NAME);
-            newCollectionName = getMandatoryProperty(properties, KEY_MONGODB_COLLECTION_NAME);
-            
-            newUsername = getProperty(properties, KEY_MONGODB_USERNAME);
-            newPassword = getProperty(properties, DEFAULT_MONGODB_PASSWORD);
-        }
+        // Defaults to "ua_repo"
+        String newDbName = getProperty(properties, KEY_MONGODB_DBNAME, DEFAULT_MONGODB_DBNAME);
+        // Defaults to "localhost:27017"
+        String newServers = getProperty(properties, KEY_MONGODB_SERVER, DEFAULT_MONGODB_SERVER);
+        // Defaults to "useradmin"
+        String newCollectionName = getProperty(properties, KEY_MONGODB_COLLECTION_NAME, DEFAULT_MONGODB_COLLECTION);
+        // Defaults to null
+        String newUsername = getProperty(properties, KEY_MONGODB_USERNAME, DEFAULT_MONGODB_USERNAME);
+        // Defaults to null. FELIX-3774; use correct property name...
+        String newPassword = getProperty(properties, KEY_MONGODB_PASSWORD, DEFAULT_MONGODB_PASSWORD); 
 
         MongoDB newMongoDb = new MongoDB(newServers, newDbName, newCollectionName);
 
@@ -315,7 +314,10 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
         while (!m_mongoDbRef.compareAndSet(oldMongoDb, newMongoDb));
 
         try {
-            oldMongoDb.disconnect();
+            // FELIX-3775: oldMongoDb can be null when supplying the configuration for the first time...
+            if (oldMongoDb != null) {
+                oldMongoDb.disconnect();
+            }
         }
         catch (MongoException e) {
             m_log.log(LogService.LOG_WARNING, "Failed to disconnect from (old) MongoDB!", e);
@@ -342,7 +344,7 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
         if (!mongoDB.connect(userName, password)) {
             throw new MongoException("Failed to connect to MongoDB! Authentication failed!");
         }
-        
+
         DBCollection collection = mongoDB.getCollection();
         if (collection == null) {
             throw new MongoException("Failed to connect to MongoDB! No collection returned!");
@@ -364,37 +366,24 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
         }
         return mongoDB.getCollection();
     }
-
-    /**
-     * Returns the mandatory value for the given key.
-     * 
-     * @param properties the properties to get the mandatory value from;
-     * @param key the key of the value to retrieve;
-     * @return the value, never <code>null</code>.
-     * @throws ConfigurationException in case the given key had no value.
-     */
-    private String getMandatoryProperty(Dictionary properties, String key) throws ConfigurationException {
-        String result = getProperty(properties, key);
-        if (result == null || "".equals(result.trim())) {
-            throw new ConfigurationException(key, "cannot be null or empty!");
-        }
-        return result;
-    }
     
     /**
-     * Returns the value for the given key.
+     * Returns the value for the given key from the given properties.
      * 
-     * @param properties the properties to get the value from;
-     * @param key the key of the value to retrieve;
-     * @return the value, can be <code>null</code> in case no such key is present.
-     * @throws ConfigurationException in case the given key had no value.
+     * @param properties the properties to get the value from, may be <code>null</code>;
+     * @param key the key to retrieve the value for, cannot be <code>null</code>;
+     * @param defaultValue the default value to use in case no value is present in the given dictionary, the value is not a string, or the dictionary itself was <code>null</code>.
+     * @return the value, can be <code>null</code> in case the given key lead to a null value, or a null value was supplied as default value.
      */
-    private String getProperty(Dictionary properties, String key) throws ConfigurationException {
-        Object result = properties.get(key);
-        if (result == null || !(result instanceof String)) {
-            return null;
+    private String getProperty(Dictionary properties, String key, String defaultValue) {
+        String result = defaultValue;
+        if (properties != null) {
+            Object value = properties.get(key);
+            if (value != null && (value instanceof String)) {
+                result = (String) value;
+            }
         }
-        return (String) result;
+        return result;
     }
     
     /**
