@@ -32,26 +32,30 @@ import org.osgi.service.useradmin.UserAdminListener;
 public class Activator implements BundleActivator {
 
     private LogServiceHelper m_logServiceHelper;
+    private MongoDBStore m_store;
 
     @Override
     public void start(BundleContext context) throws Exception {
         m_logServiceHelper = new LogServiceHelper(context);
         m_logServiceHelper.open();
         
-        MongoDBStore store = new MongoDBStore();
-        store.setLogService(m_logServiceHelper);
+        m_store = new MongoDBStore();
+        m_store.setLogService(m_logServiceHelper);
         
         Properties props = new Properties();
         props.put(Constants.SERVICE_PID, MongoDBStore.PID);
 
-        String[] serviceNames = { RoleRepositoryStore.class.getName(), 
-            UserAdminListener.class.getName(), ManagedService.class.getName() };
+        String[] serviceNames = { RoleRepositoryStore.class.getName(), UserAdminListener.class.getName(), ManagedService.class.getName() };
 
-        context.registerService(serviceNames, store, props);
+        context.registerService(serviceNames, m_store, props);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        if (m_store != null) {
+            m_store.close();
+            m_store = null;
+        }
         if (m_logServiceHelper != null) {
             m_logServiceHelper.close();
             m_logServiceHelper = null;
