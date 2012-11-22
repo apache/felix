@@ -16,79 +16,68 @@
  */
 package org.apache.felix.useradmin;
 
-import java.io.Closeable;
-import java.io.IOException;
-
+import org.osgi.framework.Filter;
 import org.osgi.service.useradmin.Role;
 
 /**
  * Provides an abstraction to store and retrieve a role repository.
+ * <p>
+ * The role object returned by this backend <em>can</em> be a different
+ * implementation than <tt>org.apache.felix.useradmin.impl.role.RoleImpl</tt>,
+ * in which case the backend is made fully responsible for keeping track of the
+ * changes in the role object and persisting them!
+ * </p>
  */
-public interface RoleRepositoryStore extends Closeable {
-    
+public interface RoleRepositoryStore {
+
     /**
      * Adds a given role to this backend.
      * <p>
      * If the given role is already contained by this backed, this method 
-     * should not do anything and return <code>false</code> to denote this.
+     * should not do anything and return <code>null</code> to denote this.
      * </p>
      * 
-     * @param role the role to add, cannot be <code>null</code>.
-     * @return <code>true</code> if the role was successfully added, <code>false</code> otherwise.
-     * @throws IllegalArgumentException in case the given argument was <code>null</code>;
-     * @throws IOException in case of I/O problems.
+     * @param roleName the name of the role to add, cannot be <code>null</code>;
+     * @param type the type of role to add, either {@link Role#USER} or {@link Role#GROUP}.
+     * @return the role added, or <code>null</code> in case the role already 
+     *         exists.
+     * @throws IllegalArgumentException in case the given name was <code>null</code>;
+     * @throws Exception in case of problems adding the role.
      */
-    boolean addRole(Role role) throws IOException;
+    Role addRole(String roleName, int type) throws Exception;
 
     /**
-     * Closes this store, allowing implementations to free up resources, close
-     * connections, and so on.
+     * Returns all roles in this backend matching the given filter criteria.
      * 
-     * @throws IOException in case of I/O problems.
-     */
-    void close() throws IOException;
-
-    /**
-     * Returns all available roles in this backend.
-     * 
+     * @param filter the optional filter to apply, can be <code>null</code> in which case all roles are to be returned.
      * @return an array with all roles, never <code>null</code>, but can be empty.
-     * @throws IOException in case of I/O problems.
+     * @throws Exception in case of problems retrieving the set of roles.
      */
-    Role[] getAllRoles() throws IOException;
-    
+    Role[] getRoles(Filter filter) throws Exception;
+
     /**
      * Returns a {@link Role} by its name.
      * 
      * @param roleName the name of the role to return, cannot be <code>null</code>.
      * @return the role with the given name, or <code>null</code> if no such role exists.
      * @throws IllegalArgumentException in case the given argument was <code>null</code>;
-     * @throws IOException in case of I/O problems.
+     * @throws Exception in case of problems retrieving the requested role.
      */
-    Role getRoleByName(String roleName) throws IOException;
-
-    /**
-     * Called once before any other method of this interface is being called.
-     * <p>
-     * Implementations can use this method to create a connection to the 
-     * backend, or load the initial set of roles, and so on.
-     * </p>
-     * 
-     * @throws IOException in case of I/O problems.
-     */
-    void initialize() throws IOException;
+    Role getRoleByName(String roleName) throws Exception;
 
     /**
      * Removes a given role from this backend.
      * <p>
      * If the given role is not contained by this backed, this method 
-     * should not do anything and return <code>false</code> to denote this.
+     * should not do anything and return <code>null</code> to denote this.
      * </p>
      * 
-     * @param role the role to remove, cannot be <code>null</code>.
-     * @return <code>true</code> if the role was successfully removed, <code>false</code> otherwise.
+     * @param roleName the name of the role to remove, cannot be <code>null</code>.
+     * @return the removed role, if it was successfully removed from this 
+     *         backend, or <code>null</code> if the role was not contained by
+     *         this backend or could not be removed.
      * @throws IllegalArgumentException in case the given argument was <code>null</code>;
-     * @throws IOException in case of I/O problems.
+     * @throws Exception in case of problems removing the requested role.
      */
-    boolean removeRole(Role role) throws IOException;
-    
+    Role removeRole(String roleName) throws Exception;
 }

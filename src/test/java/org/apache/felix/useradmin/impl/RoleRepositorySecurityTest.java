@@ -29,6 +29,8 @@ import org.osgi.service.useradmin.Role;
  */
 public class RoleRepositorySecurityTest extends TestCase {
 
+    private static final String TEST_USER_NAME = "testUser";
+    
     private RoleRepository m_roleManager;
     private TestSecurityManager m_securityManager;
 
@@ -37,8 +39,8 @@ public class RoleRepositorySecurityTest extends TestCase {
      */
     public void testAddRoleWithPermissionsOk() throws SecurityException {
         m_securityManager.m_allowed = true;
-       
-        m_roleManager.addRole(RoleRepository.USER_ANYONE);
+
+        m_roleManager.addRole(TEST_USER_NAME, Role.USER);
     }
 
     /**
@@ -46,7 +48,7 @@ public class RoleRepositorySecurityTest extends TestCase {
      */
     public void testAddRoleWithoutPermissionsFails() throws SecurityException {
         try {
-            m_roleManager.addRole(RoleRepository.USER_ANYONE);
+            m_roleManager.addRole(TEST_USER_NAME, Role.USER);
             
             fail("Expected SecurityException!");
         } catch (SecurityException e) {
@@ -81,7 +83,7 @@ public class RoleRepositorySecurityTest extends TestCase {
     public void testRemoveRoleWithPermissionsOk() throws SecurityException {
         m_securityManager.m_allowed = true;
         
-        m_roleManager.removeRole(RoleRepository.USER_ANYONE);
+        m_roleManager.removeRole(TEST_USER_NAME);
     }
 
     /**
@@ -89,7 +91,7 @@ public class RoleRepositorySecurityTest extends TestCase {
      */
     public void testRemoveRoleWithoutPermissionsFails() throws SecurityException {
         try {
-            m_roleManager.removeRole(RoleRepository.USER_ANYONE);
+            m_roleManager.removeRole(TEST_USER_NAME);
             
             fail("Expected SecurityException!");
         } catch (SecurityException e) {

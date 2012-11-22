@@ -25,14 +25,16 @@ import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.UserAdminPermission;
 
 /**
- * Provides an implementation of {@link Group}. 
+ * Provides a default implementation of {@link Group} that is not security-aware 
+ * and does not keep track of changes to its properties. 
+ * <p>
+ * This implementation should be wrapped in an {@link ObservableGroup} when 
+ * returned from the UserAdmin implementation. 
+ * </p>
  */
 public class GroupImpl extends UserImpl implements Group {
 
-    private static final long serialVersionUID = 1515097730006454140L;
-    
-	private static final String BASIC_MEMBER = "basicMember";
-    private static final String REQUIRED_MEMBER = "requiredMember";
+    private static final long serialVersionUID = 5543895177109398569L;
 
     private final Object m_lock = new Object();
 
@@ -67,11 +69,6 @@ public class GroupImpl extends UserImpl implements Group {
             result = m_members.put(name, role);
         }
 
-        if (result == null) {
-            // Notify our (optional) listener...
-            entryAdded(BASIC_MEMBER, role);
-        }
-        
         return (result == null);
     }
 
@@ -91,11 +88,6 @@ public class GroupImpl extends UserImpl implements Group {
             result = m_requiredMembers.put(name, role);
         }
 
-        if (result == null) {
-            // Notify our (optional) listener...
-            entryAdded(REQUIRED_MEMBER, role);
-        }
-        
         return (result == null);
     }
 
@@ -133,25 +125,17 @@ public class GroupImpl extends UserImpl implements Group {
 
         String name = role.getName();
 
-        String key = null;
         Object result = null;
-        
+
         synchronized (m_lock) {
 			if (m_requiredMembers.containsKey(name)) {
-                key = REQUIRED_MEMBER;
                 result = m_requiredMembers.remove(name);
             }
             else if (m_members.containsKey(name)) {
-                key = BASIC_MEMBER;
                 result = m_members.remove(name);
             }
         }
 
-        if (result != null) {
-            // Notify our (optional) listener...
-            entryRemoved(key);
-        }
-        
         return result != null;
     }
     

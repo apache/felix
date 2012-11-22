@@ -32,12 +32,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.core</artifactId>
-			<version>4.0.0</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.compendium</artifactId>
 			<version>4.0.0</version>
 		</dependency>
@@ -45,7 +39,6 @@
             <groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.framework</artifactId>
 			<version>4.0.2</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<build>

@@ -18,25 +18,25 @@ package org.apache.felix.useradmin.impl.role;
 
 import java.io.Serializable;
 import java.util.Dictionary;
+import java.util.Properties;
 
-
-import org.apache.felix.useradmin.impl.RoleChangeListener;
-import org.apache.felix.useradmin.impl.role.ObservableDictionary.DictionaryChangeListener;
 import org.osgi.service.useradmin.Role;
-import org.osgi.service.useradmin.UserAdminPermission;
 
 /**
- * Provides an implementation of {@link Role}.
+ * Provides a default implementation of {@link Role} that is not security-aware 
+ * and does not keep track of changes to its properties.
+ * <p>
+ * This implementation should be wrapped in an {@link ObservableRole} when 
+ * returned from the UserAdmin implementation. 
+ * </p>
  */
-public class RoleImpl implements Serializable, Role, DictionaryChangeListener {
-	
-    private static final long serialVersionUID = -6292833161748591485L;
+public class RoleImpl implements Serializable, Role {
 
-	private final ObservableProperties m_properties;
+	private static final long serialVersionUID = 6403795608776837916L;
+	
+    private final Properties m_properties;
     private final String m_name;
     private final int m_type;
-    
-    private volatile RoleChangeListener m_listener;
 
     /**
      * Creates a new {@link RoleImpl} instance of type {@link Role#ROLE} and a given name.
@@ -59,38 +59,7 @@ public class RoleImpl implements Serializable, Role, DictionaryChangeListener {
         }
         m_type = type;
         m_name = name;
-        m_properties = new ObservableProperties(null, UserAdminPermission.CHANGE_PROPERTY);
-        m_properties.setDictionaryChangeListener(this);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public final void entryAdded(Object key, Object value) {
-        RoleChangeListener listener = m_listener;
-        if (listener != null) {
-            listener.propertyAdded(this, key, value);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public final void entryRemoved(Object key) {
-        RoleChangeListener listener = m_listener;
-        if (listener != null) {
-            listener.propertyRemoved(this, key);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public final void entryChanged(Object key, Object oldValue, Object newValue) {
-        RoleChangeListener listener = m_listener;
-        if (listener != null) {
-            listener.propertyChanged(this, key, oldValue, newValue);
-        }
+        m_properties = new Properties();
     }
     
     /**
@@ -151,15 +120,6 @@ public class RoleImpl implements Serializable, Role, DictionaryChangeListener {
         result = prime * result + ((m_name == null) ? 0 : m_name.hashCode());
         result = prime * result + m_type;
         return result;
-    }
-
-    /**
-     * Sets the {@link RoleChangeListener} for this role implementation.
-     * 
-     * @param listener the listener to set, may be <code>null</code> to stop listening.
-     */
-    public void setRoleChangeListener(RoleChangeListener listener) {
-        m_listener = listener;
     }
     
     /**

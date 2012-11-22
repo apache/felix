@@ -20,7 +20,9 @@ package org.apache.felix.useradmin;
 import org.apache.felix.useradmin.impl.role.GroupImpl;
 import org.apache.felix.useradmin.impl.role.RoleImpl;
 import org.apache.felix.useradmin.impl.role.UserImpl;
+import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
+import org.osgi.service.useradmin.User;
 
 /**
  * Provides a factory for creating the various role instances, can be used by external 
@@ -29,18 +31,21 @@ import org.osgi.service.useradmin.Role;
 public final class RoleFactory {
 
     /**
-     * Creates a new instance of {@link RoleFactory}, not used.
+     * Creates a new group-role instance.
+     * 
+     * @param name the name of the group to create.
+     * @return a new {@link Group} instance denoting the requested role, never <code>null</code>.
      */
-    private RoleFactory() {
-        // Nop
+    public static Group createGroup(String name) {
+        return (Group) createRole(Role.GROUP, name);
     }
 
     /**
-     * Creates a new role instance.
+     * Creates a new role instance with the given type and name.
      * 
      * @param type the type of the role to create;
      * @param name the name of the role to create.
-     * @return a new {@link RoleImpl} instance denoting the requested role, never <code>null</code>.
+     * @return a new {@link Role} instance denoting the requested role, never <code>null</code>.
      */
     public static Role createRole(int type, String name) {
         if (type == Role.USER) {
@@ -53,5 +58,33 @@ public final class RoleFactory {
             RoleImpl result = new RoleImpl(name);
             return result;
         }
+    }
+
+    /**
+     * Creates a new role instance.
+     * 
+     * @param type the type of the role to create;
+     * @param name the name of the role to create.
+     * @return a new {@link Role} instance denoting the requested role, never <code>null</code>.
+     */
+    public static Role createRole(String name) {
+        return createRole(Role.ROLE, name);
+    }
+
+    /**
+     * Creates a new user-role instance.
+     * 
+     * @param name the name of the user to create.
+     * @return a new {@link User} instance denoting the requested role, never <code>null</code>.
+     */
+    public static User createUser(String name) {
+        return (User) createRole(Role.USER, name);
+    }
+
+    /**
+     * Creates a new instance of {@link RoleFactory}, not used.
+     */
+    private RoleFactory() {
+        // Nop
     }
 }

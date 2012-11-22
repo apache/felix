@@ -51,7 +51,6 @@ final class ServiceContext {
         m_eventAdmin.open();
         m_listenerList.open(true /* trackAllServices */);
         m_eventDispatcher.start();
-        m_roleRepository.start();
         m_store.open();
     }
     
@@ -59,7 +58,6 @@ final class ServiceContext {
      * Stops/closes all helpers.
      */
     public void stop() {
-        m_roleRepository.stop();
         m_eventDispatcher.stop();
         m_listenerList.close();
         m_eventAdmin.close();

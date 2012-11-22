@@ -19,7 +19,6 @@ package org.apache.felix.useradmin.impl;
 
 import java.util.List;
 
-import org.apache.felix.useradmin.RoleFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
@@ -69,14 +68,7 @@ public class UserAdminImpl implements ServiceFactory, UserAdmin, RoleChangeListe
      * {@inheritDoc}
      */
     public Role createRole(String name, int type) {
-        if ((type != Role.USER) && (type != Role.GROUP)) {
-            throw new IllegalArgumentException("Invalid type, must by either Role.USER or Role.GROUP!");
-        }
-        if (name == null) {
-            throw new IllegalArgumentException("Invalid name, must be non-null and non-empty!");
-        }
-
-        return m_roleRepository.addRole(RoleFactory.createRole(type, name));
+        return m_roleRepository.addRole(name, type);
     }
 
     /**
@@ -154,12 +146,7 @@ public class UserAdminImpl implements ServiceFactory, UserAdmin, RoleChangeListe
      * {@inheritDoc}
      */
     public boolean removeRole(String name) {
-        Role role = getRole(name);
-        if (role == null) {
-            return false;
-        }
-
-        return m_roleRepository.removeRole(role);
+        return m_roleRepository.removeRole(name);
     }
 
     /**

@@ -18,19 +18,24 @@ package org.apache.felix.useradmin.impl.role;
 
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.Properties;
 
 import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.User;
-import org.osgi.service.useradmin.UserAdminPermission;
 
 /**
- * Provides an implementation of {@link User}.
+ * Provides a default implementation of {@link User} that is not security-aware 
+ * and does not keep track of changes to its properties.
+ * <p>
+ * This implementation should be wrapped in an {@link ObservableUser} when 
+ * returned from the UserAdmin implementation. 
+ * </p>
  */
 public class UserImpl extends RoleImpl implements User {
 
-    private static final long serialVersionUID = 8639414204247841034L;
-    
-	private final ObservableProperties m_credentials;
+	private static final long serialVersionUID = 7332249440557443008L;
+	
+    private final Properties m_credentials;
 
     /**
      * Creates a new {@link UserImpl} instance with type {@link Role#USER}.
@@ -50,8 +55,7 @@ public class UserImpl extends RoleImpl implements User {
     protected UserImpl(int type, String name) {
         super(type, name);
 
-        m_credentials = new ObservableProperties(UserAdminPermission.GET_CREDENTIAL, UserAdminPermission.CHANGE_CREDENTIAL);
-        m_credentials.setDictionaryChangeListener(this);
+        m_credentials = new Properties();
     }
 
     /**
@@ -65,7 +69,6 @@ public class UserImpl extends RoleImpl implements User {
      * {@inheritDoc}
      */
     public boolean hasCredential(String key, Object value) {
-        // Will throw a SecurityException if we're not allowed to do this!
         Object result = m_credentials.get(key);
 
         // Be a bit more lenient with the various results we can get...
