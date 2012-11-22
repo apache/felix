@@ -21,7 +21,6 @@ import java.security.Permission;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.framework.FilterImpl;
 import org.osgi.service.useradmin.Role;
 
 /**
@@ -74,7 +73,7 @@ public class RoleRepositorySecurityTest extends TestCase {
      * Tests that getting roles with filters works without any permissions.
      */
     public void testGetRolesWithFilterOk() throws Exception {
-        m_roleManager.getRoles(new FilterImpl("(key=value)"));
+        m_roleManager.getRoles("(key=value)");
     }
 
     /**

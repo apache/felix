@@ -25,8 +25,6 @@ import org.apache.felix.useradmin.BackendException;
 import org.apache.felix.useradmin.RoleFactory;
 import org.apache.felix.useradmin.RoleRepositoryStore;
 import org.apache.felix.useradmin.impl.role.ObservableRole;
-import org.osgi.framework.Filter;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.UserAdminPermission;
@@ -181,11 +179,11 @@ public final class RoleRepository {
      * @param filter the filter to match the individual roles against, can be <code>null</code> if all roles should be returned.
      * @return a list with all matching roles, can be empty, but never <code>null</code>.
      */
-    public List getRoles(Filter filter) {
+    public List getRoles(String filter) {
         List matchingRoles = new ArrayList();
 
         try {
-            Role[] roles = m_store.getRoles(filter);
+            Role[] roles = m_store.getRoles(sanitizeFilter(filter));
             for (int i = 0; i < roles.length; i++) {
                 Role role = roles[i];
                 if (!isPredefinedRole(role.getName())) {
@@ -219,9 +217,8 @@ public final class RoleRepository {
 
         try {
             String criteria = "(".concat(key).concat("=").concat(value).concat(")");
-            Filter filter = FrameworkUtil.createFilter(criteria);
 
-            Role[] roles = m_store.getRoles(filter);
+            Role[] roles = m_store.getRoles(criteria);
             for (int i = 0; i < roles.length; i++) {
                 Role role = roles[i];
                 if (!isPredefinedRole(role.getName())) {
@@ -353,6 +350,19 @@ public final class RoleRepository {
         catch (Exception e) {
             throw new BackendException("Failed to get all roles!", e);
         }
+	}
+	
+	/**
+	 * Sanitizes the given filter string.
+	 * 
+	 * @param filter the filter string to sanitize, can be <code>null</code>.
+	 * @return the sanitized filter, or <code>null</code> if the given filter was <code>null</code> or empty.
+	 */
+	private String sanitizeFilter(String filter) {
+	    if (filter == null || "".equals(filter.trim())) {
+	        return null;
+	    }
+	    return filter.trim();
 	}
 
     /**

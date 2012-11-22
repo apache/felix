@@ -20,7 +20,6 @@ package org.apache.felix.useradmin.impl;
 import java.util.List;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceFactory;
@@ -89,7 +88,12 @@ public class UserAdminImpl implements ServiceFactory, UserAdmin, RoleChangeListe
      * {@inheritDoc}
      */
     public Role[] getRoles(String filter) throws InvalidSyntaxException {
-        List roles = m_roleRepository.getRoles(createFilter(filter));
+        // Do a sanity check on the given filter...
+        if (filter != null && !"".equals(filter.trim())) {
+            FrameworkUtil.createFilter(filter);
+        }
+
+        List roles = m_roleRepository.getRoles(filter);
         if (roles.isEmpty()) {
             return null;
         }
@@ -168,20 +172,6 @@ public class UserAdminImpl implements ServiceFactory, UserAdmin, RoleChangeListe
      */
     public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
         // Nop; we leave the service as-is...
-    }
-    
-    /**
-     * Creates a {@link Filter} instance for the given OSGi/LDAP filter.
-     * 
-     * @param filter the filter to convert to a {@link Filter} instance.
-     * @return a {@link Filter} instance corresponding to the given filter string, never <code>null</code>.
-     * @throws InvalidSyntaxException in case the given filter was invalid.
-     */
-    protected Filter createFilter(String filter) throws InvalidSyntaxException {
-        if (filter == null || "".equals(filter.trim())) {
-            return null;
-        }
-        return FrameworkUtil.createFilter(filter);
     }
 
     /**

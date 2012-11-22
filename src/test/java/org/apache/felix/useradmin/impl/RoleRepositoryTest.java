@@ -26,8 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.framework.FilterImpl;
-import org.osgi.framework.Filter;
 import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.User;
@@ -274,18 +272,18 @@ public class RoleRepositoryTest extends TestCase {
         role2.getProperties().put("key", "value2");
         role2.getProperties().put("keyB", "value1");
         
-        Filter filter;
+        String filter;
 
-        filter = new FilterImpl("(key=value1)");
+        filter = "(key=value1)";
         assertSameRoles(new Role[]{ role1 }, m_roleRepository.getRoles(filter));
 
-        filter = new FilterImpl("(key=value2)");
+        filter = "(key=value2)";
         assertSameRoles(new Role[]{ role2 }, m_roleRepository.getRoles(filter));
 
-        filter = new FilterImpl("(key=value*)");
+        filter = "(key=value*)";
         assertSameRoles(new Role[]{ role1, role2 }, m_roleRepository.getRoles(filter));
 
-        filter = new FilterImpl("(|(key=value1)(keyB=value1))");
+        filter = "(|(key=value1)(keyB=value1))";
         assertSameRoles(new Role[]{ role1, role2 }, m_roleRepository.getRoles(filter));
     }
 
