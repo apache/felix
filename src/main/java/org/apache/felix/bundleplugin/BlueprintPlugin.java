@@ -92,7 +92,7 @@ public class BlueprintPlugin implements AnalyzerPlugin
 					}
 					bpHeader += root;
 				}
-                return false;
+                continue;
             }
             for ( Map.Entry<String, Resource> entry : dir.entrySet() )
             {
