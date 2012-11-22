@@ -86,10 +86,6 @@ public class RoleRepositoryFileStore extends RoleRepositoryMemoryStore implement
         }
     }
     
-    public void initialize() throws IOException {
-        m_entries.putAll(retrieve());
-    }
-
     public void roleChanged(UserAdminEvent event) {
         scheduleTask();
     }
@@ -110,25 +106,30 @@ public class RoleRepositoryFileStore extends RoleRepositoryMemoryStore implement
     }
 
     /**
+     * Starts this store by reading the latest version from disk.
+     * 
+     * @throws IOException in case of I/O problems retrieving the store.
+     */
+    public void start() throws IOException {
+        m_entries.putAll(retrieve());
+    }
+
+    /**
      * Stops this store service.
      */
-    public void stop()  {
+    public void stop() throws IOException {
         ResettableTimer timer = (ResettableTimer) m_timerRef.get();
         if (timer != null) {
-            // Shutdown and await termination...
-            timer.shutDown();
+            if (!timer.isShutDown()) {
+                // Shutdown and await termination...
+                timer.shutDown();
+            }
             // Clear reference...
             m_timerRef.compareAndSet(timer, null);
         }
-        
-        try {
-            // Write the latest version to disk...
-            flush();
-        }
-        catch (IOException e) {
-            // Nothing we can do about this here...
-            e.printStackTrace();
-        }
+
+        // Write the latest version to disk...
+        flush();
     }
 
     /**
@@ -198,6 +199,9 @@ public class RoleRepositoryFileStore extends RoleRepositoryMemoryStore implement
         } catch (FileNotFoundException exception) {
             // Don't bother; file does not exist...
             return Collections.emptyMap();
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            throw exception;
         } finally {
             closeSafely(is);
         }
@@ -251,7 +255,7 @@ public class RoleRepositoryFileStore extends RoleRepositoryMemoryStore implement
      */
     private void scheduleTask() {
         ResettableTimer timer = (ResettableTimer) m_timerRef.get();
-        if (timer != null) {
+        if (timer != null && !timer.isShutDown()) {
             timer.schedule();
         }
     }

@@ -22,9 +22,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.useradmin.impl.RoleRepository;
-import org.apache.felix.useradmin.impl.role.GroupImpl;
-import org.apache.felix.useradmin.impl.role.UserImpl;
+import org.apache.felix.useradmin.RoleFactory;
 import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.User;
@@ -34,9 +32,10 @@ import org.osgi.service.useradmin.User;
  */
 public class RoleRepositoryFileStorePerformanceTest extends TestCase {
 
-    private static final int USER_COUNT = 15000;
+    private static final int USER_COUNT = 25000;
     private static final int GROUP_COUNT = 500;
 
+    private Role m_anyone;
     private Group[] m_groups;
     private User[] m_users;
     
@@ -60,14 +59,14 @@ public class RoleRepositoryFileStorePerformanceTest extends TestCase {
      * Does a very simple performance test for a large number of users spread over several groups.
      */
     protected void readRepositoryPerformanceTest() throws Exception {
-        long r_st = System.currentTimeMillis();
+        long r_st = System.nanoTime();
         Map result = m_store.retrieve();
-        long r_time = System.currentTimeMillis() - r_st;
+        long r_time = System.nanoTime() - r_st;
 
         assertNotNull(result);
         assertEquals(GROUP_COUNT + USER_COUNT + 1, result.size());
 
-        System.out.println("Read time : " + (r_time / 1000.0) + "s.");
+        System.out.println("Read time : " + (r_time / 1.0e9) + "s.");
     }
 
     /**
@@ -79,19 +78,20 @@ public class RoleRepositoryFileStorePerformanceTest extends TestCase {
         m_store = new RoleRepositoryFileStore(new File(System.getProperty("java.io.tmpdir")), false /* disable background writes */);
 
         m_repository = new HashMap(USER_COUNT + GROUP_COUNT + 1);
+        m_anyone = RoleFactory.createRole(Role.USER_ANYONE);
 
-        addToRepository(RoleRepository.USER_ANYONE);
+        addToRepository(m_anyone);
     }
     
     /**
      * Does a very simple performance test for writing a large number of users spread over several groups.
      */
     protected void writeRepositoryPerformanceTest() throws Exception {
-        long w_st = System.currentTimeMillis();
+        long w_st = System.nanoTime();
         m_store.store(m_repository);
-        long w_time = System.currentTimeMillis() - w_st;
+        long w_time = System.nanoTime() - w_st;
 
-        System.out.println("Write time: " + (w_time / 1000.0) + "s.");
+        System.out.println("Write time: " + (w_time / 1.0e9) + "s.");
     }
 
     private void addToRepository(Role role) {
@@ -105,7 +105,7 @@ public class RoleRepositoryFileStorePerformanceTest extends TestCase {
         m_groups = new Group[GROUP_COUNT];
         for (int i = 0; i < m_groups.length; i++) {
             m_groups[i] = createGroup(i+1);
-            m_groups[i].addRequiredMember(RoleRepository.USER_ANYONE);
+            m_groups[i].addRequiredMember(m_anyone);
 
             addToRepository(m_groups[i]);
         }
@@ -124,7 +124,7 @@ public class RoleRepositoryFileStorePerformanceTest extends TestCase {
     private Group createGroup(int idx) {
         String name = "Group" + idx;
         
-        Group result = new GroupImpl(name);
+        Group result = RoleFactory.createGroup(name);
 
         setCredentials(result);
         setProperties(result);
@@ -135,7 +135,7 @@ public class RoleRepositoryFileStorePerformanceTest extends TestCase {
     private User createUser(int idx) {
         String name = "User" + idx;
         
-        User result = new UserImpl(name);
+        User result = RoleFactory.createUser(name);
 
         setCredentials(result);
         setProperties(result);

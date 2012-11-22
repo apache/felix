@@ -76,6 +76,15 @@ final class ResettableTimer {
     }
 
     /**
+     * Returns the state of this timer.
+     * 
+     * @return <code>true</code> if this timer is shut down, <code>false</code> otherwise.
+     */
+    public boolean isShutDown() {
+        return m_executor.isShutdown();
+    }
+    
+    /**
      * Schedules the task for execution with the contained timeout. If a task 
      * is already pending or running, it will be cancelled (not interrupted). 
      * The new task will be scheduled to run in now + timeout.

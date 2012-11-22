@@ -35,6 +35,7 @@ public class Activator implements BundleActivator {
 
     public void start(BundleContext context) throws Exception {
         m_store = new RoleRepositoryFileStore(context.getDataFile(""));
+        m_store.start();
         
         String[] interfaces = { RoleRepositoryStore.class.getName(), UserAdminListener.class.getName(), ManagedService.class.getName() };
         
