@@ -16,7 +16,6 @@
  */
 package org.apache.felix.useradmin;
 
-import org.osgi.framework.Filter;
 import org.osgi.service.useradmin.Role;
 
 /**
@@ -49,11 +48,11 @@ public interface RoleRepositoryStore {
     /**
      * Returns all roles in this backend matching the given filter criteria.
      * 
-     * @param filter the optional filter to apply, can be <code>null</code> in which case all roles are to be returned.
+     * @param filter the (optional) filter to apply, can be <code>null</code> in which case all roles will be returned.
      * @return an array with all roles, never <code>null</code>, but can be empty.
      * @throws Exception in case of problems retrieving the set of roles.
      */
-    Role[] getRoles(Filter filter) throws Exception;
+    Role[] getRoles(String filter) throws Exception;
 
     /**
      * Returns a {@link Role} by its name.

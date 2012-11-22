@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.felix.useradmin.RoleFactory;
 import org.apache.felix.useradmin.RoleRepositoryStore;
 import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.useradmin.Role;
 
 
@@ -45,9 +47,14 @@ public class RoleRepositoryMemoryStore implements RoleRepositoryStore {
         return (result == null) ? role : null;
     }
 
-    public Role[] getRoles(Filter filter) {
+    public Role[] getRoles(String filterValue) throws InvalidSyntaxException {
         Collection roles = m_entries.values();
-        
+
+        Filter filter = null;
+        if (filterValue != null) {
+            filter = FrameworkUtil.createFilter(filterValue);
+        }
+
         List matchingRoles = new ArrayList();
         Iterator rolesIter = roles.iterator();
         while (rolesIter.hasNext()) {

@@ -34,6 +34,7 @@ import junit.framework.TestCase;
 
 import org.apache.felix.useradmin.RoleRepositoryStore;
 import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.User;
@@ -130,19 +131,20 @@ public class CustomRoleImplTest extends TestCase
             return (result == null) ? role : null;
         }
 
-        public void close() throws IOException {
-            // Nop
-        }
-
-        public Role getRoleByName(String roleName) throws IOException {
+        public Role getRoleByName(String roleName) throws Exception {
             if (roleName == null) {
                 throw new IllegalArgumentException("Role name cannot be null!");
             }
             return (Role) m_entries.get(roleName);
         }
 
-        public Role[] getRoles(Filter filter) throws IOException {
+        public Role[] getRoles(String filterValue) throws Exception {
             Collection roles = m_entries.values();
+
+            Filter filter = null;
+            if (filterValue != null) {
+                filter = FrameworkUtil.createFilter(filterValue);
+            }
             
             List matchingRoles = new ArrayList();
             Iterator rolesIter = roles.iterator();
@@ -156,12 +158,8 @@ public class CustomRoleImplTest extends TestCase
             Role[] result = new Role[matchingRoles.size()];
             return (Role[]) matchingRoles.toArray(result);
         }
-        
-        public void initialize() throws IOException {
-            // Nop
-        }
 
-        public Role removeRole(String roleName) throws IOException {
+        public Role removeRole(String roleName) throws Exception {
             if (roleName == null) {
                 throw new IllegalArgumentException("Name cannot be null!");
             }

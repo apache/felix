@@ -18,7 +18,6 @@ package org.apache.felix.useradmin.osgi;
 
 import org.apache.felix.useradmin.RoleRepositoryStore;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Filter;
 import org.osgi.service.useradmin.Role;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -49,7 +48,7 @@ class RoleRepositoryStoreHelper extends ServiceTracker implements RoleRepository
         return null;
     }
 
-    public Role[] getRoles(Filter filter) throws Exception {
+    public Role[] getRoles(String filter) throws Exception {
         RoleRepositoryStore store = getStore();
         if (store != null) {
             return store.getRoles(filter);

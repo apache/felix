@@ -21,9 +21,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.framework.FilterImpl;
 import org.apache.felix.useradmin.RoleFactory;
-import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -858,14 +856,7 @@ public class UserAdminImplTest extends TestCase {
         m_roleRepository = new RoleRepository(new MemoryRoleRepositoryStore());
         m_dispatcher = new EventDispatcher(new StubEventAdmin(), new StubUserAdminListenerList());
 
-        m_userAdmin = new UserAdminImpl(m_roleRepository, m_dispatcher) {
-            protected Filter createFilter(String filter) throws InvalidSyntaxException {
-                if (filter == null || "".equals(filter.trim())) {
-                    return null;
-                }
-                return new FilterImpl(filter);
-            }
-        };
+        m_userAdmin = new UserAdminImpl(m_roleRepository, m_dispatcher);
         m_dispatcher.start();
     }
     

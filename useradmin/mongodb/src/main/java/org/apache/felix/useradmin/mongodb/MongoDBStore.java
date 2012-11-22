@@ -26,6 +26,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.useradmin.RoleRepositoryStore;
 import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
@@ -160,15 +162,24 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
     }
 
     @Override
-    public Role[] getRoles(Filter filter) throws MongoException {
+    public Role[] getRoles(String filterValue) throws InvalidSyntaxException, MongoException {
         List<Role> roles = new ArrayList<Role>();
-        
+
+        Filter filter = null;
+        if (filterValue != null) {
+            filter = FrameworkUtil.createFilter(filterValue);
+        }
+
         DBCollection coll = getCollection();
 
         DBCursor cursor = coll.find();
         try {
             while (cursor.hasNext()) {
-                roles.add(m_helper.deserialize(cursor.next()));
+                // Hmm, there might be a more clever way of doing this...
+                Role role = m_helper.deserialize(cursor.next());
+                if ((filter == null) || filter.match(role.getProperties())) {
+                    roles.add(role);
+                }
             }
         } finally {
             cursor.close();
