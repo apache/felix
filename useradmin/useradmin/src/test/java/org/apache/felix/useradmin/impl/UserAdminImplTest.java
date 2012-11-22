@@ -22,7 +22,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.apache.felix.framework.FilterImpl;
-import org.apache.felix.useradmin.impl.role.UserImpl;
+import org.apache.felix.useradmin.RoleFactory;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.event.Event;
@@ -347,7 +347,8 @@ public class UserAdminImplTest extends TestCase {
      * Tests that obtaining the authorization for a non-existing user yields null.
      */
     public void testGetAuthorizationForNonExistingUserOk() {
-        Authorization auth = m_userAdmin.getAuthorization(new UserImpl("foo"));
+        User nonExistingUser = RoleFactory.createUser("non-existing-user");
+        Authorization auth = m_userAdmin.getAuthorization(nonExistingUser);
 
         assertNotNull(auth);
 
@@ -865,8 +866,6 @@ public class UserAdminImplTest extends TestCase {
                 return new FilterImpl(filter);
             }
         };
-
-        m_roleRepository.start();
         m_dispatcher.start();
     }
     
@@ -874,7 +873,6 @@ public class UserAdminImplTest extends TestCase {
      * {@inheritDoc}
      */
     protected void tearDown() throws Exception {
-        m_roleRepository.stop();
         m_dispatcher.stop();
         
         super.tearDown();

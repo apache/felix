@@ -115,6 +115,22 @@ final class MongoSerializerHelper {
         
         return data;
     }
+
+    /**
+     * Creates a {@link DBObject} with the given role and name. 
+     * 
+     * @param roleName the name of the role to serialize, cannot be <code>null</code> or empty (unchecked!);
+     * @param type the type of the role to serialize.
+     * @return a {@link DBObject} representing the role with the given name and type, never <code>null</code>.
+     */
+    public DBObject serialize(String roleName, int type) {
+        BasicDBObject data = new BasicDBObject();
+        
+        data.put(TYPE, type);
+        data.put(NAME, roleName);
+        
+        return data;
+    }
     
     /**
      * Creates a serialized version of the given {@link Role} to be used in an update statement.

@@ -21,17 +21,16 @@ package org.apache.felix.useradmin.itest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.felix.useradmin.RoleRepositoryStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
+import org.osgi.service.useradmin.User;
+import org.osgi.service.useradmin.UserAdmin;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
@@ -40,92 +39,62 @@ import org.osgi.service.useradmin.Role;
 public class FileStoreInitializationTest extends BaseIntegrationTest {
 
 	/**
-	 * Provides a mock file store that does nothing but track the number of
-	 * times the {@link #initialize()} and {@link #close()} methods are called.
-	 */
-	public static class MockRoleRepositoryStore implements RoleRepositoryStore {
-
-		final AtomicInteger m_initCount = new AtomicInteger(0);
-		final AtomicInteger m_closeCount = new AtomicInteger(0);
-
-		@Override
-		public boolean addRole(Role role) throws IOException {
-			return false;
-		}
-
-		@Override
-		public void close() throws IOException {
-			m_closeCount.incrementAndGet();
-		}
-
-		@Override
-		public Role[] getAllRoles() throws IOException {
-			return null;
-		}
-
-		@Override
-		public Role getRoleByName(String roleName) throws IOException {
-			return null;
-		}
-
-		@Override
-		public void initialize() throws IOException {
-			m_initCount.incrementAndGet();
-		}
-
-		@Override
-		public boolean removeRole(Role role) throws IOException {
-			return false;
-		}
-	}
-
-	/**
 	 * Tests that initialization and closing of the repository store is
 	 * performed correctly.
 	 */
 	@Test
 	public void testStoreIsInitializedAndClosedProperlyOk() throws Exception {
-		final String serviceName = RoleRepositoryStore.class.getName();
-		final MockRoleRepositoryStore mockStore = new MockRoleRepositoryStore();
+	    UserAdmin ua = getUserAdmin();
+	    
+	    // Create two roles...
+	    User user = (User) ua.createRole("user1", Role.USER);
+	    assertNotNull(user);
+	    
+	    Group group = (Group) ua.createRole("group1", Role.GROUP);
+	    assertNotNull(group);
+	    
+	    group.addMember(user);
+	    group.addRequiredMember(ua.getRole(Role.USER_ANYONE));
 
-		// Stop the file store...
+		// Stop the file store; should persist the two roles...
 		Bundle fileStoreBundle = findBundle(ORG_APACHE_FELIX_USERADMIN_FILESTORE);
 		assertNotNull(fileStoreBundle);
 		fileStoreBundle.stop();
 
-		// Manually register our mock store...
-		ServiceRegistration serviceReg = m_context.registerService(serviceName, mockStore, null);
+		Thread.sleep(100); // Wait a little until the bundle is really stopped...
+		
+		// Retrieve the roles again; should both yield null due to the store not being available...
+		user = (User) ua.getRole("user1");
+		assertNull(user);
 
-		// Wait until it becomes available...
-		awaitService(serviceName);
+		group = (Group) ua.getRole("group1");
+		assertNull(group);
+		
+		// This will not succeed: no backend to store the user in...
+		assertNull(ua.createRole("user2", Role.USER));
 
-		assertEquals(1, mockStore.m_initCount.get());
-		assertEquals(0, mockStore.m_closeCount.get());
+		fileStoreBundle.start();
 
-		serviceReg.unregister();
+		awaitService(ORG_APACHE_FELIX_USERADMIN_FILESTORE);
+        
+        // Retrieve the roles again; should both yield valid values...
+        user = (User) ua.getRole("user1");
+        assertNotNull(user);
+        
+        group = (Group) ua.getRole("group1");
+        assertNotNull(group);
 
-		Thread.sleep(100); // sleep a tiny bit to allow service to be properly unregistered...
+        Role[] members = group.getMembers();
+        assertNotNull(members);
+        assertEquals(1, members.length);
+        assertEquals("user1", members[0].getName());
 
-		assertEquals(1, mockStore.m_initCount.get());
-		assertEquals(1, mockStore.m_closeCount.get());
-
-		// Re-register the service again...
-		serviceReg = m_context.registerService(serviceName, mockStore, null);
-
-		assertEquals(2, mockStore.m_initCount.get());
-		assertEquals(1, mockStore.m_closeCount.get());
-
-		// Stop & start the UserAdmin bundle to verify the initialization is
-		// still only performed once...
-		Bundle userAdminBundle = findBundle(ORG_APACHE_FELIX_USERADMIN);
-		assertNotNull(userAdminBundle);
-		userAdminBundle.stop();
-
-		Thread.sleep(100); // sleep a tiny bit to allow service to be properly unregistered...
-
-		userAdminBundle.start();
-
-		assertEquals(3, mockStore.m_initCount.get());
-		assertEquals(2, mockStore.m_closeCount.get());
+        members = group.getRequiredMembers();
+        assertNotNull(members);
+        assertEquals(1, members.length);
+        assertEquals(Role.USER_ANYONE, members[0].getName());
+        
+        user = (User) ua.getRole("user2");
+        assertNull(user);
 	}
 }

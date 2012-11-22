@@ -20,39 +20,38 @@ package org.apache.felix.useradmin.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
 import org.apache.felix.framework.FilterImpl;
-import org.apache.felix.useradmin.impl.role.GroupImpl;
-import org.apache.felix.useradmin.impl.role.UserImpl;
 import org.osgi.framework.Filter;
+import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
+import org.osgi.service.useradmin.User;
 
 /**
  * Test cases for {@link RoleRepository}.
  */
 public class RoleRepositoryTest extends TestCase {
 
-    private RoleRepository m_roleManager;
+    private RoleRepository m_roleRepository;
     private CountDownLatch m_latch;
     
     /**
      * Tests whether adding a new role to a group causes an event to be emitted to the {@link RoleRepository}.
      */
     public void testAddBasicRoleYieldsEventOk() throws Exception {
-        final GroupImpl role = (GroupImpl) m_roleManager.addRole(new GroupImpl("foo"));
+        final Group role = (Group) m_roleRepository.addRole("foo", Role.GROUP);
         
         m_latch = new CountDownLatch(1);
         
         new Thread(new Runnable() {
             public void run() {
-                role.addMember(RoleRepository.USER_ANYONE);
+                Role anyone = m_roleRepository.getRoleByName(Role.USER_ANYONE);
+                role.addMember(anyone);
             };
         }).start();
 
@@ -64,7 +63,7 @@ public class RoleRepositoryTest extends TestCase {
      */
     public void testAddNullRoleChangeListenerFail() throws Exception {
         try {
-            m_roleManager.addRoleChangeListener(null);
+            m_roleRepository.addRoleChangeListener(null);
             fail("Expected IllegalArgumentException!");
         } catch (IllegalArgumentException e) {
             // Ok; expected...
@@ -75,22 +74,28 @@ public class RoleRepositoryTest extends TestCase {
      * Tests that adding a predefined role is not allowed.
      */
     public void testAddPredefineRoleFails() {
-        Role role = RoleRepository.USER_ANYONE;
-        assertNull(m_roleManager.addRole(role));
-        assertEquals(0, m_roleManager.getRoles(null).size());
+        try {
+            assertNull(m_roleRepository.addRole(Role.USER_ANYONE, Role.ROLE));
+            fail("IllegalArgumentException expected!");
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Ok; expected
+        }
     }
 
     /**
      * Tests whether adding a new role to a group causes an event to be emitted to the {@link RoleRepository}.
      */
     public void testAddRequiredRoleYieldsEventOk() throws Exception {
-        final GroupImpl role = (GroupImpl) m_roleManager.addRole(new GroupImpl("foo"));
+        final Group role = (Group) m_roleRepository.addRole("foo", Role.GROUP);
 
         m_latch = new CountDownLatch(1);
         
         new Thread(new Runnable() {
             public void run() {
-                role.addRequiredMember(RoleRepository.USER_ANYONE);
+                Role anyone = m_roleRepository.getRoleByName(Role.USER_ANYONE);
+                role.addRequiredMember(anyone);
             };
         }).start();
 
@@ -102,7 +107,7 @@ public class RoleRepositoryTest extends TestCase {
      */
     public void testAddRoleChangeListenerOk() throws Exception {
         // Should succeed...
-        m_roleManager.addRoleChangeListener(new RoleChangeListener() {
+        m_roleRepository.addRoleChangeListener(new RoleChangeListener() {
             public void propertyAdded(Role role, Object key, Object value) {
             }
             
@@ -124,22 +129,19 @@ public class RoleRepositoryTest extends TestCase {
      * Test method for {@link org.apache.felix.useradmin.impl.RoleRepository#addRole(Role)}.
      */
     public void testAddRoleOfSameTypeTwiceFail() {
-        UserImpl role = new UserImpl("foo");
+        assertNotNull(m_roleRepository.addRole("foo", Role.USER));
+        assertEquals(1, m_roleRepository.getRoles(null).size());
 
-        assertSame(role, m_roleManager.addRole(role));
-        assertEquals(1, m_roleManager.getRoles(null).size());
-
-        assertNull(m_roleManager.addRole(role));
-        assertEquals(1, m_roleManager.getRoles(null).size());
+        assertNull(m_roleRepository.addRole("foo", Role.USER));
+        assertEquals(1, m_roleRepository.getRoles(null).size());
     }
 
     /**
      * Tests that adding a role works.
      */
     public void testAddRoleOk() {
-        UserImpl role = new UserImpl("foo");
-        assertSame(role, m_roleManager.addRole(role));
-        assertEquals(1, m_roleManager.getRoles(null).size());
+        assertNotNull(m_roleRepository.addRole("foo", Role.USER));
+        assertEquals(1, m_roleRepository.getRoles(null).size());
     }
 
     /**
@@ -148,7 +150,7 @@ public class RoleRepositoryTest extends TestCase {
     public void testAddRolePropertyYieldsEventOk() throws Exception {
         m_latch = new CountDownLatch(1);
         
-        final Role role = m_roleManager.addRole(new UserImpl("john.doe"));
+        final Role role = m_roleRepository.addRole("john.doe", Role.USER);
         
         new Thread(new Runnable() {
             public void run() {
@@ -160,21 +162,11 @@ public class RoleRepositoryTest extends TestCase {
     }
 
     /**
-     * Tests that adding a role that does not inherit from RoleImpl does not work and yields an exception.
+     * Tests that adding a null-role does not work and yields an exception.
      */
-    public void testAddRoleWithInvalidRoleFail() {
+    public void testAddRoleWithNullRoleFail() {
         try {
-            m_roleManager.addRole(new Role() {
-                public String getName() {
-                    return "A User";
-                }
-                public Dictionary getProperties() {
-                    return new Properties();
-                }
-                public int getType() {
-                    return Role.USER;
-                }
-            });
+            m_roleRepository.addRole(null, Role.USER);
             
             fail("Exception expected!");
         } catch (IllegalArgumentException e) {
@@ -183,11 +175,11 @@ public class RoleRepositoryTest extends TestCase {
     }
 
     /**
-     * Tests that adding a null-role does not work and yields an exception.
+     * Tests that adding a role with an invalid type does not work and yields an exception.
      */
-    public void testAddRoleWithNullRoleFail() {
+    public void testAddRoleWithInvalidRoleTypeFail() {
         try {
-            m_roleManager.addRole(null);
+            m_roleRepository.addRole("role", Role.ROLE);
             
             fail("Exception expected!");
         } catch (IllegalArgumentException e) {
@@ -199,14 +191,11 @@ public class RoleRepositoryTest extends TestCase {
      * Test method for {@link org.apache.felix.useradmin.impl.RoleRepository#addRole(Role)}.
      */
     public void testAddRoleWithSameNameTwiceFail() {
-        UserImpl role1 = new UserImpl("foo");
-        GroupImpl role2 = new GroupImpl("foo");
+        assertNotNull(m_roleRepository.addRole("foo", Role.USER));
+        assertEquals(1, m_roleRepository.getRoles(null).size());
 
-        assertSame(role1, m_roleManager.addRole(role1));
-        assertEquals(1, m_roleManager.getRoles(null).size());
-
-        assertNull(m_roleManager.addRole(role2));
-        assertEquals(1, m_roleManager.getRoles(null).size());
+        assertNull(m_roleRepository.addRole("foo", Role.GROUP));
+        assertEquals(1, m_roleRepository.getRoles(null).size());
     }
 
     /**
@@ -215,7 +204,7 @@ public class RoleRepositoryTest extends TestCase {
     public void testAddUserCredentialYieldsEventOk() throws Exception {
         m_latch = new CountDownLatch(1);
         
-        final UserImpl role = (UserImpl) m_roleManager.addRole(new UserImpl("john.doe"));
+        final User role = (User) m_roleRepository.addRole("john.doe", Role.USER);
         
         new Thread(new Runnable() {
             public void run() {
@@ -230,7 +219,7 @@ public class RoleRepositoryTest extends TestCase {
      * Tests whether changing an existing property to a role causes an event to be emitted to the {@link RoleRepository}.
      */
     public void testChangeRolePropertyYieldsEventOk() throws Exception {
-        final Role role = m_roleManager.addRole(new UserImpl("john.doe"));
+        final Role role = m_roleRepository.addRole("john.doe", Role.USER);
         role.getProperties().put("key", "value");
         
         m_latch = new CountDownLatch(1);
@@ -248,7 +237,7 @@ public class RoleRepositoryTest extends TestCase {
      * Tests whether changing an existing credential for a user causes an event to be emitted to the {@link RoleRepository}.
      */
     public void testChangeUserCredentialYieldsEventOk() throws Exception {
-        final UserImpl role = (UserImpl) m_roleManager.addRole(new UserImpl("john.doe"));
+        final User role = (User) m_roleRepository.addRole("john.doe", Role.USER);
         role.getCredentials().put("key", "value");
         
         m_latch = new CountDownLatch(1);
@@ -266,85 +255,88 @@ public class RoleRepositoryTest extends TestCase {
      * Test method for {@link org.apache.felix.useradmin.impl.RoleRepository#getRoleByName(java.lang.String)}.
      */
     public void testGetRoleByName() {
-        Role role1 = m_roleManager.addRole(new UserImpl("foo"));
-        Role role2 = m_roleManager.addRole(new GroupImpl("bar"));
+        Role role1 = m_roleRepository.addRole("foo", Role.USER);
+        Role role2 = m_roleRepository.addRole("bar", Role.GROUP);
 
-        assertSame(role1, m_roleManager.getRoleByName("foo"));
-        assertSame(role2, m_roleManager.getRoleByName("bar"));
-        assertNull(m_roleManager.getRoleByName("qux"));
+        assertEquals(role1, m_roleRepository.getRoleByName("foo"));
+        assertEquals(role2, m_roleRepository.getRoleByName("bar"));
+        assertNull(m_roleRepository.getRoleByName("qux"));
     }
 
     /**
      * Test method for {@link org.apache.felix.useradmin.impl.RoleRepository#getRoles(org.osgi.framework.Filter)}.
      */
     public void testGetRolesWithFilterOk() throws Exception {
-        Role role1 = m_roleManager.addRole(new UserImpl("foo"));
+        Role role1 = m_roleRepository.addRole("foo", Role.USER);
         role1.getProperties().put("key", "value1");
         role1.getProperties().put("keyA", "valueA");
-        Role role2 = m_roleManager.addRole(new GroupImpl("bar"));
+        Role role2 = m_roleRepository.addRole("bar", Role.GROUP);
         role2.getProperties().put("key", "value2");
         role2.getProperties().put("keyB", "value1");
         
         Filter filter;
 
         filter = new FilterImpl("(key=value1)");
-        assertSameRoles(new Role[]{ role1 }, m_roleManager.getRoles(filter));
+        assertSameRoles(new Role[]{ role1 }, m_roleRepository.getRoles(filter));
 
         filter = new FilterImpl("(key=value2)");
-        assertSameRoles(new Role[]{ role2 }, m_roleManager.getRoles(filter));
+        assertSameRoles(new Role[]{ role2 }, m_roleRepository.getRoles(filter));
 
         filter = new FilterImpl("(key=value*)");
-        assertSameRoles(new Role[]{ role1, role2 }, m_roleManager.getRoles(filter));
+        assertSameRoles(new Role[]{ role1, role2 }, m_roleRepository.getRoles(filter));
 
         filter = new FilterImpl("(|(key=value1)(keyB=value1))");
-        assertSameRoles(new Role[]{ role1, role2 }, m_roleManager.getRoles(filter));
+        assertSameRoles(new Role[]{ role1, role2 }, m_roleRepository.getRoles(filter));
     }
 
     /**
      * Test method for {@link org.apache.felix.useradmin.impl.RoleRepository#getRoles(String, String)}.
      */
     public void testGetRolesWithKeyValuePairOk() throws Exception {
-        Role role1 = m_roleManager.addRole(new UserImpl("foo"));
+        Role role1 = m_roleRepository.addRole("foo", Role.USER);
         role1.getProperties().put("key", "value1");
         role1.getProperties().put("keyA", "valueA");
-        Role role2 = m_roleManager.addRole(new GroupImpl("bar"));
+        Role role2 = m_roleRepository.addRole("bar", Role.GROUP);
         role2.getProperties().put("key", "value2");
         role2.getProperties().put("keyB", "value1");
-        
-        assertSameRoles(new Role[]{ role1 }, m_roleManager.getRoles("key", "value1"));
-        assertSameRoles(new Role[]{ role2 }, m_roleManager.getRoles("key", "value2"));
-        assertSameRoles(new Role[0], m_roleManager.getRoles("key", "value"));
+
+        assertSameRoles(new Role[]{ role1 }, m_roleRepository.getRoles("key", "value1"));
+        assertSameRoles(new Role[]{ role2 }, m_roleRepository.getRoles("key", "value2"));
+        assertSameRoles(new Role[0], m_roleRepository.getRoles("key", "value"));
     }
 
     /**
      * Test method for {@link org.apache.felix.useradmin.impl.RoleRepository#getRoles(org.osgi.framework.Filter)}.
      */
     public void testGetRolesWithoutFilterOk() {
-        Role role1 = m_roleManager.addRole(new UserImpl("foo"));
-        Role role2 = m_roleManager.addRole(new GroupImpl("bar"));
+        Role role1 = m_roleRepository.addRole("foo", Role.USER);
+        Role role2 = m_roleRepository.addRole("bar", Role.GROUP);
         
-        assertSameRoles(new Role[]{ role2, role1 }, m_roleManager.getRoles(null));
+        assertSameRoles(new Role[]{ role2, role1 }, m_roleRepository.getRoles(null));
     }
 
     /**
      * Test method for {@link org.apache.felix.useradmin.impl.RoleRepository#getRoleByName(java.lang.String)}.
      */
     public void testGetUserAnyoneRoleByName() {
-        assertSame(RoleRepository.USER_ANYONE, m_roleManager.getRoleByName(Role.USER_ANYONE));
+        Role anyone = m_roleRepository.getRoleByName(Role.USER_ANYONE);
+        assertEquals(Role.USER_ANYONE, anyone.getName());
+        assertEquals(Role.ROLE, anyone.getType());
     }
 
     /**
      * Tests whether removing a role from a group causes an event to be emitted to the {@link RoleRepository}.
      */
     public void testRemoveBasicRoleYieldsEventOk() throws Exception {
-        final GroupImpl role = (GroupImpl) m_roleManager.addRole(new GroupImpl("foo"));
-        role.addMember(RoleRepository.USER_ANYONE);
+        final Role anyone = m_roleRepository.getRoleByName(Role.USER_ANYONE);
+        final Group role = (Group) m_roleRepository.addRole("bar", Role.GROUP);
+        role.addMember(anyone);
         
         m_latch = new CountDownLatch(1);
         
         new Thread(new Runnable() {
             public void run() {
-                role.removeMember(RoleRepository.USER_ANYONE);
+                role.removeMember(anyone);
             };
         }).start();
 
@@ -355,23 +347,20 @@ public class RoleRepositoryTest extends TestCase {
      * Test method for {@link org.apache.felix.useradmin.impl.RoleRepository#removeRole(Role)}.
      */
     public void testRemoveExistingRoleOk() {
-        UserImpl role = new UserImpl("foo");
-        assertSame(role, m_roleManager.addRole(role));
+        assertNotNull(m_roleRepository.addRole("foo", Role.USER));
         
-        assertTrue(m_roleManager.removeRole(role));
-        assertEquals(0, m_roleManager.getRoles(null).size());
+        assertTrue(m_roleRepository.removeRole("foo"));
+        assertEquals(0, m_roleRepository.getRoles(null).size());
     }
 
     /**
      * Test method for {@link org.apache.felix.useradmin.impl.RoleRepository#removeRole(Role)}.
      */
     public void testRemoveNonExistingRoleOk() {
-        UserImpl role1 = new UserImpl("foo");
-        UserImpl role2 = new UserImpl("bar");
-        assertSame(role1, m_roleManager.addRole(role1));
+        assertNotNull(m_roleRepository.addRole("foo", Role.USER));
 
-        assertFalse(m_roleManager.removeRole(role2));
-        assertEquals(1, m_roleManager.getRoles(null).size());
+        assertFalse(m_roleRepository.removeRole("qux"));
+        assertEquals(1, m_roleRepository.getRoles(null).size());
     }
 
     /**
@@ -379,7 +368,7 @@ public class RoleRepositoryTest extends TestCase {
      */
     public void testRemoveNullRoleChangeListenerFail() throws Exception {
         try {
-            m_roleManager.removeRoleChangeListener(null);
+            m_roleRepository.removeRoleChangeListener(null);
             fail("Expected IllegalArgumentException!");
         } catch (IllegalArgumentException e) {
             // Ok; expected...
@@ -390,26 +379,26 @@ public class RoleRepositoryTest extends TestCase {
      * Test method for {@link org.apache.felix.useradmin.impl.RoleRepository#removeRole(Role)}.
      */
     public void testRemovePredefinedRoleFails() {
-        m_roleManager.addRole(new UserImpl("foo"));
+        m_roleRepository.addRole("foo", Role.USER);
 
-        Role role = RoleRepository.USER_ANYONE;
-        assertFalse(m_roleManager.removeRole(role));
+        assertFalse(m_roleRepository.removeRole(Role.USER_ANYONE));
 
-        assertEquals(1, m_roleManager.getRoles(null).size());
+        assertEquals(1, m_roleRepository.getRoles(null).size());
     }
 
     /**
      * Tests whether removing a role from a group causes an event to be emitted to the {@link RoleRepository}.
      */
     public void testRemoveRequiredRoleYieldsEventOk() throws Exception {
-        final GroupImpl role = (GroupImpl) m_roleManager.addRole(new GroupImpl("foo"));
-        role.addRequiredMember(RoleRepository.USER_ANYONE);
+        final Role anyone = m_roleRepository.getRoleByName(Role.USER_ANYONE);
+        final Group role = (Group) m_roleRepository.addRole("bar", Role.GROUP);
+        role.addRequiredMember(anyone);
         
         m_latch = new CountDownLatch(1);
         
         new Thread(new Runnable() {
             public void run() {
-                role.removeMember(RoleRepository.USER_ANYONE);
+                role.removeMember(anyone);
             };
         }).start();
 
@@ -421,7 +410,7 @@ public class RoleRepositoryTest extends TestCase {
      */
     public void testRemoveRoleChangeListenerOk() throws Exception {
         // Should succeed...
-        m_roleManager.removeRoleChangeListener(new RoleChangeListener() {
+        m_roleRepository.removeRoleChangeListener(new RoleChangeListener() {
             public void propertyAdded(Role role, Object key, Object value) {
             }
             
@@ -443,7 +432,7 @@ public class RoleRepositoryTest extends TestCase {
      * Tests whether removing a property from a role causes an event to be emitted to the {@link RoleRepository}.
      */
     public void testRemoveRolePropertyYieldsEventOk() throws Exception {
-        final Role role = m_roleManager.addRole(new UserImpl("john.doe"));
+        final Role role = m_roleRepository.addRole("john.doe", Role.USER);
         role.getProperties().put("key", "value");
         
         m_latch = new CountDownLatch(1);
@@ -458,34 +447,11 @@ public class RoleRepositoryTest extends TestCase {
     }
 
     /**
-     * Tests that adding a role that does not inherit from RoleImpl does not work and yields an exception.
-     */
-    public void testRemoveRoleWithInvalidRoleFail() {
-        try {
-            m_roleManager.removeRole(new Role() {
-                public String getName() {
-                    return "A User";
-                }
-                public Dictionary getProperties() {
-                    return new Properties();
-                }
-                public int getType() {
-                    return Role.USER;
-                }
-            });
-            
-            fail("Exception expected!");
-        } catch (IllegalArgumentException e) {
-            // Ok; expected
-        }
-    }
-
-    /**
      * Tests that removing a null-role does not work and yields an exception.
      */
     public void testRemoveRoleWithNullRoleFail() {
         try {
-            m_roleManager.removeRole(null);
+            m_roleRepository.removeRole(null);
             
             fail("Exception expected!");
         } catch (IllegalArgumentException e) {
@@ -497,7 +463,7 @@ public class RoleRepositoryTest extends TestCase {
      * Tests whether removing a credential from a user causes an event to be emitted to the {@link RoleRepository}.
      */
     public void testRemoveUserCredentialYieldsEventOk() throws Exception {
-        final UserImpl role = (UserImpl) m_roleManager.addRole(new UserImpl("john.doe"));
+        final User role = (User) m_roleRepository.addRole("john.doe", Role.USER);
         role.getCredentials().put("key", "value");
         
         m_latch = new CountDownLatch(1);
@@ -517,8 +483,8 @@ public class RoleRepositoryTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        m_roleManager = new RoleRepository(new MemoryRoleRepositoryStore());
-        m_roleManager.addRoleChangeListener(new RoleChangeListener() {
+        m_roleRepository = new RoleRepository(new MemoryRoleRepositoryStore());
+        m_roleRepository.addRoleChangeListener(new RoleChangeListener() {
             public void propertyAdded(Role role, Object key, Object value) {
                 if (m_latch != null) {
                     m_latch.countDown();
@@ -549,8 +515,6 @@ public class RoleRepositoryTest extends TestCase {
                 }
             }
         });
-        
-        m_roleManager.start();
     }
 
     /**

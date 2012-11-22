@@ -16,12 +16,16 @@
  */
 package org.apache.felix.useradmin.filestore;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.felix.useradmin.RoleFactory;
 import org.apache.felix.useradmin.RoleRepositoryStore;
+import org.osgi.framework.Filter;
 import org.osgi.service.useradmin.Role;
 
 
@@ -32,39 +36,44 @@ public class RoleRepositoryMemoryStore implements RoleRepositoryStore {
     
     protected final ConcurrentMap m_entries = new ConcurrentHashMap();
 
-    public boolean addRole(Role role) throws IOException {
-        if (role == null) {
-            throw new IllegalArgumentException("Role cannot be null!");
+    public Role addRole(String roleName, int type) {
+        if (roleName == null) {
+            throw new IllegalArgumentException("Name cannot be null!");
         }
-        Object result = m_entries.putIfAbsent(role.getName(), role);
-        return result == null;
+        Role role = RoleFactory.createRole(type, roleName);
+        Object result = m_entries.putIfAbsent(roleName, role);
+        return (result == null) ? role : null;
     }
 
-    public void close() throws IOException {
-        // Nop
-    }
-
-    public Role[] getAllRoles() throws IOException {
+    public Role[] getRoles(Filter filter) {
         Collection roles = m_entries.values();
-        Role[] result = new Role[roles.size()];
-        return (Role[]) roles.toArray(result);
+        
+        List matchingRoles = new ArrayList();
+        Iterator rolesIter = roles.iterator();
+        while (rolesIter.hasNext()) {
+            Role role = (Role) rolesIter.next();
+            if ((filter == null) || filter.match(role.getProperties())) {
+                matchingRoles.add(role);
+            }
+        }
+
+        Role[] result = new Role[matchingRoles.size()];
+        return (Role[]) matchingRoles.toArray(result);
     }
 
-    public Role getRoleByName(String roleName) throws IOException {
+    public Role getRoleByName(String roleName) {
         if (roleName == null) {
             throw new IllegalArgumentException("Role name cannot be null!");
         }
         return (Role) m_entries.get(roleName);
     }
-    
-    public void initialize() throws IOException {
-        // Nop
-    }
 
-    public boolean removeRole(Role role) throws IOException {
-        if (role == null) {
-            throw new IllegalArgumentException("Role cannot be null!");
+    public Role removeRole(String roleName) {
+        if (roleName == null) {
+            throw new IllegalArgumentException("Name cannot be null!");
         }
-        return m_entries.remove(role.getName(), role);
+        Role role = getRoleByName(roleName);
+        boolean result = m_entries.remove(roleName, role);
+        return result ? role : null;
     }
 }

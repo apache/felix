@@ -19,13 +19,13 @@ package org.apache.felix.useradmin.mongodb;
 import static org.apache.felix.useradmin.mongodb.MongoSerializerHelper.NAME;
 import static org.apache.felix.useradmin.mongodb.MongoSerializerHelper.TYPE;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.useradmin.RoleRepositoryStore;
+import org.osgi.framework.Filter;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
@@ -124,71 +124,57 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
     }
 
     @Override
-    public boolean addRole(Role role) throws IOException {
-        if (role == null) {
+    public Role addRole(String roleName, int type) throws MongoException {
+        if (roleName == null) {
             throw new IllegalArgumentException("Role cannot be null!");
         }
         
-        try {
-            DBCollection coll = getCollection();
-            
-            DBCursor cursor = coll.find(getTemplateObject(role));
-            try {
-                if (cursor.hasNext()) {
-                    // Role already exists...
-                    return false;
-                }
-            } finally {
-                cursor.close();
-            }
-            
-            // Role does not exist; insert it...
-            DBObject data = m_helper.serialize(role);
-            
-            WriteResult result = coll.insert(data);
-            
-            if (result.getLastError() != null) {
-                result.getLastError().throwOnError();
-            }
+        DBCollection coll = getCollection();
 
-            return true;
+        Role role = getRole(roleName);
+        if (role != null) {
+            return null;
         }
-        catch (MongoException e) {
-            m_log.log(LogService.LOG_WARNING, "Add role failed!", e);
-            throw new IOException("AddRole failed!", e);
+
+        // Role does not exist; insert it...
+        DBObject data = m_helper.serialize(roleName, type);
+
+        WriteResult result = coll.insert(data);
+        
+        if (result.getLastError() != null) {
+            result.getLastError().throwOnError();
         }
+
+        return role;
     }
 
-    @Override
-    public void close() throws IOException {
+    /**
+     * Closes this store and disconnects from the MongoDB backend.
+     */
+    public void close() {
         MongoDB mongoDB = m_mongoDbRef.get();
         if (mongoDB != null) {
             mongoDB.disconnect();
         }
+        m_mongoDbRef.set(null);
     }
 
     @Override
-    public Role[] getAllRoles() throws IOException {
+    public Role[] getRoles(Filter filter) throws MongoException {
+        List<Role> roles = new ArrayList<Role>();
+        
+        DBCollection coll = getCollection();
+
+        DBCursor cursor = coll.find();
         try {
-            List<Role> roles = new ArrayList<Role>();
-            
-            DBCollection coll = getCollection();
-
-            DBCursor cursor = coll.find();
-            try {
-                while (cursor.hasNext()) {
-                    roles.add(m_helper.deserialize(cursor.next()));
-                }
-            } finally {
-                cursor.close();
+            while (cursor.hasNext()) {
+                roles.add(m_helper.deserialize(cursor.next()));
             }
+        } finally {
+            cursor.close();
+        }
 
-            return roles.toArray(new Role[roles.size()]);
-        }
-        catch (MongoException e) {
-            m_log.log(LogService.LOG_WARNING, "Get all roles failed!", e);
-            throw new IOException("GetAllRoles failed!", e);
-        }
+        return roles.toArray(new Role[roles.size()]);
     }
 
     @Override
@@ -208,56 +194,26 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
     }
 
     @Override
-    public Role getRoleByName(String name) throws IOException {
-        try {
-            return getRole(name);
-        }
-        catch (MongoException e) {
-            m_log.log(LogService.LOG_WARNING, "Get role by name failed!", e);
-            throw new IOException("GetRoleByName failed!", e);
-        }
-    }
-    
-    @Override
-    public void initialize() throws IOException {
-        // Check whether we need to connect to MongoDB, or that this is
-        // already done by the #updated method...
-        MongoDB oldMongoDB = m_mongoDbRef.get();
-        if (oldMongoDB == null) {
-            MongoDB mongoDB = new MongoDB(DEFAULT_MONGODB_SERVER, DEFAULT_MONGODB_DBNAME, DEFAULT_MONGODB_COLLECTION);
-            
-            do {
-                oldMongoDB = m_mongoDbRef.get();
-            } 
-            while (!m_mongoDbRef.compareAndSet(oldMongoDB, mongoDB));
-            
-            try {
-                connectToDB(mongoDB, DEFAULT_MONGODB_USERNAME, DEFAULT_MONGODB_PASSWORD);
-            }
-            catch (MongoException e) {
-                m_log.log(LogService.LOG_WARNING, "Initialization failed!", e);
-                throw new IOException("Initialization failed!", e);
-            }
-        }
+    public Role getRoleByName(String name) throws MongoException {
+        return getRole(name);
     }
 
     @Override
-    public boolean removeRole(Role role) throws IOException {
-        try {
-            DBCollection coll = getCollection();
-
-            WriteResult result = coll.remove(getTemplateObject(role));
-
-            if (result.getLastError() != null) {
-                result.getLastError().throwOnError();
-            }
-
-            return true;
+    public Role removeRole(String roleName) throws MongoException {
+        DBCollection coll = getCollection();
+        
+        Role role = getRole(roleName);
+        if (role == null) {
+            return null;
         }
-        catch (MongoException e) {
-            m_log.log(LogService.LOG_WARNING, "Remove role failed!", e);
-            throw new IOException("RemoveRole failed!", e);
+
+        WriteResult result = coll.remove(getTemplateObject(role));
+
+        if (result.getLastError() != null) {
+            result.getLastError().throwOnError();
         }
+
+        return role;
     }
     
     @Override
@@ -394,8 +350,8 @@ public class MongoDBStore implements RoleProvider, RoleRepositoryStore, UserAdmi
      */
     private DBObject getTemplateObject(Role role) {
         BasicDBObject query = new BasicDBObject();
-        query.put(TYPE, role.getType());
         query.put(NAME, role.getName());
+        query.put(TYPE, role.getType());
         return query;
     }
     

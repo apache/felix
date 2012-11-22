@@ -16,12 +16,9 @@
  */
 package org.apache.felix.useradmin.osgi;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.felix.useradmin.RoleRepositoryStore;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Filter;
 import org.osgi.service.useradmin.Role;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -34,8 +31,6 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 class RoleRepositoryStoreHelper extends ServiceTracker implements RoleRepositoryStore {
 	
-	private final AtomicBoolean m_initialized = new AtomicBoolean(false);
-    
     /**
      * Creates a new {@link RoleRepositoryStoreHelper} instance.
      * 
@@ -45,50 +40,25 @@ class RoleRepositoryStoreHelper extends ServiceTracker implements RoleRepository
         super(context, RoleRepositoryStore.class.getName(), null /* customizer */);
     }
 
-    public Object addingService(ServiceReference reference) {
-    	// FELIX-3735: store can also become available *after* this bundle is started...
-    	RoleRepositoryStore store = (RoleRepositoryStore) super.addingService(reference);
-    	try {
-    		initializeStore(store);
-		} catch (IOException e) {
-            // Ignore; nothing we can do about this here...
-		}
-    	return store;
-    }
-    
-    public boolean addRole(Role role) throws IOException {
+    public Role addRole(String roleName, int type) throws Exception {
         RoleRepositoryStore store = getStore();
         if (store != null) {
-            return store.addRole(role);
+            return store.addRole(roleName, type);
         }
 
-        return false;
-    }
-    
-    public synchronized void close() {
-        try {
-            RoleRepositoryStore store = getStore();
-            if (store != null) {
-                closeStore(store);
-            }
-        }
-        catch (IOException e) {
-            // Ignore; nothing we can do about this here...
-        } finally {
-            super.close();
-        }
+        return null;
     }
 
-    public Role[] getAllRoles() throws IOException {
+    public Role[] getRoles(Filter filter) throws Exception {
         RoleRepositoryStore store = getStore();
         if (store != null) {
-            return store.getAllRoles();
+            return store.getRoles(filter);
         }
 
         return new Role[0];
     }
 
-    public Role getRoleByName(String roleName) throws IOException {
+    public Role getRoleByName(String roleName) throws Exception {
         RoleRepositoryStore store = getStore();
         if (store != null) {
             return store.getRoleByName(roleName);
@@ -96,33 +66,15 @@ class RoleRepositoryStoreHelper extends ServiceTracker implements RoleRepository
 
         return null;
     }
-    
-    public void initialize() throws IOException {
-        RoleRepositoryStore store = getStore();
-        if (store != null) {
-        	initializeStore(store);
-        }
-    }
 
-    public void removedService(ServiceReference reference, Object service) {
-        RoleRepositoryStore removedStore = (RoleRepositoryStore) service;
-        try {
-        	closeStore(removedStore);
-        }
-        catch (IOException e) {
-            // Ignore; nothing we can do about this here...
-        }
-        super.removedService(reference, service);
-    }
-
-    public boolean removeRole(Role role) throws IOException {
+    public Role removeRole(String roleName) throws Exception {
         // and possibly also from our tracked store...
         RoleRepositoryStore store = getStore();
         if (store != null) {
-            return store.removeRole(role);
+            return store.removeRole(roleName);
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -133,41 +85,4 @@ class RoleRepositoryStoreHelper extends ServiceTracker implements RoleRepository
     private RoleRepositoryStore getStore() {
         return (RoleRepositoryStore) getService();
     }
-
-	/**
-	 * Closes the given store.
-	 * 
-	 * @param store the store to close, cannot be <code>null</code>.
-	 * @throws IOException in case initialization failed.
-	 */
-	private void closeStore(RoleRepositoryStore store) throws IOException {
-		// Only close the store if its initialized...
-		boolean initialized = m_initialized.get();
-		if (initialized) {
-			store.close();
-
-			do {
-				initialized = m_initialized.get();
-			} while (!m_initialized.compareAndSet(initialized, false));
-		}
-	}
-
-	/**
-	 * Initializes the given store.
-	 * 
-	 * @param store the store to initialize, cannot be <code>null</code>.
-	 * @throws IOException in case initialization failed.
-	 */
-	private void initializeStore(RoleRepositoryStore store) throws IOException {
-		// FELIX-3735: store can also become available *after* this bundle is started; 
-		// hence we need to ensure we do not initialize the store twice...
-		boolean initialized = m_initialized.get();
-		if (!initialized) {
-			store.initialize();
-
-			do {
-				initialized = m_initialized.get();
-			} while (!m_initialized.compareAndSet(initialized, true));
-		}
-	}
 }

@@ -16,12 +16,12 @@
  */
 package org.apache.felix.useradmin.impl;
 
-import org.apache.felix.useradmin.impl.RoleChecker;
-import org.apache.felix.useradmin.impl.RoleRepository;
-import org.apache.felix.useradmin.impl.role.GroupImpl;
-import org.apache.felix.useradmin.impl.role.UserImpl;
-
 import junit.framework.TestCase;
+
+import org.apache.felix.useradmin.RoleFactory;
+import org.osgi.service.useradmin.Group;
+import org.osgi.service.useradmin.Role;
+import org.osgi.service.useradmin.User;
 
 
 /**
@@ -30,12 +30,13 @@ import junit.framework.TestCase;
 public class RoleCheckerTest extends TestCase {
     
     private RoleChecker m_roleChecker;
+    private Role m_anyone;
 
     /**
      * Tests that a user always implies itself.
      */
     public void testUserAlwaysImpliesItself() {
-        UserImpl user = new UserImpl("foo");
+        User user = RoleFactory.createUser("foo");
         
         assertTrue(m_roleChecker.isImpliedBy(user, user));
     }
@@ -44,8 +45,8 @@ public class RoleCheckerTest extends TestCase {
      * Test that a user does never imply a group to which it is not a member.
      */
     public void testUserDoesNotImplyNotImpliedGroup() {
-        UserImpl user = new UserImpl("foo");
-        GroupImpl group = new GroupImpl("bar");
+        User user = RoleFactory.createUser("foo");
+        Group group = RoleFactory.createGroup("bar");
         
         assertFalse(m_roleChecker.isImpliedBy(user, group));
     }
@@ -54,10 +55,10 @@ public class RoleCheckerTest extends TestCase {
      * Test that a user does never imply a group to which it is not a member.
      */
     public void testUserImpliesImpliedGroup() {
-        UserImpl user = new UserImpl("foo");
+        User user = RoleFactory.createUser("foo");
         
-        GroupImpl group = new GroupImpl("bar");
-        group.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group group = RoleFactory.createGroup("bar");
+        group.addRequiredMember(m_anyone);
         group.addMember(user);
 
         assertTrue(m_roleChecker.isImpliedBy(group, user));
@@ -67,9 +68,9 @@ public class RoleCheckerTest extends TestCase {
      * Test that a user does never imply a group to which it is not a member.
      */
     public void testGroupDoesNotImplyNotImpliedUser() {
-        UserImpl user = new UserImpl("foo");
+        User user = RoleFactory.createUser("foo");
         
-        GroupImpl group = new GroupImpl("bar");
+        Group group = RoleFactory.createGroup("bar");
         group.addMember(user);
         
         assertFalse(m_roleChecker.isImpliedBy(user, group));
@@ -79,9 +80,9 @@ public class RoleCheckerTest extends TestCase {
      * Test that a group does never imply a group to which it is a required member.
      */
     public void testGroupDoesNotImplySameRequiredGroup() {
-        UserImpl user = new UserImpl("foo");
+        User user = RoleFactory.createUser("foo");
         
-        GroupImpl group = new GroupImpl("bar");
+        Group group = RoleFactory.createGroup("bar");
         group.addRequiredMember(group);
         group.addMember(user);
         
@@ -92,9 +93,9 @@ public class RoleCheckerTest extends TestCase {
      * Test that a group does never imply a group to which it is a basic member.
      */
     public void testGroupDoesNotImplySameGroup() {
-        UserImpl user = new UserImpl("foo");
+        User user = RoleFactory.createUser("foo");
         
-        GroupImpl group = new GroupImpl("bar");
+        Group group = RoleFactory.createGroup("bar");
         group.addMember(group);
         group.addMember(user);
         
@@ -105,25 +106,25 @@ public class RoleCheckerTest extends TestCase {
      * Test that a membership can be implied for users belonging to multiple required groups.
      */
     public void testRequiredRolesMultipleRequiredGroupsOk() {
-        UserImpl elmer = new UserImpl("elmer");
-        UserImpl pepe = new UserImpl("pepe");
-        UserImpl bugs = new UserImpl("bugs");
-        UserImpl daffy = new UserImpl("daffy");
+        User elmer = RoleFactory.createUser("elmer");
+        User pepe = RoleFactory.createUser("pepe");
+        User bugs = RoleFactory.createUser("bugs");
+        User daffy = RoleFactory.createUser("daffy");
         
-        GroupImpl administrators = new GroupImpl("administrators");
-        administrators.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group administrators = RoleFactory.createGroup("administrators");
+        administrators.addRequiredMember(m_anyone);
         administrators.addMember(elmer);
         administrators.addMember(pepe);
         administrators.addMember(bugs);
 
-        GroupImpl family = new GroupImpl("family");
-        family.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group family = RoleFactory.createGroup("family");
+        family.addRequiredMember(m_anyone);
         family.addMember(elmer);
         family.addMember(pepe);
         family.addMember(daffy);
 
-        GroupImpl alarmSystemActivation = new GroupImpl("alarmSystemActivation");
-        alarmSystemActivation.addMember(RoleRepository.USER_ANYONE);
+        Group alarmSystemActivation = RoleFactory.createGroup("alarmSystemActivation");
+        alarmSystemActivation.addMember(m_anyone);
         alarmSystemActivation.addRequiredMember(administrators);
         alarmSystemActivation.addRequiredMember(family);
 
@@ -137,25 +138,25 @@ public class RoleCheckerTest extends TestCase {
      * Test that a membership can be implied for users belonging to multiple non-required groups.
      */
     public void testRequiredRolesMultipleGroupsOk() {
-        UserImpl elmer = new UserImpl("elmer");
-        UserImpl pepe = new UserImpl("pepe");
-        UserImpl bugs = new UserImpl("bugs");
-        UserImpl daffy = new UserImpl("daffy");
+        User elmer = RoleFactory.createUser("elmer");
+        User pepe = RoleFactory.createUser("pepe");
+        User bugs = RoleFactory.createUser("bugs");
+        User daffy = RoleFactory.createUser("daffy");
         
-        GroupImpl administrators = new GroupImpl("administrators");
-        administrators.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group administrators = RoleFactory.createGroup("administrators");
+        administrators.addRequiredMember(m_anyone);
         administrators.addMember(elmer);
         administrators.addMember(pepe);
         administrators.addMember(bugs);
 
-        GroupImpl family = new GroupImpl("family");
-        family.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group family = RoleFactory.createGroup("family");
+        family.addRequiredMember(m_anyone);
         family.addMember(elmer);
         family.addMember(pepe);
         family.addMember(daffy);
 
-        GroupImpl alarmSystemActivation = new GroupImpl("alarmSystemActivation");
-        alarmSystemActivation.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group alarmSystemActivation = RoleFactory.createGroup("alarmSystemActivation");
+        alarmSystemActivation.addRequiredMember(m_anyone);
         alarmSystemActivation.addMember(administrators);
         alarmSystemActivation.addMember(family);
 
@@ -169,33 +170,33 @@ public class RoleCheckerTest extends TestCase {
      * Test that a membership can be implied for users belonging to multiple non-required groups.
      */
     public void testVotersRequiredMembersOk() {
-        GroupImpl citizens = new GroupImpl("citizen");
-        citizens.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group citizens = RoleFactory.createGroup("citizen");
+        citizens.addRequiredMember(m_anyone);
         
-        GroupImpl adults = new GroupImpl("adult");
-        adults.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group adults = RoleFactory.createGroup("adult");
+        adults.addRequiredMember(m_anyone);
         
-        GroupImpl voters = new GroupImpl("voter");
+        Group voters = RoleFactory.createGroup("voter");
         voters.addRequiredMember(citizens);
         voters.addRequiredMember(adults);
-        voters.addMember(RoleRepository.USER_ANYONE);
+        voters.addMember(m_anyone);
         
         
         // Elmer belongs to the citizens and adults...
-        UserImpl elmer = new UserImpl("elmer");
+        User elmer = RoleFactory.createUser("elmer");
         citizens.addMember(elmer);
         adults.addMember(elmer);
         
         // Pepe belongs to the citizens, but is not an adult...
-        UserImpl pepe = new UserImpl("pepe");
+        User pepe = RoleFactory.createUser("pepe");
         citizens.addMember(pepe);
         
         // Bugs is an adult, but is not a citizen...
-        UserImpl bugs = new UserImpl("bugs");
+        User bugs = RoleFactory.createUser("bugs");
         adults.addMember(bugs);
         
         // Daffy is not an adult, neither a citizen...
-        UserImpl daffy = new UserImpl("daffy");
+        User daffy = RoleFactory.createUser("daffy");
 
         assertTrue(m_roleChecker.isImpliedBy(voters, elmer));
         assertFalse(m_roleChecker.isImpliedBy(voters, pepe));
@@ -209,6 +210,8 @@ public class RoleCheckerTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         
+        m_anyone = RoleFactory.createRole(Role.USER_ANYONE);
+
         m_roleChecker = new RoleChecker();
     }
 }

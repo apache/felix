@@ -17,10 +17,14 @@
 package org.apache.felix.useradmin.impl.role;
 
 import java.util.Dictionary;
+import java.util.Properties;
 
 /**
  * Provides an stricter variant of the {@link ObservableDictionary} that only 
  * permits string keys and values of either String or byte[]. 
+ * <p>
+ * This class is <b>not</b> guaranteed to be thread-safe!
+ * </p>
  */
 final class ObservableProperties extends ObservableDictionary {
 
@@ -30,7 +34,7 @@ final class ObservableProperties extends ObservableDictionary {
      * Creates a new, empty, {@link ObservableProperties} instance.
      */
     public ObservableProperties(String getAction, String changeAction) {
-        super(getAction, changeAction);
+        this(getAction, changeAction, new Properties());
     }
 
     /**

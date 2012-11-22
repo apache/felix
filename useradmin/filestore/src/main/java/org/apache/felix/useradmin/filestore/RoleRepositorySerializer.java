@@ -161,6 +161,23 @@ final class RoleRepositorySerializer {
     }
 
     /**
+     * Returns the role with the given name from the given repository.
+     * 
+     * @param repository the repository to obtain the roles from, cannot be <code>null</code>;
+     * @param name the name of the role to retrieve, cannot be <code>null</code>.
+     * @return a role matching the given name, or <code>null</code> if no such role exists.
+     */
+    private Role getRoleFromRepository(Map repository, String name) {
+        Role role;
+        if (Role.USER_ANYONE.equals(name)) {
+            role = RoleFactory.createRole(Role.USER_ANYONE);
+        } else {
+            role = (Role) repository.get(name);
+        }
+        return role;
+    }
+    
+    /**
      * Reads and fills a given dictionary.
      * 
      * @param dict the dictionary to read & fill, cannot be <code>null</code>;
@@ -188,7 +205,7 @@ final class RoleRepositorySerializer {
             }
         }
     }
-    
+
     /**
      * Reads a (stub) group from the given input stream.
      * 
@@ -254,7 +271,7 @@ final class RoleRepositorySerializer {
         
         return repository;
     }
-
+    
     /**
      * Reads a role from the given input stream.
      * 
@@ -269,7 +286,7 @@ final class RoleRepositorySerializer {
         
         return role;
     }
-    
+
     /**
      * Reads a user from the given input stream.
      * 
@@ -300,7 +317,7 @@ final class RoleRepositorySerializer {
 
         for (int i = 0; i < size; i++) {
             String name = (String) names.get(i);
-            Role role = (Role) repository.get(name);
+            Role role = getRoleFromRepository(repository, name);
             if (role == null) {
                 throw new IOException("Unable to find referenced basic member: " + name);
             }
@@ -312,7 +329,7 @@ final class RoleRepositorySerializer {
         
         for (int i = 0; i < size; i++) {
             String name = (String) names.get(i);
-            Role role = (Role) repository.get(name);
+            Role role = getRoleFromRepository(repository, name);
             if (role == null) {
                 throw new IOException("Unable to find referenced required member: " + name);
             }

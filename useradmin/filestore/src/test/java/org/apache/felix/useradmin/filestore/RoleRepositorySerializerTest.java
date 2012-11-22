@@ -31,9 +31,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.useradmin.impl.RoleRepository;
-import org.apache.felix.useradmin.impl.role.GroupImpl;
-import org.apache.felix.useradmin.impl.role.UserImpl;
+import org.apache.felix.useradmin.RoleFactory;
 import org.osgi.service.useradmin.Group;
 import org.osgi.service.useradmin.Role;
 import org.osgi.service.useradmin.User;
@@ -70,7 +68,6 @@ public class RoleRepositorySerializerTest extends TestCase {
         m_group3.addMember(m_user4);
         m_group3.addRequiredMember(m_userAnyone);
         
-        addToRepository(m_userAnyone);
         addToRepository(m_user1);
         addToRepository(m_user2);
         addToRepository(m_user3);
@@ -90,8 +87,7 @@ public class RoleRepositorySerializerTest extends TestCase {
         Map result = m_serializer.deserialize(dis);
         assertNotNull(result);
 
-        assertEquals(8, result.size());
-        assertEquals(m_userAnyone, (Role) result.get(m_userAnyone.getName()));
+        assertEquals(7, result.size());
         assertEquals(m_user1, (User) result.get(m_user1.getName()));
         assertEquals(m_user2, (User) result.get(m_user2.getName()));
         assertEquals(m_user3, (User) result.get(m_user3.getName()));
@@ -124,11 +120,9 @@ public class RoleRepositorySerializerTest extends TestCase {
     }
 
     /**
-     * Tests that writing and reading a repository with a single role works as expected.
+     * Tests that writing and reading a repository without roles works as expected.
      */
-    public void testRWRepositoryWithSingleRoleOk() throws Exception {
-        addToRepository(m_userAnyone);
-        
+    public void testRWRepositoryWithoutRolesOk() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         
@@ -140,9 +134,7 @@ public class RoleRepositorySerializerTest extends TestCase {
         Map result = m_serializer.deserialize(dis);
         assertNotNull(result);
         
-        assertEquals(1, result.size());
-
-        assertEquals(m_userAnyone, (Role) result.get(m_userAnyone.getName()));
+        assertEquals(0, result.size());
     }
 
     /**
@@ -226,8 +218,7 @@ public class RoleRepositorySerializerTest extends TestCase {
         m_group1.addMember(m_userAnyone);
         m_group1.addRequiredMember(m_user1);
 
-        // "Forget" to add the user.anyone!
-        addToRepository(m_user1);
+        // "Forget" to add the user1
         addToRepository(m_group1);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -254,8 +245,7 @@ public class RoleRepositorySerializerTest extends TestCase {
         m_group1.addRequiredMember(m_userAnyone);
         m_group1.addMember(m_user1);
         
-        // "Forget" to add the user.anyone!
-        addToRepository(m_user1);
+        // "Forget" to add the user1!
         addToRepository(m_group1);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -285,7 +275,7 @@ public class RoleRepositorySerializerTest extends TestCase {
 
         m_repository = new HashMap();
 
-        m_userAnyone = RoleRepository.USER_ANYONE;
+        m_userAnyone = RoleFactory.createRole(Role.USER_ANYONE);
         
         setProperties(m_userAnyone);
         
@@ -307,7 +297,9 @@ public class RoleRepositorySerializerTest extends TestCase {
     }
     
     private void addToRepository(Role role) {
-        m_repository.put(role.getName(), role);
+        if (!Role.USER_ANYONE.equals(role.getName())) {
+            m_repository.put(role.getName(), role);
+        }
     }
     
     private void assertEquals(Dictionary expected, Dictionary obtained) {
@@ -380,7 +372,7 @@ public class RoleRepositorySerializerTest extends TestCase {
     private User createUser(int idx) {
         String name = "User" + idx;
         
-        User result = new UserImpl(name);
+        User result = RoleFactory.createUser(name);
 
         setCredentials(result);
         setProperties(result);
@@ -391,7 +383,7 @@ public class RoleRepositorySerializerTest extends TestCase {
     private Group createGroup(int idx) {
         String name = "Group" + idx;
         
-        Group result = new GroupImpl(name);
+        Group result = RoleFactory.createGroup(name);
 
         setCredentials(result);
         setProperties(result);

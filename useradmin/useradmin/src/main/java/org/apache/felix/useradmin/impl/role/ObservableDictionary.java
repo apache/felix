@@ -17,13 +17,9 @@
 package org.apache.felix.useradmin.impl.role;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Hashtable;
 
 import org.osgi.service.useradmin.UserAdminPermission;
 
@@ -31,10 +27,13 @@ import org.osgi.service.useradmin.UserAdminPermission;
  * Provides an observable {@link Dictionary} implementation that emits change 
  * events for the put and remove operations aside checking for security 
  * permissions for all accessor methods.
+ * <p>
+ * This class is <b>not</b> guaranteed to be thread-safe!
+ * </p>
  */
 class ObservableDictionary extends Dictionary implements Serializable {
 
-    private static final long serialVersionUID = 9223154895541178975L;
+    private static final long serialVersionUID = 3161552287666253189L;
 
     /**
      * Provides a listener for changes to a {@link ObservableDictionary}.
@@ -66,58 +65,7 @@ class ObservableDictionary extends Dictionary implements Serializable {
         void entryRemoved(Object key);
     }
 
-    /**
-     * Provides a wrapper to convert an {@link Iterator} to an {@link Enumeration} implementation.
-     */
-    static final class IteratorEnumeration implements Enumeration {
-        
-        private final Iterator m_iterator;
-
-        /**
-         * Creates a new {@link IteratorEnumeration}.
-         * 
-         * @param iterator the {@link Iterator} to convert to a {@link Enumeration}, cannot be <code>null</code>.
-         */
-        public IteratorEnumeration(Iterator iterator) {
-            m_iterator = iterator;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public boolean hasMoreElements() {
-            return m_iterator.hasNext();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public Object nextElement() {
-            return m_iterator.next();
-        }
-    }
-    
-    /**
-     * Converts a given {@link Dictionary} implementation to a {@link Map} implementation.
-     * 
-     * @param dictionary the dictionary to convert, cannot be <code>null</code>.
-     * @return a {@link Map} instance with all the same key-value pairs as the given dictionary, never <code>null</code>.
-     */
-    private static ConcurrentMap convertToMap(Dictionary dictionary) {
-        ConcurrentMap result = new ConcurrentHashMap();
-        if (dictionary instanceof Map) {
-            result.putAll((Map) dictionary);
-        } else {
-            Enumeration keyEnum = dictionary.keys();
-            while (keyEnum.hasMoreElements()) {
-                Object key = keyEnum.nextElement();
-                result.put(key, dictionary.get(key));
-            }
-        }
-        return result;
-    }
-    
-    private final ConcurrentMap m_properties;
+    private final Dictionary m_dictionary;
     private final String m_getAction;
     private final String m_changeAction;
 
@@ -127,9 +75,7 @@ class ObservableDictionary extends Dictionary implements Serializable {
      * Creates a new, empty, {@link ObservableDictionary} instance.
      */
     public ObservableDictionary(String getAction, String changeAction) {
-        m_getAction = getAction;
-        m_changeAction = changeAction;
-        m_properties = new ConcurrentHashMap();
+        this(getAction, changeAction, new Hashtable());
     }
 
     /**
@@ -143,15 +89,14 @@ class ObservableDictionary extends Dictionary implements Serializable {
         }
         m_getAction = getAction;
         m_changeAction = changeAction;
-        m_properties = convertToMap(dictionary);
+        m_dictionary = dictionary;
     }
 
     /**
      * {@inheritDoc}
      */
     public Enumeration elements() {
-        Collection values = m_properties.values();
-        return new IteratorEnumeration(values.iterator());
+        return m_dictionary.elements();
     }
 
     /**
@@ -166,11 +111,11 @@ class ObservableDictionary extends Dictionary implements Serializable {
         }
 
         ObservableDictionary other = (ObservableDictionary) object;
-        if (m_properties == null) {
-            if (other.m_properties != null) {
+        if (m_dictionary == null) {
+            if (other.m_dictionary != null) {
                 return false;
             }
-        } else if (!m_properties.equals(other.m_properties)) {
+        } else if (!m_dictionary.equals(other.m_dictionary)) {
             return false;
         }
 
@@ -189,7 +134,7 @@ class ObservableDictionary extends Dictionary implements Serializable {
             checkPermissions(getAsPermissionKey(key), m_getAction);
         }
 
-        return m_properties.get(key);
+        return m_dictionary.get(key);
     }
 
     /**
@@ -198,7 +143,7 @@ class ObservableDictionary extends Dictionary implements Serializable {
     public int hashCode() {
         final int prime = 37;
         int result = 1;
-        result = prime * result + ((m_properties == null) ? 0 : m_properties.hashCode());
+        result = prime * result + ((m_dictionary == null) ? 0 : m_dictionary.hashCode());
         return result;
     }
 
@@ -206,15 +151,14 @@ class ObservableDictionary extends Dictionary implements Serializable {
      * {@inheritDoc}
      */
     public boolean isEmpty() {
-        return m_properties.isEmpty();
+        return m_dictionary.isEmpty();
     }
 
     /**
      * {@inheritDoc}
      */
     public Enumeration keys() {
-        Collection keys = m_properties.keySet();
-        return new IteratorEnumeration(keys.iterator());
+        return m_dictionary.keys();
     }
 
     /**
@@ -232,7 +176,7 @@ class ObservableDictionary extends Dictionary implements Serializable {
             checkPermissions(getAsPermissionKey(key), m_changeAction);
         }
 
-        Object oldValue = m_properties.put(key, value);
+        Object oldValue = m_dictionary.put(key, value);
         
         final DictionaryChangeListener listener = m_listener;
         if (listener != null) {
@@ -258,7 +202,7 @@ class ObservableDictionary extends Dictionary implements Serializable {
             checkPermissions(getAsPermissionKey(key), m_changeAction);
         }
 
-        Object oldValue = m_properties.remove(key);
+        Object oldValue = m_dictionary.remove(key);
         final DictionaryChangeListener listener = m_listener;
         if (listener != null) {
             listener.entryRemoved(key);
@@ -280,7 +224,7 @@ class ObservableDictionary extends Dictionary implements Serializable {
      * {@inheritDoc}
      */
     public int size() {
-        return m_properties.size();
+        return m_dictionary.size();
     }
 
     /**

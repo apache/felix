@@ -22,16 +22,18 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.useradmin.impl.role.GroupImpl;
-import org.apache.felix.useradmin.impl.role.UserImpl;
+import org.apache.felix.useradmin.RoleFactory;
 import org.osgi.service.useradmin.Group;
+import org.osgi.service.useradmin.Role;
+import org.osgi.service.useradmin.User;
 
 /**
  * Test cases for {@link AuthorizationImpl}.
  */
 public class AuthorizationImplTest extends TestCase {
 
-    private RoleRepository m_roleManager;
+    private RoleRepository m_roleRepository;
+    private Role m_anyone;
 
     /**
      * {@inheritDoc}
@@ -39,7 +41,9 @@ public class AuthorizationImplTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        m_roleManager = new RoleRepository(new MemoryRoleRepositoryStore());
+        m_roleRepository = new RoleRepository(new MemoryRoleRepositoryStore());
+        
+        m_anyone = m_roleRepository.getRoleByName(Role.USER_ANYONE);
     }
     
     /**
@@ -62,26 +66,26 @@ public class AuthorizationImplTest extends TestCase {
         Group residents = createGroup("Residents");
         
         // Users
-        UserImpl elmer = new UserImpl("Elmer");
-        UserImpl fudd = new UserImpl("Fudd");
-        UserImpl marvin = new UserImpl("Marvin");
-        UserImpl pepe = new UserImpl("Pepe");
-        UserImpl daffy = new UserImpl("Daffy");
-        UserImpl foghorn = new UserImpl("Foghorn");
+        User elmer = RoleFactory.createUser("Elmer");
+        User fudd = RoleFactory.createUser("Fudd");
+        User marvin = RoleFactory.createUser("Marvin");
+        User pepe = RoleFactory.createUser("Pepe");
+        User daffy =RoleFactory.createUser("Daffy");
+        User foghorn = RoleFactory.createUser("Foghorn");
         
         // Not explicitly mentioned; but needed to comply with the semantics
-        alarmSystemControl.addRequiredMember(RoleRepository.USER_ANYONE);
-        internetAccess.addRequiredMember(RoleRepository.USER_ANYONE);
-        temperatureControl.addRequiredMember(RoleRepository.USER_ANYONE);
-        photoAlbumEdit.addRequiredMember(RoleRepository.USER_ANYONE);
-        photoAlbumView.addRequiredMember(RoleRepository.USER_ANYONE);
-        portForwarding.addRequiredMember(RoleRepository.USER_ANYONE);
+        alarmSystemControl.addRequiredMember(m_anyone);
+        internetAccess.addRequiredMember(m_anyone);
+        temperatureControl.addRequiredMember(m_anyone);
+        photoAlbumEdit.addRequiredMember(m_anyone);
+        photoAlbumView.addRequiredMember(m_anyone);
+        portForwarding.addRequiredMember(m_anyone);
 
-        administrators.addRequiredMember(RoleRepository.USER_ANYONE);
-        buddies.addRequiredMember(RoleRepository.USER_ANYONE);
-        children.addRequiredMember(RoleRepository.USER_ANYONE);
-        adults.addRequiredMember(RoleRepository.USER_ANYONE);
-        residents.addRequiredMember(RoleRepository.USER_ANYONE);
+        administrators.addRequiredMember(m_anyone);
+        buddies.addRequiredMember(m_anyone);
+        children.addRequiredMember(m_anyone);
+        adults.addRequiredMember(m_anyone);
+        residents.addRequiredMember(m_anyone);
 
         // Table 107.1
         residents.addMember(elmer);
@@ -121,7 +125,7 @@ public class AuthorizationImplTest extends TestCase {
         portForwarding.addRequiredMember(administrators);
 
         // Test with the user "foghorn"...
-        AuthorizationImpl auth = new AuthorizationImpl(foghorn, m_roleManager);
+        AuthorizationImpl auth = new AuthorizationImpl(foghorn, m_roleRepository);
 
         assertFalse(auth.hasRole(alarmSystemControl.getName()));
         assertFalse(auth.hasRole(internetAccess.getName()));
@@ -131,7 +135,7 @@ public class AuthorizationImplTest extends TestCase {
         assertFalse(auth.hasRole(portForwarding.getName()));
 
         // Test with the user "fudd"...
-        auth = new AuthorizationImpl(fudd, m_roleManager);
+        auth = new AuthorizationImpl(fudd, m_roleRepository);
 
         assertFalse(auth.hasRole(alarmSystemControl.getName()));
         assertTrue(auth.hasRole(internetAccess.getName()));
@@ -141,7 +145,7 @@ public class AuthorizationImplTest extends TestCase {
         assertFalse(auth.hasRole(portForwarding.getName()));
 
         // Test with the user "elmer"...
-        auth = new AuthorizationImpl(elmer, m_roleManager);
+        auth = new AuthorizationImpl(elmer, m_roleRepository);
 
         assertTrue(auth.hasRole(alarmSystemControl.getName()));
         assertTrue(auth.hasRole(internetAccess.getName()));
@@ -155,54 +159,54 @@ public class AuthorizationImplTest extends TestCase {
      * Test that the tests for membership work correctly. 
      */
     public void testHasRoleOk() {
-        GroupImpl citizens = createGroup("citizen");
-        citizens.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group citizens = createGroup("citizen");
+        citizens.addRequiredMember(m_anyone);
         
-        GroupImpl adults = createGroup("adult");
-        adults.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group adults = createGroup("adult");
+        adults.addRequiredMember(m_anyone);
         
-        GroupImpl voters = createGroup("voter");
+        Group voters = createGroup("voter");
         voters.addRequiredMember(citizens);
         voters.addRequiredMember(adults);
-        voters.addMember(RoleRepository.USER_ANYONE);
+        voters.addMember(m_anyone);
         
         // Elmer belongs to the citizens and adults...
-        UserImpl elmer = createUser("elmer");
+        User elmer = createUser("elmer");
         citizens.addMember(elmer);
         adults.addMember(elmer);
         
         // Pepe belongs to the citizens, but is not an adult...
-        UserImpl pepe = createUser("pepe");
+        User pepe = createUser("pepe");
         citizens.addMember(pepe);
         
         // Bugs is an adult, but is not a citizen...
-        UserImpl bugs = createUser("bugs");
+        User bugs = createUser("bugs");
         adults.addMember(bugs);
         
         // Daffy is not an adult, neither a citizen...
-        UserImpl daffy = createUser("daffy");
+        User daffy = createUser("daffy");
         
         AuthorizationImpl auth;
 
-        auth = new AuthorizationImpl(elmer, m_roleManager);
+        auth = new AuthorizationImpl(elmer, m_roleRepository);
         assertTrue(auth.hasRole("adult"));
         assertTrue(auth.hasRole("citizen"));
         assertTrue(auth.hasRole("voter"));
         assertFalse(auth.hasRole("non-existing-role"));
 
-        auth = new AuthorizationImpl(pepe, m_roleManager);
+        auth = new AuthorizationImpl(pepe, m_roleRepository);
         assertFalse(auth.hasRole("adult"));
         assertTrue(auth.hasRole("citizen"));
         assertFalse(auth.hasRole("voter"));
         assertFalse(auth.hasRole("non-existing-role"));
 
-        auth = new AuthorizationImpl(bugs, m_roleManager);
+        auth = new AuthorizationImpl(bugs, m_roleRepository);
         assertTrue(auth.hasRole("adult"));
         assertFalse(auth.hasRole("citizen"));
         assertFalse(auth.hasRole("voter"));
         assertFalse(auth.hasRole("non-existing-role"));
 
-        auth = new AuthorizationImpl(daffy, m_roleManager);
+        auth = new AuthorizationImpl(daffy, m_roleRepository);
         assertFalse(auth.hasRole("adult"));
         assertFalse(auth.hasRole("citizen"));
         assertFalse(auth.hasRole("voter"));
@@ -213,51 +217,51 @@ public class AuthorizationImplTest extends TestCase {
      * Test that the tests for membership work correctly. 
      */
     public void testGetRolesOk() {
-        GroupImpl citizens = createGroup("citizen");
-        citizens.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group citizens = createGroup("citizen");
+        citizens.addRequiredMember(m_anyone);
         
-        GroupImpl adults = createGroup("adult");
-        adults.addRequiredMember(RoleRepository.USER_ANYONE);
+        Group adults = createGroup("adult");
+        adults.addRequiredMember(m_anyone);
         
-        GroupImpl voters = createGroup("voter");
+        Group voters = createGroup("voter");
         voters.addRequiredMember(citizens);
         voters.addRequiredMember(adults);
-        voters.addMember(RoleRepository.USER_ANYONE);
+        voters.addMember(m_anyone);
         
         // Elmer belongs to the citizens and adults...
-        UserImpl elmer = createUser("elmer");
+        User elmer = createUser("elmer");
         citizens.addMember(elmer);
         adults.addMember(elmer);
         
         // Pepe belongs to the citizens, but is not an adult...
-        UserImpl pepe = createUser("pepe");
+        User pepe = createUser("pepe");
         citizens.addMember(pepe);
         
         // Bugs is an adult, but is not a citizen...
-        UserImpl bugs = createUser("bugs");
+        User bugs = createUser("bugs");
         adults.addMember(bugs);
 
         // Daffy is not an adult, neither a citizen...
-        UserImpl daffy = createUser("daffy");
+        User daffy = createUser("daffy");
 
-        // Daffy is not an adult, neither a citizen...
-        UserImpl donald = new UserImpl("donald");
+        // Donald is not an adult, neither a citizen...
+        User donald = RoleFactory.createUser("donald");
         
         AuthorizationImpl auth;
 
-        auth = new AuthorizationImpl(elmer, m_roleManager);
+        auth = new AuthorizationImpl(elmer, m_roleRepository);
         assertSameRoles(new String[]{ "elmer", "adult", "citizen", "voter" }, auth.getRoles());
 
-        auth = new AuthorizationImpl(pepe, m_roleManager);
+        auth = new AuthorizationImpl(pepe, m_roleRepository);
         assertSameRoles(new String[]{ "pepe", "citizen" }, auth.getRoles());
 
-        auth = new AuthorizationImpl(bugs, m_roleManager);
+        auth = new AuthorizationImpl(bugs, m_roleRepository);
         assertSameRoles(new String[]{ "bugs", "adult" }, auth.getRoles());
 
-        auth = new AuthorizationImpl(daffy, m_roleManager);
+        auth = new AuthorizationImpl(daffy, m_roleRepository);
         assertSameRoles(new String[]{ "daffy" }, auth.getRoles());
 
-        auth = new AuthorizationImpl(donald, m_roleManager);
+        auth = new AuthorizationImpl(donald, m_roleRepository);
         assertNull(auth.getRoles());
     }
 
@@ -271,15 +275,11 @@ public class AuthorizationImplTest extends TestCase {
         assertTrue("Not seen: " + e, e.isEmpty());
     }
 
-    private GroupImpl createGroup(String name) {
-        GroupImpl result = new GroupImpl(name);
-        m_roleManager.addRole(result);
-        return result;
+    private Group createGroup(String name) {
+        return (Group) m_roleRepository.addRole(name, Role.GROUP);
     }
 
-    private UserImpl createUser(String name) {
-        UserImpl result = new UserImpl(name);
-        m_roleManager.addRole(result);
-        return result;
+    private User createUser(String name) {
+        return (User) m_roleRepository.addRole(name, Role.USER);
     }
 }

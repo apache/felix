@@ -23,9 +23,9 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 
+import org.apache.felix.useradmin.RoleFactory;
 import org.apache.felix.useradmin.impl.EventDispatcher;
 import org.apache.felix.useradmin.impl.UserAdminListenerList;
-import org.apache.felix.useradmin.impl.role.UserImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.Event;
@@ -98,6 +98,10 @@ public class EventDispatcherTest extends TestCase {
             for (int i = 0; i < properties.length; i += 2) {
                 m_props.put(properties[i], properties[i + 1]);
             }
+        }
+        
+        public int compareTo(Object reference) {
+            return 0;
         }
 
         public Bundle getBundle() {
@@ -289,7 +293,7 @@ public class EventDispatcherTest extends TestCase {
      * @return
      */
     private UserAdminEvent createMockEvent(int type) {
-        Role user = new UserImpl("user-" + System.currentTimeMillis());
+        Role user = RoleFactory.createUser("user-" + System.currentTimeMillis());
         ServiceReference ref = new FakeServiceReference();
         return new UserAdminEvent(ref, type, user);
     }
