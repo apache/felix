@@ -38,14 +38,14 @@ You can then point your browser to
 http://localhost:8080/system/console/servicegraph
 
 (login/password is admin/admin)
-then click on either "Unavail" or "All". 
-The "bubbles" can be dragged around for better readability. The colors are random and don't mean anything. 
-On the "All" view, arrows point from bundles to the services they use. 
-On the "Unavail" view, arrows point from a leaf component to its missing dependencies.
+then click on either "Show Not Avail" or "Show Service Registry"
+The nodes can be dragged around for better readability. The colors are random and don't mean anything. 
+On the "Service Registry" view, arrows point from bundles to the services they use. 
+On the "Not Avail" view, arrows point from a leaf component to its missing dependencies.
 
 (note: the lib directory is provided for dependencies that are not readily available as OSGi bundles from maven)
 
 Issues & TODOs:
 ===============
-* use of JSONObject in Servlet.scala is a bit awkward, but Scala's native json is still incomplete.. 
 * no support for iPojo, Blueprint, basic ServiceTrackers... more plugins could be developed. I only wrote the ones i'm using.
+* should package proper tests
