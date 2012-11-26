@@ -178,6 +178,14 @@ public class SCRDescriptorMojo extends AbstractMojo {
             { "jar", "bundle" } );
 
     /**
+     * By default the plugin scans the java source tree, if this is set to true,
+     * the generated classes directory is scanned instead.
+     *
+     * @parameter default-value="false"
+     */
+    private boolean scanClasses;
+
+    /**
      * @component
      */
     private BuildContext buildContext;
@@ -198,7 +206,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         // create project
         final MavenProjectScanner scanner = new MavenProjectScanner(
                 this.buildContext,
-                this.project, this.sourceIncludes, this.sourceExcludes, scrLog);
+                this.project, this.sourceIncludes, this.sourceExcludes, this.scanClasses, scrLog);
 
         final Project project = new Project();
         // create the class loader
@@ -259,7 +267,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
 
     /**
      * Remove existing files for the sources which have recently changed
-     * 
+     *
      * <p>This method ensures that files which were generated in a previous run are not
      * leftover if the source file has changed by:
      * <ol>
@@ -267,7 +275,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
      *  <li>No longer having the <tt>metatype</tt> property set to true</li>
      * </ol>
      * </p>
-     * 
+     *
      * @param sources the changed source files
      */
     private void removePossiblyStaleFiles(final Collection<Source> sources, final Options options) {

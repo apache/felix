@@ -29,6 +29,7 @@ import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.Source;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.Scanner;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
@@ -38,13 +39,14 @@ public class MavenProjectScanner {
 	private enum ScanKind {
 		ADDED_OR_UPDATED, DELETED;
 	}
-	
+
     private final MavenProject project;
 
     private final String includeString;
 
     private final String excludeString;
 
+    private final boolean scanClasses;
     private final Log log;
 
     private final BuildContext buildContext;
@@ -53,10 +55,12 @@ public class MavenProjectScanner {
             final MavenProject project,
             final String includeString,
             final String excludeString,
+            final boolean scanClasses,
             final Log log) {
         this.project = project;
         this.includeString = includeString;
         this.excludeString = excludeString;
+        this.scanClasses = scanClasses;
         this.log = log;
         this.buildContext = buildContext;
     }
@@ -65,7 +69,40 @@ public class MavenProjectScanner {
      * Return all sources.
      */
     public Collection<Source> getSources() {
-    	
+    	if ( scanClasses ) {
+            final ArrayList<Source> files = new ArrayList<Source>();
+
+            final DirectoryScanner scanner = new DirectoryScanner();
+            scanner.setBasedir(this.project.getBuild().getOutputDirectory());
+            if ( this.includeString != null ) {
+                scanner.setIncludes(this.includeString.split(","));
+            } else {
+                scanner.setIncludes(new String[] {"**/*.class"});
+            }
+            if ( this.excludeString != null ) {
+                scanner.setExcludes(this.excludeString.split(","));
+            }
+            scanner.addDefaultExcludes();
+
+            scanner.scan();
+
+            for ( final String fileName : scanner.getIncludedFiles() ) {
+                files.add( new Source() {
+
+                    public File getFile() {
+                        return new File(project.getBuild().getOutputDirectory(), fileName);
+                    }
+
+                    public String getClassName() {
+                        // remove ".class"
+                        String name = fileName.substring(0, fileName.length() - 6);
+                        return name.replace(File.separatorChar, '/').replace('/', '.');
+                    }
+                });
+            }
+
+    	    return files;
+    	}
     	return getSourcesForScanKind(ScanKind.ADDED_OR_UPDATED);
     }
 
@@ -97,23 +134,23 @@ public class MavenProjectScanner {
                 continue;
             }
             log.debug( "Scanning source tree " + tree );
-            
+
             final Scanner scanner;
             switch ( scanKind ) {
-            
+
             	case ADDED_OR_UPDATED:
             		scanner = this.buildContext.newScanner(directory, false);
             		break;
-            		
+
             	case DELETED:
             		scanner = this.buildContext.newDeleteScanner(directory);
             		break;
-            		
+
             	default:
             		throw new AssertionError("Unhandled ScanKind " + scanKind);
-            	
+
             }
-            
+
 
             if ( excludes != null && excludes.length > 0 ) {
                 scanner.setExcludes( excludes );
@@ -141,14 +178,14 @@ public class MavenProjectScanner {
 
         return files;
 	}
-    
+
 	/**
 	 * Returns all sources which were deleted since the previous build
-	 * 
+	 *
 	 * @return the deleted sources
 	 */
     public Collection<Source> getDeletedSources() {
-    	
+
     	return getSourcesForScanKind(ScanKind.DELETED);
     }
 
