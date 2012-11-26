@@ -50,9 +50,9 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
 
     private static final long serialVersionUID = -6691093960031418130L;
 
-    private static final String CONFIGURATION_ADMIN_NAME = ConfigurationAdmin.class.getName();
+    static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin";
 
-    private static final String META_TYPE_NAME = MetaTypeService.class.getName();
+    static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService";
 
 
     protected ConfigurationAdmin getConfigurationAdmin()
