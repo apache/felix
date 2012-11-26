@@ -416,8 +416,8 @@ public class ClassScanner {
      * <p>
      * This method may be overwritten by extensions of this class.
      *
-     * @throws SCRDescriptorException May be thrown if an error occurrs
-     *             gethering the component descriptors.
+     * @throws SCRDescriptorException May be thrown if an error occurs
+     *             gathering the component descriptors.
      */
     private Map<String, ClassDescription> getComponentDescriptors()
             throws SCRDescriptorException {
@@ -481,7 +481,7 @@ public class ClassScanner {
      * be called by the {@link #getComponentDescriptors()} method to parse the
      * descriptors gathered in an implementation dependent way.
      *
-     * @throws SCRDescriptorException If an error occurrs reading the
+     * @throws SCRDescriptorException If an error occurs reading the
      *             descriptors from the stream.
      */
     private void readServiceComponentDescriptor(
