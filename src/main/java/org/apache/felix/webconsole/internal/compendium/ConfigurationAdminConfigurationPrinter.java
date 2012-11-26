@@ -55,8 +55,7 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
      */
     public void printConfiguration(PrintWriter pw)
     {
-        ServiceReference sr = getBundleContext().getServiceReference(
-            ConfigurationAdmin.class.getName());
+        ServiceReference sr = getBundleContext().getServiceReference( ConfigManagerBase.CONFIGURATION_ADMIN_NAME );
         if (sr == null)
         {
             pw.println("Status: Configuration Admin Service not available");
