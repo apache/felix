@@ -380,14 +380,18 @@ public class DependencyManager implements ServiceListener, Reference
                 }
                 else
                 {
-                    Map bound = ( Map ) m_componentManager.getDependencyMap().get( this );
-                    if ( m_dependencyMetadata.isMultiple() ||
-                                            bound.isEmpty() ||
-                                            reference.compareTo( bound.keySet().iterator().next() ) > 0 )
-                                    {
-                                        m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
-                                        m_componentManager.activateInternal();
-                                    }
+                    Map dependenciesMap = m_componentManager.getDependencyMap();
+                    if ( dependenciesMap != null )
+                    {
+                        Map bound = ( Map ) dependenciesMap.get( this );
+                        if ( m_dependencyMetadata.isMultiple() ||
+                                                bound.isEmpty() ||
+                                                reference.compareTo( bound.keySet().iterator().next() ) > 0 )
+                                        {
+                                            m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
+                                            m_componentManager.activateInternal();
+                                        }
+                    }
                 }
             }
 
@@ -404,12 +408,16 @@ public class DependencyManager implements ServiceListener, Reference
                 else if ( !isReluctant() )
                 {
                     //dynamic greedy single: bind then unbind
-                    Map bound = ( Map ) m_componentManager.getDependencyMap().get( this );
-                    ServiceReference oldRef = ( ServiceReference ) bound.keySet().iterator().next();
-                    if ( reference.compareTo( oldRef ) > 0 )
+                    Map dependenciesMap = m_componentManager.getDependencyMap();
+                    if ( dependenciesMap != null )
                     {
-                        m_componentManager.invokeBindMethod( this, reference );
-                        m_componentManager.invokeUnbindMethod( this, oldRef );
+                        Map bound = ( Map ) dependenciesMap.get( this );
+                        ServiceReference oldRef = ( ServiceReference ) bound.keySet().iterator().next();
+                        if ( reference.compareTo( oldRef ) > 0 )
+                        {
+                            m_componentManager.invokeBindMethod( this, reference );
+                            m_componentManager.invokeUnbindMethod( this, oldRef );
+                        }
                     }
                 }
             }
