@@ -166,12 +166,17 @@ public class SCRDescriptorGenerator {
                     if ( specVersion == null ) {
                         specVersion = container.getComponentDescription().getSpecVersion();
                         logger.debug("Setting used spec version to " + specVersion);
-                    } else if (container.getComponentDescription().getSpecVersion().ordinal() > specVersion.ordinal() && this.options.getSpecVersion() != null) {
-                        // if a spec version has been configured and a component requires a higher
-                        // version, this is considered an error!
-                        iLog.addError("Component " + container + " requires spec version " + container.getComponentDescription().getSpecVersion().name()
-                                        + " but plugin is configured to use version " + this.options.getSpecVersion(),
-                                        desc.getSource());
+                    } else if (container.getComponentDescription().getSpecVersion().ordinal() > specVersion.ordinal() ) {
+                        if ( this.options.getSpecVersion() != null) {
+                            // if a spec version has been configured and a component requires a higher
+                            // version, this is considered an error!
+                            iLog.addError("Component " + container + " requires spec version " + container.getComponentDescription().getSpecVersion().name()
+                                            + " but plugin is configured to use version " + this.options.getSpecVersion(),
+                                            desc.getSource());
+                        } else {
+                            specVersion = container.getComponentDescription().getSpecVersion();
+                            logger.debug("Setting used spec version to " + specVersion);
+                        }
                     }
                 }
                 processedContainers.add(container);
