@@ -19,6 +19,7 @@
 package org.apache.felix.resolver.test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -90,6 +91,13 @@ public class Main
             System.out.println("EXPECTED ResolutionException:");
             e.printStackTrace(System.out);
         }
+
+        System.out.println("\nSCENARIO 6\n");
+        mandatory = populateScenario6(wirings, candMap);
+        rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.EMPTY_LIST);
+        wireMap = resolver.resolve(rci);
+        System.out.println("RESULT " + wireMap);
+
     }
 
     private static List<Resource> populateScenario1(
@@ -224,7 +232,7 @@ public class Main
         ResourceImpl c = new ResourceImpl("C");
         c.addRequirement(new BundleRequirement(c, "D"));
         c.addCapability(new BundleCapability(c, "C"));
-        PackageCapability p2 = new PackageCapability(c, "p1");
+        PackageCapability p2 = new PackageCapability(c, "p2");
         p2.addDirective(Namespace.CAPABILITY_USES_DIRECTIVE, "p1");
         c.addCapability(p2);
 
@@ -268,7 +276,7 @@ public class Main
         ResourceImpl c = new ResourceImpl("C");
         c.addRequirement(new BundleRequirement(c, "D"));
         c.addCapability(new BundleCapability(c, "C"));
-        PackageCapability p2 = new PackageCapability(c, "p1");
+        PackageCapability p2 = new PackageCapability(c, "p2");
         p2.addDirective(Namespace.CAPABILITY_USES_DIRECTIVE, "p1");
         c.addCapability(p2);
 
@@ -291,6 +299,104 @@ public class Main
 
         List<Resource> resources = new ArrayList<Resource>();
         resources.add(x);
+        return resources;
+    }
+
+    private static List<Resource> populateScenario6(
+            Map<Resource, Wiring> wirings, Map<Requirement, List<Capability>> candMap)
+    {
+        wirings.clear();
+        candMap.clear();
+
+        ResourceImpl a1 = new ResourceImpl("A");
+        a1.addRequirement(new PackageRequirement(a1, "p1"));
+        a1.addRequirement(new PackageRequirement(a1, "p2"));
+        Requirement a1Req = new GenericRequirement(a1, "generic");
+        a1Req.getDirectives().put(Namespace.REQUIREMENT_CARDINALITY_DIRECTIVE, Namespace.CARDINALITY_MULTIPLE);
+        a1.addRequirement(a1Req);
+
+        ResourceImpl a2 = new ResourceImpl("A");
+        a2.addRequirement(new BundleRequirement(a2, "B"));
+        a2.addRequirement(new BundleRequirement(a2, "C"));
+        Requirement a2Req = new GenericRequirement(a2, "generic");
+        a2Req.getDirectives().put(Namespace.REQUIREMENT_CARDINALITY_DIRECTIVE, Namespace.CARDINALITY_MULTIPLE);
+        a2.addRequirement(a2Req);
+
+        ResourceImpl b1 = new ResourceImpl("B");
+        b1.addCapability(new BundleCapability(b1, "B"));
+        Capability b1_p2 = new PackageCapability(b1, "p2");
+        b1_p2.getDirectives().put(Namespace.CAPABILITY_USES_DIRECTIVE, "p1");
+        b1.addCapability(b1_p2);
+        b1.addRequirement(new PackageRequirement(b1, "p1"));
+
+        ResourceImpl b2 = new ResourceImpl("B");
+        b2.addCapability(new BundleCapability(b2, "B"));
+        Capability b2_p2 = new PackageCapability(b2, "p2");
+        b2_p2.getDirectives().put(Namespace.CAPABILITY_USES_DIRECTIVE, "p1");
+        b2.addCapability(b2_p2);
+        b2.addRequirement(new PackageRequirement(b2, "p1"));
+
+        ResourceImpl c1 = new ResourceImpl("C");
+        c1.addCapability(new BundleCapability(c1, "C"));
+        Capability c1_p1 = new PackageCapability(c1, "p1");
+
+        ResourceImpl c2 = new ResourceImpl("C");
+        c2.addCapability(new BundleCapability(c2, "C"));
+        Capability c2_p1 = new PackageCapability(c2, "p1");
+
+        ResourceImpl d1 = new ResourceImpl("D");
+        GenericCapability d1_generic = new GenericCapability(d1, "generic");
+        d1_generic.addDirective(Namespace.CAPABILITY_USES_DIRECTIVE, "p1,p2");
+        d1.addCapability(d1_generic);
+        d1.addRequirement(new PackageRequirement(d1, "p1"));
+        d1.addRequirement(new PackageRequirement(d1, "p2"));
+
+        ResourceImpl d2 = new ResourceImpl("D");
+        GenericCapability d2_generic = new GenericCapability(d2, "generic");
+        d2_generic.addDirective(Namespace.CAPABILITY_USES_DIRECTIVE, "p1,p2");
+        d2.addCapability(d2_generic);
+        d2.addRequirement(new PackageRequirement(d2, "p1"));
+        d2.addRequirement(new PackageRequirement(d2, "p2"));
+
+        candMap.put(
+            a1.getRequirements(null).get(0),
+            Arrays.asList(c2_p1));
+        candMap.put(
+            a1.getRequirements(null).get(1),
+            Arrays.asList(b2_p2));
+        candMap.put(
+            a1.getRequirements(null).get(2),
+            Arrays.asList((Capability) d1_generic, (Capability) d2_generic));
+        candMap.put(
+            a2.getRequirements(null).get(0),
+            c2.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE));
+        candMap.put(
+            a2.getRequirements(null).get(1),
+            b2.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE));
+        candMap.put(
+            a2.getRequirements(null).get(2),
+            Arrays.asList((Capability) d1_generic, (Capability) d2_generic));
+        candMap.put(
+            b1.getRequirements(null).get(0),
+            Arrays.asList(c1_p1, c2_p1));
+        candMap.put(
+            b2.getRequirements(null).get(0),
+            Arrays.asList(c1_p1, c2_p1));
+        candMap.put(
+            d1.getRequirements(null).get(0),
+            Arrays.asList(c1_p1, c2_p1));
+        candMap.put(
+            d1.getRequirements(null).get(1),
+            Arrays.asList(b1_p2, b2_p2));
+        candMap.put(
+            d2.getRequirements(null).get(0),
+            Arrays.asList(c1_p1, c2_p1));
+        candMap.put(
+            d2.getRequirements(null).get(1),
+            Arrays.asList(b1_p2, b2_p2));
+        List<Resource> resources = new ArrayList<Resource>();
+        resources.add(a1);
+        resources.add(a2);
         return resources;
     }
 }

@@ -78,6 +78,18 @@ public class Util
         return Namespace.RESOLUTION_OPTIONAL.equalsIgnoreCase(resolution);
     }
 
+    public static boolean isMultiple(Requirement req)
+    {
+    	return Namespace.CARDINALITY_MULTIPLE.equals(req.getDirectives()
+            .get(Namespace.REQUIREMENT_CARDINALITY_DIRECTIVE)) && !isDynamic(req);
+    }
+
+    public static boolean isDynamic(Requirement req)
+    {
+    	return PackageNamespace.RESOLUTION_DYNAMIC.equals(req.getDirectives()
+            .get(Namespace.REQUIREMENT_RESOLUTION_DIRECTIVE));
+    }
+
     public static List<Requirement> getDynamicRequirements(List<Requirement> reqs)
     {
         List<Requirement> result = new ArrayList<Requirement>();
