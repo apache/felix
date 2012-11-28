@@ -211,47 +211,49 @@ public class ClassScanner {
             final List<MethodNode> methods = classNode.methods;
             if (methods != null) {
                 for (final MethodNode method : methods) {
+                    final String name = method.name;
+                    // check for constructor
+                    if ( !"<init>".equals(name) ) {
+                        @SuppressWarnings("unchecked")
+                        final List<AnnotationNode> annos = getAllAnnotations(method.invisibleAnnotations, method.visibleAnnotations);
+                        if (annos != null) {
+                            final Type[] signature = Type.getArgumentTypes(method.desc);
 
-                    @SuppressWarnings("unchecked")
-                    final List<AnnotationNode> annos = getAllAnnotations(method.invisibleAnnotations, method.visibleAnnotations);
-                    if (annos != null) {
-                        final String name = method.name;
-                        final Type[] signature = Type.getArgumentTypes(method.desc);
-
-                        final Method[] allMethods = annotatedClass.getDeclaredMethods();
-                        Method found = null;
-                        for (final Method m : allMethods) {
-                            if (m.getName().equals(name)) {
-                                if (m.getParameterTypes().length == 0 && (signature == null || signature.length == 0) ) {
-                                    found = m;
-                                }
-                                if (m.getParameterTypes().length > 0 && signature != null && m.getParameterTypes().length == signature.length) {
-                                    found = m;
-                                    for(int index = 0; index < m.getParameterTypes().length; index++ ) {
-                                        String parameterTypeName = m.getParameterTypes()[index].getName();
-                                        // Name of array parameters is returned with syntax [L<name>;, convert to <name>[]
-                                        Matcher matcher = ARRAY_PARAM_TYPE_NAME.matcher(parameterTypeName);
-                                        if (matcher.matches()) {
-                                            parameterTypeName = matcher.group(1) + "[]";
-                                        }
-                                        if (!parameterTypeName.equals(signature[index].getClassName()) &&
-                                                !m.getParameterTypes()[index].getSimpleName().equals(signature[index].getClassName())) {
-                                            found = null;
+                            final Method[] allMethods = annotatedClass.getDeclaredMethods();
+                            Method found = null;
+                            for (final Method m : allMethods) {
+                                if (m.getName().equals(name)) {
+                                    if (m.getParameterTypes().length == 0 && (signature == null || signature.length == 0) ) {
+                                        found = m;
+                                    }
+                                    if (m.getParameterTypes().length > 0 && signature != null && m.getParameterTypes().length == signature.length) {
+                                        found = m;
+                                        for(int index = 0; index < m.getParameterTypes().length; index++ ) {
+                                            String parameterTypeName = m.getParameterTypes()[index].getName();
+                                            // Name of array parameters is returned with syntax [L<name>;, convert to <name>[]
+                                            Matcher matcher = ARRAY_PARAM_TYPE_NAME.matcher(parameterTypeName);
+                                            if (matcher.matches()) {
+                                                parameterTypeName = matcher.group(1) + "[]";
+                                            }
+                                            if (!parameterTypeName.equals(signature[index].getClassName()) &&
+                                                    !m.getParameterTypes()[index].getSimpleName().equals(signature[index].getClassName())) {
+                                                found = null;
+                                            }
                                         }
                                     }
-                                }
-                                // if method is found return it now, to avoid resetting 'found' to null if next method has same name but different parameters
-                                if (found != null) {
-                                    break;
+                                    // if method is found return it now, to avoid resetting 'found' to null if next method has same name but different parameters
+                                    if (found != null) {
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        if (found == null) {
-                            throw new SCRDescriptorException("Annotated method " + name + " not found.",
-                                    annotatedClass.getName());
-                        }
-                        for (final AnnotationNode annotation : annos) {
-                            parseAnnotation(descriptions, annotation, found);
+                            if (found == null) {
+                                throw new SCRDescriptorException("Annotated method " + name + " not found.",
+                                        annotatedClass.getName());
+                            }
+                            for (final AnnotationNode annotation : annos) {
+                                parseAnnotation(descriptions, annotation, found);
+                            }
                         }
                     }
                 }
