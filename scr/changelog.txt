@@ -37,6 +37,7 @@ Changes from 1.6.0 to 1.6.2
     * [FELIX-3625] - "officially" upgrade scr to ds 1.2 from compendium 4.3
     * [FELIX-3637] - DS bind concurrency problem
     * [FELIX-3639] - SCR "need write lock" assertion error
+    * [FELIX-3645] - SCR could not obtain lock in 5000 ms
     * [FELIX-3646] - AbstractComponent.disposeInternal ignores reason
     * [FELIX-3647] - Component modification must continue if modify method throws
     * [FELIX-3648] - A component declared with DS 1.0 or DS 1.1 namespace must fail validation if Reference.updated attribute is declared
@@ -59,8 +60,8 @@ Changes from 1.6.0 to 1.6.2
     * [FELIX-3725] - [DS] hidden dependency on spring junit wrapper from pax exam
     * [FELIX-3726] - Reference target filters defined as component properties are ignored
     * [FELIX-3727] - [DS] NPE during shutdown
-    * [FELIX-3744] -  set implementation object before modifying service properties
-    
+    * [FELIX-3744] - set implementation object before modifying service properties
+
 ** Improvement
     * [FELIX-2895] - Allow the use of a property to tell SCR to always discover Service Component files even if there's no wildcard in the name
     * [FELIX-3016] - Activator log level cannot be changed dynamically through Configuration Admin
