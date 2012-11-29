@@ -167,14 +167,14 @@ class ScrCommand
         }
 
         out.println("   Id   State          Name");
-        for (int i = 0; i < components.length; i++)
+        for ( Component component : components )
         {
-            out.print('[');
-            out.print(pad(String.valueOf(components[i].getId()), -4));
-            out.print("] [");
-            out.print(pad(toStateString(components[i].getState()), 13));
-            out.print("] ");
-            out.print(components[i].getName());
+            out.print( '[' );
+            out.print( pad( String.valueOf( component.getId() ), -4 ) );
+            out.print( "] [" );
+            out.print( pad( toStateString( component.getState() ), 13 ) );
+            out.print( "] " );
+            out.print( component.getName() );
             out.println();
         }
     }
@@ -187,131 +187,131 @@ class ScrCommand
             return;
         }
 
-        for (int j = 0; j < components.length; j++)
+        for ( Component component : components )
         {
-            Component component = components[j];
-            out.print("ID: ");
-            out.println(component.getId());
-            out.print("Name: ");
-            out.println(component.getName());
-            out.print("Bundle: ");
-            out.println(component.getBundle().getSymbolicName() + " (" + component.getBundle().getBundleId() + ")");
-            out.print("State: ");
-            out.println(toStateString(component.getState()));
-            out.print("Default State: ");
-            out.println(component.isDefaultEnabled() ? "enabled" : "disabled");
-            out.print("Activation: ");
-            out.println(component.isImmediate() ? "immediate" : "delayed");
+            out.print( "ID: " );
+            out.println( component.getId() );
+            out.print( "Name: " );
+            out.println( component.getName() );
+            out.print( "Bundle: " );
+            out.println( component.getBundle().getSymbolicName() + " (" + component.getBundle().getBundleId() + ")" );
+            out.print( "State: " );
+            out.println( toStateString( component.getState() ) );
+            out.print( "Default State: " );
+            out.println( component.isDefaultEnabled() ? "enabled" : "disabled" );
+            out.print( "Activation: " );
+            out.println( component.isImmediate() ? "immediate" : "delayed" );
 
             // DS 1.1 new features
-            out.print("Configuration Policy: ");
-            out.println(component.getConfigurationPolicy());
-            out.print("Activate Method: ");
-            out.print(component.getActivate());
-            if (component.isActivateDeclared())
+            out.print( "Configuration Policy: " );
+            out.println( component.getConfigurationPolicy() );
+            out.print( "Activate Method: " );
+            out.print( component.getActivate() );
+            if ( component.isActivateDeclared() )
             {
-                out.print(" (declared in the descriptor)");
+                out.print( " (declared in the descriptor)" );
             }
             out.println();
-            out.print("Deactivate Method: ");
-            out.print(component.getDeactivate());
-            if (component.isDeactivateDeclared())
+            out.print( "Deactivate Method: " );
+            out.print( component.getDeactivate() );
+            if ( component.isDeactivateDeclared() )
             {
-                out.print(" (declared in the descriptor)");
+                out.print( " (declared in the descriptor)" );
             }
             out.println();
-            out.print("Modified Method: ");
-            if (component.getModified() != null)
+            out.print( "Modified Method: " );
+            if ( component.getModified() != null )
             {
-                out.print(component.getModified());
+                out.print( component.getModified() );
             }
             else
             {
-                out.print("-");
+                out.print( "-" );
             }
             out.println();
 
-            out.print("Configuration Pid: ");
-            out.print(component.getConfigurationPid());
-            if (component.isConfigurationPidDeclared())
+            out.print( "Configuration Pid: " );
+            out.print( component.getConfigurationPid() );
+            if ( component.isConfigurationPidDeclared() )
             {
-                out.print(" (declared in the descriptor)");
+                out.print( " (declared in the descriptor)" );
             }
             out.println();
 
-            if (component.getFactory() != null)
+            if ( component.getFactory() != null )
             {
-                out.print("Factory: ");
-                out.println(component.getFactory());
+                out.print( "Factory: " );
+                out.println( component.getFactory() );
             }
 
             String[] services = component.getServices();
-            if (services != null)
+            if ( services != null )
             {
-                out.print("Services: ");
-                out.println(services[0]);
-                for (int i = 1; i < services.length; i++)
+                out.print( "Services: " );
+                out.println( services[0] );
+                for ( int i = 1; i < services.length; i++ )
                 {
-                    out.print("          ");
-                    out.println(services[i]);
+                    out.print( "          " );
+                    out.println( services[i] );
                 }
-                out.print("Service Type: ");
-                out.println(component.isServiceFactory() ? "service factory" : "service");
+                out.print( "Service Type: " );
+                out.println( component.isServiceFactory() ? "service factory" : "service" );
             }
 
             Reference[] refs = component.getReferences();
-            if (refs != null)
+            if ( refs != null )
             {
-                for (int i = 0; i < refs.length; i++)
+                for ( Reference ref : refs )
                 {
-                    out.print("Reference: ");
-                    out.println(refs[i].getName());
-                    out.print("    Satisfied: ");
-                    out.println(refs[i].isSatisfied() ? "satisfied" : "unsatisfied");
-                    out.print("    Service Name: ");
-                    out.println(refs[i].getServiceName());
-                    if (refs[i].getTarget() != null)
+                    out.print( "Reference: " );
+                    out.println( ref.getName() );
+                    out.print( "    Satisfied: " );
+                    out.println( ref.isSatisfied() ? "satisfied" : "unsatisfied" );
+                    out.print( "    Service Name: " );
+                    out.println( ref.getServiceName() );
+                    if ( ref.getTarget() != null )
                     {
-                        out.print("    Target Filter: ");
-                        out.println(refs[i].getTarget());
+                        out.print( "    Target Filter: " );
+                        out.println( ref.getTarget() );
                     }
-                    out.print("    Multiple: ");
-                    out.println(refs[i].isMultiple() ? "multiple" : "single");
-                    out.print("    Optional: ");
-                    out.println(refs[i].isOptional() ? "optional" : "mandatory");
-                    out.print("    Policy: ");
-                    out.println(refs[i].isStatic() ? "static" : "dynamic");
-                    out.print("    Policy option: ");
-                    out.println(refs[i].isReluctant() ? "reluctant" : "greedy");
-                    ServiceReference[] serviceRefs = refs[i].getBoundServiceReferences();
-                    if (serviceRefs != null) {
-                        out.print("    Bound to:");
-                        for (int k = 0; k< serviceRefs.length; k++) {
-                            out.print("        " );
-                            out.println(serviceRefs[k]);
+                    out.print( "    Multiple: " );
+                    out.println( ref.isMultiple() ? "multiple" : "single" );
+                    out.print( "    Optional: " );
+                    out.println( ref.isOptional() ? "optional" : "mandatory" );
+                    out.print( "    Policy: " );
+                    out.println( ref.isStatic() ? "static" : "dynamic" );
+                    out.print( "    Policy option: " );
+                    out.println( ref.isReluctant() ? "reluctant" : "greedy" );
+                    ServiceReference[] serviceRefs = ref.getBoundServiceReferences();
+                    if ( serviceRefs != null )
+                    {
+                        out.print( "    Bound to:" );
+                        for ( int k = 0; k < serviceRefs.length; k++ )
+                        {
+                            out.print( "        " );
+                            out.println( serviceRefs[k] );
                         }
                     }
                 }
             }
 
             Dictionary props = component.getProperties();
-            if (props != null)
+            if ( props != null )
             {
-                out.println("Properties:");
-                TreeSet keys = new TreeSet(Collections.list(props.keys()));
-                for (Iterator ki = keys.iterator(); ki.hasNext();)
+                out.println( "Properties:" );
+                TreeSet keys = new TreeSet( Collections.list( props.keys() ) );
+                for ( Object key : keys )
                 {
-                    Object key = ki.next();
-                    out.print("    ");
-                    out.print(key);
-                    out.print(" = ");
+                    out.print( "    " );
+                    out.print( key );
+                    out.print( " = " );
 
-                    Object prop = props.get(key);
-                    if (prop.getClass().isArray())
+                    Object prop = props.get( key );
+                    if ( prop.getClass().isArray() )
                     {
-                        prop = Arrays.asList((Object[]) prop);
+                        prop = Arrays.asList( ( Object[] ) prop );
                     }
-                    out.print(prop);
+                    out.print( prop );
 
                     out.println();
                 }
@@ -327,35 +327,34 @@ class ScrCommand
             return;
         }
 
-        for (int i = 0; i < components.length; i++)
+        for ( Component component : components )
         {
-            Component component = components[i];
-            if (component.getState() == Component.STATE_DISPOSED)
+            if ( component.getState() == Component.STATE_DISPOSED )
             {
-                err.println("Component " + component.getName() + " already disposed, cannot change state");
+                err.println( "Component " + component.getName() + " already disposed, cannot change state" );
             }
-            else if (enable)
+            else if ( enable )
             {
-                if (component.getState() == Component.STATE_DISABLED)
+                if ( component.getState() == Component.STATE_DISABLED )
                 {
                     component.enable();
-                    out.println("Component " + component.getName() + " enabled");
+                    out.println( "Component " + component.getName() + " enabled" );
                 }
                 else
                 {
-                    out.println("Component " + component.getName() + " already enabled");
+                    out.println( "Component " + component.getName() + " already enabled" );
                 }
             }
             else
             {
-                if (component.getState() != Component.STATE_DISABLED)
+                if ( component.getState() != Component.STATE_DISABLED )
                 {
                     component.disable();
-                    out.println("Component " + component.getName() + " disabled");
+                    out.println( "Component " + component.getName() + " disabled" );
                 }
                 else
                 {
-                    out.println("Component " + component.getName() + " already disabled");
+                    out.println( "Component " + component.getName() + " already disabled" );
                 }
             }
         }

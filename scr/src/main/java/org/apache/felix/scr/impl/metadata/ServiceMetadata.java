@@ -33,7 +33,7 @@ public class ServiceMetadata {
 	private boolean m_serviceFactory = false;
 
 	// List of provided interfaces
-	private List m_provides = new ArrayList();
+	private List<String> m_provides = new ArrayList<String>();
 
 	// Flag that indicates if this metadata has been validated and has become immutable
 	private boolean m_validated = false;
@@ -79,7 +79,7 @@ public class ServiceMetadata {
      * @return the implemented interfaces as a string array
      */
     public String [] getProvides() {
-        return (String[]) m_provides.toArray( new String[m_provides.size()] );
+        return m_provides.toArray( new String[m_provides.size()] );
     }
 
     /**

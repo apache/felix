@@ -25,27 +25,27 @@ import org.osgi.framework.ServiceReference;
 /**
  * @version $Rev:$ $Date:$
  */
-public class RefPair
+public class RefPair<T>
 {
-    private final ServiceReference ref;
-    private Object serviceObject;
+    private final ServiceReference<T> ref;
+    private T serviceObject;
 
-    public RefPair( ServiceReference ref )
+    public RefPair( ServiceReference<T> ref )
     {
         this.ref = ref;
     }
 
-    public ServiceReference getRef()
+    public ServiceReference<T> getRef()
     {
         return ref;
     }
 
-    public Object getServiceObject()
+    public T getServiceObject()
     {
         return serviceObject;
     }
 
-    public void setServiceObject( Object serviceObject )
+    public void setServiceObject( T serviceObject )
     {
         this.serviceObject = serviceObject;
     }

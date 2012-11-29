@@ -242,7 +242,7 @@ public class XmlHandler implements KXml2SAXHandler
                     // configuration-pid attribute is optional (since DS 1.2)
                     if (attrib.getProperty("configuration-pid") != null)
                     {
-                        m_currentComponent.setConfigirationPid( attrib.getProperty( "configuration-pid" ) );
+                        m_currentComponent.setConfigurationPid( attrib.getProperty( "configuration-pid" ) );
                     }
 
                     // Add this component to the list

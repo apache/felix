@@ -48,7 +48,7 @@ import org.osgi.service.log.LogService;
  * with earlier releases of the Apache Felix Declarative Services implementation.
  * But keep in mind, that this is non-standard behaviour.
  */
-public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl implements ComponentHolder
+public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S> implements ComponentHolder
 {
 
     /**
@@ -132,7 +132,7 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
     }
 
 
-    public void configurationUpdated( String pid, Dictionary configuration )
+    public void configurationUpdated( String pid, Dictionary<String, Object> configuration )
     {
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
@@ -199,11 +199,11 @@ public class ConfigurationComponentFactoryImpl extends ComponentFactoryImpl impl
     {
         super.disposeComponents( reason );
 
-        List cms = new ArrayList( );
+        List<AbstractComponentManager> cms = new ArrayList<AbstractComponentManager>( );
         getComponentManagers( m_configuredServices, cms );
-        for ( Iterator i = cms.iterator(); i.hasNext(); )
+        for ( AbstractComponentManager acm: cms )
         {
-            ((AbstractComponentManager)i.next()).dispose( reason );
+            acm.dispose( reason );
         }
 
         m_configuredServices = null;

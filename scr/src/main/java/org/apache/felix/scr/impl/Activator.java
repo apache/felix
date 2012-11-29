@@ -61,7 +61,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     private static ServiceTracker m_packageAdmin;
 
     // map of BundleComponentActivator instances per Bundle indexed by Bundle id
-    private Map m_componentBundles;
+    private Map<Long, BundleComponentActivator> m_componentBundles;
 
     // registry of managed component
     private ComponentRegistry m_componentRegistry;
@@ -85,7 +85,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
         m_logService.open();
 
         // prepare component registry
-        m_componentBundles = new HashMap();
+        m_componentBundles = new HashMap<Long, BundleComponentActivator>();
         m_componentRegistry = new ComponentRegistry( context );
 
         // get the configuration
@@ -191,9 +191,8 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     private void loadAllComponents( BundleContext context )
     {
         Bundle[] bundles = context.getBundles();
-        for ( int i = 0; i < bundles.length; i++ )
+        for ( Bundle bundle : bundles )
         {
-            Bundle bundle = bundles[i];
             if ( ComponentRegistry.isBundleActive( bundle ) )
             {
                 loadComponents( bundle );
@@ -234,7 +233,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
         // FELIX-2231 Mark bundle loaded early to prevent concurrent loading
         // if LAZY_ACTIVATION and STARTED event are fired at the same time
         final boolean loaded;
-        final Long bundleId = new Long( bundle.getBundleId() );
+        final Long bundleId = bundle.getBundleId();
         synchronized ( m_componentBundles )
         {
             if ( m_componentBundles.containsKey( bundleId ) )
@@ -243,7 +242,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
             }
             else
             {
-                m_componentBundles.put( bundleId, bundleId );
+                m_componentBundles.put( bundleId, null );
                 loaded = false;
             }
         }
@@ -306,7 +305,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
         final Object ga;
         synchronized ( m_componentBundles )
         {
-            ga = m_componentBundles.remove( new Long( bundle.getBundleId() ) );
+            ga = m_componentBundles.remove( bundle.getBundleId() );
         }
 
         if ( ga instanceof BundleComponentActivator )
@@ -334,11 +333,11 @@ public class Activator implements BundleActivator, SynchronousBundleListener
             m_componentBundles.clear();
         }
 
-        for ( int i = 0; i < activators.length; i++ )
+        for ( Object activator : activators )
         {
-            if ( activators[i] instanceof BundleComponentActivator )
+            if ( activator instanceof BundleComponentActivator )
             {
-                final BundleComponentActivator ga = ( BundleComponentActivator ) activators[i];
+                final BundleComponentActivator ga = ( BundleComponentActivator ) activator;
                 try
                 {
                     final Bundle bundle = ga.getBundleContext().getBundle();
@@ -349,7 +348,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener
                     catch ( Exception e )
                     {
                         log( LogService.LOG_ERROR, m_context.getBundle(), "Error while disposing components of bundle "
-                            + bundle.getSymbolicName() + "/" + bundle.getBundleId(), e );
+                                + bundle.getSymbolicName() + "/" + bundle.getBundleId(), e );
                     }
                 }
                 catch ( IllegalStateException e )

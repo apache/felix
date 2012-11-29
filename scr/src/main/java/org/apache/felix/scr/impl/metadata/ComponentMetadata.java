@@ -47,7 +47,7 @@ public class ComponentMetadata
     public static final String CONFIGURATION_POLICY_OPTIONAL = "optional";
 
     // set of valid configuration policy settings
-    private static final Set CONFIGURATION_POLICY_VALID;
+    private static final Set<String> CONFIGURATION_POLICY_VALID;
 
     // marker value indicating duplicate implementation class setting
     private static final String IMPLEMENTATION_CLASS_DUPLICATE = "icd";
@@ -98,26 +98,26 @@ public class ComponentMetadata
     private String m_configurationPid;
 
     // Associated properties (0..*)
-    private Dictionary m_properties = new Hashtable();
+    private Dictionary<String, Object> m_properties = new Hashtable<String, Object>();
 
     // List of Property metadata - used while building the meta data
     // while validating the properties contained in the PropertyMetadata
     // instances are copied to the m_properties Dictionary while this
     // list will be cleared
-    private List m_propertyMetaData = new ArrayList();
+    private List<PropertyMetadata> m_propertyMetaData = new ArrayList<PropertyMetadata>();
 
     // Provided services (0..1)
     private ServiceMetadata m_service = null;
 
     // List of service references, (required services 0..*)
-    private List m_references = new ArrayList();
+    private List<ReferenceMetadata> m_references = new ArrayList<ReferenceMetadata>();
 
     // Flag that is set once the component is verified (its properties cannot be changed)
     private boolean m_validated = false;
 
     static
     {
-        CONFIGURATION_POLICY_VALID = new TreeSet();
+        CONFIGURATION_POLICY_VALID = new TreeSet<String>();
         CONFIGURATION_POLICY_VALID.add( CONFIGURATION_POLICY_IGNORE );
         CONFIGURATION_POLICY_VALID.add( CONFIGURATION_POLICY_OPTIONAL );
         CONFIGURATION_POLICY_VALID.add( CONFIGURATION_POLICY_REQUIRE );
@@ -135,7 +135,7 @@ public class ComponentMetadata
      * Setter for the configuration-pid component (since DS 1.2)
      * @param configurationPid
      */
-    public void setConfigirationPid(String configurationPid)
+    public void setConfigurationPid( String configurationPid )
     {
         if ( m_validated )
         {
@@ -487,7 +487,7 @@ public class ComponentMetadata
      * Returns the flag that defines the activation policy for the component.
      * <p>
      * This method may only be trusted after this instance has been validated
-     * by the {@link #validate()} call. Else it will either return the value
+     * by the {@link #validate( Logger logger )} call. Else it will either return the value
      * of an explicitly set "immediate" attribute or return false if a service
      * element or the factory attribute is set or true otherwise. This latter
      * default value deduction may be unsafe while the descriptor has not been
@@ -611,7 +611,7 @@ public class ComponentMetadata
      *
      * @return the properties as a Dictionary
      */
-    public Dictionary getProperties()
+    public Dictionary<String, Object> getProperties()
     {
         return m_properties;
     }
@@ -623,7 +623,7 @@ public class ComponentMetadata
      *
      * @return the list of property meta data.
      */
-    List getPropertyMetaData()
+    List<PropertyMetadata> getPropertyMetaData()
     {
         return m_propertyMetaData;
     }
@@ -634,7 +634,7 @@ public class ComponentMetadata
      *
      * @return a Collection of dependency descriptors
      */
-    public List getDependencies()
+    public List<ReferenceMetadata> getDependencies()
     {
         return m_references;
     }

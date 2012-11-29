@@ -53,14 +53,14 @@ import org.osgi.service.log.LogService;
  * declared by a single <code>&lt;reference&gt;</code element in component
  * descriptor.
  */
-public class DependencyManager implements ServiceListener, Reference
+public class DependencyManager<S, T> implements ServiceListener, Reference
 {
     // mask of states ok to send events
     private static final int STATE_MASK = //Component.STATE_UNSATISFIED |
          Component.STATE_ACTIVE | Component.STATE_REGISTERED | Component.STATE_FACTORY;
 
     // the component to which this dependency belongs
-    private final AbstractComponentManager m_componentManager;
+    private final AbstractComponentManager<S> m_componentManager;
 
     // Reference to the metadata
     private final ReferenceMetadata m_dependencyMetadata;
@@ -77,8 +77,8 @@ public class DependencyManager implements ServiceListener, Reference
     private volatile Filter m_targetFilter;
 
     private final Object enableLock = new Object();
-    private final Collection<ServiceReference> added = new ArrayList<ServiceReference>();
-    private final Collection<ServiceReference> removed = new ArrayList<ServiceReference>();
+    private final Collection<ServiceReference<T>> added = new ArrayList<ServiceReference<T>>();
+    private final Collection<ServiceReference<T>> removed = new ArrayList<ServiceReference<T>>();
 
     private boolean registered;
 
@@ -88,7 +88,7 @@ public class DependencyManager implements ServiceListener, Reference
      *
      * @param dependency An object that contains data about the dependency
      */
-    DependencyManager( AbstractComponentManager componentManager, ReferenceMetadata dependency )
+    DependencyManager( AbstractComponentManager<S> componentManager, ReferenceMetadata dependency )
     {
         m_componentManager = componentManager;
         m_dependencyMetadata = dependency;
@@ -124,10 +124,10 @@ public class DependencyManager implements ServiceListener, Reference
      */
     public void serviceChanged( ServiceEvent event )
     {
-        final ServiceReference ref = event.getServiceReference();
+        final ServiceReference<T> ref = ( ServiceReference<T> ) event.getServiceReference();
         final String serviceString = "Service " + m_dependencyMetadata.getInterface() + "/"
             + ref.getProperty( Constants.SERVICE_ID );
-        Collection<ServiceReference> changes = null;
+        Collection<ServiceReference<T>> changes = null;
         try
         {
             switch ( event.getType() )
@@ -318,7 +318,7 @@ public class DependencyManager implements ServiceListener, Reference
      * @param reference The reference to the service newly registered or
      *      modified.
      */
-    private void serviceAdded( ServiceReference reference )
+    private void serviceAdded( ServiceReference<T> reference )
     {
         // if the component is currently unsatisfied, it may become satisfied
         // by adding this service, try to activate (also schedule activation
@@ -337,10 +337,10 @@ public class DependencyManager implements ServiceListener, Reference
                     "Dependency Manager: Service {0} activation did not occur on this thread", new Object[]
                         { m_dependencyMetadata.getName() }, null );
 
-                Map dependenciesMap = m_componentManager.getDependencyMap();
+                Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependenciesMap = m_componentManager.getDependencyMap();
                 if (dependenciesMap  != null) {
                     //someone else has managed to activate
-                    Map references = ( Map ) dependenciesMap.get( this );
+                    Map<ServiceReference<T>, RefPair<T>> references = (Map)dependenciesMap.get( this );
                     if (references == null )
                     {
                         throw new IllegalStateException( "Allegedly active but dependency manager not represented: " + this );
@@ -380,10 +380,10 @@ public class DependencyManager implements ServiceListener, Reference
                 }
                 else
                 {
-                    Map dependenciesMap = m_componentManager.getDependencyMap();
+                    Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependenciesMap = m_componentManager.getDependencyMap();
                     if ( dependenciesMap != null )
                     {
-                        Map bound = ( Map ) dependenciesMap.get( this );
+                        Map<ServiceReference<T>, RefPair<T>> bound = (Map)dependenciesMap.get( this );
                         if ( m_dependencyMetadata.isMultiple() ||
                                                 bound.isEmpty() ||
                                                 reference.compareTo( bound.keySet().iterator().next() ) > 0 )
@@ -408,11 +408,11 @@ public class DependencyManager implements ServiceListener, Reference
                 else if ( !isReluctant() )
                 {
                     //dynamic greedy single: bind then unbind
-                    Map dependenciesMap = m_componentManager.getDependencyMap();
+                    Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependenciesMap = m_componentManager.getDependencyMap();
                     if ( dependenciesMap != null )
                     {
-                        Map bound = ( Map ) dependenciesMap.get( this );
-                        ServiceReference oldRef = ( ServiceReference ) bound.keySet().iterator().next();
+                        Map<ServiceReference<T>, RefPair<T>> bound = (Map)dependenciesMap.get( this );
+                        ServiceReference oldRef = bound.keySet().iterator().next();
                         if ( reference.compareTo( oldRef ) > 0 )
                         {
                             m_componentManager.invokeBindMethod( this, reference );
@@ -444,7 +444,7 @@ public class DependencyManager implements ServiceListener, Reference
      * @param reference The reference to the service unregistering or being
      *      modified.
      */
-    private void serviceRemoved( ServiceReference reference )
+    private void serviceRemoved( ServiceReference<T> reference )
     {
         // if the dependency is not satisfied anymore, we have to
         // deactivate the component
@@ -470,11 +470,11 @@ public class DependencyManager implements ServiceListener, Reference
         // otherwise check whether the component is in a state to handle the event
         else if ( handleServiceEvent() || (m_componentManager.getState() & (Component.STATE_DISABLED | Component.STATE_DISPOSED)) != 0 )
         {
-            Map dependencyMap = m_componentManager.getDependencyMap();
-            Map referenceMap = null;
+            Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependencyMap = m_componentManager.getDependencyMap();
+            Map<ServiceReference<T>, RefPair<T>> referenceMap = null;
             if (dependencyMap != null)
             {
-                referenceMap = ( Map ) dependencyMap.get( this );
+                referenceMap = (Map)dependencyMap.get( this );
             }
             // if the dependency is static, we have to deactivate the component
             // to "remove" the dependency
@@ -511,7 +511,7 @@ public class DependencyManager implements ServiceListener, Reference
                     // if the dependency is mandatory and no replacement is
                     // available, bind returns false and we deactivate
                     // bind best matching service
-                    ServiceReference ref = getFrameworkServiceReference();
+                    ServiceReference<T> ref = getFrameworkServiceReference();
 
                     if ( ref == null )
                     {
@@ -652,12 +652,12 @@ public class DependencyManager implements ServiceListener, Reference
         // unget all services we once got
         if ( m_componentManager.getDependencyMap() != null )
         {
-            ServiceReference[] boundRefs = getBoundServiceReferences();
+            ServiceReference<T>[] boundRefs = getBoundServiceReferences();
             if ( boundRefs != null )
             {
-                for ( int i = 0; i < boundRefs.length; i++ )
+                for ( ServiceReference<T> ref: boundRefs )
                 {
-                    ungetService( boundRefs[i] );
+                    ungetService( ref );
                 }
             }
         }
@@ -691,13 +691,13 @@ public class DependencyManager implements ServiceListener, Reference
      * This method always directly accesses the framework's service registry
      * and ignores the services bound by this dependency manager.
      */
-    ServiceReference[] getFrameworkServiceReferences()
+    ServiceReference<T>[] getFrameworkServiceReferences()
     {
         return getFrameworkServiceReferences( getTarget() );
     }
 
 
-    private ServiceReference[] getFrameworkServiceReferences( String targetFilter )
+    private ServiceReference<T>[] getFrameworkServiceReferences( String targetFilter )
     {
         if ( hasGetPermission() )
         {
@@ -717,7 +717,7 @@ public class DependencyManager implements ServiceListener, Reference
 
             try
             {
-                return bc.getServiceReferences(
+                return ( ServiceReference<T>[] ) bc.getServiceReferences(
                     m_dependencyMetadata.getInterface(), targetFilter );
             }
             catch ( IllegalStateException ise )
@@ -738,7 +738,7 @@ public class DependencyManager implements ServiceListener, Reference
 
     private int getServiceReferenceCount()
     {
-        ServiceReference[] refs = getFrameworkServiceReferences();
+        ServiceReference<T>[] refs = getFrameworkServiceReferences();
         return refs == null? 0: refs.length;
     }
 
@@ -757,10 +757,10 @@ public class DependencyManager implements ServiceListener, Reference
      * This method always directly accesses the framework's service registry
      * and ignores the services bound by this dependency manager.
      */
-    ServiceReference getFrameworkServiceReference()
+    ServiceReference<T> getFrameworkServiceReference()
     {
         // get the framework registered services and short cut
-        ServiceReference[] refs = getFrameworkServiceReferences();
+        ServiceReference<T>[] refs = getFrameworkServiceReferences();
         if ( refs == null )
         {
             return null;
@@ -772,10 +772,10 @@ public class DependencyManager implements ServiceListener, Reference
 
 
         // find the service with the highest ranking
-        ServiceReference selectedRef = refs[0];
+        ServiceReference<T> selectedRef = refs[0];
         for ( int i = 1; i < refs.length; i++ )
         {
-            ServiceReference ref = refs[i];
+            ServiceReference<T> ref = refs[i];
             if ( ref.compareTo( selectedRef ) > 0 )
             {
                 selectedRef = ref;
@@ -792,9 +792,9 @@ public class DependencyManager implements ServiceListener, Reference
      * non-<code>null</code> service instance the service is then considered
      * bound to this instance.
      */
-    Object getService()
+    T getService()
     {
-        ServiceReference sr = getFrameworkServiceReference();
+        ServiceReference<T> sr = getFrameworkServiceReference();
         return ( sr != null ) ? getService( sr ) : null;
     }
 
@@ -806,25 +806,25 @@ public class DependencyManager implements ServiceListener, Reference
      * returned. All services returned by this method will be considered bound
      * after this method returns.
      */
-    Object[] getServices()
+    T[] getServices()
     {
-        ServiceReference[] sr = getFrameworkServiceReferences();
+        ServiceReference<T>[] sr = getFrameworkServiceReferences();
         if ( sr == null || sr.length == 0 )
         {
             return null;
         }
 
-        List services = new ArrayList();
-        for ( int i = 0; i < sr.length; i++ )
+        List<Object> services = new ArrayList<Object>();
+        for ( ServiceReference<T> ref: sr )
         {
-            Object service = getService( sr[i] );
+            Object service = getService( ref );
             if ( service != null )
             {
                 services.add( service );
             }
         }
 
-        return ( services.size() > 0 ) ? services.toArray() : null;
+        return ( services.size() > 0 ) ? services.toArray((T[])new Object[services.size()]) : null;
     }
 
 
@@ -835,20 +835,20 @@ public class DependencyManager implements ServiceListener, Reference
      * services this instance is bound to or <code>null</code> if no services
      * are actually bound.
      */
-    public ServiceReference[] getBoundServiceReferences()
+    public ServiceReference<T>[] getBoundServiceReferences()
     {
-        Map dependencyMap = m_componentManager.getDependencyMap();
+        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependencyMap = m_componentManager.getDependencyMap();
         if ( dependencyMap == null )
         {
             return null;
         }
-        Map bound = ( Map ) dependencyMap.get( this );
+        Map<ServiceReference<T>, RefPair<T>> bound = (Map)dependencyMap.get( this );
         if ( bound.isEmpty() )
         {
             return null;
         }
 
-        return ( ServiceReference[] ) bound.keySet().toArray( new ServiceReference[bound.size()] );
+        return bound.keySet().toArray( new ServiceReference[bound.size()] );
     }
 
 
@@ -857,12 +857,12 @@ public class DependencyManager implements ServiceListener, Reference
      */
     private boolean isBound()
     {
-        Map dependencyMap = m_componentManager.getDependencyMap();
+        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependencyMap = m_componentManager.getDependencyMap();
         if (dependencyMap  == null )
         {
             return false;
         }
-        Map bound = ( Map ) dependencyMap.get( this );
+        Map<ServiceReference<T>, RefPair<T>> bound = (Map)dependencyMap.get( this );
         return !bound.isEmpty();
     }
 
@@ -878,14 +878,14 @@ public class DependencyManager implements ServiceListener, Reference
      *      if the service is bound or <code>null</code> if the service is not
      *      bound.
      */
-    private RefPair getBoundService( ServiceReference serviceReference )
+    private RefPair getBoundService( ServiceReference<T> serviceReference )
     {
-        Map dependencyMap = m_componentManager.getDependencyMap();
+        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependencyMap = m_componentManager.getDependencyMap();
         if (dependencyMap == null)
         {
             return null;
         }
-        return ( RefPair ) (( Map ) dependencyMap.get( this )).get(serviceReference);
+        return dependencyMap.get( this ).get( serviceReference );
     }
 
 
@@ -900,15 +900,15 @@ public class DependencyManager implements ServiceListener, Reference
      * @return The requested service or <code>null</code> if no service is
      *      registered for the service reference (any more).
      */
-    Object getService( ServiceReference serviceReference )
+    T getService( ServiceReference<T> serviceReference )
     {
         // check whether we already have the service and return that one
         RefPair refPair = getBoundService( serviceReference );
         if ( refPair != null && refPair.getServiceObject() != null )
         {
-            return refPair.getServiceObject();
+            return (T)refPair.getServiceObject();
         }
-        Object serviceObject = null;
+        T serviceObject = null;
         // otherwise acquire the service
         try
         {
@@ -936,7 +936,7 @@ public class DependencyManager implements ServiceListener, Reference
             {
                 refPair = new RefPair( serviceReference );
                 refPair.setServiceObject( serviceObject );
-                ((Map)m_componentManager.getDependencyMap().get( this )).put( serviceReference, refPair );
+                m_componentManager.getDependencyMap().get( this ).put( serviceReference, refPair );
             }
         }
 
@@ -949,13 +949,13 @@ public class DependencyManager implements ServiceListener, Reference
      * Ungets the service described by the ServiceReference and removes it from
      * the list of bound services.
      */
-    void ungetService( ServiceReference serviceReference )
+    void ungetService( ServiceReference<T> serviceReference )
     {
         // check we really have this service, do nothing if not
-        Map dependencyMap = m_componentManager.getDependencyMap();
+        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependencyMap = m_componentManager.getDependencyMap();
         if ( dependencyMap != null )
         {
-            RefPair refPair  = ( RefPair ) ((Map ) dependencyMap.get( this )).get( serviceReference );
+            RefPair refPair  = dependencyMap.get( this ).get( serviceReference );
             if ( refPair != null && refPair.getServiceObject() != null )
             {
                 BundleComponentActivator activator = m_componentManager.getActivator();
@@ -1023,9 +1023,9 @@ public class DependencyManager implements ServiceListener, Reference
     }
 
 
-    boolean open( Object componentInstance, Map parameters )
+    boolean open( S componentInstance, Map<ServiceReference<?>, RefPair<?>> parameters )
     {
-        return bind( componentInstance, parameters);
+        return bind( componentInstance, (Map)parameters);
     }
 
 
@@ -1034,13 +1034,12 @@ public class DependencyManager implements ServiceListener, Reference
      * try to complete all that it can
      * @param componentInstance
      */
-    void close( Object componentInstance )
+    void close( S componentInstance )
     {
         unbind( componentInstance, getBoundServiceReferences() );
     }
 
-    //returns Map<ServiceReference, RefPair>
-    boolean prebind( Map dependencyMap)
+    boolean prebind( Map<DependencyManager<S, T>, Map<ServiceReference<T>, RefPair<T>>> dependencyMap)
     {
         // If no references were received, we have to check if the dependency
         // is optional, if it is not then the dependency is invalid
@@ -1053,11 +1052,11 @@ public class DependencyManager implements ServiceListener, Reference
         // we have nothing to do and just signal success
         if ( m_dependencyMetadata.getBind() == null )
         {
-            dependencyMap.put( this, new HashMap( ) );
+            dependencyMap.put( this, new HashMap<ServiceReference<T>, RefPair<T>>( ) );
             return true;
         }
 
-        Map result = new HashMap(); //<ServiceReference, RefPair>
+        Map<ServiceReference<T>, RefPair<T>> result = new HashMap<ServiceReference<T>, RefPair<T>>();
         // assume success to begin with: if the dependency is optional,
         // we don't care, whether we can bind a service. Otherwise, we
         // require at least one service to be bound, thus we require
@@ -1068,22 +1067,22 @@ public class DependencyManager implements ServiceListener, Reference
         if ( m_dependencyMetadata.isMultiple() )
         {
             // bind all registered services
-            ServiceReference[] refs = getFrameworkServiceReferences();
+            ServiceReference<T>[] refs = getFrameworkServiceReferences();
             if ( refs != null )
             {
-                for ( int index = 0; index < refs.length; index++ )
+                for ( ServiceReference<T> ref : refs )
                 {
-                    RefPair refPair = new RefPair( refs[index] );
+                    RefPair refPair = new RefPair( ref );
                     // success is if we have the minimal required number of services bound
                     if ( m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ) )
                     {
-                        result.put( refs[index], refPair );
+                        result.put( ref, refPair );
                         // of course, we have success if the service is bound
                         success = true;
                     }
                     else
                     {
-                        m_componentManager.getActivator().registerMissingDependency(this, refs[index]);
+                        m_componentManager.getActivator().registerMissingDependency( this, ref );
                     }
                 }
             }
@@ -1123,7 +1122,7 @@ public class DependencyManager implements ServiceListener, Reference
      * @return true if the dependency is satisfied and at least the minimum
      *      number of services could be bound. Otherwise false is returned.
      */
-    private boolean bind( Object componentInstance, Map parameters )
+    private boolean bind( S componentInstance, Map<ServiceReference<T>, RefPair<T>> parameters )
     {
         // If no references were received, we have to check if the dependency
         // is optional, if it is not then the dependency is invalid
@@ -1150,11 +1149,10 @@ public class DependencyManager implements ServiceListener, Reference
 
         m_componentManager.log( LogService.LOG_DEBUG,
             "For dependency {0}, optional: {1}; to bind: {2}",
-            new Object[]{ m_dependencyMetadata.getName(), new Boolean( success ), parameters }, null );
-        for ( Iterator i = parameters.entrySet().iterator(); i.hasNext(); )
+            new Object[]{ m_dependencyMetadata.getName(), success, parameters }, null );
+        for ( Map.Entry<ServiceReference<T>, RefPair<T>> entry : parameters.entrySet() )
         {
-            Map.Entry entry = ( Map.Entry ) i.next();
-            if ( !invokeBindMethod( componentInstance, ( RefPair ) entry.getValue() ) )
+            if ( !invokeBindMethod( componentInstance, entry.getValue() ) )
             {
                 m_componentManager.log( LogService.LOG_DEBUG,
                         "For dependency {0}, failed to invoke bind method on object {1}",
@@ -1177,7 +1175,7 @@ public class DependencyManager implements ServiceListener, Reference
      * @param componentInstance
      * @param ref The <code>ServiceReference</code> representing the updated
      */
-    void update( Object componentInstance, final ServiceReference ref )
+    void update( S componentInstance, final ServiceReference<T> ref )
     {
         if ( m_dependencyMetadata.getUpdated() != null )
         {
@@ -1190,7 +1188,7 @@ public class DependencyManager implements ServiceListener, Reference
      * Revoke the given bindings. This method cannot throw an exception since
      * it must try to complete all that it can
      */
-    private void unbind( Object componentInstance, ServiceReference[] boundRefs )
+    private void unbind( S componentInstance, ServiceReference<T>[] boundRefs )
     {
         if ( boundRefs != null )
         {
@@ -1198,28 +1196,28 @@ public class DependencyManager implements ServiceListener, Reference
             // in the delayed component situation) and the unbind method is declared.
             boolean doUnbind = componentInstance != null && m_dependencyMetadata.getUnbind() != null;
 
-            for ( int i = 0; i < boundRefs.length; i++ )
+            for ( ServiceReference<T> boundRef : boundRefs )
             {
                 if ( doUnbind )
                 {
-                    invokeUnbindMethod( componentInstance, boundRefs[i] );
+                    invokeUnbindMethod( componentInstance, boundRef );
                 }
 
                 // unget the service, we call it here since there might be a
                 // bind method (or the locateService method might have been
                 // called) but there is no unbind method to actually unbind
                 // the service (see FELIX-832)
-                ungetService( boundRefs[i] );
+                ungetService( boundRef );
             }
         }
     }
 
-    boolean invokeBindMethod( Object componentInstance, ServiceReference ref )
+    boolean invokeBindMethod( S componentInstance, ServiceReference<T> ref )
     {
         //event driven, and we already checked this ref is not yet handled.
         if ( componentInstance != null )
         {
-            Map dependencyMap = m_componentManager.getDependencyMap();
+            Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependencyMap = m_componentManager.getDependencyMap();
             if ( dependencyMap != null )
             {
                 if (m_bindMethods == null)
@@ -1230,8 +1228,8 @@ public class DependencyManager implements ServiceListener, Reference
                             { m_dependencyMetadata.getName(), new Integer(m_componentManager.getState())  }, null );
 
                 }
-                Map deps = ( Map ) dependencyMap.get( this );
-                RefPair refPair = new RefPair( ref );
+                Map<ServiceReference<T>, RefPair<T>> deps = (Map)dependencyMap.get( this );
+                RefPair<T> refPair = new RefPair<T>( ref );
                 if ( !m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ) )
                 {
                     //reference deactivated while we are processing.
@@ -1251,7 +1249,7 @@ public class DependencyManager implements ServiceListener, Reference
         }
     }
 
-    public void invokeBindMethodLate( final ServiceReference ref )
+    public void invokeBindMethodLate( final ServiceReference<T> ref )
     {
         if ( !isSatisfied() )
         {
@@ -1259,7 +1257,7 @@ public class DependencyManager implements ServiceListener, Reference
         }
         if ( !isMultiple() )
         {
-            ServiceReference[] refs = getFrameworkServiceReferences();
+            ServiceReference<T>[] refs = getFrameworkServiceReferences();
             if ( refs == null )
             {
                 return; // should not happen, we have one!
@@ -1267,7 +1265,7 @@ public class DependencyManager implements ServiceListener, Reference
             // find the service with the highest ranking
             for ( int i = 1; i < refs.length; i++ )
             {
-                ServiceReference test = refs[i];
+                ServiceReference<T> test = refs[i];
                 if ( test.compareTo( ref ) > 0 )
                 {
                     return; //another ref is better
@@ -1296,7 +1294,7 @@ public class DependencyManager implements ServiceListener, Reference
      *      be handed over to the bind method but the service cannot be
      *      retrieved using the service reference.
      */
-    private boolean invokeBindMethod( Object componentInstance, RefPair refPair )
+    private boolean invokeBindMethod( S componentInstance, RefPair refPair )
     {
         // The bind method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
@@ -1337,13 +1335,13 @@ public class DependencyManager implements ServiceListener, Reference
      * @param componentInstance
      * @param ref A service reference corresponding to the service whose service
      */
-    private void invokeUpdatedMethod( Object componentInstance, final ServiceReference ref )
+    private void invokeUpdatedMethod( S componentInstance, final ServiceReference<T> ref )
     {
         // The updated method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
-            RefPair refPair = ( RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
+            RefPair refPair = m_componentManager.getDependencyMap().get( this ).get( ref );
             if (refPair == null)
             {
 
@@ -1387,13 +1385,13 @@ public class DependencyManager implements ServiceListener, Reference
      * @param componentInstance
      * @param ref A service reference corresponding to the service that will be
      */
-    void invokeUnbindMethod( Object componentInstance, final ServiceReference ref )
+    void invokeUnbindMethod( S componentInstance, final ServiceReference<T> ref )
     {
         // The unbind method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
-            RefPair refPair = ( RefPair ) ((Map )m_componentManager.getDependencyMap().get( this )).get( ref );
+            RefPair refPair = m_componentManager.getDependencyMap().get( this ).get( ref );
             if (refPair == null)
             {
                 //TODO should this be possible? If so, reduce or eliminate logging
@@ -1448,7 +1446,7 @@ public class DependencyManager implements ServiceListener, Reference
      * apply.</li>
      * </ol>
      */
-    boolean canUpdateDynamically( Dictionary properties )
+    boolean canUpdateDynamically( Dictionary<String, Object> properties )
     {
         // 1. no target filter change
         final String newTarget = ( String ) properties.get( m_dependencyMetadata.getTargetPropertyName() );
@@ -1474,7 +1472,7 @@ public class DependencyManager implements ServiceListener, Reference
         // invariant: target filter change + dynamic policy
 
         // 3. check target services matching the new filter
-        ServiceReference[] refs = getFrameworkServiceReferences( newTarget );
+        ServiceReference<T>[] refs = getFrameworkServiceReferences( newTarget );
         if ( refs != null && refs.length > 0 )
         {
             // can update since there is at least on service matching the
@@ -1508,7 +1506,7 @@ public class DependencyManager implements ServiceListener, Reference
      * @param properties The properties containing the optional target service
      *      filter property
      */
-    void setTargetFilter( Dictionary properties )
+    void setTargetFilter( Dictionary<String, Object> properties )
     {
         try
         {

@@ -42,18 +42,18 @@ import org.osgi.service.log.LogService;
  * The <code>ServiceFactoryComponentManager</code> for components specified with &lt;service serviceFactory='true'/&gt;
  * in the xml metadata. The component must be delayed, not immediate or factory.
  */
-public class ServiceFactoryComponentManager extends ImmediateComponentManager
+public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager<S>
 {
 
     // maintain the map of ComponentContext objects created for the
     // service instances
-    private IdentityHashMap serviceContexts = new IdentityHashMap();
+    private IdentityHashMap<S, BundleComponentContext> serviceContexts = new IdentityHashMap<S, BundleComponentContext>();
 
     // pseudo map of implementation objects to be used for service
     // binding while calling the activate method. The map's keys and values
     // are just the implementation objects. The objects will only be
     // contained while the activate method is being called.
-    private IdentityHashMap tmpImplementationObjects = new IdentityHashMap();
+    private IdentityHashMap<S, BundleComponentContext> tmpImplementationObjects = new IdentityHashMap<S, BundleComponentContext>();
 
     /**
      * @param activator BundleComponentActivator for this DS implementation
@@ -111,7 +111,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
     /* (non-Javadoc)
      * @see org.osgi.framework.ServiceFactory#getService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration)
      */
-    public Object getService( Bundle bundle, ServiceRegistration registration )
+    public S getService( Bundle bundle, ServiceRegistration<S> registration )
     {
         log( LogService.LOG_DEBUG, "ServiceFactory.getService()", null );
 
@@ -143,9 +143,9 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
         }
         // private ComponentContext and implementation instances
         final BundleComponentContext serviceContext = new BundleComponentContext( this, bundle );
-        Object service = createImplementationObject( serviceContext, new SetImplementationObject()
+        S service = createImplementationObject( serviceContext, new SetImplementationObject<S>()
         {
-            public void presetImplementationObject( Object implementationObject )
+            public void presetImplementationObject( S implementationObject )
             {
                 serviceContext.setImplementationObject( implementationObject );
                 tmpImplementationObjects.put( implementationObject, serviceContext );
@@ -153,7 +153,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
             }
 
 
-            public void setImplementationObject( Object implementationObject )
+            public void setImplementationObject( S implementationObject )
             {
                 serviceContexts.put( implementationObject, serviceContext );
                 tmpImplementationObjects.remove( implementationObject );
@@ -166,7 +166,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
             }
 
 
-            public void resetImplementationObject( Object implementationObject )
+            public void resetImplementationObject( S implementationObject )
             {
                 tmpImplementationObjects.remove( implementationObject );
                 serviceContext.setImplementationObject( null );
@@ -189,7 +189,7 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
     /* (non-Javadoc)
      * @see org.osgi.framework.ServiceFactory#ungetService(org.osgi.framework.Bundle, org.osgi.framework.ServiceRegistration, java.lang.Object)
      */
-    public void ungetService( Bundle bundle, ServiceRegistration registration, Object service )
+    public void ungetService( Bundle bundle, ServiceRegistration<S> registration, S service )
     {
         log( LogService.LOG_DEBUG, "ServiceFactory.ungetService()", null );
 
@@ -208,40 +208,35 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
         }
     }
 
-    void update( DependencyManager dependencyManager, ServiceReference ref )
+    <T> void update( DependencyManager<S, T> dependencyManager, ServiceReference<T> ref )
     {
-        for ( Iterator it = serviceContexts.keySet().iterator(); it.hasNext(); )
+        for ( S implementationObject : serviceContexts.keySet() )
         {
-            Object implementationObject = it.next();
             dependencyManager.update( implementationObject, ref );
         }
     }
 
-    void invokeBindMethod( DependencyManager dependencyManager, ServiceReference reference )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> reference )
     {
-        for ( Iterator it = serviceContexts.keySet().iterator(); it.hasNext(); )
+        for ( S implementationObject : serviceContexts.keySet() )
         {
-            Object implementationObject = it.next();
-            dependencyManager.invokeBindMethod( implementationObject, reference);
+            dependencyManager.invokeBindMethod( implementationObject, reference );
         }
-        for ( Iterator it = tmpImplementationObjects.keySet().iterator(); it.hasNext(); )
+        for ( S implementationObject : tmpImplementationObjects.keySet() )
         {
-            Object implementationObject = it.next();
-            dependencyManager.invokeBindMethod( implementationObject, reference);
+            dependencyManager.invokeBindMethod( implementationObject, reference );
         }
     }
 
-    void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> oldRef )
     {
-        for ( Iterator it = serviceContexts.keySet().iterator(); it.hasNext(); )
+        for ( S implementationObject : serviceContexts.keySet() )
         {
-            Object implementationObject = it.next();
-            dependencyManager.invokeUnbindMethod( implementationObject, oldRef);
+            dependencyManager.invokeUnbindMethod( implementationObject, oldRef );
         }
-        for ( Iterator it = tmpImplementationObjects.keySet().iterator(); it.hasNext(); )
+        for ( S implementationObject : tmpImplementationObjects.keySet() )
         {
-            Object implementationObject = it.next();
-            dependencyManager.invokeUnbindMethod( implementationObject, oldRef);
+            dependencyManager.invokeUnbindMethod( implementationObject, oldRef );
         }
     }
 
@@ -249,20 +244,18 @@ public class ServiceFactoryComponentManager extends ImmediateComponentManager
     {
         ModifiedMethod modifiedMethod = getComponentMethods().getModifiedMethod();
         MethodResult result = null;
-        for (Iterator i = serviceContexts.values().iterator(); i.hasNext(); )
+        for ( BundleComponentContext componentContext : serviceContexts.values() )
         {
-            BundleComponentContext componentContext = ( BundleComponentContext ) i.next();
             Object instance = componentContext.getInstance();
             result = modifiedMethod.invoke( instance,
                     new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID );
 
         }
-        for (Iterator i = tmpImplementationObjects.values().iterator(); i.hasNext(); )
+        for ( BundleComponentContext componentContext : tmpImplementationObjects.values() )
         {
-            BundleComponentContext componentContext = ( BundleComponentContext ) i.next();
             Object instance = componentContext.getInstance();
             result = modifiedMethod.invoke( instance,
-                new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID );
+                    new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID );
 
         }
         return result;

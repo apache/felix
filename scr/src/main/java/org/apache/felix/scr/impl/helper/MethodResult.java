@@ -41,11 +41,11 @@ public class MethodResult
     /**
      * The actual result from the method, which may be <code>null</code>.
      */
-    private final Map result;
+    private final Map<String, Object> result;
 
     private final boolean hasResult;
 
-    MethodResult(final boolean hasResult, final Map result)
+    MethodResult(final boolean hasResult, final Map<String, Object> result)
     {
         this.hasResult = hasResult;
         this.result = result;
@@ -56,7 +56,7 @@ public class MethodResult
         return hasResult;
     }
 
-    public Map getResult()
+    public Map<String, Object> getResult()
     {
         return result;
     }
