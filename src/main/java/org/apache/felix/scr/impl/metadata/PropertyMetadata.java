@@ -92,7 +92,7 @@ public class PropertyMetadata {
             return;
         }
         // splite th values
-        List valueList = new ArrayList();
+        List<String> valueList = new ArrayList<String>();
         StringTokenizer tokener = new StringTokenizer(values, "\r\n");
         while (tokener.hasMoreTokens()) {
             String value = tokener.nextToken().trim();
@@ -324,7 +324,7 @@ public class PropertyMetadata {
             boolean[] array = new boolean[valueList.length];
             for ( int i = 0; i < array.length; i++ )
             {
-                array[i] = Boolean.valueOf( valueList[i] ).booleanValue();
+                array[i] = Boolean.valueOf( valueList[i] );
             }
             return array;
         }

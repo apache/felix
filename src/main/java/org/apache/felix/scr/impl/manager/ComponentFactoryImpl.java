@@ -58,7 +58,7 @@ import org.osgi.service.log.LogService;
  * with earlier releases of the Apache Felix Declarative Services implementation.
  * But keep in mind, that this is non-standard behaviour.
  */
-public class ComponentFactoryImpl extends AbstractComponentManager implements ComponentFactory, ComponentHolder
+public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> implements ComponentFactory, ComponentHolder
 {
 
     /**
@@ -71,14 +71,14 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
      * entry is the same as the entry's key.
      * This is an IdentityHashMap for speed, thus not a Set.
      */
-    private final Map m_componentInstances;
+    private final Map<ImmediateComponentManager, ImmediateComponentManager> m_componentInstances;
 
     /**
      * The configuration for the component factory. This configuration is
      * supplied as the base configuration for each component instance created
      * by the {@link #newInstance(Dictionary)} method.
      */
-    private volatile Dictionary m_configuration;
+    private volatile Dictionary<String, Object> m_configuration;
     
     /**
      * Flag telling if our component factory is configured from config admin.
@@ -90,8 +90,8 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
         super( activator, metadata, new ComponentMethods() );
-        m_componentInstances = new IdentityHashMap();
-        m_configuration = new Hashtable();
+        m_componentInstances = new IdentityHashMap<ImmediateComponentManager, ImmediateComponentManager>();
+        m_configuration = new Hashtable<String, Object>();
     }
 
 
@@ -204,15 +204,14 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     }
 
 
-    public Dictionary getProperties()
+    public Dictionary<String, Object> getProperties()
     {
-        Dictionary props = getServiceProperties();
+        Dictionary<String, Object> props = getServiceProperties();
 
         // add target properties of references
-        List depMetaData = getComponentMetadata().getDependencies();
-        for ( Iterator di = depMetaData.iterator(); di.hasNext(); )
+        List<ReferenceMetadata> depMetaData = getComponentMetadata().getDependencies();
+        for ( ReferenceMetadata rm : depMetaData )
         {
-            ReferenceMetadata rm = ( ReferenceMetadata ) di.next();
             if ( rm.getTarget() != null )
             {
                 props.put( rm.getTargetPropertyName(), rm.getTarget() );
@@ -220,9 +219,9 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
         }
 
         // add target properties from configuration (if we have one)        
-        for ( Object key : Collections.list( m_configuration.keys() ) )
+        for ( String key : Collections.list( m_configuration.keys() ) )
         {
-            if ( key.toString().endsWith( ".target" ) )
+            if ( key.endsWith( ".target" ) )
             {
                 props.put( key, m_configuration.get( key ) );
             }
@@ -237,9 +236,9 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     }
 
 
-    public Dictionary getServiceProperties()
+    public Dictionary<String, Object> getServiceProperties()
     {
-        Dictionary props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         // 112.5.5 The Component Factory service must register with the following properties
         props.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
@@ -268,28 +267,28 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
 
     protected boolean collectDependencies()
     {
-        Map old = getDependencyMap();
+        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> old = getDependencyMap();
         if ( old == null )
         {
-            Map dependenciesMap = new HashMap();
-            for (Iterator i = getDependencyManagers(); i.hasNext(); )
+            Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependenciesMap = new HashMap<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>>();
+            for (DependencyManager dm: getDependencyManagers() )
             {
-                dependenciesMap.put( i.next(), Collections.EMPTY_MAP );
+                dependenciesMap.put( dm, Collections.EMPTY_MAP );
             }
             setDependencyMap( old, dependenciesMap );
         }
         return true;
     }
 
-    void update( DependencyManager dependencyManager, ServiceReference ref )
+    <T> void update( DependencyManager<S, T> dependencyManager, ServiceReference<T> ref )
     {
     }
 
-    void invokeBindMethod( DependencyManager dependencyManager, ServiceReference reference )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> reference )
     {
     }
 
-    void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> oldRef )
     {
     }
 
@@ -340,7 +339,7 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
     }
 
 
-    public void configurationUpdated( String pid, Dictionary configuration )
+    public void configurationUpdated( String pid, Dictionary<String, Object> configuration )
     {
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
@@ -399,13 +398,13 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
 
     public Component[] getComponents()
     {
-        List cms = getComponentList();
-        return (Component[]) cms.toArray( new Component[ cms.size() ] );
+        List<AbstractComponentManager> cms = getComponentList();
+        return cms.toArray( new Component[ cms.size() ] );
     }
 
-    protected List getComponentList()
+    protected List<AbstractComponentManager> getComponentList()
     {
-        List cms = new ArrayList( );
+        List<AbstractComponentManager> cms = new ArrayList<AbstractComponentManager>( );
         cms.add( this );
         getComponentManagers( m_componentInstances, cms );
         return cms;
@@ -440,11 +439,11 @@ public class ComponentFactoryImpl extends AbstractComponentManager implements Co
      */
     public void disposeComponents( int reason )
     {
-        List cms = new ArrayList( );
+        List<AbstractComponentManager> cms = new ArrayList<AbstractComponentManager>( );
         getComponentManagers( m_componentInstances, cms );
-        for ( Iterator i = cms.iterator(); i.hasNext(); )
+        for ( AbstractComponentManager acm: cms )
         {
-            ((AbstractComponentManager)i.next()).dispose( reason );
+            acm.dispose( reason );
         }
 
         synchronized ( m_componentInstances )

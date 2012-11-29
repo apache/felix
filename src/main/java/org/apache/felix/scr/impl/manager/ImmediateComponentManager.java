@@ -46,16 +46,16 @@ import org.osgi.service.log.LogService;
  * The default ComponentManager. Objects of this class are responsible for managing
  * implementation object's lifecycle.
  */
-public class ImmediateComponentManager extends AbstractComponentManager implements ServiceFactory
+public class ImmediateComponentManager<S> extends AbstractComponentManager<S> implements ServiceFactory<S>
 {
 
     // The object that implements the service and that is bound to other services
-    private volatile Object m_implementationObject;
+    private volatile S m_implementationObject;
 
     // The component implementation object temporarily set to allow
     // for service updates during activation. This field is only set
     // to a non-null value while calling the activate method
-    private volatile Object m_tmpImplementationObject;
+    private volatile S m_tmpImplementationObject;
 
     // keep the using bundles as reference "counters" for instance deactivation
     private volatile int m_useCount;
@@ -67,18 +67,18 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
     private ComponentHolder m_componentHolder;
 
     // optional properties provided in the ComponentFactory.newInstance method
-    private Dictionary m_factoryProperties;
+    private Dictionary<String, Object> m_factoryProperties;
 
     // the component properties, also used as service properties
-    private Dictionary m_properties;
+    private Dictionary<String, Object> m_properties;
 
     // properties supplied ot ExtComponentContext.updateProperties
     // null if properties are not to be overwritten
-    private Dictionary m_serviceProperties;
+    private Dictionary<String, Object> m_serviceProperties;
 
     // the component properties from the Configuration Admin Service
     // this is null, if none exist or none are provided
-    private Dictionary m_configurationProperties;
+    private Dictionary<String, Object> m_configurationProperties;
 
     /**
      * The constructor receives both the activator and the metadata
@@ -121,9 +121,9 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         if ( m_implementationObject == null )
         {
             final ComponentContextImpl tmpContext = new ComponentContextImpl( this );
-            Object tmpComponent = createImplementationObject( tmpContext, new SetImplementationObject()
+            S tmpComponent = createImplementationObject( tmpContext, new SetImplementationObject<S>()
             {
-                public void setImplementationObject( Object implementationObject )
+                public void setImplementationObject( S implementationObject )
                 {
                     m_componentContext = tmpContext;
                     m_implementationObject = implementationObject;
@@ -131,13 +131,13 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 }
 
 
-                public void presetImplementationObject( Object implementationObject )
+                public void presetImplementationObject( S implementationObject )
                 {
                     m_tmpImplementationObject = implementationObject;
                 }
 
 
-                public void resetImplementationObject( Object implementationObject )
+                public void resetImplementationObject( S implementationObject )
                 {
                     m_tmpImplementationObject = null;
                 }
@@ -202,7 +202,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
      * potentially other parts as part of the {@link #createImplementationObject} method
      * processing.
      */
-    protected interface SetImplementationObject
+    protected interface SetImplementationObject<S>
     {
 
         /**
@@ -211,7 +211,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
          * temporarily set the implementation object during the activator
          * call.
          */
-        void presetImplementationObject( Object implementationObject );
+        void presetImplementationObject( S implementationObject );
 
 
         /**
@@ -220,7 +220,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
          * revert any temporary settings done in the {@link #presetImplementationObject(Object)}
          * method.
          */
-        void resetImplementationObject( Object implementationObject );
+        void resetImplementationObject( S implementationObject );
 
 
         /**
@@ -230,14 +230,14 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
          * by the {@link #presetImplementationObject(Object)} should be
          * removed and the implementation object is now accessible.
          */
-        void setImplementationObject( Object implementationObject );
+        void setImplementationObject( S implementationObject );
     }
 
 
-    protected Object createImplementationObject( ComponentContext componentContext, SetImplementationObject setter )
+    protected S createImplementationObject( ComponentContext componentContext, SetImplementationObject setter )
     {
-        final Class implementationObjectClass;
-        final Object implementationObject;
+        final Class<S> implementationObjectClass;
+        final S implementationObject;
 
         // 1. Load the component implementation class
         // 2. Create the component instance and component context
@@ -245,8 +245,8 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         try
         {
             // 112.4.4 The class is retrieved with the loadClass method of the component's bundle
-            implementationObjectClass = getActivator().getBundleContext().getBundle().loadClass(
-                    getComponentMetadata().getImplementationClassName() );
+            implementationObjectClass = (Class<S>) getActivator().getBundleContext().getBundle().loadClass(
+                    getComponentMetadata().getImplementationClassName() )  ;
 
             // 112.4.4 The class must be public and have a public constructor without arguments so component instances
             // may be created by the SCR with the newInstance method on Class
@@ -260,15 +260,14 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         }
 
         // 3. Bind the target services
-        Map parameters = getParameterMap();
-        Iterator it = getDependencyManagers();
-        while ( it.hasNext() )
+        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> parameters = getDependencyMap();
+
+        for ( DependencyManager<S, ?> dm: getDependencyManagers())
         {
             // if a dependency turned unresolved since the validation check,
             // creating the instance fails here, so we deactivate and return
             // null.
-            DependencyManager dm = ( DependencyManager ) it.next();
-            Map params = ( Map ) parameters.get( dm );  //<ServiceReference, RefPair>
+            Map<ServiceReference<?>, RefPair<?>> params = parameters.get( dm );
             if ( !dm.open( implementationObject, params ) )
             {
                 log( LogService.LOG_ERROR, "Cannot create component instance due to failure to bind reference {0}",
@@ -276,11 +275,9 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                                 {dm.getName()}, null );
 
                 // make sure, we keep no bindings
-                it = getReversedDependencyManagers();
-                while ( it.hasNext() )
+                for ( DependencyManager md: getReversedDependencyManagers() )
                 {
-                    dm = ( DependencyManager ) it.next();
-                    dm.close( implementationObject );
+                    md.close( implementationObject );
                 }
 
                 return null;
@@ -300,11 +297,9 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
             // 112.5.8 If the activate method throws an exception, SCR must log an error message
             // containing the exception with the Log Service and activation fails
-            it = getDependencyManagers();
-            while ( it.hasNext() )
+            for ( DependencyManager md: getReversedDependencyManagers() )
             {
-                DependencyManager dm = ( DependencyManager ) it.next();
-                dm.close( implementationObject );
+                md.close( implementationObject );
             }
 
             return null;
@@ -335,11 +330,9 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         }
 
         // 2. Unbind any bound services
-        Iterator it = getReversedDependencyManagers();
-        while ( it.hasNext() )
+        for ( DependencyManager md: getReversedDependencyManagers() )
         {
-            DependencyManager dm = ( DependencyManager ) it.next();
-            dm.close( implementationObject );
+            md.close( implementationObject );
         }
 
         // 3. Release all references
@@ -356,25 +349,25 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         return Active.getInstance();
     }
 
-    void update( DependencyManager dependencyManager, ServiceReference ref )
+    <T> void update( DependencyManager<S, T> dependencyManager, ServiceReference<T> ref )
     {
-        final Object impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
+        final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
         dependencyManager.update( impl, ref );
     }
 
-    void invokeBindMethod( DependencyManager dependencyManager, ServiceReference reference )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> reference )
     {
-        final Object impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
+        final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
         dependencyManager.invokeBindMethod( impl, reference);
     }
 
-    void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> oldRef )
     {
-        final Object impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
+        final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
         dependencyManager.invokeUnbindMethod( impl, oldRef);
     }
 
-    protected void setFactoryProperties( Dictionary dictionary )
+    protected void setFactoryProperties( Dictionary<String, Object> dictionary )
     {
         m_factoryProperties = copyTo( null, dictionary );
     }
@@ -409,21 +402,19 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
      *
      * @return a private Hashtable of component properties
      */
-    public Dictionary getProperties()
+    public Dictionary<String, Object> getProperties()
     {
 
         if ( m_properties == null )
         {
 
             // 1. the properties from the component descriptor
-            Dictionary props = copyTo( null, getComponentMetadata().getProperties() );
+            Dictionary<String, Object> props = copyTo( null, getComponentMetadata().getProperties() );
 
             // 2. add target properties of references
             // 112.6 Component Properties, target properties (p. 302)
-            List depMetaData = getComponentMetadata().getDependencies();
-            for ( Iterator di = depMetaData.iterator(); di.hasNext(); )
+            for ( ReferenceMetadata rm : getComponentMetadata().getDependencies() )
             {
-                ReferenceMetadata rm = ( ReferenceMetadata ) di.next();
                 if ( rm.getTarget() != null )
                 {
                     props.put( rm.getTargetPropertyName(), rm.getTarget() );
@@ -438,7 +429,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
             // 5. set component.name and component.id
             props.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
-            props.put( ComponentConstants.COMPONENT_ID, new Long( getId() ) );
+            props.put( ComponentConstants.COMPONENT_ID, getId() );
 
             m_properties = props;
         }
@@ -446,7 +437,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         return m_properties;
     }
 
-    public void setServiceProperties( Dictionary serviceProperties )
+    public void setServiceProperties( Dictionary<String, Object> serviceProperties )
     {
         if ( serviceProperties == null || serviceProperties.isEmpty() )
         {
@@ -457,13 +448,13 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
             m_serviceProperties = copyTo( null, serviceProperties, false );
             // set component.name and component.id
             m_serviceProperties.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
-            m_serviceProperties.put( ComponentConstants.COMPONENT_ID, new Long( getId() ) );
+            m_serviceProperties.put( ComponentConstants.COMPONENT_ID, getId() );
         }
 
         updateServiceRegistration();
     }
 
-    public Dictionary getServiceProperties()
+    public Dictionary<String, Object> getServiceProperties()
     {
         if ( m_serviceProperties != null )
         {
@@ -474,13 +465,13 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
     private void updateServiceRegistration()
     {
-        ServiceRegistration sr = getServiceRegistration();
+        ServiceRegistration<?> sr = getServiceRegistration();
         if ( sr != null )
         {
             try
             {
                 // Don't propagate if service properties did not change.
-                final Dictionary regProps = getServiceProperties();
+                final Dictionary<String, Object> regProps = getServiceProperties();
                 if ( !servicePropertiesMatches( sr, regProps ) )
                 {
                     sr.setProperties( regProps );
@@ -518,7 +509,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
      *                      the Configuration Admin Service or <code>null</code> if there is
      *                      no configuration or if the configuration has just been deleted.
      */
-    public void reconfigure( Dictionary configuration )
+    public void reconfigure( Dictionary<String, Object> configuration )
     {
         // nothing to do if there is no configuration (see FELIX-714)
         if ( configuration == null && m_configurationProperties == null )
@@ -594,11 +585,9 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
 
         // 3. check whether we can dynamically apply the configuration if
         // any target filters influence the bound services
-        final Dictionary props = getProperties();
-        Iterator it = getDependencyManagers();
-        while ( it.hasNext() )
+        final Dictionary<String, Object> props = getProperties();
+        for ( DependencyManager dm: getDependencyManagers() )
         {
-            DependencyManager dm = ( DependencyManager ) it.next();
             if ( !dm.canUpdateDynamically( props ) )
             {
                 log( LogService.LOG_DEBUG,
@@ -672,9 +661,9 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
      * @return <code>true</code> if the registration service properties equals
      *         the prop properties, false if not.
      */
-    private boolean servicePropertiesMatches( ServiceRegistration reg, Dictionary props )
+    private boolean servicePropertiesMatches( ServiceRegistration reg, Dictionary<String, Object> props )
     {
-        Dictionary regProps = new Hashtable();
+        Dictionary<String, Object> regProps = new Hashtable<String, Object>();
         String[] keys = reg.getReference().getPropertyKeys();
         for ( int i = 0; keys != null && i < keys.length; i++ )
         {
@@ -687,7 +676,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
         return regProps.equals( props );
     }
 
-    public Object getService( Bundle bundle, ServiceRegistration serviceRegistration )
+    public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
             Object implementationObject = m_implementationObject;
             if ( implementationObject == null )
@@ -725,7 +714,7 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                     if ( m_implementationObject == null )
                     {
                         //state should be "Registered"
-                        Object result = state().getService( this );
+                        S result = (S) state().getService( this );
                         if ( result != null )
                         {
                             m_useCount++;
@@ -740,10 +729,10 @@ public class ImmediateComponentManager extends AbstractComponentManager implemen
                 }
             }
             m_useCount++;
-            return implementationObject;
+            return (S) implementationObject;
     }
 
-    public void ungetService( Bundle bundle, ServiceRegistration serviceRegistration, Object o )
+    public void ungetService( Bundle bundle, ServiceRegistration<S> serviceRegistration, S o )
     {
         // the framework should not call ungetService more than it calls
         // calls getService. Still, we want to be sure to not go below zero

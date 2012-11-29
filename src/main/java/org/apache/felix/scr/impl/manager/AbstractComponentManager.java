@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.sun.xml.internal.rngom.binary.DataExceptPattern;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -59,7 +60,7 @@ import org.osgi.service.log.LogService;
  * implementation object's lifecycle.
  *
  */
-public abstract class AbstractComponentManager implements Component, SimpleLogger
+public abstract class AbstractComponentManager<S> implements Component, SimpleLogger
 {
 
     // the ID of this component
@@ -76,26 +77,21 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
     private final ComponentMethods m_componentMethods;
 
     // The dependency managers that manage every dependency
-    private final List m_dependencyManagers;
+    private final List<DependencyManager> m_dependencyManagers;
 
     private boolean m_dependencyManagersInitialized;
 
-    //<Map<DependencyManager, Map<ServiceReference, RefPair>>>
-    private final AtomicReference m_dependencies_map;
+    private final AtomicReference<Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>>> m_dependencies_map;
 
     // A reference to the BundleComponentActivator
     private BundleComponentActivator m_activator;
 
     // The ServiceRegistration
-    private final AtomicReference m_serviceRegistration;
+    private final AtomicReference<ServiceRegistration<S>> m_serviceRegistration;
 
     private final ReentrantLock m_stateLock;
 
     private long m_timeout = 5000;
-
-//    private Thread lockingThread;
-//    private Throwable lockingStackTrace;
-//    private ArrayList lockingActivity = new ArrayList( );
 
     protected volatile boolean enabled;
     protected volatile CountDownLatch enabledLatch;
@@ -125,8 +121,8 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         m_dependencyManagers = loadDependencyManagers( metadata );
 
         m_stateLock = new ReentrantLock( true );
-        m_dependencies_map = new AtomicReference();
-        m_serviceRegistration = new AtomicReference();
+        m_dependencies_map = new AtomicReference<Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>>>();
+        m_serviceRegistration = new AtomicReference<ServiceRegistration<S>>();
 
         // dump component details
         if ( isLogEnabled( LogService.LOG_DEBUG ) )
@@ -158,19 +154,12 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     final void obtainWriteLock( String source )
     {
-//        if ( isLogEnabled( LogService.LOG_DEBUG ) )
-//        {
-//            lockingActivity.add( "obtainWriteLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
-//        }
         try
         {
             if (!m_stateLock.tryLock( m_timeout, TimeUnit.MILLISECONDS ) )
             {
-//                lockingActivity.add( "obtainWriteLock failure from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis() + " Could not obtain write lock.");
                 throw new IllegalStateException( "Could not obtain lock" );
             }
-//            lockingThread = Thread.currentThread();
-//            lockingStackTrace = new Exception("Write lock stack trace for thread: " + lockingThread);
         }
         catch ( InterruptedException e )
         {
@@ -181,13 +170,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     final void releaseWriteLock( String source )
     {
-//        if ( isLogEnabled( LogService.LOG_DEBUG ) )
-//        {
-//            lockingActivity.add( "deescalateLock from: " +  source + " readLocks: " + m_stateLock.getReadHoldCount() + " writeLocks: " + m_stateLock.getWriteHoldCount() + " thread: " + Thread.currentThread() + " time: " + System.currentTimeMillis());
-//        }
         m_stateLock.unlock();
-//        lockingThread = null;
-//        lockingStackTrace = null;
     }
 
     final boolean isWriteLocked()
@@ -649,13 +632,13 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
     {
         synchronized ( m_serviceRegistration )
         {
-            ServiceRegistration existing = ( ServiceRegistration ) m_serviceRegistration.get();
+            ServiceRegistration existing = m_serviceRegistration.get();
             if ( existing == null )
             {
                 log( LogService.LOG_DEBUG, "registering services", null );
 
                 // get a copy of the component properties as service properties
-                final Dictionary serviceProperties = getServiceProperties();
+                final Dictionary<String, Object> serviceProperties = getServiceProperties();
 
                 ServiceRegistration newRegistration = getActivator().getBundleContext().registerService(
                         provides,
@@ -694,7 +677,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         {
             synchronized ( m_serviceRegistration )
             {
-                ServiceRegistration sr = ( ServiceRegistration ) m_serviceRegistration.get();
+                ServiceRegistration sr = m_serviceRegistration.get();
 
                 if ( sr != null && m_serviceRegistration.compareAndSet( sr, null ) )
                 {
@@ -719,7 +702,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         {
             return true;
         }
-        Class implementationObjectClass;
+        Class<?> implementationObjectClass;
         try
         {
             implementationObjectClass = getActivator().getBundleContext().getBundle().loadClass(
@@ -732,10 +715,8 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         }
         m_componentMethods.initComponentMethods( this, m_componentMetadata, implementationObjectClass );
 
-        for (Iterator it = m_dependencyManagers.iterator(); it.hasNext(); )
+        for ( DependencyManager dependencyManager : m_dependencyManagers )
         {
-            DependencyManager dependencyManager = ( DependencyManager ) it.next();
-
             dependencyManager.initBindingMethods( m_componentMethods.getBindMethods( dependencyManager.getName() ) );
         }
         m_dependencyManagersInitialized = true;
@@ -753,19 +734,17 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
      */
     protected boolean collectDependencies() throws IllegalStateException
     {
-        Map old = ( Map ) m_dependencies_map.get();
+        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> old = m_dependencies_map.get();
         if ( old != null)
         {
             log( LogService.LOG_DEBUG, "dependency map already present, do not collect dependencies", null );
             return false;
         }
         initDependencyManagers();
-        Map newDeps = new HashMap( );//<DependencyManager, Map<ServiceReference, RefPair>
-        for (Iterator it = m_dependencyManagers.iterator(); it.hasNext(); )
+        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> newDeps = new HashMap<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>>( );
+        for ( DependencyManager dependencyManager : m_dependencyManagers )
         {
-            DependencyManager dependencyManager = ( DependencyManager ) it.next();
-
-            if (!dependencyManager.prebind( newDeps) )
+            if ( !dependencyManager.prebind( newDeps ) )
             {
                 //not actually satisfied any longer
                 returnServices( newDeps );
@@ -784,7 +763,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         return true;
     }
 
-    protected boolean setDependencyMap( Map old, Map newDeps )
+    protected boolean setDependencyMap( Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> old, Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> newDeps )
     {
         return m_dependencies_map.compareAndSet( old, newDeps );
     }
@@ -794,35 +773,33 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         m_dependencies_map.set( null );
     }
 
-    private void returnServices( Map deps )
+    private void returnServices( Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> deps )
     {
-         for (Iterator it = deps.values().iterator(); it.hasNext(); )
-         {
-             Map refs = ( Map ) it.next();
-             if ( refs != null )
-             {
-                 for (Iterator ri = refs.entrySet().iterator(); ri.hasNext(); )
-                 {
-                     Map.Entry entry = ( Map.Entry ) ri.next();
-                     RefPair args = ( RefPair ) entry.getValue();
-                     if ( args.getServiceObject() != null )
-                     {
-                         getActivator().getBundleContext().ungetService( (ServiceReference) entry.getKey() );
-                     }
-                 }
-             }
-         }
+        for ( Map<ServiceReference<?>, RefPair<?>> refs : deps.values() )
+        {
+            if ( refs != null )
+            {
+                for ( Map.Entry<ServiceReference<?>, RefPair<?>> serviceReferenceRefPairEntry : refs.entrySet() )
+                {
+                    RefPair<?> args = serviceReferenceRefPairEntry.getValue();
+                    if ( args.getServiceObject() != null )
+                    {
+                        getActivator().getBundleContext().ungetService( serviceReferenceRefPairEntry.getKey() );
+                    }
+                }
+            }
+        }
     }
 
-    abstract void update( DependencyManager dependencyManager, ServiceReference ref );
+    abstract <T> void update( DependencyManager<S, T> dependencyManager, ServiceReference<T> ref );
 
-    abstract void invokeBindMethod( DependencyManager dependencyManager, ServiceReference reference );
+    abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> reference );
 
-    abstract void invokeUnbindMethod( DependencyManager dependencyManager, ServiceReference oldRef );
+    abstract <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> oldRef );
 
-    Map getDependencyMap()
+    Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> getDependencyMap()
     {
-        return ( Map ) m_dependencies_map.get();
+        return m_dependencies_map.get();
     }
 
     //**********************************************************************************************************
@@ -839,9 +816,9 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
     }
 
 
-    final ServiceRegistration getServiceRegistration()
+    final ServiceRegistration<?> getServiceRegistration()
     {
-        return ( ServiceRegistration ) m_serviceRegistration.get();
+        return m_serviceRegistration.get();
     }
 
 
@@ -856,13 +833,6 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
         m_dependencyManagers.clear();
     }
-
-    //<DependencyManager, Map<ServiceReference, RefPair>>
-    protected Map getParameterMap()
-    {
-        return ( Map ) m_dependencies_map.get();
-    }
-
 
     /**
      * Returns <code>true</code> if logging for the given level is enabled.
@@ -917,13 +887,13 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
                 if ( services != null && services.length > 0 )
                 {
                     final Bundle bundle = getBundle();
-                    for ( int i = 0; i < services.length; i++ )
+                    for ( String service : services )
                     {
-                        final Permission perm = new ServicePermission( services[i], ServicePermission.REGISTER );
+                        final Permission perm = new ServicePermission( service, ServicePermission.REGISTER );
                         if ( !bundle.hasPermission( perm ) )
                         {
                             log( LogService.LOG_DEBUG, "Permission to register service {0} is denied", new Object[]
-                                { services[i] }, null );
+                                    {service}, null );
                             allowed = false;
                         }
                     }
@@ -936,19 +906,15 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
     }
 
 
-    private List loadDependencyManagers( ComponentMetadata metadata )
+    private List<DependencyManager> loadDependencyManagers( ComponentMetadata metadata )
     {
-        List depMgrList = new ArrayList(metadata.getDependencies().size());
+        List<DependencyManager> depMgrList = new ArrayList<DependencyManager>(metadata.getDependencies().size());
 
         // If this component has got dependencies, create dependency managers for each one of them.
         if ( metadata.getDependencies().size() != 0 )
         {
-            Iterator dependencyit = metadata.getDependencies().iterator();
-
-            while ( dependencyit.hasNext() )
+            for ( ReferenceMetadata currentdependency: metadata.getDependencies() )
             {
-                ReferenceMetadata currentdependency = (ReferenceMetadata) dependencyit.next();
-
                 DependencyManager depmanager = new DependencyManager( this, currentdependency );
 
                 depMgrList.add( depmanager );
@@ -962,10 +928,8 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
     {
         if ( !m_componentMetadata.isConfigurationRequired() )
         {
-            Iterator it = getDependencyManagers();
-            while ( it.hasNext() )
+            for ( DependencyManager dm: getDependencyManagers() )
             {
-                DependencyManager dm = (DependencyManager) it.next();
                 dm.enable();
             }
         }
@@ -973,10 +937,9 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     protected void updateTargets(Dictionary properties)
     {
-        for (Object o: m_dependencyManagers)
+        for ( DependencyManager dm: getDependencyManagers() )
         {
-            DependencyManager dependencyManager = ( DependencyManager ) o;
-            dependencyManager.setTargetFilter( properties );
+            dm.setTargetFilter( properties );
         }
     }
 
@@ -985,10 +948,8 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         // indicates whether all dependencies are satisfied
         boolean satisfied = true;
 
-        Iterator it = getDependencyManagers();
-        while ( it.hasNext() )
+        for ( DependencyManager dm: getDependencyManagers() )
         {
-            DependencyManager dm = ( DependencyManager ) it.next();
 
             if ( !dm.hasGetPermission() )
             {
@@ -1023,29 +984,27 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
      * Returns an iterator over the {@link DependencyManager} objects
      * representing the declared references in declaration order
      */
-    Iterator getDependencyManagers()
+    List<DependencyManager> getDependencyManagers()
     {
-        return m_dependencyManagers.iterator();
+        return m_dependencyManagers;
     }
 
     /**
      * Returns an iterator over the {@link DependencyManager} objects
      * representing the declared references in reversed declaration order
      */
-    Iterator getReversedDependencyManagers()
+    List<DependencyManager> getReversedDependencyManagers()
     {
         List list = new ArrayList( m_dependencyManagers );
         Collections.reverse( list );
-        return list.iterator();
+        return list;
     }
 
 
     DependencyManager getDependencyManager(String name)
     {
-        Iterator it = getDependencyManagers();
-        while ( it.hasNext() )
+        for ( DependencyManager dm: getDependencyManagers() )
         {
-            DependencyManager dm = (DependencyManager) it.next();
             if ( name.equals(dm.getName()) )
             {
                 return dm;
@@ -1058,29 +1017,25 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
 
     private void deactivateDependencyManagers()
     {
-        Iterator it = getDependencyManagers();
-        while ( it.hasNext() )
+        for ( DependencyManager dm: getDependencyManagers() )
         {
-            DependencyManager dm = (DependencyManager) it.next();
             dm.deactivate();
         }
     }
 
     private void disableDependencyManagers()
     {
-        Iterator it = getDependencyManagers();
-        while ( it.hasNext() )
+        for ( DependencyManager dm: getDependencyManagers() )
         {
-            DependencyManager dm = (DependencyManager) it.next();
             dm.unregisterServiceListener();
         }
     }
 
     public abstract boolean hasConfiguration();
 
-    public abstract Dictionary getProperties();
+    public abstract Dictionary<String, Object> getProperties();
 
-    public abstract void setServiceProperties( Dictionary serviceProperties );
+    public abstract void setServiceProperties( Dictionary<String, Object> serviceProperties );
 
     /**
      * Returns the subset of component properties to be used as service
@@ -1088,7 +1043,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
      * name does not start with dot (.), properties which are considered
      * private.
      */
-    public Dictionary getServiceProperties()
+    public Dictionary<String, Object> getServiceProperties()
     {
         return copyTo( null, getProperties(), false );
     }
@@ -1107,7 +1062,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
      *      <code>source</code> is <code>null</code> or empty and
      *      <code>target</code> was <code>null</code>.
      */
-    protected static Dictionary copyTo( Dictionary target, Dictionary source )
+    protected static Dictionary<String, Object> copyTo( Dictionary<String, Object> target, Dictionary<String, Object> source )
     {
         return copyTo( target, source, true );
     }
@@ -1131,11 +1086,11 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
      *         <code>target</code> was <code>null</code> or all properties are
      *         private and had not to be copied
      */
-    protected static Dictionary copyTo( Dictionary target, final Dictionary source, final boolean allProps )
+    protected static Dictionary<String, Object> copyTo( Dictionary<String, Object> target, final Dictionary<String, Object> source, final boolean allProps )
     {
         if ( target == null )
         {
-            target = new Hashtable();
+            target = new Hashtable<String, Object>();
         }
 
         if ( source != null && !source.isEmpty() )
@@ -1187,7 +1142,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
     {
         if ( methodResult.hasResult() )
         {
-            Dictionary serviceProps = ( methodResult.getResult() == null) ? null : new Hashtable( methodResult.getResult() );
+            Dictionary<String, Object> serviceProps = ( methodResult.getResult() == null) ? null : new Hashtable<String, Object>( methodResult.getResult() );
             setServiceProperties(serviceProps );
         }
     }
@@ -1239,7 +1194,7 @@ public abstract class AbstractComponentManager implements Component, SimpleLogge
         }
 
 
-        ServiceReference getServiceReference( AbstractComponentManager acm )
+        ServiceReference<?> getServiceReference( AbstractComponentManager acm )
         {
             throw new IllegalStateException("getServiceReference" + this);
         }

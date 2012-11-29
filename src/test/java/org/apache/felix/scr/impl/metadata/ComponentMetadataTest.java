@@ -715,7 +715,7 @@ public class ComponentMetadataTest extends TestCase
       ComponentMetadata cm = createComponentMetadata11( null, null );
         try
         {
-          cm.setConfigirationPid( "configurationPid" );
+          cm.setConfigurationPid( "configurationPid" );
           cm.validate( logger );
           fail( "Expect validation failure for illegal configuration-pid usage in ds 1.1 namespace" );
         }
@@ -727,7 +727,7 @@ public class ComponentMetadataTest extends TestCase
         cm = createComponentMetadata12( null, null );
         try
         {
-          cm.setConfigirationPid( "configurationPid" );
+          cm.setConfigurationPid( "configurationPid" );
           cm.validate( logger );
         }
         catch ( ComponentException ce )

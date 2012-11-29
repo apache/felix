@@ -61,7 +61,7 @@ public class BundleComponentActivator implements Logger
     private BundleContext m_context = null;
 
     // This is a list of component instance managers that belong to a particular bundle
-    private List m_managers = new ArrayList();
+    private List<ComponentHolder> m_managers = new ArrayList<ComponentHolder>();
 
     // The Configuration Admin tracker providing configuration for components
     private ServiceTracker m_logService;
@@ -144,16 +144,15 @@ public class BundleComponentActivator implements Logger
             }
 
             // load from the descriptors
-            for ( int i = 0; i < descriptorURLs.length; i++ )
+            for ( URL descriptorURL : descriptorURLs )
             {
-                loadDescriptor( descriptorURLs[i] );
+                loadDescriptor( descriptorURL );
             }
         }
         //enable all the enabled components
-        for (Iterator it = m_managers.iterator(); it.hasNext();)
+        for ( ComponentHolder componentHolder : m_managers )
         {
-            ComponentHolder componentHolder = ( ComponentHolder ) it.next();
-            if (componentHolder.getComponentMetadata().isEnabled())
+            if ( componentHolder.getComponentMetadata().isEnabled() )
             {
                 componentHolder.enableComponents( false );
             }
@@ -191,19 +190,19 @@ public class BundleComponentActivator implements Logger
         }
 
         // find the entries
-        final Enumeration entries = bundle.findEntries( path, filePattern, false );
+        final Enumeration<URL> entries = bundle.findEntries( path, filePattern, false );
         if ( entries == null || !entries.hasMoreElements() )
         {
             return new URL[0];
         }
 
         // create the result list
-        List urls = new ArrayList();
+        List<URL> urls = new ArrayList<URL>();
         while ( entries.hasMoreElements() )
         {
             urls.add( entries.nextElement() );
         }
-        return ( URL[] ) urls.toArray( new URL[urls.size()] );
+        return urls.toArray( new URL[urls.size()] );
     }
 
 
@@ -227,10 +226,9 @@ public class BundleComponentActivator implements Logger
 
             // 112.4.2 Component descriptors may contain a single, root component element
             // or one or more component elements embedded in a larger document
-            Iterator i = handler.getComponentMetadataList().iterator();
-            while ( i.hasNext() )
+            for ( Object o : handler.getComponentMetadataList() )
             {
-                ComponentMetadata metadata = ( ComponentMetadata ) i.next();
+                ComponentMetadata metadata = ( ComponentMetadata ) o;
                 ComponentRegistryKey key = null;
                 try
                 {
@@ -313,7 +311,7 @@ public class BundleComponentActivator implements Logger
 
         while ( m_managers.size() != 0 )
         {
-            ComponentHolder holder = ( ComponentHolder ) m_managers.get( 0 );
+            ComponentHolder holder = m_managers.get( 0 );
             try
             {
                 m_managers.remove( holder );
@@ -333,7 +331,7 @@ public class BundleComponentActivator implements Logger
         }
 
         log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] STOPPED", new Object[]
-            { new Long( m_context.getBundle().getBundleId() ) }, null, null );
+            {m_context.getBundle().getBundleId()}, null, null );
 
         if (m_logService != null) {
             m_logService.close();
@@ -393,16 +391,16 @@ public class BundleComponentActivator implements Logger
             return;
         }
 
-        for ( int i = 0; i < holder.length; i++ )
+        for ( ComponentHolder aHolder : holder )
         {
             try
             {
-                log( LogService.LOG_DEBUG, "Enabling Component", holder[i].getComponentMetadata(), null );
-                holder[i].enableComponents( true );
+                log( LogService.LOG_DEBUG, "Enabling Component", aHolder.getComponentMetadata(), null );
+                aHolder.enableComponents( true );
             }
             catch ( Throwable t )
             {
-                log( LogService.LOG_ERROR, "Cannot enable component", holder[i].getComponentMetadata(), t );
+                log( LogService.LOG_ERROR, "Cannot enable component", aHolder.getComponentMetadata(), t );
             }
         }
     }
@@ -425,16 +423,16 @@ public class BundleComponentActivator implements Logger
             return;
         }
 
-        for ( int i = 0; i < holder.length; i++ )
+        for ( ComponentHolder aHolder : holder )
         {
             try
             {
-                log( LogService.LOG_DEBUG, "Disabling Component", holder[i].getComponentMetadata(), null );
-                holder[i].disableComponents( true );
+                log( LogService.LOG_DEBUG, "Disabling Component", aHolder.getComponentMetadata(), null );
+                aHolder.disableComponents( true );
             }
             catch ( Throwable t )
             {
-                log( LogService.LOG_ERROR, "Cannot disable component", holder[i].getComponentMetadata(), t );
+                log( LogService.LOG_ERROR, "Cannot disable component", aHolder.getComponentMetadata(), t );
             }
         }
     }
@@ -460,7 +458,7 @@ public class BundleComponentActivator implements Logger
         // if all components are selected
         if ( name == null )
         {
-            return ( ComponentHolder[] ) m_managers.toArray( new ComponentHolder[m_managers.size()] );
+            return m_managers.toArray( new ComponentHolder[m_managers.size()] );
         }
 
         ComponentHolder componentHolder = m_componentRegistry.getComponentHolder( m_context.getBundle(), name );

@@ -26,7 +26,7 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 
 
 /**
- * The <code>DelayedComponentManager</code> TODO
+ * The <code>DelayedComponentManager</code> marker class.  Needed?
  */
 public class DelayedComponentManager extends ImmediateComponentManager
 {
@@ -41,11 +41,5 @@ public class DelayedComponentManager extends ImmediateComponentManager
     {
         super( activator, componentHolder, metadata, componentMethods );
     }
-
-
-//    State getSatisfiedState()
-//    {
-//        return Registered.getInstance();
-//    }
 
 }
