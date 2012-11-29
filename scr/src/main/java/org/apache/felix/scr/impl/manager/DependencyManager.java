@@ -1215,38 +1215,31 @@ public class DependencyManager<S, T> implements ServiceListener, Reference
     boolean invokeBindMethod( S componentInstance, ServiceReference<T> ref )
     {
         //event driven, and we already checked this ref is not yet handled.
-        if ( componentInstance != null )
+        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependencyMap = m_componentManager.getDependencyMap();
+        if ( dependencyMap != null )
         {
-            Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependencyMap = m_componentManager.getDependencyMap();
-            if ( dependencyMap != null )
+            if ( m_bindMethods == null )
             {
-                if (m_bindMethods == null)
-                {
-                    m_componentManager.log( LogService.LOG_ERROR,
+                m_componentManager.log( LogService.LOG_ERROR,
                         "For dependency {0}, bind method not set: component state {1}",
                         new Object[]
-                            { m_dependencyMetadata.getName(), new Integer(m_componentManager.getState())  }, null );
+                                {m_dependencyMetadata.getName(), new Integer( m_componentManager.getState() )}, null );
 
-                }
-                Map<ServiceReference<T>, RefPair<T>> deps = (Map)dependencyMap.get( this );
-                RefPair<T> refPair = new RefPair<T>( ref );
-                if ( !m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ) )
-                {
-                    //reference deactivated while we are processing.
-                    return false;
-                }
-                deps.put( ref, refPair );
-                return invokeBindMethod( componentInstance, refPair );
             }
-            return false;
+            Map<ServiceReference<T>, RefPair<T>> deps = (Map)dependencyMap.get( this );
+            RefPair<T> refPair = new RefPair<T>( ref );
+            if ( !m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ) )
+            {
+                //reference deactivated while we are processing.
+                return false;
+            }
+            synchronized ( deps )
+            {
+                deps.put( ref, refPair );
+            }
+            return invokeBindMethod( componentInstance, refPair );
         }
-        else
-        {
-            m_componentManager.log( LogService.LOG_DEBUG,
-                "DependencyManager : component not yet created, assuming bind method call succeeded",
-                null );
-            return true;
-        }
+        return false;
     }
 
     public void invokeBindMethodLate( final ServiceReference<T> ref )

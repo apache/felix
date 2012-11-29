@@ -259,7 +259,10 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             return null;
         }
 
-        // 3. Bind the target services
+        // 3. set the implementation object prematurely
+        setter.presetImplementationObject( implementationObject );
+
+        // 4. Bind the target services
         Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> parameters = getDependencyMap();
 
         for ( DependencyManager<S, ?> dm: getDependencyManagers())
@@ -268,7 +271,12 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             // creating the instance fails here, so we deactivate and return
             // null.
             Map<ServiceReference<?>, RefPair<?>> params = parameters.get( dm );
-            if ( !dm.open( implementationObject, params ) )
+            boolean open;
+            synchronized ( params )
+            {
+                open = dm.open( implementationObject, params );
+            }
+            if ( !open )
             {
                 log( LogService.LOG_ERROR, "Cannot create component instance due to failure to bind reference {0}",
                         new Object[]
@@ -283,9 +291,6 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 return null;
             }
         }
-
-        // 4. set the implementation object prematurely
-        setter.presetImplementationObject( implementationObject );
 
         // 5. Call the activate method, if present
         final MethodResult result = getComponentMethods().getActivateMethod().invoke( implementationObject, new ActivatorParameter(
