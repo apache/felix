@@ -564,7 +564,13 @@ public class ComponentDescriptorIO {
                         }
 
                         if (attributes.getValue(PROPERTY_ATTR_VALUE) != null) {
-                            prop.setValue(attributes.getValue(PROPERTY_ATTR_VALUE));
+                            if ( prop.getType() == PropertyType.Char || prop.getType() == PropertyType.Character ) {
+                                final int val = Integer.valueOf(attributes.getValue(PROPERTY_ATTR_VALUE));
+                                final Character c = Character.valueOf((char)val);
+                                prop.setValue(c.toString());
+                            } else {
+                                prop.setValue(attributes.getValue(PROPERTY_ATTR_VALUE));
+                            }
                             this.currentClass.add(prop);
                         } else {
                             // hold the property pending as we have a multi value
@@ -689,6 +695,11 @@ public class ComponentDescriptorIO {
                         int index = 0;
                         while (st.hasMoreTokens()) {
                             values[index] = st.nextToken();
+                            if ( this.pendingProperty.getType() == PropertyType.Char || this.pendingProperty.getType() == PropertyType.Character ) {
+                                final int val = Integer.valueOf(values[index]);
+                                final Character c = Character.valueOf((char)val);
+                                values[index] = c.toString();
+                            }
                             index++;
                         }
                         this.pendingProperty.setMultiValue(values);
