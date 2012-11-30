@@ -46,14 +46,15 @@ import org.osgi.service.useradmin.UserAdminListener;
 public class RoleRepositoryFileStore extends RoleRepositoryMemoryStore implements Runnable, UserAdminListener, ManagedService {
 
     /** The PID for this service to allow its configuration to be updated. */
-    public static final String PID = "org.apache.felix.useradmin.rolerepositoryfilestore";
+    public static final String PID = "org.apache.felix.useradmin.filestore";
 
     static final String KEY_WRITE_DISABLED = "background.write.disabled";
     static final String KEY_WRITE_DELAY_VALUE = "background.write.delay.value";
     static final String KEY_WRITE_DELAY_TIMEUNIT = "background.write.delay.timeunit";
 
-    private static final boolean DEFAULT_WRITE_DISABLED = Boolean.parseBoolean(System.getProperty(KEY_WRITE_DISABLED, "false"));
-    private static final int DEFAULT_WRITE_DELAY_VALUE = Integer.parseInt(System.getProperty(KEY_WRITE_DELAY_VALUE, "500"));
+    private static final String PREFIX = PID.concat(".");
+    private static final boolean DEFAULT_WRITE_DISABLED = Boolean.parseBoolean(System.getProperty(PREFIX.concat(KEY_WRITE_DISABLED), "false"));
+    private static final int DEFAULT_WRITE_DELAY_VALUE = Integer.parseInt(System.getProperty(PREFIX.concat(KEY_WRITE_DELAY_VALUE), "500"));
     private static final TimeUnit DEFAULT_WRITE_DELAY_TIMEUNIT = TimeUnit.MILLISECONDS;
 
     private static final String FILE_NAME = "ua_repo.dat";

@@ -1,0 +1,38 @@
+Apache Felix User Admin File-based store
+Copyright 2012 The Apache Software Foundation
+
+This bundle provides a file-based store for use with the Felix UserAdmin
+service. It uses a binary file-format to persist the role information. This
+file will always be written in the data area of the bundle and be called
+"ua_repo.dat".
+
+The file-based store service this bundle provides can be configured at 
+runtime by using the service PID "org.apache.felix.useradmin.filestore". The 
+configuration options recognized by this service are:
+
+"background.write.disabled"
+   by default, all changes made to the UserAdmin repository are flushed to
+   disk. By setting this value to "false", this no longer will happen for each
+   change, but only upon stopping of the service. This value is optional and 
+   defaults to "false";
+"background.write.delay.value"
+   denotes the period after which the changes should be persisted to disk. If
+   other changes to the repository occur during this period, the period will
+   start over. This value is optional and defaults to "500";
+"background.write.delay.timeunit"
+   denotes the time unit for "background.write.delay.value". This value is
+   optional and defaults to "milliseconds". Possible values are: "days", 
+   "hours", "minutes", "seconds", "milliseconds", "microseconds" and 
+   "nanoseconds".
+
+Alternatively, one can also supply the above mentioned configuration keys 
+prefixed with "org.apache.felix.useradmin.filestore." as system properties. 
+For example by adding the following to your JVM arguments:
+
+  -Dorg.apache.felix.useradmin.filestore.background.write.disabled=true
+  
+will disable persisting the changes on each change of the UserAdmin roles.
+
+However, using system properties will imply that only a single store can be 
+configured on a system (which could be a sensible default for some 
+situations)!
