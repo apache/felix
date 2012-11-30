@@ -65,9 +65,11 @@ public abstract class ClassModifier {
             final ClassReader reader = new ClassReader(new FileInputStream(fileName));
             reader.accept(cn, 0);
 
-            // TODO: ClassWriter.COMPUTE_MAXS  | ClassWriter.COMPUTE_FRAMES
-            final ClassWriter writer = new ClassWriter(0) {
+            // For target Java7 and above use: ClassWriter.COMPUTE_MAXS  | ClassWriter.COMPUTE_FRAMES
+            final int mask = (cn.version > 50 ? ClassWriter.COMPUTE_MAXS  | ClassWriter.COMPUTE_FRAMES : 0);
+            final ClassWriter writer = new ClassWriter(mask) {
 
+                @Override
                 protected String getCommonSuperClass(final String type1, final String type2) {
                     Class<?> c, d;
                     try {
