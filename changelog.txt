@@ -1,3 +1,20 @@
+Changes from 1.9.0 to 1.8.0
+---------------------------
+** Improvement
+    * [FELIX-3358] - Enhance the maven-scr-plugin to be compatible with recent Maven/Eclipse integrations
+    * [FELIX-3642] - Change default for generating descriptor files to generate single file for each component
+    * [FELIX-3641] - Option to generate separate descriptor files
+    * [FELIX-3643] - Use BuildContext for scanning changed files
+    * [FELIX-3640] - Ignore maven-scr-plugin executions in Eclipse
+
+** Bug
+    * [FELIX-3788] - specVersion incorrectly determined, depends on class order
+    * [FELIX-3568] - java.lang.VerifyError from bundles compiled with maven-scr-plugin (java 7)
+    * [FELIX-3739] - scr-plugin: "Annotated method {0} not found"
+    * [FELIX-3793] - Property of type Character must use unicode value
+    * [FELIX-3653] - Define the "@Reference" annotation on class level without a "referenceInterface" parameter.
+
+    
 Changes from 1.7.4 to 1.8.0
 ---------------------------
 
