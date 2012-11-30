@@ -25,7 +25,7 @@
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
     <artifactId>org.apache.felix.useradmin.mongodb</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <description>Provides a MongoDB store implementation for the User Admin service.</description>
     <dependencies>
@@ -48,7 +48,7 @@
         <dependency>
         	<groupId>org.apache.felix</groupId>
         	<artifactId>org.apache.felix.useradmin</artifactId>
-        	<version>1.0.3</version>
+        	<version>1.0.4-SNAPSHOT</version>
         	<type>bundle</type>
         </dependency>
     </dependencies>
@@ -107,10 +107,4 @@
             </plugin>
 		</plugins>
 	</build>
-
-  <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin.mongodb-1.0.1</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin.mongodb-1.0.1</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.useradmin.mongodb-1.0.1</url>
-  </scm>
 </project>
