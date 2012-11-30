@@ -1760,7 +1760,7 @@ public class ManifestParser
 
             boolean isDelimiter = (delim.indexOf(c) >= 0);
 
-            if (c == '\\')
+            if (!isEscaped && (c == '\\'))
             {
                 isEscaped = true;
                 continue;
