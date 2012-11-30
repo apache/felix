@@ -339,7 +339,13 @@ public class ComponentDescriptorIO {
         if ( property.getType() != PropertyType.String ) {
             IOUtils.addAttribute(ai, PROPERTY_ATTR_TYPE, property.getType());
         }
-        IOUtils.addAttribute(ai, PROPERTY_ATTR_VALUE, property.getValue());
+        String value = property.getValue();
+        if ( value != null ) {
+            if ( property.getType() == PropertyType.Character || property.getType() == PropertyType.Char ) {
+                value = String.valueOf((int)value.charAt(0));
+            }
+            IOUtils.addAttribute(ai, PROPERTY_ATTR_VALUE, value);
+        }
 
         IOUtils.indent(contentHandler, 2);
         contentHandler.startElement(INNER_NAMESPACE_URI, ComponentDescriptorIO.PROPERTY, ComponentDescriptorIO.PROPERTY_QNAME, ai);
@@ -348,7 +354,11 @@ public class ComponentDescriptorIO {
             IOUtils.text(contentHandler, "\n");
             for (int i = 0; i < property.getMultiValue().length; i++) {
                 IOUtils.indent(contentHandler, 3);
-                IOUtils.text(contentHandler, property.getMultiValue()[i]);
+                value = property.getMultiValue()[i];
+                if ( property.getType() == PropertyType.Character || property.getType() == PropertyType.Char ) {
+                    value = String.valueOf((int)value.charAt(0));
+                }
+                IOUtils.text(contentHandler, value);
                 IOUtils.newline(contentHandler);
             }
             IOUtils.indent(contentHandler, 2);

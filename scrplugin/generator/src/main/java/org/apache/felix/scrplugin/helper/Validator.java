@@ -375,6 +375,21 @@ public class Validator {
                             && property.getType() == PropertyType.Char) {
                 property.setType(PropertyType.Character);
             }
+            // check character property value
+            if ( property.getType() == PropertyType.Char || property.getType() == PropertyType.Character ) {
+                if ( property.getValue() != null ) {
+                    if ( property.getValue().length() != 1 ) {
+                        this.logError(property, "Value is not a character: " + property.getValue());
+                    }
+                }
+                if ( property.getMultiValue() != null ) {
+                    for(final String value : property.getMultiValue() ) {
+                        if ( value.length() != 1 ) {
+                            this.logError(property, "Value is not a character: " + value);
+                        }
+                    }
+                }
+            }
         }
         // TODO might want to check value
     }
