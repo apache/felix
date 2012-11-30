@@ -1,0 +1,38 @@
+Apache Felix UserAdmin MongoDB-based store
+Copyright 2012 The Apache Software Foundation
+
+This project provides a MongoDB-based store for use with the Felix UserAdmin
+service. It uses MongoDB to persist the role information.
+
+The MongoDB-based store service this bundle provides can be configured at 
+runtime by using the service PID "org.apache.felix.useradmin.mongodb". The 
+configuration options recognized by this service are:
+
+"server"
+   A space separated string containing the MongoDB servers. The format for 
+   this string is: "<host1:port1> <host2:port2>". This value is optional and
+   defaults to "localhost:27017";
+"dbname"
+   A string value containing the name of the database to use for this store. 
+   This value is optional and defaults to "ua_repo";
+"collection"
+   The name of the database collection to use for this store. This value is 
+   optional and defaults to "useradmin";
+"username"
+   A string value representing the name of the user to authenticate against 
+   MongoDB. This value is optional and defaults to "" (empty string);
+"password"
+   A string value representing the password to authenticate against MongoDB. 
+   This value is optional and defaults to "" (empty string). 
+
+Alternatively, one can also supply the above mentioned configuration keys 
+prefixed with "org.apache.felix.useradmin.mongodb." as system properties. For
+example by adding the following to your JVM arguments:
+
+  -Dorg.apache.felix.useradmin.mongodb.server=my.mongo.server:27017
+
+will let this service use the MongoDB server at "my.mongo.server".
+
+However, using system properties will imply that only a single store can be 
+configured on a system (which could be a sensible default for some 
+situations)!
