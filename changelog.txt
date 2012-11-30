@@ -1,3 +1,16 @@
+Changes from 1.2.2 to 1.2.0
+---------------------------
+** Improvement
+    * [FELIX-3641] - Option to generate separate descriptor files
+    
+** Bug
+    * [FELIX-3788] - specVersion incorrectly determined, depends on class order
+    * [FELIX-3568] - java.lang.VerifyError from bundles compiled with maven-scr-plugin (java 7)
+    * [FELIX-3739] - scr-plugin: "Annotated method {0} not found"
+    * [FELIX-3793] - Property of type Character must use unicode value
+    * [FELIX-3653] - Define the "@Reference" annotation on class level without a "referenceInterface" parameter.
+
+
 Changes from 1.1.4 to 1.2.0
 ---------------------------
 
