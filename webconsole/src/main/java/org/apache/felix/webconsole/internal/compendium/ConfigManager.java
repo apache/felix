@@ -99,7 +99,7 @@ public class ConfigManager extends ConfigManagerBase
     /** Default constructor */
     public ConfigManager()
     {
-        super(LABEL, TITLE, CSS);
+        super(LABEL, TITLE, CATEGORY_OSGI, CSS);
 
         // load templates
         TEMPLATE = readTemplateFile( "/templates/config.html" ); //$NON-NLS-1$

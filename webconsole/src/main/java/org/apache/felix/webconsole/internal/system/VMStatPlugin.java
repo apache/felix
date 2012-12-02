@@ -73,7 +73,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
     /** Default constructor */
     public VMStatPlugin()
     {
-        super( LABEL, TITLE, CSS );
+        super( LABEL, TITLE, CATEGORY_OSGI_MANAGER, CSS );
 
         // load templates
         TPL_VM_MAIN = readTemplateFile(  "/templates/vmstat.html"  ); //$NON-NLS-1$
@@ -201,7 +201,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
         DateFormat format = DateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG, request.getLocale() );
         final String startTime = format.format( new Date( startDate ) );
         final String upTime = formatPeriod( System.currentTimeMillis() - startDate );
-        
+
         JSONObject json = new JSONObject();
         try
         {
@@ -236,7 +236,7 @@ public class VMStatPlugin extends SimpleWebConsolePlugin implements OsgiManagerP
 
         response.getWriter().print( body );
     }
-    
+
     private static final String sysProp( String name )
     {
         String ret = System.getProperty( name );

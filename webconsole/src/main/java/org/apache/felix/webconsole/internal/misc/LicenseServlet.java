@@ -69,7 +69,7 @@ public final class LicenseServlet extends SimpleWebConsolePlugin implements Osgi
      */
     public LicenseServlet()
     {
-        super(LABEL, TITLE, CSS);
+        super(LABEL, TITLE, CATEGORY_OSGI_MANAGER, CSS);
 
         // load templates
         TEMPLATE = readTemplateFile( "/templates/license.html" );

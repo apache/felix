@@ -73,7 +73,7 @@ public class ConfigurationRender extends SimpleWebConsolePlugin implements OsgiM
     /** Default constructor */
     public ConfigurationRender( final ResourceBundleManager resourceBundleManager )
     {
-        super( LABEL, TITLE, CSS_REFS );
+        super( LABEL, TITLE, CATEGORY_OSGI_MANAGER, CSS_REFS );
         this.resourceBundleManager = resourceBundleManager;
     }
 

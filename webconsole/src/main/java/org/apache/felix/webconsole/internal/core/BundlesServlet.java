@@ -125,7 +125,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
     /** Default constructor */
     public BundlesServlet()
     {
-        super(NAME, TITLE, CSS);
+        super(NAME, TITLE, CATEGORY_OSGI, CSS);
 
         // load templates
         TEMPLATE_MAIN = readTemplateFile( "/templates/bundles.html" );

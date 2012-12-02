@@ -31,6 +31,17 @@ public interface OsgiManagerPlugin
 {
 
     /**
+     * Category used for Web Console specific plugins.
+     */
+    public static final String CATEGORY_OSGI_MANAGER = "Web Console";
+
+    /**
+     * Category used for Web Console plugins related to OSGi support such
+     * as bundles, configurations, etc.
+     */
+    public static final String CATEGORY_OSGI = "OSGi";
+
+    /**
      * This method is called from the Felix Web Console to ensure the
      * AbstractWebConsolePlugin is correctly setup.
      *

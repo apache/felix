@@ -48,6 +48,7 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
     // used for standard AbstractWebConsolePlugin implementation
     private final String label;
     private final String title;
+    private final String category;
     private final String css[];
     private final String labelRes;
     private final int labelResLen;
@@ -61,7 +62,8 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
 
 
     /**
-     * Creates new Simple Web Console Plugin.
+     * Creates new Simple Web Console Plugin with the default category
+     * ({@code null})
      *
      * @param label the front label. See
      *          {@link AbstractWebConsolePlugin#getLabel()}
@@ -71,6 +73,24 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
      *          {@link AbstractWebConsolePlugin#getCssReferences()}
      */
     public SimpleWebConsolePlugin( String label, String title, String css[] )
+    {
+        this( label, title, null, css );
+    }
+
+
+    /**
+     * Creates new Simple Web Console Plugin with the given category.
+     *
+     * @param label the front label. See
+     *            {@link AbstractWebConsolePlugin#getLabel()}
+     * @param title the plugin title . See
+     *            {@link AbstractWebConsolePlugin#getTitle()}
+     * @param category the plugin's navigation category. See
+     *            {@link AbstractWebConsolePlugin#getCategory()}
+     * @param css the additional plugin CSS. See
+     *            {@link AbstractWebConsolePlugin#getCssReferences()}
+     */
+    public SimpleWebConsolePlugin( String label, String title, String category, String css[] )
     {
         if ( label == null )
         {
@@ -82,6 +102,7 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
         }
         this.label = label;
         this.title = title;
+        this.category = category;
         this.css = css;
         this.labelRes = '/' + label + '/';
         this.labelResLen = labelRes.length() - 1;
@@ -103,6 +124,15 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
     public final String getTitle()
     {
         return title;
+    }
+
+
+    /**
+     * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#getCategory()
+     */
+    public String getCategory()
+    {
+        return category;
     }
 
 
