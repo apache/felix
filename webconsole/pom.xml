@@ -228,9 +228,6 @@
                                        <Bundle-SymbolicName>
                                            ${project.artifactId}.all
                                        </Bundle-SymbolicName>
-                                       <Include-Resource>
-                                           {maven-resources},META-INF=src/main/all-resources
-                                       </Include-Resource>
                                        <Export-Package>
                                             org.apache.commons.fileupload,
                                             org.apache.commons.fileupload.disk,
