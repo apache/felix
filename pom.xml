@@ -36,6 +36,11 @@
         http://felix.apache.org/site/apache-felix-web-console.html for more
         information on this bundle.
     </description>
+    
+    <properties>
+        <org.json.version>20070829</org.json.version>
+        <org.json.version.osgi>0.0.0.${org.json.version}</org.json.version.osgi>
+    </properties>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole</connection>
@@ -127,7 +132,8 @@
                             org.apache.felix.webconsole.i18n;version=1.0.0;provide:=true
                         </Export-Package>
                         <Import-Package>
-                            org.osgi.service.metatype;resolution:=optional,
+                            org.json.*;version=0,
+							org.osgi.service.metatype;resolution:=optional,
                             javax.servlet.*;version=2.4,
                             org.apache.commons.io; version="[1.4,3)",
                             *
@@ -190,6 +196,91 @@
         </plugins>
     </build>
 
+   <profiles>
+       <!--
+           The "all-in-one-bundle" profile builds a bundle including certain
+           3rd party libraries and classes, namely: Commons IO, Commons
+           FileUpload, JSON, and the OSGi ServiceTracker.
+           The "all-in-one-bundle" can be used in deployments where these
+           dependencies need not be deployed separately.
+       -->
+       <profile>
+           <id>all-in-one-bundle</id>
+           <activation><activeByDefault>true</activeByDefault></activation>
+           <build>
+               <plugins>
+                   <plugin>
+                       <groupId>org.apache.felix</groupId>
+                       <artifactId>maven-bundle-plugin</artifactId>
+                       <executions>
+                           <execution>
+                               <id>all-in-one-bundle</id>
+                               <goals>
+                                   <goal>bundle</goal>
+                               </goals>
+                               <configuration>
+                                   <classifier>all</classifier>
+                                   <instructions>
+                                       <Bundle-Name>
+                                           ${project.name} (All In One)
+                                       </Bundle-Name>
+                                       <Bundle-SymbolicName>
+                                           ${project.artifactId}.all
+                                       </Bundle-SymbolicName>
+                                       <Include-Resource>
+                                           {maven-resources},META-INF=src/main/all-resources
+                                       </Include-Resource>
+                                       <Export-Package>
+                                            org.apache.commons.fileupload,
+                                            org.apache.commons.fileupload.disk,
+                                            org.apache.commons.fileupload.servlet,
+                                            org.apache.commons.fileupload.util,
+                                            org.apache.commons.io,
+                                            org.apache.commons.io.filefilter,
+                                            org.apache.commons.io.output,
+                                            org.json;version=${org.json.version.osgi}
+                                       </Export-Package>
+                                       <Embed-Dependency>
+                                           <!-- Import/Export-Package parsing -->
+                                           org.apache.felix.utils;inline=org/apache/felix/utils/manifest/**,
+                                           org.apache.felix.framework;inline=org/apache/felix/framework/util/VersionRange**,
+                                            
+                                           <!-- ServiceTracker -->
+                                           org.osgi.compendium;
+                                              inline=org/osgi/util/tracker/*,
+                                       </Embed-Dependency>
+                                       
+                                       <_removeheaders>
+                                           Embed-Dependency,Private-Package,Include-Resource
+                                       </_removeheaders>
+                                   </instructions>
+                               </configuration>
+                           </execution>
+                       </executions>
+                   </plugin>
+                   <!--
+                  <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-remote-resources-plugin</artifactId>
+                    <executions>
+                      <execution>
+                        <goals>
+                          <goal>process</goal>
+                        </goals>
+                        <configuration>
+                          <resourceBundles>
+                            <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
+                          </resourceBundles>
+                        </configuration>
+                      </execution>
+                    </executions>
+                  </plugin>
+                  -->
+               </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -228,9 +319,10 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20070829</version>
+            <version>${org.json.version}</version>
             <scope>provided</scope>
         </dependency>
+        
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.shell</artifactId>
