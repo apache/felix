@@ -180,8 +180,8 @@
                     </includes>
                     <excludes>
                         <exclude>src/main/appended-resources/**</exclude>
-                        <exclude>src/main/resources/res/lib/jquery-1.3.2.js</exclude>
-                        <exclude>src/main/resources/res/lib/jquery-ui-1.7.2.js</exclude>
+                        <exclude>src/main/resources/res/lib/jquery-1.8.3.js</exclude>
+                        <exclude>src/main/resources/res/lib/jquery-ui-1.9.2.js</exclude>
                         <exclude>src/main/resources/res/lib/jquery-ui-i18n-1.7.2.js</exclude>
                         <exclude>src/main/resources/res/lib/jquery.cookies-2.2.0.js</exclude>
                         <exclude>src/main/resources/res/lib/jquery.multifile-1.4.6.js</exclude>
@@ -190,6 +190,7 @@
                         <exclude>src/main/resources/res/lib/themes/**</exclude>
                         <exclude>src/main/resources/res/ui/ui.tabs.paging.js</exclude>
                         <exclude>src/main/resources/templates/*.html</exclude>
+                        <exclude>src/main/debug-resources/res/lib/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -253,6 +254,65 @@
                                        <_removeheaders>
                                            Embed-Dependency,Private-Package,Include-Resource
                                        </_removeheaders>
+                                   </instructions>
+                               </configuration>
+                           </execution>
+                       </executions>
+                   </plugin>
+                   <!--
+                  <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-remote-resources-plugin</artifactId>
+                    <executions>
+                      <execution>
+                        <goals>
+                          <goal>process</goal>
+                        </goals>
+                        <configuration>
+                          <resourceBundles>
+                            <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
+                          </resourceBundles>
+                        </configuration>
+                      </execution>
+                    </executions>
+                  </plugin>
+                  -->
+               </plugins>
+            </build>
+        </profile>
+        
+       <!--
+           The "debug" profile builds a bundle using the non-minified
+           JQuery libraries and CSS files instead to make debugging
+           JQuery related issues easier.
+       -->
+       <profile>
+           <id>debug-bundle</id>
+           <activation><activeByDefault>true</activeByDefault></activation>
+           <build>
+               <plugins>
+                   <plugin>
+                       <groupId>org.apache.felix</groupId>
+                       <artifactId>maven-bundle-plugin</artifactId>
+                       <executions>
+                           <execution>
+                               <id>debug-bundle</id>
+                               <goals>
+                                   <goal>bundle</goal>
+                               </goals>
+                               <configuration>
+                                   <classifier>debug</classifier>
+                                   <instructions>
+                                       <Bundle-Name>
+                                           ${project.name} (JQuery Debug)
+                                       </Bundle-Name>
+                                       <Bundle-SymbolicName>
+                                           ${project.artifactId}.debug
+                                       </Bundle-SymbolicName>
+                                       <Include-Resource>
+                                           {maven-resources},
+                                           res=src/main/debug-resources/res
+                                       </Include-Resource>
                                    </instructions>
                                </configuration>
                            </execution>

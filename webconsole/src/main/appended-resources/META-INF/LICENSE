@@ -10,7 +10,8 @@ conditions of the following licenses.
 
 For the JQuery component:
 
-Copyright (c) 2009 John Resig, http://jquery.com/
+Copyright 2012 jQuery Foundation and other contributors
+http://jquery.com/
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -34,7 +35,13 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 For the JQuery UI component:
 
-Copyright (c) 2009 AUTHORS.txt, http://jqueryui.com/
+Copyright 2012 jQuery Foundation and other contributors,
+http://jqueryui.com/
+
+This software consists of voluntary contributions made by many
+individuals (AUTHORS.txt, http://jqueryui.com/about) For exact
+contribution history, see the revision history and logs, available
+at http://jquery-ui.googlecode.com/svn/
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
