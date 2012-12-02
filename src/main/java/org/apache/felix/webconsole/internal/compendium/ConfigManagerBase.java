@@ -43,9 +43,9 @@ import org.osgi.service.metatype.ObjectClassDefinition;
 abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiManagerPlugin
 {
 
-    ConfigManagerBase(String label, String title, String[] css)
+    ConfigManagerBase(String label, String title, String category, String[] css)
     {
-        super(label, title, css);
+        super(label, title, category, css);
     }
 
     private static final long serialVersionUID = -6691093960031418130L;

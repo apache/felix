@@ -114,20 +114,20 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
 
     /** Default constructor */
     public ServicesServlet() {
-        super(LABEL, TITLE, CSS);
+        super(LABEL, TITLE, CATEGORY_OSGI, CSS);
 
         // load templates
         TEMPLATE = readTemplateFile( "/templates/services.html" ); //$NON-NLS-1$
     }
-    
+
     private ServiceRegistration bipReg;
-    
-    public void activate(BundleContext bundleContext) 
+
+    public void activate(BundleContext bundleContext)
     {
         super.activate(bundleContext);
         bipReg = new ServicesUsedInfoProvider( bundleContext.getBundle() ).register( bundleContext );
     }
-    
+
     public void deactivate() {
 	if ( null != bipReg )
 	{

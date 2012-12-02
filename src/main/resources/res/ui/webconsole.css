@@ -66,6 +66,17 @@
 	white-space: nowrap;
 }
 
+/* New Category Based Navigation Tree (FELIX-3769) */
+#navmenu {
+     width: auto;
+}
+#navmenu li.ui-menu-item {
+     width: auto;
+}
+#navmenu li.navMenuItem-0 {
+    display: inline-block;
+}
+
 /* CENTRAL CONTENT AREA STYLING */
 #content, .ui-widget, .ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button { font-size: 8pt }
 

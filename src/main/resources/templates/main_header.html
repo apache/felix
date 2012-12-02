@@ -24,8 +24,22 @@
 	<script src="${appRoot}/res/lib/jquery.cookies-2.2.0.js" type="text/javascript"></script>
 	<script src="${appRoot}/res/lib/jquery.tablesorter-2.0.3.js" type="text/javascript"></script>
 	<script src="${appRoot}/res/lib/support.js" type="text/javascript"></script>
-	
-	   
+
+    <script type="text/javascript">
+    // <![CDATA[
+        $(document).ready(function(){
+            $( '#navmenu' ).menu({ 
+                position: {
+                    my: "left top",
+                    at: "left bottom",
+                    submenu: "ui-icon-carat-1-s"
+                } 
+            });
+        });
+        
+    // ]]>
+    </script>
+       
     <!-- FELIX-2188: backwards compatibility CSS -->
     <link href="${appRoot}/res/ui/admin_compat.css" rel="stylesheet" type="text/css" />
 </head>

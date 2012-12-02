@@ -62,6 +62,27 @@ public interface WebConsoleConstants
     public static final String PLUGIN_TITLE = "felix.webconsole.title"; //$NON-NLS-1$
 
     /**
+     * The category under which the OSGi Manager plugin is listed in the top
+     * navigation by the OSGi Manager (value is "felix.webconsole.category").
+     * <p>
+     * For {@link #SERVICE_NAME Servlet} services not extending the
+     * {@link AbstractWebConsolePlugin} this property is required to declare a
+     * specific category. Otherwise the plugin is put into the default category.
+     * <p>
+     * For {@link #SERVICE_NAME Servlet} services extending from the
+     * {@link AbstractWebConsolePlugin} abstract class this property is not
+     * technically required. To support lazy service access with categorization,
+     * e.g. for plugins implemented using the OSGi <i>Service Factory</i>
+     * pattern, the use of this service registration property is strongly
+     * encouraged. If the property is missing the
+     * {@link AbstractWebConsolePlugin#getCategory()} is called which should be
+     * overritten.
+     *
+     * @since 3.1.3; Web Console Bundle 4.0.2
+     */
+    public static final String PLUGIN_CATEGORY = "felix.webconsole.category"; //$NON-NLS-1$
+
+    /**
      * The property marking a service as a configuration printer.
      * This can be any service having either a printConfiguration(PrintWriter)
      * or printConfiguration(PrintWriter, String) method - this is according

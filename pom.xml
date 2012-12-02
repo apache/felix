@@ -127,7 +127,7 @@
                             org.apache.felix.webconsole.internal.OsgiManagerActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.webconsole;version=3.1.2;provide:=true,
+                            org.apache.felix.webconsole;version=3.1.3;provide:=true,
                             org.apache.felix.webconsole.bundleinfo;version=1.0.0;provide:=true,
                             org.apache.felix.webconsole.i18n;version=1.0.0;provide:=true
                         </Export-Package>
