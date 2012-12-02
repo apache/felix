@@ -298,9 +298,9 @@ $(document).ready(function(){
 			5: { sorter: false }
 		},
 		textExtraction:mixedLinksExtraction
-	}).bind("sortEnd", function() {
-        var t = bundlesTable.eq(0).attr("config");
-        if (t.sortList) {
+	}).bind("sortEnd", function(/* Event */ e) {
+        var t = e.target.config;
+        if (t && t.sortList) {
             setCookie("bundlelist", t.sortList);
         }
     });
