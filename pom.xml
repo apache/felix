@@ -29,7 +29,7 @@
     <groupId>org.apache.felix</groupId>
     <artifactId>maven-scr-plugin</artifactId>
 
-    <version>1.8.1-SNAPSHOT</version>
+    <version>1.9.0</version>
     <packaging>maven-plugin</packaging>
 
     <name>Maven SCR Plugin</name>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/maven-scr-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scrplugin/maven-scr-plugin</developerConnection>
-        <url>http://svn.apache.org/repos/asf/felix/scrplugin/maven-scr-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/maven-scr-plugin-1.9.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/maven-scr-plugin-1.9.0</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/maven-scr-plugin-1.9.0</url>
     </scm>
 
     <dependencies>
