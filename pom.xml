@@ -21,7 +21,7 @@
 	<parent>
 		<artifactId>felix-parent</artifactId>
 		<groupId>org.apache.felix</groupId>
-		<version>1.2.0</version>
+        <version>2.1</version>
         <relativePath>../../../pom/pom.xml</relativePath>
 	</parent>
 	<artifactId>org.apache.felix.useradmin</artifactId>
@@ -42,6 +42,18 @@
 	</dependencies>
 	<build>
 		<plugins>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>src/**</include>
+                    </includes>
+                    <excludes>
+                        <exclude>src/main/resources/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
@@ -70,21 +82,6 @@
 							${project.artifactId}.*
 						</Private-Package>
 					</instructions>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>rat-maven-plugin</artifactId>
-				<configuration>
-					<excludeSubProjects>false</excludeSubProjects>
-					<useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-					<useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-					<excludes>
-						<param>doc/*</param>
-						<param>maven-eclipse.xml</param>
-						<param>.checkstyle</param>
-						<param>.externalToolBuilders/*</param>
-					</excludes>
 				</configuration>
 			</plugin>
 		</plugins>
