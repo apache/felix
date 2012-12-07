@@ -392,9 +392,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                 // write the state only
                 resp.setContentType( "application/json" ); //$NON-NLS-1$
                 resp.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
-                final boolean isFragment = (bundle.getState() == Bundle.UNINSTALLED ? false : isFragmentBundle(bundle));
-                resp.getWriter().print("{\"fragment\":" + isFragment // //$NON-NLS-1$
-                    + ",\"stateRaw\":" + bundle.getState() + "}"); //$NON-NLS-1$ //$NON-NLS-2$
+                resp.getWriter().print( "{\"fragment\":" + isFragmentBundle( bundle ) // //$NON-NLS-1$
+                    + ",\"stateRaw\":" + bundle.getState() + "}" ); //$NON-NLS-1$ //$NON-NLS-2$
                 return;
             }
         }
@@ -748,10 +747,18 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         }
     }
 
-    private final boolean isFragmentBundle( Bundle bundle)
+
+    private final boolean isFragmentBundle( Bundle bundle )
     {
+        // Workaround for FELIX-3670
+        if ( bundle.getState() == Bundle.UNINSTALLED )
+        {
+            return bundle.getHeaders().get( Constants.FRAGMENT_HOST ) != null;
+        }
+
         return getPackageAdmin().getBundleType( bundle ) == PackageAdmin.BUNDLE_TYPE_FRAGMENT;
     }
+
 
     private final void bundleDetails( JSONWriter jw, Bundle bundle, final String pluginRoot, final String servicesRoot, final Locale locale)
         throws JSONException
