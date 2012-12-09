@@ -57,7 +57,7 @@ public class LogServlet extends SimpleWebConsolePlugin implements OsgiManagerPlu
     /** Default constructor */
     public LogServlet()
     {
-        super(LABEL, TITLE, CATEGORY_OSGI_MANAGER, CSS);
+        super(LABEL, TITLE, CATEGORY_OSGI, CSS);
 
         // load templates
         TEMPLATE = readTemplateFile( "/templates/logs.html" ); //$NON-NLS-1$
