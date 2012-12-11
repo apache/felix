@@ -33,7 +33,13 @@ var editorMessage = false;
 
 function configure(pid, create) {
 	var uri = pluginRoot + '/' + pid;
-	$.post(create ? uri + '?create=1' : uri, null, displayConfigForm, 'json');
+	// we have to add a cache killer for IE8
+	var postUri = uri + '?';
+	if ( create ) {
+		postUri = postUri + 'create=1&';
+	}
+	postUri = postUri + 'ts='+new Date().getMilliseconds();
+	$.post(postUri, null, displayConfigForm, 'json');
 }
 
 function displayConfigForm(obj) {
