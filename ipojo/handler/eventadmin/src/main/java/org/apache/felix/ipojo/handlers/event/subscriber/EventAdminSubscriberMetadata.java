@@ -19,7 +19,7 @@
 package org.apache.felix.ipojo.handlers.event.subscriber;
 
 import org.apache.felix.ipojo.ConfigurationException;
-import org.apache.felix.ipojo.handlers.event.publisher.EventUtil;
+import org.apache.felix.ipojo.handlers.event.EventUtil;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.ParseUtils;
 import org.osgi.framework.BundleContext;

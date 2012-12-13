@@ -18,25 +18,13 @@
  */
 package org.apache.felix.ipojo.handlers.event.subscriber;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.PrimitiveHandler;
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
 import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
-import org.apache.felix.ipojo.handlers.event.publisher.EventUtil;
+import org.apache.felix.ipojo.handlers.event.EventUtil;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.MethodMetadata;
 import org.apache.felix.ipojo.parser.PojoMetadata;
@@ -44,6 +32,9 @@ import org.apache.felix.ipojo.util.Callback;
 import org.osgi.framework.Filter;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 /**
  * Event Subscriber Handler.
