@@ -191,7 +191,14 @@ public class ServiceRegistry
         {
             if (((ServiceRegistrationImpl) regs[i]).isValid())
             {
-                regs[i].unregister();
+                try
+                {
+                    regs[i].unregister();
+                }
+                catch (IllegalStateException e)
+                {
+                    // Ignore exception if the service has already been unregistered
+                }
             }
         }
 
