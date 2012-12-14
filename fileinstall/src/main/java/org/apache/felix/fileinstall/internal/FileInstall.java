@@ -19,16 +19,8 @@
 package org.apache.felix.fileinstall.internal;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.ArtifactListener;
@@ -37,14 +29,7 @@ import org.apache.felix.fileinstall.ArtifactUrlTransformer;
 import org.apache.felix.fileinstall.internal.Util.Logger;
 import org.apache.felix.utils.collections.DictionaryAsMap;
 import org.apache.felix.utils.properties.InterpolationHelper;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkEvent;
-import org.osgi.framework.FrameworkListener;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.*;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
@@ -72,6 +57,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
     static boolean initialized;
     static final Object barrier = new Object();
     static final Object refreshLock = new Object();
+    ServiceRegistration urlHandlerRegistration;
 
     public void start(BundleContext context) throws Exception
     {
@@ -80,7 +66,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
 
         Hashtable props = new Hashtable();
         props.put("url.handler.protocol", JarDirUrlHandler.PROTOCOL);
-        context.registerService(org.osgi.service.url.URLStreamHandlerService.class.getName(), new JarDirUrlHandler(), props);
+        urlHandlerRegistration = context.registerService(org.osgi.service.url.URLStreamHandlerService.class.getName(), new JarDirUrlHandler(), props);
 
         padmin = new ServiceTracker(context, PackageAdmin.class.getName(), null);
         padmin.open();
@@ -182,6 +168,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
         synchronized (barrier) {
             initialized = false;
         }
+        urlHandlerRegistration.unregister();
         List /*<DirectoryWatcher>*/ toClose = new ArrayList /*<DirectoryWatcher>*/();
         synchronized (watchers)
         {
@@ -386,24 +373,27 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
     private static class ConfigAdminSupport implements Runnable
     {
         private Tracker tracker;
+        private ServiceRegistration registration;
 
         private ConfigAdminSupport(BundleContext context, FileInstall fileInstall)
         {
             tracker = new Tracker(context, fileInstall);
             Hashtable props = new Hashtable();
             props.put(Constants.SERVICE_PID, tracker.getName());
-            context.registerService(ManagedServiceFactory.class.getName(), tracker, props);
+            registration = context.registerService(ManagedServiceFactory.class.getName(), tracker, props);
             tracker.open();
         }
 
         public void run()
         {
+            registration.unregister();
             tracker.close();
         }
 
         private class Tracker extends ServiceTracker implements ManagedServiceFactory {
 
             private final FileInstall fileInstall;
+            private final Set configs = Collections.synchronizedSet(new HashSet());
             private ConfigInstaller configInstaller;
 
             private Tracker(BundleContext bundleContext, FileInstall fileInstall)
@@ -419,11 +409,13 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
 
             public void updated(String s, Dictionary dictionary) throws ConfigurationException
             {
+                configs.add(s);
                 fileInstall.updated(s, dictionary);
             }
 
             public void deleted(String s)
             {
+                configs.remove(s);
                 fileInstall.deleted(s);
             }
 
@@ -437,6 +429,12 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
 
             public void removedService(ServiceReference serviceReference, Object o)
             {
+                Iterator iterator = configs.iterator();
+                while (iterator.hasNext()) {
+                    String s = (String) iterator.next();
+                    fileInstall.deleted(s);
+                    iterator.remove();
+                }
                 if (configInstaller != null)
                 {
                     configInstaller.destroy();
