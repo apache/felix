@@ -21,8 +21,8 @@ package org.apache.felix.cm.integration.helper;
 
 import java.util.Dictionary;
 
-import org.ops4j.pax.swissbox.tinybundles.dp.Constants;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedServiceFactory;
 
