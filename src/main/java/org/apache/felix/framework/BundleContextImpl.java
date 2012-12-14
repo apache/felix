@@ -343,7 +343,7 @@ class BundleContextImpl implements FelixBundleContext
             }
         }
 
-        return m_felix.registerService(m_bundle, clazzes, svcObj, dict);
+        return m_felix.registerService(this, clazzes, svcObj, dict);
     }
 
     public <S> ServiceRegistration<S> registerService(

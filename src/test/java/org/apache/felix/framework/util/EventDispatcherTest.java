@@ -48,6 +48,7 @@ public class EventDispatcherTest extends TestCase
         final Bundle b1 = getMockBundle();
         final Bundle b2 = getMockBundle();
         final Bundle b3 = getMockBundle();
+        final Bundle b4 = getMockBundle();
 
         final Set calledHooks = new HashSet();
         final EventHook eh1 = new EventHook()
@@ -79,8 +80,8 @@ public class EventDispatcherTest extends TestCase
 
         Logger logger = new Logger();
         ServiceRegistry registry = new ServiceRegistry(logger, null);
-        registry.registerService(null, new String [] {EventHook.class.getName()}, eh1, new Hashtable());
-        registry.registerService(null, new String [] {EventHook.class.getName()}, eh2, new Hashtable());
+        registry.registerService(b4.getBundleContext(), new String [] {EventHook.class.getName()}, eh1, new Hashtable());
+        registry.registerService(b4.getBundleContext(), new String [] {EventHook.class.getName()}, eh2, new Hashtable());
 
         // -- Set up event dispatcher
         EventDispatcher ed = new EventDispatcher(logger, registry);

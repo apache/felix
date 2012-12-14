@@ -31,20 +31,26 @@ import org.osgi.service.packageadmin.PackageAdmin;
 class FrameworkWiringImpl implements FrameworkWiring, Runnable
 {
     private final Felix m_felix;
+    private final ServiceRegistry m_registry;
     private final List<Collection<Bundle>> m_requests = new ArrayList();
     private final List<FrameworkListener[]> m_requestListeners
         = new ArrayList<FrameworkListener[]>();
-    private final ServiceRegistration<PackageAdmin> m_paReg;
+    private ServiceRegistration<PackageAdmin> m_paReg;
     private Thread m_thread = null;
 
 
     public FrameworkWiringImpl(Felix felix, ServiceRegistry registry)
     {
         m_felix = felix;
-        m_paReg = registry.registerService(felix,
-            new String[] { PackageAdmin.class.getName() },
-            new PackageAdminImpl(felix),
-            null);
+        m_registry = registry;
+    }
+
+    void start()
+    {
+        m_paReg = m_registry.registerService(m_felix._getBundleContext(),
+                new String[] { PackageAdmin.class.getName() },
+                new PackageAdminImpl(m_felix),
+                null);
     }
 
     /**
