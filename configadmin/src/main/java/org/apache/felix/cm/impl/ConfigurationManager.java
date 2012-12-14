@@ -127,6 +127,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
     // the BundleContext of the Configuration Admin Service bundle
     BundleContext bundleContext;
 
+    // the service registration of the default file persistence manager
+    private volatile ServiceRegistration filepmRegistration;
+
     // the service registration of the configuration admin
     private volatile ServiceRegistration configurationAdminRegistration;
 
@@ -245,7 +248,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             props.put( Constants.SERVICE_DESCRIPTION, "Platform Filesystem Persistence Manager" );
             props.put( Constants.SERVICE_VENDOR, "Apache Software Foundation" );
             props.put( Constants.SERVICE_RANKING, new Integer( Integer.MIN_VALUE ) );
-            bundleContext.registerService( PersistenceManager.class.getName(), fpm, props );
+            filepmRegistration = bundleContext.registerService( PersistenceManager.class.getName(), fpm, props );
 
             // setup dynamic configuration bindings
             dynamicBindings = new DynamicBindings( bundleContext, fpm );
@@ -316,10 +319,11 @@ public class ConfigurationManager implements BundleActivator, BundleListener
         // clearing the field before actually unregistering the service
         // prevents IllegalStateException in getServiceReference() if
         // the field is not null but the service already unregistered
-        if (configurationAdminRegistration != null) {
-            ServiceRegistration reg = configurationAdminRegistration;
-            configurationAdminRegistration = null;
-            reg.unregister();
+        final ServiceRegistration caReg = configurationAdminRegistration;
+        configurationAdminRegistration = null;
+        if ( caReg != null )
+        {
+            caReg.unregister();
         }
 
         // consider inactive after unregistering such that during
@@ -328,6 +332,14 @@ public class ConfigurationManager implements BundleActivator, BundleListener
 
         // don't care for PersistenceManagers any more
         persistenceManagerTracker.close();
+
+        // shutdown the file persistence manager
+        final ServiceRegistration filePmReg = filepmRegistration;
+        filepmRegistration = null;
+        if ( filePmReg != null )
+        {
+            filePmReg.unregister();
+        }
 
         // stop listening for events
         bundleContext.removeBundleListener( this );
