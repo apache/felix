@@ -4706,18 +4706,21 @@ public class Felix extends BundleImpl implements Framework
 
         public void stop()
         {
-// TODO: LOCKING - This is not really correct.
-            if (m_bundle.getState() == Bundle.ACTIVE)
+            acquireBundleLock(m_bundle,
+                    Bundle.INSTALLED | Bundle.RESOLVED | Bundle.STARTING |
+                    Bundle.ACTIVE | Bundle.STOPPING);
+            try
             {
-                m_oldState = Bundle.ACTIVE;
-                try
-                {
-                    stopBundle(m_bundle, false);
-                }
-                catch (Throwable ex)
-                {
-                    fireFrameworkEvent(FrameworkEvent.ERROR, m_bundle, ex);
-                }
+                m_oldState = m_bundle.getState();
+                stopBundle(m_bundle, false);
+            }
+            catch (Throwable ex)
+            {
+                fireFrameworkEvent(FrameworkEvent.ERROR, m_bundle, ex);
+            }
+            finally
+            {
+                releaseBundleLock(m_bundle);
             }
         }
 
