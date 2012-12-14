@@ -304,7 +304,7 @@ class BundleImpl implements Bundle, BundleRevisions
         }
 
         return getFramework().findBundleEntries(
-            adapt(BundleRevisionImpl.class), path, filePattern, recurse);
+                this, path, filePattern, recurse);
     }
 
     public Dictionary getHeaders()
