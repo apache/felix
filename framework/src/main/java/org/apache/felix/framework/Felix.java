@@ -2007,7 +2007,7 @@ public class Felix extends BundleImpl implements Framework
     {
         // CONCURRENCY NOTE:
         // We will first acquire the bundle lock for the specific bundle
-        // as long as the bundle is STARTING or ACTIVE, shich is necessary
+        // as long as the bundle is STARTING or ACTIVE, which is necessary
         // because we may change the bundle state.
 
         // Acquire bundle lock.
