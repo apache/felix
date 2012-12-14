@@ -1567,13 +1567,16 @@ public class Felix extends BundleImpl implements Framework
         {
             return null;
         }
-        try
+        else if (bundle.getState() == Bundle.INSTALLED)
         {
-            resolveBundleRevision(bundle.adapt(BundleRevision.class));
-        }
-        catch (Exception ex)
-        {
-            // Ignore.
+            try
+            {
+                resolveBundleRevision(bundle.adapt(BundleRevision.class));
+            }
+            catch (Exception ex)
+            {
+                // Ignore.
+            }
         }
 
         // If the bundle revision isn't resolved, then just search
@@ -1603,13 +1606,16 @@ public class Felix extends BundleImpl implements Framework
         {
             return null;
         }
-        try
+        else if (bundle.getState() == Bundle.INSTALLED)
         {
-            resolveBundleRevision(bundle.adapt(BundleRevision.class));
-        }
-        catch (Exception ex)
-        {
-            // Ignore.
+            try
+            {
+                resolveBundleRevision(bundle.adapt(BundleRevision.class));
+            }
+            catch (Exception ex)
+            {
+                // Ignore.
+            }
         }
 
         if (bundle.adapt(BundleRevision.class).getWiring() == null)
@@ -1688,13 +1694,33 @@ public class Felix extends BundleImpl implements Framework
      * Implementation for Bundle.findEntries().
     **/
     Enumeration findBundleEntries(
+            BundleImpl bundle, String path, String filePattern, boolean recurse)
+    {
+        if (bundle.getState() == Bundle.UNINSTALLED)
+        {
+            throw new IllegalStateException("The bundle is uninstalled.");
+        }
+        else if (!Util.isFragment(bundle.adapt(BundleRevision.class)) && bundle.getState() == Bundle.INSTALLED)
+        {
+            try
+            {
+                resolveBundleRevision(bundle.adapt(BundleRevision.class));
+            }
+            catch (Exception ex)
+            {
+                // Ignore.
+            }
+        }
+        return findBundleEntries(
+                bundle.adapt(BundleRevision.class), path, filePattern, recurse);
+    }
+
+    /**
+     * Implementation for BundleWiring.findEntries().
+     **/
+    Enumeration findBundleEntries(
         BundleRevision revision, String path, String filePattern, boolean recurse)
     {
-        // Try to resolve the bundle per the spec.
-        List<Bundle> list = new ArrayList<Bundle>(1);
-        list.add(revision.getBundle());
-        resolveBundles(list);
-
         // Get the entry enumeration from the revision content and
         // create a wrapper enumeration to filter it.
         Enumeration enumeration =
