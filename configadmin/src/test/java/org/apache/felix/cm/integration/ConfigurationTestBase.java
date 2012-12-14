@@ -19,10 +19,6 @@
 package org.apache.felix.cm.integration;
 
 
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
-import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartup;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,16 +34,18 @@ import junit.framework.TestCase;
 
 import org.apache.felix.cm.integration.helper.BaseTestActivator;
 import org.apache.felix.cm.integration.helper.ManagedServiceTestActivator;
-import org.apache.felix.cm.integration.helper.MyTinyBundle;
 import org.apache.felix.cm.integration.helper.UpdateThreadSignalTask;
 import org.junit.After;
 import org.junit.Before;
+
+import javax.inject.Inject;
+
 import org.ops4j.pax.exam.CoreOptions;
-import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
-import org.ops4j.pax.exam.container.def.PaxRunnerOptions;
-import org.ops4j.pax.swissbox.tinybundles.core.TinyBundles;
+import org.ops4j.pax.exam.TestProbeBuilder;
+import org.ops4j.pax.exam.junit.ProbeBuilder;
+import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -57,6 +55,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+
+import static org.ops4j.pax.exam.CoreOptions.*;
 
 
 public abstract class ConfigurationTestBase
@@ -107,15 +107,14 @@ public abstract class ConfigurationTestBase
         }
 
         final Option[] base = options(
-            /* CoreOptions.allFrameworks(), */
-            provision(
-                CoreOptions.bundle( bundleFile.toURI().toString() ),
-                mavenBundle( "org.ops4j.pax.swissbox", "pax-swissbox-tinybundles", "1.0.0" )
-             ),
-             waitForFrameworkStartup()
+                workingDirectory("target/paxexam/"),
+                cleanCaches(true),
+                junitBundles(),
+                mavenBundle("org.ops4j.pax.tinybundles", "tinybundles", "1.0.0"),
+                bundle(bundleFile.toURI().toString())
         );
-        final Option vmOption = ( paxRunnerVmOption != null ) ? PaxRunnerOptions.vmOption( paxRunnerVmOption ) : null;
-        return OptionUtils.combine( base, vmOption );
+        final Option option = ( paxRunnerVmOption != null ) ? vmOption( paxRunnerVmOption ) : null;
+        return OptionUtils.combine( base, option );
     }
 
 
@@ -157,19 +156,22 @@ public abstract class ConfigurationTestBase
     }
 
 
+    @ProbeBuilder
+    public TestProbeBuilder buildProbe( TestProbeBuilder builder ) {
+        return builder.setHeader(Constants.EXPORT_PACKAGE, "org.apache.felix.cm.integration.helper");
+    }
+
     protected Bundle installBundle( final String pid, final Class<?> activatorClass, final String location )
         throws BundleException
     {
         final String activatorClassName = activatorClass.getName();
-        final InputStream bundleStream = new MyTinyBundle()
-            .prepare(
-                TinyBundles.withBnd()
-                .set( Constants.BUNDLE_SYMBOLICNAME, activatorClassName )
+        final InputStream bundleStream = TinyBundles.bundle()
+                .set(Constants.BUNDLE_SYMBOLICNAME, activatorClassName)
                 .set( Constants.BUNDLE_VERSION, "0.0.11" )
                 .set( Constants.IMPORT_PACKAGE, "org.apache.felix.cm.integration.helper" )
                 .set( Constants.BUNDLE_ACTIVATOR, activatorClassName )
                 .set( BaseTestActivator.HEADER_PID, pid )
-            ).build( TinyBundles.asStream() );
+                .build( TinyBundles.withBnd() );
 
         try
         {

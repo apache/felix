@@ -70,10 +70,10 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
     // ----------------------- Initialization -------------------------------------------
 
     @Before
-    public void startup( BundleContext context )
+    public void startup()
     {
-        context.registerService( LogService.class.getName(), this, null );
-        _tracker = new ServiceTracker( context, ConfigurationAdmin.class.getName(), null );
+        bundleContext.registerService( LogService.class.getName(), this, null );
+        _tracker = new ServiceTracker( bundleContext, ConfigurationAdmin.class.getName(), null );
         _tracker.open();
     }
 
@@ -84,7 +84,7 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
      */
 
     @After
-    public void tearDown( BundleContext context )
+    public void tearDown()
     {
         _tracker.close();
     }
@@ -143,12 +143,12 @@ public class ConfigurationAdminUpdateStressTest extends ConfigurationTestBase im
     // --------------------------- CM Update stress test -------------------------------------
 
     @Test
-    public void testCMUpdateStress( BundleContext context )
+    public void testCMUpdateStress()
     {
         _testLatch = new CountDownLatch( 1 );
         try
         {
-            CreateUpdateStress stress = new CreateUpdateStress( context );
+            CreateUpdateStress stress = new CreateUpdateStress( bundleContext );
             stress.start();
 
             if ( !_testLatch.await( 15, TimeUnit.SECONDS ) )
