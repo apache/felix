@@ -23,6 +23,7 @@ import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceException;
@@ -101,12 +102,14 @@ public class ServiceRegistry
 
     // Caller is expected to fire REGISTERED event.
     public ServiceRegistration registerService(
-        Bundle bundle, String[] classNames, Object svcObj, Dictionary dict)
+        BundleContext context, String[] classNames, Object svcObj, Dictionary dict)
     {
         ServiceRegistrationImpl reg = null;
 
         synchronized (this)
         {
+            Bundle bundle = context.getBundle();
+
             // Create the service registration.
             reg = new ServiceRegistrationImpl(
                 this, bundle, classNames, new Long(m_currentServiceId++), svcObj, dict);

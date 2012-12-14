@@ -37,19 +37,25 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
     private static final int STARTLEVEL_IDX = 1;
 
     private final Felix m_felix;
+    private final ServiceRegistry m_registry;
     private final List m_requests = new ArrayList();
     private final List<FrameworkListener[]> m_requestListeners
         = new ArrayList<FrameworkListener[]>();
-    private final ServiceRegistration<StartLevel> m_slReg;
+    private ServiceRegistration<StartLevel> m_slReg;
     private Thread m_thread = null;
 
     FrameworkStartLevelImpl(Felix felix, ServiceRegistry registry)
     {
         m_felix = felix;
-        m_slReg = registry.registerService(felix,
-            new String[] { StartLevel.class.getName() },
-            new StartLevelImpl(felix),
-            null);
+        m_registry = registry;
+    }
+
+    void start()
+    {
+        m_slReg = m_registry.registerService(m_felix._getBundleContext(),
+                new String[] { StartLevel.class.getName() },
+                new StartLevelImpl(m_felix),
+                null);
     }
 
     // Should only be called hold requestList lock.

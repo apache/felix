@@ -763,6 +763,10 @@ public class Felix extends BundleImpl implements Framework
                 // so create a gate for that purpose.
                 m_shutdownGate = new ThreadGate();
 
+                // Start services
+                m_fwkWiring.start();
+                m_fwkStartLevel.start();
+
                 try
                 {
                     Felix.m_secureAction.startActivator(
@@ -3258,7 +3262,7 @@ public class Felix extends BundleImpl implements Framework
      * @return A <code>ServiceRegistration</code> object or null.
     **/
     ServiceRegistration registerService(
-        BundleImpl bundle, String[] classNames, Object svcObj, Dictionary dict)
+        BundleContextImpl context, String[] classNames, Object svcObj, Dictionary dict)
     {
         if (classNames == null)
         {
@@ -3269,50 +3273,31 @@ public class Felix extends BundleImpl implements Framework
             throw new IllegalArgumentException("Service object cannot be null.");
         }
 
-        // Acquire bundle lock.
-        try
-        {
-            acquireBundleLock(bundle, Bundle.STARTING | Bundle.ACTIVE | Bundle.STOPPING);
-        }
-        catch (IllegalStateException ex)
-        {
-            throw new IllegalStateException(
-                "Can only register services while bundle is active or activating.");
-        }
-
         ServiceRegistration reg = null;
 
-        try
+        // Check to make sure that the service object is
+        // an instance of all service classes; ignore if
+        // service object is a service factory.
+        if (!(svcObj instanceof ServiceFactory))
         {
-            // Check to make sure that the service object is
-            // an instance of all service classes; ignore if
-            // service object is a service factory.
-            if (!(svcObj instanceof ServiceFactory))
+            for (int i = 0; i < classNames.length; i++)
             {
-                for (int i = 0; i < classNames.length; i++)
+                Class clazz = Util.loadClassUsingClass(svcObj.getClass(), classNames[i], m_secureAction);
+                if (clazz == null)
                 {
-                    Class clazz = Util.loadClassUsingClass(svcObj.getClass(), classNames[i], m_secureAction);
-                    if (clazz == null)
-                    {
-                        throw new IllegalArgumentException(
-                            "Cannot cast service: " + classNames[i]);
-                    }
-                    else if (!clazz.isAssignableFrom(svcObj.getClass()))
-                    {
-                        throw new IllegalArgumentException(
-                            "Service object is not an instance of \""
-                            + classNames[i] + "\".");
-                    }
+                    throw new IllegalArgumentException(
+                        "Cannot cast service: " + classNames[i]);
+                }
+                else if (!clazz.isAssignableFrom(svcObj.getClass()))
+                {
+                    throw new IllegalArgumentException(
+                        "Service object is not an instance of \""
+                        + classNames[i] + "\".");
                 }
             }
+        }
 
-            reg = m_registry.registerService(bundle, classNames, svcObj, dict);
-        }
-        finally
-        {
-            // Always release bundle lock.
-            releaseBundleLock(bundle);
-        }
+        reg = m_registry.registerService(context, classNames, svcObj, dict);
 
         // Check to see if this a listener hook; if so, then we need
         // to invoke the callback with all existing service listeners.
