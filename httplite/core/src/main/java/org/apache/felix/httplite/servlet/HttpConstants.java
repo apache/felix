@@ -111,7 +111,7 @@ public class HttpConstants
     /**
      * Date format for HTTP
      */
-    public static final String HTTP_DATE_FORMAT = "EEE, d MMM yyyy HH:mm:ss z";
+    public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
     /**
      * Timezone specified for HTTP
      */
