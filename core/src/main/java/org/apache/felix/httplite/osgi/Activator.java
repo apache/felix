@@ -112,6 +112,8 @@ public class Activator implements BundleActivator
 
         config.put(Server.CONFIG_PROPERTY_HTTP_PORT,
             context.getProperty(Server.CONFIG_PROPERTY_HTTP_PORT));
+        config.put(Server.CONFIG_PROPERTY_HTTP_HOST,
+            context.getProperty(Server.CONFIG_PROPERTY_HTTP_HOST));
         config.put(Server.CONFIG_PROPERTY_HTTP_ENABLE,
             context.getProperty(Server.CONFIG_PROPERTY_HTTP_ENABLE));
         config.put(Server.CONFIG_PROPERTY_HTTPS_ENABLE,
