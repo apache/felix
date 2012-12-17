@@ -69,6 +69,10 @@ public class Server
      * The port used for servlets and resources available via HTTP. The default is 8080. A negative port number has the same effect as setting org.apache.felix.http.enable to false.
      */
     public static final String CONFIG_PROPERTY_HTTP_PORT = "org.osgi.service.http.port";
+    /**
+     * The address of the host interface to bind http to. The default is to bind to all interfaces.
+     */
+    public static final String CONFIG_PROPERTY_HTTP_HOST = "org.apache.felix.http.host"; 
 
     /**
      * Default HTTP port to listen on.
@@ -94,6 +98,7 @@ public class Server
 
     private String m_hostname;
     private final int m_port;
+    private InetAddress m_bindAddr;
 
     private int m_state;
     private ThreadGate m_shutdownGate;
@@ -119,6 +124,9 @@ public class Server
      *   <li><tt>org.osgi.service.http.port</tt> - the port on which it listens for connections;
      *       the default is 8080.
      *   </li>   
+     *   <li><tt>org.apache.felix.http.host</tt> - the address of the host interface which is bound;
+     *       the default is all addresses.
+     *   </li>
      *   <li><tt>org.apache.felix.http.threadpool.limit</tt> - the maximum number of threads in the
      *       thread pool; the default value is 10.
      *   </li>
@@ -149,6 +157,7 @@ public class Server
 
         // Read in the configured properties or their default values.
         m_port = getConfiguredPort(configMap);
+        m_bindAddr = getConfiguredBindAddr(configMap);
         int threadLimit = (configMap.get(Server.CONFIG_PROPERTY_THREADPOOL_LIMIT_PROP) == null) ? DEFAULT_THREADPOOL_LIMIT
             : Integer.parseInt((String) configMap.get(Server.CONFIG_PROPERTY_THREADPOOL_LIMIT_PROP));
         int threadTimeout = (configMap.get(Server.CONFIG_PROPERTY_THREADPOOL_TIMEOUT_PROP) == null) ? ThreadPool.DEFAULT_THREAD_TIMEOUT
@@ -170,6 +179,27 @@ public class Server
     {
         return (configMap.get(Server.CONFIG_PROPERTY_HTTP_PORT) == null) ? DEFAULT_PORT
             : Integer.parseInt((String) configMap.get(Server.CONFIG_PROPERTY_HTTP_PORT));
+    }
+
+    /**
+     * Get the address of the interface the HTTP server listens on based on configuration map or default value.
+     * 
+     * @param configMap
+     * @return Address of the interface to bind to or null if no interface is specified.
+     */
+    public InetAddress getConfiguredBindAddr(Map configMap)
+    {
+        try
+        {
+            return (configMap.get(Server.CONFIG_PROPERTY_HTTP_HOST) == null) ? null
+                : InetAddress.getByName((String) configMap.get(Server.CONFIG_PROPERTY_HTTP_HOST));
+        }
+        catch(UnknownHostException ex)
+        {
+            m_logger.log(Logger.LOG_ERROR,
+                "Unable to resolve " + configMap.get(Server.CONFIG_PROPERTY_HTTP_HOST) + " to address of interface to bind to. Binding to all interfaces.", ex);
+	    return null;
+        }
     }
 
     /**
@@ -240,7 +270,12 @@ public class Server
         {
             // If inactive, then create server socket, server thread, and
             // set state to active.
-            m_serverSocket = new ServerSocket(m_port);
+            if(m_bindAddr == null)
+                m_serverSocket = new ServerSocket(m_port);
+            else
+                m_serverSocket = new ServerSocket(m_port, 0, m_bindAddr);
+            
+
             m_serverThread = new Thread(new Runnable()
             {
 				public void run()
