@@ -67,11 +67,11 @@ public class TestParameters extends AbstractHttpliteTestCase
         assertTrue( client.getResponseCode() == 200 );
         
         int headerCount = 0;
-        Enumeration enum = testServlet.getHeaderNames();
-        while (enum.hasMoreElements()) 
+        Enumeration e = testServlet.getHeaderNames();
+        while (e.hasMoreElements()) 
         {
             headerCount++;
-            System.out.println("header: " + enum.nextElement().toString());
+            System.out.println("header: " + e.nextElement().toString());
         }
         
         
