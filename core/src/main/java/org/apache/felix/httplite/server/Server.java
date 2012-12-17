@@ -270,11 +270,14 @@ public class Server
         {
             // If inactive, then create server socket, server thread, and
             // set state to active.
-            if(m_bindAddr == null)
+            if (m_bindAddr == null)
+            {
                 m_serverSocket = new ServerSocket(m_port);
+            }
             else
+            {
                 m_serverSocket = new ServerSocket(m_port, 0, m_bindAddr);
-            
+            }
 
             m_serverThread = new Thread(new Runnable()
             {
