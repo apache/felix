@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
@@ -820,8 +821,8 @@ public class HttpServletRequestImpl implements HttpServletRequest
 
         try
         {
-            SimpleDateFormat sdf = new SimpleDateFormat();
-
+            SimpleDateFormat sdf = new SimpleDateFormat(HttpConstants.HTTP_DATE_FORMAT);
+            sdf.setTimeZone(TimeZone.getTimeZone(HttpConstants.HTTP_TIMEZONE));
             return sdf.parse( headerValue ).getTime();
         }
         catch ( ParseException e )
