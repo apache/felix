@@ -19,6 +19,7 @@
 package org.apache.felix.ipojo;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -53,11 +54,9 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
 
     /**
      * The list of the managed instance name.
-     * This list is shared by all factories and is
-     * used to assert name unicity.
-     * All accesses must be protected using the INSTANCE_NAME lock.
+     * This list is shared by all factories and is used to assert name uniqueness.
      */
-    protected static final List INSTANCE_NAME = new ArrayList();
+    protected static final List INSTANCE_NAME = Collections.synchronizedList(new ArrayList());
 
     /**
      * The component type description exposed by the {@link Factory} service.
@@ -132,15 +131,15 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
     protected int m_state = Factory.INVALID;
 
     /**
-     * The index used to generate instance name if not set.
-     */
-    private long m_index = 0;
-
-    /**
      * The flag indicating if this factory has already a
      * computed description or not.
      */
     private boolean m_described;
+
+    /**
+     * Generates a unique instance name if not provided by the configuration.
+     */
+    private NameGenerator m_generator = new UniquenessNameGenerator(new SwitchNameGenerator());
 
     /**
      * Creates an iPOJO Factory.
@@ -275,49 +274,45 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
                     + ": " + e.getMessage());
         }
 
-        // The following code is doing a sequence of operation on the INSTANCE_NAME list
-        // So, it needs to be protected against concurrent access.
-        synchronized (INSTANCE_NAME) {
-
-            String name;
-            if (configuration.get("instance.name") == null && configuration.get("name") == null) { // Support both instance.name & name
-                // We're holding the INSTANCE_NAME lock, so no problem.
-                name = generateName();
-                configuration.put("instance.name", name);
-            } else {
-                name = (String) configuration.get("instance.name");
-                if (name == null) {
-                    name = (String) configuration.get("name");
-                    getLogger().log(Logger.WARNING, "The 'name' (" + name + ") attribute, used as the instance name, is deprecated, please use the 'instance.name' attribute");
-                    configuration.put("instance.name", name);
-                }
-
-                // We're holding the INSTANCE_NAME's lock.
-                if (INSTANCE_NAME.contains(name)) {
-                        m_logger.log(Logger.ERROR, "The configuration is not acceptable : Name already used");
-                        throw new UnacceptableConfiguration(getFactoryName() + " : Name already used : " + name);
-                }
-
+        // Find name in the configuration
+        String name;
+        if (configuration.get("instance.name") == null && configuration.get("name") == null) {
+            // No name provided
+            name = null;
+        } else {
+            // Support both instance.name & name
+            name = (String) configuration.get("instance.name");
+            if (name == null) {
+                name = (String) configuration.get("name");
+                getLogger().log(Logger.WARNING, "The 'name' (" + name + ") attribute, used as the instance name, is deprecated, please use the 'instance.name' attribute");
             }
-            // Here we are sure to be valid until the end of the method.
-            HandlerManager[] handlers = new HandlerManager[m_requiredHandlers.size()];
-            for (int i = 0; i < handlers.length; i++) {
-                RequiredHandler req = (RequiredHandler) m_requiredHandlers.get(i);
-                handlers[i] = getHandler(req, serviceContext);
-            }
+        }
 
-            try {
-                ComponentInstance instance = createInstance(configuration, context, handlers); // This method is called with the lock.
-                // We're still in the synchronized block, so we can access the INSTANCE_NAME.
-                INSTANCE_NAME.add(name);
-                m_componentInstances.put(name, instance);
-                m_logger.log(Logger.INFO, "Instance " + name + " from factory " + m_factoryName + " created");
-                return instance;
-            } catch (ConfigurationException e) {
-                m_logger.log(Logger.ERROR, e.getMessage());
-                throw new ConfigurationException(e.getMessage(), m_factoryName);
-            }
-        } // End of the synchronized block on INSTANCE_NAME.
+
+        // Generate a unique name if required and verify uniqueness
+        // We extract the version from the configuration because it may help to compute a unique name by appending
+        // the version to the given name.
+        String version = (String) configuration.get("factory.version");
+        name = m_generator.generate(name, version);
+        configuration.put("instance.name", name);
+
+        // Here we are sure to be valid until the end of the method.
+        HandlerManager[] handlers = new HandlerManager[m_requiredHandlers.size()];
+        for (int i = 0; i < handlers.length; i++) {
+            RequiredHandler req = (RequiredHandler) m_requiredHandlers.get(i);
+            handlers[i] = getHandler(req, serviceContext);
+        }
+
+        try {
+            ComponentInstance instance = createInstance(configuration, context, handlers);
+            m_componentInstances.put(name, instance);
+            m_logger.log(Logger.INFO, "Instance " + name + " from factory " + m_factoryName + " created");
+            return instance;
+        } catch (ConfigurationException e) {
+            INSTANCE_NAME.remove(name);
+            m_logger.log(Logger.ERROR, e.getMessage());
+            throw new ConfigurationException(e.getMessage(), m_factoryName);
+        }
 
 
     }
@@ -608,6 +603,9 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
 
         if (m_isPublic) {
             // Exposition of the factory service
+            if (m_componentDesc == null) {
+                System.out.println("Description of " + m_factoryName + " " + m_componentDesc);
+            }
             BundleContext bc = SecurityHelper.selectContextToRegisterServices(m_componentDesc.getFactoryInterfacesToPublish(),
                     m_context, getIPOJOBundleContext());
             m_sr =
@@ -684,9 +682,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
      * @see org.osgi.service.cm.ManagedServiceFactory#deleted(java.lang.String)
      */
     public synchronized void deleted(String name) {
-        synchronized (INSTANCE_NAME) {
-            INSTANCE_NAME.remove(name);
-        }
+        INSTANCE_NAME.remove(name);
         ComponentInstance instance = (ComponentInstance) m_componentInstances.remove(name);
         if (instance != null) {
             instance.dispose();
@@ -702,9 +698,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         synchronized (this) {
             m_componentInstances.remove(name);
         }
-        synchronized (INSTANCE_NAME) {
-            INSTANCE_NAME.remove(name);
-        }
+        INSTANCE_NAME.remove(name);
     }
 
     /**
@@ -718,16 +712,23 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
     protected void computeDescription() {
         for (int i = 0; i < m_requiredHandlers.size(); i++) {
             RequiredHandler req = (RequiredHandler) m_requiredHandlers.get(i);
-            Handler handler = getHandler(req, null).getHandler();
-            try {
-                handler.setFactory(this);
-                handler.initializeComponentFactory(m_componentDesc, m_componentMetadata);
-                ((Pojo) handler).getComponentInstance().dispose();
-            } catch (org.apache.felix.ipojo.ConfigurationException e) {
-                ((Pojo) handler).getComponentInstance().dispose();
-                m_logger.log(Logger.ERROR, e.getMessage());
-                stop();
-                throw new IllegalStateException(e.getMessage());
+
+            if (getHandler(req, null) == null) {
+                // TODO this does not really looks good.
+                m_logger.log(Logger.ERROR, "Cannot extract handler object from " + m_factoryName + " " + req
+                        .getFullName());
+            } else {
+                Handler handler = getHandler(req, null).getHandler();
+                try {
+                    handler.setFactory(this);
+                    handler.initializeComponentFactory(m_componentDesc, m_componentMetadata);
+                    ((Pojo) handler).getComponentInstance().dispose();
+                } catch (org.apache.felix.ipojo.ConfigurationException e) {
+                    ((Pojo) handler).getComponentInstance().dispose();
+                    m_logger.log(Logger.ERROR, e.getMessage());
+                    stop();
+                    throw new IllegalStateException(e.getMessage());
+                }
             }
         }
     }
@@ -784,10 +785,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
                     if (instance.getState() != ComponentInstance.DISPOSED) {
                         instance.dispose();
                     }
-                    // Need to enter a synchronized block locking the INSTANCE_NAME class to avoid concurrent accesses.
-                    synchronized (INSTANCE_NAME) {
-                        INSTANCE_NAME.remove(instance.getInstanceName());
-                    }
+                    INSTANCE_NAME.remove(instance.getInstanceName());
                 }
 
                 m_componentInstances.clear();
@@ -847,20 +845,6 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
             stop();
             return null;
         }
-    }
-
-    /**
-     * Helper method generating a new unique name.
-     * This method is call when holding the lock on INSTANCE_NAME to assert generated name unicity.
-     * @return a non already used name
-     */
-    protected String generateName() {
-        String name = m_factoryName + "-" + m_index;
-        while (INSTANCE_NAME.contains(name)) {
-            m_index = m_index + 1;
-            name = m_factoryName + "-" + m_index;
-        }
-        return name;
     }
 
     /**
@@ -1025,5 +1009,112 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
             return 0;
         }
     }
+
+    /**
+     * Generate a unique name for a component instance.
+     */
+    private interface NameGenerator {
+
+        /**
+         * @return a unique name.
+         * @param name The user provided name (may be null)
+         * @param version the factory version if set. Instances can specify the version of the factory they are bound
+         *                to. This parameter may be used to avoid name conflicts.
+         */
+        String generate(String name, String version) throws UnacceptableConfiguration;
+    }
+
+    /**
+     * This generator implements the default naming strategy.
+     * The name is composed of the factory name suffixed with a unique number identifier (starting from 0).
+     */
+    private class DefaultNameGenerator implements NameGenerator {
+        private long m_nextId = 0;
+
+        /**
+         * This method has to be synchronized to ensure name uniqueness.
+         * @param name The user provided name (may be null)
+         * @param version ignored.
+         */
+        public synchronized String generate(String name, String version) throws UnacceptableConfiguration
+        {
+            // Note: This method is overridden by handlers to get the full name.
+            return IPojoFactory.this.getFactoryName() + "-" + m_nextId++;
+        }
+    }
+
+    /**
+     * This generator implements the naming strategy when client provides the instance name value.
+     */
+    private class UserProvidedNameGenerator implements NameGenerator {
+
+        /**
+         * @param name The user provided name (not null)
+         * @param  version ignored.
+         */
+        public String generate(String name, String version) throws UnacceptableConfiguration
+        {
+            return name;
+        }
+    }
+
+    /**
+     * This generator ensure that the returned name is globally unique.
+     */
+    private class UniquenessNameGenerator implements NameGenerator {
+
+        private NameGenerator delegate;
+
+        private UniquenessNameGenerator(NameGenerator delegate)
+        {
+            this.delegate = delegate;
+        }
+
+        /**
+         * This method has to be synchronized to ensure name uniqueness.
+         * @param name The user provided name (may be null)
+         */
+        public String generate(String name, String version) throws UnacceptableConfiguration
+        {
+            // Produce the name
+            String name2 = delegate.generate(name, version);
+
+            // Needs to be in a synchronized block because we want to ensure that the name is unique
+            synchronized (INSTANCE_NAME) {
+                // Verify uniqueness
+                if (INSTANCE_NAME.contains(name2)  && version != null) {
+                    // Named already used, try to append the version.
+                    name2 = name2 + "-" + version;
+                    if (INSTANCE_NAME.contains(name2)) {
+                        m_logger.log(Logger.ERROR, "The configuration is not acceptable : Name already used");
+                        throw new UnacceptableConfiguration(getFactoryName() + " : Name already used : " + name2);
+                    }
+                } else if (INSTANCE_NAME.contains(name2)) {
+                    m_logger.log(Logger.ERROR, "The configuration is not acceptable : Name already used");
+                    throw new UnacceptableConfiguration(getFactoryName() + " : Name already used : " + name2);
+                }
+                // reserve the name
+                INSTANCE_NAME.add(name2);
+            }
+            return name2;
+        }
+    }
+
+    /**
+     * This generator choose the right NameGenerator.
+     */
+    private class SwitchNameGenerator implements NameGenerator {
+        private NameGenerator computed = new DefaultNameGenerator();
+        private NameGenerator userProvided = new UserProvidedNameGenerator();
+
+        public String generate(String name, String version) throws UnacceptableConfiguration
+        {
+            if (name == null) {
+                return computed.generate(null, null);
+            }
+            return userProvided.generate(name, version);
+        }
+    }
+
 
 }
