@@ -533,6 +533,9 @@ public class Extender implements SynchronousBundleListener, BundleActivator {
             m_logger.log(Logger.ERROR, "Cannot instantiate an abstract factory from " + clazz.getName(), e);
         } catch (InvocationTargetException e) {
             m_logger.log(Logger.ERROR, "Cannot instantiate an abstract factory from " + clazz.getName(), e.getTargetException());
+        } catch(Throwable e) {
+            // Intercepts everything else to avoid complete crash.
+            m_logger.log(Logger.ERROR, "Cannot instantiate an abstract factory from " + clazz.getName(), e);
         }
     }
 
