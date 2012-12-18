@@ -1,17 +1,5 @@
 package org.apache.felix.ipojo.tests.api;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.ops4j.pax.exam.CoreOptions.equinox;
-import static org.ops4j.pax.exam.CoreOptions.felix;
-import static org.ops4j.pax.exam.CoreOptions.knopflerfish;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
-
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.MissingHandlerException;
@@ -34,7 +22,11 @@ import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import static org.ops4j.pax.exam.MavenUtils.*;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertThat;
+import static org.ops4j.pax.exam.CoreOptions.*;
+import static org.ops4j.pax.exam.MavenUtils.asInProject;
 
 
 @RunWith( JUnit4TestRunner.class )
@@ -84,6 +76,7 @@ public class SingletonComponentTest {
         ServiceReference ref = ipojo.getServiceReferenceByName(Foo.class
                 .getName(), ci.getInstanceName());
         assertThat(ref, is(notNullValue()));
+        type.disposeInstance(ci);
 
     }
 
@@ -114,23 +107,27 @@ public class SingletonComponentTest {
         ci = type.create();
         assertThat("Ci is invalid", ci.getState(),
                 is(ComponentInstance.INVALID));
-
+        type.stop();
     }
 
     @Test
     public void createBoth() throws Exception {
-        ComponentInstance cons = createAConsumer().create();
+        SingletonComponentType consFactory = createAConsumer();
+        ComponentInstance cons = consFactory.create();
         // cons is invalid
         assertThat("cons is invalid", cons.getState(), is(ComponentInstance.INVALID));
 
-        ComponentInstance prov = createAProvider().create();
+        SingletonComponentType provFactory = createAProvider();
+        ComponentInstance prov = provFactory.create();
         assertThat("prov is valid", prov.getState(), is(ComponentInstance.VALID));
         assertThat("cons is valid", cons.getState(), is(ComponentInstance.VALID));
-
+        consFactory.stop();
+        provFactory.stop();
     }
 
     @Test
     public void createTwoCons() throws Exception {
+        SingletonComponentType consFactory = createAConsumer();
         ComponentInstance cons1 = createAConsumer().create();
         // cons is invalid
         assertThat("cons is invalid", cons1.getState(), is(ComponentInstance.INVALID));
@@ -149,7 +146,7 @@ public class SingletonComponentTest {
     }
 
     @Test
-    @Ignore
+    @Ignore // TODO Why is this ignored ?
     public void setObject() throws Exception {
         ComponentInstance cons = createAConsumer().setObject(new MyComponentImpl(5)).create();
         // cons is invalid
@@ -174,6 +171,7 @@ public class SingletonComponentTest {
         PrimitiveComponentType type =  new SingletonComponentType()
         .setBundleContext(context)
         .setClassName(org.example.service.impl.MyComponentImpl.class.getName())
+        .setComponentTypeName("singleton.cons")
         .addDependency(new Dependency().setField("myFoo"))
         .setValidateMethod("start");
 
@@ -183,8 +181,9 @@ public class SingletonComponentTest {
     private SingletonComponentType createAnOptionalConsumer() {
         PrimitiveComponentType type =  new SingletonComponentType()
         .setBundleContext(context)
-        .setClassName(org.example.service.impl.MyComponentImpl.class.getName())
+        .setClassName(MyComponentImpl.class.getName())
         .addDependency(new Dependency().setField("myFoo").setOptional(true))
+        .setComponentTypeName("singleton.optional.consumer")
         .setValidateMethod("start");
 
         return (SingletonComponentType) type;

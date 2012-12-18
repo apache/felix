@@ -165,6 +165,7 @@ public class PrimitiveComponentTest {
     private PrimitiveComponentType createAnOptionalConsumer() {
         return new SingletonComponentType()
         .setBundleContext(context)
+        .setComponentTypeName("cons.optional")
         .setClassName(org.example.service.impl.MyComponentImpl.class.getName())
         .addDependency(new Dependency().setField("myFoo").setOptional(true))
         .setValidateMethod("start");
