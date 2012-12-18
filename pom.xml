@@ -25,7 +25,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.runtime-project</artifactId>
-    <version>1.8.6</version>
+    <version>1.9.0-SNAPSHOT</version>
     <name>Apache Felix iPOJO Runtime Project</name>
     <packaging>pom</packaging>
 
@@ -117,10 +117,4 @@
             </build>
         </profile>
     </profiles>
-
-  <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.8.6</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.8.6</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.8.6</url>
-  </scm>
 </project>
