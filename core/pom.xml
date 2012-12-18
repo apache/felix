@@ -41,7 +41,7 @@
         <ipojo.package.version>1.8.4</ipojo.package.version>
 
         <!-- Embedded manipulator version -->
-        <ipojo.manipulator.version>1.9.0-SNAPSHOT</ipojo.manipulator.version>
+        <ipojo.manipulator.version>1.8.6</ipojo.manipulator.version>
     </properties>
 
     <description>
