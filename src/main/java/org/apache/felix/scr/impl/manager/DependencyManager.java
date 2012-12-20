@@ -25,7 +25,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -121,13 +123,19 @@ public class DependencyManager<S, T> implements Reference
         void setTracker( ServiceTracker<T, RefPair<T>> tracker );
 
         void setTrackerOpened();
+
+        void setPreviousRefMap( Map<ServiceReference<T>, RefPair<T>> previousRefMap );
     }
 
     private abstract class AbstractCustomizer implements Customizer<T>
     {
+        private final Map<ServiceReference<T>, RefPair<T>> EMPTY_REF_MAP = Collections.emptyMap();
+
         private ServiceTracker<T, RefPair<T>> tracker;
 
         private volatile boolean trackerOpened;
+
+        private volatile Map<ServiceReference<T>, RefPair<T>> previousRefMap = EMPTY_REF_MAP;
 
         public void setTracker( ServiceTracker<T, RefPair<T>> tracker )
         {
@@ -163,6 +171,23 @@ public class DependencyManager<S, T> implements Reference
             trackerOpened = true;
         }
 
+        protected Map<ServiceReference<T>, RefPair<T>> getPreviousRefMap()
+        {
+            return previousRefMap;
+        }
+
+        public void setPreviousRefMap( Map<ServiceReference<T>, RefPair<T>> previousRefMap )
+        {
+            if ( previousRefMap != null )
+            {
+                this.previousRefMap = previousRefMap;
+            }
+            else
+            {
+                this.previousRefMap = EMPTY_REF_MAP;
+            }
+
+        }
     }
 
 
@@ -223,7 +248,11 @@ public class DependencyManager<S, T> implements Reference
 
         public RefPair<T> addingService( ServiceReference<T> serviceReference )
         {
-            RefPair<T> refPair = new RefPair<T>( serviceReference  );
+            RefPair<T> refPair = getPreviousRefMap().get( serviceReference );
+            if ( refPair == null )
+            {
+                refPair = new RefPair<T>( serviceReference  );
+            }
             if (isActive())
             {
                  if (!m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext()))
@@ -236,16 +265,19 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
         {
-            if (isActive())
+            if ( getPreviousRefMap().remove( serviceReference ) == null )
             {
-                if ( !refPair.isFailed() )
+                if (isActive())
                 {
-                    m_componentManager.invokeBindMethod( DependencyManager.this, refPair );
+                    if ( !refPair.isFailed() )
+                    {
+                        m_componentManager.invokeBindMethod( DependencyManager.this, refPair );
+                    }
                 }
-            }
-            else if ( isTrackerOpened() && !isOptional() )
-            {
-                m_componentManager.activateInternal();
+                else if ( isTrackerOpened() && !isOptional() )
+                {
+                    m_componentManager.activateInternal();
+                }
             }
         }
 
@@ -2106,9 +2138,14 @@ public class DependencyManager<S, T> implements Reference
             filterString = "(&" + filterString + m_target + ")";
         }
 
+        SortedMap<ServiceReference<T>, RefPair<T>> refMap;
         if ( registered )
         {
-            unregisterServiceListener();
+            refMap = unregisterServiceListener();
+        }
+        else
+        {
+            refMap = new TreeMap<ServiceReference<T>, RefPair<T>>(Collections.reverseOrder());
         }
         m_componentManager.log( LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}", new Object[]
                 {m_dependencyMetadata.getName(), target}, null );
@@ -2124,7 +2161,7 @@ public class DependencyManager<S, T> implements Reference
             m_targetFilter = null;
         }
 
-        registerServiceListener();
+        registerServiceListener( refMap );
 
         //TODO deal with changes in what matches filter.
 
@@ -2225,15 +2262,21 @@ public class DependencyManager<S, T> implements Reference
 
     }
 
-    private void registerServiceListener() throws InvalidSyntaxException
+    private void registerServiceListener( SortedMap<ServiceReference<T>, RefPair<T>> refMap ) throws InvalidSyntaxException
     {
+        final ServiceTracker<T, RefPair<T>> oldTracker = trackerRef.get();
         Customizer<T> customizer = newCustomizer();
+        customizer.setPreviousRefMap( refMap );
         ServiceTracker<T, RefPair<T>> tracker = new ServiceTracker<T, RefPair<T>>( m_componentManager.getActivator().getBundleContext(), m_targetFilter, customizer );
         customizer.setTracker( tracker );
         trackerRef.set( tracker );
         registered = true;
         tracker.open();
         customizer.setTrackerOpened();
+        if ( oldTracker != null )
+        {
+            oldTracker.completeClose( refMap );
+        }
         m_componentManager.log( LogService.LOG_DEBUG, "registering service listener for dependency {0}", new Object[]
                 {m_dependencyMetadata.getName()}, null );
     }
@@ -2278,17 +2321,23 @@ public class DependencyManager<S, T> implements Reference
         return customizer;
     }
 
-    void unregisterServiceListener()
+    SortedMap<ServiceReference<T>, RefPair<T>> unregisterServiceListener()
     {
+        SortedMap<ServiceReference<T>, RefPair<T>> refMap;
         ServiceTracker<T, RefPair<T>> tracker = trackerRef.get();
-        trackerRef.set( null ); //???
+//        trackerRef.set( null ); //???
         if ( tracker != null )
         {
-            tracker.close();
+            refMap = tracker.close();
+        }
+        else
+        {
+            refMap = new TreeMap<ServiceReference<T>, RefPair<T>>(Collections.reverseOrder());
         }
         registered = false;
         m_componentManager.log( LogService.LOG_DEBUG, "unregistering service listener for dependency {0}", new Object[]
                 {m_dependencyMetadata.getName()}, null );
+        return refMap;
     }
 
 
@@ -2302,20 +2351,6 @@ public class DependencyManager<S, T> implements Reference
     public String getTarget()
     {
         return m_target;
-    }
-
-
-    /**
-     * Checks whether the service references matches the target filter of this
-     * dependency.
-     *
-     * @param ref The service reference to check
-     * @return <code>true</code> if this dependency has no target filter or if
-     *      the target filter matches the service reference.
-     */
-    private boolean targetFilterMatch( ServiceReference ref )
-    {
-        return m_targetFilter == null || m_targetFilter.match( ref );
     }
 
 
