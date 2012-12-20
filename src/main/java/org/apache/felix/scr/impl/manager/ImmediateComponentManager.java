@@ -21,7 +21,6 @@ package org.apache.felix.scr.impl.manager;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
@@ -32,7 +31,6 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
@@ -612,7 +610,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         // 5. update the target filter on the services now, this may still
         // result in unsatisfied dependencies, in which case we abort
         // this dynamic update and have the component be deactivated
-        if ( !verifyDependencyManagers( props ) )
+        if ( !verifyDependencyManagers() )
         {
             log(
                     LogService.LOG_ERROR,
