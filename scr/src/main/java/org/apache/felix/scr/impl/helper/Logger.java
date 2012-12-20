@@ -45,11 +45,12 @@ public interface Logger
      * @param pattern The <code>java.text.MessageFormat</code> message format
      *      string for preparing the message
      * @param arguments The format arguments for the <code>pattern</code>
-     *      string.
+ *      string.
+     * @param metadata  component metadata if known
+     * @param componentId  component ID if known
      * @param ex An optional <code>Throwable</code> whose stack trace is written,
-     *      or <code>null</code> to not log a stack trace.
      */
-    void log( int level, String pattern, Object[] arguments, ComponentMetadata metadata, Throwable ex );
+    void log( int level, String pattern, Object[] arguments, ComponentMetadata metadata, Long componentId, Throwable ex );
 
 
     /**
@@ -58,12 +59,12 @@ public interface Logger
      * @param level The log level of the messages. This corresponds to the log
      *          levels defined by the OSGi LogService.
      * @param message The message to print
-     * @param metadata The {@link ComponentMetadata} whose processing caused
-     *          the message. This may be <code>null</code> if the component
-     *          metadata is not known or applicable.
+     * @param metadata The {@link org.apache.felix.scr.impl.metadata.ComponentMetadata} whose processing caused
+ *          the message. This may be <code>null</code> if the component
+ *          metadata is not known or applicable.
+     * @param componentId
      * @param ex The <code>Throwable</code> causing the message to be logged.
-     *          This may be <code>null</code>.
      */
-    void log( int level, String message, ComponentMetadata metadata, Throwable ex );
+    void log( int level, String message, ComponentMetadata metadata, Long componentId, Throwable ex );
 
 }
