@@ -65,6 +65,8 @@ import org.osgi.framework.ServiceReference;
  *
  * - included AbstractTracked as an inner class.
  * - addedService method on customizer called after the object is tracked.
+ * - we always track all matching services.
+ *
  * @param <S>
  * @param <T>
  */
@@ -107,6 +109,12 @@ public class ServiceTracker<S, T> {
 	 * {@code ServiceListener} object
 	 */
 	private volatile Tracked				tracked;
+
+
+    /**
+     * whether the DependencyManager is getting the service immediately.
+     */
+    private boolean active;
 
 	/**
 	 * Accessor method for the current Tracked object. This method is only
@@ -789,17 +797,32 @@ public class ServiceTracker<S, T> {
 	 *         {@code ServiceTracker}. If no services are being tracked, then
 	 *         the returned map is empty.
 	 * @since 1.5
+     * @param activate
 	 */
-	public SortedMap<ServiceReference<S>, T> getTracked() {
+	public SortedMap<ServiceReference<S>, T> getTracked( Boolean activate ) {
 		SortedMap<ServiceReference<S>, T> map = new TreeMap<ServiceReference<S>, T>(Collections.reverseOrder());
 		final Tracked t = tracked();
 		if (t == null) { /* if ServiceTracker is not open */
 			return map;
 		}
 		synchronized (t) {
-			return t.copyEntries(map);
+            if ( activate != null )
+            {
+                active = activate;
+            }
+            return t.copyEntries(map);
 		}
 	}
+
+    void deactivate() {
+        final Tracked t = tracked();
+        if (t == null) { /* if ServiceTracker is not open */
+            return;
+        }
+        synchronized (t) {
+                active = false;
+        }
+    }
 
 	/**
 	 * Return if this {@code ServiceTracker} is empty.
@@ -817,6 +840,17 @@ public class ServiceTracker<S, T> {
 			return t.isEmpty();
 		}
 	}
+
+    public boolean isActive() {
+        final Tracked t = tracked();
+        if (t == null) { /* if ServiceTracker is not open */
+            return false;
+        }
+        synchronized (t) {
+            return active;
+        }
+
+    }
 
 	/**
 	 * Return an array of service objects for all services being tracked by this
@@ -1049,13 +1083,15 @@ public class ServiceTracker<S, T> {
          * @param related Action related object.
          */
         void track(final S item, final R related) {
+            boolean tracking;
             final T object;
             synchronized (this) {
                 if (closed) {
                     return;
                 }
+                tracking = tracked.containsKey( item );
                 object = tracked.get(item);
-                if (object == null) { /* we are not tracking the item */
+                if (!tracking) { /* we are not tracking the item */
                     if (adding.contains(item)) {
                         /* if this item is already in the process of being added. */
                         if (DEBUG) {
@@ -1072,7 +1108,7 @@ public class ServiceTracker<S, T> {
                 }
             }
 
-            if (object == null) { /* we are not tracking the item */
+            if (!tracking) { /* we are not tracking the item */
                 trackAdding(item, related);
             } else {
                 /* Call customizer outside of synchronized region */
@@ -1112,11 +1148,9 @@ public class ServiceTracker<S, T> {
                          * if the item was not untracked during the customizer
                          * callback
                          */
-                        if (object != null) {
-                            tracked.put(item, object);
-                            modified(); /* increment modification count */
-                            notifyAll(); /* notify any waiters */
-                        }
+                        tracked.put( item, object );
+                        modified(); /* increment modification count */
+                        notifyAll(); /* notify any waiters */
                     } else {
                         becameUntracked = true;
                     }
@@ -1125,7 +1159,7 @@ public class ServiceTracker<S, T> {
             /*
              * The item became untracked during the customizer callback.
              */
-            if (becameUntracked && (object != null)) {
+            if (becameUntracked) {
                 if (DEBUG) {
                     System.out.println("AbstractTracked.trackAdding[removed]: " + item); //$NON-NLS-1$
                 }
@@ -1178,9 +1212,6 @@ public class ServiceTracker<S, T> {
                                                  * must remove from tracker before
                                                  * calling customizer callback
                                                  */
-                if (object == null) { /* are we actually tracking the item */
-                    return;
-                }
                 modified(); /* increment modification count */
             }
             if (DEBUG) {

@@ -21,10 +21,8 @@ package org.apache.felix.scr.impl.manager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +33,6 @@ import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.component.ComponentFactory;
@@ -95,9 +92,15 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
+    @Override
+    public boolean isFactory()
+    {
+        return true;
+    }
+
     /* (non-Javadoc)
-     * @see org.osgi.service.component.ComponentFactory#newInstance(java.util.Dictionary)
-     */
+    * @see org.osgi.service.component.ComponentFactory#newInstance(java.util.Dictionary)
+    */
     public ComponentInstance newInstance( Dictionary dictionary )
     {
         final ImmediateComponentManager cm = createComponentManager();
@@ -267,28 +270,28 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
     protected boolean collectDependencies()
     {
-        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> old = getDependencyMap();
-        if ( old == null )
-        {
-            Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependenciesMap = new HashMap<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>>();
-            for (DependencyManager dm: getDependencyManagers() )
-            {
-                dependenciesMap.put( dm, Collections.EMPTY_MAP );
-            }
-            setDependencyMap( old, dependenciesMap );
-        }
+//        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> old = getDependencyMap();
+//        if ( old == null )
+//        {
+//            Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependenciesMap = new HashMap<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>>();
+//            for (DependencyManager dm: getDependencyManagers() )
+//            {
+//                dependenciesMap.put( dm, Collections.EMPTY_MAP );
+//            }
+//            setDependencyMap( old, dependenciesMap );
+//        }
         return true;
     }
 
-    <T> void update( DependencyManager<S, T> dependencyManager, ServiceReference<T> ref )
+    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> ref )
     {
     }
 
-    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> reference )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> reference )
     {
     }
 
-    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> oldRef )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRef )
     {
     }
 
