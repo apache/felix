@@ -617,40 +617,47 @@ public class DependencyManager<S, T> implements Reference
 
         public RefPair<T> addingService( ServiceReference<T> serviceReference )
         {
-            RefPair<T> refPair = new RefPair<T>( serviceReference  );
+            RefPair<T> refPair = getPreviousRefMap().get( serviceReference );
+            if ( refPair == null )
+            {
+                refPair = new RefPair<T>( serviceReference  );
+            }
             return refPair;
         }
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
-            if (isActive() )
+            if ( getPreviousRefMap().get( serviceReference ) == null )
             {
-                if ( this.refPair == null || ( !isReluctant() && refPair.getRef().compareTo( this.refPair.getRef() ) > 0 ) )
+                if (isActive() )
                 {
-                    synchronized ( refPair )
+                    if ( this.refPair == null || ( !isReluctant() && refPair.getRef().compareTo( this.refPair.getRef() ) > 0 ) )
                     {
-                        m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() );
-                    }
-                    if ( !refPair.isFailed() )
-                    {
-                        m_componentManager.invokeBindMethod( DependencyManager.this, refPair, trackingCount );
-                        if ( this.refPair != null )
+                        synchronized ( refPair )
                         {
-                            m_componentManager.invokeUnbindMethod( DependencyManager.this, this.refPair, trackingCount );
-                            closeRefPair();
+                            m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() );
                         }
+                        if ( !refPair.isFailed() )
+                        {
+                            m_componentManager.invokeBindMethod( DependencyManager.this, refPair, trackingCount );
+                            if ( this.refPair != null )
+                            {
+                                m_componentManager.invokeUnbindMethod( DependencyManager.this, this.refPair, trackingCount );
+                                closeRefPair();
+                            }
+                        }
+                        else
+                        {
+                            m_componentManager.getActivator().registerMissingDependency( DependencyManager.this, serviceReference, trackingCount );
+                        }
+                        this.refPair = refPair;
                     }
-                    else
-                    {
-                        m_componentManager.getActivator().registerMissingDependency( DependencyManager.this, serviceReference, trackingCount );
-                    }
-                    this.refPair = refPair;
                 }
-            }
-            else if ( isTrackerOpened() && !isOptional() )
-            {
-                m_componentManager.activateInternal( trackingCount );
+                else if ( isTrackerOpened() && !isOptional() )
+                {
+                    m_componentManager.activateInternal( trackingCount );
+                }
             }
             this.trackingCount = trackingCount;
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
