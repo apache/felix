@@ -1215,6 +1215,10 @@ public class ServiceTracker<S, T> {
                              */
                 }
                 object = tracked.get( item );
+                if (object == null) {
+                    //this can happen if a service is removed concurrently with tracker.close().
+                    return;
+                }
                 pendingRemovals++;
                 size = tracked.size() - pendingRemovals;
             }

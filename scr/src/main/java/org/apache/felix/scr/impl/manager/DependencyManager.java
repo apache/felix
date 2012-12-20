@@ -1860,9 +1860,20 @@ public class DependencyManager<S, T> implements Reference
                 }
             }
         }
-        //TODO static and dynamic reluctant
+        //TODO dynamic reluctant
         RefPair<T> refPair = trackerRef.get().getService( ref );
-        m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() );
+        synchronized ( refPair )
+        {
+            if (refPair.getServiceObject() != null)
+            {
+                m_componentManager.log( LogService.LOG_DEBUG,
+                        "DependencyManager : late binding of service reference {1} skipped as service has already been located",
+                        new Object[] {ref}, null );
+                //something else got the reference and may be binding it.
+                return;
+            }
+            m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() );
+        }
         m_componentManager.invokeBindMethod( this, refPair );
     }
 
@@ -2310,7 +2321,10 @@ public class DependencyManager<S, T> implements Reference
     {
         ServiceTracker<T, RefPair<T>> tracker = trackerRef.get();
         trackerRef.set( null ); //???
-        tracker.close();
+        if ( tracker != null )
+        {
+            tracker.close();
+        }
         registered = false;
         m_componentManager.log( LogService.LOG_DEBUG, "unregistering service listener for dependency {0}", new Object[]
                 {m_dependencyMetadata.getName()}, null );

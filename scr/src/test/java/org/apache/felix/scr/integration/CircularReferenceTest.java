@@ -252,11 +252,11 @@ public class CircularReferenceTest extends ComponentTestBase
         Object service = bundleContext.getService( serviceReference );
         assertNotNull( service );
 
-
+        delay();
         A a = ( A ) componentA.getComponentInstance().getInstance();
         assertEquals( 1, a.getBs().size() );
         B b = ( B ) componentB.getComponentInstance().getInstance();
-        assertEquals( 0, b.getAs().size() );
+        assertEquals( 1, b.getAs().size() );
     }
     /**
      * A > 1.1 > B > 0..1 > A Both should start, but B should not have an A reference.
@@ -287,10 +287,11 @@ public class CircularReferenceTest extends ComponentTestBase
         assertNotNull( serviceA );
 
 
+        delay();
         A a = ( A ) componentA.getComponentInstance().getInstance();
         assertEquals( 1, a.getBs().size() );
         B b = ( B ) componentB.getComponentInstance().getInstance();
-        assertEquals( 0, b.getAs().size() );
+        assertEquals( 1, b.getAs().size() );
 
 
         //disabling (removing the A service registration) and re-enabling will
