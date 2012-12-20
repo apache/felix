@@ -24,8 +24,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -137,6 +139,12 @@ public class DependencyManager<S, T> implements Reference
 
         private volatile Map<ServiceReference<T>, RefPair<T>> previousRefMap = EMPTY_REF_MAP;
 
+        private volatile int floor;
+
+        private volatile int ceiling;
+
+        private final Set<Integer> missing = new HashSet<Integer>( );
+
         public void setTracker( ServiceTracker<T, RefPair<T>> tracker )
         {
             this.tracker = tracker;
@@ -200,18 +208,46 @@ public class DependencyManager<S, T> implements Reference
                 }
             }
         }
+
+        protected void tracked( int trackingCount )
+        {
+            synchronized ( missing )
+            {
+                if (trackingCount == floor + 1 )
+                {
+                    floor++;
+                    missing.remove( trackingCount );
+                }
+                else if ( trackingCount < ceiling )
+                {
+                    missing.remove( trackingCount );
+                }
+                if ( trackingCount > ceiling )
+                {
+                    for (int i = ceiling + 1; i < trackingCount; i++ )
+                    {
+                        missing.add( i );
+                    }
+                    ceiling = trackingCount;
+                }
+                if ( missing.isEmpty() )
+                {
+                    missing.notifyAll();
+                }
+            }
+        }
     }
 
 
     private class FactoryCustomizer extends AbstractCustomizer {
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
         {
             RefPair<T> refPair = new RefPair<T>( serviceReference  );
             return refPair;
         }
 
-        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if ( !isOptional() )
             {
@@ -219,11 +255,11 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
         }
 
-        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if ( !isOptional() )
             {
@@ -237,7 +273,8 @@ public class DependencyManager<S, T> implements Reference
         public boolean open()
         {
             boolean success = m_dependencyMetadata.isOptional() || !getTracker().isEmpty();
-            getTracker().getTracked( true );   //TODO activate method??
+            AtomicInteger trackingCount = new AtomicInteger( );
+            getTracker().getTracked( true, trackingCount );   //TODO activate method??
             return success;
         }
 
@@ -256,7 +293,7 @@ public class DependencyManager<S, T> implements Reference
 
         private RefPair<T> lastRefPair;
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
         {
             RefPair<T> refPair = getPreviousRefMap().get( serviceReference );
             if ( refPair == null )
@@ -273,7 +310,7 @@ public class DependencyManager<S, T> implements Reference
             return refPair;
         }
 
-        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if ( getPreviousRefMap().remove( serviceReference ) == null )
             {
@@ -289,17 +326,19 @@ public class DependencyManager<S, T> implements Reference
                     m_componentManager.activateInternal();
                 }
             }
+            tracked( trackingCount );
         }
 
-        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if (isActive())
             {
                 m_componentManager.update( DependencyManager.this, refPair );
             }
+            tracked( trackingCount );
         }
 
-        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if ( isActive() )
             {
@@ -316,12 +355,14 @@ public class DependencyManager<S, T> implements Reference
                 }
             }
             ungetService( refPair );
+            tracked( trackingCount );
         }
 
         public boolean open()
         {
             boolean success = m_dependencyMetadata.isOptional();
-            SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true );
+            AtomicInteger trackingCount = new AtomicInteger( );
+            SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true, trackingCount );
             for (RefPair<T> refPair: tracked.values())
             {
                 synchronized (refPair)
@@ -353,7 +394,8 @@ public class DependencyManager<S, T> implements Reference
         {
             if ( lastRefPair == null )
             {
-                return getTracker().getTracked( true ).values();
+                AtomicInteger trackingCount = new AtomicInteger( );
+                return getTracker().getTracked( true, trackingCount ).values();
             }
             else
             {
@@ -365,7 +407,7 @@ public class DependencyManager<S, T> implements Reference
     private class MultipleStaticGreedyCustomizer extends AbstractCustomizer {
 
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
         {
             RefPair<T> refPair = new RefPair<T>( serviceReference  );
             if (isActive())
@@ -375,7 +417,7 @@ public class DependencyManager<S, T> implements Reference
             return refPair;
         }
 
-        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if (isActive())
             {
@@ -392,7 +434,7 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if (isActive())
             {
@@ -400,7 +442,7 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if ( isActive() )
             {
@@ -419,7 +461,8 @@ public class DependencyManager<S, T> implements Reference
         public boolean open()
         {
             boolean success = m_dependencyMetadata.isOptional();
-            SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( success || !getTracker().isEmpty() );
+            AtomicInteger trackingCount = new AtomicInteger( );
+            SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( success || !getTracker().isEmpty(), trackingCount );
             for (RefPair<T> refPair: tracked.values())
             {
                 synchronized (refPair)
@@ -441,7 +484,8 @@ public class DependencyManager<S, T> implements Reference
 
         public Collection<RefPair<T>> getRefs()
         {
-            return getTracker().getTracked( null ).values();
+            AtomicInteger trackingCount = new AtomicInteger( );
+            return getTracker().getTracked( null, trackingCount ).values();
         }
     }
 
@@ -449,13 +493,13 @@ public class DependencyManager<S, T> implements Reference
 
         private final Collection<RefPair<T>> refs = new ArrayList<RefPair<T>>();
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
         {
             RefPair<T> refPair = new RefPair<T>( serviceReference  );
             return refPair;
         }
 
-        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if ( isTrackerOpened() && !isOptional() && !isActive())
             {
@@ -463,7 +507,7 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if (isActive())
             {
@@ -471,7 +515,7 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if ( isActive() )
             {
@@ -494,7 +538,8 @@ public class DependencyManager<S, T> implements Reference
         public boolean open()
         {
             boolean success = m_dependencyMetadata.isOptional();
-            SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true );
+            AtomicInteger trackingCount = new AtomicInteger( );
+            SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true, trackingCount );
             for (RefPair<T> refPair: tracked.values())
             {
                 synchronized (refPair)
@@ -526,13 +571,13 @@ public class DependencyManager<S, T> implements Reference
 
         private RefPair<T> refPair;
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
         {
             RefPair<T> refPair = new RefPair<T>( serviceReference  );
             return refPair;
         }
 
-        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if (isActive() )
             {
@@ -564,7 +609,7 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if (isActive())
             {
@@ -572,7 +617,7 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if (refPair == this.refPair)
             {
@@ -581,7 +626,8 @@ public class DependencyManager<S, T> implements Reference
                     RefPair<T> nextRefPair = null;
                     if ( !getTracker().isEmpty() )
                     {
-                        SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true );
+                        AtomicInteger trackingCount2 = new AtomicInteger( );
+                        SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true, trackingCount2 );
                         nextRefPair = tracked.values().iterator().next();
                         synchronized ( nextRefPair )
                         {
@@ -615,7 +661,8 @@ public class DependencyManager<S, T> implements Reference
             boolean success = m_dependencyMetadata.isOptional();
             if ( success || !getTracker().isEmpty() )
             {
-                SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true );
+                AtomicInteger trackingCount = new AtomicInteger( );
+                SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true, trackingCount );
                 if ( !tracked.isEmpty() )
                 {
                     RefPair<T> refPair = tracked.values().iterator().next();
@@ -659,13 +706,13 @@ public class DependencyManager<S, T> implements Reference
 
         private RefPair<T> refPair;
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
         {
             RefPair<T> refPair = new RefPair<T>( serviceReference );
             return refPair;
         }
 
-        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if ( isActive() )
             {
@@ -681,7 +728,7 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if ( isActive() )
             {
@@ -689,7 +736,7 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
+        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             if ( isActive() && refPair == this.refPair )
             {
@@ -703,7 +750,8 @@ public class DependencyManager<S, T> implements Reference
             boolean success = m_dependencyMetadata.isOptional();
             if ( success || !getTracker().isEmpty() )
             {
-                SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true );
+                AtomicInteger trackingCount = new AtomicInteger( );
+                SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true, trackingCount );
                 if ( !tracked.isEmpty() )
                 {
                     RefPair<T> refPair = tracked.values().iterator().next();
@@ -826,7 +874,8 @@ public class DependencyManager<S, T> implements Reference
      */
     int size()
     {
-        return trackerRef.get().getTracked( null ).size();
+        AtomicInteger trackingCount = new AtomicInteger( );
+        return trackerRef.get().getTracked( null, trackingCount ).size();
     }
 
 
@@ -976,7 +1025,8 @@ public class DependencyManager<S, T> implements Reference
      */
     private RefPair<T> getRefPair( ServiceReference<T> serviceReference )
     {
-        return trackerRef.get().getTracked( null ).get( serviceReference );
+        AtomicInteger trackingCount = new AtomicInteger( );
+        return trackerRef.get().getTracked( null, trackingCount ).get( serviceReference );
     }
 
 
@@ -1055,7 +1105,8 @@ public class DependencyManager<S, T> implements Reference
      */
     public boolean isSatisfied()
     {
-        return customizerRef.get().isSatisfied();
+        Customizer<T> customizer = customizerRef.get();
+        return customizer != null && customizer.isSatisfied();
     }
 
 
@@ -1594,7 +1645,8 @@ public class DependencyManager<S, T> implements Reference
 //        trackerRef.set( null ); //???
         if ( tracker != null )
         {
-            refMap = tracker.close();
+            AtomicInteger trackingCount = new AtomicInteger( );
+            refMap = tracker.close( trackingCount );
         }
         else
         {

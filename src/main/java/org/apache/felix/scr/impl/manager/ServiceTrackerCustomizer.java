@@ -59,15 +59,17 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 * service object is stored in the {@code ServiceTracker} and is available
 	 * from the {@code getService} and {@code getServices} methods.
 	 * 
-	 * @param reference The reference to the service being added to the
-	 *        {@code ServiceTracker}.
-	 * @return The service object to be tracked for the specified referenced
+	 *
+     * @param reference The reference to the service being added to the
+     *        {@code ServiceTracker}.
+     * @param trackingCount
+     * @return The service object to be tracked for the specified referenced
 	 *         service or {@code null} if the specified referenced service
 	 *         should not be tracked.
 	 */
-	public T addingService(ServiceReference<S> reference);
+	public T addingService( ServiceReference<S> reference, int trackingCount );
 
-    public void addedService(ServiceReference<S> reference, T service);
+    public void addedService( ServiceReference<S> reference, T service, int trackingCount );
 
 	/**
 	 * A service tracked by the {@code ServiceTracker} has been modified.
@@ -75,11 +77,12 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 * <p>
 	 * This method is called when a service being tracked by the
 	 * {@code ServiceTracker} has had it properties modified.
-	 * 
-	 * @param reference The reference to the service that has been modified.
-	 * @param service The service object for the specified referenced service.
-	 */
-	public void modifiedService(ServiceReference<S> reference, T service);
+	 *
+     * @param reference The reference to the service that has been modified.
+     * @param service The service object for the specified referenced service.
+     * @param trackingCount
+     */
+	public void modifiedService( ServiceReference<S> reference, T service, int trackingCount );
 
 	/**
 	 * A service tracked by the {@code ServiceTracker} has been removed.
@@ -87,10 +90,11 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 * <p>
 	 * This method is called after a service is no longer being tracked by the
 	 * {@code ServiceTracker}.
-	 * 
-	 * @param reference The reference to the service that has been removed.
-	 * @param service The service object for the specified referenced service.
-	 */
-	public void removedService(ServiceReference<S> reference, T service);
+	 *
+     * @param reference The reference to the service that has been removed.
+     * @param service The service object for the specified referenced service.
+     * @param trackingCount
+     */
+	public void removedService( ServiceReference<S> reference, T service, int trackingCount );
 
 }
