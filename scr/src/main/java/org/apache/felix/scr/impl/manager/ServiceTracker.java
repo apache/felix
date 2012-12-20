@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -367,8 +369,9 @@ public class ServiceTracker<S, T> {
 	 * <p>
 	 * This implementation calls {@link #getServiceReferences()} to get the list
 	 * of tracked services to remove.
-	 */
-	public SortedMap<ServiceReference<S>, T> close() {
+     * @param trackingCount
+     */
+	public SortedMap<ServiceReference<S>, T> close( AtomicInteger trackingCount ) {
 		final Tracked outgoing;
 //		final ServiceReference<S>[] references;
         SortedMap<ServiceReference<S>, T> map = new TreeMap<ServiceReference<S>, T>(Collections.reverseOrder());
@@ -381,7 +384,11 @@ public class ServiceTracker<S, T> {
 				System.out.println("ServiceTracker.close: " + filter);
 			}
 			outgoing.close();
-            outgoing.copyEntries( map );
+            synchronized ( outgoing )
+            {
+                trackingCount.set( outgoing.getTrackingCount() );
+                outgoing.copyEntries( map );
+            }
 //			references = getServiceReferences();
 //			tracked = null;
 			try {
@@ -440,16 +447,16 @@ public class ServiceTracker<S, T> {
 	 * This method can be overridden in a subclass to customize the service
 	 * object to be tracked for the service being added. In that case, take care
 	 * not to rely on the default implementation of
-	 * {@link #removedService(ServiceReference, Object) removedService} to unget
+	 * {@link #removedService(ServiceReference, Object, int) removedService} to unget
 	 * the service.
 	 * 
 	 * @param reference The reference to the service being added to this
 	 *        {@code ServiceTracker}.
 	 * @return The service object to be tracked for the service added to this
 	 *         {@code ServiceTracker}.
-	 * @see ServiceTrackerCustomizer#addingService(ServiceReference)
+	 * @see ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference, int)
 	 */
-	public T addingService(ServiceReference<S> reference) {
+	public T addingService(ServiceReference<S> reference, int trackingCount) {
 		T result = (T) context.getService(reference);
 		return result;
 	}
@@ -467,9 +474,9 @@ public class ServiceTracker<S, T> {
 	 * 
 	 * @param reference The reference to modified service.
 	 * @param service The service object for the modified service.
-	 * @see ServiceTrackerCustomizer#modifiedService(ServiceReference, Object)
+	 * @see ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, Object, int)
 	 */
-	public void modifiedService(ServiceReference<S> reference, T service) {
+	public void modifiedService(ServiceReference<S> reference, T service, int trackingCount) {
 		/* do nothing */
 	}
 
@@ -487,14 +494,14 @@ public class ServiceTracker<S, T> {
 	 * passing the specified {@code ServiceReference}.
 	 * <p>
 	 * This method can be overridden in a subclass. If the default
-	 * implementation of {@link #addingService(ServiceReference) addingService}
+	 * implementation of {@link #addingService(ServiceReference, int) addingService}
 	 * method was used, this method must unget the service.
 	 * 
 	 * @param reference The reference to removed service.
 	 * @param service The service object for the removed service.
-	 * @see ServiceTrackerCustomizer#removedService(ServiceReference, Object)
+	 * @see ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference, Object, int)
 	 */
-	public void removedService(ServiceReference<S> reference, T service) {
+	public void removedService(ServiceReference<S> reference, T service, int trackingCount) {
 		context.ungetService(reference);
 	}
 
@@ -818,8 +825,9 @@ public class ServiceTracker<S, T> {
 	 *         the returned map is empty.
 	 * @since 1.5
      * @param activate
-	 */
-	public SortedMap<ServiceReference<S>, T> getTracked( Boolean activate ) {
+     * @param trackingCount
+     */
+	public SortedMap<ServiceReference<S>, T> getTracked( Boolean activate, AtomicInteger trackingCount ) {
 		SortedMap<ServiceReference<S>, T> map = new TreeMap<ServiceReference<S>, T>(Collections.reverseOrder());
 		final Tracked t = tracked();
 		if (t == null) { /* if ServiceTracker is not open */
@@ -830,6 +838,7 @@ public class ServiceTracker<S, T> {
             {
                 active = activate;
             }
+            trackingCount.set( t.getTrackingCount() );
             return t.copyEntries(map);
 		}
 	}
@@ -1132,7 +1141,7 @@ public class ServiceTracker<S, T> {
                 trackAdding(item, related);
             } else {
                 /* Call customizer outside of synchronized region */
-                customizerModified(item, related, object);
+                customizerModified(item, related, object, trackingCount );
                 /*
                  * If the customizer throws an unchecked exception, it is safe to
                  * let it propagate
@@ -1156,7 +1165,7 @@ public class ServiceTracker<S, T> {
             boolean becameUntracked = false;
             /* Call customizer outside of synchronized region */
             try {
-                object = customizerAdding(item, related);
+                object = customizerAdding(item, related, trackingCount );
                 /*
                  * If the customizer throws an unchecked exception, it will
                  * propagate after the finally
@@ -1184,13 +1193,13 @@ public class ServiceTracker<S, T> {
                     System.out.println("AbstractTracked.trackAdding[removed]: " + item); //$NON-NLS-1$
                 }
                 /* Call customizer outside of synchronized region */
-                customizerRemoved(item, related, object);
+                customizerRemoved(item, related, object, trackingCount );
                 /*
                  * If the customizer throws an unchecked exception, it is safe to
                  * let it propagate
                  */
             } else {
-                customizerAdded( item, related, object );
+                customizerAdded( item, related, object, trackingCount );
             }
         }
 
@@ -1238,7 +1247,7 @@ public class ServiceTracker<S, T> {
                 System.out.println("AbstractTracked.untrack[removed]: " + item); //$NON-NLS-1$
             }
             /* Call customizer outside of synchronized region */
-            customizerRemoved(item, related, object);
+            customizerRemoved(item, related, object, trackingCount );
             /*
              * If the customizer throws an unchecked exception, it is safe to let it
              * propagate
@@ -1277,7 +1286,7 @@ public class ServiceTracker<S, T> {
          * @GuardedBy this
          */
         T getCustomizedObject(final S item) {
-            return tracked.get(item);
+            return tracked.get( item );
         }
 
         /**
@@ -1337,14 +1346,16 @@ public class ServiceTracker<S, T> {
          * Call the specific customizer adding method. This method must not be
          * called while synchronized on this object.
          *
+         *
          * @param item Item to be tracked.
          * @param related Action related object.
+         * @param trackingCount
          * @return Customized object for the tracked item or {@code null} if the
          *         item is not to be tracked.
          */
-        abstract T customizerAdding(final S item, final R related);
+        abstract T customizerAdding( final S item, final R related, int trackingCount );
 
-        abstract void customizerAdded(final S item, final R related, final T object);
+        abstract void customizerAdded( final S item, final R related, final T object, int trackingCount );
 
         /**
          * Call the specific customizer modified method. This method must not be
@@ -1353,8 +1364,9 @@ public class ServiceTracker<S, T> {
          * @param item Tracked item.
          * @param related Action related object.
          * @param object Customized object for the tracked item.
+         * @param trackingCount
          */
-        abstract void customizerModified(final S item, final R related, final T object);
+        abstract void customizerModified( final S item, final R related, final T object, int trackingCount );
 
         /**
          * Call the specific customizer removed method. This method must not be
@@ -1363,8 +1375,9 @@ public class ServiceTracker<S, T> {
          * @param item Tracked item.
          * @param related Action related object.
          * @param object Customized object for the tracked item.
+         * @param trackingCount
          */
-        abstract void customizerRemoved(final S item, final R related, final T object);
+        abstract void customizerRemoved( final S item, final R related, final T object, int trackingCount );
     }
 
 
@@ -1436,41 +1449,45 @@ public class ServiceTracker<S, T> {
 		 * Call the specific customizer adding method. This method must not be
 		 * called while synchronized on this object.
 		 * 
-		 * @param item Item to be tracked.
-		 * @param related Action related object.
-		 * @return Customized object for the tracked item or {@code null} if the
+		 *
+         * @param item Item to be tracked.
+         * @param related Action related object.
+         * @param trackingCount
+         * @return Customized object for the tracked item or {@code null} if the
 		 *         item is not to be tracked.
 		 */
-		final T customizerAdding(final ServiceReference<S> item, final ServiceEvent related) {
-			return customizer.addingService( item );
+		final T customizerAdding( final ServiceReference<S> item, final ServiceEvent related, int trackingCount ) {
+			return customizer.addingService( item, trackingCount );
 		}
 
-		final void customizerAdded(final ServiceReference<S> item, final ServiceEvent related, final T object) {
-		    customizer.addedService( item, object );
+		final void customizerAdded( final ServiceReference<S> item, final ServiceEvent related, final T object, int trackingCount ) {
+		    customizer.addedService( item, object, trackingCount );
 		}
 
 		/**
 		 * Call the specific customizer modified method. This method must not be
 		 * called while synchronized on this object.
-		 * 
-		 * @param item Tracked item.
-		 * @param related Action related object.
-		 * @param object Customized object for the tracked item.
-		 */
-		final void customizerModified(final ServiceReference<S> item, final ServiceEvent related, final T object) {
-			customizer.modifiedService(item, object);
+		 *
+         * @param item Tracked item.
+         * @param related Action related object.
+         * @param object Customized object for the tracked item.
+         * @param trackingCount
+         */
+		final void customizerModified( final ServiceReference<S> item, final ServiceEvent related, final T object, int trackingCount ) {
+			customizer.modifiedService( item, object, trackingCount );
 		}
 
         /**
 		 * Call the specific customizer removed method. This method must not be
 		 * called while synchronized on this object.
-		 * 
-		 * @param item Tracked item.
-		 * @param related Action related object.
-		 * @param object Customized object for the tracked item.
-		 */
-		final void customizerRemoved(final ServiceReference<S> item, final ServiceEvent related, final T object) {
-			customizer.removedService(item, object);
+		 *
+         * @param item Tracked item.
+         * @param related Action related object.
+         * @param object Customized object for the tracked item.
+         * @param trackingCount
+         */
+		final void customizerRemoved( final ServiceReference<S> item, final ServiceEvent related, final T object, int trackingCount ) {
+			customizer.removedService(item, object, trackingCount );
 		}
 	}
 
