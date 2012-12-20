@@ -76,7 +76,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
      * The values are the {@link ImmediateComponentManager component instances}
      * created on behalf of the configurations.
      */
-    private final Map m_components;
+    private final Map<String, ImmediateComponentManager> m_components;
 
     /**
      * The special component used if there is no configuration or a singleton
@@ -103,7 +103,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
      * {@link #configurationUpdated(String, Dictionary)} method are also
      * enabled. Otherwise they are not enabled immediately.
      */
-    private boolean m_enabled;
+    private volatile boolean m_enabled;
     private final ComponentMethods m_componentMethods;
 
 
@@ -111,7 +111,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
     {
         this.m_activator = activator;
         this.m_componentMetadata = metadata;
-        this.m_components = new HashMap();
+        this.m_components = new HashMap<String, ImmediateComponentManager>();
         this.m_componentMethods = new ComponentMethods();
         this.m_singleComponent = createComponentManager();
         this.m_enabled = false;
@@ -220,7 +220,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
 
                         // replace the single component field with another
                         // entry from the map
-                        m_singleComponent = ( ImmediateComponentManager ) m_components.values().iterator().next();
+                        m_singleComponent = m_components.values().iterator().next();
 
                     }
                 }
@@ -336,6 +336,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
 
     public void enableComponents( final boolean async )
     {
+        m_enabled = true;
         final ImmediateComponentManager[] cms = getComponentManagers( false );
         if ( cms == null )
         {
@@ -343,13 +344,12 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         }
         else
         {
-            for ( int i = 0; i < cms.length; i++ )
+            for ( ImmediateComponentManager cm : cms )
             {
-                cms[i].enable( async );
+                cm.enable( async );
             }
         }
 
-        m_enabled = true;
     }
 
 
@@ -364,9 +364,9 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         }
         else
         {
-            for ( int i = 0; i < cms.length; i++ )
+            for ( ImmediateComponentManager cm : cms )
             {
-                cms[i].disable( async );
+                cm.disable( async );
             }
         }
     }
@@ -386,9 +386,9 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         }
         else
         {
-            for ( int i = 0; i < cms.length; i++ )
+            for ( ImmediateComponentManager cm : cms )
             {
-                cms[i].dispose( reason );
+                cm.dispose( reason );
             }
         }
     }
@@ -426,7 +426,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
                 }
                 else
                 {
-                    m_singleComponent = ( ImmediateComponentManager ) m_components.values().iterator().next();
+                    m_singleComponent = m_components.values().iterator().next();
                 }
             }
         }
@@ -472,7 +472,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
     {
         synchronized ( m_components )
         {
-            return ( ImmediateComponentManager ) m_components.get( pid );
+            return m_components.get( pid );
         }
     }
 
@@ -481,7 +481,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
     {
         synchronized ( m_components )
         {
-            return ( ImmediateComponentManager ) m_components.remove( pid );
+            return m_components.remove( pid );
         }
     }
 
