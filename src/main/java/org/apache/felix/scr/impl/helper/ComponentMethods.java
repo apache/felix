@@ -39,7 +39,7 @@ public class ComponentMethods
 
     private final Map bindMethodMap = new HashMap();//<String, BindMethods>
 
-    public synchronized void initComponentMethods(SimpleLogger logger, ComponentMetadata componentMetadata, Class implementationObjectClass)
+    public synchronized void initComponentMethods( ComponentMetadata componentMetadata, Class implementationObjectClass )
     {
         if (m_activateMethod != null)
         {
@@ -47,18 +47,18 @@ public class ComponentMethods
         }
         boolean isDS11 = componentMetadata.isDS11();
         boolean isDS12Felix = componentMetadata.isDS12Felix();
-        m_activateMethod = new ActivateMethod( logger, componentMetadata.getActivate(), componentMetadata
+        m_activateMethod = new ActivateMethod( componentMetadata.getActivate(), componentMetadata
                 .isActivateDeclared(), implementationObjectClass, isDS11, isDS12Felix );
-        m_deactivateMethod = new DeactivateMethod( logger, componentMetadata.getDeactivate(),
+        m_deactivateMethod = new DeactivateMethod( componentMetadata.getDeactivate(),
                 componentMetadata.isDeactivateDeclared(), implementationObjectClass, isDS11, isDS12Felix );
 
-        m_modifiedMethod = new ModifiedMethod( logger, componentMetadata.getModified(), implementationObjectClass, isDS11, isDS12Felix );
+        m_modifiedMethod = new ModifiedMethod( componentMetadata.getModified(), implementationObjectClass, isDS11, isDS12Felix );
 
         for ( Iterator it = componentMetadata.getDependencies().iterator(); it.hasNext(); )
         {
             ReferenceMetadata referenceMetadata = ( ReferenceMetadata ) it.next();
             String refName = referenceMetadata.getName();
-            BindMethods bindMethods = new BindMethods(logger, referenceMetadata, implementationObjectClass, isDS11, isDS12Felix);
+            BindMethods bindMethods = new BindMethods( referenceMetadata, implementationObjectClass, isDS11, isDS12Felix);
             bindMethodMap.put( refName, bindMethods );
         }
     }

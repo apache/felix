@@ -19,19 +19,16 @@
 package org.apache.felix.scr.impl.helper;
 
 
-import org.apache.felix.scr.impl.manager.AbstractComponentManager;
-
-
 /**
  * Component method to be invoked on service unbinding.
  */
 public class UnbindMethod extends BindMethod
 {
 
-    public UnbindMethod( final SimpleLogger logger, final String methodName,
-        final Class componentClass, final String referenceName, final String referenceClassName, final boolean isDS11, final boolean isDS12Felix )
+    public UnbindMethod( final String methodName,
+            final Class componentClass, final String referenceClassName, final boolean isDS11, final boolean isDS12Felix )
     {
-        super( logger, methodName, componentClass, referenceClassName, isDS11, isDS12Felix );
+        super( methodName, componentClass, referenceClassName, isDS11, isDS12Felix );
     }
 
 

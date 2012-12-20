@@ -19,16 +19,13 @@
 package org.apache.felix.scr.impl.helper;
 
 
-import org.apache.felix.scr.impl.manager.AbstractComponentManager;
-
-
 public class ModifiedMethod extends ActivateMethod
 {
 
-    public ModifiedMethod( final SimpleLogger logger, final String methodName,
-        final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
+    public ModifiedMethod( final String methodName,
+            final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
     {
-        super( logger, methodName, methodName != null, componentClass, isDS11, isDS12Felix );
+        super( methodName, methodName != null, componentClass, isDS11, isDS12Felix );
     }
 
 

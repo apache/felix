@@ -35,14 +35,14 @@ public class ActivateMethod extends BaseMethod
         { COMPONENT_CONTEXT_CLASS };
 
 
-    public ActivateMethod( final SimpleLogger logger, final String methodName,
-        final boolean methodRequired, final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
+    public ActivateMethod( final String methodName,
+            final boolean methodRequired, final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
     {
-        super( logger, methodName, methodRequired, componentClass, isDS11, isDS12Felix );
+        super( methodName, methodRequired, componentClass, isDS11, isDS12Felix );
     }
 
 
-    protected Method doFindMethod( Class targetClass, boolean acceptPrivate, boolean acceptPackage )
+    protected Method doFindMethod( Class targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
 
@@ -50,7 +50,7 @@ public class ActivateMethod extends BaseMethod
 
         try
         {
-            final Method method = getSingleParameterMethod( targetClass, acceptPrivate, acceptPackage );
+            final Method method = getSingleParameterMethod( targetClass, acceptPrivate, acceptPackage, logger );
             if ( method != null )
             {
                 return method;
@@ -86,7 +86,7 @@ public class ActivateMethod extends BaseMethod
                 try
                 {
                     // find the declared method in this class
-                    Method m = getMethod( targetClass, getMethodName(), null, acceptPrivate, acceptPackage );
+                    Method m = getMethod( targetClass, getMethodName(), null, acceptPrivate, acceptPackage, logger );
                     if ( m != null ) {
                         return m;
                     }
@@ -142,11 +142,11 @@ public class ActivateMethod extends BaseMethod
         return "activate";
     }
 
-    public MethodResult invoke(Object componentInstance, Object rawParameter, final MethodResult methodCallFailureResult)
+    public MethodResult invoke( Object componentInstance, Object rawParameter, final MethodResult methodCallFailureResult, SimpleLogger logger )
     {
-        if (methodExists())
+        if (methodExists( logger ))
         {
-            return super.invoke(componentInstance, rawParameter, methodCallFailureResult);
+            return super.invoke(componentInstance, rawParameter, methodCallFailureResult, logger );
         }
         return null;
     }
@@ -156,12 +156,14 @@ public class ActivateMethod extends BaseMethod
      * {@link #getAcceptedParameterTypes()} or <code>null</code> if no such
      * method exists.
      *
+     *
      * @param targetClass The class in which to look for the method. Only this
      *      class is searched for the method.
      * @param acceptPrivate <code>true</code> if private methods should be
      *      considered.
      * @param acceptPackage <code>true</code> if package private methods should
      *      be considered.
+     * @param logger
      * @return The requested method or <code>null</code> if no acceptable method
      *      can be found in the target class.
      * @throws SuitableMethodNotAccessibleException If a suitable method was
@@ -170,7 +172,7 @@ public class ActivateMethod extends BaseMethod
      *      trying to find the requested method.
      */
     private Method getSingleParameterMethod( final Class targetClass, final boolean acceptPrivate,
-        final boolean acceptPackage ) throws SuitableMethodNotAccessibleException, InvocationTargetException
+            final boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         SuitableMethodNotAccessibleException ex = null;
         Method singleParameterMethod = null;
@@ -181,11 +183,11 @@ public class ActivateMethod extends BaseMethod
             {
                 // find the declared method in this class
                 singleParameterMethod = getMethod( targetClass, getMethodName(), new Class[]
-                    { acceptedTypes[i] }, acceptPrivate, acceptPackage );
+                    { acceptedTypes[i] }, acceptPrivate, acceptPackage, logger );
             }
             catch ( SuitableMethodNotAccessibleException thrown )
             {
-                getLogger().log( LogService.LOG_DEBUG, "SuitableMethodNotAccessible", thrown );
+                logger.log( LogService.LOG_DEBUG, "SuitableMethodNotAccessible", thrown );
                 ex = thrown;
             }
         }

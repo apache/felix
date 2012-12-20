@@ -19,9 +19,6 @@
 package org.apache.felix.scr.impl.helper;
 
 
-import org.apache.felix.scr.impl.manager.AbstractComponentManager;
-
-
 public class DeactivateMethod extends ActivateMethod
 {
 
@@ -29,10 +26,10 @@ public class DeactivateMethod extends ActivateMethod
         { COMPONENT_CONTEXT_CLASS, BUNDLE_CONTEXT_CLASS, MAP_CLASS, Integer.TYPE, INTEGER_CLASS };
 
 
-    public DeactivateMethod( final SimpleLogger logger, final String methodName,
-        final boolean methodRequired, final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
+    public DeactivateMethod( final String methodName,
+            final boolean methodRequired, final Class componentClass, final boolean isDS11, final boolean isDS12Felix )
     {
-        super( logger, methodName, methodRequired, componentClass, isDS11, isDS12Felix );
+        super( methodName, methodRequired, componentClass, isDS11, isDS12Felix );
     }
 
 
