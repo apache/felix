@@ -23,6 +23,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import org.apache.felix.status.PrinterMode;
 import org.apache.felix.status.StatusPrinter;
@@ -46,8 +47,11 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer {
 
     private final Map<ServiceReference, ServiceRegistration> registrations = new HashMap<ServiceReference, ServiceRegistration>();
 
+    private final ResourceBundleManager rbManager;
+
     public WebConsoleAdapter(final BundleContext btx) throws InvalidSyntaxException {
         this.bundleContext = btx;
+        this.rbManager = new ResourceBundleManager(btx);
         this.cfgPrinterTracker = new ServiceTracker( this.bundleContext,
                 this.bundleContext.createFilter("(|(" + Constants.OBJECTCLASS + "=" + ConsoleConstants.INTERFACE_CONFIGURATION_PRINTER + ")" +
                         "(&(" + ConsoleConstants.PLUGIN_LABEL + "=*)(&("
@@ -68,13 +72,20 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer {
             }
             this.registrations.clear();
         }
+        this.rbManager.dispose();
     }
 
     public void add(final ServiceReference reference, final Object service) {
         final ConfigurationPrinterAdapter cpa = ConfigurationPrinterAdapter.createAdapter(service, reference);
         if ( cpa != null && cpa.title != null ) {
             if ( cpa.title.startsWith("%") ) {
-                cpa.title = cpa.title.substring(1);
+                final String key = cpa.title.substring(1);
+                final ResourceBundle rb = this.rbManager.getResourceBundle(reference.getBundle());
+                if ( rb == null || !rb.containsKey(key) ) {
+                    cpa.title = key;
+                } else {
+                    cpa.title = rb.getString(key);
+                }
             }
             if ( cpa.label == null ) {
                 cpa.label = cpa.title;
