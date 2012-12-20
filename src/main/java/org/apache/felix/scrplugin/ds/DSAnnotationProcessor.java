@@ -201,7 +201,7 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
         }
 
         // configuration policy
-        component.setConfigurationPolicy(ComponentConfigurationPolicy.valueOf(cad.getEnumValue("policy",
+        component.setConfigurationPolicy(ComponentConfigurationPolicy.valueOf(cad.getEnumValue("configurationPolicy",
                         ComponentConfigurationPolicy.OPTIONAL.name())));
 
         // configuration pid
