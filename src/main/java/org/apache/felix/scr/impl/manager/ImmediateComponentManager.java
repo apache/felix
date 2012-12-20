@@ -21,8 +21,6 @@ package org.apache.felix.scr.impl.manager;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -263,19 +261,13 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         setter.presetImplementationObject( implementationObject );
 
         // 4. Bind the target services
-        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> parameters = getDependencyMap();
 
         for ( DependencyManager<S, ?> dm: getDependencyManagers())
         {
             // if a dependency turned unresolved since the validation check,
             // creating the instance fails here, so we deactivate and return
             // null.
-            Map<ServiceReference<?>, RefPair<?>> params = parameters.get( dm );
-            boolean open;
-            synchronized ( params )
-            {
-                open = dm.open( implementationObject, params );
-            }
+            boolean open = dm.open( implementationObject );
             if ( !open )
             {
                 log( LogService.LOG_ERROR, "Cannot create component instance due to failure to bind reference {0}",
@@ -354,22 +346,22 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         return Active.getInstance();
     }
 
-    <T> void update( DependencyManager<S, T> dependencyManager, ServiceReference<T> ref )
+    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
-        dependencyManager.update( impl, ref );
+        dependencyManager.update( impl, refPair );
     }
 
-    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> reference )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
-        dependencyManager.invokeBindMethod( impl, reference);
+        dependencyManager.invokeBindMethod( impl, refPair);
     }
 
-    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> oldRef )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
-        dependencyManager.invokeUnbindMethod( impl, oldRef);
+        dependencyManager.invokeUnbindMethod( impl, oldRefPair);
     }
 
     protected void setFactoryProperties( Dictionary<String, Object> dictionary )

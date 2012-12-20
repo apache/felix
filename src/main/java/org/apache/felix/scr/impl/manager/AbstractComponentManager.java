@@ -24,9 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -35,7 +33,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.sun.xml.internal.rngom.binary.DataExceptPattern;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -79,9 +76,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     // The dependency managers that manage every dependency
     private final List<DependencyManager> m_dependencyManagers;
 
-    private boolean m_dependencyManagersInitialized;
+    private volatile boolean m_dependencyManagersInitialized;
 
-    private final AtomicReference<Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>>> m_dependencies_map;
+    private volatile boolean m_dependenciesCollected;
 
     // A reference to the BundleComponentActivator
     private BundleComponentActivator m_activator;
@@ -121,7 +118,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         m_dependencyManagers = loadDependencyManagers( metadata );
 
         m_stateLock = new ReentrantLock( true );
-        m_dependencies_map = new AtomicReference<Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>>>();
         m_serviceRegistration = new AtomicReference<ServiceRegistration<S>>();
 
         // dump component details
@@ -511,6 +507,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 && m_componentMetadata.getServiceMetadata().isServiceFactory();
     }
 
+    public boolean isFactory()
+    {
+        return false;
+    }
+
     public String[] getServices()
     {
         if ( m_componentMetadata.getServiceMetadata() != null )
@@ -734,73 +735,46 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     protected boolean collectDependencies() throws IllegalStateException
     {
-        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> old = m_dependencies_map.get();
-        if ( old != null)
+        if ( m_dependenciesCollected)
         {
             log( LogService.LOG_DEBUG, "dependency map already present, do not collect dependencies", null );
             return false;
         }
         initDependencyManagers();
-        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> newDeps = new HashMap<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>>( );
-        for ( DependencyManager dependencyManager : m_dependencyManagers )
+        for ( DependencyManager<S, ?> dependencyManager : m_dependencyManagers )
         {
-            if ( !dependencyManager.prebind( newDeps ) )
+            if ( !dependencyManager.prebind() )
             {
                 //not actually satisfied any longer
-                returnServices( newDeps );
+                returnServices();
                 log( LogService.LOG_DEBUG, "Could not get required dependency for dependency manager: {0}",
                         new Object[] {dependencyManager}, null );
                 throw new IllegalStateException( "Missing dependencies, not satisfied" );
             }
         }
-        if ( !setDependencyMap( old, newDeps ) )
-        {
-            returnServices(newDeps);
-            log( LogService.LOG_DEBUG, "Another thread set the dependency map already present, do not keep collected dependencies", null );
-            return false;
-        }
+        m_dependenciesCollected = true;
         log( LogService.LOG_DEBUG, "This thread collected dependencies", null );
         return true;
     }
 
-    protected boolean setDependencyMap( Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> old, Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> newDeps )
-    {
-        return m_dependencies_map.compareAndSet( old, newDeps );
-    }
-
     protected void unsetDependencyMap()
     {
-        m_dependencies_map.set( null );
+        m_dependenciesCollected = false;
     }
 
-    private void returnServices( Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> deps )
+    private void returnServices()
     {
-        for ( Map<ServiceReference<?>, RefPair<?>> refs : deps.values() )
+        for ( DependencyManager<S, ?> dependencyManager : m_dependencyManagers )
         {
-            if ( refs != null )
-            {
-                for ( Map.Entry<ServiceReference<?>, RefPair<?>> serviceReferenceRefPairEntry : refs.entrySet() )
-                {
-                    RefPair<?> args = serviceReferenceRefPairEntry.getValue();
-                    if ( args.getServiceObject() != null )
-                    {
-                        getActivator().getBundleContext().ungetService( serviceReferenceRefPairEntry.getKey() );
-                    }
-                }
-            }
+            dependencyManager.deactivate();
         }
     }
 
-    abstract <T> void update( DependencyManager<S, T> dependencyManager, ServiceReference<T> ref );
+    abstract <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair );
 
-    abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> reference );
+    abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair );
 
-    abstract <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> oldRef );
-
-    Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> getDependencyMap()
-    {
-        return m_dependencies_map.get();
-    }
+    abstract <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair );
 
     //**********************************************************************************************************
     public BundleComponentActivator getActivator()

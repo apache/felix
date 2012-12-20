@@ -208,35 +208,35 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         }
     }
 
-    <T> void update( DependencyManager<S, T> dependencyManager, ServiceReference<T> ref )
+    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair )
     {
         for ( S implementationObject : serviceContexts.keySet() )
         {
-            dependencyManager.update( implementationObject, ref );
+            dependencyManager.update( implementationObject, refPair );
         }
     }
 
-    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> reference )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair )
     {
         for ( S implementationObject : serviceContexts.keySet() )
         {
-            dependencyManager.invokeBindMethod( implementationObject, reference );
+            dependencyManager.invokeBindMethod( implementationObject, refPair );
         }
         for ( S implementationObject : tmpImplementationObjects.keySet() )
         {
-            dependencyManager.invokeBindMethod( implementationObject, reference );
+            dependencyManager.invokeBindMethod( implementationObject, refPair );
         }
     }
 
-    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, ServiceReference<T> oldRef )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair )
     {
         for ( S implementationObject : serviceContexts.keySet() )
         {
-            dependencyManager.invokeUnbindMethod( implementationObject, oldRef );
+            dependencyManager.invokeUnbindMethod( implementationObject, oldRefPair );
         }
         for ( S implementationObject : tmpImplementationObjects.keySet() )
         {
-            dependencyManager.invokeUnbindMethod( implementationObject, oldRef );
+            dependencyManager.invokeUnbindMethod( implementationObject, oldRefPair );
         }
     }
 
