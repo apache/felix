@@ -981,6 +981,11 @@ public class ServiceTracker<S, T> {
         private final LinkedList<S> initial;
 
         /**
+         * counter to show size after removed during remmoving event.
+         */
+        private int pendingRemovals;
+
+        /**
          * AbstractTracked constructor.
          */
         AbstractTracked() {
@@ -1182,6 +1187,7 @@ public class ServiceTracker<S, T> {
          */
         void untrack(final S item, final R related) {
             final T object;
+            final int size;
             synchronized (this) {
                 if (initial.remove(item)) { /*
                                              * if this item is already in the list
@@ -1208,7 +1214,16 @@ public class ServiceTracker<S, T> {
                              * adding
                              */
                 }
-                object = tracked.remove(item); /*
+                object = tracked.get( item );
+                pendingRemovals++;
+                size = tracked.size() - pendingRemovals;
+            }
+            /* Call customizer outside of synchronized region */
+            customizerRemoving(item, related, object, size );
+            synchronized (this) {
+                pendingRemovals--;
+
+                tracked.remove(item); /*
                                                  * must remove from tracker before
                                                  * calling customizer callback
                                                  */
@@ -1336,6 +1351,8 @@ public class ServiceTracker<S, T> {
          */
         abstract void customizerModified(final S item, final R related, final T object);
 
+        abstract void customizerRemoving( final S item, final R related, final T object, int size );
+
         /**
          * Call the specific customizer removed method. This method must not be
          * called while synchronized on this object.
@@ -1441,7 +1458,13 @@ public class ServiceTracker<S, T> {
 			customizer.modifiedService(item, object);
 		}
 
-		/**
+        @Override
+        void customizerRemoving( ServiceReference<S> item, ServiceEvent related, T object, int size )
+        {
+            customizer.removingService( item, object, size );
+        }
+
+        /**
 		 * Call the specific customizer removed method. This method must not be
 		 * called while synchronized on this object.
 		 * 

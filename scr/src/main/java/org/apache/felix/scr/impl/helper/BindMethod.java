@@ -563,6 +563,7 @@ public class BindMethod extends BaseMethod
                 Object service = context.getService( refPair.getRef() );
                 if ( service == null )
                 {
+                    refPair.setFailed();
                     getLogger().log(
                          LogService.LOG_WARNING,
                          "Could not get service from ref " + refPair.getRef(), null );

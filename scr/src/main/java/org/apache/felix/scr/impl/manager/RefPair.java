@@ -30,6 +30,8 @@ public class RefPair<T>
     private final ServiceReference<T> ref;
     private T serviceObject;
 
+    private boolean failed;
+
     public RefPair( ServiceReference<T> ref )
     {
         this.ref = ref;
@@ -48,7 +50,22 @@ public class RefPair<T>
     public void setServiceObject( T serviceObject )
     {
         this.serviceObject = serviceObject;
+        if ( serviceObject != null)
+        {
+            failed = false;
+        }
     }
+
+    public void setFailed( )
+    {
+        this.failed = true;
+    }
+
+    public boolean isFailed()
+    {
+        return failed;
+    }
+
 
     @Override
     public String toString()
