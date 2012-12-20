@@ -1,3 +1,16 @@
+Changes from 1.6.2 to 1.6.4
+---------------------------
+
+** Bug
+    * [FELIX-3708] - [DS] use java 5
+    * [FELIX-3729] - [DS] Track dependencies by imitating ServiceTracker and keeping a list of actual service references all the time
+    * [FELIX-3738] - [DS] ComponentInstance.getServices(String refName) is implemented wrong for 0..1 and 1..1 refs
+    * [FELIX-3754] - Services registered from within the activate method may not be bound
+    * [FELIX-3787] - NPE on reference update
+    * [FELIX-3790] - [DS] Services may not be bound if the events arrive during component instantiation.
+    * [FELIX-3825] - [DS] make logging more useful by including component ID when known
+    * [FELIX-3826] - [DS] race in enabling components with factory pid
+
 Changes from 1.6.0 to 1.6.2
 ---------------------------
 
@@ -69,7 +82,7 @@ Changes from 1.6.0 to 1.6.2
     * [FELIX-3371] - update scr build to recent pax components
     * [FELIX-3377] - Allow a component to update its own service properties
     * [FELIX-3506] - SCR bind/unbind/update methods should be able to return a map of service properties like the activate/deactivate/modified methods.s
-    * [FELIX-3569] - Improve configured method handling for ComponentFactory instances
+    * [FELIX-3558] - [DS] make it easier to debug tests by cribbing code from ScrService to print out DS state     * [FELIX-3569] - Improve configured method handling for ComponentFactory instances
     * [FELIX-3662] - [DS] use backport-util-concurrenct instead of concurrent for pre java 5 compatibility
     * [FELIX-3677] - [DS] in the scr command info operation, show the bound service references
 
