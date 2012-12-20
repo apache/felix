@@ -81,8 +81,6 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 */
 	public void modifiedService(ServiceReference<S> reference, T service);
 
-    void removingService( ServiceReference<S> item, T object, int size );
-
 	/**
 	 * A service tracked by the {@code ServiceTracker} has been removed.
 	 * 

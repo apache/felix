@@ -188,6 +188,18 @@ public class DependencyManager<S, T> implements Reference
             }
 
         }
+
+        protected void ungetService( RefPair<T> ref )
+        {
+            synchronized ( ref )
+            {
+                if ( ref.getServiceObject() != null )
+                {
+                    ref.setServiceObject( null );
+                    m_componentManager.getActivator().getBundleContext().ungetService( ref.getRef() );
+                }
+            }
+        }
     }
 
 
@@ -208,10 +220,6 @@ public class DependencyManager<S, T> implements Reference
         }
 
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
-        {
-        }
-
-        public void removingService( ServiceReference<T> item, RefPair<T> object, int size )
         {
         }
 
@@ -245,6 +253,8 @@ public class DependencyManager<S, T> implements Reference
     }
 
     private class MultipleDynamicCustomizer extends AbstractCustomizer {
+
+        private RefPair<T> lastRefPair;
 
         public RefPair<T> addingService( ServiceReference<T> serviceReference )
         {
@@ -289,28 +299,23 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void removingService( ServiceReference<T> item, RefPair<T> refPair, int size )
+        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
         {
             if ( isActive() )
             {
-                boolean unbind = isOptional() || size > 0;
+                boolean unbind = isOptional() || !getTracker().isEmpty();
                 if ( unbind )
                 {
                     m_componentManager.invokeUnbindMethod( DependencyManager.this, refPair );
                 }
                 else
                 {
+                    lastRefPair = refPair;
                     m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
+                    lastRefPair = null;
                 }
             }
-        }
-
-        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
-        {
-            if (refPair.getServiceObject() != null)
-            {
-                m_componentManager.getActivator().getBundleContext().ungetService( serviceReference );
-            }
+            ungetService( refPair );
         }
 
         public boolean open()
@@ -338,25 +343,26 @@ public class DependencyManager<S, T> implements Reference
         {
             for ( RefPair<T> ref : getRefs() )
             {
-                if ( ref.getServiceObject() != null )
-                {
-                    ref.setServiceObject( null );
-                    m_componentManager.getActivator().getBundleContext().ungetService( ref.getRef() );
-                }
+                ungetService( ref );
             }
             getTracker().deactivate();
         }
 
+
         public Collection<RefPair<T>> getRefs()
         {
-            return getTracker().getTracked( true ).values();
+            if ( lastRefPair == null )
+            {
+                return getTracker().getTracked( true ).values();
+            }
+            else
+            {
+                return Collections.singletonList( lastRefPair );
+            }
         }
     }
 
     private class MultipleStaticGreedyCustomizer extends AbstractCustomizer {
-
-
-        private final AtomicInteger reactivateCount = new AtomicInteger(  );
 
 
         public RefPair<T> addingService( ServiceReference<T> serviceReference )
@@ -374,8 +380,8 @@ public class DependencyManager<S, T> implements Reference
             if (isActive())
             {
                 m_componentManager.log( LogService.LOG_DEBUG,
-                    "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
-                        { m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface() }, null );
+                        "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
+                        {m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface()}, null );
                 m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
                 m_componentManager.activateInternal();
 
@@ -394,32 +400,20 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void removingService( ServiceReference<T> item, RefPair<T> object, int size )
+        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
         {
             if ( isActive() )
             {
                 //deactivate while ref is still tracked
-                    m_componentManager.log( LogService.LOG_DEBUG,
-                            "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
-                            {m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface()}, null );
-                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
-                    reactivateCount.incrementAndGet();
-            }
-        }
-
-        public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
-        {
-            if ( reactivateCount.getAndDecrement() > 0 )
-            {
+                m_componentManager.log( LogService.LOG_DEBUG,
+                        "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
+                        {m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface()}, null );
+                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
                 //try to reactivate after ref is no longer tracked.
                 m_componentManager.activateInternal();
-
             }
             //This is unlikely
-            if (refPair.getServiceObject() != null)
-            {
-                m_componentManager.getActivator().getBundleContext().ungetService( serviceReference );
-            }
+            ungetService( refPair );
         }
 
         public boolean open()
@@ -440,11 +434,7 @@ public class DependencyManager<S, T> implements Reference
         {
             for ( RefPair<T> ref: getRefs())
             {
-                if ( ref.getServiceObject() != null)
-                {
-                    ref.setServiceObject( null );
-                    m_componentManager.getActivator().getBundleContext().ungetService( ref.getRef() );
-                }
+                ungetService( ref );
             }
             getTracker().deactivate();
         }
@@ -481,10 +471,6 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void removingService( ServiceReference<T> item, RefPair<T> object, int size )
-        {
-        }
-
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
         {
             if ( isActive() )
@@ -502,10 +488,7 @@ public class DependencyManager<S, T> implements Reference
 
                 }
             }
-            if (refPair.getServiceObject() != null)
-            {
-                m_componentManager.getActivator().getBundleContext().ungetService( serviceReference );
-            }
+            ungetService( refPair );
         }
 
         public boolean open()
@@ -527,11 +510,7 @@ public class DependencyManager<S, T> implements Reference
         {
             for ( RefPair<T> ref: getRefs())
             {
-                if ( ref.getServiceObject() != null)
-                {
-                    ref.setServiceObject( null );
-                    m_componentManager.getActivator().getBundleContext().ungetService( ref.getRef() );
-                }
+                ungetService( ref );
             }
             refs.clear();
             getTracker().deactivate();
@@ -591,10 +570,6 @@ public class DependencyManager<S, T> implements Reference
             {
                 m_componentManager.update( DependencyManager.this, refPair );
             }
-        }
-
-        public void removingService( ServiceReference<T> item, RefPair<T> object, int size )
-        {
         }
 
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
@@ -666,10 +641,9 @@ public class DependencyManager<S, T> implements Reference
 
         private void closeRefPair()
         {
-            if ( refPair != null && refPair.getServiceObject() != null )
+            if ( refPair != null )
             {
-                refPair.setServiceObject( null );
-                m_componentManager.getActivator().getBundleContext().ungetService( refPair.getRef() );
+                ungetService( refPair );
             }
             refPair = null;
         }
@@ -715,10 +689,6 @@ public class DependencyManager<S, T> implements Reference
             }
         }
 
-        public void removingService( ServiceReference<T> item, RefPair<T> object, int size )
-        {
-        }
-
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
         {
             if ( isActive() && refPair == this.refPair )
@@ -749,10 +719,9 @@ public class DependencyManager<S, T> implements Reference
 
         public void close()
         {
-            if ( refPair != null && refPair.getServiceObject() != null )
+            if ( refPair != null )
             {
-                refPair.setServiceObject( null );
-                m_componentManager.getActivator().getBundleContext().ungetService( refPair.getRef() );
+                ungetService( refPair );
             }
             refPair = null;
             getTracker().deactivate();
