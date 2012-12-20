@@ -26,6 +26,8 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -102,6 +104,16 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     private volatile boolean disposed;
 
+
+    //service event tracking
+    private volatile int floor;
+
+    private volatile int ceiling;
+
+    private final Set<Integer> missing = new TreeSet<Integer>( );
+
+
+
     /**
      * The constructor receives both the activator and the metadata
      *
@@ -174,6 +186,52 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     final boolean isWriteLocked()
     {
         return m_stateLock.getHoldCount() > 0;
+    }
+
+    //service event tracking
+    void tracked( int trackingCount )
+    {
+        synchronized ( missing )
+        {
+            if (trackingCount == floor + 1 )
+            {
+                floor++;
+                missing.remove( trackingCount );
+            }
+            else if ( trackingCount < ceiling )
+            {
+                missing.remove( trackingCount );
+            }
+            if ( trackingCount > ceiling )
+            {
+                for (int i = ceiling + 1; i < trackingCount; i++ )
+                {
+                    missing.add( i );
+                }
+                ceiling = trackingCount;
+            }
+            missing.notifyAll();
+        }
+    }
+
+    void waitForTracked( int trackingCount )
+    {
+        synchronized ( missing )
+        {
+            while ( ceiling  < trackingCount || ( !missing.isEmpty() && missing.iterator().next() < trackingCount))
+            {
+                log( LogService.LOG_DEBUG, "waitForTracked trackingCount: {0} ceiling: {1} missing: {2}",
+                        new Object[] {trackingCount, ceiling, missing}, null);
+                try
+                {
+                    missing.wait( );
+                }
+                catch ( InterruptedException e )
+                {
+                    //??
+                }
+            }
+        }
     }
 
 //---------- Component ID management
