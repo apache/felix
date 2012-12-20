@@ -40,14 +40,14 @@ public class B
         activated = true;
     }
 
-    private void setA(A b)
+    private void setA(A a)
     {
-        as.add( b );
+        as.add( a );
     }
 
-    private void unsetA(A b)
+    private void unsetA(A a)
     {
-        as.remove( b );
+        as.remove( a );
     }
 
     public List<A> getAs()
