@@ -673,6 +673,13 @@ public class ComponentRegistry implements ScrService, ServiceListener
                         dm.invokeBindMethodLate( serviceReference );
                     }
                 }
+
+                @Override
+                public String toString()
+                {
+                    return "Late binding task of reference " + serviceReference + " for dependencyManagers " + dependencyManagers;
+                }
+
             } );
         }
     }
