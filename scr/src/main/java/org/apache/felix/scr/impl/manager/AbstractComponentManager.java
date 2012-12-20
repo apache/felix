@@ -97,6 +97,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     protected volatile boolean enabled;
     protected volatile CountDownLatch enabledLatch;
     private final Object enabledLatchLock = new Object();
+
+    protected volatile boolean m_internalEnabled;
     /**
      * synchronizing while creating the service registration is safe as long as the bundle is not stopped
      * during some service registrations.  So, avoid synchronizing during unregister service if the component is being
@@ -587,6 +589,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     final void enableInternal()
     {
         m_state.enable( this );
+        m_internalEnabled = true;
     }
 
     final boolean activateInternal( int trackingCount )
@@ -601,6 +604,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     final void disableInternal()
     {
+        m_internalEnabled = false;
         m_state.disable( this );
     }
 
@@ -966,20 +970,20 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     private void enableDependencyManagers() throws InvalidSyntaxException
     {
-        if ( !m_componentMetadata.isConfigurationRequired() )
+        if ( !m_componentMetadata.isConfigurationRequired() || hasConfiguration() )
         {
-            for ( DependencyManager dm: getDependencyManagers() )
-            {
-                dm.enable();
-            }
+            updateTargets( getProperties() );
         }
     }
 
     protected void updateTargets(Dictionary properties)
     {
-        for ( DependencyManager dm: getDependencyManagers() )
+        if ( m_internalEnabled )
         {
-            dm.setTargetFilter( properties );
+            for ( DependencyManager dm: getDependencyManagers() )
+            {
+                dm.setTargetFilter( properties );
+            }
         }
     }
 
@@ -1358,20 +1362,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             }
 
             acm.registerComponentId();
-            try
-            {
-                acm.enableDependencyManagers();
-                acm.changeState( Unsatisfied.getInstance() );
-                acm.log( LogService.LOG_DEBUG, "Component enabled", null );
-            }
-            catch ( InvalidSyntaxException ise )
-            {
-                // one of the reference target filters is invalid, fail
-                acm.log( LogService.LOG_ERROR, "Failed enabling Component", ise );
-                acm.disableDependencyManagers();
-                acm.unregisterComponentId();
-                acm.changeState( Disabled.getInstance() );
-            }
+            acm.changeState( Unsatisfied.getInstance() );
+            acm.log( LogService.LOG_DEBUG, "Component enabled", null );
         }
 
         void deactivate( AbstractComponentManager acm, int reason, boolean disable )

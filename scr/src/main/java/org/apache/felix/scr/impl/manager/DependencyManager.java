@@ -879,6 +879,58 @@ public class DependencyManager<S, T> implements Reference
         }
     }
 
+    private class NoPermissionsCustomizer implements Customizer<T>
+    {
+
+        public boolean open()
+        {
+            return false;
+        }
+
+        public void close()
+        {
+        }
+
+        public Collection<RefPair<T>> getRefs( AtomicInteger trackingCount )
+        {
+            return null;
+        }
+
+        public boolean isSatisfied()
+        {
+            return isOptional();
+        }
+
+        public void setTracker( ServiceTracker<T, RefPair<T>> tRefPairServiceTracker )
+        {
+        }
+
+        public void setTrackerOpened()
+        {
+        }
+
+        public void setPreviousRefMap( Map<ServiceReference<T>, RefPair<T>> previousRefMap )
+        {
+        }
+
+        public RefPair<T> addingService( ServiceReference<T> tServiceReference )
+        {
+            return null;
+        }
+
+        public void addedService( ServiceReference<T> tServiceReference, RefPair<T> service, int trackingCount )
+        {
+        }
+
+        public void modifiedService( ServiceReference<T> tServiceReference, RefPair<T> service, int trackingCount )
+        {
+        }
+
+        public void removedService( ServiceReference<T> tServiceReference, RefPair<T> service, int trackingCount )
+        {
+        }
+    }
+
     //---------- Reference interface ------------------------------------------
 
     public String getServiceName()
@@ -927,31 +979,6 @@ public class DependencyManager<S, T> implements Reference
 
 
     //---------- Service tracking support -------------------------------------
-
-    /**
-     * Enables this dependency manager by starting to listen for service
-     * events.
-     * @throws InvalidSyntaxException if the target filter is invalid
-     */
-    void enable() throws InvalidSyntaxException
-    {
-        if ( hasGetPermission() )
-        {
-            // setup the target filter from component descriptor
-            setTargetFilter( m_dependencyMetadata.getTarget() );
-
-            m_componentManager.log( LogService.LOG_DEBUG,
-                    "Registered for service events, currently {0} service(s) match the filter", new Object[]
-                    {new Integer( size() )}, null );
-        }
-        else
-        {
-            // no services available
-            m_componentManager.log( LogService.LOG_DEBUG,
-                    "Not registered for service events since the bundle has no permission to get service {0}", new Object[]
-                    {m_dependencyMetadata.getInterface()}, null );
-        }
-    }
 
 
     void deactivate()
@@ -1684,8 +1711,20 @@ public class DependencyManager<S, T> implements Reference
      * @param target The new target filter to be set. This may be
      *      <code>null</code> if no target filtering is to be used.
      */
-    private void setTargetFilter( String target ) throws InvalidSyntaxException
+    private void setTargetFilter( String target) throws InvalidSyntaxException
     {
+        if (!hasGetPermission())
+        {
+            customizerRef.set( new NoPermissionsCustomizer() );
+            m_componentManager.log( LogService.LOG_INFO, "No permission to get services for {0}", new Object[]
+                    {m_dependencyMetadata.getName()}, null );
+            return;
+        }
+        // if configuration does not set filter, use the value from metadata
+        if (target == null)
+        {
+            target = m_dependencyMetadata.getTarget();
+        }
         // do nothing if target filter does not change
         if ( ( m_target == null && target == null ) || ( m_target != null && m_target.equals( target ) ) )
         {
