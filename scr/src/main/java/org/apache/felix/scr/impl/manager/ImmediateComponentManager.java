@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.manager;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ComponentHolder;
@@ -54,7 +55,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     private volatile S m_tmpImplementationObject;
 
     // keep the using bundles as reference "counters" for instance deactivation
-    private volatile int m_useCount;
+    private final AtomicInteger m_useCount = new AtomicInteger( );
 
     // The context that will be passed to the implementationObject
     private ComponentContextImpl m_componentContext;
@@ -164,7 +165,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         if ( m_implementationObject != null )
         {
             disposeImplementationObject( m_implementationObject, m_componentContext, reason );
-            m_useCount = 0;
+            m_useCount.set( 0 );
             m_implementationObject = null;
             log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), reason },  null );
             m_componentContext = null;
@@ -712,7 +713,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                         S result = (S) state().getService( this );
                         if ( result != null )
                         {
-                            m_useCount++;
+                            m_useCount.incrementAndGet();
                         }
                         return result;
                     }
@@ -723,7 +724,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                     releaseWriteLock( "ImmediateComponentManager.getService.1" );
                 }
             }
-            m_useCount++;
+            m_useCount.incrementAndGet();
             return (S) implementationObject;
     }
 
@@ -731,19 +732,19 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     {
         // the framework should not call ungetService more than it calls
         // calls getService. Still, we want to be sure to not go below zero
-        if ( m_useCount > 0 )
+        if ( m_useCount.get() > 0 )
         {
-            m_useCount--;
+            int useCount = m_useCount.decrementAndGet();
 
             // unget the service instance if no bundle is using it
             // any longer unless delayed component instances have to
             // be kept (FELIX-3039)
-            if ( m_useCount == 0 && !isImmediate() && !getActivator().getConfiguration().keepInstances() )
+            if ( useCount == 0 && !isImmediate() && !getActivator().getConfiguration().keepInstances() )
             {
                 obtainWriteLock( "ImmediateComponentManager.ungetService.1" );
                 try
                 {
-                    if ( m_useCount == 0 )
+                    if ( m_useCount.get() == 0 )
                     {
                         state().ungetService( this );
                         unsetDependencyMap();
