@@ -21,19 +21,30 @@ package org.apache.felix.status;
 import java.io.PrintWriter;
 import java.net.URL;
 
+/**
+ * The status printer handler can be used by clients to access
+ * a status printer.
+ */
 public interface StatusPrinterHandler {
 
-    String getTitle();
-
+    /** The unique name of the printer. */
     String getName();
 
+    /** The human readable title for the status printer. */
+    String getTitle();
+
+    /** The optional category for this printer. */
     String getCategory();
 
+    /** All supported modes. */
     PrinterMode[] getModes();
 
+    /** Whether the printer supports this mode. */
     boolean supports( final PrinterMode mode );
 
+    /** Print the configuration in the mode. */
     void printConfiguration( PrinterMode mode, PrintWriter printWriter );
 
+    /** Get the attachments for the zip. */
     URL[] getAttachmentsForZip();
 }

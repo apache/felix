@@ -125,7 +125,7 @@ public class ResourceBundleManager implements BundleListener
         return null;
     }
 
-
+    // TODO : Instead of getting all property files, we could just get the one for the default locale
     private synchronized Map getResourceBundleEntries(final Bundle bundle)
     {
         String file = ( String ) bundle.getHeaders().get( Constants.BUNDLE_LOCALIZATION );

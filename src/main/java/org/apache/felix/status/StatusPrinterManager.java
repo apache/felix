@@ -18,11 +18,29 @@
  */
 package org.apache.felix.status;
 
+/**
+ * The manager allows to access status printers.
+ * Instead of directly returning a status printer, a status
+ * printer handler is returned which provides access to the
+ * meta information of the printer and other utility methods.
+ */
 public interface StatusPrinterManager {
 
+    /**
+     * Get all status printer handlers.
+     * @return A list of handlers - might be empty.
+     */
     StatusPrinterHandler[] getAllHandlers();
 
+    /**
+     * Get all handlers supporting the mode.
+     * @return A list of handlers - might be empty.
+     */
     StatusPrinterHandler[] getHandlers( final PrinterMode mode);
 
+    /**
+     * Return a handler for the unique name.
+     * @return The corresponding handler or <code>null</code>.
+     */
     StatusPrinterHandler getHandler( final String name );
 }
