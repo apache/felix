@@ -221,7 +221,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             while ( ceiling  < trackingCount || ( !missing.isEmpty() && missing.iterator().next() < trackingCount))
             {
                 log( LogService.LOG_DEBUG, "waitForTracked trackingCount: {0} ceiling: {1} missing: {2}",
-                        new Object[] {trackingCount, ceiling, missing}, null);
+                        new Object[] {trackingCount, ceiling, missing}, null );
                 try
                 {
                     missing.wait( );
@@ -895,7 +895,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         BundleComponentActivator activator = getActivator();
         if ( activator != null )
         {
-            activator.log( level, message, getComponentMetadata(), ex );
+            activator.log( level, message, getComponentMetadata(), m_componentId, ex );
         }
     }
 
@@ -904,7 +904,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         BundleComponentActivator activator = getActivator();
         if ( activator != null )
         {
-            activator.log( level, message, arguments, getComponentMetadata(), ex );
+            activator.log( level, message, arguments, getComponentMetadata(), m_componentId, ex );
         }
     }
 

@@ -254,7 +254,7 @@ public class XmlHandler implements KXml2SAXHandler
                 {
                     m_logger.log( LogService.LOG_DEBUG,
                         "Not currently parsing a component; ignoring element {0} (bundle {1})", new Object[]
-                            { localName, m_bundle.getLocation() }, null, null );
+                            { localName, m_bundle.getLocation() }, null, null, null );
                 }
 
                 // 112.4.4 Implementation
@@ -356,7 +356,7 @@ public class XmlHandler implements KXml2SAXHandler
                 else if ( !localName.equals( "components" ) )
                 {
                     m_logger.log( LogService.LOG_DEBUG, "Ignoring unsupported element {0} (bundle {1})", new Object[]
-                        { localName, m_bundle.getLocation() }, null, null );
+                        { localName, m_bundle.getLocation() }, null, null, null );
                 }
             }
             catch ( Exception ex )
@@ -370,7 +370,7 @@ public class XmlHandler implements KXml2SAXHandler
         else if ( !localName.equals( "components" ) )
         {
             m_logger.log( LogService.LOG_DEBUG, "Ignoring unsupported element '{'{0}'}'{1} (bundle {2})", new Object[]
-                { uri, localName, m_bundle.getLocation() }, null, null );
+                { uri, localName, m_bundle.getLocation() }, null, null, null );
         }
     }
 

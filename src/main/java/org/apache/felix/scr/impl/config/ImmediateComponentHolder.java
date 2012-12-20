@@ -525,7 +525,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         BundleComponentActivator activator = getActivator();
         if ( activator != null )
         {
-            activator.log( level, message, getComponentMetadata(), ex );
+            activator.log( level, message, getComponentMetadata(), null, ex );
         }
     }
 
@@ -534,7 +534,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         BundleComponentActivator activator = getActivator();
         if ( activator != null )
         {
-            activator.log( level, message, arguments, getComponentMetadata(), ex );
+            activator.log( level, message, arguments, getComponentMetadata(), null, ex );
         }
     }
 

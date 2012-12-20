@@ -36,16 +36,16 @@ public class MockLogger implements Logger
     }
 
 
-    public void log( int level, String pattern, Object[] arguments, ComponentMetadata metadata, Throwable ex )
+    public void log( int level, String pattern, Object[] arguments, ComponentMetadata metadata, Long componentId, Throwable ex )
     {
         if ( isLogEnabled( level ) )
         {
-            log( level, MessageFormat.format( pattern, arguments ), metadata, ex );
+            log( level, MessageFormat.format( pattern, arguments ), metadata, null, ex );
         }
     }
 
 
-    public void log( int level, String message, ComponentMetadata metadata, Throwable ex )
+    public void log( int level, String message, ComponentMetadata metadata, Long componentId, Throwable ex )
     {
         lastMessage = message;
     }
