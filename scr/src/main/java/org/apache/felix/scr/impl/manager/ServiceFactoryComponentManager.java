@@ -89,8 +89,9 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         for (Iterator i = serviceContexts.values().iterator(); i.hasNext(); )
         {
             BundleComponentContext componentContext = ( BundleComponentContext ) i.next();
-            i.remove();
             disposeImplementationObject( componentContext.getInstance(), componentContext, reason );
+            i.remove();
+            cleanupImplementationObject( componentContext.getInstance() );
             log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent", new Object[] { getName() },  null );
         }
     }
@@ -195,10 +196,11 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         // When the ungetServiceMethod is called, the implementation object must be deactivated
         // private ComponentContext and implementation instances
         final ComponentContext serviceContext;
-        serviceContext = ( ComponentContext ) serviceContexts.remove( service );
+        serviceContext = serviceContexts.get( service );
 
         disposeImplementationObject( service, serviceContext, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
-
+        serviceContexts.remove( service );
+        cleanupImplementationObject( service );
         // if this was the last use of the component, go back to REGISTERED state
         if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
         {
