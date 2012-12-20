@@ -282,7 +282,7 @@ class ScrCommand
                     out.println( ref.isStatic() ? "static" : "dynamic" );
                     out.print( "    Policy option: " );
                     out.println( ref.isReluctant() ? "reluctant" : "greedy" );
-                    ServiceReference[] serviceRefs = ref.getBoundServiceReferences();
+                    ServiceReference[] serviceRefs = ref.getServiceReferences();
                     if ( serviceRefs != null )
                     {
                         out.print( "    Bound to:" );
