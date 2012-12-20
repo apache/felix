@@ -345,19 +345,19 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         return Active.getInstance();
     }
 
-    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair )
+    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
         dependencyManager.update( impl, refPair );
     }
 
-    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
         dependencyManager.invokeBindMethod( impl, refPair);
     }
 
-    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
         dependencyManager.invokeUnbindMethod( impl, oldRefPair);
@@ -528,7 +528,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 && !getComponentMetadata().isConfigurationIgnored() )
         {
             log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
-            activateInternal();
+            activateInternal( getTrackingCount().get() );
             return;
         }
 
@@ -544,7 +544,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         // this component must be deactivated
         if ( configuration == null && getComponentMetadata().isConfigurationRequired() )
         {
-            deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true );
+            deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, getTrackingCount().get() );
         }
         else if ( configuration == null | !modify() )
         {
@@ -556,8 +556,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             // FELIX-2368: cycle component immediately, reconfigure() is
             //     called through ConfigurationListener API which itself is
             //     called asynchronously by the Configuration Admin Service
-            deactivateInternal( reason, false );
-            activateInternal();
+            deactivateInternal( reason, false, getTrackingCount().get() );
+            activateInternal( getTrackingCount().get() );
         }
     }
 

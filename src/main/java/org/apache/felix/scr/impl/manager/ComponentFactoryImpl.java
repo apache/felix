@@ -114,7 +114,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         // enable
         cm.enableInternal();
         //activate immediately
-        cm.activateInternal();
+        cm.activateInternal( getTrackingCount().get() );
 
         instance = cm.getComponentInstance();
         if ( instance == null )
@@ -283,15 +283,15 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         return true;
     }
 
-    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> ref )
+    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> ref, int trackingCount )
     {
     }
 
-    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> reference )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> reference, int trackingCount )
     {
     }
 
-    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRef )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRef, int trackingCount )
     {
     }
 
@@ -331,7 +331,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             if ( ( getState() & STATE_DISPOSED ) == 0 && getComponentMetadata().isConfigurationRequired() )
             {
                 log( LogService.LOG_DEBUG, "Deactivating component factory (required configuration has gone)", null );
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true );
+                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, getTrackingCount().get() );
             }
         }
         else
@@ -377,7 +377,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
                 {
                     log( LogService.LOG_DEBUG,
                             "Component Factory target filters not satisfied anymore: deactivating", null );
-                    deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
+                    deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, getTrackingCount().get() );
                     return;
                 }
             }
@@ -388,7 +388,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             {
                 // try to activate our component factory, if all dependnecies are satisfied
                 log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
-                activateInternal();
+                activateInternal( getTrackingCount().get() );
             }
         }
         else

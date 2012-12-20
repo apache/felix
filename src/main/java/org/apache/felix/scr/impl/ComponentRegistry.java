@@ -19,7 +19,6 @@
 package org.apache.felix.scr.impl;
 
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -131,7 +130,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
     // the ConfigurationAdmin service
     private ConfigurationSupport configurationSupport;
 
-    private final Map<ServiceReference<?>, List<DependencyManager>> m_missingDependencies = new HashMap<ServiceReference<?>, List<DependencyManager>>( );
+    private final Map<ServiceReference<?>, List<Entry>> m_missingDependencies = new HashMap<ServiceReference<?>, List<Entry>>( );
 
     protected ComponentRegistry( BundleContext context )
     {
@@ -660,7 +659,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
     public void missingServicePresent( final ServiceReference serviceReference, ComponentActorThread actor )
     {
-        final List<DependencyManager> dependencyManagers = m_missingDependencies.remove( serviceReference );
+        final List<Entry> dependencyManagers = m_missingDependencies.remove( serviceReference );
         if ( dependencyManagers != null )
         {
             actor.schedule( new Runnable()
@@ -668,9 +667,9 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
                 public void run()
                 {
-                    for ( DependencyManager dm : dependencyManagers )
+                    for ( Entry entry : dependencyManagers )
                     {
-                        dm.invokeBindMethodLate( serviceReference );
+                        entry.getDm().invokeBindMethodLate( serviceReference, entry.getTrackingCount() );
                     }
                 }
 
@@ -684,20 +683,42 @@ public class ComponentRegistry implements ScrService, ServiceListener
         }
     }
 
-    public synchronized void registerMissingDependency( DependencyManager dependencyManager, ServiceReference serviceReference )
+    public synchronized void registerMissingDependency( DependencyManager dependencyManager, ServiceReference serviceReference, int trackingCount )
     {
         //check that the service reference is from scr
         if ( serviceReference.getProperty( ComponentConstants.COMPONENT_NAME ) == null || serviceReference.getProperty( ComponentConstants.COMPONENT_ID ) == null )
         {
             return;
         }
-        List<DependencyManager> dependencyManagers = m_missingDependencies.get( serviceReference );
+        List<Entry> dependencyManagers = m_missingDependencies.get( serviceReference );
         if ( dependencyManagers == null )
         {
-            dependencyManagers = new ArrayList<DependencyManager>();
+            dependencyManagers = new ArrayList<Entry>();
             m_missingDependencies.put( serviceReference, dependencyManagers );
         }
-        dependencyManagers.add( dependencyManager );
+        dependencyManagers.add( new Entry( dependencyManager, trackingCount ) );
+    }
+
+    private static class Entry
+    {
+        private final DependencyManager dm;
+        private final int trackingCount;
+
+        private Entry( DependencyManager dm, int trackingCount )
+        {
+            this.dm = dm;
+            this.trackingCount = trackingCount;
+        }
+
+        public DependencyManager getDm()
+        {
+            return dm;
+        }
+
+        public int getTrackingCount()
+        {
+            return trackingCount;
+        }
     }
 
 }

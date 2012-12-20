@@ -30,7 +30,6 @@ import org.apache.felix.scr.impl.helper.MethodResult;
 import org.apache.felix.scr.impl.helper.ModifiedMethod;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
@@ -208,7 +207,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         }
     }
 
-    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair )
+    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         for ( S implementationObject : serviceContexts.keySet() )
         {
@@ -216,7 +215,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         }
     }
 
-    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         for ( S implementationObject : serviceContexts.keySet() )
         {
@@ -228,7 +227,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         }
     }
 
-    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair )
+    <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount )
     {
         for ( S implementationObject : serviceContexts.keySet() )
         {

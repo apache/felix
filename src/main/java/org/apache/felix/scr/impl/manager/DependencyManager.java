@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -257,7 +256,7 @@ public class DependencyManager<S, T> implements Reference
 
     private class FactoryCustomizer extends AbstractCustomizer {
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference )
         {
             RefPair<T> refPair = new RefPair<T>( serviceReference  );
             return refPair;
@@ -267,7 +266,7 @@ public class DependencyManager<S, T> implements Reference
         {
             if ( !isOptional() )
             {
-                m_componentManager.activateInternal();
+                m_componentManager.activateInternal( trackingCount );
             }
         }
 
@@ -281,7 +280,7 @@ public class DependencyManager<S, T> implements Reference
             {
                 if (getTracker().isEmpty())
                 {
-                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
+                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
                 }
             }
         }
@@ -309,7 +308,7 @@ public class DependencyManager<S, T> implements Reference
 
         private RefPair<T> lastRefPair;
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference )
         {
             RefPair<T> refPair = getPreviousRefMap().get( serviceReference );
             if ( refPair == null )
@@ -318,10 +317,7 @@ public class DependencyManager<S, T> implements Reference
             }
             if (isActive())
             {
-                 if (!m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext()))
-                 {
-                      m_componentManager.getActivator().registerMissingDependency( DependencyManager.this, serviceReference );
-                 }
+                 m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext());
             }
             return refPair;
         }
@@ -334,12 +330,15 @@ public class DependencyManager<S, T> implements Reference
                 {
                     if ( !refPair.isFailed() )
                     {
-                        m_componentManager.invokeBindMethod( DependencyManager.this, refPair );
+                        m_componentManager.invokeBindMethod( DependencyManager.this, refPair, trackingCount );
+                    }
+                    else {
+                        m_componentManager.getActivator().registerMissingDependency( DependencyManager.this, serviceReference, trackingCount );
                     }
                 }
                 else if ( isTrackerOpened() && !isOptional() )
                 {
-                    m_componentManager.activateInternal();
+                    m_componentManager.activateInternal( trackingCount );
                 }
             }
             tracked( trackingCount );
@@ -349,7 +348,7 @@ public class DependencyManager<S, T> implements Reference
         {
             if (isActive())
             {
-                m_componentManager.update( DependencyManager.this, refPair );
+                m_componentManager.update( DependencyManager.this, refPair, trackingCount );
             }
             tracked( trackingCount );
         }
@@ -361,12 +360,12 @@ public class DependencyManager<S, T> implements Reference
                 boolean unbind = isOptional() || !getTracker().isEmpty();
                 if ( unbind )
                 {
-                    m_componentManager.invokeUnbindMethod( DependencyManager.this, refPair );
+                    m_componentManager.invokeUnbindMethod( DependencyManager.this, refPair, trackingCount );
                 }
                 else
                 {
                     lastRefPair = refPair;
-                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
+                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
                     lastRefPair = null;
                 }
             }
@@ -389,7 +388,7 @@ public class DependencyManager<S, T> implements Reference
                     }
                     else
                     {
-                         m_componentManager.getActivator().registerMissingDependency( DependencyManager.this, refPair.getRef() );
+                         m_componentManager.getActivator().registerMissingDependency( DependencyManager.this, refPair.getRef(), trackingCount.get() );
                     }
                 }
             }
@@ -423,7 +422,7 @@ public class DependencyManager<S, T> implements Reference
     private class MultipleStaticGreedyCustomizer extends AbstractCustomizer {
 
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference )
         {
             RefPair<T> refPair = new RefPair<T>( serviceReference  );
             if (isActive())
@@ -440,13 +439,13 @@ public class DependencyManager<S, T> implements Reference
                 m_componentManager.log( LogService.LOG_DEBUG,
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                         {m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface()}, null );
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
-                m_componentManager.activateInternal();
+                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
+                m_componentManager.activateInternal( trackingCount );
 
             }
             else if ( isTrackerOpened() &&  !isOptional() )
             {
-                m_componentManager.activateInternal();
+                m_componentManager.activateInternal( trackingCount );
             }
         }
 
@@ -454,7 +453,7 @@ public class DependencyManager<S, T> implements Reference
         {
             if (isActive())
             {
-                m_componentManager.update( DependencyManager.this, refPair );
+                m_componentManager.update( DependencyManager.this, refPair, trackingCount );
             }
         }
 
@@ -466,9 +465,9 @@ public class DependencyManager<S, T> implements Reference
                 m_componentManager.log( LogService.LOG_DEBUG,
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                         {m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface()}, null );
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
+                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
                 //try to reactivate after ref is no longer tracked.
-                m_componentManager.activateInternal();
+                m_componentManager.activateInternal( trackingCount );
             }
             //This is unlikely
             ungetService( refPair );
@@ -509,7 +508,7 @@ public class DependencyManager<S, T> implements Reference
 
         private final Collection<RefPair<T>> refs = new ArrayList<RefPair<T>>();
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference )
         {
             RefPair<T> refPair = new RefPair<T>( serviceReference  );
             return refPair;
@@ -519,7 +518,7 @@ public class DependencyManager<S, T> implements Reference
         {
             if ( isTrackerOpened() && !isOptional() && !isActive())
             {
-                m_componentManager.activateInternal();
+                m_componentManager.activateInternal( trackingCount );
             }
         }
 
@@ -527,7 +526,7 @@ public class DependencyManager<S, T> implements Reference
         {
             if (isActive())
             {
-                m_componentManager.update( DependencyManager.this, refPair );
+                m_componentManager.update( DependencyManager.this, refPair, trackingCount );
             }
         }
 
@@ -541,10 +540,10 @@ public class DependencyManager<S, T> implements Reference
                     m_componentManager.log( LogService.LOG_DEBUG,
                         "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                             { m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface() }, null );
-                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
+                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
 
                     // FELIX-2368: immediately try to reactivate
-                    m_componentManager.activateInternal();
+                    m_componentManager.activateInternal( trackingCount );
 
                 }
             }
@@ -587,7 +586,7 @@ public class DependencyManager<S, T> implements Reference
 
         private RefPair<T> refPair;
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference )
         {
             RefPair<T> refPair = new RefPair<T>( serviceReference  );
             return refPair;
@@ -605,23 +604,23 @@ public class DependencyManager<S, T> implements Reference
                     }
                     if ( !refPair.isFailed() )
                     {
-                        m_componentManager.invokeBindMethod( DependencyManager.this, refPair );
+                        m_componentManager.invokeBindMethod( DependencyManager.this, refPair, trackingCount );
                         if ( this.refPair != null )
                         {
-                            m_componentManager.invokeUnbindMethod( DependencyManager.this, this.refPair );
+                            m_componentManager.invokeUnbindMethod( DependencyManager.this, this.refPair, trackingCount );
                             closeRefPair();
                         }
                     }
                     else
                     {
-                        m_componentManager.getActivator().registerMissingDependency( DependencyManager.this, serviceReference );
+                        m_componentManager.getActivator().registerMissingDependency( DependencyManager.this, serviceReference, trackingCount );
                     }
                     this.refPair = refPair;
                 }
             }
             else if ( isTrackerOpened() && !isOptional() )
             {
-                m_componentManager.activateInternal();
+                m_componentManager.activateInternal( trackingCount );
             }
         }
 
@@ -629,7 +628,7 @@ public class DependencyManager<S, T> implements Reference
         {
             if (isActive())
             {
-                m_componentManager.update( DependencyManager.this, refPair );
+                m_componentManager.update( DependencyManager.this, refPair, trackingCount );
             }
         }
 
@@ -654,19 +653,19 @@ public class DependencyManager<S, T> implements Reference
                         }
                         if ( !refPair.isFailed() )
                         {
-                            m_componentManager.invokeBindMethod( DependencyManager.this, nextRefPair );
+                            m_componentManager.invokeBindMethod( DependencyManager.this, nextRefPair, trackingCount );
                         }
                     }
 
                     if ( isOptional() || nextRefPair != null)
                     {
-                        m_componentManager.invokeUnbindMethod( DependencyManager.this, refPair );
+                        m_componentManager.invokeUnbindMethod( DependencyManager.this, refPair, trackingCount );
                         closeRefPair();
                         this.refPair = nextRefPair;
                     }
                     else //required and no replacement service, deactivate
                     {
-                        m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
+                        m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
                     }
                 }
             }
@@ -688,7 +687,7 @@ public class DependencyManager<S, T> implements Reference
                     }
                     if (refPair.isFailed())
                     {
-                        m_componentManager.getActivator().registerMissingDependency( DependencyManager.this, refPair.getRef() );
+                        m_componentManager.getActivator().registerMissingDependency( DependencyManager.this, refPair.getRef(), trackingCount.get() );
                     }
                     this.refPair = refPair;
                 }
@@ -722,7 +721,7 @@ public class DependencyManager<S, T> implements Reference
 
         private RefPair<T> refPair;
 
-        public RefPair<T> addingService( ServiceReference<T> serviceReference, int trackingCount )
+        public RefPair<T> addingService( ServiceReference<T> serviceReference )
         {
             RefPair<T> refPair = new RefPair<T>( serviceReference );
             return refPair;
@@ -734,13 +733,13 @@ public class DependencyManager<S, T> implements Reference
             {
                 if ( !isReluctant() && ( this.refPair == null || refPair.getRef().compareTo( this.refPair.getRef() ) > 0 ) )
                 {
-                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
-                    m_componentManager.activateInternal();
+                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
+                    m_componentManager.activateInternal( trackingCount );
                 }
             }
             else if (isTrackerOpened() && !isOptional() )
             {
-                m_componentManager.activateInternal();
+                m_componentManager.activateInternal( trackingCount );
             }
         }
 
@@ -748,7 +747,7 @@ public class DependencyManager<S, T> implements Reference
         {
             if ( isActive() )
             {
-                m_componentManager.update( DependencyManager.this, refPair );
+                m_componentManager.update( DependencyManager.this, refPair, trackingCount );
             }
         }
 
@@ -756,8 +755,8 @@ public class DependencyManager<S, T> implements Reference
         {
             if ( isActive() && refPair == this.refPair )
             {
-                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
-                m_componentManager.activateInternal();
+                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
+                m_componentManager.activateInternal( trackingCount );
             }
         }
 
@@ -1269,7 +1268,7 @@ public class DependencyManager<S, T> implements Reference
     }
 
 
-    public void invokeBindMethodLate( final ServiceReference<T> ref )
+    public void invokeBindMethodLate( final ServiceReference<T> ref, int trackingCount )
     {
         if ( !isSatisfied() )
         {
@@ -1303,7 +1302,7 @@ public class DependencyManager<S, T> implements Reference
             }
             m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() );
         }
-        m_componentManager.invokeBindMethod( this, refPair );
+        m_componentManager.invokeBindMethod( this, refPair, trackingCount );
     }
 
     /**
@@ -1609,7 +1608,7 @@ public class DependencyManager<S, T> implements Reference
         customizer.setTracker( tracker );
         trackerRef.set( tracker );
         registered = true;
-        tracker.open();
+        tracker.open( m_componentManager.getTrackingCount() );
         customizer.setTrackerOpened();
         if ( oldTracker != null )
         {

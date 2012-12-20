@@ -60,14 +60,14 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 * from the {@code getService} and {@code getServices} methods.
 	 * 
 	 *
+     *
      * @param reference The reference to the service being added to the
      *        {@code ServiceTracker}.
-     * @param trackingCount
      * @return The service object to be tracked for the specified referenced
 	 *         service or {@code null} if the specified referenced service
 	 *         should not be tracked.
 	 */
-	public T addingService( ServiceReference<S> reference, int trackingCount );
+	public T addingService( ServiceReference<S> reference );
 
     public void addedService( ServiceReference<S> reference, T service, int trackingCount );
 
