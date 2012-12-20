@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -143,7 +144,7 @@ public class DependencyManager<S, T> implements Reference
 
         private volatile int ceiling;
 
-        private final Set<Integer> missing = new HashSet<Integer>( );
+        private final Set<Integer> missing = new TreeSet<Integer>( );
 
         public void setTracker( ServiceTracker<T, RefPair<T>> tracker )
         {
@@ -230,9 +231,24 @@ public class DependencyManager<S, T> implements Reference
                     }
                     ceiling = trackingCount;
                 }
-                if ( missing.isEmpty() )
+                missing.notifyAll();
+            }
+        }
+
+        protected void waitForTracked( int trackingCount )
+        {
+            synchronized ( missing )
+            {
+                while ( ceiling  < trackingCount || ( !missing.isEmpty() && missing.iterator().next() < trackingCount))
                 {
-                    missing.notifyAll();
+                    try
+                    {
+                        missing.wait( );
+                    }
+                    catch ( InterruptedException e )
+                    {
+                        //??
+                    }
                 }
             }
         }
@@ -997,7 +1013,12 @@ public class DependencyManager<S, T> implements Reference
      */
     public ServiceReference<T>[] getServiceReferences()
     {
-        Collection<RefPair<T>> bound = customizerRef.get().getRefs();
+        Customizer<T> customizer = customizerRef.get();
+        if (customizer == null)
+        {
+            return null;
+        }
+        Collection<RefPair<T>> bound = customizer.getRefs();
         if ( bound.isEmpty() )
         {
             return null;
