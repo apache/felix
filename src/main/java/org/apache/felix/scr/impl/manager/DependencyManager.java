@@ -1345,6 +1345,10 @@ public class DependencyManager<S, T> implements Reference
         latch.countDown();
     }
 
+    void cleanup( S componentInstance)
+    {
+        edgeInfoMap.remove( componentInstance );
+    }
 
     public void invokeBindMethodLate( final ServiceReference<T> ref, int trackingCount )
     {
