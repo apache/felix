@@ -211,7 +211,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
     {
         for ( S implementationObject : serviceContexts.keySet() )
         {
-            dependencyManager.update( implementationObject, refPair );
+            dependencyManager.invokeUpdatedMethod( implementationObject, refPair, trackingCount );
         }
     }
 
@@ -219,11 +219,11 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
     {
         for ( S implementationObject : serviceContexts.keySet() )
         {
-            dependencyManager.invokeBindMethod( implementationObject, refPair );
+            dependencyManager.invokeBindMethod( implementationObject, refPair, trackingCount );
         }
         for ( S implementationObject : tmpImplementationObjects.keySet() )
         {
-            dependencyManager.invokeBindMethod( implementationObject, refPair );
+            dependencyManager.invokeBindMethod( implementationObject, refPair, trackingCount );
         }
     }
 
@@ -231,11 +231,11 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
     {
         for ( S implementationObject : serviceContexts.keySet() )
         {
-            dependencyManager.invokeUnbindMethod( implementationObject, oldRefPair );
+            dependencyManager.invokeUnbindMethod( implementationObject, oldRefPair, trackingCount );
         }
         for ( S implementationObject : tmpImplementationObjects.keySet() )
         {
-            dependencyManager.invokeUnbindMethod( implementationObject, oldRefPair );
+            dependencyManager.invokeUnbindMethod( implementationObject, oldRefPair, trackingCount );
         }
     }
 
