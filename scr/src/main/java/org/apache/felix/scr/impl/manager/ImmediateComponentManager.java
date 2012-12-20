@@ -348,19 +348,19 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
-        dependencyManager.update( impl, refPair );
+        dependencyManager.invokeUpdatedMethod( impl, refPair, trackingCount );
     }
 
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
-        dependencyManager.invokeBindMethod( impl, refPair);
+        dependencyManager.invokeBindMethod( impl, refPair, trackingCount );
     }
 
     <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
-        dependencyManager.invokeUnbindMethod( impl, oldRefPair);
+        dependencyManager.invokeUnbindMethod( impl, oldRefPair, trackingCount );
     }
 
     protected void setFactoryProperties( Dictionary<String, Object> dictionary )

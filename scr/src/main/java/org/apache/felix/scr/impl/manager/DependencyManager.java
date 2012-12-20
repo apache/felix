@@ -24,12 +24,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -80,6 +80,40 @@ public class DependencyManager<S, T> implements Reference
 
     private boolean registered;
 
+    private final Map<S, EdgeInfo> edgeInfoMap = new IdentityHashMap<S, EdgeInfo>(  );
+
+    private static class EdgeInfo
+    {
+        private int open = -1;
+        private int close = -1;
+        private CountDownLatch latch;
+
+        public void setClose( int close )
+        {
+            this.close = close;
+        }
+
+        public CountDownLatch getLatch()
+        {
+            return latch;
+        }
+
+        public void setLatch( CountDownLatch latch )
+        {
+            this.latch = latch;
+        }
+
+        public void setOpen( int open )
+        {
+            this.open = open;
+        }
+
+        public boolean outOfRange( int trackingCount )
+        {
+            return (open != -1 && trackingCount < open)
+                || (close != -1 && trackingCount > close);
+        }
+    }
 
     /**
      * Constructor that receives several parameters.
@@ -663,10 +697,12 @@ public class DependencyManager<S, T> implements Reference
 
                     if ( isOptional() || nextRefPair != null)
                     {
-                        m_componentManager.invokeUnbindMethod( DependencyManager.this, refPair, trackingCount );
-                        closeRefPair();
-                        this.refPair = nextRefPair;
+                        RefPair<T> oldRefPair = this.refPair;
+                        this.refPair = null;
                         this.trackingCount = trackingCount;
+                        m_componentManager.invokeUnbindMethod( DependencyManager.this, oldRefPair, trackingCount );
+                        ungetService( oldRefPair );
+                        this.refPair = nextRefPair;
                         tracked( trackingCount );
                     }
                     else //required and no replacement service, deactivate
@@ -1193,26 +1229,8 @@ public class DependencyManager<S, T> implements Reference
         return true;
     }
 
-
-    boolean open( S componentInstance )
-    {
-        return bind( componentInstance );
-    }
-
-
-    /**
-     * Revoke all bindings. This method cannot throw an exception since it must
-     * try to complete all that it can
-     * @param componentInstance
-     */
-    void close( S componentInstance )
-    {
-        unbind( componentInstance );
-    }
-
     boolean prebind()
     {
-
         return customizerRef.get().open();
     }
 
@@ -1223,7 +1241,7 @@ public class DependencyManager<S, T> implements Reference
      * @return true if the dependency is satisfied and at least the minimum
      *      number of services could be bound. Otherwise false is returned.
      */
-    private boolean bind( S componentInstance )
+    boolean open( S componentInstance )
     {
         // If no references were received, we have to check if the dependency
         // is optional, if it is not then the dependency is invalid
@@ -1248,7 +1266,13 @@ public class DependencyManager<S, T> implements Reference
         // flag being set in the loop below
         boolean success = m_dependencyMetadata.isOptional();
         AtomicInteger trackingCount =  new AtomicInteger( );
-        Collection<RefPair<T>> refs = customizerRef.get().getRefs( trackingCount );
+        Collection<RefPair<T>> refs;
+        synchronized ( trackerRef.get().tracked() )
+        {
+            refs = customizerRef.get().getRefs( trackingCount );
+            EdgeInfo info = getEdgeInfo( componentInstance );
+            info.setOpen( trackingCount.get() );
+        }
         m_componentManager.log( LogService.LOG_DEBUG,
             "For dependency {0}, optional: {1}; to bind: {2}",
             new Object[]{ m_dependencyMetadata.getName(), success, refs }, null );
@@ -1256,7 +1280,7 @@ public class DependencyManager<S, T> implements Reference
         {
             if ( !refPair.isFailed() )
             {
-                if ( !invokeBindMethod( componentInstance, refPair ) )
+                if ( !invokeBindMethod( componentInstance, refPair, trackingCount.get() ) )
                 {
                     m_componentManager.log( LogService.LOG_DEBUG,
                             "For dependency {0}, failed to invoke bind method on object {1}",
@@ -1270,50 +1294,55 @@ public class DependencyManager<S, T> implements Reference
     }
 
 
-    /**
-     * Handles an update in the service reference properties of a bound service.
-     * <p>
-     * This just calls the {@link #invokeUpdatedMethod(S, RefPair<T>)}
-     * method if the method has been configured in the component metadata. If
-     * the method is not configured, this method does nothing.
-     *
-     * @param componentInstance
-     * @param refPair The <code>ServiceReference</code> representing the updated
-     */
-    void update( S componentInstance, final RefPair<T> refPair )
+    private EdgeInfo getEdgeInfo( S componentInstance )
     {
-        if ( m_dependencyMetadata.getUpdated() != null )
+        EdgeInfo info = edgeInfoMap.get( componentInstance );
+        if ( info == null )
         {
-            invokeUpdatedMethod( componentInstance, refPair );
+            info = new EdgeInfo();
+            edgeInfoMap.put( componentInstance, info );
         }
+        return info;
     }
-
-
     /**
      * Revoke the given bindings. This method cannot throw an exception since
      * it must try to complete all that it can
      */
-    private void unbind( S componentInstance )
+    void close( S componentInstance )
     {
-            // only invoke the unbind method if there is an instance (might be null
-            // in the delayed component situation) and the unbind method is declared.
-            boolean doUnbind = componentInstance != null && m_dependencyMetadata.getUnbind() != null;
+        // only invoke the unbind method if there is an instance (might be null
+        // in the delayed component situation) and the unbind method is declared.
+        boolean doUnbind = componentInstance != null && m_dependencyMetadata.getUnbind() != null;
 
-            AtomicInteger trackingCount =  new AtomicInteger( );
-            for ( RefPair<T> boundRef : customizerRef.get().getRefs( trackingCount ) )
-            {
-                if ( doUnbind )
-                {
-                    invokeUnbindMethod( componentInstance, boundRef );
-                }
+        AtomicInteger trackingCount = new AtomicInteger();
+        Collection<RefPair<T>> refPairs;
+        CountDownLatch latch = new CountDownLatch( 1 );
+        synchronized ( trackerRef.get().tracked() )
+        {
+            refPairs = customizerRef.get().getRefs( trackingCount );
+            EdgeInfo info = getEdgeInfo( componentInstance );
+            info.setClose( trackingCount.get() );
+            info.setLatch( latch );
+        }
 
-                // unget the service, we call it here since there might be a
-                // bind method (or the locateService method might have been
-                // called) but there is no unbind method to actually unbind
-                // the service (see FELIX-832)
-//                ungetService( boundRef );
-            }
+        m_componentManager.log( LogService.LOG_DEBUG,
+                "DependencyManager : close {0} for {1} at tracking count {2} refpairs: {3}",
+                new Object[] {this, componentInstance, trackingCount.get(), refPairs}, null );
         m_componentManager.waitForTracked( trackingCount.get() );
+        for ( RefPair<T> boundRef : refPairs )
+        {
+            if ( doUnbind )
+            {
+                invokeUnbindMethod( componentInstance, boundRef, trackingCount.get() );
+            }
+
+            // unget the service, we call it here since there might be a
+            // bind method (or the locateService method might have been
+            // called) but there is no unbind method to actually unbind
+            // the service (see FELIX-832)
+//                ungetService( boundRef );
+        }
+        latch.countDown();
     }
 
 
@@ -1363,21 +1392,32 @@ public class DependencyManager<S, T> implements Reference
      * component this method has no effect and just returns <code>true</code>.
      *
      *
+     *
      * @param componentInstance
      * @param refPair the service reference, service object tuple.
      *
+     * @param trackingCount
      * @return true if the service should be considered bound. If no bind
      *      method is found or the method call fails, <code>true</code> is
      *      returned. <code>false</code> is only returned if the service must
      *      be handed over to the bind method but the service cannot be
      *      retrieved using the service reference.
      */
-    boolean invokeBindMethod( S componentInstance, RefPair refPair )
+    boolean invokeBindMethod( S componentInstance, RefPair refPair, int trackingCount )
     {
         // The bind method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
+            synchronized ( trackerRef.get().tracked() )
+            {
+                EdgeInfo info = edgeInfoMap.get( componentInstance );
+                if (info != null && info.outOfRange( trackingCount ) )
+                {
+                    //ignore events before open started or we will have duplicate binds.
+                    return true;
+                }
+            }
             MethodResult result = m_bindMethods.getBind().invoke( componentInstance, refPair, MethodResult.VOID );
             if ( result == null )
             {
@@ -1410,8 +1450,12 @@ public class DependencyManager<S, T> implements Reference
      * @param componentInstance
      * @param refPair A service reference corresponding to the service whose service
      */
-    private void invokeUpdatedMethod( S componentInstance, final RefPair<T> refPair )
+    void invokeUpdatedMethod( S componentInstance, final RefPair<T> refPair, int trackingCount )
     {
+        if ( m_dependencyMetadata.getUpdated() == null )
+        {
+            return;
+        }
         // The updated method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
@@ -1423,6 +1467,15 @@ public class DependencyManager<S, T> implements Reference
                 m_componentManager.log( LogService.LOG_WARNING,
                         "DependencyManager : invokeUpdatedMethod : Component set, but reference not present", null );
                 return;
+            }
+            synchronized ( trackerRef.get().tracked() )
+            {
+                EdgeInfo info = edgeInfoMap.get( componentInstance );
+                if (info != null && info.outOfRange( trackingCount ) )
+                {
+                    //ignore events after close started or we will have duplicate unbinds.
+                    return;
+                }
             }
             if ( !m_bindMethods.getUpdated().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ))
             {
@@ -1458,13 +1511,37 @@ public class DependencyManager<S, T> implements Reference
      *
      * @param componentInstance
      * @param refPair A service reference corresponding to the service that will be
+     * @param trackingCount
      */
-    void invokeUnbindMethod( S componentInstance, final RefPair<T> refPair )
+    void invokeUnbindMethod( S componentInstance, final RefPair<T> refPair, int trackingCount )
     {
         // The unbind method is only invoked if the implementation object is not
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
+            EdgeInfo info;
+            synchronized ( trackerRef.get().tracked() )
+            {
+                info = edgeInfoMap.get( componentInstance );
+            }
+            if (info != null && info.outOfRange( trackingCount ) )
+            {
+                //wait for unbinds to complete
+                if (info.getLatch() != null)
+                {
+                    try
+                    {
+                        info.getLatch().await(  );
+                    }
+                    catch ( InterruptedException e )
+                    {
+                        //ignore
+                    }
+                }
+                //ignore events after close started or we will have duplicate unbinds.
+                return;
+            }
+
             if (refPair == null)
             {
                 //TODO should this be possible? If so, reduce or eliminate logging

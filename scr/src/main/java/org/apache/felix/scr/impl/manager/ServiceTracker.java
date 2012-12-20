@@ -125,7 +125,7 @@ public class ServiceTracker<S, T> {
 	 * 
 	 * @return The current Tracked object.
 	 */
-	private Tracked tracked() {
+	public Tracked tracked() {
 		return tracked;
 	}
 
