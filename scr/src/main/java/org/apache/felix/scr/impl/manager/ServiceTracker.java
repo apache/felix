@@ -368,20 +368,22 @@ public class ServiceTracker<S, T> {
 	 * This implementation calls {@link #getServiceReferences()} to get the list
 	 * of tracked services to remove.
 	 */
-	public void close() {
+	public SortedMap<ServiceReference<S>, T> close() {
 		final Tracked outgoing;
-		final ServiceReference<S>[] references;
+//		final ServiceReference<S>[] references;
+        SortedMap<ServiceReference<S>, T> map = new TreeMap<ServiceReference<S>, T>(Collections.reverseOrder());
 		synchronized (this) {
 			outgoing = tracked;
 			if (outgoing == null) {
-				return;
+				return map;
 			}
 			if (DEBUG) {
 				System.out.println("ServiceTracker.close: " + filter);
 			}
 			outgoing.close();
-			references = getServiceReferences();
-			tracked = null;
+            outgoing.copyEntries( map );
+//			references = getServiceReferences();
+//			tracked = null;
 			try {
 				context.removeServiceListener(outgoing);
 			} catch (IllegalStateException e) {
@@ -392,17 +394,35 @@ public class ServiceTracker<S, T> {
 		synchronized (outgoing) {
 			outgoing.notifyAll(); /* wake up any waiters */
 		}
-		if (references != null) {
-			for (int i = 0; i < references.length; i++) {
-				outgoing.untrack(references[i], null);
-			}
-		}
+//		if (references != null) {
+//			for (int i = 0; i < references.length; i++) {
+//				outgoing.untrack(references[i], null);
+//			}
+//		}
 		if (DEBUG) {
 			if ((cachedReference == null) && (cachedService == null)) {
 				System.out.println("ServiceTracker.close[cached cleared]: " + filter);
 			}
 		}
+        return map;
 	}
+
+    public void completeClose(Map<ServiceReference<S>, T> toUntrack) {
+        final Tracked outgoing;
+        synchronized (this) {
+            outgoing = tracked;
+            if (outgoing == null) {
+                return;
+            }
+            tracked = null;
+            if (DEBUG) {
+                System.out.println("ServiceTracker.close: " + filter);
+            }
+        }
+        for (ServiceReference<S> ref: toUntrack.keySet()) {
+            outgoing.untrack( ref, null );
+        }
+    }
 
 	/**
 	 * Default implementation of the
@@ -820,7 +840,7 @@ public class ServiceTracker<S, T> {
             return;
         }
         synchronized (t) {
-                active = false;
+            active = false;
         }
     }
 
