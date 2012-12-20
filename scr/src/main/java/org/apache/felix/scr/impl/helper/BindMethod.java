@@ -23,7 +23,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.apache.felix.scr.impl.Activator;
-import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.RefPair;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -49,10 +48,10 @@ public class BindMethod extends BaseMethod
     private int m_paramStyle;
 
 
-    public BindMethod( final SimpleLogger logger, final String methodName,
+    public BindMethod( final String methodName,
             final Class componentClass, final String referenceClassName, final boolean isDS11, final boolean isDS12Felix )
     {
-        super( logger, methodName, componentClass, isDS11, isDS12Felix );
+        super( methodName, componentClass, isDS11, isDS12Felix );
         m_referenceClassName = referenceClassName;
     }
 
@@ -63,17 +62,19 @@ public class BindMethod extends BaseMethod
      * the class hierarchy is traversed until a method is found or the root
      * of the class hierarchy is reached without finding a method.
      *
+     *
      * @param targetClass The class in which to look for the method
      * @param acceptPrivate <code>true</code> if private methods should be
      *      considered.
      * @param acceptPackage <code>true</code> if package private methods should
      *      be considered.
+     * @param logger
      * @return The requested method or <code>null</code> if no acceptable method
      *      can be found in the target class or any super class.
      * @throws InvocationTargetException If an unexpected Throwable is caught
      *      trying to find the requested method.
      */
-    protected Method doFindMethod( Class targetClass, boolean acceptPrivate, boolean acceptPackage )
+    protected Method doFindMethod( Class targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
         throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         // 112.3.1 The method is searched for using the following priority
@@ -86,9 +87,9 @@ public class BindMethod extends BaseMethod
         // flag indicating a suitable but inaccessible method has been found
         boolean suitableMethodNotAccessible = false;
 
-        if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
-            getLogger().log( LogService.LOG_DEBUG,
+            logger.log( LogService.LOG_DEBUG,
                 "doFindMethod: Looking for method " + targetClass.getName() + "." + getMethodName(), null );
         }
 
@@ -96,12 +97,12 @@ public class BindMethod extends BaseMethod
         Method method;
         try
         {
-            method = getServiceReferenceMethod( targetClass, acceptPrivate, acceptPackage );
+            method = getServiceReferenceMethod( targetClass, acceptPrivate, acceptPackage, logger );
             if ( method != null )
             {
-                if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
                 {
-                    getLogger().log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
+                    logger.log( LogService.LOG_DEBUG, "doFindMethod: Found Method " + method, null );
                 }
                 m_paramStyle = SERVICE_REFERENCE;
                 return method;
@@ -113,13 +114,13 @@ public class BindMethod extends BaseMethod
         }
 
         // for further methods we need the class of the service object
-        final Class parameterClass = getParameterClass( targetClass );
+        final Class parameterClass = getParameterClass( targetClass, logger );
         if ( parameterClass != null )
         {
 
-            if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+            if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
-                getLogger().log(
+                logger.log(
                     LogService.LOG_DEBUG,
                     "doFindMethod: No method taking ServiceReference found, checking method taking "
                         + parameterClass.getName(), null );
@@ -128,7 +129,7 @@ public class BindMethod extends BaseMethod
             // Case 2 - Service object parameter
             try
             {
-                method = getServiceObjectMethod( targetClass, parameterClass, acceptPrivate, acceptPackage );
+                method = getServiceObjectMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
                     m_paramStyle = SERVICE_OBJECT;
@@ -143,7 +144,7 @@ public class BindMethod extends BaseMethod
             // Case 3 - Service interface assignement compatible methods
             try
             {
-                method = getServiceObjectAssignableMethod( targetClass, parameterClass, acceptPrivate, acceptPackage );
+                method = getServiceObjectAssignableMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                 if ( method != null )
                 {
                     m_paramStyle = SERVICE_OBJECT;
@@ -162,7 +163,7 @@ public class BindMethod extends BaseMethod
                 // Case 4 - same as case 2, but + Map param (DS 1.1 only)
                 try
                 {
-                    method = getServiceObjectWithMapMethod( targetClass, parameterClass, acceptPrivate, acceptPackage );
+                    method = getServiceObjectWithMapMethod( targetClass, parameterClass, acceptPrivate, acceptPackage, logger );
                     if ( method != null )
                     {
                         m_paramStyle = SERVICE_OBJECT_AND_MAP;
@@ -193,9 +194,9 @@ public class BindMethod extends BaseMethod
             }
 
         }
-        else if ( getLogger().isLogEnabled( LogService.LOG_WARNING ) )
+        else if ( logger.isLogEnabled( LogService.LOG_WARNING ) )
         {
-            getLogger().log(
+            logger.log(
                 LogService.LOG_WARNING,
                 "doFindMethod: Cannot check for methods taking parameter class " + m_referenceClassName + ": "
                     + targetClass.getName() + " does not see it", null );
@@ -205,7 +206,7 @@ public class BindMethod extends BaseMethod
         // the suitable methods are accessible, we have to terminate
         if ( suitableMethodNotAccessible )
         {
-            getLogger().log( LogService.LOG_ERROR,
+            logger.log( LogService.LOG_ERROR,
                 "doFindMethod: Suitable but non-accessible method found in class {0}", new Object[]
                     { targetClass.getName() }, null );
             throw new SuitableMethodNotAccessibleException();
@@ -229,14 +230,14 @@ public class BindMethod extends BaseMethod
      *      if the class loader of the <code>targetClass</code> cannot see that
      *      class.
      */
-    private Class getParameterClass( final Class targetClass )
+    private Class getParameterClass( final Class targetClass, SimpleLogger logger )
     {
-        if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
-            getLogger().log(
+            logger.log(
                 LogService.LOG_DEBUG,
-                "getParameterClass: Looking for interface class " + m_referenceClassName + "through loader of "
-                    + targetClass.getName(), null );
+                "getParameterClass: Looking for interface class {0} through loader of {1}",
+                    new Object[] {m_referenceClassName, targetClass.getName()}, null );
         }
 
         try
@@ -250,10 +251,10 @@ public class BindMethod extends BaseMethod
             }
 
             final Class referenceClass = loader.loadClass( m_referenceClassName );
-            if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+            if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
-                getLogger().log( LogService.LOG_DEBUG,
-                    "getParameterClass: Found class " + referenceClass.getName(), null );
+                logger.log( LogService.LOG_DEBUG,
+                    "getParameterClass: Found class {0}", new Object[] {referenceClass.getName()}, null );
             }
             return referenceClass;
         }
@@ -263,9 +264,9 @@ public class BindMethod extends BaseMethod
             // super class so we try this class next
         }
 
-        if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
-            getLogger().log( LogService.LOG_DEBUG,
+            logger.log( LogService.LOG_DEBUG,
                 "getParameterClass: Not found through component class, using PackageAdmin service", null );
         }
 
@@ -282,19 +283,19 @@ public class BindMethod extends BaseMethod
                 {
                     try
                     {
-                        if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+                        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
                         {
-                            getLogger().log(
+                            logger.log(
                                 LogService.LOG_DEBUG,
-                                "getParameterClass: Checking Bundle " + pkg[i].getExportingBundle().getSymbolicName()
-                                    + "/" + pkg[i].getExportingBundle().getBundleId(), null );
+                                "getParameterClass: Checking Bundle {0}/{1}",
+                                    new Object[] {pkg[i].getExportingBundle().getSymbolicName(), pkg[i].getExportingBundle().getBundleId()}, null );
                         }
 
                         Class referenceClass = pkg[i].getExportingBundle().loadClass( m_referenceClassName );
-                        if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+                        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
                         {
-                            getLogger().log( LogService.LOG_DEBUG,
-                                "getParameterClass: Found class " + referenceClass.getName(), null );
+                            logger.log( LogService.LOG_DEBUG,
+                                    "getParameterClass: Found class {0}", new Object[] {referenceClass.getName()}, null );
                         }
                         return referenceClass;
                     }
@@ -304,23 +305,23 @@ public class BindMethod extends BaseMethod
                     }
                 }
             }
-            else if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+            else if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
-                getLogger().log( LogService.LOG_DEBUG,
-                    "getParameterClass: No bundles exporting package " + referenceClassPackage + " found ", null );
+                logger.log( LogService.LOG_DEBUG,
+                    "getParameterClass: No bundles exporting package {0} found", new Object[] {referenceClassPackage}, null );
             }
         }
-        else if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+        else if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
-            getLogger().log( LogService.LOG_DEBUG,
+            logger.log( LogService.LOG_DEBUG,
                 "getParameterClass: PackageAdmin service not available, cannot find class", null );
         }
 
         // class cannot be found, neither through the component nor from an
         // export, so we fall back to assuming Object
-        if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
-            getLogger().log( LogService.LOG_DEBUG,
+            logger.log( LogService.LOG_DEBUG,
                 "getParameterClass: No class found, falling back to class Object", null );
         }
         return OBJECT_CLASS;
@@ -331,30 +332,6 @@ public class BindMethod extends BaseMethod
      * Returns a method taking a single <code>ServiceReference</code> object
      * as a parameter or <code>null</code> if no such method exists.
      *
-     * @param targetClass The class in which to look for the method. Only this
-     *      class is searched for the method.
-     * @param acceptPrivate <code>true</code> if private methods should be
-     *      considered.
-     * @param acceptPackage <code>true</code> if package private methods should
-     *      be considered.
-     * @return The requested method or <code>null</code> if no acceptable method
-     *      can be found in the target class.
-     * @throws SuitableMethodNotAccessibleException If a suitable method was
-     *      found which is not accessible
-     * @throws InvocationTargetException If an unexpected Throwable is caught
-     *      trying to find the requested method.
-     */
-    private Method getServiceReferenceMethod( final Class targetClass, boolean acceptPrivate, boolean acceptPackage )
-        throws SuitableMethodNotAccessibleException, InvocationTargetException
-    {
-        return getMethod( targetClass, getMethodName(), new Class[]
-            { SERVICE_REFERENCE_CLASS }, acceptPrivate, acceptPackage );
-    }
-
-
-    /**
-     * Returns a method taking a single parameter of the exact type declared
-     * for the service reference or <code>null</code> if no such method exists.
      *
      * @param targetClass The class in which to look for the method. Only this
      *      class is searched for the method.
@@ -362,6 +339,34 @@ public class BindMethod extends BaseMethod
      *      considered.
      * @param acceptPackage <code>true</code> if package private methods should
      *      be considered.
+     * @param logger
+     * @return The requested method or <code>null</code> if no acceptable method
+     *      can be found in the target class.
+     * @throws SuitableMethodNotAccessibleException If a suitable method was
+     *      found which is not accessible
+     * @throws InvocationTargetException If an unexpected Throwable is caught
+     *      trying to find the requested method.
+     */
+    private Method getServiceReferenceMethod( final Class targetClass, boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger )
+        throws SuitableMethodNotAccessibleException, InvocationTargetException
+    {
+        return getMethod( targetClass, getMethodName(), new Class[]
+            { SERVICE_REFERENCE_CLASS }, acceptPrivate, acceptPackage, logger );
+    }
+
+
+    /**
+     * Returns a method taking a single parameter of the exact type declared
+     * for the service reference or <code>null</code> if no such method exists.
+     *
+     *
+     * @param targetClass The class in which to look for the method. Only this
+     *      class is searched for the method.
+     * @param acceptPrivate <code>true</code> if private methods should be
+     *      considered.
+     * @param acceptPackage <code>true</code> if package private methods should
+     *      be considered.
+     * @param logger
      * @return The requested method or <code>null</code> if no acceptable method
      *      can be found in the target class.
      * @throws SuitableMethodNotAccessibleException If a suitable method was
@@ -370,10 +375,10 @@ public class BindMethod extends BaseMethod
      *      trying to find the requested method.
      */
     private Method getServiceObjectMethod( final Class targetClass, final Class parameterClass, boolean acceptPrivate,
-        boolean acceptPackage ) throws SuitableMethodNotAccessibleException, InvocationTargetException
+            boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException, InvocationTargetException
     {
         return getMethod( targetClass, getMethodName(), new Class[]
-            { parameterClass }, acceptPrivate, acceptPackage );
+            { parameterClass }, acceptPrivate, acceptPackage, logger );
     }
 
 
@@ -382,27 +387,29 @@ public class BindMethod extends BaseMethod
      * compatible with the declared service type or <code>null</code> if no
      * such method exists.
      *
+     *
      * @param targetClass The class in which to look for the method. Only this
      *      class is searched for the method.
      * @param acceptPrivate <code>true</code> if private methods should be
      *      considered.
      * @param acceptPackage <code>true</code> if package private methods should
      *      be considered.
+     * @param logger
      * @return The requested method or <code>null</code> if no acceptable method
      *      can be found in the target class.
      * @throws SuitableMethodNotAccessibleException If a suitable method was
      *      found which is not accessible
      */
     private Method getServiceObjectAssignableMethod( final Class targetClass, final Class parameterClass,
-        boolean acceptPrivate, boolean acceptPackage ) throws SuitableMethodNotAccessibleException
+            boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException
     {
         // Get all potential bind methods
         Method candidateBindMethods[] = targetClass.getDeclaredMethods();
         boolean suitableNotAccessible = false;
 
-        if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+        if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
         {
-            getLogger().log(
+            logger.log(
                 LogService.LOG_DEBUG,
                 "getServiceObjectAssignableMethod: Checking " + candidateBindMethods.length
                     + " declared method in class " + targetClass.getName(), null );
@@ -412,9 +419,9 @@ public class BindMethod extends BaseMethod
         for ( int i = 0; i < candidateBindMethods.length; i++ )
         {
             Method method = candidateBindMethods[i];
-            if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+            if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
             {
-                getLogger().log( LogService.LOG_DEBUG, "getServiceObjectAssignableMethod: Checking " + method, null );
+                logger.log( LogService.LOG_DEBUG, "getServiceObjectAssignableMethod: Checking " + method, null );
             }
 
             // Get the parameters for the current method
@@ -426,9 +433,9 @@ public class BindMethod extends BaseMethod
             if ( parameters.length == 1 && method.getName().equals( getMethodName() ) )
             {
 
-                if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+                if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
                 {
-                    getLogger().log( LogService.LOG_DEBUG, "getServiceObjectAssignableMethod: Considering " + method, null );
+                    logger.log( LogService.LOG_DEBUG, "getServiceObjectAssignableMethod: Considering " + method, null );
                 }
 
                 // Get the parameter type
@@ -447,9 +454,9 @@ public class BindMethod extends BaseMethod
                     // suitable method is not accessible, flag for exception
                     suitableNotAccessible = true;
                 }
-                else if ( getLogger().isLogEnabled( LogService.LOG_DEBUG ) )
+                else if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
                 {
-                    getLogger().log(
+                    logger.log(
                         LogService.LOG_DEBUG,
                         "getServiceObjectAssignableMethod: Parameter failure: Required " + theParameter + "; actual "
                             + parameterClass.getName(), null );
@@ -475,12 +482,14 @@ public class BindMethod extends BaseMethod
      * type declared for the service reference and the second being a
      * <code>Map</code> or <code>null</code> if no such method exists.
      *
+     *
      * @param targetClass The class in which to look for the method. Only this
      *      class is searched for the method.
      * @param acceptPrivate <code>true</code> if private methods should be
      *      considered.
      * @param acceptPackage <code>true</code> if package private methods should
      *      be considered.
+     * @param logger
      * @return The requested method or <code>null</code> if no acceptable method
      *      can be found in the target class.
      * @throws SuitableMethodNotAccessibleException If a suitable method was
@@ -489,11 +498,11 @@ public class BindMethod extends BaseMethod
      *      trying to find the requested method.
      */
     private Method getServiceObjectWithMapMethod( final Class targetClass, final Class parameterClass,
-        boolean acceptPrivate, boolean acceptPackage ) throws SuitableMethodNotAccessibleException,
+            boolean acceptPrivate, boolean acceptPackage, SimpleLogger logger ) throws SuitableMethodNotAccessibleException,
         InvocationTargetException
     {
         return getMethod( targetClass, getMethodName(), new Class[]
-            { parameterClass, MAP_CLASS }, acceptPrivate, acceptPackage );
+            { parameterClass, MAP_CLASS }, acceptPrivate, acceptPackage, logger );
     }
 
 
@@ -554,19 +563,19 @@ public class BindMethod extends BaseMethod
         return null;
     }
 
-    public boolean getServiceObject( RefPair refPair, BundleContext context )
+    public boolean getServiceObject( RefPair refPair, BundleContext context, SimpleLogger logger )
     {
         //??? this resolves which we need.... better way?
-        if ( refPair.getServiceObject() == null && methodExists() )
+        if ( refPair.getServiceObject() == null && methodExists( logger ) )
         {
             if (m_paramStyle == SERVICE_OBJECT || m_paramStyle == SERVICE_OBJECT_AND_MAP) {
                 Object service = context.getService( refPair.getRef() );
                 if ( service == null )
                 {
                     refPair.setFailed();
-                    getLogger().log(
+                    logger.log(
                          LogService.LOG_WARNING,
-                         "Could not get service from ref " + refPair.getRef(), null );
+                         "Could not get service from ref {0}", new Object[] {refPair.getRef()}, null );
                     return false;
                 }
                 refPair.setServiceObject( service );

@@ -784,7 +784,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             log( LogService.LOG_ERROR, "Could not load implementation object class", e );
             return false;
         }
-        m_componentMethods.initComponentMethods( this, m_componentMetadata, implementationObjectClass );
+        m_componentMethods.initComponentMethods( m_componentMetadata, implementationObjectClass );
 
         for ( DependencyManager dependencyManager : m_dependencyManagers )
         {

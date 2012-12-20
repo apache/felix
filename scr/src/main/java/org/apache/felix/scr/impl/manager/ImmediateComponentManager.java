@@ -287,7 +287,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
         // 5. Call the activate method, if present
         final MethodResult result = getComponentMethods().getActivateMethod().invoke( implementationObject, new ActivatorParameter(
-                componentContext, 1 ), null );
+                componentContext, 1 ), null, this );
         if ( result == null )
         {
             // make sure the implementation object is not available
@@ -321,7 +321,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         // method throws an exception, SCR must log an error message containing the
         // exception with the Log Service and continue) has already been logged
         final MethodResult result = getComponentMethods().getDeactivateMethod().invoke( implementationObject, new ActivatorParameter( componentContext,
-                reason ), null );
+                reason ), null, this );
         if ( result != null )
         {
             setServiceProperties( result );
@@ -649,7 +649,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     protected MethodResult invokeModifiedMethod()
     {
         return getComponentMethods().getModifiedMethod().invoke( getInstance(),
-                    new ActivatorParameter( m_componentContext, -1 ), MethodResult.VOID );
+                    new ActivatorParameter( m_componentContext, -1 ), MethodResult.VOID, this );
     }
 
     protected boolean hasInstance()

@@ -249,14 +249,14 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         {
             Object instance = componentContext.getInstance();
             result = modifiedMethod.invoke( instance,
-                    new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID );
+                    new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID, this );
 
         }
         for ( BundleComponentContext componentContext : tmpImplementationObjects.values() )
         {
             Object instance = componentContext.getInstance();
             result = modifiedMethod.invoke( instance,
-                    new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID );
+                    new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID, this );
 
         }
         return result;

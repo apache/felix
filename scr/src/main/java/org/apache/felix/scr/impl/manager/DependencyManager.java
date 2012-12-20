@@ -309,7 +309,7 @@ public class DependencyManager<S, T> implements Reference
             }
             if (isActive())
             {
-                 m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext());
+                 m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager );
             }
             return refPair;
         }
@@ -387,7 +387,7 @@ public class DependencyManager<S, T> implements Reference
             {
                 synchronized (refPair)
                 {
-                    if (m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext()))
+                    if (m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager ))
                     {
                          success = true;
                     }
@@ -433,7 +433,7 @@ public class DependencyManager<S, T> implements Reference
             RefPair<T> refPair = new RefPair<T>( serviceReference  );
             if (isActive())
             {
-                 m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext());
+                 m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager );
             }
             return refPair;
         }
@@ -497,7 +497,7 @@ public class DependencyManager<S, T> implements Reference
             {
                 synchronized (refPair)
                 {
-                    success |= m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext());
+                    success |= m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager );
                 }
             }
             return success;
@@ -584,7 +584,7 @@ public class DependencyManager<S, T> implements Reference
             {
                 synchronized (refPair)
                 {
-                    success |= m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext());
+                    success |= m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager );
                 }
                 refs.add(refPair) ;
             }
@@ -636,7 +636,7 @@ public class DependencyManager<S, T> implements Reference
                     {
                         synchronized ( refPair )
                         {
-                            m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() );
+                            m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager );
                         }
                         if ( !refPair.isFailed() )
                         {
@@ -691,7 +691,7 @@ public class DependencyManager<S, T> implements Reference
                         nextRefPair = tracked.values().iterator().next();
                         synchronized ( nextRefPair )
                         {
-                            if (!m_bindMethods.getBind().getServiceObject( nextRefPair, m_componentManager.getActivator().getBundleContext() ))
+                            if (!m_bindMethods.getBind().getServiceObject( nextRefPair, m_componentManager.getActivator().getBundleContext(), m_componentManager ))
                             {
                                 //TODO error???
                             }
@@ -745,7 +745,7 @@ public class DependencyManager<S, T> implements Reference
                     RefPair<T> refPair = tracked.values().iterator().next();
                     synchronized ( refPair )
                     {
-                        success |= m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() );
+                        success |= m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager );
                     }
                     if (refPair.isFailed())
                     {
@@ -861,7 +861,7 @@ public class DependencyManager<S, T> implements Reference
                     RefPair<T> refPair = tracked.values().iterator().next();
                     synchronized ( refPair )
                     {
-                        success |= m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() );
+                        success |= m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager );
                     }
                     this.refPair = refPair;
                 }
@@ -1416,7 +1416,7 @@ public class DependencyManager<S, T> implements Reference
                 //something else got the reference and may be binding it.
                 return;
             }
-            m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() );
+            m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager );
         }
         m_componentManager.invokeBindMethod( this, refPair, trackingCount );
     }
@@ -1456,7 +1456,7 @@ public class DependencyManager<S, T> implements Reference
                     return true;
                 }
             }
-            MethodResult result = m_bindMethods.getBind().invoke( componentInstance, refPair, MethodResult.VOID );
+            MethodResult result = m_bindMethods.getBind().invoke( componentInstance, refPair, MethodResult.VOID, m_componentManager );
             if ( result == null )
             {
                 return false;
@@ -1515,7 +1515,7 @@ public class DependencyManager<S, T> implements Reference
                     return;
                 }
             }
-            if ( !m_bindMethods.getUpdated().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ))
+            if ( !m_bindMethods.getUpdated().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager ))
             {
                 m_componentManager.log( LogService.LOG_WARNING,
                         "DependencyManager : invokeUpdatedMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
@@ -1523,7 +1523,7 @@ public class DependencyManager<S, T> implements Reference
                 return;
 
             }
-            MethodResult methodResult = m_bindMethods.getUpdated().invoke( componentInstance, refPair, MethodResult.VOID );
+            MethodResult methodResult = m_bindMethods.getUpdated().invoke( componentInstance, refPair, MethodResult.VOID, m_componentManager );
             if ( methodResult != null)
             {
                 m_componentManager.setServiceProperties( methodResult );
@@ -1587,7 +1587,7 @@ public class DependencyManager<S, T> implements Reference
                         "DependencyManager : invokeUnbindMethod : Component set, but reference not present", null );
                 return;
             }
-            if ( !m_bindMethods.getUnbind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext() ))
+            if ( !m_bindMethods.getUnbind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager ))
             {
                 m_componentManager.log( LogService.LOG_WARNING,
                         "DependencyManager : invokeUnbindMethod : Service not available from service registry for ServiceReference {0} for reference {1}",
@@ -1595,7 +1595,7 @@ public class DependencyManager<S, T> implements Reference
                 return;
 
             }
-            MethodResult methodResult = m_bindMethods.getUnbind().invoke( componentInstance, refPair, MethodResult.VOID );
+            MethodResult methodResult = m_bindMethods.getUnbind().invoke( componentInstance, refPair, MethodResult.VOID, m_componentManager );
             if ( methodResult != null )
             {
                 m_componentManager.setServiceProperties( methodResult );

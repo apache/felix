@@ -32,26 +32,24 @@ public class BindMethods
     private final UpdatedMethod m_updated;
     private final UnbindMethod m_unbind;
 
-    BindMethods( SimpleLogger logger, ReferenceMetadata m_dependencyMetadata, Class instanceClass,
+    BindMethods( ReferenceMetadata m_dependencyMetadata, Class instanceClass,
             final boolean isDS11, final boolean isDS12Felix )
     {
-        m_bind = new BindMethod( logger,
+        m_bind = new BindMethod(
                 m_dependencyMetadata.getBind(),
                 instanceClass,
                 m_dependencyMetadata.getInterface(),
                 isDS11, isDS12Felix
         );
-        m_updated = new UpdatedMethod( logger,
+        m_updated = new UpdatedMethod(
                 m_dependencyMetadata.getUpdated(),
                 instanceClass,
-                m_dependencyMetadata.getName(),
                 m_dependencyMetadata.getInterface(),
                 isDS11, isDS12Felix
         );
-        m_unbind = new UnbindMethod( logger,
+        m_unbind = new UnbindMethod(
                 m_dependencyMetadata.getUnbind(),
                 instanceClass,
-                m_dependencyMetadata.getName(),
                 m_dependencyMetadata.getInterface(),
                 isDS11, isDS12Felix
         );
