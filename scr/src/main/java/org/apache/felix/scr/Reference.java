@@ -138,5 +138,4 @@ public interface Reference
      */
     String getUpdatedMethodName();
 
-    ServiceReference[] getBoundServiceReferences();
 }

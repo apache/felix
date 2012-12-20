@@ -1195,13 +1195,6 @@ public class DependencyManager<S, T> implements Reference
         return m_dependencyMetadata.getInterface();
     }
 
-
-    public ServiceReference[] getServiceReferences()
-    {
-        return getBoundServiceReferences();
-    }
-
-
     public boolean isOptional()
     {
         return m_dependencyMetadata.isOptional();
@@ -1292,23 +1285,6 @@ public class DependencyManager<S, T> implements Reference
     }
 
 
-    /**
-     * Returns an array of <code>ServiceReference</code> instances for services
-     * implementing the interface and complying to the (optional) target filter
-     * declared for this dependency. If no matching service can be found
-     * <code>null</code> is returned. If the configured target filter is
-     * syntactically incorrect an error message is logged with the LogService
-     * and <code>null</code> is returned.
-     * <p>
-     * This method always directly accesses the framework's service registry
-     * and ignores the services bound by this dependency manager.
-     */
-    ServiceReference<T>[] getFrameworkServiceReferences()
-    {
-        return getFrameworkServiceReferences( getTarget() );
-    }
-
-
     private ServiceReference<T>[] getFrameworkServiceReferences( String targetFilter )
     {
         if ( hasGetPermission() )
@@ -1360,77 +1336,61 @@ public class DependencyManager<S, T> implements Reference
      * returned. If multiple matching services have the same service.ranking
      * value, the service with the lowest service.id is returned.
      * <p>
-     * This method always directly accesses the framework's service registry
-     * and ignores the services bound by this dependency manager.
      */
-    ServiceReference<T> getFrameworkServiceReference()
+    private RefPair<T> getBestRefPair()
     {
-        // get the framework registered services and short cut
-        ServiceReference<T>[] refs = getFrameworkServiceReferences();
-        if ( refs == null )
+        Customizer customizer = customizerRef.get( );
+        if (customizer == null )
         {
             return null;
         }
-        else if ( refs.length == 1 )
+        Collection<RefPair<T>> refs = customizer.getRefs();
+        if (refs.isEmpty())
         {
-            return refs[0];
+            return null;
         }
-
-
-        // find the service with the highest ranking
-        ServiceReference<T> selectedRef = refs[0];
-        for ( int i = 1; i < refs.length; i++ )
-        {
-            ServiceReference<T> ref = refs[i];
-            if ( ref.compareTo( selectedRef ) > 0 )
-            {
-                selectedRef = ref;
-            }
-        }
-
-        return selectedRef;
+        return refs.iterator().next();
     }
 
 
     /**
      * Returns the service instance for the service reference returned by the
-     * {@link #getFrameworkServiceReference()} method. If this returns a
+     * {@link #getBestRefPair()} method. If this returns a
      * non-<code>null</code> service instance the service is then considered
      * bound to this instance.
      */
     T getService()
     {
-        ServiceReference<T> sr = getFrameworkServiceReference();
-        return ( sr != null ) ? getService( sr ) : null;
+        RefPair<T> sr = getBestRefPair();
+        return getService( sr );
     }
 
 
     /**
      * Returns an array of service instances for the service references returned
-     * by the {@link #getFrameworkServiceReferences()} method. If no services
+     * by the customizer. If no services
      * match the criteria configured for this dependency <code>null</code> is
      * returned. All services returned by this method will be considered bound
      * after this method returns.
      */
     T[] getServices()
     {
-        ServiceReference<T>[] sr = getFrameworkServiceReferences();
-        if ( sr == null || sr.length == 0 )
+        Customizer customizer = customizerRef.get( );
+        if (customizer == null )
         {
             return null;
         }
-
-        List<Object> services = new ArrayList<Object>();
-        for ( ServiceReference<T> ref: sr )
+        Collection<RefPair<T>> refs = customizer.getRefs();
+        List<T> services = new ArrayList<T>( refs.size() );
+        for ( RefPair<T> ref: refs)
         {
-            Object service = getService( ref );
-            if ( service != null )
+            T service = getService(ref);
+            if (service != null)
             {
                 services.add( service );
             }
         }
-
-        return ( services.size() > 0 ) ? services.toArray((T[])new Object[services.size()]) : null;
+        return services.isEmpty()? null: (T[])services.toArray( new Object[ services.size()] );
     }
 
 
@@ -1441,7 +1401,7 @@ public class DependencyManager<S, T> implements Reference
      * services this instance is bound to or <code>null</code> if no services
      * are actually bound.
      */
-    public ServiceReference<T>[] getBoundServiceReferences()
+    public ServiceReference<T>[] getServiceReferences()
     {
         Collection<RefPair<T>> bound = customizerRef.get().getRefs();
         if ( bound.isEmpty() )
@@ -1478,7 +1438,7 @@ public class DependencyManager<S, T> implements Reference
      *      if the service is bound or <code>null</code> if the service is not
      *      bound.
      */
-    private RefPair<T> getBoundService( ServiceReference<T> serviceReference )
+    private RefPair<T> getRefPair( ServiceReference<T> serviceReference )
     {
         return trackerRef.get().getTracked( null ).get( serviceReference );
     }
@@ -1498,7 +1458,12 @@ public class DependencyManager<S, T> implements Reference
     T getService( ServiceReference<T> serviceReference )
     {
         // check whether we already have the service and return that one
-        RefPair refPair = getBoundService( serviceReference );
+        RefPair<T> refPair = getRefPair( serviceReference );
+        return getService( refPair );
+    }
+
+    private T getService( RefPair<T> refPair )
+    {
         if (refPair == null)
         {
             //we don't know about this reference
@@ -1506,13 +1471,13 @@ public class DependencyManager<S, T> implements Reference
         }
         if ( refPair.getServiceObject() != null )
         {
-            return (T)refPair.getServiceObject();
+            return refPair.getServiceObject();
         }
         T serviceObject;
         // otherwise acquire the service
         try
         {
-            serviceObject = m_componentManager.getActivator().getBundleContext().getService( serviceReference );
+            serviceObject = m_componentManager.getActivator().getBundleContext().getService( refPair.getRef() );
         }
         catch ( Exception e )
         {
@@ -1521,7 +1486,7 @@ public class DependencyManager<S, T> implements Reference
             // factories !
             m_componentManager.log( LogService.LOG_ERROR, "Failed getting service {0} ({1}/{2,number,#})", new Object[]
                 { m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface(),
-                    serviceReference.getProperty( Constants.SERVICE_ID ) }, e );
+                    refPair.getRef().getProperty( Constants.SERVICE_ID ) }, e );
             return null;
         }
 
@@ -1844,20 +1809,16 @@ public class DependencyManager<S, T> implements Reference
         }
         if ( !isMultiple() )
         {
-            //TODO fixme to use tracker
-            ServiceReference<T>[] refs = getFrameworkServiceReferences();
-            if ( refs == null )
+            Collection<RefPair<T>> refs = customizerRef.get().getRefs();
+            if (refs.isEmpty())
             {
-                return; // should not happen, we have one!
+                return;
             }
-            // find the service with the highest ranking
-            for ( int i = 1; i < refs.length; i++ )
+            RefPair<T> test = refs.iterator().next();
+            if ( ref != test.getRef())
             {
-                ServiceReference<T> test = refs[i];
-                if ( test.compareTo( ref ) > 0 )
-                {
-                    return; //another ref is better
-                }
+                //another ref is now better
+                return;
             }
         }
         //TODO dynamic reluctant
@@ -2067,21 +2028,21 @@ public class DependencyManager<S, T> implements Reference
         }
         // invariant: target filter change + dynamic policy
 
-        // 3. check target services matching the new filter
+        // 3. check optionality
+        if ( m_dependencyMetadata.isOptional() )
+        {
+            // can update since even if no service matches the new filter, this
+            // makes no difference because the dependency is optional
+            return true;
+        }
+        // invariant: target filter change + mandatory + dynamic policy
+
+        // 4. check target services matching the new filter
         ServiceReference<T>[] refs = getFrameworkServiceReferences( newTarget );
         if ( refs != null && refs.length > 0 )
         {
             // can update since there is at least on service matching the
             // new target filter and the services may be exchanged dynamically
-            return true;
-        }
-        // invariant: target filter change + dynamic policy + no more matching service
-
-        // 4. check optionality
-        if ( m_dependencyMetadata.isOptional() )
-        {
-            // can update since even if no service matches the new filter, this
-            // makes no difference because the dependency is optional
             return true;
         }
         // invariant: target filter change + dynamic policy + no more matching service + required
