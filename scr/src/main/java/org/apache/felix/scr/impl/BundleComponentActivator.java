@@ -27,7 +27,6 @@ import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -602,8 +601,8 @@ public class BundleComponentActivator implements Logger
         m_componentRegistry.missingServicePresent( serviceReference, m_componentActor );
     }
 
-    public void registerMissingDependency( DependencyManager dependencyManager, ServiceReference serviceReference )
+    public void registerMissingDependency( DependencyManager dependencyManager, ServiceReference serviceReference, int trackingCount )
     {
-        m_componentRegistry.registerMissingDependency(dependencyManager, serviceReference);
+        m_componentRegistry.registerMissingDependency(dependencyManager, serviceReference, trackingCount );
     }
 }

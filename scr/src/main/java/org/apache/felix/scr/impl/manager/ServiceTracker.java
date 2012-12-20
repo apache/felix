@@ -279,10 +279,11 @@ public class ServiceTracker<S, T> {
 	 * 
 	 * @throws java.lang.IllegalStateException If the {@code BundleContext} with
 	 *         which this {@code ServiceTracker} was created is no longer valid.
-	 * @see #open(boolean)
+	 * @see #open(boolean, java.util.concurrent.atomic.AtomicInteger)
+     * @param trackingCount
 	 */
-	public void open() {
-		open(false);
+	public void open( AtomicInteger trackingCount ) {
+		open(false, trackingCount );
 	}
 
 	/**
@@ -293,17 +294,19 @@ public class ServiceTracker<S, T> {
 	 * {@code ServiceTracker} was created are now tracked by this
 	 * {@code ServiceTracker}.
 	 * 
-	 * @param trackAllServices If {@code true}, then this {@code ServiceTracker}
-	 *        will track all matching services regardless of class loader
-	 *        accessibility. If {@code false}, then this {@code ServiceTracker}
-	 *        will only track matching services which are class loader
-	 *        accessible to the bundle whose {@code BundleContext} is used by
-	 *        this {@code ServiceTracker}.
-	 * @throws java.lang.IllegalStateException If the {@code BundleContext} with
+	 *
+     * @param trackAllServices If {@code true}, then this {@code ServiceTracker}
+     *        will track all matching services regardless of class loader
+     *        accessibility. If {@code false}, then this {@code ServiceTracker}
+     *        will only track matching services which are class loader
+     *        accessible to the bundle whose {@code BundleContext} is used by
+     *        this {@code ServiceTracker}.
+     * @param trackingCount
+     * @throws java.lang.IllegalStateException If the {@code BundleContext} with
 	 *         which this {@code ServiceTracker} was created is no longer valid.
 	 * @since 1.3
 	 */
-	public void open(boolean trackAllServices) {
+	public void open( boolean trackAllServices, AtomicInteger trackingCount ) {
 		final Tracked t;
 		synchronized (this) {
 			if (tracked != null) {
@@ -312,7 +315,7 @@ public class ServiceTracker<S, T> {
 			if (DEBUG) {
 				System.out.println("ServiceTracker.open: " + filter);
 			}
-			t = trackAllServices ? new AllTracked() : new Tracked();
+			t = trackAllServices ? new AllTracked( trackingCount ) : new Tracked( trackingCount );
 			synchronized (t) {
 				try {
 					context.addServiceListener(t, listenerFilter);
@@ -454,7 +457,7 @@ public class ServiceTracker<S, T> {
 	 *        {@code ServiceTracker}.
 	 * @return The service object to be tracked for the service added to this
 	 *         {@code ServiceTracker}.
-	 * @see ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference, int)
+	 * @see ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference
 	 */
 	public T addingService(ServiceReference<S> reference, int trackingCount) {
 		T result = (T) context.getService(reference);
@@ -964,7 +967,7 @@ public class ServiceTracker<S, T> {
          *
          * @GuardedBy this
          */
-        private int					trackingCount;
+        private final AtomicInteger					trackingCount;
 
         /**
          * List of items in the process of being added. This is used to deal with
@@ -1011,10 +1014,11 @@ public class ServiceTracker<S, T> {
 
         /**
          * AbstractTracked constructor.
+         * @param trackingCount
          */
-        AbstractTracked() {
+        AbstractTracked( AtomicInteger trackingCount ) {
             tracked = new HashMap<S, T>();
-            trackingCount = 0;
+            this.trackingCount = trackingCount;
             adding = new ArrayList<S>(6);
             initial = new LinkedList<S>();
             closed = false;
@@ -1114,6 +1118,7 @@ public class ServiceTracker<S, T> {
         void track(final S item, final R related) {
             boolean tracking;
             final T object;
+            int trackingCount = -1;
             synchronized (this) {
                 if (closed) {
                     return;
@@ -1133,7 +1138,7 @@ public class ServiceTracker<S, T> {
                     if (DEBUG) {
                         System.out.println("AbstractTracked.track[modified]: " + item); //$NON-NLS-1$
                     }
-                    modified(); /* increment modification count */
+                    trackingCount = modified(); /* increment modification count */
                 }
             }
 
@@ -1163,9 +1168,10 @@ public class ServiceTracker<S, T> {
             }
             T object = null;
             boolean becameUntracked = false;
+            int trackingCount = -1;
             /* Call customizer outside of synchronized region */
             try {
-                object = customizerAdding(item, related, trackingCount );
+                object = customizerAdding(item, related);
                 /*
                  * If the customizer throws an unchecked exception, it will
                  * propagate after the finally
@@ -1178,7 +1184,7 @@ public class ServiceTracker<S, T> {
                          * callback
                          */
                         tracked.put( item, object );
-                        modified(); /* increment modification count */
+                        trackingCount = modified(); /* increment modification count */
                         notifyAll(); /* notify any waiters */
                     } else {
                         becameUntracked = true;
@@ -1211,7 +1217,7 @@ public class ServiceTracker<S, T> {
          */
         void untrack(final S item, final R related) {
             final T object;
-            final int size;
+            int trackingCount;
             synchronized (this) {
                 if (initial.remove(item)) { /*
                                              * if this item is already in the list
@@ -1241,7 +1247,7 @@ public class ServiceTracker<S, T> {
                 object = tracked.remove(item); /*                                                 * must remove from tracker before
                                                  * calling customizer callback
                                                  */
-                modified(); /* increment modification count */
+                trackingCount = modified(); /* increment modification count */
             }
             if (DEBUG) {
                 System.out.println("AbstractTracked.untrack[removed]: " + item); //$NON-NLS-1$
@@ -1307,8 +1313,8 @@ public class ServiceTracker<S, T> {
          *
          * @GuardedBy this
          */
-        void modified() {
-            trackingCount++;
+        int modified() {
+            return trackingCount.incrementAndGet();
         }
 
         /**
@@ -1322,7 +1328,7 @@ public class ServiceTracker<S, T> {
          * @return The tracking count for this object.
          */
         int getTrackingCount() {
-            return trackingCount;
+            return trackingCount.get();
         }
 
         /**
@@ -1347,13 +1353,13 @@ public class ServiceTracker<S, T> {
          * called while synchronized on this object.
          *
          *
+         *
          * @param item Item to be tracked.
          * @param related Action related object.
-         * @param trackingCount
          * @return Customized object for the tracked item or {@code null} if the
          *         item is not to be tracked.
          */
-        abstract T customizerAdding( final S item, final R related, int trackingCount );
+        abstract T customizerAdding( final S item, final R related );
 
         abstract void customizerAdded( final S item, final R related, final T object, int trackingCount );
 
@@ -1390,9 +1396,10 @@ public class ServiceTracker<S, T> {
 	private class Tracked extends AbstractTracked<ServiceReference<S>, T, ServiceEvent> implements ServiceListener {
 		/**
 		 * Tracked constructor.
-		 */
-		Tracked() {
-			super();
+         * @param trackingCount
+         */
+		Tracked( AtomicInteger trackingCount ) {
+			super( trackingCount );
 		}
 
 		/**
@@ -1440,9 +1447,10 @@ public class ServiceTracker<S, T> {
 		 * 
 		 * @GuardedBy this
 		 */
-		final void modified() {
-			super.modified(); /* increment the modification count */
+		final int modified() {
+			int trackingCount = super.modified(); /* increment the modification count */
 			ServiceTracker.this.modified();
+            return trackingCount;
 		}
 
 		/**
@@ -1450,14 +1458,14 @@ public class ServiceTracker<S, T> {
 		 * called while synchronized on this object.
 		 * 
 		 *
+         *
          * @param item Item to be tracked.
          * @param related Action related object.
-         * @param trackingCount
          * @return Customized object for the tracked item or {@code null} if the
 		 *         item is not to be tracked.
 		 */
-		final T customizerAdding( final ServiceReference<S> item, final ServiceEvent related, int trackingCount ) {
-			return customizer.addingService( item, trackingCount );
+		final T customizerAdding( final ServiceReference<S> item, final ServiceEvent related ) {
+			return customizer.addingService( item );
 		}
 
 		final void customizerAdded( final ServiceReference<S> item, final ServiceEvent related, final T object, int trackingCount ) {
@@ -1501,9 +1509,10 @@ public class ServiceTracker<S, T> {
 	private class AllTracked extends Tracked implements AllServiceListener {
 		/**
 		 * AllTracked constructor.
-		 */
-		AllTracked() {
-			super();
+         * @param trackingCount
+         */
+		AllTracked( AtomicInteger trackingCount ) {
+			super( trackingCount );
 		}
 	}
 }

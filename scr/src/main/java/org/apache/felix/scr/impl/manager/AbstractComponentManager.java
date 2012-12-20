@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
@@ -78,6 +79,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     private volatile boolean m_dependencyManagersInitialized;
 
     private volatile boolean m_dependenciesCollected;
+
+    private final AtomicInteger trackingCount = new AtomicInteger( );
 
     // A reference to the BundleComponentActivator
     private BundleComponentActivator m_activator;
@@ -236,7 +239,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             enableInternal();
             if ( !async )
             {
-                activateInternal();
+                activateInternal( trackingCount.get() );
             }
         }
         catch ( InterruptedException e )
@@ -263,7 +266,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 {
                     try
                     {
-                        activateInternal();
+                        activateInternal( trackingCount.get() );
                     }
                     finally
                     {
@@ -309,7 +312,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             }
             if ( !async )
             {
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true );
+                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, trackingCount.get() );
             }
             disableInternal();
         }
@@ -337,7 +340,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 {
                     try
                     {
-                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true );
+                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, trackingCount.get() );
                     }
                     finally
                     {
@@ -528,12 +531,12 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         m_state.enable( this );
     }
 
-    final boolean activateInternal()
+    final boolean activateInternal( int trackingCount )
     {
         return m_state.activate( this );
     }
 
-    final void deactivateInternal( int reason, boolean disable )
+    final void deactivateInternal( int reason, boolean disable, int trackingCount )
     {
         m_state.deactivate( this, reason, disable );
     }
@@ -696,6 +699,12 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
+    AtomicInteger getTrackingCount()
+    {
+        return trackingCount;
+    }
+
+
     boolean initDependencyManagers()
     {
         if ( m_dependencyManagersInitialized )
@@ -769,11 +778,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
-    abstract <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair );
+    abstract <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
 
-    abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair );
+    abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
 
-    abstract <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair );
+    abstract <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount );
 
     //**********************************************************************************************************
     public BundleComponentActivator getActivator()
