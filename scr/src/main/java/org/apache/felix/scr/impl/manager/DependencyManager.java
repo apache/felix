@@ -114,23 +114,54 @@ public class DependencyManager<S, T> implements Reference
         void close();
 
         Collection<RefPair<T>> getRefs();
+
+        boolean isSatisfied();
         
         void setTracker( ServiceTracker<T, RefPair<T>> tracker );
+
+        void setTrackerOpened();
     }
 
     private abstract class AbstractCustomizer implements Customizer<T>
     {
         private ServiceTracker<T, RefPair<T>> tracker;
 
+        private volatile boolean trackerOpened;
+
         public void setTracker( ServiceTracker<T, RefPair<T>> tracker )
         {
             this.tracker = tracker;
+        }
+
+        public boolean isSatisfied()
+        {
+            return isOptional() || !tracker.isEmpty();
         }
 
         protected ServiceTracker<T, RefPair<T>> getTracker()
         {
             return tracker;
         }
+
+        /**
+         *
+         * @return whether the tracker
+         */
+        protected boolean isActive()
+        {
+            return tracker.isActive();
+        }
+
+        protected boolean isTrackerOpened()
+        {
+            return trackerOpened;
+        }
+
+        public void setTrackerOpened()
+        {
+            trackerOpened = true;
+        }
+
     }
 
 
@@ -201,7 +232,7 @@ public class DependencyManager<S, T> implements Reference
             {
                 m_componentManager.invokeBindMethod( DependencyManager.this, refPair );
             }
-            else if ( !isOptional() )
+            else if ( isTrackerOpened() && !isOptional() )
             {
                 m_componentManager.activateInternal();
             }
@@ -296,9 +327,13 @@ public class DependencyManager<S, T> implements Reference
                     "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
                         { m_dependencyMetadata.getName(), m_dependencyMetadata.getInterface() }, null );
                 m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false );
+                m_componentManager.activateInternal();
 
             }
-            m_componentManager.activateInternal();
+            else if ( isTrackerOpened() &&  !isOptional() )
+            {
+                m_componentManager.activateInternal();
+            }
         }
 
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
@@ -367,7 +402,7 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair )
         {
-            if (!isActive())
+            if ( isTrackerOpened() && !isOptional() && !isActive())
             {
                 m_componentManager.activateInternal();
             }
@@ -470,7 +505,7 @@ public class DependencyManager<S, T> implements Reference
                     this.refPair = refPair;
                 }
             }
-            else if ( !isOptional() )
+            else if ( isTrackerOpened() && !isOptional() )
             {
                 m_componentManager.activateInternal();
             }
@@ -581,7 +616,7 @@ public class DependencyManager<S, T> implements Reference
                     m_componentManager.activateInternal();
                 }
             }
-            else
+            else if (isTrackerOpened() && !isOptional() )
             {
                 m_componentManager.activateInternal();
             }
@@ -1507,7 +1542,7 @@ public class DependencyManager<S, T> implements Reference
      */
     public boolean isSatisfied()
     {
-        return size() > 0 || m_dependencyMetadata.isOptional();
+        return customizerRef.get().isSatisfied();
     }
 
 
@@ -2167,9 +2202,10 @@ public class DependencyManager<S, T> implements Reference
         Customizer<T> customizer = newCustomizer();
         ServiceTracker<T, RefPair<T>> tracker = new ServiceTracker<T, RefPair<T>>( m_componentManager.getActivator().getBundleContext(), m_targetFilter, customizer );
         customizer.setTracker( tracker );
-        tracker.open();
         trackerRef.set( tracker );
         registered = true;
+        tracker.open();
+        customizer.setTrackerOpened();
         m_componentManager.log( LogService.LOG_DEBUG, "registering service listener for dependency {0}", new Object[]
                 {m_dependencyMetadata.getName()}, null );
     }

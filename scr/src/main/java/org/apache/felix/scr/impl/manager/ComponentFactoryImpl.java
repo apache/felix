@@ -109,10 +109,10 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
         ComponentInstance instance;
         cm.setFactoryProperties( dictionary );
-        // enable
-        cm.enableInternal();
         //configure the properties
         cm.reconfigure( m_configuration );
+        // enable
+        cm.enableInternal();
         //activate immediately
         cm.activateInternal();
 
@@ -373,7 +373,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
                 super.updateTargets( getProperties() );
 
                 // Next, verify dependencies
-                if ( !verifyDependencyManagers( m_configuration ) )
+                if ( !verifyDependencyManagers() )
                 {
                     log( LogService.LOG_DEBUG,
                             "Component Factory target filters not satisfied anymore: deactivating", null );

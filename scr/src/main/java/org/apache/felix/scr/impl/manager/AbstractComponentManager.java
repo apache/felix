@@ -26,7 +26,6 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -917,7 +916,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
-    protected boolean verifyDependencyManagers( Dictionary properties )
+    protected boolean verifyDependencyManagers()
     {
         // indicates whether all dependencies are satisfied
         boolean satisfied = true;
@@ -1389,7 +1388,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
             // Before creating the implementation object, we are going to
             // test if all the mandatory dependencies are satisfied
-            if ( !acm.verifyDependencyManagers( acm.getProperties() ) )
+            if ( !acm.verifyDependencyManagers() )
             {
                 acm.log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
                 return true;
