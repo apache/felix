@@ -297,12 +297,26 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
                 }
 
                 // configure the component
+                log( LogService.LOG_DEBUG, "ImmediateComponentHolder About to actually configure the dependency managers for component for pid {0} ",
+                        new Object[] {pid}, null );
                 newIcm.reconfigure( props );
+                log( LogService.LOG_DEBUG, "ImmediateComponentHolder Finished configuring the dependency managers for component for pid {0} ",
+                        new Object[] {pid}, null );
 
                 // enable the component if it is initially enabled
                 if ( m_enabled && getComponentMetadata().isEnabled() )
                 {
+                    log( LogService.LOG_DEBUG, "ImmediateComponentHolder About to enable component for pid {0} ",
+                            new Object[] {pid}, null );
                     newIcm.enable( false );
+                    log( LogService.LOG_DEBUG, "ImmediateComponentHolder Finished enabling component for pid {0} ",
+                            new Object[] {pid}, null );
+                }
+                else
+                {
+                    log( LogService.LOG_DEBUG, "ImmediateComponentHolder Will not enable component for pid {0}: holder enabled state: {1}, metadata enabled: {2} ",
+                            new Object[] {pid, m_enabled, getComponentMetadata().isEnabled()}, null );
+
                 }
 
                 // store the component in the map
