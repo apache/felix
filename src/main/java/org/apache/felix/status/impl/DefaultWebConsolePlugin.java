@@ -18,11 +18,18 @@ package org.apache.felix.status.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.felix.status.PrinterMode;
 import org.apache.felix.status.StatusPrinterHandler;
 import org.apache.felix.status.StatusPrinterManager;
+import org.apache.felix.status.impl.webconsole.ConsoleConstants;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The web console plugin for a status printer.
@@ -99,5 +106,27 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
     public void addAttachments(String namePrefix, ZipOutputStream zos)
     throws IOException {
         // no attachments support
+    }
+
+    public static ServiceRegistration register(final BundleContext context,
+            final StatusPrinterManager manager) {
+        final DefaultWebConsolePlugin dwcp = new DefaultWebConsolePlugin(manager);
+
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(ConsoleConstants.PLUGIN_LABEL, dwcp.getName());
+        props.put(ConsoleConstants.PLUGIN_TITLE, dwcp.getTitle());
+        props.put(ConsoleConstants.PLUGIN_CATEGORY, dwcp.getCategory());
+        return context.registerService("javax.servlet.Servlet", new ServiceFactory() {
+
+            public void ungetService(final Bundle bundle, final ServiceRegistration registration,
+                    final Object service) {
+                // nothing to do
+            }
+
+            public Object getService(final Bundle bundle, final ServiceRegistration registration) {
+                return dwcp;
+            }
+
+        }, props);
     }
 }

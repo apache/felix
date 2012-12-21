@@ -19,9 +19,7 @@ package org.apache.felix.status.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,10 +31,8 @@ import org.apache.felix.status.PrinterMode;
 import org.apache.felix.status.StatusPrinter;
 import org.apache.felix.status.StatusPrinterHandler;
 import org.apache.felix.status.StatusPrinterManager;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
@@ -85,25 +81,7 @@ public class StatusPrinterManagerImpl implements StatusPrinterManager,
                 this );
         this.cfgPrinterTracker.open();
 
-        // TODO: Move the registration to the plugin
-        final DefaultWebConsolePlugin dwcp = new DefaultWebConsolePlugin(this);
-
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put("felix.webconsole.label", dwcp.getName());
-        props.put("felix.webconsole.title", dwcp.getTitle());
-        props.put("felix.webconsole.category", dwcp.getCategory());
-        this.pluginRegistration = btx.registerService("javax.servlet.Servlet", new ServiceFactory() {
-
-            public void ungetService(final Bundle bundle, final ServiceRegistration registration,
-                    final Object service) {
-                // nothing to do
-            }
-
-            public Object getService(final Bundle bundle, final ServiceRegistration registration) {
-                return dwcp;
-            }
-
-        }, props);
+        this.pluginRegistration = DefaultWebConsolePlugin.register(btx, this);
     }
 
     /**
