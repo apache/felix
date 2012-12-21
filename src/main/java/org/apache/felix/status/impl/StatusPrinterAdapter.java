@@ -21,8 +21,6 @@ import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.util.Comparator;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Locale;
 import java.util.zip.ZipOutputStream;
 
@@ -31,9 +29,7 @@ import org.apache.felix.status.StatusPrinter;
 import org.apache.felix.status.StatusPrinterHandler;
 import org.apache.felix.status.StatusPrinterManager;
 import org.apache.felix.status.ZipAttachmentProvider;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -119,22 +115,7 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
     public void registerConsole(final BundleContext context, final StatusPrinterManager manager) {
         if ( this.registration == null &&
              (supports(PrinterMode.HTML_BODY) || supports(PrinterMode.TEXT))) {
-            final Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put("felix.webconsole.label", "status-" + this.description.getName());
-            props.put("felix.webconsole.title", this.description.getTitle());
-            props.put("felix.webconsole.category", this.description.getCategory() == null ? "Status" : this.description.getCategory());
-            this.registration = context.registerService("javax.servlet.Servlet", new ServiceFactory() {
-
-                public void ungetService(final Bundle bundle, final ServiceRegistration registration,
-                        final Object service) {
-                    // nothing to do
-                }
-
-                public Object getService(final Bundle bundle, final ServiceRegistration registration) {
-                    return new WebConsolePlugin(manager, getName());
-                }
-
-            }, props);
+            this.registration = WebConsolePlugin.register(context, manager, this.description);
         }
     }
 

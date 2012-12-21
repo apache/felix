@@ -18,8 +18,6 @@ package org.apache.felix.status.impl;
 
 import java.lang.reflect.Method;
 
-import org.slf4j.LoggerFactory;
-
 /**
  * Utility methods
  */
@@ -51,7 +49,6 @@ public class ClassUtils {
         try {
             return m.invoke(obj, args);
         } catch (final Throwable e) {
-            LoggerFactory.getLogger(ClassUtils.class).warn("Ups " + m, e);
             // ignore
         }
         return null;

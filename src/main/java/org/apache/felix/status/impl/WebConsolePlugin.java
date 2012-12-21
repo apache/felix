@@ -16,8 +16,16 @@
  */
 package org.apache.felix.status.impl;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import org.apache.felix.status.StatusPrinterHandler;
 import org.apache.felix.status.StatusPrinterManager;
+import org.apache.felix.status.impl.webconsole.ConsoleConstants;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The web console plugin for a status printer.
@@ -42,5 +50,28 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
     @Override
     protected StatusPrinterHandler getStatusPrinterHandler() {
         return this.statusPrinterManager.getHandler(this.printerName);
+    }
+
+    public static ServiceRegistration register(
+            final BundleContext context,
+            final StatusPrinterManager manager,
+            final StatusPrinterDescription desc) {
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(ConsoleConstants.PLUGIN_LABEL, "status-" + desc.getName());
+        props.put(ConsoleConstants.PLUGIN_TITLE, desc.getTitle());
+        props.put(ConsoleConstants.PLUGIN_CATEGORY, desc.getCategory() == null ? "Status" : desc.getCategory());
+        return context.registerService("javax.servlet.Servlet", new ServiceFactory() {
+
+            public void ungetService(final Bundle bundle, final ServiceRegistration registration,
+                    final Object service) {
+                // nothing to do
+            }
+
+            public Object getService(final Bundle bundle, final ServiceRegistration registration) {
+                return new WebConsolePlugin(manager, desc.getName());
+            }
+
+        }, props);
+
     }
 }
