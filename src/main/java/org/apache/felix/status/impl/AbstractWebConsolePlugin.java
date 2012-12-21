@@ -55,32 +55,29 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     protected abstract StatusPrinterHandler getStatusPrinterHandler();
 
+    private void printSingleConfigurationStatus(final ConfigurationWriter pw,
+            final PrinterMode mode,
+            final StatusPrinterHandler handler)
+    throws IOException {
+        final ZipConfigurationWriter zcw = (pw instanceof ZipConfigurationWriter ? (ZipConfigurationWriter)pw : null);
+        pw.title(handler.getTitle());
+        handler.print(mode, pw);
+        pw.end();
+        if ( zcw != null ) {
+            handler.addAttachments(zcw.getAttachmentPrefix(handler.getTitle()), zcw.getZipOutputStream());
+        }
+
+    }
+
     private void printConfigurationStatus( final ConfigurationWriter pw, final PrinterMode mode, final StatusPrinterHandler handler )
     throws IOException {
         if ( handler == null ) {
             for(final StatusPrinterHandler sph : this.statusPrinterManager.getHandlers(mode)) {
-                pw.title(sph.getTitle());
-                sph.print(mode, pw);
-                pw.end();
+                printSingleConfigurationStatus(pw, mode, sph);
             }
         } else {
             if ( handler.supports(mode) ) {
-                pw.title(handler.getTitle());
-                handler.print(mode, pw);
-                pw.end();
-            }
-        }
-    }
-
-    private void addAttachments( final ZipConfigurationWriter cf, final StatusPrinterHandler handler )
-    throws IOException {
-        if ( handler == null ) {
-            for(final StatusPrinterHandler sph : this.statusPrinterManager.getHandlers(PrinterMode.ZIP_FILE)) {
-                sph.addAttachments(cf.getAttachmentPrefix(sph.getTitle()), cf.getZipOutputStream());
-            }
-        } else {
-            if ( handler.supports(PrinterMode.ZIP_FILE) ) {
-                handler.addAttachments(cf.getAttachmentPrefix(handler.getTitle()), cf.getZipOutputStream());
+                printSingleConfigurationStatus(pw, mode, handler);
             }
         }
     }
@@ -157,7 +154,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             final ZipConfigurationWriter pw = new ZipConfigurationWriter( zip );
             printConfigurationStatus( pw, PrinterMode.ZIP_FILE, handler );
 
-            this.addAttachments( pw, handler );
             zip.finish();
         } else if ( request.getPathInfo().endsWith( ".nfo" ) ) {
             if ( handler == null ) {
@@ -417,7 +413,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         }
 
         public ZipOutputStream getZipOutputStream() {
-            counter++;
             return this.zip;
         }
     }

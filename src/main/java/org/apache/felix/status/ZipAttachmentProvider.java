@@ -24,7 +24,8 @@ import java.util.zip.ZipOutputStream;
 /**
  * This is an optional extension of the {@link StatusPrinter}.
  * If a status printer implements this interface, the printer
- * can add additional attachments to the output of the configuration zip.
+ * can add additional attachments to the output of the
+ * configuration zip.
  *
  * A service implementing this method must still register itself
  * as a {@link StatusPrinter} but not as a
@@ -33,10 +34,19 @@ import java.util.zip.ZipOutputStream;
 public interface ZipAttachmentProvider extends StatusPrinter {
 
     /**
-     * Return an array of attachments
-     * The returned list should contain URLs pointing to the
-     * attachments.
-     * @return An array of URLs or null.
+     * Add attachments to the zip output stream.
+     * The attachment provider can add as many attachments in any format
+     * as it wants. However it should use the namePrefix to create unique
+     * names / paths inside the zip.
+     *
+     * The general pattern is: creating a zip entry by using the name prefix
+     * and a name, adding the entry to the zip output stream, writing
+     * the content of the file to the stream, and finally ending the
+     * zip entry.
+     *
+     * @param namePrefix Name prefix to use for zip entries. Ends with a slash.
+     * @param zos The zip output stream.
+     * @throws IOException
      */
     void addAttachments(final String namePrefix, final ZipOutputStream zos)
     throws IOException;
