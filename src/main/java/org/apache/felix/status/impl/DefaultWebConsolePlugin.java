@@ -16,8 +16,9 @@
  */
 package org.apache.felix.status.impl;
 
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.felix.status.PrinterMode;
 import org.apache.felix.status.StatusPrinterHandler;
@@ -79,9 +80,9 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#printConfiguration(org.apache.felix.status.PrinterMode, java.io.PrintWriter)
+     * @see org.apache.felix.status.StatusPrinter#print(org.apache.felix.status.PrinterMode, java.io.PrintWriter)
      */
-    public void printConfiguration(final PrinterMode mode, final PrintWriter printWriter) {
+    public void print(final PrinterMode mode, final PrintWriter printWriter) {
         final StatusPrinterHandler[] handlers = this.statusPrinterManager.getAllHandlers();
         printWriter.print("Currently registered ");
         printWriter.print(String.valueOf(handlers.length));
@@ -93,9 +94,10 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#getAttachmentsForZip()
+     * @see org.apache.felix.status.ZipAttachmentProvider#addAttachments(java.lang.String, java.util.zip.ZipOutputStream)
      */
-    public URL[] getAttachmentsForZip() {
-        return null;
+    public void addAttachments(String namePrefix, ZipOutputStream zos)
+    throws IOException {
+        // no attachments support
     }
 }

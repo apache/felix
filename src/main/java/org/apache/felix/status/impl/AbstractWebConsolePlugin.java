@@ -17,12 +17,9 @@
 package org.apache.felix.status.impl;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.zip.Deflater;
@@ -63,33 +60,27 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         if ( handler == null ) {
             for(final StatusPrinterHandler sph : this.statusPrinterManager.getHandlers(mode)) {
                 pw.title(sph.getTitle());
-                sph.printConfiguration(mode, pw);
+                sph.print(mode, pw);
                 pw.end();
             }
         } else {
             if ( handler.supports(mode) ) {
                 pw.title(handler.getTitle());
-                handler.printConfiguration(mode, pw);
+                handler.print(mode, pw);
                 pw.end();
             }
         }
     }
 
-    private void addAttachments( final ConfigurationWriter cf, final StatusPrinterHandler handler )
+    private void addAttachments( final ZipConfigurationWriter cf, final StatusPrinterHandler handler )
     throws IOException {
         if ( handler == null ) {
             for(final StatusPrinterHandler sph : this.statusPrinterManager.getHandlers(PrinterMode.ZIP_FILE)) {
-                final URL[] attachments = sph.getAttachmentsForZip();
-                if ( attachments != null ) {
-                    cf.handleAttachments( sph.getTitle(), attachments );
-                }
+                sph.addAttachments(cf.getAttachmentPrefix(sph.getTitle()), cf.getZipOutputStream());
             }
         } else {
             if ( handler.supports(PrinterMode.ZIP_FILE) ) {
-                final URL[] attachments = handler.getAttachmentsForZip();
-                if ( attachments != null ) {
-                    cf.handleAttachments( handler.getTitle(), attachments );
-                }
+                handler.addAttachments(cf.getAttachmentPrefix(handler.getTitle()), cf.getZipOutputStream());
             }
         }
     }
@@ -162,13 +153,11 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
             zip.write(sb.toString().getBytes("UTF-8"));
             zip.closeEntry();
-            zip.flush();
 
-            final ConfigurationWriter pw = new ZipConfigurationWriter( zip );
+            final ZipConfigurationWriter pw = new ZipConfigurationWriter( zip );
             printConfigurationStatus( pw, PrinterMode.ZIP_FILE, handler );
-            pw.flush();
 
-            addAttachments( pw, handler );
+            this.addAttachments( pw, handler );
             zip.finish();
         } else if ( request.getPathInfo().endsWith( ".nfo" ) ) {
             if ( handler == null ) {
@@ -184,10 +173,10 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             pw.println ( "<head><title>dummy</title></head><body><div>" );
 
             if ( handler.supports(PrinterMode.HTML_BODY) ) {
-                handler.printConfiguration(PrinterMode.HTML_BODY, pw);
+                handler.print(PrinterMode.HTML_BODY, pw);
             } else {
                 pw.enableFilter( true );
-                handler.printConfiguration(PrinterMode.TEXT, pw);
+                handler.print(PrinterMode.TEXT, pw);
                 pw.enableFilter( false );
             }
             pw.println( "</div></body></html>" );
@@ -240,10 +229,10 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             pw.println("<br/>&nbsp;</p>"); // status line
             pw.print("<div>");
             if ( handler.supports(PrinterMode.HTML_BODY) ) {
-                handler.printConfiguration(PrinterMode.HTML_BODY, pw);
+                handler.print(PrinterMode.HTML_BODY, pw);
             } else {
                 pw.enableFilter( true );
-                handler.printConfiguration(PrinterMode.TEXT, pw);
+                handler.print(PrinterMode.TEXT, pw);
                 pw.enableFilter( false );
             }
             pw.print("</div>");
@@ -263,11 +252,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
         public void end() throws IOException {
             // dummy implementation
-        }
-
-        public void handleAttachments( final String title, final URL[] urls ) throws IOException {
-            throw new UnsupportedOperationException( "handleAttachments not supported by this configuration writer: "
-                + this );
         }
     }
 
@@ -404,7 +388,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
         private int counter;
 
-
         ZipConfigurationWriter( final ZipOutputStream zip ) {
             super( new OutputStreamWriter( zip ) );
             this.zip = zip;
@@ -412,65 +395,30 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
         @Override
         public void title( final String title ) throws IOException {
-            String name = MessageFormat.format( "{0,number,000}-{1}.txt", new Object[]
-                { new Integer( counter ), title } );
-
             counter++;
+
+            final String name = MessageFormat.format( "{0,number,000}-{1}.txt", new Object[]
+                { new Integer( counter ), title } );
 
             final ZipEntry entry = new ZipEntry( name );
             zip.putNextEntry( entry );
         }
-
-        private OutputStream startFile( final String title, final String name) throws IOException {
-            final String path = MessageFormat.format( "{0,number,000}-{1}/{2}", new Object[]
-                 { new Integer( counter ), title, name } );
-            final ZipEntry entry = new ZipEntry( path );
-            zip.putNextEntry( entry );
-
-            return zip;
-        }
-
-        @Override
-        public void handleAttachments( final String title, final URL[] attachments)
-        throws IOException {
-            for(int i = 0; i < attachments.length; i++) {
-                final URL current = attachments[i];
-                final String path = current.getPath();
-                final String name;
-                if ( path == null || path.length() == 0 ) {
-                    // sanity code, we should have a path, but if not let's
-                    // just create some random name
-                    name = "file" + Double.doubleToLongBits( Math.random() );
-                } else {
-                    final int pos = path.lastIndexOf('/');
-                    name = (pos == -1 ? path : path.substring(pos + 1));
-                }
-                final OutputStream os = this.startFile(title, name);
-                final InputStream is = current.openStream();
-                try {
-                    byte[] buffer = new byte[4096];
-                    int n = 0;
-                    while (-1 != (n = is.read(buffer))) {
-                        os.write(buffer, 0, n);
-                    }
-                } finally {
-                    if ( is != null ) {
-                        try { is.close(); } catch (final IOException ignore) {}
-                    }
-                }
-                this.end();
-            }
-
-            // increase the filename counter
-            counter++;
-        }
-
 
         @Override
         public void end() throws IOException {
             flush();
 
             zip.closeEntry();
+        }
+
+        public String getAttachmentPrefix(final String title) {
+            return MessageFormat.format( "{0,number,000}-{1}/", new Object[]
+                    { new Integer( counter ), title } );
+        }
+
+        public ZipOutputStream getZipOutputStream() {
+            counter++;
+            return this.zip;
         }
     }
 }

@@ -18,7 +18,8 @@
  */
 package org.apache.felix.status;
 
-import java.net.URL;
+import java.io.IOException;
+import java.util.zip.ZipOutputStream;
 
 /**
  * This is an optional extension of the {@link StatusPrinter}.
@@ -37,5 +38,6 @@ public interface ZipAttachmentProvider extends StatusPrinter {
      * attachments.
      * @return An array of URLs or null.
      */
-    URL[] getAttachments();
+    void addAttachments(final String namePrefix, final ZipOutputStream zos)
+    throws IOException;
 }

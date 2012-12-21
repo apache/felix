@@ -16,14 +16,15 @@
  */
 package org.apache.felix.status.impl;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.text.DateFormat;
 import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Locale;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.felix.status.PrinterMode;
 import org.apache.felix.status.StatusPrinter;
@@ -67,9 +68,9 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
         Method attachmentMethod = null;
         if ( !(service instanceof ZipAttachmentProvider) ) {
 
-            // getAttachments()
-            attachmentMethod = ClassUtils.searchMethod(service.getClass(), "getAttachments",
-                    null);
+            // addAttachments()
+            attachmentMethod = ClassUtils.searchMethod(service.getClass(), "addAttachments",
+                    new Class[] {String.class, ZipOutputStream.class});
         }
         return new StatusPrinterAdapter(
                 description,
@@ -173,18 +174,16 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#getAttachmentsForZip()
+     * @see org.apache.felix.status.ZipAttachmentProvider#addAttachments(java.lang.String, java.util.zip.ZipOutputStream)
      */
-    public URL[] getAttachmentsForZip() {
-        // check if printer implements binary configuration printer
-        URL[] attachments = null;
+    public void addAttachments(final String namePrefix, final ZipOutputStream zos)
+    throws IOException {
+        // check if printer implements ZipAttachmentProvider
         if ( printer instanceof ZipAttachmentProvider ) {
-            attachments = ((ZipAttachmentProvider)printer).getAttachments();
+            ((ZipAttachmentProvider)printer).addAttachments(namePrefix, zos);
         } else if ( this.attachmentMethod != null ) {
-            attachments = (URL[])ClassUtils.invoke(this.printer, this.attachmentMethod, null);
+            ClassUtils.invoke(this.printer, this.attachmentMethod, new Object[] {namePrefix, zos});
         }
-
-        return attachments;
     }
 
     /**
@@ -200,9 +199,9 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#printConfiguration(org.apache.felix.status.PrinterMode, java.io.PrintWriter)
+     * @see org.apache.felix.status.StatusPrinter#print(org.apache.felix.status.PrinterMode, java.io.PrintWriter)
      */
-    public void printConfiguration(final PrinterMode mode,
+    public void print(final PrinterMode mode,
             final PrintWriter printWriter) {
         if ( this.supports(mode) ) {
             if ( this.printer instanceof StatusPrinter ) {

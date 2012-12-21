@@ -16,27 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.status;
-
 
 /**
- * The status printer handler can be used by clients to access
- * a status printer.
+ * Interfaces for getting status information about the current instance
+ *
+ * @version 1.0.0
  */
-public interface StatusPrinterHandler extends StatusPrinter, ZipAttachmentProvider {
+@Version("1.0.0")
+@Export(optional = "provide:=true")
+package org.apache.felix.status;
 
-    /** The unique name of the printer. */
-    String getName();
+import aQute.bnd.annotation.Export;
+import aQute.bnd.annotation.Version;
 
-    /** The human readable title for the status printer. */
-    String getTitle();
 
-    /** The optional category for this printer. */
-    String getCategory();
-
-    /** All supported modes. */
-    PrinterMode[] getModes();
-
-    /** Whether the printer supports this mode. */
-    boolean supports( final PrinterMode mode );
-}

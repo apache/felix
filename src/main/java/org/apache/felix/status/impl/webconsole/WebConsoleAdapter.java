@@ -17,6 +17,8 @@
 package org.apache.felix.status.impl.webconsole;
 
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.Dictionary;
@@ -24,6 +26,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.felix.status.PrinterMode;
 import org.apache.felix.status.StatusPrinter;
@@ -120,11 +124,42 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer {
                 }
 
                 /**
-                 * @see org.apache.felix.status.ZipAttachmentProvider#getAttachments()
+                 * @see org.apache.felix.status.ZipAttachmentProvider#addAttachments(java.lang.String, java.util.zip.ZipOutputStream)
                  */
-                public URL[] getAttachments() {
-                    return cpa.getAttachments();
+                public void addAttachments(final String namePrefix, final ZipOutputStream zos)
+                throws IOException {
+                    final URL[] attachments = cpa.getAttachments();
+                    if ( attachments != null ) {
+                        for(final URL current : attachments) {
+                            final String path = current.getPath();
+                            final String name;
+                            if ( path == null || path.length() == 0 ) {
+                                // sanity code, we should have a path, but if not let's
+                                // just create some random name
+                                name = "file" + Double.doubleToLongBits( Math.random() );
+                            } else {
+                                final int pos = path.lastIndexOf('/');
+                                name = (pos == -1 ? path : path.substring(pos + 1));
+                            }
+                            final ZipEntry entry = new ZipEntry(namePrefix + name);
+                            zos.putNextEntry(entry);
+                            final InputStream is = current.openStream();
+                            try {
+                                byte[] buffer = new byte[4096];
+                                int n = 0;
+                                while (-1 != (n = is.read(buffer))) {
+                                    zos.write(buffer, 0, n);
+                                }
+                            } finally {
+                                if ( is != null ) {
+                                    try { is.close(); } catch (final IOException ignore) {}
+                                }
+                            }
+                            zos.closeEntry();
+                        }
+                    }
                 }
+
             }, props);
             synchronized ( this.registrations ) {
                 this.registrations.put(reference, reg);
