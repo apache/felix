@@ -685,8 +685,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
     {
         if ( menuMap != null )
         {
+            SortedMap categoryMap = sortMenuCategoryMap( menuMap, appRoot );
             pw.println( "<ul id=\"navmenu\">" );
-            renderSubmenu( menuMap, appRoot, pw, 0 );
+            renderSubmenu( categoryMap, appRoot, pw, 0 );
             pw.println( "</ul>" );
         }
     }
@@ -707,24 +708,19 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         while ( itr.hasNext() )
         {
             String key = ( String ) itr.next();
-            if ( key.startsWith( "category." ) )
+            MenuItem menuItem = ( MenuItem ) menuMap.get( key );
+            pw.println( "<li" + liStyleClass + ">" + menuItem.getLink() );
+            Map subMenu = menuItem.getSubMenu();
+            if ( subMenu != null )
             {
-                pw.println( "<li" + liStyleClass + "><a href=\"#\">" + key.substring( key.indexOf( '.' ) + 1 ) + "</a>" );
-                renderMenu( ( Map ) menuMap.get( key ), appRoot, pw, level + 1 );
-                pw.println( "</li>" );
+                renderMenu( subMenu, appRoot, pw, level + 1 );
             }
-            else
-            {
-                String label = key;
-                String title = ( String ) menuMap.get( label );
-                pw.println( "<li" + liStyleClass + "><a href=\"" + appRoot + "/" + label + "\">" + title + "</a></li>" );
-            }
+            pw.println( "</li>" );
         }
     }
 
 
-    private static final void printLocaleElement(PrintWriter pw, String appRoot,
-        Object langCode, Object langName)
+    private static final void printLocaleElement( PrintWriter pw, String appRoot, Object langCode, Object langName )
     {
         pw.print("  <img src='"); //$NON-NLS-1$
         pw.print(appRoot);
@@ -964,4 +960,89 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         return url;
     }
 
+
+    private SortedMap sortMenuCategoryMap( Map map, String appRoot )
+    {
+        SortedMap sortedMap = new TreeMap( String.CASE_INSENSITIVE_ORDER );
+        Iterator keys = map.keySet().iterator();
+        while ( keys.hasNext() )
+        {
+            String key = ( String ) keys.next();
+            if ( key.startsWith( "category." ) )
+            {
+                SortedMap categoryMap = sortMenuCategoryMap( ( Map ) map.get( key ), appRoot );
+                String title = key.substring( key.indexOf( '.' ) + 1 );
+                if ( sortedMap.containsKey( title ) )
+                {
+                    ( ( MenuItem ) sortedMap.get( title ) ).setSubMenu( categoryMap );
+                }
+                else
+                {
+                    String link = "<a href=\"#\">" + title + "</a>";
+                    MenuItem menuItem = new MenuItem( link, categoryMap );
+                    sortedMap.put( title, menuItem );
+                }
+            }
+            else
+            {
+                String title = ( String ) map.get( key );
+                String link = "<a href=\"" + appRoot + "/" + key + "\">" + title + "</a>";
+                if ( sortedMap.containsKey( title ) )
+                {
+                    ( ( MenuItem ) sortedMap.get( title ) ).setLink( link );
+                }
+                else
+                {
+                    MenuItem menuItem = new MenuItem( link );
+                    sortedMap.put( title, menuItem );
+                }
+            }
+
+        }
+        return sortedMap;
+    }
+
+    private static class MenuItem
+    {
+    private String link;
+        private Map subMenu;
+
+
+        public MenuItem( String link )
+        {
+            this.link = link;
+        }
+
+
+        public MenuItem( String link, Map subMenu )
+        {
+            super();
+            this.link = link;
+            this.subMenu = subMenu;
+        }
+
+
+        public String getLink()
+        {
+            return link;
+        }
+
+
+        public void setLink( String link )
+        {
+            this.link = link;
+        }
+
+
+        public Map getSubMenu()
+        {
+            return subMenu;
+        }
+
+
+        public void setSubMenu( Map subMenu )
+        {
+            this.subMenu = subMenu;
+        }
+    }
 }

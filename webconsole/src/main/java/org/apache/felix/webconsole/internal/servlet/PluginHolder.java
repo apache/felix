@@ -26,8 +26,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
@@ -237,7 +235,7 @@ class PluginHolder implements ServiceListener
      */
     Map getLocalizedLabelMap( final ResourceBundleManager resourceBundleManager, final Locale locale )
     {
-        final SortedMap map = new TreeMap( MENU_ITEM_ORDER );
+        final Map map = new HashMap();
         Plugin[] plugins = getPlugins();
         for ( int i = 0; i < plugins.length; i++ )
         {
@@ -249,7 +247,7 @@ class PluginHolder implements ServiceListener
             }
 
             // support only one level for now
-            SortedMap categoryMap = null;
+            Map categoryMap = null;
             String category = plugin.getCategory();
             if ( category == null || category.trim().length() == 0 )
             {
@@ -283,9 +281,9 @@ class PluginHolder implements ServiceListener
     }
 
 
-    private SortedMap findCategoryMap( Map map, String categoryPath )
+    private Map findCategoryMap( Map map, String categoryPath )
     {
-        SortedMap categoryMap = null;
+        Map categoryMap = null;
         Map searchMap = map;
 
         String categories[] = categoryPath.split( "/" );
@@ -295,11 +293,11 @@ class PluginHolder implements ServiceListener
             String categoryKey = "category." + categories[i];
             if ( searchMap.containsKey( categoryKey ) )
             {
-                categoryMap = ( SortedMap ) searchMap.get( categoryKey );
+                categoryMap = ( Map ) searchMap.get( categoryKey );
             }
             else
             {
-                categoryMap = new TreeMap( MENU_ITEM_ORDER );
+                categoryMap = new HashMap();
                 searchMap.put( categoryKey, categoryMap );
             }
             searchMap = categoryMap;
@@ -458,26 +456,6 @@ class PluginHolder implements ServiceListener
 
         return null;
     }
-
-    /**
-     * A comparator that will compare plugin menu items to other menu items including categories.
-     */
-    private static final Comparator MENU_ITEM_ORDER = new Comparator() {
-
-		public int compare(Object o1, Object o2) {
-			String s1 = getLabel(o1.toString());
-			String s2 = getLabel(o2.toString());
-			return s1.compareToIgnoreCase(s2);
-		}
-
-		private String getLabel(String s) {
-			if(s.startsWith("category."))
-				return s.substring(s.indexOf('.')+1);
-			else
-				return s;
-		}
-
-    };
 
     private static class Plugin implements ServletConfig
     {
