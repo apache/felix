@@ -20,6 +20,7 @@ package org.apache.felix.webconsole.internal.compendium;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -1206,7 +1207,7 @@ public class ConfigManager extends ConfigManagerBase
 
     private static void setPasswordProps( final Vector vec, final String[] properties, Object props )
     {
-        List propList = toList( props );
+        List propList = ( props == null ) ? new ArrayList() : toList( props );
         for ( int i = 0; i < properties.length; i++ )
         {
             if ( PASSWORD_PLACEHOLDER_VALUE.equals( properties[i] ) )
