@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.webconsole.internal.compendium;
+package org.apache.felix.webconsole.internal.configuration;
 
 import java.io.PrintWriter;
 import java.util.Dictionary;
@@ -55,7 +55,7 @@ public class ConfigurationAdminConfigurationPrinter extends AbstractConfiguratio
      */
     public void printConfiguration(PrintWriter pw)
     {
-        ServiceReference sr = getBundleContext().getServiceReference( ConfigManagerBase.CONFIGURATION_ADMIN_NAME );
+        ServiceReference sr = getBundleContext().getServiceReference( ConfigManager.CONFIGURATION_ADMIN_NAME );
         if (sr == null)
         {
             pw.println("Status: Configuration Admin Service not available");

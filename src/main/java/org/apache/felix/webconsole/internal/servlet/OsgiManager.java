@@ -162,7 +162,7 @@ public class OsgiManager extends GenericServlet
     static final String DEFAULT_MANAGER_ROOT = "/system/console"; //$NON-NLS-1$
 
     static final String[] PLUGIN_CLASSES = {
-            "org.apache.felix.webconsole.internal.compendium.ConfigurationAdminConfigurationPrinter", //$NON-NLS-1$
+            "org.apache.felix.webconsole.internal.configuration.ConfigurationAdminConfigurationPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.compendium.PreferencesConfigurationPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.compendium.WireAdminConfigurationPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.core.BundlesConfigurationPrinter", //$NON-NLS-1$
@@ -172,7 +172,7 @@ public class OsgiManager extends GenericServlet
             "org.apache.felix.webconsole.internal.misc.ThreadPrinter", }; //$NON-NLS-1$
 
     static final String[] PLUGIN_MAP = {
-            "org.apache.felix.webconsole.internal.compendium.ConfigManager", "configMgr", //$NON-NLS-1$ //$NON-NLS-2$
+            "org.apache.felix.webconsole.internal.configuration.ConfigManager", "configMgr", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.compendium.LogServlet", "logs", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.core.BundlesServlet", "bundles", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.core.ServicesServlet", "services", //$NON-NLS-1$ //$NON-NLS-2$
@@ -323,6 +323,23 @@ public class OsgiManager extends GenericServlet
             {
                 public Object getService( Bundle bundle, ServiceRegistration registration )
                 {
+                    /*
+                     * Explicitly load the class through the class loader to dynamically
+                     * wire the API if not wired yet. Implicit loading by creating a
+                     * class instance does not seem to properly work wiring the API
+                     * in time.
+                     */
+                    try
+                    {
+                        OsgiManager.this.getClass().getClassLoader()
+                            .loadClass( "org.osgi.service.metatype.MetaTypeProvider" );
+                        return new ConfigurationMetatypeSupport( OsgiManager.this );
+                    }
+                    catch ( ClassNotFoundException cnfe )
+                    {
+                        // ignore
+                    }
+
                     return new ConfigurationSupport( OsgiManager.this );
                 }
 
@@ -421,7 +438,7 @@ public class OsgiManager extends GenericServlet
         // (we are authorative for our URL space and no other servlet should interfere)
         res.flushBuffer();
     }
-    
+
     private void ensureLocaleCookieSet(HttpServletRequest request, HttpServletResponse response, Locale locale) {
         Cookie[] cookies = request.getCookies();
         boolean hasCookie = false;
