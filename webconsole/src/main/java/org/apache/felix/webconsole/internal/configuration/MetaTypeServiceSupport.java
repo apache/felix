@@ -14,20 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.webconsole.internal.compendium;
+package org.apache.felix.webconsole.internal.configuration;
 
 
+import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.felix.webconsole.SimpleWebConsolePlugin;
-import org.apache.felix.webconsole.internal.OsgiManagerPlugin;
+import org.json.JSONException;
+import org.json.JSONWriter;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeService;
@@ -40,30 +37,35 @@ import org.osgi.service.metatype.ObjectClassDefinition;
  * methods mostly with respect to using the MetaTypeService to access
  * configuration descriptions.
  */
-abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiManagerPlugin
+class MetaTypeServiceSupport extends MetaTypeSupport
 {
 
-    ConfigManagerBase(String label, String title, String category, String[] css)
+    private final BundleContext bundleContext;
+
+    private final MetaTypeService service;
+
+    /**
+     *
+     * @param bundleContext
+     * @param service
+     *
+     * @throws ClassCastException if {@code service} is not a MetaTypeService instances
+     */
+    MetaTypeServiceSupport( final BundleContext bundleContext, final Object service )
     {
-        super(label, title, category, css);
+        super();
+        this.bundleContext = bundleContext;
+        this.service = ( MetaTypeService ) service;
     }
 
-    private static final long serialVersionUID = -6691093960031418130L;
-
-    static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin";
-
-    static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService";
-
-
-    protected ConfigurationAdmin getConfigurationAdmin()
+    public BundleContext getBundleContext()
     {
-        return ( ConfigurationAdmin ) getService( CONFIGURATION_ADMIN_NAME );
+        return bundleContext;
     }
 
-
-    protected MetaTypeService getMetaTypeService()
+    public MetaTypeService getMetaTypeService()
     {
-        return ( MetaTypeService ) getService( META_TYPE_NAME );
+        return service;
     }
 
 
@@ -75,7 +77,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
      * @param locale The name of the locale to get the meta data for.
      * @return see the method description
      */
-    protected Map getPidObjectClasses( final String locale )
+    Map getPidObjectClasses( final String locale )
     {
         return getObjectClassDefinitions( PID_GETTER, locale );
     }
@@ -90,7 +92,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
      * @param locale The name of the locale to get the meta data for.
      * @return see the method description
      */
-    protected Map getFactoryPidObjectClasses( final String locale )
+    Map getFactoryPidObjectClasses( final String locale )
     {
         return getObjectClassDefinitions( FACTORY_PID_GETTER, locale );
     }
@@ -134,7 +136,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
                         {
                             ocd = mti.getObjectClassDefinition( idList[j], locale );
                         }
-                        catch (IllegalArgumentException ignore)
+                        catch ( IllegalArgumentException ignore )
                         {
                             // ignore - just don't show this configuration
                         }
@@ -150,13 +152,13 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
     }
 
 
-    protected ObjectClassDefinition getObjectClassDefinition( Configuration config, String locale )
+    ObjectClassDefinition getObjectClassDefinition( Configuration config, String locale )
     {
         // if the configuration is bound, try to get the object class
         // definition from the bundle installed from the given location
         if ( config.getBundleLocation() != null )
         {
-            Bundle bundle = this.getBundle( config.getBundleLocation() );
+            Bundle bundle = getBundle( this.getBundleContext(), config.getBundleLocation() );
             if ( bundle != null )
             {
                 String id = config.getFactoryPid();
@@ -164,7 +166,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
                 {
                     id = config.getPid();
                 }
-                return getObjectClassDefinition(bundle, id, locale);
+                return getObjectClassDefinition( bundle, id, locale );
             }
         }
 
@@ -182,7 +184,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
     }
 
 
-    protected ObjectClassDefinition getObjectClassDefinition( Bundle bundle, String pid, String locale )
+    ObjectClassDefinition getObjectClassDefinition( Bundle bundle, String pid, String locale )
     {
         if ( bundle != null )
         {
@@ -197,7 +199,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
                     {
                         return mti.getObjectClassDefinition( pid, locale );
                     }
-                    catch (IllegalArgumentException e)
+                    catch ( IllegalArgumentException e )
                     {
                         // MetaTypeProvider.getObjectClassDefinition might throw illegal
                         // argument exception. So we must catch it here, otherwise the
@@ -214,7 +216,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
     }
 
 
-    protected ObjectClassDefinition getObjectClassDefinition( String pid, String locale )
+    ObjectClassDefinition getObjectClassDefinition( String pid, String locale )
     {
         Bundle[] bundles = this.getBundleContext().getBundles();
         for ( int i = 0; i < bundles.length; i++ )
@@ -236,7 +238,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
     }
 
 
-    protected Map getAttributeDefinitionMap( Configuration config, String locale )
+    Map getAttributeDefinitionMap( Configuration config, String locale )
     {
         Map adMap = new HashMap();
         ObjectClassDefinition ocd = this.getObjectClassDefinition( config, locale );
@@ -247,7 +249,7 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
             {
                 for ( int i = 0; i < ad.length; i++ )
                 {
-                    adMap.put( ad[i].getID(), ad[i] );
+                    adMap.put( ad[i].getID(), new MetatypePropertyDescriptor( ad[i] ) );
                 }
             }
         }
@@ -255,39 +257,32 @@ abstract class ConfigManagerBase extends SimpleWebConsolePlugin implements OsgiM
     }
 
 
-    protected Bundle getBundle( String bundleLocation )
+    void mergeWithMetaType( Dictionary props, ObjectClassDefinition ocd, JSONWriter json ) throws JSONException
     {
-        if ( bundleLocation == null )
+        json.key( "title" ).value( ocd.getName() ); //$NON-NLS-1$
+
+        if ( ocd.getDescription() != null )
         {
-            return null;
+            json.key( "description" ).value( ocd.getDescription() ); //$NON-NLS-1$
         }
 
-        Bundle[] bundles = this.getBundleContext().getBundles();
-        for ( int i = 0; i < bundles.length; i++ )
+        AttributeDefinition[] ad = ocd.getAttributeDefinitions( ObjectClassDefinition.ALL );
+        if ( ad != null )
         {
-            if ( bundleLocation.equals( bundles[i].getLocation() ) )
+            json.key( "properties" ).object(); //$NON-NLS-1$
+            for ( int i = 0; i < ad.length; i++ )
             {
-                return bundles[i];
+                final AttributeDefinition adi = ad[i];
+                final String attrId = adi.getID();
+                json.key( attrId );
+                attributeToJson( json, new MetatypePropertyDescriptor( adi ), props.get( attrId ) );
             }
-        }
-
-        return null;
-    }
-
-
-    protected static final Locale getLocale( HttpServletRequest request )
-    {
-        try
-        {
-            return request.getLocale();
-        }
-        catch ( Throwable t )
-        {
-            // expected in standard OSGi Servlet 2.1 environments
-            // fallback to using the default locale
-            return Locale.getDefault();
+            json.endObject();
         }
     }
+
+
+
 
     /**
      * The <code>IdGetter</code> interface is an internal helper to abstract

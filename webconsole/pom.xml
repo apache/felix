@@ -133,7 +133,6 @@
                         </Export-Package>
                         <Import-Package>
                             org.json.*;version=0,
-							org.osgi.service.metatype;resolution:=optional,
                             javax.servlet.*;version=2.4,
                             org.apache.commons.io; version="[1.4,3)",
                             *
@@ -154,8 +153,7 @@
                         </Include-Resource>
                         <Embed-Dependency>
                             org.apache.felix.utils;inline=org/apache/felix/utils/manifest/**,
-                            org.apache.felix.framework;inline=org/apache/felix/framework/util/VersionRange**,
-                            org.osgi.compendium;inline=org/osgi/service/metatype/**
+                            org.apache.felix.framework;inline=org/apache/felix/framework/util/VersionRange**
                         </Embed-Dependency>
                         <_removeheaders>
                             Embed-Dependency,Private-Package,Include-Resource
