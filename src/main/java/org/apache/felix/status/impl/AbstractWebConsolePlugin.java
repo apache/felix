@@ -106,6 +106,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                 return;
             }
         }
+
         if ( request.getPathInfo().endsWith( ".txt" ) ) { //$NON-NLS-2$
             response.setContentType( "text/plain; charset=utf-8" ); //$NON-NLS-2$
             final ConfigurationWriter pw = new PlainTextConfigurationWriter( response.getWriter() );
@@ -386,12 +387,16 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             this.zip = zip;
         }
 
+        private String getFormattedTitle(final String title) {
+            return MessageFormat.format( "{0,number,000}-{1}", new Object[]
+                    { new Integer( counter ), title } );
+        }
+
         @Override
         protected void title( final String title ) throws IOException {
             counter++;
 
-            final String name = MessageFormat.format( "{0,number,000}-{1}.txt", new Object[]
-                { new Integer( counter ), title } );
+            final String name = getFormattedTitle(title).concat(".txt");
 
             final ZipEntry entry = new ZipEntry( name );
             zip.putNextEntry( entry );
@@ -404,21 +409,16 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             zip.closeEntry();
         }
 
-        private String getAttachmentPrefix(final String title) {
-            return MessageFormat.format( "{0,number,000}-{1}/", new Object[]
-                    { new Integer( counter ), title } );
-        }
-
         @Override
         public void printStatus(
                 final PrinterMode mode,
                 final StatusPrinterHandler handler)
         throws IOException {
             super.printStatus(mode, handler);
-            handler.addAttachments(this.getAttachmentPrefix(handler.getTitle()), this.zip);
+            final String title = getFormattedTitle(handler.getTitle());
+            handler.addAttachments(title.concat("/"), this.zip);
             if ( handler.supports(PrinterMode.JSON) ) {
-                final String name = MessageFormat.format( "json/{0,number,000}-{1}.json", new Object[]
-                        { new Integer( counter ), handler.getTitle() } );
+                final String name = "json/".concat(title).concat(".json");
 
                 final ZipEntry entry = new ZipEntry( name );
                 zip.putNextEntry( entry );
