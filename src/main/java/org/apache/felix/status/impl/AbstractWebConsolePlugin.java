@@ -55,29 +55,17 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     protected abstract StatusPrinterHandler getStatusPrinterHandler();
 
-    private void printSingleConfigurationStatus(final ConfigurationWriter pw,
+    private void printConfigurationStatus( final ConfigurationWriter pw,
             final PrinterMode mode,
-            final StatusPrinterHandler handler)
-    throws IOException {
-        final ZipConfigurationWriter zcw = (pw instanceof ZipConfigurationWriter ? (ZipConfigurationWriter)pw : null);
-        pw.title(handler.getTitle());
-        handler.print(mode, pw);
-        pw.end();
-        if ( zcw != null ) {
-            handler.addAttachments(zcw.getAttachmentPrefix(handler.getTitle()), zcw.getZipOutputStream());
-        }
-
-    }
-
-    private void printConfigurationStatus( final ConfigurationWriter pw, final PrinterMode mode, final StatusPrinterHandler handler )
+            final StatusPrinterHandler handler )
     throws IOException {
         if ( handler == null ) {
             for(final StatusPrinterHandler sph : this.statusPrinterManager.getHandlers(mode)) {
-                printSingleConfigurationStatus(pw, mode, sph);
+                pw.printStatus(mode, sph);
             }
         } else {
             if ( handler.supports(mode) ) {
-                printSingleConfigurationStatus(pw, mode, handler);
+                pw.printStatus(mode, handler);
             }
         }
     }
@@ -241,13 +229,22 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             super( delegatee );
         }
 
-        public void title( final String title ) throws IOException {
+        protected void title( final String title ) throws IOException {
             // dummy implementation
         }
 
 
-        public void end() throws IOException {
+        protected void end() throws IOException {
             // dummy implementation
+        }
+
+        public void printStatus(
+                final PrinterMode mode,
+                final StatusPrinterHandler handler)
+        throws IOException {
+            this.title(handler.getTitle());
+            handler.print(mode, this);
+            this.end();
         }
     }
 
@@ -365,7 +362,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         }
 
         @Override
-        public void title( final String title ) throws IOException {
+        protected void title( final String title ) throws IOException {
             print( "*** " );
             print( title );
             println( ":" );
@@ -373,7 +370,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
 
         @Override
-        public void end() throws IOException {
+        protected void end() throws IOException {
             println();
         }
     }
@@ -390,7 +387,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         }
 
         @Override
-        public void title( final String title ) throws IOException {
+        protected void title( final String title ) throws IOException {
             counter++;
 
             final String name = MessageFormat.format( "{0,number,000}-{1}.txt", new Object[]
@@ -401,19 +398,35 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         }
 
         @Override
-        public void end() throws IOException {
+        protected void end() throws IOException {
             flush();
 
             zip.closeEntry();
         }
 
-        public String getAttachmentPrefix(final String title) {
+        private String getAttachmentPrefix(final String title) {
             return MessageFormat.format( "{0,number,000}-{1}/", new Object[]
                     { new Integer( counter ), title } );
         }
 
-        public ZipOutputStream getZipOutputStream() {
-            return this.zip;
+        @Override
+        public void printStatus(
+                final PrinterMode mode,
+                final StatusPrinterHandler handler)
+        throws IOException {
+            super.printStatus(mode, handler);
+            handler.addAttachments(this.getAttachmentPrefix(handler.getTitle()), this.zip);
+            if ( handler.supports(PrinterMode.JSON) ) {
+                final String name = MessageFormat.format( "json/{0,number,000}-{1}.json", new Object[]
+                        { new Integer( counter ), handler.getTitle() } );
+
+                final ZipEntry entry = new ZipEntry( name );
+                zip.putNextEntry( entry );
+                handler.print(PrinterMode.JSON, this);
+                flush();
+
+                zip.closeEntry();
+            }
         }
     }
 }
