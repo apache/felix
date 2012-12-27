@@ -116,7 +116,7 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
         props.put(ConsoleConstants.PLUGIN_LABEL, dwcp.getName());
         props.put(ConsoleConstants.PLUGIN_TITLE, dwcp.getTitle());
         props.put(ConsoleConstants.PLUGIN_CATEGORY, dwcp.getCategory());
-        return context.registerService("javax.servlet.Servlet", new ServiceFactory() {
+        return context.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory() {
 
             public void ungetService(final Bundle bundle, final ServiceRegistration registration,
                     final Object service) {

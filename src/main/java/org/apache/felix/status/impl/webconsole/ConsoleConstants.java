@@ -19,6 +19,8 @@ package org.apache.felix.status.impl.webconsole;
 
 public class ConsoleConstants {
 
+    public static final String INTERFACE_SERVLET = "javax.servlet.Servlet"; //$NON-NLS-1$
+
     public static final String INTERFACE_CONFIGURATION_PRINTER = "org.apache.felix.webconsole.ConfigurationPrinter"; //$NON-NLS-1$
 
     public static final String PLUGIN_LABEL = "felix.webconsole.label"; //$NON-NLS-1$

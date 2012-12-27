@@ -60,7 +60,7 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
         props.put(ConsoleConstants.PLUGIN_LABEL, "status-" + desc.getName());
         props.put(ConsoleConstants.PLUGIN_TITLE, desc.getTitle());
         props.put(ConsoleConstants.PLUGIN_CATEGORY, desc.getCategory() == null ? "Status" : desc.getCategory());
-        return context.registerService("javax.servlet.Servlet", new ServiceFactory() {
+        return context.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory() {
 
             public void ungetService(final Bundle bundle, final ServiceRegistration registration,
                     final Object service) {
