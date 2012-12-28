@@ -29,6 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.*;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.felix.webconsole.internal.servlet.OsgiManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
@@ -637,8 +638,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         current = current.substring( 1, slash );
 
         String appRoot = ( String ) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT );
-    	Map menuMap = ( Map ) request.getAttribute( WebConsoleConstants.ATTR_LABEL_MAP );
 
+        Map menuMap = ( Map ) request.getAttribute( OsgiManager.ATTR_LABEL_MAP_CATEGORIZED );
         this.renderMenu( menuMap, appRoot, pw );
 
         // render lang-box
