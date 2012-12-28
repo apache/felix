@@ -141,6 +141,8 @@ public class OsgiManager extends GenericServlet
 
     static final String PROP_PASSWORD = "password"; //$NON-NLS-1$
 
+    static final String PROP_CATEGORY = "category"; //$NON-NLS-1$
+
     static final String PROP_ENABLED_PLUGINS = "plugins"; //$NON-NLS-1$
 
     static final String PROP_LOG_LEVEL = "loglevel"; //$NON-NLS-1$
@@ -158,6 +160,8 @@ public class OsgiManager extends GenericServlet
     static final String DEFAULT_USER_NAME = "admin"; //$NON-NLS-1$
 
     static final String DEFAULT_PASSWORD = "admin"; //$NON-NLS-1$
+
+    static final String DEFAULT_CATEGORY = "Main"; //$NON-NLS-1$
 
     static final String DEFAULT_HTTP_SERVICE_SELECTOR = ""; //$NON-NLS-1$
 
@@ -226,6 +230,8 @@ public class OsgiManager extends GenericServlet
     ResourceBundleManager resourceBundleManager;
 
     private int logLevel = DEFAULT_LOG_LEVEL;
+
+    private String defaultCategory = DEFAULT_CATEGORY;
 
     public OsgiManager(BundleContext bundleContext)
     {
@@ -490,7 +496,7 @@ public class OsgiManager extends GenericServlet
         AbstractWebConsolePlugin plugin = getConsolePlugin(label);
         if (plugin != null)
         {
-            final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale, "Main" );
+            final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale, this.defaultCategory );
             final Object flatLabelMap = labelMap.remove( WebConsoleConstants.ATTR_LABEL_MAP );
 
             // the official request attributes
@@ -939,6 +945,9 @@ public class OsgiManager extends GenericServlet
         {
             newWebManagerRoot = "/" + newWebManagerRoot; //$NON-NLS-1$
         }
+
+        // default category
+        this.defaultCategory = ConfigurationUtil.getProperty( config, PROP_CATEGORY, DEFAULT_CATEGORY );
 
         // get the HTTP Service selector (and dispose tracker for later
         // recreation)

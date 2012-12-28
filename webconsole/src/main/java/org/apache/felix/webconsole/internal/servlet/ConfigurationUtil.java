@@ -94,9 +94,10 @@ public class ConfigurationUtil
     public static final String getProperty(Map config, String name, String def)
     {
         Object value = config.get(name);
-        if (value instanceof String)
+        if ( value instanceof String )
         {
-            return (String) value;
+            final String s = ( ( String ) value ).trim();
+            return ( s.length() > 0 ) ? s : def;
         }
 
         if (value == null)

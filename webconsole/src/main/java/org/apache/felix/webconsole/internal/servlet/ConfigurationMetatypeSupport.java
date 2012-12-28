@@ -41,6 +41,7 @@ class ConfigurationMetatypeSupport extends ConfigurationSupport implements MetaT
             OsgiManager.PROP_REALM, OsgiManager.DEFAULT_REALM, //
             OsgiManager.PROP_USER_NAME, OsgiManager.DEFAULT_USER_NAME, //
             OsgiManager.PROP_PASSWORD, OsgiManager.DEFAULT_PASSWORD, //
+            OsgiManager.PROP_CATEGORY, OsgiManager.DEFAULT_CATEGORY, //
             OsgiManager.PROP_LOCALE, "", //$NON-NLS-1$
         };
 
