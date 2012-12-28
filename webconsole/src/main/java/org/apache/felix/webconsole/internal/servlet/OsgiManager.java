@@ -484,12 +484,12 @@ public class OsgiManager extends GenericServlet
         AbstractWebConsolePlugin plugin = getConsolePlugin(label);
         if (plugin != null)
         {
-            final Map labelMap = holder.getLocalizedLabelMap(resourceBundleManager,
-                locale);
+            final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale );
+            final Object flatLabelMap = labelMap.remove( WebConsoleConstants.ATTR_LABEL_MAP );
 
             // the official request attributes
             request.setAttribute(WebConsoleConstants.ATTR_LANG_MAP, getLangMap());
-            request.setAttribute(WebConsoleConstants.ATTR_LABEL_MAP, labelMap);
+            request.setAttribute(WebConsoleConstants.ATTR_LABEL_MAP, flatLabelMap);
             request.setAttribute(WebConsoleConstants.ATTR_APP_ROOT,
                 request.getContextPath() + request.getServletPath());
             request.setAttribute(WebConsoleConstants.ATTR_PLUGIN_ROOT,

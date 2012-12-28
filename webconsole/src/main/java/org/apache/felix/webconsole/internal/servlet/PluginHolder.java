@@ -19,7 +19,6 @@
 package org.apache.felix.webconsole.internal.servlet;
 
 
-import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Locale;
@@ -226,6 +225,10 @@ class PluginHolder implements ServiceListener
      * resource bundle if the first character of the title is a percent
      * sign (%). Titles not prefixed with a percent sign are added to the
      * map unmodified.
+     * <p>
+     * The special entry {@code felix.webconsole.labelMap} is the flat,
+     * unstructured map of labels to titles which is used as the
+     * respective request attribute (see FELIX-3833).
      *
      * @param resourceBundleManager The ResourceBundleManager providing
      *      localized titles
@@ -236,6 +239,7 @@ class PluginHolder implements ServiceListener
     Map getLocalizedLabelMap( final ResourceBundleManager resourceBundleManager, final Locale locale )
     {
         final Map map = new HashMap();
+        final Map flatMap = new HashMap();
         Plugin[] plugins = getPlugins();
         for ( int i = 0; i < plugins.length; i++ )
         {
@@ -274,8 +278,13 @@ class PluginHolder implements ServiceListener
                     /* ignore missing resource - use default title */
                 }
             }
+
             categoryMap.put( label, title );
+            flatMap.put( label, title );
         }
+
+        // flat map of labels to titles (FELIX-3833)
+        map.put( WebConsoleConstants.ATTR_LABEL_MAP, flatMap );
 
         return map;
     }
