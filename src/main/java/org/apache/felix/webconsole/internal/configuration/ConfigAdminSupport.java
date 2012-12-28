@@ -150,7 +150,7 @@ class ConfigAdminSupport
     String applyConfiguration( HttpServletRequest request, String pid )
         throws IOException
     {
-        if ( request.getParameter( "delete" ) != null ) //$NON-NLS-1$
+        if ( request.getParameter( ConfigManager.ACTION_DELETE ) != null ) //$NON-NLS-1$
         {
             // only delete if the PID is not our place holder
             if ( !ConfigManager.PLACEHOLDER_PID.equals( pid ) )
@@ -162,10 +162,10 @@ class ConfigAdminSupport
             return null; // return request.getHeader( "Referer" );
         }
 
-        String factoryPid = request.getParameter( ConfigManager.factoryPID );
+        String factoryPid = request.getParameter( ConfigManager.FACTORY_PID );
         Configuration config = null;
 
-        String propertyList = request.getParameter( "propertylist" ); //$NON-NLS-1$
+        String propertyList = request.getParameter( ConfigManager.PROPERTY_LIST ); //$NON-NLS-1$
         if ( propertyList == null )
         {
             // FIXME: this would be a bug !!
@@ -392,7 +392,7 @@ class ConfigAdminSupport
 
         if ( config.getFactoryPid() != null )
         {
-            json.key( ConfigManager.factoryPID );
+            json.key( ConfigManager.FACTORY_PID );
             json.value( config.getFactoryPid() );
         }
 
