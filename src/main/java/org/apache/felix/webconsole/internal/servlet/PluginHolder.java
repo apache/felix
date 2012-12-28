@@ -236,7 +236,7 @@ class PluginHolder implements ServiceListener
      *
      * @return The localized map of labels to titles
      */
-    Map getLocalizedLabelMap( final ResourceBundleManager resourceBundleManager, final Locale locale )
+    Map getLocalizedLabelMap( final ResourceBundleManager resourceBundleManager, final Locale locale, final String defaultCategory )
     {
         final Map map = new HashMap();
         final Map flatMap = new HashMap();
@@ -255,8 +255,8 @@ class PluginHolder implements ServiceListener
             String category = plugin.getCategory();
             if ( category == null || category.trim().length() == 0 )
             {
-                // TODO: FELIX-3769; decide whether hard code or configurable
-                category = "Main";
+                // FELIX-3798 configured default category
+                category = defaultCategory;
             }
 
             // TODO: FELIX-3769; translate the Category

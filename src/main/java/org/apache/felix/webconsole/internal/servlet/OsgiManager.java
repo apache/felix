@@ -92,13 +92,19 @@ public class OsgiManager extends GenericServlet
 
     /**
      * Old name of the request attribute providing the mappings from label to
-     * page title. This attribute is no deprecated and replaced by
+     * page title. This attribute is now deprecated and replaced by
      * {@link WebConsoleConstants#ATTR_LABEL_MAP}.
      *
      * @deprecated use {@link WebConsoleConstants#ATTR_LABEL_MAP} instead
      */
     private static final String ATTR_LABEL_MAP_OLD = OsgiManager.class.getName()
         + ".labelMap";
+
+    /**
+     * The name of the (internal) request attribute providing the categorized
+     * label map structure.
+     */
+    public static final String ATTR_LABEL_MAP_CATEGORIZED = WebConsoleConstants.ATTR_LABEL_MAP + ".categorized";
 
     /**
      * The name and value of a parameter which will prevent redirection to a
@@ -484,19 +490,20 @@ public class OsgiManager extends GenericServlet
         AbstractWebConsolePlugin plugin = getConsolePlugin(label);
         if (plugin != null)
         {
-            final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale );
+            final Map labelMap = holder.getLocalizedLabelMap( resourceBundleManager, locale, "Main" );
             final Object flatLabelMap = labelMap.remove( WebConsoleConstants.ATTR_LABEL_MAP );
 
             // the official request attributes
             request.setAttribute(WebConsoleConstants.ATTR_LANG_MAP, getLangMap());
             request.setAttribute(WebConsoleConstants.ATTR_LABEL_MAP, flatLabelMap);
+            request.setAttribute( ATTR_LABEL_MAP_CATEGORIZED, labelMap );
             request.setAttribute(WebConsoleConstants.ATTR_APP_ROOT,
                 request.getContextPath() + request.getServletPath());
             request.setAttribute(WebConsoleConstants.ATTR_PLUGIN_ROOT,
                 request.getContextPath() + request.getServletPath() + '/' + label);
 
             // deprecated request attributes
-            request.setAttribute(ATTR_LABEL_MAP_OLD, labelMap);
+            request.setAttribute(ATTR_LABEL_MAP_OLD, flatLabelMap);
             request.setAttribute(ATTR_APP_ROOT_OLD,
                 request.getContextPath() + request.getServletPath());
 
