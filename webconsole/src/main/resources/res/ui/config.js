@@ -36,7 +36,7 @@ function configure(pid, create) {
 	// we have to add a cache killer for IE8
 	var postUri = uri + '?';
 	if ( create ) {
-		postUri = postUri + 'create=1&';
+		postUri += param.create + '=1&';
 	}
 	postUri = postUri + 'ts='+new Date().getMilliseconds();
 	$.post(postUri, null, displayConfigForm, 'json');
@@ -61,7 +61,7 @@ function displayConfigForm(obj) {
     
     var inputEl = createElement( "input", null, {
             type: "hidden",
-            name: "apply",
+            name: param.apply,
             value: "true"
         });
     formEl.appendChild( inputEl );
@@ -78,11 +78,11 @@ function displayConfigForm(obj) {
     }
     
     // add the PID filter as a hidden form field if present
-    if (obj.pidFilter)
+    if (obj[ param.pidFilter ])
     {
         inputEl = createElement( "input", null, {
                 type: "hidden",
-                name: "pidFilter",
+                name: param.pidFilter,
                 value: obj.pidFilter
             });
         formEl.appendChild( inputEl );
@@ -186,7 +186,7 @@ function printForm( /* Element */ parent, /* Object */ properties ) {
     
     parent.appendChild( createElement( "input", null, {
             type: "hidden",
-            name: "propertylist",
+            name: param.propertylist,
             value: propList
         })
     );
@@ -405,7 +405,7 @@ function configConfirm(/* String */ message, /* String */ title, /* String */ lo
 function deleteConfig(/* String */ configId, /* String */ bundleLocation)
 {
     if ( configConfirm(i18n.del_ask, configId, bundleLocation) ) {
-	$.post(pluginRoot + '/' + configId + '?apply=1&delete=1', null, function() {
+	$.post(pluginRoot + '/' + configId + '?' + param.apply + '=1&' + param.dele + '=1', null, function() {
 	    document.location.href = pluginRoot;
 	}, 'json');
 	return true;
@@ -416,7 +416,7 @@ function deleteConfig(/* String */ configId, /* String */ bundleLocation)
 function unbindConfig(/* String */ configId, /* String */ bundleLocation)
 {
     if ( configConfirm(i18n.unbind_ask, configId, bundleLocation) ) {
-	$.post(pluginRoot + '/' + configId + '?unbind=1', null, function() {
+	$.post(pluginRoot + '/' + configId + '?' + param.unbind + '=1', null, function() {
 	    document.location.href = pluginRoot + '/' + configId;
 	}, 'json');
 	return true;

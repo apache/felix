@@ -51,13 +51,17 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
 
     static final String PID_FILTER = "pidFilter"; //$NON-NLS-1$
     static final String PID = "pid"; //$NON-NLS-1$
-    static final String factoryPID = "factoryPid"; //$NON-NLS-1$
+    static final String FACTORY_PID = "factoryPid"; //$NON-NLS-1$
+    static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]"; //$NON-NLS-1$
 
-    static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin";
+    static final String ACTION_CREATE = "create"; //$NON-NLS-1$
+    static final String ACTION_DELETE = "delete"; //$NON-NLS-1$
+    static final String ACTION_APPLY = "apply"; //$NON-NLS-1$
+    static final String ACTION_UNBIND = "unbind"; //$NON-NLS-1$
+    static final String PROPERTY_LIST = "propertylist"; //$NON-NLS-1$
 
-    static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService";
-
-    static final String PLACEHOLDER_PID = "[Temporary PID replaced by real PID upon save]";
+    static final String CONFIGURATION_ADMIN_NAME = "org.osgi.service.cm.ConfigurationAdmin"; //$NON-NLS-1$
+    static final String META_TYPE_NAME = "org.osgi.service.metatype.MetaTypeService"; //$NON-NLS-1$
 
     // templates
     private final String TEMPLATE;
@@ -141,12 +145,12 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         Configuration config = null;
 
         // should actually apply the configuration before redirecting
-        if ( request.getParameter( "create" ) != null ) //$NON-NLS-1$
+        if ( request.getParameter( ACTION_CREATE ) != null ) //$NON-NLS-1$
         {
             config = cas.getPlaceholderConfiguration( pid ); // ca.createFactoryConfiguration( pid, null );
             pid = config.getPid();
         }
-        else if ( request.getParameter( "apply" ) != null ) //$NON-NLS-1$
+        else if ( request.getParameter( ACTION_APPLY ) != null ) //$NON-NLS-1$
         {
             String redirect = cas.applyConfiguration( request, pid );
             if ( redirect != null )
@@ -172,7 +176,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         }
 
         // check for configuration unbinding
-        if ( request.getParameter( "unbind" ) != null ) //$NON-NLS-1$
+        if ( request.getParameter( ACTION_UNBIND ) != null ) //$NON-NLS-1$
         {
             if ( config != null && config.getBundleLocation() != null )
             {
@@ -367,7 +371,7 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         }
 
         // if a configuration is addressed, display it immediately
-        if ( request.getParameter( "create" ) != null && pid != null ) //$NON-NLS-1$
+        if ( request.getParameter( ACTION_CREATE ) != null && pid != null ) //$NON-NLS-1$
         {
             pid = PLACEHOLDER_PID; // new PlaceholderConfiguration( pid ).getPid();
         }
@@ -377,6 +381,12 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "__data__", json.toString() ); //$NON-NLS-1$
         vars.put( "selectedPid", pid != null ? pid : ""); //$NON-NLS-1$ //$NON-NLS-2$
+        vars.put( "param.apply", ACTION_APPLY ); //$NON-NLS-1$
+        vars.put( "param.create", ACTION_CREATE ); //$NON-NLS-1$
+        vars.put( "param.unbind", ACTION_UNBIND ); //$NON-NLS-1$
+        vars.put( "param.delete", ACTION_DELETE ); //$NON-NLS-1$
+        vars.put( "param.propertylist", PROPERTY_LIST ); //$NON-NLS-1$
+        vars.put( "param.pidFilter", PID_FILTER ); //$NON-NLS-1$
 
         response.getWriter().print(TEMPLATE);
     }
