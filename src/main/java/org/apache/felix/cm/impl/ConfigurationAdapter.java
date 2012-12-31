@@ -76,7 +76,7 @@ public class ConfigurationAdapter implements Configuration
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation() ==> {0}", new Object[]
             { bundleLocation } );
         checkActive();
-        configurationAdmin.checkPermission( ( bundleLocation == null ) ? "*" : bundleLocation );
+        configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( bundleLocation == null ) ? "*" : bundleLocation );
         checkDeleted();
         return bundleLocation;
     }
@@ -95,8 +95,8 @@ public class ConfigurationAdapter implements Configuration
         // CM 1.4 / 104.13.2.4
         checkActive();
         final String configLocation = delegatee.getBundleLocation();
-        configurationAdmin.checkPermission( ( configLocation == null ) ? "*" : configLocation );
-        configurationAdmin.checkPermission( ( bundleLocation == null ) ? "*" : bundleLocation );
+        configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( configLocation == null ) ? "*" : configLocation );
+        configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( bundleLocation == null ) ? "*" : bundleLocation );
         checkDeleted();
         delegatee.setStaticBundleLocation( bundleLocation );
     }
@@ -202,11 +202,15 @@ public class ConfigurationAdapter implements Configuration
      * @throws IllegalStateException If this configuration object is not
      *      backed by an active ConfigurationManager
      */
-    private void checkActive() {
-        if (!delegatee.isActive()) {
-            throw new IllegalStateException( "Configuration " + delegatee.getPid() + " not backed by an active Configuration Admin Service" );
+    private void checkActive()
+    {
+        if ( !delegatee.isActive() )
+        {
+            throw new IllegalStateException( "Configuration " + delegatee.getPid()
+                + " not backed by an active Configuration Admin Service" );
         }
     }
+
 
     /**
      * Checks whether this configuration object has already been deleted.
@@ -214,8 +218,10 @@ public class ConfigurationAdapter implements Configuration
      * @throws IllegalStateException If this configuration object has been
      *      deleted.
      */
-    private void checkDeleted() {
-        if (delegatee.isDeleted()) {
+    private void checkDeleted()
+    {
+        if ( delegatee.isDeleted() )
+        {
             throw new IllegalStateException( "Configuration " + delegatee.getPid() + " deleted" );
         }
     }

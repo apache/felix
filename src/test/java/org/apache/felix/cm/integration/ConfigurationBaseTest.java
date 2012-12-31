@@ -179,7 +179,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
 
     @Test
-    public void test_configuration_after_getProperties_config_admin_stop() throws BundleException
+    public void test_configuration_getProperties_after_config_admin_stop() throws BundleException
     {
         final String pid = "test_configuration_after_config_admin_stop";
         final Configuration config = configure( pid, null, true );
@@ -240,7 +240,7 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
 
 
     @Test
-    public void test_configuration_after_getBundleLocation_config_admin_stop() throws BundleException
+    public void test_configuration_getBundleLocation_after_config_admin_stop() throws BundleException
     {
         final String pid = "test_configuration_after_config_admin_stop";
         final Configuration config = configure( pid, null, true );
@@ -370,6 +370,181 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         catch ( Exception e )
         {
             TestCase.fail( "Expected IllegalStateException for config.update" );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_admin_createFactoryConfiguration_1_after_config_admin_stop() throws BundleException
+    {
+        final ConfigurationAdmin ca = getConfigurationAdmin();
+        TestCase.assertNotNull( "ConfigurationAdmin service is required", ca );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            ca.createFactoryConfiguration( "sample" );
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.createFactoryConfiguration" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.createFactoryConfiguration, got: " + e );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_admin_createFactoryConfiguration_2_after_config_admin_stop() throws BundleException
+    {
+        final ConfigurationAdmin ca = getConfigurationAdmin();
+        TestCase.assertNotNull( "ConfigurationAdmin service is required", ca );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            ca.createFactoryConfiguration( "sample", "location" );
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.createFactoryConfiguration" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.createFactoryConfiguration, got: " + e );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_admin_getConfiguration_1_after_config_admin_stop() throws BundleException
+    {
+        final ConfigurationAdmin ca = getConfigurationAdmin();
+        TestCase.assertNotNull( "ConfigurationAdmin service is required", ca );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            ca.getConfiguration( "sample" );
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.getConfiguration" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.getConfiguration, got: " + e );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_admin_getConfiguration_2_after_config_admin_stop() throws BundleException
+    {
+        final ConfigurationAdmin ca = getConfigurationAdmin();
+        TestCase.assertNotNull( "ConfigurationAdmin service is required", ca );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            ca.getConfiguration( "sample", "location" );
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.getConfiguration" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.getConfiguration, got: " + e );
+        }
+        finally
+        {
+            try
+            {
+                cfgAdminBundle.start();
+            }
+            catch ( BundleException be )
+            {
+                // tooo bad
+            }
+        }
+    }
+
+
+    @Test
+    public void test_configuration_admin_listConfigurations_after_config_admin_stop() throws BundleException
+    {
+        final ConfigurationAdmin ca = getConfigurationAdmin();
+        TestCase.assertNotNull( "ConfigurationAdmin service is required", ca );
+
+        final Bundle cfgAdminBundle = configAdminTracker.getServiceReference().getBundle();
+        cfgAdminBundle.stop();
+        try
+        {
+            ca.listConfigurations( "(service.pid=sample)" );
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.listConfigurations" );
+        }
+        catch ( IllegalStateException ise )
+        {
+            // expected
+        }
+        catch ( Exception e )
+        {
+            TestCase.fail( "Expected IllegalStateException for ConfigurationAdmin.listConfigurations, got: " + e );
         }
         finally
         {

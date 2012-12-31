@@ -71,6 +71,8 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration createFactoryConfiguration( String factoryPid ) throws IOException
     {
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
         configurationManager.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0})", new Object[]
             { factoryPid } );
 
@@ -85,12 +87,14 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration createFactoryConfiguration( String factoryPid, String location ) throws IOException
     {
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
         configurationManager.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0}, location={1})",
             new Object[]
                 { factoryPid, location } );
 
         // CM 1.4 / 104.13.2.3
-        this.checkPermission( ( location == null ) ? "*" : location );
+        this.checkPermission( configurationManager, ( location == null ) ? "*" : location );
 
         ConfigurationImpl config = configurationManager.createFactoryConfiguration( factoryPid, location );
         return this.wrap( config );
@@ -102,6 +106,8 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration getConfiguration( String pid ) throws IOException
     {
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
         configurationManager.log( LogService.LOG_DEBUG, "getConfiguration(pid={0})", new Object[]
             { pid } );
 
@@ -124,7 +130,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
             else
             {
                 // CM 1.4 / 104.13.2.3
-                this.checkPermission( config.getBundleLocation() );
+                this.checkPermission( configurationManager, config.getBundleLocation() );
             }
         }
 
@@ -137,11 +143,13 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration getConfiguration( String pid, String location ) throws IOException
     {
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
         configurationManager.log( LogService.LOG_DEBUG, "getConfiguration(pid={0}, location={1})", new Object[]
             { pid, location } );
 
         // CM 1.4 / 104.13.2.3
-        this.checkPermission( ( location == null ) ? "*" : location );
+        this.checkPermission( configurationManager, ( location == null ) ? "*" : location );
 
         ConfigurationImpl config = configurationManager.getConfiguration( pid );
         if ( config == null )
@@ -151,7 +159,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         else
         {
             final String configLocation = config.getBundleLocation();
-            this.checkPermission( ( configLocation == null ) ? "*" : configLocation );
+            this.checkPermission( configurationManager, ( configLocation == null ) ? "*" : configLocation );
         }
 
         return this.wrap( config );
@@ -163,6 +171,8 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      */
     public Configuration[] listConfigurations( String filter ) throws IOException, InvalidSyntaxException
     {
+        final ConfigurationManager configurationManager = getConfigurationManager();
+
         configurationManager.log( LogService.LOG_DEBUG, "listConfigurations(filter={0})", new Object[]
             { filter } );
 
@@ -194,11 +204,11 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      * Returns <code>true</code> if the current access control context (call
      * stack) has the CONFIGURE permission.
      */
-    boolean hasPermission(String name)
+    boolean hasPermission( final ConfigurationManager configurationManager, String name )
     {
         try
         {
-            checkPermission(name);
+            checkPermission(configurationManager, name);
             return true;
         }
         catch ( SecurityException se )
@@ -220,7 +230,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      * @throws SecurityException if the access control context does not
      *      have the appropriate permission
      */
-    void checkPermission( String name )
+    void checkPermission( final ConfigurationManager configurationManager, String name )
     {
         // the caller's permission must be checked
         final SecurityManager sm = System.getSecurityManager();
@@ -267,4 +277,23 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         }
     }
 
+
+    /**
+     * Returns the {@link ConfigurationManager} backing this configuraiton
+     * admin instance or throws {@code IllegalStateException} if already
+     * disposed off.
+     *
+     * @return The {@link ConfigurationManager} instance if still active
+     * @throws IllegalStateException if this instance has been
+     *      {@linkplain #dispose() disposed off} already.
+     */
+    private ConfigurationManager getConfigurationManager()
+    {
+        if ( this.configurationManager == null )
+        {
+            throw new IllegalStateException( "Configuration Admin service has been unregistered" );
+        }
+
+        return this.configurationManager;
+    }
 }
