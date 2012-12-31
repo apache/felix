@@ -223,9 +223,9 @@
                                        <Bundle-Name>
                                            ${project.name} (All In One)
                                        </Bundle-Name>
-                                       <Bundle-SymbolicName>
-                                           ${project.artifactId}.all
-                                       </Bundle-SymbolicName>
+                                       <Bundle-Version>
+                                           ${project.version}-all
+                                       </Bundle-Version>
                                        <Export-Package>
                                             org.apache.commons.fileupload,
                                             org.apache.commons.fileupload.disk,
@@ -301,9 +301,9 @@
                                        <Bundle-Name>
                                            ${project.name} (JQuery Debug)
                                        </Bundle-Name>
-                                       <Bundle-SymbolicName>
-                                           ${project.artifactId}.debug
-                                       </Bundle-SymbolicName>
+                                       <Bundle-Version>
+                                           ${project.version}-debug
+                                       </Bundle-Version>
                                        <Include-Resource>
                                            {maven-resources},
                                            res=src/main/debug-resources/res
