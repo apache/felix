@@ -669,8 +669,8 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 }
 
                 // CM 1.4 / 104.13.2.3 Permission required
-                if ( !configurationAdmin.hasPermission( ( String ) config
-                    .get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ) )
+                if ( !configurationAdmin.hasPermission( this,
+                    ( String ) config.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) ) )
                 {
                     log(
                         LogService.LOG_DEBUG,
