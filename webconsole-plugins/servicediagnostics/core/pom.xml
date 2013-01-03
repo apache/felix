@@ -11,7 +11,7 @@
 
   <artifactId>org.apache.felix.servicediagnostics.plugin</artifactId>
   <packaging>bundle</packaging>
-  <version>0.1.3-SNAPSHOT</version>
+  <version>0.1.2-SNAPSHOT</version>
   <name>Apache Felix Web Console Service Diagnostics Plugin</name>
   <description>
     This is a plugin for the Apache Felix OSGi web console providing a graphical representation of services and missing required dependencies.
