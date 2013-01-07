@@ -249,7 +249,7 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
 
     /**
      * Starts the factory.
-     * This method is called when holding the monitor lock.
+     * This method is not called when holding the monitor lock.
      */
     public void starting() {
         if (m_tracker != null) {
