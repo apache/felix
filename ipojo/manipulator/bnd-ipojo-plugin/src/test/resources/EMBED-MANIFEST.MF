@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-Name: Embed
+Bundle-Vendor: The Apache Software Foundation
+Bundle-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.apache.felix.ipojo.test
+IPOJO-Components: instance { $component="org.apache.felix.ipojo.IPOJOU
+ RLHandler" }component { $immediate="true" $classname="org.apache.feli
+ x.ipojo.IPOJOURLHandler" $public="false" callback { $transition="inva
+ lidate" $method="stop" }provides { property { $mandatory="false" $nam
+ e="url.handler.protocol" $value="ipojo" $type="java.lang.String" }}ma
+ nipulation { $super="org.osgi.service.url.AbstractURLStreamHandlerSer
+ vice" field { $name="m_context" $type="org.osgi.framework.BundleConte
+ xt" }field { $name="m_temp" $type="java.io.File" }method { $arguments
+ ="{org.osgi.framework.BundleContext}" $name="$init" }method { $name="
+ stop" }method { $arguments="{java.net.URL}" $name="openConnection" $r
+ eturn="java.net.URLConnection" }method { $arguments="{java.net.URL,ja
+ va.io.File}" $name="save" }method { $arguments="{java.io.InputStream,
+ java.io.File}" $name="save" }method { $arguments="{java.util.jar.JarF
+ ile}" $name="findMetadata" $return="java.io.File" }interface { $name=
+ "org.osgi.service.url.URLStreamHandlerService" }}}
