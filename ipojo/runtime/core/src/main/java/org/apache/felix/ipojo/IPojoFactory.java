@@ -580,7 +580,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
     /**
      * Starting method.
      * This method is called when the factory is starting.
-     * This method is called when holding the lock on the factory.
+     * This method is <strong>not</strong> called when holding the lock on the factory.
      */
     public abstract void starting();
 
@@ -590,16 +590,20 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
      * calls the {@link IPojoFactory#starting()} method,
      * and published services if the factory is public.
      */
-    public synchronized void start() {
-        if (m_described) { // Already started.
-            return;
+    public void start() {
+        synchronized (this) {
+            if (m_described) { // Already started.
+                return;
+            }
         }
 
         m_componentDesc = getComponentTypeDescription();
 
         starting();
 
-        computeFactoryState();
+        synchronized (this) {
+            computeFactoryState();
+        }
 
         if (m_isPublic) {
             // Exposition of the factory service
