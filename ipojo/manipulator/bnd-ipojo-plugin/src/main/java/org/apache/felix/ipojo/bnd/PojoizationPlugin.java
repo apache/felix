@@ -95,6 +95,38 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
         BndJarResourceStore store = new BndJarResourceStore(analyzer, this.m_reporter);
         store.setIncludeEmbedComponents(m_includeEmbedBundles);
 
+        CompositeMetadataProvider provider = buildMetadataProvider(analyzer, reporter, store);
+
+        // Quick exit
+        CacheableMetadataProvider cache = new CacheableMetadataProvider(provider);
+        if (cache.getMetadatas().isEmpty() && !hasEmbedComponents(analyzer)) {
+            return false;
+        }
+
+        manipulateComponents(reporter, store, cache);
+
+        int nbComponents = findElements(cache.getMetadatas(), "component").size();
+        int nbHandlers = findElements(cache.getMetadatas(), "handler").size();
+        this.m_reporter.progress("iPOJO manipulation performed performed in %s ms (%d components, %d handlers).",
+                               (System.currentTimeMillis() - start),
+                               nbComponents,
+                               nbHandlers);
+
+        // Return true if a new run should be performed after the analyze
+        return false;
+    }
+
+    protected void manipulateComponents(BndReporter reporter, BndJarResourceStore store, CacheableMetadataProvider cache) {
+        Pojoization pojoization = new Pojoization(reporter);
+        pojoization.disableAnnotationProcessing();
+        if (m_useLocalSchemas) {
+            pojoization.setUseLocalXSD();
+        }
+
+        pojoization.pojoization(store, cache, createVisitor(store, reporter));
+    }
+
+    protected CompositeMetadataProvider buildMetadataProvider(Analyzer analyzer, BndReporter reporter, BndJarResourceStore store) {
         // Build MetadataProvider
         CompositeMetadataProvider provider = new CompositeMetadataProvider(reporter);
 
@@ -114,29 +146,7 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
             }
         }
         provider.addMetadataProvider(new AnnotationMetadataProvider(store, reporter));
-
-        CacheableMetadataProvider cache = new CacheableMetadataProvider(provider);
-        if (cache.getMetadatas().isEmpty() && !hasEmbedComponents(analyzer)) {
-            return false;
-        }
-
-        Pojoization pojoization = new Pojoization(reporter);
-        pojoization.disableAnnotationProcessing();
-        if (m_useLocalSchemas) {
-            pojoization.setUseLocalXSD();
-        }
-
-        pojoization.pojoization(store, cache, createVisitor(store, reporter));
-
-        int nbComponents = findElements(cache.getMetadatas(), "component").size();
-        int nbHandlers = findElements(cache.getMetadatas(), "handler").size();
-        this.m_reporter.progress("iPOJO manipulation performed performed in %s ms (%d components, %d handlers).",
-                               (System.currentTimeMillis() - start),
-                               nbComponents,
-                               nbHandlers);
-
-        // Return true if a new run should be performed after the analyze
-        return false;
+        return provider;
     }
 
     private boolean hasEmbedComponents(Analyzer analyzer) throws Exception {
@@ -155,7 +165,7 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
         return found;
     }
 
-    private ManipulationVisitor createVisitor(ResourceStore store, BndReporter reporter) {
+    protected ManipulationVisitor createVisitor(ResourceStore store, BndReporter reporter) {
         ManipulatedResourcesWriter writer = new ManipulatedResourcesWriter();
         writer.setReporter(reporter);
         writer.setResourceStore(store);
@@ -163,7 +173,6 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
         CheckFieldConsistencyVisitor checkFieldConsistencyVisitor = new CheckFieldConsistencyVisitor(writer);
         checkFieldConsistencyVisitor.setReporter(reporter);
         return checkFieldConsistencyVisitor;
-
     }
 
 }
