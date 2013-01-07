@@ -18,11 +18,6 @@
  */
 package org.apache.felix.ipojo.bnd;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import aQute.bnd.service.AnalyzerPlugin;
 import aQute.bnd.service.Plugin;
 import aQute.lib.osgi.Analyzer;
@@ -39,6 +34,13 @@ import org.apache.felix.ipojo.manipulator.visitor.check.CheckFieldConsistencyVis
 import org.apache.felix.ipojo.manipulator.visitor.writer.ManipulatedResourcesWriter;
 import org.apache.felix.ipojo.metadata.Element;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static org.apache.felix.ipojo.bnd.Manifests.hasEmbedComponents;
+
 /**
  * A {@code BndIpojoPlugin} is ...
  *
@@ -48,12 +50,15 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
 
     private static final String PROPERTY_METADATA = "metadata";
     private static final String PROPERTY_USE_LOCAL_SCHEMAS = "use-local-schemas";
+    private static final String PROPERTY_INCLUDE_EMBED_BUNDLES = "include-embed-bundles";
 
     private static final String DEFAULT_METADATA = "META-INF/metadata.xml";
     private static final boolean DEFAULT_USE_LOCAL_SCHEMAS = false;
+    private static final boolean DEFAULT_INCLUDE_EMBED_BUNDLES = false;
 
     private String m_metadata = DEFAULT_METADATA;
     private boolean m_useLocalSchemas = DEFAULT_USE_LOCAL_SCHEMAS;
+    private boolean m_includeEmbedBundles = DEFAULT_INCLUDE_EMBED_BUNDLES;
 
     private Reporter m_reporter;
 
@@ -67,6 +72,11 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
         // Use local schemas ?
         if (configuration.containsKey(PROPERTY_USE_LOCAL_SCHEMAS)) {
             m_useLocalSchemas = true;
+        }
+
+        // Process embed bundles ?
+        if (configuration.containsKey(PROPERTY_INCLUDE_EMBED_BUNDLES)) {
+            m_includeEmbedBundles = true;
         }
     }
 
@@ -83,6 +93,7 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
 
         // Build ResourceStore
         BndJarResourceStore store = new BndJarResourceStore(analyzer, this.m_reporter);
+        store.setIncludeEmbedComponents(m_includeEmbedBundles);
 
         // Build MetadataProvider
         CompositeMetadataProvider provider = new CompositeMetadataProvider(reporter);
@@ -105,7 +116,7 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
         provider.addMetadataProvider(new AnnotationMetadataProvider(store, reporter));
 
         CacheableMetadataProvider cache = new CacheableMetadataProvider(provider);
-        if (cache.getMetadatas().isEmpty()) {
+        if (cache.getMetadatas().isEmpty() && !hasEmbedComponents(analyzer)) {
             return false;
         }
 
@@ -126,6 +137,12 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
 
         // Return true if a new run should be performed after the analyze
         return false;
+    }
+
+    private boolean hasEmbedComponents(Analyzer analyzer) throws Exception {
+        // We want to process components from embed jars ?
+        return m_includeEmbedBundles && Manifests.hasEmbedComponents(analyzer);
+
     }
 
     private List<Element> findElements(List<Element> metadatas, String name) {
