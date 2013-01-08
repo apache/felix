@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -68,7 +68,8 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
     public void serviceChanged(ServiceEvent event)
     {
         Bundle bundle = event.getServiceReference().getBundle();
-        if (bundle.getState() == Bundle.ACTIVE && event.getType() != ServiceEvent.MODIFIED)
+        if ((bundle != null)
+            && (bundle.getState() == Bundle.ACTIVE && event.getType() != ServiceEvent.MODIFIED))
         {
             synchronized (this)
             {
@@ -81,7 +82,6 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
 
     private void addBundle(Bundle bundle, Logger logger)
     {
-        
         /*
          * Concurrency note: This method MUST be called in a context which
          * is synchronized on this instance to prevent data structure
@@ -104,19 +104,18 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
             m_logger.log(Logger.LOG_WARNING, ex.getMessage(), ex);
         }
     }
-    
+
     private void removeBundle(Bundle bundle, Logger logger)
     {
-        
         /*
          * Concurrency note: This method MUST be called in a context which
          * is synchronized on this instance to prevent data structure
          * corruption.
          */
-        
+
         m_localResourceList.remove(new Long(bundle.getBundleId()));
     }
-    
+
     public void dispose()
     {
         m_context.removeBundleListener(this);
@@ -150,9 +149,9 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
         m_context.addServiceListener(this);
 
         // Generate the resource list from the set of installed bundles.
-        // Lock so we can ensure that no bundle events arrive before we 
+        // Lock so we can ensure that no bundle events arrive before we
         // are done getting our state snapshot.
-        Bundle[] bundles = null;
+        Bundle[] bundles;
         synchronized (this)
         {
             // Create a local resource object for each bundle, which will
@@ -166,5 +165,4 @@ public class LocalRepositoryImpl implements Repository, SynchronousBundleListene
             m_snapshotTimeStamp = System.currentTimeMillis();
         }
     }
-
 }
