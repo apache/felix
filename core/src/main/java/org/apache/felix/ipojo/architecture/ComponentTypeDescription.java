@@ -23,7 +23,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
 
-import org.apache.felix.ipojo.ComponentFactory;
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.IPojoFactory;
 import org.apache.felix.ipojo.metadata.Attribute;
@@ -255,7 +254,7 @@ public class ComponentTypeDescription {
         desc.addAttribute(new Attribute("name", m_factory.getName()));
         desc.addAttribute(
                           new Attribute("bundle",
-                                          Long.toString(((ComponentFactory) m_factory).getBundleContext().getBundle().getBundleId())));
+                                          Long.toString(m_factory.getBundleContext().getBundle().getBundleId())));
 
         String state = "valid";
         if (m_factory.getState() == Factory.INVALID) {
