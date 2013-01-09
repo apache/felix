@@ -34,8 +34,33 @@
           <name>OW2 Snapshot Repository</name>
           <url>http://maven.ow2.org/maven2-snapshot/</url>
       </repository>
+
+    <repository>
+      <id>apache.snapshots</id>
+      <name>snapshot plugins</name>
+      <url>http://repository.apache.org/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
   </repositories>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>apache.plugins.snapshots</id>
+      <name>snapshot plugins</name>
+      <url>http://repository.apache.org/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
 
   <properties>
     <ipojo.core.release>1.8.2</ipojo.core.release>
