@@ -70,11 +70,18 @@
 #navmenu {
      width: auto;
 }
+
 #navmenu li.ui-menu-item {
      width: auto;
 }
+
 #navmenu li.navMenuItem-0 {
     display: inline-block;
+}
+
+/* Don't display caret on top-level menu (FELIX-3841) */
+#navmenu li.navMenuItem-0 > a > span {
+    display: none;
 }
 
 /* CENTRAL CONTENT AREA STYLING */
