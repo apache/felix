@@ -603,16 +603,18 @@ public class DependencyManager {
      * Removes all components and their dependencies.
      */
     public void clear() {
-        List services = getComponents();
-        for (int i = services.size() - 1; i >= 0; i--) {
-            Component service = (Component) services.get(i);
-            remove(service);
+    	Component[] components;
+    	synchronized (m_components) {
+			components = (Component[]) m_components.toArray(new Component[m_components.size()]);
+    	}
+        for (int i = components.length - 1; i >= 0; i--) {
+            Component component = (Component) components[i];
+            remove(component);
             // remove any state listeners that are still registered
-            if (service instanceof ComponentImpl) {
-                ComponentImpl si = (ComponentImpl) service;
+            if (component instanceof ComponentImpl) {
+                ComponentImpl si = (ComponentImpl) component;
                 si.removeStateListeners();
             }
         }
     }
-    
 }
