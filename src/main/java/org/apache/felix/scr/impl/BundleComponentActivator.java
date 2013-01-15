@@ -102,6 +102,9 @@ public class BundleComponentActivator implements Logger
         m_logService.open();
         m_configuration = configuration;
 
+        log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] active",
+                new Object[] {m_context.getBundle().getBundleId()}, null, null, null );
+
         // Get the Metadata-Location value from the manifest
         String descriptorLocations = ( String ) m_context.getBundle().getHeaders().get( "Service-Component" );
         if ( descriptorLocations == null )
@@ -124,6 +127,8 @@ public class BundleComponentActivator implements Logger
      */
     private void initialize( String descriptorLocations )
     {
+        log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] descriptor locations {1}",
+                new Object[] {m_context.getBundle().getBundleId(), descriptorLocations}, null, null, null );
 
         // 112.4.1: The value of the the header is a comma separated list of XML entries within the Bundle
         StringTokenizer st = new StringTokenizer( descriptorLocations, ", " );
@@ -151,9 +156,20 @@ public class BundleComponentActivator implements Logger
         //enable all the enabled components
         for ( ComponentHolder componentHolder : m_managers )
         {
+            log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] May enable component holder {1}",
+                    new Object[] {m_context.getBundle().getBundleId(), componentHolder.getComponentMetadata().getName()}, null, null, null );
+
             if ( componentHolder.getComponentMetadata().isEnabled() )
             {
+                log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] Enabling component holder {1}",
+                        new Object[] {m_context.getBundle().getBundleId(), componentHolder.getComponentMetadata().getName()}, null, null, null );
+
                 componentHolder.enableComponents( false );
+            }
+            else
+            {
+                log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] Will not enable component holder {1}",
+                        new Object[] {m_context.getBundle().getBundleId(), componentHolder.getComponentMetadata().getName()}, null, null, null );
             }
         }
     }
@@ -246,6 +262,9 @@ public class BundleComponentActivator implements Logger
                     // register the component after validation
                     m_componentRegistry.registerComponentHolder( key, holder );
                     m_managers.add( holder );
+
+                    log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] ComponentHolder created for {1}",
+                            new Object[] {m_context.getBundle().getBundleId(), metadata.getName()}, null, null, null );
 
                 }
                 catch ( Throwable t )
