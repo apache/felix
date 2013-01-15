@@ -81,7 +81,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
     /**
      * The special component used if there is no configuration or a singleton
      * configuration. This field is only <code>null</code> once all components
-     * held by this holder have been disposed off by
+     * held by this holder have been disposed of by
      * {@link #disposeComponents(int)} and is first created in the constructor.
      * As factory configurations are provided this instance may be configured
      * or "deconfigured".
@@ -185,34 +185,48 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
      */
     public void configurationDeleted( final String pid )
     {
-        // FELIX-2231: nothing to do any more, all components have been disposed off
-        if (m_singleComponent == null) {
-            return;
-        }
+        log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration deleted for pid {0}",
+                new Object[] {pid}, null);
 
-        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
+        // component to deconfigure or dispose of
+        final ImmediateComponentManager icm;
+        boolean deconfigure = false;
+
+        synchronized ( m_components )
         {
-            m_singleComponent.reconfigure( null );
-        }
-        else
-        {
-            // remove the component configured with the deleted configuration
-            ImmediateComponentManager icm = removeComponentManager( pid );
-            if ( icm != null )
+            // FELIX-2231: nothing to do any more, all components have been disposed off
+            if (m_singleComponent == null) 
             {
-                boolean dispose = true;
+                return;
+            }
+
+            if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
+            {
+                // singleton configuration has pid equal to component name
+                icm = m_singleComponent;
+                deconfigure = true;
+            }
+            else
+            {
+                // remove the component configured with the deleted configuration
+                icm = m_components.remove( pid );
+                if ( icm == null ) 
+                {
+                    // we already removed the component with the deleted configuration
+                    return;
+                }
+
                 // special casing if the single component is deconfigured
                 if ( m_singleComponent == icm )
                 {
 
-                    // if the single component is the last remaining, deconfi
+                    // if the single component is the last remaining, deconfig
                     if ( m_components.isEmpty() )
                     {
 
                         // if the single component is the last remaining
                         // deconfigure it
-                        icm.reconfigure( null );
-                        dispose = false;
+		                deconfigure = true;
 
                     }
                     else
@@ -224,15 +238,19 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
 
                     }
                 }
-
-                // icm may be null if the last configuration deleted was the
-                // single component's configuration. Otherwise the component
-                // is not the "last" and has to be disposed off
-                if ( dispose )
-                {
-                    icm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
-                }
             }
+        }
+
+        // icm may be null if the last configuration deleted was the
+        // single component's configuration. Otherwise the component
+        // is not the "last" and has to be disposed off
+        if ( deconfigure )
+        {
+	        icm.reconfigure( null );
+        }
+        else
+        {
+            icm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
         }
     }
 
@@ -254,138 +272,159 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
     {
         log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration updated for pid {0} with properties {1}",
                 new Object[] {pid, props}, null);
-        // FELIX-2231: nothing to do any more, all components have been disposed off
-        if (m_singleComponent == null) {
-            return;
-        }
 
-        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
+        // component to update or create
+        final ImmediateComponentManager icm;
+        final String message;
+        final boolean enable;
+        Object[] notEnabledArguments = null;
+
+        synchronized ( m_components )
         {
-            log( LogService.LOG_DEBUG, "ImmediateComponentHolder reconfiguring single component for pid {0} ",
-                    new Object[] {pid}, null );
-            // singleton configuration has pid equal to component name
-            m_singleComponent.reconfigure( props );
-        }
-        else
-        {
-            // factory configuration update or created
-            final ImmediateComponentManager icm = getComponentManager( pid );
-            if ( icm != null )
+            // FELIX-2231: nothing to do any more, all components have been disposed off
+            if (m_singleComponent == null) 
             {
-                log( LogService.LOG_DEBUG, "ImmediateComponentHolder reconfiguring existing component for pid {0} ",
-                        new Object[] {pid}, null );
-                // factory configuration updated for existing component instance
-                icm.reconfigure( props );
+                return;
+            }
+
+            if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
+            {
+                // singleton configuration has pid equal to component name
+                icm = m_singleComponent;
+                message = "ImmediateComponentHolder reconfiguring single component for pid {0} ";
+                enable = false;
             }
             else
             {
-                // factory configuration created
-                final ImmediateComponentManager newIcm;
-                if ( !m_singleComponent.hasConfiguration() )
+                final ImmediateComponentManager existingIcm = m_components.get( pid );
+                if ( existingIcm != null )
                 {
-                    // configure the single instance if this is not configured
-                    log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuring the unconfigured single component for pid {0} ",
-                            new Object[] {pid}, null );
-                    newIcm = m_singleComponent;
+                    // factory configuration updated for existing component instance
+                    icm = existingIcm;
+                    message = "ImmediateComponentHolder reconfiguring existing component for pid {0} ";
+                    enable = false;
                 }
                 else
                 {
-                    // otherwise create a new instance to provide the config to
-                    log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuring a new component for pid {0} ",
-                            new Object[] {pid}, null );
-                    newIcm = createComponentManager();
+                    // factory configuration created
+                    if ( !m_singleComponent.hasConfiguration() )
+                    {
+                        // configure the single instance if this is not configured
+                        icm = m_singleComponent;
+                        message = "ImmediateComponentHolder configuring the unconfigured single component for pid {0} ";
+                    }
+                    else
+                    {
+                        // otherwise create a new instance to provide the config to
+                        icm = createComponentManager();
+                        message = "ImmediateComponentHolder configuring a new component for pid {0} ";
+                    }
+
+                    // enable the component if it is initially enabled
+                    if ( m_enabled && getComponentMetadata().isEnabled() ) 
+                    {
+                        enable = true;
+                    }
+                    else 
+                    {
+                        enable = false;
+                        notEnabledArguments = new Object[] {pid, m_enabled, getComponentMetadata().isEnabled()};
+                    }
+
+	                // store the component in the map
+                    m_components.put( pid, icm );
                 }
-
-                // configure the component
-                newIcm.reconfigure( props );
-                log( LogService.LOG_DEBUG, "ImmediateComponentHolder Finished configuring the dependency managers for component for pid {0} ",
-                        new Object[] {pid}, null );
-
-                // enable the component if it is initially enabled
-                if ( m_enabled && getComponentMetadata().isEnabled() )
-                {
-                    newIcm.enable( false );
-                    log( LogService.LOG_DEBUG, "ImmediateComponentHolder Finished enabling component for pid {0} ",
-                            new Object[] {pid}, null );
-                }
-                else
-                {
-                    log( LogService.LOG_DEBUG, "ImmediateComponentHolder Will not enable component for pid {0}: holder enabled state: {1}, metadata enabled: {2} ",
-                            new Object[] {pid, m_enabled, getComponentMetadata().isEnabled()}, null );
-
-                }
-
-                // store the component in the map
-                putComponentManager( pid, newIcm );
             }
+        }
+        log( LogService.LOG_DEBUG, message, new Object[] {pid}, null);
+
+        // configure the component
+        icm.reconfigure( props );
+        log( LogService.LOG_DEBUG, "ImmediateComponentHolder Finished configuring the dependency managers for component for pid {0} ",
+                new Object[] {pid}, null );
+
+        if (enable) 
+        {
+            icm.enable( false );
+            log( LogService.LOG_DEBUG, "ImmediateComponentHolder Finished enabling component for pid {0} ",
+                    new Object[] {pid}, null );
+        }
+        else if (notEnabledArguments != null) 
+        {
+            log( LogService.LOG_DEBUG, "ImmediateComponentHolder Will not enable component for pid {0}: holder enabled state: {1}, metadata enabled: {2} ",
+                    notEnabledArguments, null );
         }
     }
 
 
     public Component[] getComponents()
     {
-        Component[] components = getComponentManagers( false );
-        return ( components != null ) ? components : new Component[]
-            { m_singleComponent };
+        synchronized ( m_components )
+        {
+            Component[] components = getComponentManagers( false );
+            return ( components != null ) ? components : new Component[] { m_singleComponent };
+        }
     }
 
 
     public void enableComponents( final boolean async )
     {
-        m_enabled = true;
-        final ImmediateComponentManager[] cms = getComponentManagers( false );
-        if ( cms == null )
+        ImmediateComponentManager[] cms;
+        synchronized ( m_components )
         {
-            m_singleComponent.enable( async );
-        }
-        else
-        {
-            for ( ImmediateComponentManager cm : cms )
+            m_enabled = true;
+            cms = getComponentManagers( false );
+            if ( cms == null )
             {
-                cm.enable( async );
+                cms = new ImmediateComponentManager[] { m_singleComponent };
             }
         }
-
+        for ( ImmediateComponentManager cm : cms )
+        {
+            cm.enable( async );
+        }
     }
 
 
     public void disableComponents( final boolean async )
     {
-        m_enabled = false;
+        ImmediateComponentManager[] cms;
+        synchronized ( m_components )
+        {
+            m_enabled = false;
 
-        final ImmediateComponentManager[] cms = getComponentManagers( false );
-        if ( cms == null )
-        {
-            m_singleComponent.disable( async );
-        }
-        else
-        {
-            for ( ImmediateComponentManager cm : cms )
+            cms = getComponentManagers( false );
+            if ( cms == null )
             {
-                cm.disable( async );
+                cms = new ImmediateComponentManager[] { m_singleComponent };
             }
+        }
+        for ( ImmediateComponentManager cm : cms )
+        {
+            cm.disable( async );
         }
     }
 
 
     public void disposeComponents( final int reason )
     {
-        // FELIX-1733: get a copy of the single component and clear
-        // the field to prevent recreation in disposed(ICM)
-        final ImmediateComponentManager singleComponent = m_singleComponent;
-        m_singleComponent = null;
+        ImmediateComponentManager[] cms;
+        synchronized ( m_components )
+        {
+            // FELIX-1733: get a copy of the single component and clear
+            // the field to prevent recreation in disposed(ICM)
+            final ImmediateComponentManager singleComponent = m_singleComponent;
+            m_singleComponent = null;
 
-        final ImmediateComponentManager[] cms = getComponentManagers( true );
-        if ( cms == null )
-        {
-            singleComponent.dispose( reason );
-        }
-        else
-        {
-            for ( ImmediateComponentManager cm : cms )
+            cms = getComponentManagers( true );
+            if ( cms == null )
             {
-                cm.dispose( reason );
+                cms = new ImmediateComponentManager[] { singleComponent };
             }
+        }
+        for ( ImmediateComponentManager cm : cms )
+        {
+            cm.dispose( reason );
         }
     }
 
@@ -406,13 +445,10 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
                     }
                 }
             }
-        }
 
-        // if the component is the single component, we have to replace it
-        // by another entry in the map
-        if ( component == m_singleComponent )
-        {
-            synchronized ( m_components )
+            // if the component is the single component, we have to replace it
+            // by another entry in the map
+            if ( component == m_singleComponent )
             {
                 if ( m_components.isEmpty() )
                 {
@@ -464,58 +500,27 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
 
     //---------- internal
 
-    private ImmediateComponentManager getComponentManager( String pid )
-    {
-        synchronized ( m_components )
-        {
-            return m_components.get( pid );
-        }
-    }
-
-
-    private ImmediateComponentManager removeComponentManager( String pid )
-    {
-        synchronized ( m_components )
-        {
-            return m_components.remove( pid );
-        }
-    }
-
-
-    private void putComponentManager( String pid, ImmediateComponentManager componentManager )
-    {
-        synchronized ( m_components )
-        {
-            m_components.put( pid, componentManager );
-        }
-    }
-
-
-    /**
+   /**
      * Returns all components from the map, optionally also removing them
      * from the map. If there are no components in the map, <code>null</code>
      * is returned.
      */
     private ImmediateComponentManager[] getComponentManagers( final boolean clear )
     {
-        synchronized ( m_components )
+        // fast exit if there is no component in the map
+        if ( m_components.isEmpty() )
         {
-            // fast exit if there is no component in the map
-            if ( m_components.isEmpty() )
-            {
-                return null;
-            }
-
-            final ImmediateComponentManager[] cm = new ImmediateComponentManager[m_components.size()];
-            m_components.values().toArray( cm );
-
-            if ( clear )
-            {
-                m_components.clear();
-            }
-
-            return cm;
+            return null;
         }
+
+        final ImmediateComponentManager[] cm = new ImmediateComponentManager[m_components.size()];
+        m_components.values().toArray( cm );
+
+        if ( clear )
+        {
+            m_components.clear();
+        }
+        return cm;
     }
 
     public boolean isLogEnabled( int level )
