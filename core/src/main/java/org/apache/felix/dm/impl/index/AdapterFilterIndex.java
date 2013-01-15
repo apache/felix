@@ -220,5 +220,4 @@ public class AdapterFilterIndex extends AbstractFactoryFilterIndex implements Fi
         sb.append("]");
         return sb.toString();
     }
-
 }
