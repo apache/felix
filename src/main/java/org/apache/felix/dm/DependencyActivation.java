@@ -19,9 +19,24 @@
 package org.apache.felix.dm;
 
 /**
+ * Dependency activation interface that must be implemented by any
+ * new dependency and is used by the dependency manager to start and
+ * stop the dependency after it has been associated with a component.
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface DependencyActivation {
-  public void start(DependencyService service);
-  public void stop(DependencyService service);
+	/**
+	 * Invoked when the dependency should start.
+	 * 
+	 * @param service the component this dependency belongs to
+	 */
+	public void start(DependencyService service);
+
+	/**
+	 * Invoked when the dependency should stop.
+	 * 
+	 * @param service the component this dependency belongs to
+	 */
+	public void stop(DependencyService service);
 }

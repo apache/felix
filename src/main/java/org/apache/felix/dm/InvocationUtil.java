@@ -27,6 +27,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
+ * Utility methods for invoking callbacks. Lookups of callbacks are accellerated by using a LRU cache.
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class InvocationUtil {
@@ -43,6 +45,20 @@ public class InvocationUtil {
         m_methodCache = new LRUMap(Math.max(size, 64));
     }
     
+    /**
+     * Invokes a callback method on an instance. The code will search for a callback method with
+     * the supplied name and any of the supplied signatures in order, invoking the first one it finds.
+     * 
+     * @param instance the instance to invoke the method on
+     * @param methodName the name of the method
+     * @param signatures the ordered list of signatures to look for
+     * @param parameters the parameter values to use for each potential signature
+     * @return whatever the method returns
+     * @throws NoSuchMethodException when no method could be found
+     * @throws IllegalArgumentException when illegal values for this methods arguments are supplied 
+     * @throws IllegalAccessException when the method cannot be accessed
+     * @throws InvocationTargetException when the method that was invoked throws an exception
+     */
     public static Object invokeCallbackMethod(Object instance, String methodName, Class[][] signatures, Object[][] parameters) throws NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         Class currentClazz = instance.getClass();
         while (currentClazz != null && currentClazz != Object.class) {
@@ -57,6 +73,21 @@ public class InvocationUtil {
         throw new NoSuchMethodException(methodName);
     }
 
+    /**
+     * Invoke a method on an instance.
+     * 
+     * @param object the instance to invoke the method on
+     * @param clazz the class of the instance
+     * @param name the name of the method
+     * @param signatures the signatures to look for in order
+     * @param parameters the parameter values for the signatures
+     * @param isSuper <code>true</code> if this is a superclass and we should therefore not look for private methods
+     * @return whatever the method returns
+     * @throws NoSuchMethodException when no method could be found
+     * @throws IllegalArgumentException when illegal values for this methods arguments are supplied 
+     * @throws IllegalAccessException when the method cannot be accessed
+     * @throws InvocationTargetException when the method that was invoked throws an exception
+     */
     public static Object invokeMethod(Object object, Class clazz, String name, Class[][] signatures, Object[][] parameters, boolean isSuper) throws NoSuchMethodException, InvocationTargetException, IllegalArgumentException, IllegalAccessException {
         if (object == null) {
             throw new IllegalArgumentException("Instance cannot be null");

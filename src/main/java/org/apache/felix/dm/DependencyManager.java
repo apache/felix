@@ -105,7 +105,8 @@ public class DependencyManager {
                 for (int i = 0; i < props.length; i++) {
                     if (props[i].equals("*aspect*")) {
                         m_serviceRegistryCache.addFilterIndex(new AspectFilterIndex());
-                    } else if (props[i].equals("*adapter*")) {
+                    }
+                    else if (props[i].equals("*adapter*")) {
                     	m_serviceRegistryCache.addFilterIndex(new AdapterFilterIndex());
                     }
                     else {
@@ -431,6 +432,7 @@ public class DependencyManager {
         return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove, swap);
     }
     
+    /** @see DependencyManager#createAdapterService(Class, String, String, String, String, String) */
     public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove) {
         return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove);
     }
@@ -457,8 +459,8 @@ public class DependencyManager {
      * @param resourceFilter the filter condition to use with the resource
      * @param resourcePropertiesFilter the filter condition on the resource properties to use with the resource
      * @param propagate <code>true</code> if properties from the resource should be propagated to the service
-     * @param callbackInstance 
-     * @param callbackChanged 
+     * @param callbackInstance instance to invoke the callback on
+     * @param callbackChanged the name of the callback method
      * @return a service that acts as a factory for generating resource adapters
      * @see Resource
      */
@@ -466,14 +468,17 @@ public class DependencyManager {
         return new ResourceAdapterServiceImpl(this, resourceFilter, propagate, callbackInstance, null, callbackChanged);
     }
     
+    /** @see DependencyManager#createResourceAdapterService(String, boolean, Object, String) */
     public Component createResourceAdapterService(String resourceFilter, boolean propagate, Object callbackInstance, String callbackSet, String callbackChanged) {
         return new ResourceAdapterServiceImpl(this, resourceFilter, propagate, callbackInstance, callbackSet, callbackChanged);
     }
     
+    /** @see DependencyManager#createResourceAdapterService(String, boolean, Object, String) */
     public Component createResourceAdapterService(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackChanged) {
     	return new ResourceAdapterServiceImpl(this, resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, null, callbackChanged);
     }
     
+    /** @see DependencyManager#createResourceAdapterService(String, boolean, Object, String) */
     public Component createResourceAdapterService(String resourceFilter, Object propagateCallbackInstance, String propagateCallbackMethod, Object callbackInstance, String callbackSet, String callbackChanged) {
         return new ResourceAdapterServiceImpl(this, resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, callbackSet, callbackChanged);
     }
@@ -582,12 +587,8 @@ public class DependencyManager {
      * @param propertiesMetaData Array of MetaData regarding configuration properties
      * @return a service that acts as a factory for generating the managed service factory configuration adapter
      */
-    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, 
-                                                            String heading, String desc, String localization,
-                                                            PropertyMetaData[] propertiesMetaData) 
-    {
-        return new FactoryConfigurationAdapterServiceImpl(this, factoryPid, update, propagate, m_context, m_logger, 
-                                                          heading, desc, localization, propertiesMetaData);        
+	public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, String heading, String desc, String localization, PropertyMetaData[] propertiesMetaData) {
+		return new FactoryConfigurationAdapterServiceImpl(this, factoryPid, update, propagate, m_context, m_logger, heading, desc, localization, propertiesMetaData);
     }
 
     /**

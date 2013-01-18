@@ -39,6 +39,13 @@ public interface Component {
      * @return this component
      */
     public Component add(Dependency dependency);
+
+    /**
+     * Adds a list of new dependencies to this component.
+     * 
+     * @param dependencies the dependencies to add
+     * @return this component
+     */
     public Component add(List dependencies);
     
     /**
@@ -255,6 +262,18 @@ public interface Component {
 	 */
 	public Object[] getCompositionInstances();
 	
+	/**
+	 * Invokes a callback method on an array of instances. The method, whose name
+	 * and signatures you provide, along with the values for the parameters, is
+	 * invoked on all the instances where it exists.
+	 * 
+	 * @see InvocationUtil#invokeCallbackMethod(Object, String, Class[][], Object[][])
+	 * 
+	 * @param instances an array of instances to invoke the method on
+	 * @param methodName the name of the method
+	 * @param signatures the signatures of the method
+	 * @param parameters the parameter values
+	 */
     public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters);
 	
 	/**
