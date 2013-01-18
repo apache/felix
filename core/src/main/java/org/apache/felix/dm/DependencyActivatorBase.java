@@ -313,5 +313,4 @@ public abstract class DependencyActivatorBase implements BundleActivator {
     public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate, String heading, String desc, String localization, PropertyMetaData[] propertiesMetaData) {
         return m_manager.createFactoryConfigurationAdapterService(factoryPid, update, propagate, heading, desc, localization, propertiesMetaData);
     }
-
 }

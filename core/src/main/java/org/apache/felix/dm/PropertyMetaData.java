@@ -19,12 +19,14 @@ package org.apache.felix.dm;
 public interface PropertyMetaData {
     /**
      * The label used to display the property. Example: "Log Level".
+     * 
      * @return The label used to display the property (may be localized)
      */
     public PropertyMetaData setHeading(String heading);
 
     /**
      * The key of a ConfigurationAdmin property. Example: "printer.logLevel"
+     * 
      * @return The Configuration Admin property name
      */
     public PropertyMetaData setId(String id);
@@ -56,6 +58,7 @@ public interface PropertyMetaData {
     /**
      * Returns the property description. The description may be localized and must describe the semantics of this type and any 
      * constraints. Example: "Select the log level for the Printer Service".
+     * 
      * @return a localizable description of the property.
      */
     public PropertyMetaData setDescription(String description);
@@ -81,6 +84,7 @@ public interface PropertyMetaData {
 
     /**
      * Return a list of valid options for this property (the labels may be localized).
+     * 
      * @return the list of valid options for this property.
      */
     public PropertyMetaData addOption(String optionLabel, String optionValue);

@@ -208,5 +208,10 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
      */
     public ServiceDependency setPropagate(Object instance, String method);
 
+	/**
+	 * Sets this dependency to be instance bound or not.
+	 * 
+	 * @param isInstanceBound <code>true</code> if this dependency should be instance bound
+	 */
     public ServiceDependency setInstanceBound(boolean isInstanceBound);    
 }

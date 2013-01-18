@@ -18,7 +18,11 @@
  */
 package org.apache.felix.dm;
 
+import org.osgi.framework.BundleContext;
+
 /**
+ * Interface to the component, so dependencies can interact with it.
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface DependencyService {
@@ -42,18 +46,51 @@ public interface DependencyService {
      * @param dependency the dependency
      */
     public void dependencyChanged(Dependency dependency);
-    
+
+    /**
+     * Returns the component instance.
+     * 
+     * @return component instance
+     */
     public Object getService(); // is also defined on the Service interface
+    
+    /**
+     * Initializes the component. Instantiates it and injects the default injectables such
+     * as {@link BundleContext} and {@link DependencyManager}.
+     */
     public void initService(); // was an implementation method TODO we use it in ConfDepImpl but should not (probably)
+    
+    /**
+     * Returns <code>true</code> if this component is registered. In other words, all
+     * its required dependencies are available.
+     * 
+     * @return <code>true</code> if the component is registered
+     */
     public boolean isRegistered(); // impl method
+    
+    /**
+     * Returns a list of all instances that are part of the composition for this component.
+     * 
+     * @return an array of instances
+     */
     public Object[] getCompositionInstances(); // impl method
     
+    /**
+     * Returns <code>true</code> if this component is instantiated.
+     * 
+     * @return <code>true</code> if this component is instantiated
+     */
     public boolean isInstantiated();
     
     /**
      * Can be called by the dependency whenever it wants to invoke callback methods.
      */
     public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters);
-    
+
+    /**
+     * Returns the component interface.
+     * 
+     * @return the component interface
+     */
     public Component getServiceInterface();
 }

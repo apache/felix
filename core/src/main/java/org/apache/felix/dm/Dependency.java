@@ -105,7 +105,23 @@ public interface Dependency {
      */
     public void invokeRemoved(DependencyService service);
     
+    /**
+     * Determines if the properties associated with this dependency should be propagated to
+     * the properties of the service registered by the component they belong to.
+     * 
+     * @see Dependency#getProperties()
+     * 
+     * @return <code>true</code> if the properties should be propagated
+     */
     public boolean isPropagated();
+    
+    /**
+     * Returns the properties associated with this dependency.
+     * 
+     * @see Dependency#isPropagated()
+     * 
+     * @return the properties
+     */
     public Dictionary getProperties();
     
     /**
