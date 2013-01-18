@@ -29,46 +29,68 @@ package org.apache.felix.dm;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public interface ConfigurationDependency extends Dependency, ComponentDependencyDeclaration
-{
-  ConfigurationDependency setCallback(String callback);
+public interface ConfigurationDependency extends Dependency, ComponentDependencyDeclaration {
+	/**
+	 * Sets the name of the callback method that should be invoked when a configuration
+	 * is available. The contract for this method is identical to that of
+	 * <code>ManagedService.updated(Dictionary) throws ConfigurationException</code>.
+	 * 
+	 * @param callback the name of the callback method
+	 */
+	ConfigurationDependency setCallback(String callback);
 
-  /**
-   * Sets the <code>service.pid</code> of the configuration you are depending on.
-   */
-  ConfigurationDependency setPid(String pid);
+	/**
+	 * Sets the <code>service.pid</code> of the configuration you are depending
+	 * on.
+	 */
+	ConfigurationDependency setPid(String pid);
 
-  /**
-   * Sets propagation of the configuration properties to the service properties. Any additional
-   * service properties specified directly are merged with these.
-   */
-  ConfigurationDependency setPropagate(boolean propagate);
-  
-  /**
-   * The label used to display the tab name (or section) where the properties are displayed. Example: "Printer Service".
-   * @return The label used to display the tab name where the properties are displayed (may be localized)
-   */
-  ConfigurationDependency setHeading(String heading);
+	/**
+	 * Sets propagation of the configuration properties to the service
+	 * properties. Any additional service properties specified directly are
+	 * merged with these.
+	 */
+	ConfigurationDependency setPropagate(boolean propagate);
 
-  /**
-   * A human readable description of the PID this configuration is associated with. Example: "Configuration for the PrinterService bundle".
-   * @return A human readable description of the PID this configuration is associated with (may be localized)
-   */
-  ConfigurationDependency setDescription(String description);
+	/**
+	 * The label used to display the tab name (or section) where the properties
+	 * are displayed. Example: "Printer Service".
+	 * 
+	 * @return The label used to display the tab name where the properties are
+	 *         displayed (may be localized)
+	 */
+	ConfigurationDependency setHeading(String heading);
 
-  /**
-   * Points to the basename of the Properties file that can localize the Meta Type informations.
-   * The default localization base name for the properties is OSGI-INF/l10n/bundle, but can
-   * be overridden by the manifest Bundle-Localization header (see core specification, in section Localization on page 68).
-   * You can specify a specific localization basename file using this method (e.g. <code>setLocalization("person")</code> 
-   * will match person_du_NL.properties in the root bundle directory.
-   */
-  ConfigurationDependency setLocalization(String path);
+	/**
+	 * A human readable description of the PID this configuration is associated
+	 * with. Example: "Configuration for the PrinterService bundle".
+	 * 
+	 * @return A human readable description of the PID this configuration is
+	 *         associated with (may be localized)
+	 */
+	ConfigurationDependency setDescription(String description);
 
-  /**
-   * Adds a MetaData regarding a given configuration property.
-   */
-  ConfigurationDependency add(PropertyMetaData properties);
-  
-  ConfigurationDependency setInstanceBound(boolean isInstanceBound);
+	/**
+	 * Points to the basename of the Properties file that can localize the Meta
+	 * Type informations. The default localization base name for the properties
+	 * is OSGI-INF/l10n/bundle, but can be overridden by the manifest
+	 * Bundle-Localization header (see core specification, in section
+	 * Localization on page 68). You can specify a specific localization
+	 * basename file using this method (e.g.
+	 * <code>setLocalization("person")</code> will match person_du_NL.properties
+	 * in the root bundle directory.
+	 */
+	ConfigurationDependency setLocalization(String path);
+
+	/**
+	 * Adds a MetaData regarding a given configuration property.
+	 */
+	ConfigurationDependency add(PropertyMetaData properties);
+
+	/**
+	 * Sets this dependency to be instance bound or not.
+	 * 
+	 * @param isInstanceBound <code>true</code> if this dependency should be instance bound
+	 */
+	ConfigurationDependency setInstanceBound(boolean isInstanceBound);
 }

@@ -23,9 +23,17 @@ import java.util.Dictionary;
 import java.util.Properties;
 
 /**
+ * Utility class for resource handling.
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ResourceUtil {
+	/**
+	 * Creates a set of properties for a resource based on its URL.
+	 * 
+	 * @param url the URL
+	 * @return a set of properties
+	 */
     public static Dictionary createProperties(URL url) {
         Properties props = new Properties();
         props.setProperty(ResourceHandler.PROTOCOL, url.getProtocol());

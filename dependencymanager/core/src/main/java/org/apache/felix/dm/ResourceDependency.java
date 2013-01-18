@@ -21,6 +21,11 @@ package org.apache.felix.dm;
 import java.net.URL;
 
 /**
+ * A resource dependency is a dependency on a resource. A resource in this context is an object that is
+ * identified by a URL. Resources should somehow be provided by an external component, the resource
+ * provider. These dependencies then react on them becoming available or not. Use cases for such dependencies
+ * are resources that are embedded in bundles, in a workspace or some remote or local repository, etc.
+ * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface ResourceDependency extends Dependency, ComponentDependencyDeclaration, ResourceHandler {
@@ -34,7 +39,7 @@ public interface ResourceDependency extends Dependency, ComponentDependencyDecla
      * @param removed the method to call when a service was removed
      * @return this service dependency
      */
-	public ResourceDependency setCallbacks(String added, String removed) ;
+	public ResourceDependency setCallbacks(String added, String removed);
 
     /**
      * Sets the callbacks for this service. These callbacks can be used as hooks whenever a
@@ -95,16 +100,47 @@ public interface ResourceDependency extends Dependency, ComponentDependencyDecla
      * @return this service dependency
      */
      public ResourceDependency setAutoConfig(String instanceName);
-    
+
+     /**
+      * Sets the resource for this dependency.
+      * 
+      * @param resource the URL of the resource
+      */
      public ResourceDependency setResource(URL resource);
-	
+
+     /**
+      * Determines if this is a required dependency or not.
+      * 
+      * @param required <code>true</code> if the dependency is required
+      */
      public ResourceDependency setRequired(boolean required);
 
+     /**
+      * Sets the filter condition for this resource dependency.
+      * 
+      * @param resourceFilter the filter condition
+      */
      public ResourceDependency setFilter(String resourceFilter);
-     
+
+     /** @see ResourceDependency#setPropagate(Object, String) */
      public ResourceDependency setPropagate(boolean propagate);
-     
+
+     /**
+      * Sets an Object instance and a callback method used to propagate some properties to the provided service properties.
+      * The method will be invoked on the specified object instance and must have one of the following signatures:<p>
+      * <ul><li>Dictionary callback(ServiceReference, Object service) 
+      * <li>Dictionary callback(ServiceReference)
+      * </ul>
+      * @param instance the Object instance which is used to retrieve propagated service properties 
+      * @param method the method to invoke for retrieving the properties to be propagated to the service properties.
+      * @return this service dependency.
+      */
      public ResourceDependency setPropagate(Object instance, String method);
-     
+
+ 	/**
+ 	 * Sets this dependency to be instance bound or not.
+ 	 * 
+ 	 * @param isInstanceBound <code>true</code> if this dependency should be instance bound
+ 	 */
      public ResourceDependency setInstanceBound(boolean isInstanceBound);
 }
