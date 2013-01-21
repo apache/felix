@@ -99,14 +99,14 @@ gogo.Terminal_ctor = function(div, width, height) {
        }
    }
 
-   function keypress(ev, fromkeydown) {
+   function keypress(ev) {
         // Translate to standard keycodes
         if (!ev)
             ev = window.event;
         var kc;
         if (ev.keyCode)
             kc = ev.keyCode;
-        if (!fromkeydown && ev.which)
+        if (ev.which)
             kc = ev.which;
         if (ev.ctrlKey) {
             if (kc >= 0 && kc <= 32)
@@ -125,36 +125,7 @@ gogo.Terminal_ctor = function(div, width, height) {
                     default: return true;
                 }
             }
-        } else if (fromkeydown) {
-            switch(kc) {
-                case 8: break;               // Backspace
-                case 9: break;               // Tab
-                case 27: break;              // ESC
-                case 33:  kc = 63276; break; // PgUp
-                case 34:  kc = 63277; break; // PgDn
-                case 35:  kc = 63275; break; // End
-                case 36:  kc = 63273; break; // Home
-                case 37:  kc = 63234; break; // Left
-                case 38:  kc = 63232; break; // Up
-                case 39:  kc = 63235; break; // Right
-                case 40:  kc = 63233; break; // Down
-                case 45:  kc = 63302; break; // Ins
-                case 46:  kc = 63272; break; // Del
-                case 112: kc = 63236; break; // F1
-                case 113: kc = 63237; break; // F2
-                case 114: kc = 63238; break; // F3
-                case 115: kc = 63239; break; // F4
-                case 116: kc = 63240; break; // F5
-                case 117: kc = 63241; break; // F6
-                case 118: kc = 63242; break; // F7
-                case 119: kc = 63243; break; // F8
-                case 120: kc = 63244; break; // F9
-                case 121: kc = 63245; break; // F10
-                case 122: kc = 63246; break; // F11
-                case 123: kc = 63247; break; // F12
-                default: return true;
-            }
-        }
+        } 
 
         var k = "";
         // Build character
@@ -187,7 +158,7 @@ gogo.Terminal_ctor = function(div, width, height) {
 
         var s = encodeURIComponent(k);
         
-//        debug("fromkeydown=" + fromkeydown + ", ev.keyCode=" + ev.keyCode + ", " +
+//        debug("ev.keyCode=" + ev.keyCode + ", " +
 //              "ev.which=" + ev.which + ", ev.ctrlKey=" + ev.ctrlKey + ", " +
 //              "kc=" + kc + ", k=" + k + ", s=" + s);
 
@@ -200,20 +171,6 @@ gogo.Terminal_ctor = function(div, width, height) {
         return true;
    }
 
-   function keydown(ev) {
-       if (!ev)
-          ev = window.event;
-           o = { 9:1, 8:1, 27:1, 33:1, 34:1, 35:1, 36:1, 37:1, 38:1, 39:1, 40:1, 45:1, 46:1, 112:1,
-                 113:1, 114:1, 115:1, 116:1, 117:1, 118:1, 119:1, 120:1, 121:1, 122:1, 123:1 };
-           if (o[ev.keyCode] || ev.ctrlKey || ev.altKey) {
-               keypress(ev, true);
-           } else {
-               ev.cancelBubble = true;
-               if (ev.stopPropagation) ev.stopPropagation();
-               if (ev.preventDefault) ev.preventDefault();
-           }
-   }
-   
    function ignoreKey(ev) {
        if (!ev) {
            ev = window.event;
@@ -252,7 +209,6 @@ gogo.Terminal_ctor = function(div, width, height) {
        div.appendChild(d);
        
        document.onkeypress = keypress;
-       document.onkeydown = ignoreKey;
        document.onkeyup = ignoreKey;
        timeout = window.setTimeout(update, 100);
    }
