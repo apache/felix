@@ -23,7 +23,7 @@
 	<packaging>bundle</packaging>
 	<version>0.0.1-SNAPSHOT</version>
 
-	<name>Apache Felix Web Gogo Shell Plugin</name>
+	<name>Apache Felix Web Console Gogo Shell Plugin</name>
 	<description>
         This is a plugin for the Apache Felix OSGi web console that provides access to Gogo shell commands.
     </description>
