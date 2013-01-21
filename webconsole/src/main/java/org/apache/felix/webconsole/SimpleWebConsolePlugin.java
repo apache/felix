@@ -182,8 +182,12 @@ public abstract class SimpleWebConsolePlugin extends AbstractWebConsolePlugin
             activate( bc ); // don't know why this is needed!
 
             Hashtable props = new Hashtable();
-            props.put( WebConsoleConstants.PLUGIN_LABEL, label );
-            props.put( WebConsoleConstants.PLUGIN_TITLE, title );
+            props.put( WebConsoleConstants.PLUGIN_LABEL, getLabel() );
+            props.put( WebConsoleConstants.PLUGIN_TITLE, getTitle() );
+            if ( getCategory() != null )
+            {
+                props.put( WebConsoleConstants.PLUGIN_CATEGORY, getCategory() );
+            }
             reg = bc.registerService( "javax.servlet.Servlet", this, props ); //$NON-NLS-1$
         }
         return this;
