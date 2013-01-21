@@ -57,6 +57,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     private static final String LABEL = "components"; //$NON-NLS-1$
     private static final String TITLE = "%components.pluginTitle"; //$NON-NLS-1$
+    private static final String CATEGORY = "OSGi"; //$NON-NLS-1$
     private static final String CSS[] = { "/res/ui/bundles.css" }; // yes, it's correct! //$NON-NLS-1$
     private static final String RES = "/" + LABEL + "/res/"; //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -81,6 +82,11 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
         // load templates
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
+    }
+
+    public String getCategory()
+    {
+        return CATEGORY;
     }
 
     /**
