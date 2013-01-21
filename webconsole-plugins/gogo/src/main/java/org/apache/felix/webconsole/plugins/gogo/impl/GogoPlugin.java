@@ -43,6 +43,8 @@ public class GogoPlugin extends SimpleWebConsolePlugin {
 
     public static final String TITLE = "Gogo";
 
+    public static final String CATEGORY = "Web Console";
+
     public static final int TERM_WIDTH = 120;
 
     public static final int TERM_HEIGHT = 39;
@@ -62,6 +64,11 @@ public class GogoPlugin extends SimpleWebConsolePlugin {
     @Override
     public void deactivate() {
         super.deactivate();
+    }
+
+    public String getCategory()
+    {
+        return CATEGORY;
     }
 
     protected void renderContent(HttpServletRequest request, HttpServletResponse response) throws IOException {
