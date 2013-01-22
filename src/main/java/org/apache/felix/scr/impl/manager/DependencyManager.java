@@ -316,6 +316,7 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+        	boolean tracked = false;
             if ( getPreviousRefMap().remove( serviceReference ) == null )
             {
                 if (isActive())
@@ -330,11 +331,16 @@ public class DependencyManager<S, T> implements Reference
                 }
                 else if ( isTrackerOpened() && !isOptional() )
                 {
+                    tracked( trackingCount );
+                    tracked = true;
                     m_componentManager.activateInternal( trackingCount );
                 }
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
-            tracked( trackingCount );
+            if ( !tracked )
+            {
+				tracked(trackingCount);
+			}
         }
 
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
@@ -527,12 +533,12 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            tracked( trackingCount );
             if ( isTrackerOpened() && !isOptional() && !isActive())
             {
                 m_componentManager.activateInternal( trackingCount );
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
-            tracked( trackingCount );
         }
 
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
@@ -619,6 +625,7 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+        	boolean tracked = false;
             if ( getPreviousRefMap().get( serviceReference ) == null )
             {
                 if (isActive() )
@@ -647,12 +654,17 @@ public class DependencyManager<S, T> implements Reference
                 }
                 else if ( isTrackerOpened() && !isOptional() )
                 {
+                    tracked( trackingCount );
+                    tracked = true;
                     m_componentManager.activateInternal( trackingCount );
                 }
             }
             this.trackingCount = trackingCount;
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
-            tracked( trackingCount );
+            if ( !tracked )
+            {
+				tracked(trackingCount);
+			}
         }
 
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
@@ -782,32 +794,19 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            this.trackingCount = trackingCount;
+            tracked( trackingCount );
             if ( isActive() )
             {
                 if ( !isReluctant() && ( this.refPair == null || refPair.getRef().compareTo( this.refPair.getRef() ) > 0 ) )
                 {
-                    this.trackingCount = trackingCount;
-                    tracked( trackingCount );
                     m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
                     m_componentManager.activateInternal( trackingCount );
-                }
-                else
-                {
-                    //reluctant, ignore
-                    this.trackingCount = trackingCount;
-                    tracked( trackingCount );
                 }
             }
             else if (isTrackerOpened() && !isOptional() )
             {
                 m_componentManager.activateInternal( trackingCount );
-                this.trackingCount = trackingCount;
-                tracked( trackingCount );
-            }
-            else
-            {
-                this.trackingCount = trackingCount;
-                tracked( trackingCount );
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
         }
