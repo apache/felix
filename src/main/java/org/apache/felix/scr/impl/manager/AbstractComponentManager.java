@@ -170,6 +170,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             if (!m_stateLock.tryLock( m_timeout, TimeUnit.MILLISECONDS ) )
             {
+            	dumpThreads();
                 throw new IllegalStateException( "Could not obtain lock" );
             }
         }
@@ -188,6 +189,19 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     final boolean isWriteLocked()
     {
         return m_stateLock.getHoldCount() > 0;
+    }
+    
+    private void dumpThreads()
+    {
+        try
+        {
+            String dump = new ThreadDump().call();
+            log( LogService.LOG_ERROR, dump, null );
+        }
+        catch ( Throwable t )
+        {
+            log( LogService.LOG_ERROR, "Could not dump threads", t );
+        }
     }
 
     //service event tracking
