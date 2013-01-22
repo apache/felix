@@ -48,11 +48,11 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin
     /**
      * This plugin is called after analysis of the JAR but before manifest
      * generation. When some DM annotations are found, the plugin will add the corresponding 
-     * DM component descriptors under OSGI-INF/ directory. It will also set the  
+     * DM component descriptors under META-INF/ directory. It will also set the  
      * "DependencyManager-Component" manifest header (which references the descriptor paths).
      * 
      * @param analyzer the object that is used to retrieve classes containing DM annotations.
-     * @return true if the classpace has been modified so that the bundle classpath must be reanalyzed
+     * @return true if the classpath has been modified so that the bundle classpath must be reanalyzed
      * @throws Exception on any errors.
      */
     public boolean analyzeJar(Analyzer analyzer) throws Exception
@@ -90,7 +90,7 @@ public class AnnotationPlugin implements AnalyzerPlugin, Plugin
                     analyzer.getJar().putResource(entry.getKey(), entry.getValue());
                 }
 
-                // Inser the metatype resource, if any.
+                // Insert the metatype resource, if any.
                 Resource metaType = generator.getMetaTypeResource();
                 if (metaType != null)
                 {

@@ -18,8 +18,12 @@
  */
 package org.apache.felix.dm.annotation.plugin.mvn;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,7 +40,7 @@ import aQute.lib.osgi.Resource;
 /**
  * The <code>AnnotationMojo</code>
  * generates a Dependency Manager component descriptor file based on annotations found from java classes.
- *
+ * 
  * @goal scan
  * @phase package
  * @description Build DependencyManager component descriptors from class annotations.
@@ -47,7 +51,7 @@ public class AnnotationMojo extends AbstractMojo
 {
     /**
      * The Maven project.
-     *
+     * 
      * @parameter expression="${project}"
      * @required
      * @readonly
@@ -56,7 +60,7 @@ public class AnnotationMojo extends AbstractMojo
 
     /**
      * The target extension
-     *
+     * 
      * @parameter default-value="jar"
      * @required
      */
@@ -64,17 +68,33 @@ public class AnnotationMojo extends AbstractMojo
 
     /**
      * If set, configures the log level.
-     *
+     * 
      * @parameter alias="log"
      */
     private String m_log;
 
     /**
      * If set, configures if we must auto generate Import-Service/Export-Service headers.
-     *
+     * 
      * @parameter alias="build-import-export-service" default-value="true"
      */
     private boolean m_buildImportExportService;
+
+    /**
+     * The maven project bas directory, used when generating metadata in maven project directory.
+     * 
+     * @parameter expression="${project.basedir}"
+     * @required
+     * @readonly
+     */
+    private File m_projectBaseDir;
+    
+    /**
+     * If set, configures the output directory where generated descriptor files are generated.
+     * 
+     * @parameter alias="generated-output-dir"
+     */
+    private String m_generatedOutputDir;
 
     /**
      * "Import-Service" osgi header
@@ -87,7 +107,8 @@ public class AnnotationMojo extends AbstractMojo
     private static final String EXPORT_SERVICE = "Export-Service";
 
     /**
-     * Executes this mojo. We'll use the bnd library in order to scan classes from our target bundle.
+     * Executes this mojo. We'll use the bnd library in order to scan classes
+     * from our target bundle.
      */
     public void execute() throws MojoExecutionException
     {
@@ -111,29 +132,34 @@ public class AnnotationMojo extends AbstractMojo
             // Start scanning
             if (generator.execute())
             {
-                // Some annotations have been parsed. 
-                // Add the list of generated component descriptors in our special header.
+                // Some annotations have been parsed.
+                // Add the list of generated component descriptors in our
+                // special header.
                 jar = analyzer.getJar();
-                jar.getManifest().getMainAttributes().putValue("DependencyManager-Component",
-                                                               generator.getDescriptorPaths());
+                jar.getManifest().getMainAttributes()
+                    .putValue( "DependencyManager-Component", generator.getDescriptorPaths() );
 
-                // Add generated descriptors into the target bundle (we'll use a temp file).
+                // Add generated descriptors into the target bundle (we'll use a
+                // temp file).
                 Map<String, Resource> resources = generator.getDescriptors();
                 for (Map.Entry<String, Resource> entry : resources.entrySet())
                 {
+                    addResource(entry.getKey(), entry.getValue().openInputStream());
                     jar.putResource(entry.getKey(), entry.getValue());
                 }
 
                 Resource metaType = generator.getMetaTypeResource();
                 if (metaType != null)
                 {
+                    addResource("OSGI-INF/metatype/metatype.xml", metaType.openInputStream());
                     jar.putResource("OSGI-INF/metatype/metatype.xml", metaType);
                 }
 
                 // Possibly set the Import-Service/Export-Service header
                 if (m_buildImportExportService)
                 {
-                    // Don't override Import-Service header, if it is found from the bnd directives.
+                    // Don't override Import-Service header, if it is found from
+                    // the bnd directives.
                     if (jar.getManifest().getMainAttributes().getValue(IMPORT_SERVICE) == null)
                     {
                         buildImportExportService(jar, IMPORT_SERVICE, generator.getImportService());
@@ -170,6 +196,29 @@ public class AnnotationMojo extends AbstractMojo
         }
     }
 
+    /**
+     * Adds a resource file into the project base directory
+     * @param key
+     * @param in
+     * @throws IOException
+     */
+    private void addResource(String key, InputStream in) throws IOException
+    {
+        if (m_generatedOutputDir != null) {
+            File descriptorFile = new File( m_projectBaseDir + File.separator + m_generatedOutputDir, key );
+            descriptorFile.getParentFile().mkdirs();
+            BufferedInputStream bin = new BufferedInputStream( in );
+            BufferedOutputStream out = new BufferedOutputStream( new FileOutputStream( descriptorFile ) );
+            int b;
+            while ( ( b = bin.read() ) != -1 )
+            {
+                out.write( b );
+            }
+            out.close();
+            bin.close();
+        }
+    }
+
     private void buildImportExportService(Jar jar, String header, Set<String> services) throws IOException
     {
         getLog().info("building " + header + " header with the following services: " + services);
@@ -189,6 +238,7 @@ public class AnnotationMojo extends AbstractMojo
 
     /**
      * Returns the target name of this maven project.
+     * 
      * @return the target name of this maven project.
      */
     private File getBundleName()
@@ -200,6 +250,7 @@ public class AnnotationMojo extends AbstractMojo
 
     /**
      * Copy the generated jar into our target bundle.
+     * 
      * @param jar the jar with the generated component descriptors
      * @param target our target bundle
      * @throws MojoExecutionException on any errors
