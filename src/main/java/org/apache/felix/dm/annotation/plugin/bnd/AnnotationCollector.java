@@ -603,14 +603,7 @@ public class AnnotationCollector extends ClassDataCollector
             throw new IllegalStateException("Annotation " + annotation + "can't applied on " + m_className
                     + " can't mix \"field\" attribute with \"added/changed/removed\" attributes");
         }
-        
-        // changed/removed callbacks are allowed only if added callback is defined
-        if (field == null && added == null && (changed != null || removed != null))
-        {
-            throw new IllegalStateException("Annotation " + annotation + " applied on " + m_className
-                    + " must define an \"added\" callback");
-        }
-        
+                
         // Parse aspect impl field where to inject the original service.
         writer.putString(annotation, EntryParam.field, null);
         
