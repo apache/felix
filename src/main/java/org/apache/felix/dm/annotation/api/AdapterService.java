@@ -106,6 +106,11 @@ public @interface AdapterService
     String changed() default "";
 
     /**
+     * name of the callback method to invoke on swap.
+     */
+    String swap() default "";
+
+    /**
      * The callback method to invoke when the service is lost. When this attribute is used, then the added attribute 
      * must also be used.
      */

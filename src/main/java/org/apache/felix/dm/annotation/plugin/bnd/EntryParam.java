@@ -40,6 +40,7 @@ public enum EntryParam
     added, 
     changed,
     removed,
+    swap,
     autoConfig, 
     pid, 
     factoryPid,
