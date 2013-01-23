@@ -496,8 +496,8 @@ public class Validator {
 
     private String validateMethod(final ReferenceDescription ref, final String methodName, final boolean componentIsAbstract)
     throws SCRDescriptorException {
-        final Method method = findMethod(this.project, this.options, this.container.getClassDescription(), ref, methodName);
-        if (method == null) {
+        final MethodResult result = findMethod(this.project, this.options, this.container.getClassDescription(), ref, methodName);
+        if (result == null) {
             if (!componentIsAbstract) {
                 this.logError(ref,
                                 "Missing method " + methodName + " for reference "
@@ -508,14 +508,19 @@ public class Validator {
 
         // method needs to be protected for 1.0
         if (this.options.getSpecVersion() == SpecVersion.VERSION_1_0) {
-            if (Modifier.isPublic(method.getModifiers())) {
-                this.logWarn(ref, "Method " + method.getName() + " should be declared protected");
-            } else if (!Modifier.isProtected(method.getModifiers())) {
-                this.logError(ref, "Method " + method.getName() + " has wrong qualifier, public or protected required");
+            if (Modifier.isPublic(result.method.getModifiers())) {
+                this.logWarn(ref, "Method " + result.method.getName() + " should be declared protected");
+            } else if (!Modifier.isProtected(result.method.getModifiers())) {
+                this.logError(ref, "Method " + result.method.getName() + " has wrong qualifier, public or protected required");
                 return null;
             }
         }
-        return method.getName();
+
+        if (this.options.getSpecVersion().ordinal() < result.requiredSpecVersion.ordinal() ) {
+            this.logError(ref, "Method declaration for '" + result.method.getName() + "' requires version "
+                    + result.requiredSpecVersion + " or newer");
+        }
+        return result.method.getName();
     }
 
     private static final String TYPE_SERVICE_REFERENCE = "org.osgi.framework.ServiceReference";
@@ -535,12 +540,22 @@ public class Validator {
         return null;
     }
 
-    public static Method findMethod(final Project project,
+    public static final class MethodResult {
+        public Method method;
+        public SpecVersion requiredSpecVersion;
+    }
+
+    /**
+     * Find the method and the required spec version
+     * @throws SCRDescriptorException If the class can't be found
+     */
+    public static MethodResult findMethod(final Project project,
                     final Options options,
                     final ClassDescription cd,
                     final ReferenceDescription ref,
                     final String methodName)
     throws SCRDescriptorException {
+        SpecVersion requiredVersion = SpecVersion.VERSION_1_0;
         try {
             final Class<?>[] sig = new Class<?>[] { project.getClassLoader().loadClass(TYPE_SERVICE_REFERENCE) };
             final Class<?>[] sig2 = new Class<?>[] { project.getClassLoader().loadClass(ref.getInterfaceName()) };
@@ -551,8 +566,9 @@ public class Validator {
             Method method = getMethod(cd, realMethodName, sig);
             if (method == null) {
                 method = getMethod(cd, realMethodName, sig2);
-                if (method == null && options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                if (method == null && (options.getSpecVersion() == null || options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal()) ) {
                     method = getMethod(cd, realMethodName, sig3);
+                    requiredVersion = SpecVersion.VERSION_1_1;
                 }
             }
 
@@ -572,8 +588,9 @@ public class Validator {
             }
             if (method == null) {
                 method = getMethod(cd, realMethodName, sig2);
-                if (method == null && options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                if (method == null && (options.getSpecVersion() == null || options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal()) ) {
                     method = getMethod(cd, realMethodName, sig3);
+                    requiredVersion = SpecVersion.VERSION_1_1;
                 }
             }
 
@@ -585,12 +602,17 @@ public class Validator {
             }
             if (method == null) {
                 method = getMethod(cd, realMethodName, sig2);
-                if (method == null && options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
+                if (method == null && (options.getSpecVersion() == null || options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal()) ) {
                     method = getMethod(cd, realMethodName, sig3);
+                    requiredVersion = SpecVersion.VERSION_1_1;
                 }
             }
 
-            return method;
+            final MethodResult result = new MethodResult();
+            result.method = method;
+            result.requiredSpecVersion = requiredVersion;
+
+            return result;
         } catch (final ClassNotFoundException cnfe) {
             throw new SCRDescriptorException("Unable to load class!", cnfe);
         }

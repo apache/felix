@@ -162,6 +162,7 @@ public class SCRDescriptorGenerator {
                                 desc.getSource());
             } else {
                 final ComponentContainer container = this.createComponent(desc, iLog);
+
                 if (container.getComponentDescription().getSpecVersion() != null) {
                     if ( specVersion == null ) {
                         specVersion = container.getComponentDescription().getSpecVersion();
@@ -178,6 +179,12 @@ public class SCRDescriptorGenerator {
                             logger.debug("Setting used spec version to " + specVersion);
                         }
                     }
+                } else {
+                    if ( this.options.getSpecVersion() != null ) {
+                        container.getComponentDescription().setSpecVersion(options.getSpecVersion());
+                    } else {
+                        container.getComponentDescription().setSpecVersion(SpecVersion.VERSION_1_0);
+                    }
                 }
                 processedContainers.add(container);
             }
@@ -190,64 +197,16 @@ public class SCRDescriptorGenerator {
         this.logger.debug("Generating descriptor for spec version: " + specVersion);
         options.setSpecVersion(specVersion);
 
-        final DescriptionContainer module = new DescriptionContainer(this.options);
-
         // before we can validate we should check the references for bind/unbind method
         // in order to create them if possible
         if ( this.options.isGenerateAccessors() ) {
-
-            for (final ComponentContainer container : processedContainers) {
-                for (final ReferenceDescription ref : container.getReferences().values()) {
-                    // if this is a field with a single cardinality,
-                    // we look for the bind/unbind methods
-                    // and create them if they are not availabe
-                    if (ref.getStrategy() != ReferenceStrategy.LOOKUP && ref.getField() != null
-                        && ref.getField().getDeclaringClass().getName().equals(container.getClassDescription().getDescribedClass().getName())
-                        && (ref.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || ref.getCardinality() == ReferenceCardinality.MANDATORY_UNARY)) {
-
-                        final String bindValue = ref.getBind();
-                        final String unbindValue = ref.getUnbind();
-                        final String name = ref.getName();
-                        final String type = ref.getInterfaceName();
-
-                        boolean createBind = false;
-                        boolean createUnbind = false;
-
-                        // Only create method if no bind name has been specified
-                        if (bindValue == null && Validator.findMethod(this.project, this.options, container.getClassDescription(), ref, "bind") == null) {
-                            // create bind method
-                            createBind = true;
-                        }
-                        if (unbindValue == null && Validator.findMethod(this.project, this.options, container.getClassDescription(), ref, "unbind") == null) {
-                            // create unbind method
-                            createUnbind = true;
-                        }
-                        if (createBind || createUnbind) {
-                            // logging
-                            if ( createBind && createUnbind ) {
-                                this.logger.debug("Generating bind and unbind method for " + name + " in " + container.getClassDescription().getDescribedClass().getName());
-                            } else if ( createBind ) {
-                                this.logger.debug("Generating bind method for " + name + " in " + container.getClassDescription().getDescribedClass().getName());
-                            } else {
-                                this.logger.debug("Generating unbind method for " + name + " in " + container.getClassDescription().getDescribedClass().getName());
-
-                            }
-                            ClassModifier.addMethods(container.getClassDescription().getDescribedClass().getName(),
-                                            name,
-                                            ref.getField().getName(),
-                                            type,
-                                            createBind,
-                                            createUnbind,
-                                            this.project.getClassLoader(),
-                                            this.project.getClassesDirectory(),
-                                            this.logger);
-                        }
-                    }
-                }
+            for(final ComponentContainer container : processedContainers) {
+                this.generateMethods(container);
             }
         }
 
         // now validate
+        final DescriptionContainer module = new DescriptionContainer(this.options);
         for (final ComponentContainer container : processedContainers) {
             final int errorCount = iLog.getNumberOfErrors();
 
@@ -274,12 +233,63 @@ public class SCRDescriptorGenerator {
         return result;
     }
 
+    private void generateMethods(final ComponentContainer container) throws SCRDescriptorException {
+        for (final ReferenceDescription ref : container.getReferences().values()) {
+            // if this is a field with a single cardinality,
+            // we look for the bind/unbind methods
+            // and create them if they are not availabe
+            if (ref.getStrategy() != ReferenceStrategy.LOOKUP && ref.getField() != null
+                && ref.getField().getDeclaringClass().getName().equals(container.getClassDescription().getDescribedClass().getName())
+                && (ref.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || ref.getCardinality() == ReferenceCardinality.MANDATORY_UNARY)) {
+
+                final String bindValue = ref.getBind();
+                final String unbindValue = ref.getUnbind();
+                final String name = ref.getName();
+                final String type = ref.getInterfaceName();
+
+                boolean createBind = false;
+                boolean createUnbind = false;
+
+                // Only create method if no bind name has been specified
+                if (bindValue == null && Validator.findMethod(this.project, this.options, container.getClassDescription(), ref, "bind") == null) {
+                    // create bind method
+                    createBind = true;
+                }
+                if (unbindValue == null && Validator.findMethod(this.project, this.options, container.getClassDescription(), ref, "unbind") == null) {
+                    // create unbind method
+                    createUnbind = true;
+                }
+                if (createBind || createUnbind) {
+                    // logging
+                    if ( createBind && createUnbind ) {
+                        this.logger.debug("Generating bind and unbind method for " + name + " in " + container.getClassDescription().getDescribedClass().getName());
+                    } else if ( createBind ) {
+                        this.logger.debug("Generating bind method for " + name + " in " + container.getClassDescription().getDescribedClass().getName());
+                    } else {
+                        this.logger.debug("Generating unbind method for " + name + " in " + container.getClassDescription().getDescribedClass().getName());
+
+                    }
+                    ClassModifier.addMethods(container.getClassDescription().getDescribedClass().getName(),
+                                    name,
+                                    ref.getField().getName(),
+                                    type,
+                                    createBind,
+                                    createUnbind,
+                                    this.project.getClassLoader(),
+                                    this.project.getClassesDirectory(),
+                                    this.logger);
+                }
+            }
+        }
+    }
     /**
      * Create the SCR objects based on the descriptions
      */
     private ComponentContainer createComponent(final ClassDescription desc,
                     final IssueLog iLog) {
         final ComponentDescription componentDesc = desc.getDescription(ComponentDescription.class);
+
+        final SpecVersion intitialComponentSpecVersion = componentDesc.getSpecVersion();
 
         // configuration pid in 1.2
         if ( componentDesc.getConfigurationPid() != null && !componentDesc.getConfigurationPid().equals(componentDesc.getName())) {
@@ -388,6 +398,12 @@ public class SCRDescriptorGenerator {
             container.getProperties().put(org.osgi.framework.Constants.SERVICE_PID, pid);
         }
 
+        // check if component has spec version configured but requires a higher one
+        if ( intitialComponentSpecVersion != null && componentDesc.getSpecVersion().ordinal() > intitialComponentSpecVersion.ordinal() ) {
+            iLog.addError("Component " + container + " requires spec version " + container.getComponentDescription().getSpecVersion().name()
+                    + " but component is configured to use version " + intitialComponentSpecVersion.name(),
+                    desc.getSource());
+        }
         return container;
     }
 
@@ -546,6 +562,7 @@ public class SCRDescriptorGenerator {
 
     /**
      * Process reference directives
+     * @throws SCRDescriptorException
      */
     private void processReferences(final ClassDescription current,
                     final ComponentContainer component) {
@@ -562,6 +579,25 @@ public class SCRDescriptorGenerator {
             }
 
             this.testReference(current, component.getReferences(), rd, component.getClassDescription() == current);
+
+            // check for method signature
+            try {
+                final Validator.MethodResult bindMethod = Validator.findMethod(this.project, this.options, current, rd,
+                        rd.getBind() == null ? "bind" : rd.getBind());
+                if ( bindMethod != null ) {
+                    component.getComponentDescription().setSpecVersion(bindMethod.requiredSpecVersion);
+                }
+
+                final Validator.MethodResult unbindMethod = Validator.findMethod(this.project, this.options, current, rd,
+                        rd.getUnbind() == null ? "unbind" : rd.getUnbind());
+                if ( unbindMethod != null ) {
+                    component.getComponentDescription().setSpecVersion(unbindMethod.requiredSpecVersion);
+                }
+
+            } catch (final SCRDescriptorException sde) {
+                // this happens only if a class not found exception occurs, so we can ignore this at this point!
+            }
+
         }
     }
 
