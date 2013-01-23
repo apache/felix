@@ -19,11 +19,14 @@
 package org.apache.felix.scrplugin.xml;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.xml.transform.TransformerException;
 
 import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.Options;
@@ -153,6 +156,10 @@ public class MetaTypeIO {
             IOUtils.newline(contentHandler);
             contentHandler.endPrefixMapping(PREFIX);
             contentHandler.endDocument();
+        } catch (final IOException e) {
+            throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
+        } catch (final TransformerException e) {
+            throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
         } catch (final SAXException e) {
             throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
         }

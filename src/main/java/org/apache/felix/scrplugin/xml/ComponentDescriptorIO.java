@@ -20,6 +20,7 @@ package org.apache.felix.scrplugin.xml;
 
 import java.awt.Component;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.Provider.Service;
 import java.util.ArrayList;
@@ -183,7 +184,7 @@ public class ComponentDescriptorIO {
     protected static void generateXML(final DescriptionContainer module,
             final List<ComponentContainer> components,
             final File descriptorFile,
-            final Log logger) throws SAXException {
+            final Log logger) throws SAXException, IOException, TransformerException {
         logger.info("Writing " + components.size() + " Service Component Descriptors to "
                 + descriptorFile);
         final ContentHandler contentHandler = IOUtils.getSerializer(descriptorFile);
@@ -767,6 +768,10 @@ public class ComponentDescriptorIO {
                 final File file = new File(descriptorDir, component.getClassDescription().getDescribedClass().getName() + ".xml");
                 try {
                     ComponentDescriptorIO.generateXML(module, Collections.singletonList(component), file, logger);
+                } catch (final IOException e) {
+                    throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
+                } catch (final TransformerException e) {
+                    throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
                 } catch (final SAXException e) {
                     throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
                 }
@@ -778,6 +783,10 @@ public class ComponentDescriptorIO {
             }
             try {
                 ComponentDescriptorIO.generateXML(module, components, descriptorFile, logger);
+            } catch (final IOException e) {
+                throw new SCRDescriptorException("Unable to generate xml", descriptorFile.toString(), e);
+            } catch (final TransformerException e) {
+                throw new SCRDescriptorException("Unable to generate xml", descriptorFile.toString(), e);
             } catch (final SAXException e) {
                 throw new SCRDescriptorException("Unable to generate xml", descriptorFile.toString(), e);
             }

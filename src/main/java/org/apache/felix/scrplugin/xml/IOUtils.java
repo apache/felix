@@ -64,29 +64,23 @@ public class IOUtils {
      * Get a serializer to write XML to a file.
      */
     public static ContentHandler getSerializer(final File file)
-    throws SAXException {
-        try {
-            final Writer writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
+    throws TransformerException, IOException {
+        final Writer writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
 
-            final TransformerHandler transformerHandler = FACTORY.newTransformerHandler();
-            final Transformer transformer = transformerHandler.getTransformer();
+        final TransformerHandler transformerHandler = FACTORY.newTransformerHandler();
+        final Transformer transformer = transformerHandler.getTransformer();
 
-            final Properties format = new Properties();
-            format.put(OutputKeys.METHOD, "xml");
-            format.put(OutputKeys.OMIT_XML_DECLARATION, "no");
-            format.put(OutputKeys.ENCODING, "UTF-8");
-            format.put(OutputKeys.INDENT, "yes");
+        final Properties format = new Properties();
+        format.put(OutputKeys.METHOD, "xml");
+        format.put(OutputKeys.OMIT_XML_DECLARATION, "no");
+        format.put(OutputKeys.ENCODING, "UTF-8");
+        format.put(OutputKeys.INDENT, "yes");
 
-            transformer.setOutputProperties(format);
+        transformer.setOutputProperties(format);
 
-            transformerHandler.setResult(new StreamResult(writer));
+        transformerHandler.setResult(new StreamResult(writer));
 
-            return transformerHandler;
-        } catch (final IOException se) {
-            throw new SAXException("Unable to open file for writing: " + file, se);
-        } catch (final TransformerException se) {
-            throw new SAXException("Unable to create xml writer for: " + file, se);
-        }
+        return transformerHandler;
     }
 
     /**
