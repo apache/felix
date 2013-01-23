@@ -63,11 +63,7 @@ public class AspectServiceBuilder extends AbstractBuilder
 
         if (field != null && (added != null || changed != null || removed != null || swap != null))
         {
-            throw new IllegalArgumentException("autoconfig field " + field + " cant be defined with both added/changed/removed/swap calllbacks");
-        }
-        if (field == null && added == null && (changed != null || removed != null))
-        {
-            throw new IllegalArgumentException("missing added callback");
+            throw new IllegalArgumentException("autoconfig field " + field + " can't be defined with both added/changed/removed/swap calllbacks");
         }
 
         Component c;
@@ -78,7 +74,7 @@ public class AspectServiceBuilder extends AbstractBuilder
         } 
         else
         {
-            if (added != null)
+            if (added != null || changed != null || removed != null || swap != null)
             {
                 c = dm.createAspectService(serviceInterface, serviceFilter, ranking, added, changed, removed, swap)
                       .setServiceProperties(aspectProperties);
