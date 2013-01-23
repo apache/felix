@@ -107,6 +107,11 @@ public @interface AspectService
     String removed() default "";
     
     /**
+     * name of the callback method to invoke on swap.
+     */
+    String swap() default "";
+
+    /**
      * Sets the static method used to create the AspectService implementation instance. The
      * default constructor of the annotated class is used. The factoryMethod can be used to provide a specific
      * aspect implements, like a DynamicProxy.

@@ -595,9 +595,10 @@ public class AnnotationCollector extends ClassDataCollector
         String added = annotation.get(EntryParam.added.toString());
         String changed = annotation.get(EntryParam.changed.toString());
         String removed = annotation.get(EntryParam.removed.toString());
+        String swap = annotation.get(EntryParam.swap.toString());
 
-        // "field" and "added/changed/removed" attributes can't be mixed
-        if (field != null && (added != null || changed != null || removed != null))
+        // "field" and "added/changed/removed/swap" attributes can't be mixed
+        if (field != null && (added != null || changed != null || removed != null || swap != null))
         {
             throw new IllegalStateException("Annotation " + annotation + "can't applied on " + m_className
                     + " can't mix \"field\" attribute with \"added/changed/removed\" attributes");
@@ -617,6 +618,7 @@ public class AnnotationCollector extends ClassDataCollector
         writer.putString(annotation, EntryParam.added, null);
         writer.putString(annotation, EntryParam.changed, null);
         writer.putString(annotation, EntryParam.removed, null);
+        writer.putString(annotation, EntryParam.swap, null);
     }
 
     /**
