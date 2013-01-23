@@ -764,7 +764,9 @@ public class ComponentDescriptorIO {
 
         final List<String> fileNames = new ArrayList<String>();
         if ( options.isGenerateSeparateDescriptors() ) {
+            final SpecVersion globalVersion = module.getOptions().getSpecVersion();
             for(final ComponentContainer component : components ) {
+                module.getOptions().setSpecVersion(component.getComponentDescription().getSpecVersion());
                 final File file = new File(descriptorDir, component.getClassDescription().getDescribedClass().getName() + ".xml");
                 try {
                     ComponentDescriptorIO.generateXML(module, Collections.singletonList(component), file, logger);
@@ -777,6 +779,7 @@ public class ComponentDescriptorIO {
                 }
                 fileNames.add(PARENT_NAME + '/' + file.getName());
             }
+            module.getOptions().setSpecVersion(globalVersion);
         } else {
             if (descriptorFile == null) {
                 throw new SCRDescriptorFailureException("Descriptor file name must not be empty.");
