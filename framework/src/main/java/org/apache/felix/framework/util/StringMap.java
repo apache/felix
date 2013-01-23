@@ -40,7 +40,10 @@ public class StringMap extends AbstractMap<String, Object>
 
     public StringMap(Map map, boolean caseSensitive)
     {
-        putAll(map);
+        for (Entry e : (Set<Entry>)map.entrySet())
+        {
+            put(e.getKey().toString(), e.getValue());
+        }
     }
 
     @Override
@@ -79,15 +82,6 @@ public class StringMap extends AbstractMap<String, Object>
     {
         KeyValueEntry kve = (KeyValueEntry) m_map.put(toUpperCase(key), new KeyValueEntry(key, value));
         return (kve != null) ? kve.value : null;
-    }
-
-    @Override
-    public void putAll(Map<? extends String, ? extends Object> map)
-    {
-        for (Map.Entry<? extends String, ? extends Object> e : map.entrySet())
-        {
-            put(e.getKey(), e.getValue());
-        }
     }
 
     @Override
