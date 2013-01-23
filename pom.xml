@@ -30,7 +30,7 @@
     </properties>
     <name>Apache Felix Dependency Manager</name>
     <artifactId>org.apache.felix.dependencymanager</artifactId>
-    <version>3.1.0</version>
+    <version>3.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
@@ -96,10 +96,4 @@
             </plugin>
         </plugins>
     </build>
-
-  <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager-3.1.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager-3.1.0</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager-3.1.0</url>
-  </scm>
 </project>
