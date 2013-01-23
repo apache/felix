@@ -41,6 +41,7 @@ public enum Params
     added,
     changed,
     removed,
+    swap,
     autoConfig,
     pid,
     propagate,

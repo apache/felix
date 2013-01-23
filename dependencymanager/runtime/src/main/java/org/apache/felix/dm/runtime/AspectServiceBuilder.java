@@ -59,10 +59,11 @@ public class AspectServiceBuilder extends AbstractBuilder
         String added = srvMeta.getString(Params.added, null);
         String changed = srvMeta.getString(Params.changed, null);
         String removed = srvMeta.getString(Params.removed, null);
-        
-        if (field != null && (added != null || changed != null || removed != null))
+        String swap = srvMeta.getString(Params.swap, null);
+
+        if (field != null && (added != null || changed != null || removed != null || swap != null))
         {
-            throw new IllegalArgumentException("autoconfig field " + field + " cant be defined with both added/changed/removed calllbacks");
+            throw new IllegalArgumentException("autoconfig field " + field + " cant be defined with both added/changed/removed/swap calllbacks");
         }
         if (field == null && added == null && (changed != null || removed != null))
         {
@@ -79,7 +80,7 @@ public class AspectServiceBuilder extends AbstractBuilder
         {
             if (added != null)
             {
-                c = dm.createAspectService(serviceInterface, serviceFilter, ranking, added, changed, removed)
+                c = dm.createAspectService(serviceInterface, serviceFilter, ranking, added, changed, removed, swap)
                       .setServiceProperties(aspectProperties);
             } 
             else
