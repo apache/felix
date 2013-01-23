@@ -23,12 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.xml.transform.OutputKeys;
@@ -41,24 +36,17 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
  * Utility class for xml/sax handling.
- * It provides support for "older" sax implementations (like the default one shipped with JDK 1.4.2)
- * which have bugs in the namespace handling.
  */
 public class IOUtils {
 
     /** The transformer factory. */
     private static final SAXTransformerFactory FACTORY = (SAXTransformerFactory) TransformerFactory.newInstance();
-
-    /** The URI for xml namespaces */
-    private static final String XML_NAMESPACE_URI = "http://www.w3.org/XML/1998/namespace";
 
     /**
      * Parse a file and send the sax events to the content handler.
@@ -66,12 +54,15 @@ public class IOUtils {
      * @param handler
      * @throws TransformerException
      */
-    public static final void parse(InputStream file, ContentHandler handler)
+    public static final void parse(final InputStream file, final ContentHandler handler)
     throws TransformerException {
         final Transformer transformer = FACTORY.newTransformer();
         transformer.transform( new StreamSource( file ), new SAXResult( handler ) );
     }
 
+    /**
+     * Get a serializer to write XML to a file.
+     */
     public static ContentHandler getSerializer(final File file)
     throws SAXException {
         try {
@@ -85,296 +76,16 @@ public class IOUtils {
             format.put(OutputKeys.OMIT_XML_DECLARATION, "no");
             format.put(OutputKeys.ENCODING, "UTF-8");
             format.put(OutputKeys.INDENT, "yes");
+
             transformer.setOutputProperties(format);
 
             transformerHandler.setResult(new StreamResult(writer));
 
-            if ( needsNamespacesAsAttributes(format) ) {
-                return new NamespaceAsAttributes(transformerHandler);
-            }
-
             return transformerHandler;
         } catch (final IOException se) {
-            throw new SAXException("Unable to detect if namespace support for sax works properly.", se);
+            throw new SAXException("Unable to open file for writing: " + file, se);
         } catch (final TransformerException se) {
-            throw new SAXException("Unable to detect if namespace support for sax works properly.", se);
-        }
-    }
-
-    /**
-     * Checks if the used Trax implementation correctly handles namespaces set using
-     * <code>startPrefixMapping()</code>, but wants them also as 'xmlns:' attributes.
-     * <p>
-     * The check consists in sending SAX events representing a minimal namespaced document
-     * with namespaces defined only with calls to <code>startPrefixMapping</code> (no
-     * xmlns:xxx attributes) and check if they are present in the resulting text.
-     */
-    protected static boolean needsNamespacesAsAttributes(Properties format)
-    throws TransformerException, SAXException {
-        // Serialize a minimal document to check how namespaces are handled.
-        final StringWriter writer = new StringWriter();
-
-        final String uri = "namespaceuri";
-        final String prefix = "nsp";
-        final String check = "xmlns:" + prefix + "='" + uri + "'";
-
-        final TransformerHandler handler = FACTORY.newTransformerHandler();
-
-        handler.getTransformer().setOutputProperties(format);
-        handler.setResult(new StreamResult(writer));
-
-        // Output a single element
-        handler.startDocument();
-        handler.startPrefixMapping(prefix, uri);
-        handler.startElement(uri, "element", "element", new AttributesImpl());
-        handler.endElement(uri, "element", "element");
-        handler.endPrefixMapping(prefix);
-        handler.endDocument();
-
-        final String text = writer.toString();
-
-        // Check if the namespace is there (replace " by ' to be sure of what we search in)
-        boolean needsIt = (text.replace('"', '\'').indexOf(check) == -1);
-
-        return needsIt;
-    }
-
-    /**
-     * A pipe that ensures that all namespace prefixes are also present as
-     * 'xmlns:' attributes. This used to circumvent Xalan's serialization behaviour
-     * which is to ignore namespaces if they're not present as 'xmlns:xxx' attributes.
-     */
-    public static class NamespaceAsAttributes implements ContentHandler {
-
-        /** The wrapped content handler. */
-        private final ContentHandler contentHandler;
-
-        /**
-         * The prefixes of startPrefixMapping() declarations for the coming element.
-         */
-        private List<String> prefixList = new ArrayList<String>();
-
-        /**
-         * The URIs of startPrefixMapping() declarations for the coming element.
-         */
-        private List<String> uriList = new ArrayList<String>();
-
-        /**
-         * Maps of URI<->prefix mappings. Used to work around a bug in the Xalan
-         * serializer.
-         */
-        private Map<String, String> uriToPrefixMap = new HashMap<String, String>();
-        private Map<String, String> prefixToUriMap = new HashMap<String, String>();
-
-        /**
-         * True if there has been some startPrefixMapping() for the coming element.
-         */
-        private boolean hasMappings = false;
-
-        public NamespaceAsAttributes(ContentHandler ch) {
-            this.contentHandler = ch;
-        }
-
-        public void startDocument() throws SAXException {
-            // Cleanup
-            this.uriToPrefixMap.clear();
-            this.prefixToUriMap.clear();
-            clearMappings();
-            this.contentHandler.startDocument();
-        }
-
-        /**
-         * Track mappings to be able to add <code>xmlns:</code> attributes
-         * in <code>startElement()</code>.
-         */
-        public void startPrefixMapping(String prefix, String uri) throws SAXException {
-            // Store the mappings to reconstitute xmlns:attributes
-            // except prefixes starting with "xml": these are reserved
-            // VG: (uri != null) fixes NPE in startElement
-            if (uri != null && !prefix.startsWith("xml")) {
-                this.hasMappings = true;
-                this.prefixList.add(prefix);
-                this.uriList.add(uri);
-
-                // append the prefix colon now, in order to save concatenations later, but
-                // only for non-empty prefixes.
-                if (prefix.length() > 0) {
-                    this.uriToPrefixMap.put(uri, prefix + ":");
-                } else {
-                    this.uriToPrefixMap.put(uri, prefix);
-                }
-
-                this.prefixToUriMap.put(prefix, uri);
-            }
-            this.contentHandler.startPrefixMapping(prefix, uri);
-        }
-
-        /**
-         * Ensure all namespace declarations are present as <code>xmlns:</code> attributes
-         * and add those needed before calling superclass. This is a workaround for a Xalan bug
-         * (at least in version 2.0.1) : <code>org.apache.xalan.serialize.SerializerToXML</code>
-         * ignores <code>start/endPrefixMapping()</code>.
-         */
-        public void startElement(String eltUri, String eltLocalName, String eltQName, Attributes attrs)
-                throws SAXException {
-
-            // try to restore the qName. The map already contains the colon
-            if (null != eltUri && eltUri.length() != 0 && this.uriToPrefixMap.containsKey(eltUri)) {
-                eltQName = this.uriToPrefixMap.get(eltUri) + eltLocalName;
-            }
-            if (this.hasMappings) {
-                // Add xmlns* attributes where needed
-
-                // New Attributes if we have to add some.
-                AttributesImpl newAttrs = null;
-
-                int mappingCount = this.prefixList.size();
-                int attrCount = attrs.getLength();
-
-                for (int mapping = 0; mapping < mappingCount; mapping++) {
-
-                    // Build infos for this namespace
-                    String uri = this.uriList.get(mapping);
-                    String prefix = this.prefixList.get(mapping);
-                    String qName = prefix.length() == 0 ? "xmlns" : ("xmlns:" + prefix);
-
-                    // Search for the corresponding xmlns* attribute
-                    boolean found = false;
-                    for (int attr = 0; attr < attrCount; attr++) {
-                        if (qName.equals(attrs.getQName(attr))) {
-                            // Check if mapping and attribute URI match
-                            if (!uri.equals(attrs.getValue(attr))) {
-                                throw new SAXException("URI in prefix mapping and attribute do not match");
-                            }
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        // Need to add this namespace
-                        if (newAttrs == null) {
-                            // Need to test if attrs is empty or we go into an infinite loop...
-                            // Well know SAX bug which I spent 3 hours to remind of :-(
-                            if (attrCount == 0) {
-                                newAttrs = new AttributesImpl();
-                            } else {
-                                newAttrs = new AttributesImpl(attrs);
-                            }
-                        }
-
-                        if (prefix.length() == 0) {
-                            newAttrs.addAttribute(XML_NAMESPACE_URI, "xmlns", "xmlns", "CDATA", uri);
-                        } else {
-                            newAttrs.addAttribute(XML_NAMESPACE_URI, prefix, qName, "CDATA", uri);
-                        }
-                    }
-                } // end for mapping
-
-                // Cleanup for the next element
-                clearMappings();
-
-                // Start element with new attributes, if any
-                this.contentHandler.startElement(eltUri, eltLocalName, eltQName, newAttrs == null ? attrs : newAttrs);
-            } else {
-                // Normal job
-                this.contentHandler.startElement(eltUri, eltLocalName, eltQName, attrs);
-            }
-        }
-
-
-        /**
-         * Receive notification of the end of an element.
-         * Try to restore the element qName.
-         */
-        public void endElement(String eltUri, String eltLocalName, String eltQName) throws SAXException {
-            // try to restore the qName. The map already contains the colon
-            if (null != eltUri && eltUri.length() != 0 && this.uriToPrefixMap.containsKey(eltUri)) {
-                eltQName = this.uriToPrefixMap.get(eltUri) + eltLocalName;
-            }
-            this.contentHandler.endElement(eltUri, eltLocalName, eltQName);
-        }
-
-        /**
-         * End the scope of a prefix-URI mapping:
-         * remove entry from mapping tables.
-         */
-        public void endPrefixMapping(String prefix) throws SAXException {
-            // remove mappings for xalan-bug-workaround.
-            // Unfortunately, we're not passed the uri, but the prefix here,
-            // so we need to maintain maps in both directions.
-            if (this.prefixToUriMap.containsKey(prefix)) {
-                this.uriToPrefixMap.remove(this.prefixToUriMap.get(prefix));
-                this.prefixToUriMap.remove(prefix);
-            }
-
-            if (hasMappings) {
-                // most of the time, start/endPrefixMapping calls have an element event between them,
-                // which will clear the hasMapping flag and so this code will only be executed in the
-                // rather rare occasion when there are start/endPrefixMapping calls with no element
-                // event in between. If we wouldn't remove the items from the prefixList and uriList here,
-                // the namespace would be incorrectly declared on the next element following the
-                // endPrefixMapping call.
-                int pos = prefixList.lastIndexOf(prefix);
-                if (pos != -1) {
-                    prefixList.remove(pos);
-                    uriList.remove(pos);
-                }
-            }
-
-            this.contentHandler.endPrefixMapping(prefix);
-        }
-
-        /**
-         * @see org.xml.sax.ContentHandler#endDocument()
-         */
-        public void endDocument() throws SAXException {
-            // Cleanup
-            this.uriToPrefixMap.clear();
-            this.prefixToUriMap.clear();
-            clearMappings();
-            this.contentHandler.endDocument();
-        }
-
-        private void clearMappings() {
-            this.hasMappings = false;
-            this.prefixList.clear();
-            this.uriList.clear();
-        }
-
-        /**
-         * @see org.xml.sax.ContentHandler#characters(char[], int, int)
-         */
-        public void characters(char[] ch, int start, int length) throws SAXException {
-            contentHandler.characters(ch, start, length);
-        }
-
-        /**
-         * @see org.xml.sax.ContentHandler#ignorableWhitespace(char[], int, int)
-         */
-        public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {
-            contentHandler.ignorableWhitespace(ch, start, length);
-        }
-
-        /**
-         * @see org.xml.sax.ContentHandler#processingInstruction(java.lang.String, java.lang.String)
-         */
-        public void processingInstruction(String target, String data) throws SAXException {
-            contentHandler.processingInstruction(target, data);
-        }
-
-        /**
-         * @see org.xml.sax.ContentHandler#setDocumentLocator(org.xml.sax.Locator)
-         */
-        public void setDocumentLocator(Locator locator) {
-            contentHandler.setDocumentLocator(locator);
-        }
-
-        /**
-         * @see org.xml.sax.ContentHandler#skippedEntity(java.lang.String)
-         */
-        public void skippedEntity(String name) throws SAXException {
-            contentHandler.skippedEntity(name);
+            throw new SAXException("Unable to create xml writer for: " + file, se);
         }
     }
 
@@ -386,7 +97,7 @@ public class IOUtils {
      * @param name  The name of the attribute.
      * @param value The value of the attribute.
      */
-    protected static void addAttribute(AttributesImpl ai, String name, Object value) {
+    public static void addAttribute(final AttributesImpl ai, final String name, final Object value) {
         if ( value != null ) {
             ai.addAttribute("", name, name, "CDATA", value.toString());
         }
@@ -398,7 +109,7 @@ public class IOUtils {
      * @param text
      * @throws SAXException
      */
-    protected static void text(ContentHandler ch, String text)
+    public static void text(final ContentHandler ch, final String text)
     throws SAXException {
         if ( text != null ) {
             final char[] c = text.toCharArray();
@@ -412,7 +123,7 @@ public class IOUtils {
      * @param ch    The content handler.
      * @param level The level of indention.
      */
-    protected static void indent(ContentHandler ch, int level)
+    public static void indent(final ContentHandler ch, final int level)
     throws SAXException {
         for(int i=0;i<level;i++) {
             IOUtils.text(ch, "    ");
@@ -424,7 +135,7 @@ public class IOUtils {
      * @param ch    The content handler.
      * @throws SAXException
      */
-    protected static void newline(ContentHandler ch)
+    public static void newline(final ContentHandler ch)
     throws SAXException {
         IOUtils.text(ch, "\n");
     }
