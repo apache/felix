@@ -8,6 +8,7 @@ Changes from 3.0.0 to 3.0.1
     * [FELIX-2954 ] - annotated component factory does not allow to provide a component instance explicitly
     * [FELIX-2966] - Annotations should automatically generate Import-Service/Export-Service headers
     * [FELIX-2965] - Annotations should allow to enable or disable auto-configuration mode.
+    * [FELIX-3866] - Added support for swap attribute in AspectService and AdpaterService annotations.
 
 Initial Release 3.0.0
 ---------------------
