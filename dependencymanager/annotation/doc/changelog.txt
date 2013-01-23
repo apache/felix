@@ -12,6 +12,7 @@ Changes from 3.0.0 to 3.0.1
     * [FELIX-2965] - Annotations should allow to enable or disable auto-configuration mode.
     * [FELIX-3863] - Generate DependencyManager Annotation MetaData In Project Folder
     * [FELIX-3865] - Update DependencyManager annotation plugin with latest bndlb 
+    * [FELIX-3866] - Added support for swap attribute in AspectService and AdpaterService annotations.
 
 Initial Release 3.0.0
 ---------------------
