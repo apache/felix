@@ -28,7 +28,7 @@
 	<name>Apache Felix Dependency Manager Annotation</name>
 	<description>Dependency Manager Annotation API and corresponding scanner plugins</description>
 	<artifactId>org.apache.felix.dependencymanager.annotation</artifactId>
-	<version>3.1.0</version>
+	<version>3.1.1-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 	<dependencies>
 		<dependency>
@@ -104,10 +104,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-  <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.annotation-3.1.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.annotation-3.1.0</developerConnection>
-    <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.dependencymanager.annotation-3.1.0</url>
-  </scm>
 </project>
