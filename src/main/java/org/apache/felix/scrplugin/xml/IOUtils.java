@@ -19,10 +19,12 @@
 package org.apache.felix.scrplugin.xml;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +75,7 @@ public class IOUtils {
     public static ContentHandler getSerializer(final File file)
     throws SAXException {
         try {
-            final FileWriter writer = new FileWriter(file);
+            final Writer writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
 
             final TransformerHandler transformerHandler = FACTORY.newTransformerHandler();
             final Transformer transformer = transformerHandler.getTransformer();
