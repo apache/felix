@@ -219,7 +219,7 @@ public class AnnotationMojo extends AbstractMojo
         }
     }
 
-    private void buildImportExportService(Jar jar, String header, Set<String> services) throws IOException
+    private void buildImportExportService(Jar jar, String header, Set<String> services) throws Exception
     {
         getLog().info("building " + header + " header with the following services: " + services);
 
