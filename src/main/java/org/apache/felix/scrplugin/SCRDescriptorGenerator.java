@@ -385,6 +385,28 @@ public class SCRDescriptorGenerator {
             }
         } while ( current != null);
 
+        // check service interfaces for properties
+        if ( container.getServiceDescription() != null ) {
+            for(final String interfaceName : container.getServiceDescription().getInterfaces()) {
+                try {
+                    final Class<?> interfaceClass = project.getClassLoader().loadClass(interfaceName);
+                    final ClassDescription interfaceDesc = this.scanner.getDescription(interfaceClass);
+                    if ( interfaceDesc != null ) {
+                        this.processProperties(interfaceDesc, container, ocd);
+                    }
+                } catch ( final SCRDescriptorFailureException sde) {
+                    this.logger.debug(sde.getMessage(), sde);
+                    iLog.addError(sde.getMessage(), interfaceName);
+                } catch ( final SCRDescriptorException sde) {
+                    this.logger.debug(sde.getSourceLocation() + " : " + sde.getMessage(), sde);
+                    iLog.addError(sde.getMessage(), sde.getSourceLocation());
+                } catch (ClassNotFoundException e) {
+                    this.logger.debug(e.getMessage(), e);
+                    iLog.addError(e.getMessage(), interfaceName);
+                }
+            }
+        }
+
         // global properties
         this.processGlobalProperties(desc, container.getProperties());
 
