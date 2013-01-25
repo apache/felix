@@ -18,7 +18,11 @@
  */
 package org.apache.felix.scr.annotations;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * The <code>Property</code> annotation defines properties which are made
@@ -128,6 +132,14 @@ public @interface Property {
      * value attributes or the type attribute.
      */
     short[] shortValue() default {};
+
+    /**
+     * The password value(s) of the property.
+     * This attribute should not be used in combination with any of the other
+     * value attributes or the type attribute.
+     * @since 1.8.0
+     */
+    String[] passwordValue() default {};
 
     /**
      * Defines the cardinality of the property and its collection type. If the
