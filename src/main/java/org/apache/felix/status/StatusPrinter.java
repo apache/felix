@@ -45,8 +45,8 @@ public interface StatusPrinter {
      * The value of this property is either a string or a string array containing
      * valid names of {@link PrinterMode}.
      *
-     * If this property is missing the printer is ignored.
-     *
+     * If this property is missing or contains invalid values,
+     * the printer is ignored.
      */
     String CONFIG_PRINTER_MODES = "felix.statusprinter.modes"; //$NON-NLS-1$
 
@@ -74,6 +74,9 @@ public interface StatusPrinter {
     /**
      * Prints the configuration report to the given <code>printWriter</code>.
      * Implementations are free to print whatever information they deem useful.
+     *
+     * If a printer is invoked with a mode it doesn't support ({@link #CONFIG_PRINTER_MODES})
+     * the printer should just do/print nothing and directly return.
      *
      * @param mode The render mode.
      * @param printWriter where to write the configuration data. It might be flushed,

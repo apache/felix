@@ -224,6 +224,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         }
     }
 
+    /**
+     * Base class for all configuration writers.
+     */
     private abstract static class ConfigurationWriter extends PrintWriter {
 
         ConfigurationWriter( final Writer delegatee ) {
@@ -249,6 +252,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         }
     }
 
+    /**
+     * The HTML configuration writer outputs the status as an HTML snippet.
+     */
     private static class HtmlConfigurationWriter extends ConfigurationWriter {
 
         // whether or not to filter "<" signs in the output
@@ -356,6 +362,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         }
     }
 
+    /**
+     * The plain text configuration writer outputs the status as plain text.
+     */
     private static class PlainTextConfigurationWriter extends ConfigurationWriter {
 
         PlainTextConfigurationWriter( final Writer delegatee ) {
@@ -376,6 +385,12 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         }
     }
 
+    /**
+     * The ZIP configuration writer creates a zip with
+     * - txt output of a status printers (if supported)
+     * - json output of a status printers (if supported)
+     * - attachments from a status printer (if supported)
+     */
     private static class ZipConfigurationWriter extends ConfigurationWriter {
 
         private final ZipOutputStream zip;

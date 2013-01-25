@@ -18,6 +18,9 @@
  */
 package org.apache.felix.status;
 
+/**
+ * Enumeration for the different printer modes.
+ */
 public enum PrinterMode {
 
     TEXT,       // plain text

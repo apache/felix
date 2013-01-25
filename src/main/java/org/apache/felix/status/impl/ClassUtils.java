@@ -19,12 +19,13 @@ package org.apache.felix.status.impl;
 import java.lang.reflect.Method;
 
 /**
- * Utility methods
+ * Utility methods for dynamic method invocations
  */
 public class ClassUtils {
 
     /**
-     * Search a method with the given name and signature
+     * Search a method with the given name and signature.
+     * @return The method or <code>null</code> if not found.
      */
     public static Method searchMethod(final Class<?> clazz, final String mName, final Class<?>[] params) {
         try {
@@ -43,7 +44,8 @@ public class ClassUtils {
     }
 
     /**
-     * Invoke the method on the printer with the arguments.
+     * Invoke the method on the object with the arguments.
+     * @return The result of the method invocation or <code>null</code> if an exception occurs.
      */
     public static Object invoke(final Object obj, final Method m, final Object[] args) {
         try {

@@ -39,7 +39,8 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
 
     /**
      * Constructor
-     * @param statusPrinterAdapter The adapter
+     * @param statusPrinterManager The status printer manager.
+     * @param printerName The name of the printer this plugin is displaying.
      */
     WebConsolePlugin(final StatusPrinterManager statusPrinterManager,
             final String printerName) {

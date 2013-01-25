@@ -21,7 +21,11 @@ package org.apache.felix.status;
 
 /**
  * The status printer handler can be used by clients to access
- * a status printer.
+ * a status printer. The handlers can be get from the {@link StatusPrinterManager}.
+ *
+ * For clients using status printers, a handler simplifies accessing and
+ * working with the status printer. A client should never lookup a
+ * status printer directly.
  */
 public interface StatusPrinterHandler extends StatusPrinter, ZipAttachmentProvider {
 
