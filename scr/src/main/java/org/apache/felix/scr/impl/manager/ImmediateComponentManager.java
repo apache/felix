@@ -28,6 +28,7 @@ import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.helper.ActivateMethod.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.MethodResult;
+import org.apache.felix.scr.impl.helper.ModifiedMethod;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Bundle;
@@ -169,7 +170,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             m_useCount.set( 0 );
             m_implementationObject = null;
             cleanupImplementationObject( implementationObject );
-            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), reason },  null );
+            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
             m_componentContext = null;
             m_properties = null;
             m_serviceProperties = null;
@@ -532,14 +533,13 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         // clear the current properties to force using the configuration data
         m_properties = null;
 
-        updateTargets( getProperties() );
-
         // unsatisfied component and non-ignored configuration may change targets
         // to satisfy references
         if ( getState() == STATE_UNSATISFIED && configuration != null
                 && !getComponentMetadata().isConfigurationIgnored() )
         {
             log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
+            updateTargets( getProperties() );
             activateInternal( getTrackingCount().get() );
             return;
         }
@@ -549,6 +549,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         if ( ( getState() & ( STATE_ACTIVE | STATE_FACTORY | STATE_REGISTERED ) ) == 0 )
         {
             // nothing to do for inactive components, leave this method
+            log( LogService.LOG_DEBUG, "Component can not be configured in state {0}", new Object[] { getState() }, null );
+            updateTargets( getProperties() );
             return;
         }
 
@@ -557,8 +559,10 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         if ( configuration == null && getComponentMetadata().isConfigurationRequired() )
         {
             deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, getTrackingCount().get() );
+            updateTargets( getProperties() );
+            return;
         }
-        else if ( configuration == null | !modify() )
+        if ( !modify() )
         {
             // SCR 112.7.1 - deactivate if configuration is deleted or no modified method declared
             log( LogService.LOG_DEBUG, "Deactivating and Activating to reconfigure from configuration", null );
@@ -569,21 +573,17 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             //     called through ConfigurationListener API which itself is
             //     called asynchronously by the Configuration Admin Service
             deactivateInternal( reason, false, getTrackingCount().get() );
+            updateTargets( getProperties() );
             activateInternal( getTrackingCount().get() );
         }
     }
 
     private boolean modify()
     {
-        // 0. no live update if there is no instance
-        if ( hasInstance() )
-        {
-            return false;
-        }
-
         // 1. no live update if there is no declared method
         if ( getComponentMetadata().getModified() == null )
         {
+            log( LogService.LOG_DEBUG, "No modified method, cannot update dynamically", null );
             return false;
         }
         // invariant: we have a modified method name
@@ -600,8 +600,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             {
                 log( LogService.LOG_DEBUG,
                         "Cannot dynamically update the configuration due to dependency changes induced on dependency {0}",
-                        new Object[]
-                                {dm.getName()}, null );
+                        new Object[] {dm.getName()}, null );
                 return false;
             }
         }
@@ -610,13 +609,13 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         // 4. call method (nothing to do when failed, since it has already been logged)
         //   (call with non-null default result to continue even if the
         //    modify method call failed)
+        updateTargets( props );
         final MethodResult result = invokeModifiedMethod();
         if ( result == null )
         {
             // log an error if the declared method cannot be found
             log( LogService.LOG_ERROR, "Declared modify method ''{0}'' cannot be found, configuring by reactivation",
-                    new Object[]
-                            {getComponentMetadata().getModified()}, null );
+                    new Object[] {getComponentMetadata().getModified()}, null );
             return false;
         }
 
@@ -625,8 +624,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         // this dynamic update and have the component be deactivated
         if ( !verifyDependencyManagers() )
         {
-            log(
-                    LogService.LOG_ERROR,
+            log( LogService.LOG_ERROR,
                     "Updating the service references caused at least on reference to become unsatisfied, deactivating component",
                     null );
             return false;
@@ -648,15 +646,20 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     protected MethodResult invokeModifiedMethod()
     {
-        return getComponentMethods().getModifiedMethod().invoke( getInstance(),
-                    new ActivatorParameter( m_componentContext, -1 ), MethodResult.VOID, this );
+        ModifiedMethod modifiedMethod = getComponentMethods().getModifiedMethod();
+        if ( getInstance() != null )
+        {
+            return modifiedMethod.invoke( getInstance(), new ActivatorParameter( m_componentContext, -1 ),
+                    MethodResult.VOID, this );
+        }
+        else if ( m_tmpImplementationObject != null)
+        {
+            return modifiedMethod.invoke( m_tmpImplementationObject, new ActivatorParameter( m_componentContext, -1 ),
+                    MethodResult.VOID, this );
+            
+        }
+        return MethodResult.VOID;
     }
-
-    protected boolean hasInstance()
-    {
-        return getInstance() == null;
-    }
-
 
     /**
      * Checks if the given service registration properties matches another set
