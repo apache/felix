@@ -56,6 +56,9 @@ import org.apache.felix.scrplugin.annotations.ScannedAnnotation;
 import org.apache.felix.scrplugin.annotations.ScannedClass;
 import org.apache.felix.scrplugin.description.ClassDescription;
 import org.apache.felix.scrplugin.description.ComponentDescription;
+import org.apache.felix.scrplugin.description.PropertyDescription;
+import org.apache.felix.scrplugin.description.ReferenceDescription;
+import org.apache.felix.scrplugin.description.ServiceDescription;
 import org.apache.felix.scrplugin.xml.ComponentDescriptorIO;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
@@ -146,6 +149,16 @@ public class ClassScanner {
                     if ( desc.getDescriptions(ComponentDescription.class).size() > 0) {
                         result.add(desc);
                         log.debug("Found component description " + desc + " in " + annotatedClass.getName());
+                    } else {
+                        // check whether one of the other annotations is used and log a warning (FELIX-3636)
+                        if ( desc.getDescription(PropertyDescription.class) != null
+                             || desc.getDescription(ReferenceDescription.class) != null
+                             || desc.getDescription(ServiceDescription.class) != null ) {
+                            iLog.addWarning("Class '" + src.getClassName() + "' contains SCR annotations, but not a" +
+                                 "@Component (or equivalent) annotation. Therefore no component descriptor is created for this" +
+                                 "class. Please add a @Component annotation and consider making it abstract.",
+                                 src.getFile().toString());
+                        }
                     }
                 } else {
                     this.allDescriptions.put(annotatedClass.getName(), new ClassDescription(annotatedClass, GENERATED));
