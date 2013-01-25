@@ -92,7 +92,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
             disposeImplementationObject( componentContext.getInstance(), componentContext, reason );
             i.remove();
             cleanupImplementationObject( componentContext.getInstance() );
-            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent", new Object[] { getName() },  null );
+            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
         }
     }
 
@@ -244,7 +244,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
     protected MethodResult invokeModifiedMethod()
     {
         ModifiedMethod modifiedMethod = getComponentMethods().getModifiedMethod();
-        MethodResult result = null;
+        MethodResult result = MethodResult.VOID;
         for ( BundleComponentContext componentContext : serviceContexts.values() )
         {
             Object instance = componentContext.getInstance();
@@ -260,11 +260,6 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
 
         }
         return result;
-    }
-
-    protected boolean hasInstance()
-    {
-        return !serviceContexts.isEmpty();
     }
 
     //---------- Component interface

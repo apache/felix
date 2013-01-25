@@ -61,6 +61,14 @@ import org.osgi.service.log.LogService;
  */
 public abstract class AbstractComponentManager<S> implements Component, SimpleLogger
 {
+    //useful text for deactivation reason numbers
+    static final String[] REASONS = {"Unspecified",
+        "Component disabled",
+        "Reference became unsatisfied",
+        "Configuration modified",
+        "Configuration deleted",
+        "Component disabled",
+        "Bundle stopped"};
 
     // the ID of this component
     private long m_componentId;
@@ -278,6 +286,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     //---------- Asynchronous frontend to state change methods ----------------
     private static final AtomicLong taskCounter = new AtomicLong( );
+
     /**
      * Enables this component and - if satisfied - also activates it. If
      * enabling the component fails for any reason, the component ends up
@@ -1285,7 +1294,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
         void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
-            log( acm, "deactivate (reason: " + reason + ") (dsable: " + disable + ")" );
+            log( acm, "deactivate (reason: " + REASONS[ reason ] + ") (dsable: " + disable + ")" );
         }
 
 
@@ -1397,7 +1406,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
         void dispose( AbstractComponentManager acm, int reason )
         {
-            acm.log( LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null );
+            acm.log( LogService.LOG_DEBUG, "Disposing component (reason: {0})", new Object[] { REASONS[ reason ] }, null );
             acm.clear();
             acm.changeState( Disposed.getInstance() );
 
@@ -1557,6 +1566,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
         void dispose( AbstractComponentManager acm, int reason )
         {
+            acm.log( LogService.LOG_DEBUG, "Disposing component for reason {0}", new Object[] { REASONS[ reason] }, null );
             acm.disableDependencyManagers();
             doDisable( acm );
             acm.clear();   //content of Disabled.dispose
@@ -1593,7 +1603,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
         void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
-            acm.log( LogService.LOG_DEBUG, "Deactivating component", null );
+            acm.log( LogService.LOG_DEBUG, "Deactivating component for reason {0}", new Object[] {REASONS[ reason ]},  null );
 
             // catch any problems from deleting the component to prevent the
             // component to remain in the deactivating state !
