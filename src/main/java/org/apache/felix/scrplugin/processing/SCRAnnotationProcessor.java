@@ -331,7 +331,7 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
 
     private static final String[] PROPERTY_VALUE_PROCESSING = new String[] { "String", "value", "String", "classValue", "Long",
             "longValue", "Double", "doubleValue", "Float", "floatValue", "Integer", "intValue", "Byte", "byteValue", "Char",
-            "charValue", "Boolean", "boolValue", "Short", "shortValue" };
+            "charValue", "Boolean", "boolValue", "Short", "shortValue", "Password", "passwordValue" };
 
     /**
      * Create properties descriptions
