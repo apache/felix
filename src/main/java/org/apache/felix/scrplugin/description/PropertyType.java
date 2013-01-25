@@ -29,7 +29,8 @@ public enum PropertyType {
     Char,
     Character,
     Boolean,
-    Short;
+    Short,
+    Passwort;
 
     public static PropertyType from(final Class<?> javaClass) {
         if ( javaClass.getName().equals(Long.class.getName())) {
