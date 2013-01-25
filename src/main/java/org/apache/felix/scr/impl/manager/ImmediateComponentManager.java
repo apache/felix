@@ -609,39 +609,47 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         // 4. call method (nothing to do when failed, since it has already been logged)
         //   (call with non-null default result to continue even if the
         //    modify method call failed)
-        updateTargets( props );
-        final MethodResult result = invokeModifiedMethod();
-        if ( result == null )
+        obtainWriteLock( "ImmediateComponentManager.modify" );
+        try
         {
-            // log an error if the declared method cannot be found
-            log( LogService.LOG_ERROR, "Declared modify method ''{0}'' cannot be found, configuring by reactivation",
-                    new Object[] {getComponentMetadata().getModified()}, null );
-            return false;
-        }
+            final MethodResult result = invokeModifiedMethod();
+            updateTargets( props );
+            if ( result == null )
+            {
+                // log an error if the declared method cannot be found
+                log( LogService.LOG_ERROR, "Declared modify method ''{0}'' cannot be found, configuring by reactivation",
+                        new Object[] {getComponentMetadata().getModified()}, null );
+                return false;
+            }
 
-        // 5. update the target filter on the services now, this may still
-        // result in unsatisfied dependencies, in which case we abort
-        // this dynamic update and have the component be deactivated
-        if ( !verifyDependencyManagers() )
-        {
-            log( LogService.LOG_ERROR,
-                    "Updating the service references caused at least on reference to become unsatisfied, deactivating component",
-                    null );
-            return false;
-        }
+            // 5. update the target filter on the services now, this may still
+            // result in unsatisfied dependencies, in which case we abort
+            // this dynamic update and have the component be deactivated
+            if ( !verifyDependencyManagers() )
+            {
+                log( LogService.LOG_ERROR,
+                        "Updating the service references caused at least on reference to become unsatisfied, deactivating component",
+                        null );
+                return false;
+            }
 
-        // 6. update service registration properties if we didn't just do it
-        if ( result.hasResult() )
-        {
-            setServiceProperties( result );
-        }
-        else
-        {
-            updateServiceRegistration();
-        }
+            // 6. update service registration properties if we didn't just do it
+            if ( result.hasResult() )
+            {
+                setServiceProperties( result );
+            }
+            else
+            {
+                updateServiceRegistration();
+            }
 
-        // 7. everything set and done, the component has been updated
-        return true;
+            // 7. everything set and done, the component has been updated
+            return true;
+        }
+        finally
+        {
+            releaseWriteLock( "ImmediateComponentManager.modify" );
+        }
     }
 
     protected MethodResult invokeModifiedMethod()
