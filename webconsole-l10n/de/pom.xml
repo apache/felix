@@ -1,0 +1,105 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>2.1</version>
+        <relativePath>../pom/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>org.apache.felix.webconsole.l10n.de</artifactId>
+    <packaging>bundle</packaging>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <name>Apache Felix Web Management Console - German Localization</name>
+    <description>
+        German localization of the Web Management Console. This bundle
+        attaches as a fragment to the  Web Based Management Console for
+        OSGi Frameworks. See
+        http://felix.apache.org/site/apache-felix-web-console.html for more
+        information on this bundle.
+    </description>
+    
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-l10n/de</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-l10n/de</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/webconsole-l10n/de</url>
+    </scm>
+
+    <build>
+        <plugins>
+            <!-- translate UTF-8 encoded properties files to ISO-8859-1 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>native2ascii-maven-plugin</artifactId>
+                <version>1.0-beta-1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>native2ascii</goal>
+                        </goals>
+                        <configuration>
+                            <encoding>UTF-8</encoding>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.6</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>
+                            ${project.artifactId}
+                        </Bundle-SymbolicName>
+                        <Bundle-Vendor>
+                            The Apache Software Foundation
+                        </Bundle-Vendor>
+                        <Bundle-DocURL>
+                            http://felix.apache.org/site/apache-felix-web-console.html
+                        </Bundle-DocURL>
+                        <Fragment-Host>
+                            org.apache.felix.webconsole
+                        </Fragment-Host>
+                        <_removeheaders>
+                            Embed-Dependency,Private-Package,Include-Resource
+                        </_removeheaders>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>src/**</include>
+                    </includes>
+                    <excludes>
+                        <exclude>src/main/appended-resources/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
