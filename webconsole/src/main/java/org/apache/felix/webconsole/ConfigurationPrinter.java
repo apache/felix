@@ -32,6 +32,8 @@ import java.io.PrintWriter;
  * With the {@link WebConsoleConstants#CONFIG_PRINTER_MODES} property this
  * service can specify when it should be included.
  * The default mode is {@link #MODE_ALWAYS}.
+ * @deprecated This has been deprecated. Use the org.apache.felix.status
+ *             API instead.
  */
 public interface ConfigurationPrinter
 {
