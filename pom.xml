@@ -66,6 +66,12 @@
         </plugins>        
     </build>    
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/status-printer</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/status-printer</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/status-printer</url>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
