@@ -33,6 +33,8 @@ import java.net.URL;
  * as a {@link ConfigurationPrinter} but not as a
  * {@link AttachmentProvider} service.
  * @since 3.0
+ * @deprecated This has been deprecated. Use the org.apache.felix.status
+ *             API instead.
  */
 public interface AttachmentProvider
 {
