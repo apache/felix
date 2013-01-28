@@ -25,7 +25,7 @@ import org.osgi.framework.BundleContext;
 
 
 /**
- * This is the main, starting class of the Bundle. It initializes and disposes 
+ * This is the main, starting class of the Bundle. It initializes and disposes
  * the Apache Web Console upon bundle lifecycle requests.
  */
 public class OsgiManagerActivator implements BundleActivator
@@ -33,21 +33,45 @@ public class OsgiManagerActivator implements BundleActivator
 
     private OsgiManager osgiManager;
 
+    private BundleActivator statusActivator;
+
+    private static final String STATUS_ACTIVATOR = "org.apache.felix.status.impl.Activator";
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
-    public void start( BundleContext bundleContext )
+    public void start( final BundleContext bundleContext ) throws Exception
     {
         osgiManager = new OsgiManager( bundleContext );
+        try
+        {
+            final Class activatorClass = bundleContext.getBundle().loadClass(STATUS_ACTIVATOR);
+            this.statusActivator = (BundleActivator) activatorClass.newInstance();
+
+        }
+        catch (Throwable t)
+        {
+            // we ignore this as the status activator is only available if the web console
+            // bundle contains the status bundle.
+        }
+        if ( this.statusActivator != null)
+        {
+            this.statusActivator.start(bundleContext);
+        }
     }
 
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
-    public void stop( BundleContext arg0 )
+    public void stop( final BundleContext bundleContext ) throws Exception
     {
+        if ( this.statusActivator != null)
+        {
+            this.statusActivator.stop(bundleContext);
+            this.statusActivator = null;
+        }
+
         if ( osgiManager != null )
         {
             osgiManager.dispose();
