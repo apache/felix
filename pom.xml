@@ -36,7 +36,6 @@
     </description>
     
     <build>
-        <directory>${bundle.build.name}</directory>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
