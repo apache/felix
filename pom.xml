@@ -238,7 +238,7 @@
                                             org.apache.commons.io.filefilter,
                                             org.apache.commons.io.output,
                                             org.json;version=${org.json.version.osgi},
-                                            org.apache.felix.status;version=1.0.0,
+                                            org.apache.felix.status;version=1.0.0;provide:=true,
                                             ${webconsole.exports}
                                        </Export-Package>
                                        <Embed-Dependency>
