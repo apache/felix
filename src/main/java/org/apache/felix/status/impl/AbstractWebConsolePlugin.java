@@ -168,6 +168,16 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             }
             pw.println( "</div></body></html>" );
             return;
+        } else if ( request.getPathInfo().endsWith(".json") ) {
+            if ( handler == null ) {
+                response.sendError( HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+            response.setContentType( "application/json" ); //$NON-NLS-1$
+            response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
+
+            final JSONConfigurationWriter jcw = new JSONConfigurationWriter(response.getWriter());
+            printConfigurationStatus( jcw, PrinterMode.JSON, handler );
         } else {
             if ( handler == null ) {
                 response.sendError( HttpServletResponse.SC_NOT_FOUND);
@@ -189,6 +199,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
             pw.println("$(document).ready(function() {");
             pw.println("    $('.downloadTxt').click(function() { downloadDump('txt', false)});");
+            pw.println("    $('.downloadJson').click(function() { downloadDump('json', false)});");
             pw.println("    $('.downloadZip').click(function() { downloadDump('zip', false)});");
             pw.println("    $('.downloadFullZip').click(function() { downloadDump('zip', true)});");
             pw.println("    $('.downloadFullTxt').click(function() { downloadDump('txt', true)});");
@@ -206,6 +217,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             pw.print("<button type=\"button\" class=\"downloadFullZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Full Zip</button>");
             pw.print("<button type=\"button\" class=\"downloadFullTxt\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Full Text</button>");
 
+            if ( handler.supports(PrinterMode.JSON) ) {
+                pw.print("<button type=\"button\" class=\"downloadJson\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As JSON</button>");
+            }
             if ( handler.supports(PrinterMode.ZIP_FILE_BIN) || handler.supports(PrinterMode.ZIP_FILE_JSON) ) {
                 pw.print("<button type=\"button\" class=\"downloadZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As Zip</button>");
             }
@@ -251,6 +265,16 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             this.title(handler.getTitle());
             handler.print(mode, this);
             this.end();
+        }
+    }
+
+    /**
+     * The JSON configuration writer
+     */
+    private static class JSONConfigurationWriter extends ConfigurationWriter {
+
+        JSONConfigurationWriter( final Writer delegatee ) {
+            super( delegatee );
         }
     }
 
