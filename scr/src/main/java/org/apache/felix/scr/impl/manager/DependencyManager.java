@@ -1765,7 +1765,8 @@ public class DependencyManager<S, T> implements Reference
         final ServiceTracker<T, RefPair<T>> oldTracker = trackerRef.get();
         Customizer<T> customizer = newCustomizer();
         customizer.setPreviousRefMap( refMap );
-        ServiceTracker<T, RefPair<T>> tracker = new ServiceTracker<T, RefPair<T>>( m_componentManager.getActivator().getBundleContext(), m_targetFilter, customizer );
+        boolean initialActive = oldTracker != null && oldTracker.isActive();
+        ServiceTracker<T, RefPair<T>> tracker = new ServiceTracker<T, RefPair<T>>( m_componentManager.getActivator().getBundleContext(), m_targetFilter, customizer, initialActive );
         customizer.setTracker( tracker );
         trackerRef.set( tracker );
         registered = true;

@@ -232,15 +232,17 @@ public class ServiceTracker<S, T> {
 	 *        is null, then this {@code ServiceTracker} will be used as the
 	 *        {@code ServiceTrackerCustomizer} and this {@code ServiceTracker}
 	 *        will call the {@code ServiceTrackerCustomizer} methods on itself.
+	 * @param initialActive Initial active state of the tracker.
 	 * @since 1.1
 	 */
-	public ServiceTracker(final BundleContext context, final Filter filter, final ServiceTrackerCustomizer<S, T> customizer) {
+	public ServiceTracker(final BundleContext context, final Filter filter, final ServiceTrackerCustomizer<S, T> customizer, boolean initialActive) {
 		this.context = context;
 		this.trackReference = null;
 		this.trackClass = null;
 		this.listenerFilter = filter.toString();
 		this.filter = filter;
 		this.customizer = customizer;
+		this.active = initialActive;
 		if ((context == null) || (filter == null)) {
 			/*
 			 * we throw a NPE here to be consistent with the other constructors
@@ -424,7 +426,6 @@ public class ServiceTracker<S, T> {
             if (outgoing == null) {
                 return;
             }
-            tracked = null;
             if (DEBUG) {
                 System.out.println("ServiceTracker.close: " + filter);
             }
@@ -432,6 +433,7 @@ public class ServiceTracker<S, T> {
         for (ServiceReference<S> ref: toUntrack.keySet()) {
             outgoing.untrack( ref, null );
         }
+        tracked = null;
     }
 
 	/**
