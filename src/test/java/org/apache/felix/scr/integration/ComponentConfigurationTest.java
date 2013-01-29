@@ -36,7 +36,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-        //  paxRunnerVmOption = DEBUG_VM_OPTION;
+//          paxRunnerVmOption = DEBUG_VM_OPTION;
     }
 
 
@@ -281,6 +281,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
             TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
             TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
             TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+            TestCase.assertNotNull( SimpleComponent.INSTANCE.m_singleRef );
 
             // reconfigure without target --> unsatisifed
             theConfig.remove( targetProp );
@@ -304,6 +305,99 @@ public class ComponentConfigurationTest extends ComponentTestBase
         }
         finally
         {
+            theConfig.remove( targetProp );
+            if ( service != null )
+            {
+                service.drop();
+            }
+        }
+    }
+
+    @Test
+    public void test_SimpleComponent_dynamic_configuration_with_optional_service() throws Exception
+    {
+        final String targetProp = "ref.target";
+        final String filterProp = "required";
+        final SimpleServiceImpl service = SimpleServiceImpl.create( bundleContext, "sample" ).setFilterProperty( filterProp );
+        try
+        {
+            final String pid = "DynamicConfigurationComponentWithOptionalReference";
+            final Component component = findComponentByName( pid );
+
+            deleteConfig( pid );
+            delay();
+
+            TestCase.assertNotNull( component );
+            TestCase.assertFalse( component.isDefaultEnabled() );
+
+            TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+            TestCase.assertNull( SimpleComponent.INSTANCE );
+
+            component.enable();
+            delay();
+
+            // optional ref missing --> component active
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertNotNull( SimpleComponent.INSTANCE );
+            final SimpleComponent instance = SimpleComponent.INSTANCE;
+
+            // dynamically configure without the correct target
+            configure( pid );
+            delay();
+
+            // optional ref missing --> component active
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
+            TestCase.assertNull( SimpleComponent.INSTANCE.m_singleRef );
+
+            // dynamically configure with correct target
+            theConfig.put( targetProp, "(filterprop=" + filterProp + ")" );
+            configure( pid );
+            delay();
+
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
+            TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
+            TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+            TestCase.assertNotNull( SimpleComponent.INSTANCE.m_singleRef );
+
+            configure( pid );
+            delay();
+
+            // same instance after reconfiguration
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
+            TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
+            TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+            TestCase.assertNotNull( SimpleComponent.INSTANCE.m_singleRef );
+
+            // reconfigure without target --> active
+            theConfig.remove( targetProp );
+            configure( pid );
+            delay();
+
+            // optional ref missing --> component active
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
+            TestCase.assertNull( SimpleComponent.INSTANCE.m_singleRef );
+
+            deleteConfig( pid );
+            delay();
+
+            // optional ref missing --> component active
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
+            TestCase.assertNull( SimpleComponent.INSTANCE.m_singleRef );
+
+            component.disable();
+            delay();
+
+            TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+            TestCase.assertNull( SimpleComponent.INSTANCE );
+        }
+        finally
+        {
+//            Thread.sleep( 60000 );
             theConfig.remove( targetProp );
             if ( service != null )
             {

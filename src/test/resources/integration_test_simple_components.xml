@@ -60,8 +60,23 @@
             interface="org.apache.felix.scr.integration.components.SimpleService"
             cardinality="1..1"
             policy="dynamic"
-            bind="bindSimpleService"
-            unbind="unbindSimpleService"
+            bind="setSimpleService"
+            unbind="unsetSimpleService"
+            target="(filterprop=__nothing__)"
+        />
+    </scr:component>
+
+    <scr:component name="DynamicConfigurationComponentWithOptionalReference"
+        enabled="false" modified="configure" immediate="true">
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <property name="service.pid" value="DynamicConfigurationComponentWithRequiredReference" />
+        <reference
+            name="ref"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            cardinality="0..1"
+            policy="dynamic"
+            bind="setSimpleService"
+            unbind="unsetSimpleService"
             target="(filterprop=__nothing__)"
         />
     </scr:component>
