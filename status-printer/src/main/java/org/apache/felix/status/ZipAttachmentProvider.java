@@ -29,7 +29,9 @@ import java.util.zip.ZipOutputStream;
  *
  * A service implementing this method must still register itself
  * as a {@link StatusPrinter} but not as a
- * {@link ZipAttachmentProvider} service.
+ * {@link ZipAttachmentProvider} service and the provider
+ * should either support {@link PrinterMode.ZIP_FILE_JSON}
+ * or {@link PrinterMode.ZIP_FILE_BIN}
  */
 public interface ZipAttachmentProvider extends StatusPrinter {
 

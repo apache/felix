@@ -183,7 +183,7 @@ public class ConfigurationPrinterAdapter {
     public String[] getPrinterModes() {
         final Set<String> list = new HashSet<String>();
         if ( this.match(ConsoleConstants.MODE_TXT) || this.match(ConsoleConstants.MODE_ZIP) ) {
-            list.add(PrinterMode.ZIP_FILE.name());
+            list.add(PrinterMode.ZIP_FILE_BIN.name());
         }
         if ( this.match(ConsoleConstants.MODE_WEB) ) {
             if ( !escapeHtml ) {
