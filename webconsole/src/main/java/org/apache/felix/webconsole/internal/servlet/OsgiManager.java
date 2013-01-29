@@ -55,7 +55,7 @@ import org.apache.felix.webconsole.internal.Util;
 import org.apache.felix.webconsole.internal.core.BundlesServlet;
 import org.apache.felix.webconsole.internal.filter.FilteringResponseWrapper;
 import org.apache.felix.webconsole.internal.i18n.ResourceBundleManager;
-import org.apache.felix.webconsole.internal.misc.ConfigurationRender;
+import org.apache.felix.webconsole.internal.servlet.PluginHolder.InternalPlugin;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -294,10 +294,10 @@ public class OsgiManager extends GenericServlet
         resourceBundleManager = new ResourceBundleManager(getBundleContext());
 
         // start the configuration render, providing the resource bundle manager
-        ConfigurationRender cr = new ConfigurationRender(resourceBundleManager);
-        cr.activate(bundleContext);
-        osgiManagerPlugins.add(cr);
-        holder.addOsgiManagerPlugin(cr);
+        //ConfigurationRender cr = new ConfigurationRender(resourceBundleManager);
+        //cr.activate(bundleContext);
+        //osgiManagerPlugins.add(cr);
+        //holder.addOsgiManagerPlugin(cr);
 
         // start tracking external plugins after setting up our own plugins
         holder.open();
