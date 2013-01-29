@@ -141,7 +141,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             zip.closeEntry();
 
             final ZipConfigurationWriter pw = new ZipConfigurationWriter( zip );
-            printConfigurationStatus( pw, PrinterMode.ZIP_FILE, handler );
+            printConfigurationStatus( pw, PrinterMode.ZIP_FILE_BIN, handler );
+            pw.counter = 0;
+            printConfigurationStatus( pw, PrinterMode.ZIP_FILE_JSON, handler );
 
             zip.finish();
         } else if ( request.getPathInfo().endsWith( ".nfo" ) ) {
@@ -204,7 +206,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             pw.print("<button type=\"button\" class=\"downloadFullZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Full Zip</button>");
             pw.print("<button type=\"button\" class=\"downloadFullTxt\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Full Text</button>");
 
-            if ( handler.supports(PrinterMode.ZIP_FILE) ) {
+            if ( handler.supports(PrinterMode.ZIP_FILE_BIN) || handler.supports(PrinterMode.ZIP_FILE_JSON) ) {
                 pw.print("<button type=\"button\" class=\"downloadZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As Zip</button>");
             }
             if ( handler.supports(PrinterMode.TEXT ) ) {
@@ -429,18 +431,23 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                 final PrinterMode mode,
                 final StatusPrinterHandler handler)
         throws IOException {
-            super.printStatus(mode, handler);
             final String title = getFormattedTitle(handler.getTitle());
-            handler.addAttachments(title.concat("/"), this.zip);
-            if ( handler.supports(PrinterMode.JSON) ) {
+            if ( mode == PrinterMode.ZIP_FILE_BIN ) {
+                super.printStatus(mode, handler);
+                handler.addAttachments(title.concat("/"), this.zip);
+            } else {
+                counter++;
                 final String name = "json/".concat(title).concat(".json");
 
                 final ZipEntry entry = new ZipEntry( name );
                 zip.putNextEntry( entry );
-                handler.print(PrinterMode.JSON, this);
+                handler.print(PrinterMode.ZIP_FILE_JSON, this);
                 flush();
 
                 zip.closeEntry();
+                if ( !handler.supports(PrinterMode.ZIP_FILE_BIN) ) {
+                    handler.addAttachments(title.concat("/"), this.zip);
+                }
             }
         }
     }

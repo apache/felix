@@ -113,7 +113,7 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer {
                         m = ConsoleConstants.MODE_WEB;
                     } else if ( mode == PrinterMode.TEXT ) {
                         m = ConsoleConstants.MODE_TXT;
-                    } else if ( mode == PrinterMode.ZIP_FILE ) {
+                    } else if ( mode == PrinterMode.ZIP_FILE_BIN ) {
                         m = ConsoleConstants.MODE_ZIP;
                     } else {
                         m = null;

@@ -49,8 +49,7 @@ public class Activator implements BundleActivator {
         this.managerRegistration = context.registerService(
                 StatusPrinterManager.class.getName(),
                 this.printerManager, props);
-
-    }
+}
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
