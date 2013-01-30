@@ -25,21 +25,21 @@ var bundleOpSuccess = false;
 function renderData( eventData, filter )  {
 	lastBundleData = eventData;
 	var s = eventData.s;
-	var statline = i18n.statlinePrefix + ' ' + i18n.statlinePartA.msgFormat(s[0]);
+	var statline = i18n.statlinePrefix + ' ' + i18n.statlineTotal.msgFormat(s[0]);
 	if ( s[0] == s[1] || s[0] == s[1] + s[2]) {
 		statline += ' - ' + i18n.statlineAll.msgFormat(s[0]);
 	} else {
 		if ( s[1] > 0 ) {
-			statline += ', ' + i18n.statlinePartB.msgFormat(s[1]);
+			statline += ', ' + i18n.statlineActive.msgFormat(s[1]);
 		}
 		if ( s[2] > 0 ) {
-			statline += ', ' + i18n.statlinePartC.msgFormat(s[2]);
+			statline += ', ' + i18n.statlineFragments.msgFormat(s[2]);
 		}
 		if ( s[3] > 0 ) {
-			statline += ', ' + i18n.statlinePartD.msgFormat(s[3]);
+			statline += ', ' + i18n.statlineResolved.msgFormat(s[3]);
 		}
 		if ( s[4] > 0 ) {
-			statline += ', ' + i18n.statlinePartE.msgFormat(s[4]);
+			statline += ', ' + i18n.statlineInstalled.msgFormat(s[4]);
 		}
 	}
     $('.statline').html(statline);
