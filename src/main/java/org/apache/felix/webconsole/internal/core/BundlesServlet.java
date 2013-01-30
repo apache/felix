@@ -1566,8 +1566,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             if ( tmpFile != null )
             {
                 // start, refreshPackages just needs to exist, don't care for value
-                boolean start = startItem != null;
-                boolean refreshPackages = refreshPackagesItem != null;
+                final boolean start = startItem != null;
+                final boolean refreshPackages = refreshPackagesItem != null;
 
                 bundleLocation = "inputstream:" + bundleItem.getName();
                 installBundle( bundleLocation, tmpFile, startLevel, start, refreshPackages );
