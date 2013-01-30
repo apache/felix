@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.Provider.Service;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -48,6 +47,8 @@ import org.apache.felix.scrplugin.description.ReferencePolicyOption;
 import org.apache.felix.scrplugin.description.ReferenceStrategy;
 import org.apache.felix.scrplugin.description.ServiceDescription;
 import org.apache.felix.scrplugin.helper.ComponentContainer;
+import org.apache.felix.scrplugin.helper.ComponentContainerUtil;
+import org.apache.felix.scrplugin.helper.ComponentContainerUtil.ComponentContainerContainer;
 import org.apache.felix.scrplugin.helper.DescriptionContainer;
 import org.apache.felix.scrplugin.helper.IssueLog;
 import org.apache.felix.scrplugin.helper.StringUtils;
@@ -734,6 +735,7 @@ public class ComponentDescriptorIO {
      */
     public static List<String> generateDescriptorFiles(final DescriptionContainer module, final Options options, final Log logger)
             throws SCRDescriptorException, SCRDescriptorFailureException {
+        // get the list of all relevant containers
         final List<ComponentContainer> components = new ArrayList<ComponentContainer>();
         for(final ComponentContainer container : module.getComponents()) {
             if (!container.getComponentDescription().isCreateDs()) {
@@ -758,57 +760,33 @@ public class ComponentDescriptorIO {
             }
             return null;
         }
+        if ( !options.isGenerateSeparateDescriptors() && descriptorFile == null ) {
+            throw new SCRDescriptorFailureException("Descriptor file name must not be empty.");
+        }
 
         // finally the descriptors have to be written ....
         descriptorDir.mkdirs(); // ensure parent dir
 
         final List<String> fileNames = new ArrayList<String>();
-        if ( options.isGenerateSeparateDescriptors() ) {
+        final List<ComponentContainerContainer> containers = ComponentContainerUtil.split(components, options.isGenerateSeparateDescriptors());
+        for(final ComponentContainerContainer ccc : containers) {
             final SpecVersion globalVersion = module.getOptions().getSpecVersion();
-            while ( !components.isEmpty() ) {
-                // get the first component
-                final List<ComponentContainer> innerList = new ArrayList<ComponentContainer>();
-                final ComponentContainer component = components.remove(0);
-                innerList.add(component);
-                final int pos = component.getClassDescription().getDescribedClass().getName().indexOf('$');
-                final String baseClassName;
-                if ( pos == -1 ) {
-                    baseClassName = component.getClassDescription().getDescribedClass().getName();
-                } else {
-                    baseClassName = component.getClassDescription().getDescribedClass().getName().substring(0, pos);
-                }
-                final String baseClassPrefix = baseClassName + '$';
 
-                // check for inner classes
-                final Iterator<ComponentContainer> i = components.iterator();
-                while ( i.hasNext() ) {
-                    final ComponentContainer cc = i.next();
-                    if ( cc.getClassDescription().getDescribedClass().getName().startsWith(baseClassPrefix) ) {
-                        innerList.add(cc);
-                        i.remove();
+            final File useFile;
+            if ( ccc.className == null ) {
+                useFile = descriptorFile;
+            } else {
+                SpecVersion sv = null;
+                for(final ComponentContainer cc : ccc.components ) {
+                    if ( sv == null || sv.ordinal() < cc.getComponentDescription().getSpecVersion().ordinal() ) {
+                        sv = cc.getComponentDescription().getSpecVersion();
                     }
                 }
-
-                module.getOptions().setSpecVersion(component.getComponentDescription().getSpecVersion());
-                final File file = new File(descriptorDir, baseClassName + ".xml");
-                try {
-                    ComponentDescriptorIO.generateXML(module, innerList, file, logger);
-                } catch (final IOException e) {
-                    throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
-                } catch (final TransformerException e) {
-                    throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
-                } catch (final SAXException e) {
-                    throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
-                }
-                fileNames.add(PARENT_NAME + '/' + file.getName());
-            }
-            module.getOptions().setSpecVersion(globalVersion);
-        } else {
-            if (descriptorFile == null) {
-                throw new SCRDescriptorFailureException("Descriptor file name must not be empty.");
+                module.getOptions().setSpecVersion(sv);
+                useFile = new File(descriptorDir, ccc.className + ".xml");
             }
             try {
-                ComponentDescriptorIO.generateXML(module, components, descriptorFile, logger);
+                ComponentDescriptorIO.generateXML(module, ccc.components, useFile, logger);
             } catch (final IOException e) {
                 throw new SCRDescriptorException("Unable to generate xml", descriptorFile.toString(), e);
             } catch (final TransformerException e) {
@@ -816,9 +794,11 @@ public class ComponentDescriptorIO {
             } catch (final SAXException e) {
                 throw new SCRDescriptorException("Unable to generate xml", descriptorFile.toString(), e);
             }
-            fileNames.add(PARENT_NAME + '/' + descriptorFile.getName());
+            fileNames.add(PARENT_NAME + '/' + useFile.getName());
 
+            module.getOptions().setSpecVersion(globalVersion);
         }
+
         return fileNames;
     }
 }
