@@ -31,7 +31,7 @@ import java.util.zip.ZipOutputStream;
  * as a {@link StatusPrinter} but not as a
  * {@link ZipAttachmentProvider} service and the provider
  * should either support {@link PrinterMode.ZIP_FILE_JSON}
- * or {@link PrinterMode.ZIP_FILE_BIN}
+ * or {@link PrinterMode.ZIP_FILE_TEXT}
  */
 public interface ZipAttachmentProvider extends StatusPrinter {
 
