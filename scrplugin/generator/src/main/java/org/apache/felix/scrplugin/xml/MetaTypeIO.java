@@ -21,7 +21,6 @@ package org.apache.felix.scrplugin.xml;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -97,13 +96,42 @@ public class MetaTypeIO {
 
                 final List<String> fileNames = new ArrayList<String>();
                 if ( options.isGenerateSeparateDescriptors() ) {
+                    // create a list with relevant components
+                    final List<ComponentContainer> components = new ArrayList<ComponentContainer>();
                     for(final ComponentContainer component : module.getComponents() ) {
                         if ( component.getMetatypeContainer() != null ) {
-                            final File file = new File(mtDir, component.getClassDescription().getDescribedClass().getName() + ".xml");
-                            logger.info("Generating 1 MetaType Descriptor in " + file);
-                            MetaTypeIO.write(module, Collections.singletonList(component), file);
-                            fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + file.getName());
+                            components.add(component);
                         }
+                    }
+
+                    while ( !components.isEmpty() ) {
+                        // get the first component
+                        final List<ComponentContainer> innerList = new ArrayList<ComponentContainer>();
+                        final ComponentContainer component = components.remove(0);
+                        innerList.add(component);
+                        final int pos = component.getClassDescription().getDescribedClass().getName().indexOf('$');
+                        final String baseClassName;
+                        if ( pos == -1 ) {
+                            baseClassName = component.getClassDescription().getDescribedClass().getName();
+                        } else {
+                            baseClassName = component.getClassDescription().getDescribedClass().getName().substring(0, pos);
+                        }
+                        final String baseClassPrefix = baseClassName + '$';
+
+                        // check for inner classes
+                        final Iterator<ComponentContainer> i = components.iterator();
+                        while ( i.hasNext() ) {
+                            final ComponentContainer cc = i.next();
+                            if ( cc.getClassDescription().getDescribedClass().getName().startsWith(baseClassPrefix) ) {
+                                innerList.add(cc);
+                                i.remove();
+                            }
+                        }
+
+                        final File file = new File(mtDir, baseClassName + ".xml");
+                        logger.info("Generating " + innerList.size() + " MetaType Descriptor in " + file);
+                        MetaTypeIO.write(module, innerList, file);
+                        fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + file.getName());
                     }
                 } else {
                     logger.info("Generating " + metatypeCount + " MetaType Descriptors in " + mtFile);
