@@ -143,31 +143,47 @@ public class ClassScanner {
                 // load the class
                 final Class<?> annotatedClass = project.getClassLoader().loadClass(src.getClassName());
 
-                final ClassDescription desc = this.processClass(annotatedClass, src.getFile().toString());
-                if ( desc != null ) {
-                    this.allDescriptions.put(annotatedClass.getName(), desc);
-                    if ( desc.getDescriptions(ComponentDescription.class).size() > 0) {
-                        result.add(desc);
-                        log.debug("Found component description " + desc + " in " + annotatedClass.getName());
-                    } else {
-                        // check whether one of the other annotations is used and log a warning (FELIX-3636)
-                        if ( desc.getDescription(PropertyDescription.class) != null
-                             || desc.getDescription(ReferenceDescription.class) != null
-                             || desc.getDescription(ServiceDescription.class) != null ) {
-                            iLog.addWarning("Class '" + src.getClassName() + "' contains SCR annotations, but not a" +
-                                 "@Component (or equivalent) annotation. Therefore no component descriptor is created for this" +
-                                 "class. Please add a @Component annotation and consider making it abstract.",
-                                 src.getFile().toString());
-                        }
-                    }
-                } else {
-                    this.allDescriptions.put(annotatedClass.getName(), new ClassDescription(annotatedClass, GENERATED));
-                }
+                this.process(annotatedClass, src, result);
             } catch (final ClassNotFoundException cnfe) {
                 throw new SCRDescriptorFailureException("Unable to load compiled class: " + src.getClassName(), cnfe);
             }
         }
         return result;
+    }
+
+    /**
+     * Process a class
+     * @throws SCRDescriptorException
+     * @throws SCRDescriptorFailureException
+     */
+    private void process(final Class<?> annotatedClass, final Source src, final List<ClassDescription> result)
+    throws SCRDescriptorFailureException, SCRDescriptorException {
+        final ClassDescription desc = this.processClass(annotatedClass, src.getFile().toString());
+        if ( desc != null ) {
+            this.allDescriptions.put(annotatedClass.getName(), desc);
+            if ( desc.getDescriptions(ComponentDescription.class).size() > 0) {
+                result.add(desc);
+                log.debug("Found component description " + desc + " in " + annotatedClass.getName());
+            } else {
+                // check whether one of the other annotations is used and log a warning (FELIX-3636)
+                if ( desc.getDescription(PropertyDescription.class) != null
+                     || desc.getDescription(ReferenceDescription.class) != null
+                     || desc.getDescription(ServiceDescription.class) != null ) {
+                    iLog.addWarning("Class '" + src.getClassName() + "' contains SCR annotations, but not a" +
+                         "@Component (or equivalent) annotation. Therefore no component descriptor is created for this" +
+                         "class. Please add a @Component annotation and consider making it abstract.",
+                         src.getFile().toString());
+                }
+            }
+        } else {
+            this.allDescriptions.put(annotatedClass.getName(), new ClassDescription(annotatedClass, GENERATED));
+        }
+        // process inner classes
+        for(final Class<?> innerClass : annotatedClass.getDeclaredClasses()) {
+            if ( !innerClass.isAnnotation() && !innerClass.isInterface() ) {
+                process(innerClass, src, result);
+            }
+        }
     }
 
     /**

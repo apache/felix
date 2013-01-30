@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.Provider.Service;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -765,11 +765,34 @@ public class ComponentDescriptorIO {
         final List<String> fileNames = new ArrayList<String>();
         if ( options.isGenerateSeparateDescriptors() ) {
             final SpecVersion globalVersion = module.getOptions().getSpecVersion();
-            for(final ComponentContainer component : components ) {
+            while ( !components.isEmpty() ) {
+                // get the first component
+                final List<ComponentContainer> innerList = new ArrayList<ComponentContainer>();
+                final ComponentContainer component = components.remove(0);
+                innerList.add(component);
+                final int pos = component.getClassDescription().getDescribedClass().getName().indexOf('$');
+                final String baseClassName;
+                if ( pos == -1 ) {
+                    baseClassName = component.getClassDescription().getDescribedClass().getName();
+                } else {
+                    baseClassName = component.getClassDescription().getDescribedClass().getName().substring(0, pos);
+                }
+                final String baseClassPrefix = baseClassName + '$';
+
+                // check for inner classes
+                final Iterator<ComponentContainer> i = components.iterator();
+                while ( i.hasNext() ) {
+                    final ComponentContainer cc = i.next();
+                    if ( cc.getClassDescription().getDescribedClass().getName().startsWith(baseClassPrefix) ) {
+                        innerList.add(cc);
+                        i.remove();
+                    }
+                }
+
                 module.getOptions().setSpecVersion(component.getComponentDescription().getSpecVersion());
-                final File file = new File(descriptorDir, component.getClassDescription().getDescribedClass().getName() + ".xml");
+                final File file = new File(descriptorDir, baseClassName + ".xml");
                 try {
-                    ComponentDescriptorIO.generateXML(module, Collections.singletonList(component), file, logger);
+                    ComponentDescriptorIO.generateXML(module, innerList, file, logger);
                 } catch (final IOException e) {
                     throw new SCRDescriptorException("Unable to generate xml", file.toString(), e);
                 } catch (final TransformerException e) {
