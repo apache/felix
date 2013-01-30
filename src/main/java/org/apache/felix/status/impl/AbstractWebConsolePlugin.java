@@ -141,7 +141,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             zip.closeEntry();
 
             final ZipConfigurationWriter pw = new ZipConfigurationWriter( zip );
-            printConfigurationStatus( pw, PrinterMode.ZIP_FILE_BIN, handler );
+            printConfigurationStatus( pw, PrinterMode.ZIP_FILE_TEXT, handler );
             pw.counter = 0;
             printConfigurationStatus( pw, PrinterMode.ZIP_FILE_JSON, handler );
 
@@ -220,7 +220,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             if ( handler.supports(PrinterMode.JSON) ) {
                 pw.print("<button type=\"button\" class=\"downloadJson\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As JSON</button>");
             }
-            if ( handler.supports(PrinterMode.ZIP_FILE_BIN) || handler.supports(PrinterMode.ZIP_FILE_JSON) ) {
+            if ( handler.supports(PrinterMode.ZIP_FILE_TEXT) || handler.supports(PrinterMode.ZIP_FILE_JSON) ) {
                 pw.print("<button type=\"button\" class=\"downloadZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As Zip</button>");
             }
             if ( handler.supports(PrinterMode.TEXT ) ) {
@@ -456,7 +456,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                 final StatusPrinterHandler handler)
         throws IOException {
             final String title = getFormattedTitle(handler.getTitle());
-            if ( mode == PrinterMode.ZIP_FILE_BIN ) {
+            if ( mode == PrinterMode.ZIP_FILE_TEXT ) {
                 super.printStatus(mode, handler);
                 handler.addAttachments(title.concat("/"), this.zip);
             } else {
@@ -469,7 +469,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                 flush();
 
                 zip.closeEntry();
-                if ( !handler.supports(PrinterMode.ZIP_FILE_BIN) ) {
+                if ( !handler.supports(PrinterMode.ZIP_FILE_TEXT) ) {
                     handler.addAttachments(title.concat("/"), this.zip);
                 }
             }

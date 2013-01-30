@@ -26,6 +26,6 @@ public enum PrinterMode {
     TEXT,          // plain text
     HTML_BODY,     // HTML which can be placed inside a HTML body element (no external references)
     JSON,          // JSON output
-    ZIP_FILE_BIN,  // file content for a zip
+    ZIP_FILE_TEXT, // file content for a zip
     ZIP_FILE_JSON  // json file content for a zip
 }
