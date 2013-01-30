@@ -25,7 +25,24 @@ var bundleOpSuccess = false;
 function renderData( eventData, filter )  {
 	lastBundleData = eventData;
 	var s = eventData.s;
-    $('.statline').html(i18n.statline.msgFormat(s[0], s[1], s[2], s[3], s[4]));
+	var statline = i18n.statlinePrefix + ' ' + i18n.statlinePartA.msgFormat(s[0]);
+	if ( s[0] == s[1] || s[0] == s[1] + s[2]) {
+		statline += ' - ' + i18n.statlineAll.msgFormat(s[0]);
+	} else {
+		if ( s[1] > 0 ) {
+			statline += ', ' + i18n.statlinePartB.msgFormat(s[1]);
+		}
+		if ( s[2] > 0 ) {
+			statline += ', ' + i18n.statlinePartC.msgFormat(s[2]);
+		}
+		if ( s[3] > 0 ) {
+			statline += ', ' + i18n.statlinePartD.msgFormat(s[3]);
+		}
+		if ( s[4] > 0 ) {
+			statline += ', ' + i18n.statlinePartE.msgFormat(s[4]);
+		}
+	}
+    $('.statline').html(statline);
 	bundlesBody.empty();
     for ( var idx in eventData.data ) {
         if ( currentBundle == null || !drawDetails || currentBundle == eventData.data[idx].id) {
