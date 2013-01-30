@@ -31,6 +31,8 @@ import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.Options;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.helper.ComponentContainer;
+import org.apache.felix.scrplugin.helper.ComponentContainerUtil;
+import org.apache.felix.scrplugin.helper.ComponentContainerUtil.ComponentContainerContainer;
 import org.apache.felix.scrplugin.helper.DescriptionContainer;
 import org.apache.felix.scrplugin.helper.MetatypeAttributeDefinition;
 import org.apache.felix.scrplugin.helper.MetatypeContainer;
@@ -78,10 +80,11 @@ public class MetaTypeIO {
             final Options options,
             final Log logger)
                     throws SCRDescriptorException {
-        int metatypeCount = 0;
+        // create a list with relevant components
+        final List<ComponentContainer> components = new ArrayList<ComponentContainer>();
         for(final ComponentContainer component : module.getComponents()) {
             if ( component.getMetatypeContainer() != null ) {
-                metatypeCount++;
+                components.add(component);
             }
         }
         // write meta type info if there is a file name
@@ -91,53 +94,24 @@ public class MetaTypeIO {
 
             final File mtFile = new File(mtDir, options.getMetaTypeName());
 
-            if (metatypeCount > 0) {
+            if (components.size() > 0) {
                 mtDir.mkdirs();
 
                 final List<String> fileNames = new ArrayList<String>();
-                if ( options.isGenerateSeparateDescriptors() ) {
-                    // create a list with relevant components
-                    final List<ComponentContainer> components = new ArrayList<ComponentContainer>();
-                    for(final ComponentContainer component : module.getComponents() ) {
-                        if ( component.getMetatypeContainer() != null ) {
-                            components.add(component);
-                        }
+                final List<ComponentContainerContainer> containers = ComponentContainerUtil.split(components, options.isGenerateSeparateDescriptors());
+                for(final ComponentContainerContainer ccc : containers) {
+                    final File useFile;
+                    if ( ccc.className == null ) {
+                        useFile = mtFile;
+                    } else {
+                        useFile = new File(mtDir, ccc.className + ".xml");
                     }
+                    logger.info("Generating " + ccc.components.size() + " MetaType Descriptors in " + useFile);
+                    MetaTypeIO.write(module, ccc.components, useFile);
+                    fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + useFile.getName());
 
-                    while ( !components.isEmpty() ) {
-                        // get the first component
-                        final List<ComponentContainer> innerList = new ArrayList<ComponentContainer>();
-                        final ComponentContainer component = components.remove(0);
-                        innerList.add(component);
-                        final int pos = component.getClassDescription().getDescribedClass().getName().indexOf('$');
-                        final String baseClassName;
-                        if ( pos == -1 ) {
-                            baseClassName = component.getClassDescription().getDescribedClass().getName();
-                        } else {
-                            baseClassName = component.getClassDescription().getDescribedClass().getName().substring(0, pos);
-                        }
-                        final String baseClassPrefix = baseClassName + '$';
-
-                        // check for inner classes
-                        final Iterator<ComponentContainer> i = components.iterator();
-                        while ( i.hasNext() ) {
-                            final ComponentContainer cc = i.next();
-                            if ( cc.getClassDescription().getDescribedClass().getName().startsWith(baseClassPrefix) ) {
-                                innerList.add(cc);
-                                i.remove();
-                            }
-                        }
-
-                        final File file = new File(mtDir, baseClassName + ".xml");
-                        logger.info("Generating " + innerList.size() + " MetaType Descriptor in " + file);
-                        MetaTypeIO.write(module, innerList, file);
-                        fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + file.getName());
-                    }
-                } else {
-                    logger.info("Generating " + metatypeCount + " MetaType Descriptors in " + mtFile);
-                    MetaTypeIO.write(module, module.getComponents(), mtFile);
-                    fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + mtFile.getName());
                 }
+
                 return fileNames;
             }
             if (mtFile.exists()) {
@@ -145,7 +119,7 @@ public class MetaTypeIO {
             }
 
         } else {
-            if ( metatypeCount > 0 ) {
+            if (components.size() > 0) {
                 logger.info("Meta type file name is not set: meta type info is not written.");
             }
         }
