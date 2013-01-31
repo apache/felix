@@ -89,7 +89,7 @@ class DirectoryRevision extends BundleArchiveRevision
             // Get manifest.
             Manifest mf = new Manifest(is);
             // Create a case insensitive map of manifest attributes.
-            return new StringMap(mf.getMainAttributes(), false);
+            return new StringMap(mf.getMainAttributes());
         }
         finally
         {
