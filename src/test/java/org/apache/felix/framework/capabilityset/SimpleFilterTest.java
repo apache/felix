@@ -79,5 +79,8 @@ public class SimpleFilterTest extends TestCase
 
         pieces = SimpleFilter.parseSubstring("aaaa*aaaa");
         assertFalse("Should not match!", SimpleFilter.compareSubstring(pieces, "aaaaaaa"));
+
+        pieces = SimpleFilter.parseSubstring("aaa**aaa");
+        assertTrue("Should match!", SimpleFilter.compareSubstring(pieces, "aaaaaa"));
     }
 }
