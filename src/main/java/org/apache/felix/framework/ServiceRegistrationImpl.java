@@ -47,7 +47,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
     // Service factory interface.
     private volatile ServiceFactory m_factory;
     // Associated property dictionary.
-    private volatile Map m_propMap = new StringMap(false);
+    private volatile Map m_propMap = new StringMap();
     // Re-usable service reference.
     private final ServiceReferenceImpl m_ref;
     // Flag indicating that we are unregistering.
@@ -272,7 +272,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
     private void initializeProperties(Dictionary dict)
     {
         // Create a case-insensitive map for the properties.
-        Map props = new StringMap(false);
+        Map props = new StringMap();
 
         if (dict != null)
         {
