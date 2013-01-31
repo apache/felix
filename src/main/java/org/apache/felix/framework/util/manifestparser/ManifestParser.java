@@ -552,6 +552,13 @@ public class ManifestParser
                     : new SimpleFilter(null, null, SimpleFilter.MATCH_ALL);
                 for (String path : clause.m_paths)
                 {
+                    if (path.startsWith("osgi.wiring."))
+                    {
+                        throw new BundleException("Manifest cannot use Require-Capability for '"
+                            + path
+                            + "' namespace.");
+                    }
+
                     // Create requirement and add to requirement list.
                     reqList.add(
                         new BundleRequirementImpl(
@@ -678,12 +685,20 @@ public class ManifestParser
 
     private static List<BundleCapability> convertProvideCapabilities(
         List<ParsedHeaderClause> clauses, BundleRevision owner)
+        throws BundleException
     {
         List<BundleCapability> capList = new ArrayList();
         for (ParsedHeaderClause clause : clauses)
         {
             for (String path : clause.m_paths)
             {
+                if (path.startsWith("osgi.wiring."))
+                {
+                    throw new BundleException("Manifest cannot use Provide-Capability for '"
+                        + path
+                        + "' namespace.");
+                }
+
                 // Create package capability and add to capability list.
                 capList.add(
                     new BundleCapabilityImpl(
