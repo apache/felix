@@ -113,7 +113,7 @@ public class FilterImpl implements Filter
         public WrapperCapability(ServiceReference sr)
         {
             super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-            m_map = new StringMap(false);
+            m_map = new StringMap();
             for (String key : sr.getPropertyKeys())
             {
                 m_map.put(key, sr.getProperty(key));
@@ -161,7 +161,7 @@ public class FilterImpl implements Filter
             if (!caseSensitive)
             {
                 m_dict = null;
-                m_map = new StringMap(false);
+                m_map = new StringMap();
                 if (dict != null)
                 {
                     Enumeration keys = dict.keys();

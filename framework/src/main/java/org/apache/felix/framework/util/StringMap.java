@@ -34,15 +34,17 @@ public class StringMap extends AbstractMap<String, Object>
 
     private final TreeMap<char[], KeyValueEntry> m_map = new TreeMap<char[], KeyValueEntry>(COMPARATOR);
 
-    public StringMap(boolean caseSensitive)
+    public StringMap()
     {
     }
 
-    public StringMap(Map map, boolean caseSensitive)
+    public StringMap(Map<? extends Object, ? extends Object> map)
     {
-        for (Entry e : (Set<Entry>)map.entrySet())
+        for (Map.Entry<? extends Object, ? extends Object> e : map.entrySet())
         {
-            put(e.getKey().toString(), e.getValue());
+            KeyValueEntry kve = (KeyValueEntry) m_map.put(
+                toUpperCase(e.getKey().toString()),
+                new KeyValueEntry(e.getKey().toString(), e.getValue()));
         }
     }
 
@@ -82,6 +84,15 @@ public class StringMap extends AbstractMap<String, Object>
     {
         KeyValueEntry kve = (KeyValueEntry) m_map.put(toUpperCase(key), new KeyValueEntry(key, value));
         return (kve != null) ? kve.value : null;
+    }
+
+    @Override
+    public void putAll(Map<? extends String, ? extends Object> map)
+    {
+        for (Map.Entry<? extends String, ? extends Object> e : map.entrySet())
+        {
+            put(e.getKey().toString(), e.getValue());
+        }
     }
 
     @Override

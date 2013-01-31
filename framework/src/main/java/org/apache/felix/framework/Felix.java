@@ -305,7 +305,7 @@ public class Felix extends BundleImpl implements Framework
     {
         super();
         // Copy the configuration properties; convert keys to strings.
-        m_configMutableMap = new StringMap(false);
+        m_configMutableMap = new StringMap();
         if (configMap != null)
         {
             for (Iterator i = configMap.entrySet().iterator(); i.hasNext(); )
@@ -783,7 +783,7 @@ public class Felix extends BundleImpl implements Framework
                 // its bundle context to the logger so that it can track log services.
                 m_logger.setSystemBundleContext(_getBundleContext());
 
-                // We have to check with the security provider (if there is one). 
+                // We have to check with the security provider (if there is one).
                 // This is to avoid having bundles in the cache that have been tampered with
                 SecurityProvider sp = getFramework().getSecurityProvider();
                 if ((sp != null) && (System.getSecurityManager() != null))
@@ -829,7 +829,7 @@ public class Felix extends BundleImpl implements Framework
                         releaseGlobalLock();
                     }
                 }
-                
+
                 // Clear the cache of classes coming from the system bundle.
                 // This is only used for Felix.getBundle(Class clazz) to speed
                 // up class lookup for the system bundle.

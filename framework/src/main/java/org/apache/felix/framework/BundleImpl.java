@@ -337,7 +337,7 @@ class BundleImpl implements Bundle, BundleRevisions
         // Spec says empty local returns raw headers.
         if (locale.length() == 0)
         {
-            result = new StringMap(adapt(BundleRevisionImpl.class).getHeaders(), false);
+            result = new StringMap(adapt(BundleRevisionImpl.class).getHeaders());
         }
 
         // If we have no result, try to get it from the cached headers.
@@ -373,7 +373,7 @@ class BundleImpl implements Bundle, BundleRevisions
         if (result == null)
         {
             // Get a modifiable copy of the raw headers.
-            Map headers = new StringMap(adapt(BundleRevisionImpl.class).getHeaders(), false);
+            Map headers = new StringMap(adapt(BundleRevisionImpl.class).getHeaders());
             // Assume for now that this will be the result.
             result = headers;
 

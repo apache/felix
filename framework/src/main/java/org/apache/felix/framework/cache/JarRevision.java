@@ -99,7 +99,7 @@ class JarRevision extends BundleArchiveRevision
     public Map getManifestHeader() throws Exception
     {
         // Create a case insensitive map of manifest attributes.
-        Map headers = new StringMap(false);
+        Map headers = new StringMap();
         // Read and parse headers.
         getMainAttributes(headers, m_zipFile);
         return headers;
