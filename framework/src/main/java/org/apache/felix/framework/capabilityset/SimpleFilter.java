@@ -403,24 +403,23 @@ loop:   for (;;)
             char c = value.charAt(idx++);
             if (!escaped && (c == '*'))
             {
-                if (wasStar)
+                // If we have successive '*' characters, then we can
+                // effectively collapse them by ignoring succeeding ones.
+                if (!wasStar)
                 {
-                    // encountered two successive stars;
-                    // I assume this is illegal
-                    throw new IllegalArgumentException("Invalid filter string: " + value);
+                    if (ss.length() > 0)
+                    {
+                        pieces.add(ss.toString()); // accumulate the pieces
+                        // between '*' occurrences
+                    }
+                    ss.setLength(0);
+                    // if this is a leading star, then track it
+                    if (pieces.isEmpty())
+                    {
+                        leftstar = true;
+                    }
+                    wasStar = true;
                 }
-                if (ss.length() > 0)
-                {
-                    pieces.add(ss.toString()); // accumulate the pieces
-                    // between '*' occurrences
-                }
-                ss.setLength(0);
-                // if this is a leading star, then track it
-                if (pieces.isEmpty())
-                {
-                    leftstar = true;
-                }
-                wasStar = true;
             }
             else if (!escaped && (c == '\\'))
             {
