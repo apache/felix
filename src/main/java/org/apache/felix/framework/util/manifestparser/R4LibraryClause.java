@@ -134,17 +134,7 @@ public class R4LibraryClause
 
     private boolean checkOSNames(String currentOSName, String[] osnames)
     {
-        boolean win32 = currentOSName.startsWith("win") &&
-            (currentOSName.equals("windows95")
-            || currentOSName.equals("windows98")
-            || currentOSName.equals("windowsnt")
-            || currentOSName.equals("windows2000")
-            || currentOSName.equals("windows2003")
-            || currentOSName.equals("windows2008")
-            || currentOSName.equals("windowsxp")
-            || currentOSName.equals("windowsce")
-            || currentOSName.equals("windowsvista")
-            || currentOSName.equals("windows7"));
+        boolean win32 = currentOSName.startsWith("win") && !currentOSName.equals("windowsce");
 
         for (int i = 0; (osnames != null) && (i < osnames.length); i++)
         {
@@ -381,7 +371,11 @@ public class R4LibraryClause
             }
             else if (value.indexOf("2008") >= 0)
             {
-                os = "windows2008";
+                os = "windowsserver2008";
+            }
+            else if (value.indexOf("2012") >= 0)
+            {
+                os = "windowsserver2012";
             }
             else if (value.indexOf("xp") >= 0)
             {
@@ -395,10 +389,17 @@ public class R4LibraryClause
             {
                 os = "windowsvista";
             }
-            // will need better test here if any future Windows version has a 7 in it!
-            else if (value.indexOf("7") >= 0)
+            else if ((value.indexOf(" 7") >= 0) || value.equals("win7"))
             {
                 os = "windows7";
+            }
+            else if ((value.indexOf(" 8") >= 0) || value.equals("win8"))
+            {
+                os = "windows8";
+            }
+            else if ((value.indexOf(" 9") >= 0) || value.equals("win9"))
+            {
+                os = "windows9";
             }
             return os;
         }
@@ -465,7 +466,7 @@ public class R4LibraryClause
     {
         value = value.toLowerCase();
 
-        if (value.startsWith("x86-64") || value.startsWith("amd64") || 
+        if (value.startsWith("x86-64") || value.startsWith("amd64") ||
             value.startsWith("em64") || value.startsWith("x86_64"))
         {
             return "x86-64";
