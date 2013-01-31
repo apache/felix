@@ -4710,7 +4710,10 @@ public class Felix extends BundleImpl implements Framework
             try
             {
                 m_oldState = m_bundle.getState();
-                stopBundle(m_bundle, false);
+                if (m_oldState != Bundle.UNINSTALLED)
+                {
+                    stopBundle(m_bundle, false);
+                }
             }
             catch (Throwable ex)
             {
