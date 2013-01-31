@@ -1014,6 +1014,7 @@ class BundleImpl implements Bundle, BundleRevisions
         // Uninstall the bundle.
         getFramework().uninstallBundle(this);
     }
+
     private static final SecurityManagerEx m_smEx = new SecurityManagerEx();
     private static final ClassLoader m_classloader = Felix.class.getClassLoader();
 
