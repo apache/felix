@@ -2588,13 +2588,11 @@ public class Felix extends BundleImpl implements Framework
                     new TreeMap<Long, BundleImpl>(m_installedBundles[IDENTIFIER_MAP_IDX])
                 };
                 target = (BundleImpl) maps[LOCATION_MAP_IDX].remove(bundle._getLocation());
-                maps[IDENTIFIER_MAP_IDX].remove(new Long(target.getBundleId()));
-                m_installedBundles = maps;
-
-                // Put the uninstalled bundle into the uninstalled
-                // list for subsequent refreshing.
                 if (target != null)
                 {
+                    maps[IDENTIFIER_MAP_IDX].remove(new Long(target.getBundleId()));
+                    m_installedBundles = maps;
+
                     // Set the bundle's persistent state to uninstalled.
                     bundle.setPersistentStateUninstalled();
 
@@ -4708,7 +4706,7 @@ public class Felix extends BundleImpl implements Framework
         {
             acquireBundleLock(m_bundle,
                     Bundle.INSTALLED | Bundle.RESOLVED | Bundle.STARTING |
-                    Bundle.ACTIVE | Bundle.STOPPING);
+                    Bundle.ACTIVE | Bundle.STOPPING | Bundle.UNINSTALLED);
             try
             {
                 m_oldState = m_bundle.getState();
