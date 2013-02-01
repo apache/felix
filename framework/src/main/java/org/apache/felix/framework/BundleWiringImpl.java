@@ -1287,7 +1287,8 @@ public class BundleWiringImpl implements BundleWiring
     {
         // Get the appropriate class loader for delegation.
         ClassLoader parent = (m_classLoader == null)
-            ? determineParentClassLoader() : m_classLoader.getParent();
+            ? determineParentClassLoader() :
+            BundleRevisionImpl.getSecureAction().getParentClassLoader(m_classLoader);
         return (parent == null) ? m_bootClassLoader : parent;
     }
 
