@@ -1122,7 +1122,7 @@ public class Felix extends BundleImpl implements Framework
     **/
     void setActiveStartLevel(int requestedLevel, FrameworkListener[] listeners)
     {
-        Bundle[] bundles = null;
+        Bundle[] bundles;
 
         // Record the target start level immediately and use this for
         // comparisons for starting/stopping bundles to avoid race
@@ -1144,16 +1144,12 @@ public class Felix extends BundleImpl implements Framework
             // This approach does mean that it is possible for a for individual
             // bundle states to change during this operation. If a bundle's start
             // level changes, then it is possible for it to be processed out of
-            // order. Uninstalled bundles are just logged andignored.
+            // order. Uninstalled bundles are just logged and ignored.
             //
             // Calls to this method are only made by the start level thread, which
             // serializes framework start level changes. Thus, it is not possible
             // for two requests to change the framework's start level to interfere
             // with each other.
-
-            // Determine if we are lowering or raising the
-            // active start level.
-            boolean lowering = (m_targetStartLevel < m_activeStartLevel);
 
             // Acquire global lock.
             boolean locked = acquireGlobalLock();
@@ -1193,19 +1189,37 @@ public class Felix extends BundleImpl implements Framework
                 releaseGlobalLock();
             }
 
+            // Determine if we are lowering or raising the
+            // active start level.
+            boolean isLowering = (m_targetStartLevel < m_activeStartLevel);
+            // Determine the range of start levels to process.
+            int low = (isLowering) ? m_targetStartLevel + 1 : m_activeStartLevel + 1;
+            int high = (isLowering) ? m_activeStartLevel : m_targetStartLevel;
+
             // Process bundles and stop or start them accordingly.
             while (bundlesRemaining)
             {
                 StartLevelTuple tuple;
+
+                // Remove our tuple to be processed while holding the queue lock
+                // and update the active start level accordingly, which allows
+                // us to determine in startBundle() if concurrent requests to
+                // start a bundle should be handled synchronously or just added
+                // to the queue and handled asynchronously.
                 synchronized (m_startLevelBundles)
                 {
-                    if (lowering)
+                    if (isLowering)
                     {
                         tuple = m_startLevelBundles.last();
                     }
                     else
                     {
                         tuple = m_startLevelBundles.first();
+                    }
+
+                    if ((tuple.m_level >= low) && (tuple.m_level <= high))
+                    {
+                        m_activeStartLevel = tuple.m_level;
                     }
                 }
 
@@ -1245,16 +1259,16 @@ public class Felix extends BundleImpl implements Framework
                     try
                     {
                         // Start the bundle if necessary.
-                        if (((tuple.m_bundle.getPersistentState() == Bundle.ACTIVE)
-                            || (tuple.m_bundle.getPersistentState() == Bundle.STARTING))
-                            && (tuple.m_level <= m_targetStartLevel))
+                        // Note that we only attempt to start the bundle if
+                        // its start level is equal to the active start level,
+                        // which means we assume lower bundles are in the state
+                        // they should be in (i.e., we won't attempt to restart
+                        // them if they previously failed to start).
+                        if (!isLowering
+                            && (((tuple.m_bundle.getPersistentState() == Bundle.ACTIVE)
+                                || (tuple.m_bundle.getPersistentState() == Bundle.STARTING))
+                                && (tuple.m_level == m_activeStartLevel)))
                         {
-                            // Count up the active start level.
-                            if (m_activeStartLevel != tuple.m_level)
-                            {
-                                m_activeStartLevel = tuple.m_level;
-                            }
-
                             try
                             {
 // TODO: LAZY - Not sure if this is the best way...
@@ -1273,16 +1287,11 @@ public class Felix extends BundleImpl implements Framework
                             }
                         }
                         // Stop the bundle if necessary.
-                        else if (((tuple.m_bundle.getState() == Bundle.ACTIVE)
-                            || (tuple.m_bundle.getState() == Bundle.STARTING))
-                            && (tuple.m_level > m_targetStartLevel))
+                        else if (isLowering
+                            && (((tuple.m_bundle.getState() == Bundle.ACTIVE)
+                                || (tuple.m_bundle.getState() == Bundle.STARTING))
+                                && (tuple.m_level == m_activeStartLevel)))
                         {
-                            // Count down the active start level.
-                            if (m_activeStartLevel != tuple.m_level)
-                            {
-                                m_activeStartLevel = tuple.m_level;
-                            }
-
                             try
                             {
                                 stopBundle(tuple.m_bundle, false);
@@ -1837,6 +1846,7 @@ public class Felix extends BundleImpl implements Framework
         // bundles can be installed or uninstalled during the resolve.
 
         int eventType;
+        boolean isTransient = (options & Bundle.START_TRANSIENT) != 0;
 
         // Acquire bundle lock.
         try
@@ -1884,7 +1894,7 @@ public class Felix extends BundleImpl implements Framework
 
             // Set and save the bundle's persistent state to active
             // if we are supposed to record state change.
-            if ((options & Bundle.START_TRANSIENT) == 0)
+            if (!isTransient)
             {
                 if ((options & Bundle.START_ACTIVATION_POLICY) != 0)
                 {
@@ -1897,31 +1907,64 @@ public class Felix extends BundleImpl implements Framework
             }
 
             // Check to see if the bundle's start level is greater than the
-            // the framework's active start level.
+            // the framework's target start level and if so just return. For
+            // transient starts we compare their start level to the current
+            // active start level, since we never process transient starts
+            // asynchronously (i.e., they are either satisfied and process
+            // synchronously here or they throw an exception).
             int bundleLevel = bundle.getStartLevel(getInitialBundleStartLevel());
-            if (bundleLevel > m_targetStartLevel)
+            if (isTransient && (bundleLevel > m_activeStartLevel))
             {
                 // Throw an exception for transient starts.
-                if ((options & Bundle.START_TRANSIENT) != 0)
-                {
-                    throw new BundleException(
-                        "Cannot start bundle " + bundle + " because its start level is "
-                        + bundleLevel
-                        + ", which is greater than the framework's start level of "
-                        + m_targetStartLevel + ".");
-                }
-                // Ignore persistent starts.
+                throw new BundleException(
+                    "Cannot start bundle " + bundle + " because its start level is "
+                    + bundleLevel
+                    + ", which is greater than the framework's start level of "
+                    + m_activeStartLevel + ".");
+            }
+            else if (bundleLevel > m_targetStartLevel)
+            {
+                // Ignore persistent starts that are not satisfied.
                 return;
             }
 
-            // Check to see if there is a start level change in progress and if so
-            // add this bundle to the bundles being processed by the start level
-            // thread and return.
+            // Check to see if there is a start level change in progress and if
+            // so queue this bundle to the start level bundle queue for the start
+            // level thread and return, except for transient starts which are
+            // queued but processed synchronously.
+            // Note: Don't queue starts from the start level thread, otherwise
+            // we'd never get anything started.
             if (!Thread.currentThread().getName().equals(FrameworkStartLevelImpl.THREAD_NAME))
             {
                 synchronized (m_startLevelBundles)
                 {
-                    if (!m_startLevelBundles.isEmpty())
+                    // Since we have the start level queue lock, we know the
+                    // active start level cannot change. For transient starts
+                    // we now need to double check and make sure we can still
+                    // start them since technically the active start level could
+                    // have changed.
+                    if (isTransient && (bundleLevel > m_activeStartLevel))
+                    {
+                        throw new BundleException(
+                            "Cannot start bundle " + bundle + " because its start level is "
+                            + bundleLevel
+                            + ", which is greater than the framework's start level of "
+                            + m_activeStartLevel + ".");
+                    }
+
+                    // If the start level bundle queue is not empty, then we know
+                    // there is a start level operation ongoing. We know that the
+                    // bundle being started is satisfied by the target start level
+                    // otherwise we wouldn't be here. In most cases we simply want
+                    // to queue the bundle; however, if the bundle level is lower
+                    // than the current active start level, then we want to handle
+                    // it synchronously. This is because the start level thread
+                    // ignores bundles that it should have already processed.
+                    // So queue the bundle if its bundle start level is greater
+                    // or equal to the active start level and then simply return
+                    // since it will be processed asynchronously.
+                    if (!m_startLevelBundles.isEmpty()
+                        && (bundleLevel >= m_activeStartLevel))
                     {
                         // Only add the bundle to the start level bundles
                         // being process if it is not already there.
@@ -1933,15 +1976,29 @@ public class Felix extends BundleImpl implements Framework
                                 found = true;
                             }
                         }
+
                         if (!found)
                         {
-// TODO: STARTLEVEL - Technically, if a bundle is installed and started during a
-//       start level operation, then it will end up being queued for the start level
-//       thread even if its start level is met, when it potentially could have been
-//       started immediately.
                             m_startLevelBundles.add(new StartLevelTuple(bundle, bundleLevel));
                         }
-                        return;
+
+                        // Note that although we queued the transiently started
+                        // bundle, we don't return here because we handle all
+                        // transient bundles synchronously. The reason why we
+                        // queue it anyway is for the case where the start level
+                        // is lowering, since the transiently started bundle may
+                        // have already been processed by the start level thread
+                        // and we will start it briefly here synchronously, but
+                        // we want the start level thread to process it again
+                        // so it gets another chance to stop it. This is not an
+                        // issue when the start level is raising because the
+                        // start level thread ignores non-persistently started
+                        // bundles or if it is also persistently started it will
+                        // be a no-op.
+                        if (!isTransient)
+                        {
+                            return;
+                        }
                     }
                 }
             }
