@@ -125,7 +125,7 @@ class URLHandlersContentHandlerProxy extends ContentHandler
             else
             {
                 service = (ContentHandler) m_action.invoke(
-                    m_action.getMethod(framework.getClass(), "getContentHandlerService", STRING_TYPES),
+                    m_action.getDeclaredMethod(framework.getClass(), "getContentHandlerService", STRING_TYPES),
                     framework, new Object[]{m_mimeType});
             }
 
