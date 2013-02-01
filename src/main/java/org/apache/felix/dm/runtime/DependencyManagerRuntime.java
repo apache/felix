@@ -104,16 +104,19 @@ public class DependencyManagerRuntime
      */
     protected void bundleStarted(Bundle bundle)
     {
-        Log.instance().info("Scanning started bundle %s", bundle.getSymbolicName());        
+        Log.instance().info("Scanning started bundle %s", bundle.getSymbolicName());
         List<URL> descriptorURLs = new ArrayList<URL>();
-        collectDescriptors(bundle, descriptorURLs);                
+        collectDescriptors(bundle, descriptorURLs);
         Bundle[] fragments = m_packageAdmin.getFragments(bundle);
-        if (fragments != null) {
-            for (Bundle fragment : fragments) {
+        if (fragments != null)
+        {
+            for (Bundle fragment : fragments)
+            {
                 collectDescriptors(fragment, descriptorURLs);
             }
         }
-        for (URL descriptorURL: descriptorURLs) {
+        for (URL descriptorURL : descriptorURLs)
+        {
             loadDescriptor(bundle, descriptorURL);
         }
     }
