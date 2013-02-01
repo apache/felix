@@ -1,5 +1,12 @@
-Changes from 3.0.0 to 3.0.1
----------------------------
+Trunk
+-----
+
+** Bug
+
+    * [FELIX-3873] - Make the reference to json.org consistent in DM artifacts
+
+Release 3.1.0
+-------------
 
 ** Bug
 
