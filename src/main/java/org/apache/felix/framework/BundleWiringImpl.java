@@ -1811,7 +1811,9 @@ public class BundleWiringImpl implements BundleWiring
         {
             try
             {
-                ClassLoader.registerAsParallelCapable();
+                BundleRevisionImpl.getSecureAction()
+                    .getMethod(ClassLoader.class, "registerAsParallelCapable", null)
+                        .invoke(null);
             }
             catch (Throwable th)
             {
@@ -1851,7 +1853,9 @@ public class BundleWiringImpl implements BundleWiring
          {
              try
              {
-                 ClassLoader.registerAsParallelCapable();
+                 BundleRevisionImpl.getSecureAction()
+                    .getMethod(ClassLoader.class, "registerAsParallelCapable", null)
+                        .invoke(null);
              }
              catch (Throwable th)
              {
