@@ -30,7 +30,7 @@
         Implementation of the Declarative Services specification 1.2
     </description>
     <artifactId>org.apache.felix.scr</artifactId>
-    <version>1.6.3-SNAPSHOT</version>
+    <version>1.7-SNAPSHOT</version>
     <scm>
         <connection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scr</developerConnection>
@@ -223,7 +223,6 @@
                             ${project.artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                        <Bundle-Version>1.7</Bundle-Version>
                         <Bundle-DocURL>
                             http://felix.apache.org/site/apache-felix-service-component-runtime.html
                         </Bundle-DocURL>
