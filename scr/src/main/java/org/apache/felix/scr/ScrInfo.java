@@ -18,12 +18,12 @@
  */
 package org.apache.felix.scr;
 
-import java.io.PrintStream;
+import java.io.PrintWriter;
 
 /**
  * Abstraction of command interface.
  * 
- * @Since 1.6.4
+ * @Since 1.8
  */
 public interface ScrInfo
 {
@@ -32,23 +32,23 @@ public interface ScrInfo
      * List in text the components for the bundle specified, or all components if null, sorted by component ID
      * @param bundleIdentifier bundle the components are in or null for all components
      * @param out PrintStream for normal output
-     * @param err PrintStream for errors.
+     * @throws IllegalArgumentException if nothing can be found
      */
-    void list(String bundleIdentifier, PrintStream out, PrintStream err);
+    void list(String bundleIdentifier, PrintWriter out);
 
     /**
      * List in text detailed information about the specified components.  Components can be specified by 
      * numeric componentId, component name, a regexp to match for component name, or null for all components.
      * @param componentId specifier for desired components
      * @param out PrintStream for normal output
-     * @param err PrintStream for errors.
+     * @throws IllegalArgumentException if nothing can be found
      */
-    void info(String componentId, PrintStream out, PrintStream err);
+    void info(String componentId, PrintWriter out);
 
     /**
      * List in text the current SCR configuration
      * @param out PrintStream for output.
      */
-    void config(PrintStream out);
+    void config(PrintWriter out);
 
 }

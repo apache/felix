@@ -19,6 +19,7 @@
 package org.apache.felix.scr.impl;
 
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.StringTokenizer;
 import org.apache.felix.shell.Command;
 
@@ -84,29 +85,37 @@ class ScrShellCommand implements Command
         else
         {
             String arg = (st.hasMoreTokens()) ? st.nextToken() : null;
-            if (command.equals(LIST_CMD))
+            PrintWriter pw = new PrintWriter(out);
+            try
             {
-                scrCommand.list(arg, out, err);
+                if (command.equals(LIST_CMD))
+                {
+                    scrCommand.list(arg, pw);
+                }
+                else if (command.equals(INFO_CMD))
+                {
+                    scrCommand.info(arg, pw);
+                }
+                else if (command.equals(ENABLE_CMD))
+                {
+                    scrCommand.change(arg, pw, true);
+                }
+                else if (command.equals(DISABLE_CMD))
+                {
+                    scrCommand.change(arg, pw, false);
+                }
+                else if (command.equals(CONFIG_CMD))
+                {
+                    scrCommand.config(pw);
+                }
+                else
+                {
+                    err.println("Unknown command: " + command);
+                }
             }
-            else if (command.equals(INFO_CMD))
+            catch ( IllegalArgumentException e )
             {
-                scrCommand.info(arg, out, err);
-            }
-            else if (command.equals(ENABLE_CMD))
-            {
-                scrCommand.change(arg, out, err, true);
-            }
-            else if (command.equals(DISABLE_CMD))
-            {
-                scrCommand.change(arg, out, err, false);
-            }
-            else if (command.equals(CONFIG_CMD))
-            {
-                scrCommand.config(out);
-            }
-            else
-            {
-                err.println("Unknown command: " + command);
+                System.err.println(e.getMessage());
             }
         }
     }
