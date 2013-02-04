@@ -19,6 +19,7 @@
 package org.apache.felix.scr.impl;
 
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -144,7 +145,7 @@ public class ScrCommand implements ScrInfo
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.ScrInfo#list(java.lang.String, java.io.PrintStream, java.io.PrintStream)
      */
-    public void list(final String bundleIdentifier, final PrintStream out, final PrintStream err)
+    public void list(final String bundleIdentifier, final PrintWriter out)
     {
         Component[] components;
 
@@ -172,8 +173,7 @@ public class ScrCommand implements ScrInfo
 
             if (bundle == null)
             {
-                err.println("Missing bundle with ID " + bundleIdentifier);
-                return;
+                throw new IllegalArgumentException("Missing bundle with ID " + bundleIdentifier);
             }
             if (ComponentRegistry.isBundleActive(bundle))
             {
@@ -215,14 +215,15 @@ public class ScrCommand implements ScrInfo
         {
             out.println( String.format( "[%1$4d] [%2$s] [%3$4d] %4$s", component.getId(), toStateString( component.getState() ), component.getBundle().getBundleId(), component.getName() ) );
         }
-    }
+        out.flush();
+   }
 
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.ScrInfo#info(java.lang.String, java.io.PrintStream, java.io.PrintStream)
      */
-    public void info(final String componentId, PrintStream out, PrintStream err)
+    public void info(final String componentId, PrintWriter out)
     {
-        Component[] components = getComponentFromArg(componentId, err);
+        Component[] components = getComponentFromArg(componentId);
         if (components == null)
         {
             return;
@@ -394,11 +395,13 @@ public class ScrCommand implements ScrInfo
                 }
             }
         }
+        out.flush();
     }
 
-    void change(final String componentIdentifier, PrintStream out, PrintStream err, boolean enable)
+    void change(final String componentIdentifier, PrintWriter out, boolean enable)
     {
-        Component[] components = getComponentFromArg(componentIdentifier, err);
+        Component[] components = getComponentFromArg(componentIdentifier);
+        ArrayList<String> disposed = new ArrayList<String>();
         if (components == null)
         {
             return;
@@ -408,7 +411,7 @@ public class ScrCommand implements ScrInfo
         {
             if ( component.getState() == Component.STATE_DISPOSED )
             {
-                err.println( "Component " + component.getName() + " already disposed, cannot change state" );
+                disposed.add(component.getName());
             }
             else if ( enable )
             {
@@ -435,12 +438,18 @@ public class ScrCommand implements ScrInfo
                 }
             }
         }
+        out.flush();
+        if ( !disposed.isEmpty() )
+        {
+            throw new IllegalArgumentException( "Components " + disposed + " already disposed, cannot change state" );
+
+        }
     }
 
     /* (non-Javadoc)
      * @see org.apache.felix.scr.impl.ScrInfo#config(java.io.PrintStream)
      */
-    public void config(PrintStream out)
+    public void config(PrintWriter out)
     {
         out.print("Log Level: ");
         out.println(scrConfiguration.getLogLevel());
@@ -481,7 +490,7 @@ public class ScrCommand implements ScrInfo
         }
     }
 
-    private Component[] getComponentFromArg(final String componentIdentifier, PrintStream err)
+    private Component[] getComponentFromArg(final String componentIdentifier)
     {
         Component[] components = null;
         if (componentIdentifier != null)
@@ -492,7 +501,7 @@ public class ScrCommand implements ScrInfo
                 Component component = scrService.getComponent(componentId);
                 if (component == null)
                 {
-                    err.println("Missing Component with ID " + componentId);
+                    throw new IllegalArgumentException("Missing Component with ID " + componentId);
                 }
                 else
                 {
@@ -505,10 +514,6 @@ public class ScrCommand implements ScrInfo
                 
                 // check whether it is a component name
                 components = scrService.getComponents(componentIdentifier);
-                if (components == null)
-                {
-                    err.println("Missing Component with ID " + componentIdentifier);
-                }
             }
         }
         if ( components == null)
@@ -524,6 +529,10 @@ public class ScrCommand implements ScrInfo
                     {
                         cs.add( component );
                     }
+                }
+                if (cs.isEmpty())
+                {
+                    throw new IllegalArgumentException("No Component with ID or matching " + componentIdentifier);
                 }
                 components = cs.toArray( new Component[cs.size()] );
             }
