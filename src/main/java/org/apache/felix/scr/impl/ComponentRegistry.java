@@ -69,11 +69,11 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
     /**
      * The map of known components indexed by component name. The values are
-     * either the component names (for name reservations) or implementations
+     * either null (for name reservations) or implementations
      * of the {@link ComponentHolder} interface.
      * <p>
      * The {@link #checkComponentName(String)} will first add an entry to this
-     * map being the name of the component to reserve the name. After setting up
+     * map with null value to reserve the name. After setting up
      * the component, the {@link #registerComponentHolder(String, ComponentHolder)}
      * method replaces the value of the named entry with the actual
      * {@link ComponentHolder}.
@@ -111,7 +111,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
      * @see #registerComponentId(AbstractComponentManager)
      * @see #unregisterComponentId(long)
      */
-    private final Map<Long, AbstractComponentManager> m_componentsById;
+    private final Map<Long, AbstractComponentManager<?>> m_componentsById;
 
     /**
      * Counter to setup the component IDs as issued by the
@@ -135,9 +135,9 @@ public class ComponentRegistry implements ScrService, ServiceListener
     protected ComponentRegistry( BundleContext context )
     {
         m_bundleContext = context;
-        m_componentHoldersByName = new HashMap /* <ComponentRegistryKey, Object> */ ();
-        m_componentHoldersByPid = new HashMap();
-        m_componentsById = new HashMap();
+        m_componentHoldersByName = new HashMap<ComponentRegistryKey, ComponentHolder>();
+        m_componentHoldersByPid = new HashMap<String, Set<ComponentHolder>>();
+        m_componentsById = new HashMap<Long, AbstractComponentManager<?>>();
         m_componentCounter = -1;
 
         // keep me informed on ConfigurationAdmin state changes
@@ -188,16 +188,16 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
     public Component[] getComponents()
     {
-        Object[] holders = getComponentHolders();
-        ArrayList list = new ArrayList();
-        for ( int i = 0; i < holders.length; i++ )
+        ComponentHolder[] holders = getComponentHolders();
+        ArrayList<Component> list = new ArrayList<Component>();
+        for ( ComponentHolder holder: holders )
         {
-            if ( holders[i] instanceof ComponentHolder )
+            if ( holders != null )
             {
-                Component[] components = ( ( ComponentHolder ) holders[i] ).getComponents();
-                for ( int j = 0; j < components.length; j++ )
+                Component[] components = holder.getComponents();
+                for ( Component component: components )
                 {
-                    list.add( components[j] );
+                    list.add( component );
                 }
             }
         }
@@ -214,20 +214,19 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
     public Component[] getComponents( Bundle bundle )
     {
-        Object[] holders = getComponentHolders();
-        ArrayList list = new ArrayList();
-        for ( int i = 0; i < holders.length; i++ )
+        ComponentHolder[] holders = getComponentHolders();
+        ArrayList<Component> list = new ArrayList<Component>();
+        for ( ComponentHolder holder: holders )
         {
-            if ( holders[i] instanceof ComponentHolder )
+            if ( holder != null )
             {
-                ComponentHolder holder = ( ComponentHolder ) holders[i];
                 BundleComponentActivator activator = holder.getActivator();
                 if ( activator != null && activator.getBundleContext().getBundle() == bundle )
                 {
                     Component[] components = holder.getComponents();
-                    for ( int j = 0; j < components.length; j++ )
+                    for ( Component component: components )
                     {
-                        list.add( components[j] );
+                        list.add( component );
                     }
                 }
             }
@@ -239,7 +238,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
             return null;
         }
 
-        return ( Component[] ) list.toArray( new Component[list.size()] );
+        return list.toArray( new Component[list.size()] );
     }
 
 
@@ -247,27 +246,26 @@ public class ComponentRegistry implements ScrService, ServiceListener
     {
         synchronized ( m_componentsById )
         {
-            return ( Component ) m_componentsById.get( new Long( componentId ) );
+            return m_componentsById.get( new Long( componentId ) );
         }
     }
 
 
     public Component[] getComponents( String componentName )
     {
-        List /* <ComponentHolder */list = new ArrayList/* <ComponentHolder> */();
+        List<Component> list = new ArrayList<Component>();
         synchronized ( m_componentHoldersByName )
         {
-            for ( Iterator ci = m_componentHoldersByName.values().iterator(); ci.hasNext(); )
+            for ( ComponentHolder c: m_componentHoldersByName.values() )
             {
-                ComponentHolder c = ( ComponentHolder ) ci.next();
-                if ( componentName.equals( c.getComponentMetadata().getName() ) )
+                if ( c.getComponentMetadata().getName().equals( componentName ) )
                 {
-                    list.addAll( Arrays.asList( c.getComponents() ) );
+                    list.addAll( Arrays.<Component>asList( c.getComponents() ) );
                 }
             }
         }
 
-        return ( list.isEmpty() ) ? null : ( Component[] ) list.toArray( new Component[list.size()] );
+        return ( list.isEmpty() ) ? null : list.toArray( new Component[list.size()] );
     }
 
 
@@ -282,7 +280,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
      *
      * @return the assigned component ID
      */
-    final long registerComponentId( final AbstractComponentManager componentManager )
+    final long registerComponentId( final AbstractComponentManager<?> componentManager )
     {
         long componentId;
         synchronized ( m_componentsById )
@@ -309,7 +307,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
     {
         synchronized ( m_componentsById )
         {
-            m_componentsById.remove( new Long( componentId ) );
+            m_componentsById.remove( componentId );
         }
     }
 
@@ -534,7 +532,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
         if (metadata.isFactory())
         {
             // 112.2.4 SCR must register a Component Factory
-            // service on behalf ot the component
+            // service on behalf of the component
             // as soon as the component factory is satisfied
             if ( !activator.getConfiguration().isFactoryEnabled() )
             {
@@ -683,7 +681,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
         }
     }
 
-    public synchronized void registerMissingDependency( DependencyManager dependencyManager, ServiceReference serviceReference, int trackingCount )
+    public synchronized void registerMissingDependency( DependencyManager<?,?> dependencyManager, ServiceReference serviceReference, int trackingCount )
     {
         //check that the service reference is from scr
         if ( serviceReference.getProperty( ComponentConstants.COMPONENT_NAME ) == null || serviceReference.getProperty( ComponentConstants.COMPONENT_ID ) == null )
@@ -701,16 +699,16 @@ public class ComponentRegistry implements ScrService, ServiceListener
 
     private static class Entry
     {
-        private final DependencyManager dm;
+        private final DependencyManager<?,?> dm;
         private final int trackingCount;
 
-        private Entry( DependencyManager dm, int trackingCount )
+        private Entry( DependencyManager<?,?> dm, int trackingCount )
         {
             this.dm = dm;
             this.trackingCount = trackingCount;
         }
 
-        public DependencyManager getDm()
+        public DependencyManager<?,?> getDm()
         {
             return dm;
         }

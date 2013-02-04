@@ -72,7 +72,7 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
             return null;
         }
 
-        final ArrayList adList = new ArrayList();
+        final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
 
         adList.add(new AttributeDefinitionImpl(ScrConfiguration.PROP_LOGLEVEL, "SCR Log Level",
             "Allows limiting the amount of logging information sent to the OSGi LogService."
@@ -93,19 +93,25 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
                 .getScrConfiguration().isFactoryEnabled()));
 
         adList.add( new AttributeDefinitionImpl(
-            ScrConfiguration.PROP_DELAYED_KEEP_INSTANCES,
-            "Keep Component Instances",
-            "Whether or not to keep instances of delayed components once they are not referred to any more. The "
-                + "Declarative Services specifications suggests that instances of delayed components are disposed off "
-                + "if there is not used any longer. Setting this flag causes the components to not be disposed off "
-                + "and thus prevent them from being constantly recreated if often used. Examples of such components "
-                + "may be EventHandler services. The default is to dispose off unused components.", this
-                .getScrConfiguration().keepInstances() ) );
+                ScrConfiguration.PROP_DELAYED_KEEP_INSTANCES,
+                "Keep Component Instances",
+                "Whether or not to keep instances of delayed components once they are not referred to any more. The "
+                    + "Declarative Services specifications suggests that instances of delayed components are disposed off "
+                    + "if there is not used any longer. Setting this flag causes the components to not be disposed off "
+                    + "and thus prevent them from being constantly recreated if often used. Examples of such components "
+                    + "may be EventHandler services. The default is to dispose off unused components.", this
+                    .getScrConfiguration().keepInstances() ) );
+
+        adList.add( new AttributeDefinitionImpl(
+                ScrConfiguration.PROP_INFO_SERVICE,
+                "Bind Info Service",
+                "Whether to bind a service backing the console commands providing info on components ", 
+                this.getScrConfiguration().infoAsService() ) );
 
         return new ObjectClassDefinition()
         {
 
-            private final AttributeDefinition[] attrs = (AttributeDefinition[]) adList
+            private final AttributeDefinition[] attrs = adList
                 .toArray(new AttributeDefinition[adList.size()]);
 
             public String getName()

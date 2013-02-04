@@ -20,21 +20,26 @@ package org.apache.felix.scr.impl;
 
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
+import org.apache.felix.scr.ScrInfo;
 import org.apache.felix.scr.ScrService;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The <code>ScrCommand</code> class provides the implementations for the
@@ -42,14 +47,16 @@ import org.osgi.framework.ServiceReference;
  * {@link #register(BundleContext, ScrService, ScrConfiguration)} method
  * instantiates and registers the Gogo and Shell commands as possible.
  */
-class ScrCommand
+public class ScrCommand implements ScrInfo
 {
 
     private final BundleContext bundleContext;
     private final ScrService scrService;
     private final ScrConfiguration scrConfiguration;
+    
+    private ServiceRegistration reg;
 
-    static void register(BundleContext bundleContext, ScrService scrService, ScrConfiguration scrConfiguration)
+    static ScrCommand register(BundleContext bundleContext, ScrService scrService, ScrConfiguration scrConfiguration)
     {
         final ScrCommand cmd = new ScrCommand(bundleContext, scrService, scrConfiguration);
 
@@ -99,6 +106,7 @@ class ScrCommand
         {
             // Ignore.
         }
+        return cmd;
     }
 
     private ScrCommand(BundleContext bundleContext, ScrService scrService, ScrConfiguration scrConfiguration)
@@ -110,7 +118,33 @@ class ScrCommand
 
     // ---------- Actual implementation
 
-    void list(final String bundleIdentifier, final PrintStream out, final PrintStream err)
+    
+    public void update( boolean infoAsService )
+    {
+        if (infoAsService)
+        {
+            if ( reg == null )
+            {
+                final Hashtable props = new Hashtable();
+                props.put(Constants.SERVICE_DESCRIPTION, "SCR Info service");
+                props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+                reg = bundleContext.registerService( ScrInfo.class, this, props );
+            }
+        }
+        else
+        {
+            if ( reg != null )
+            {
+                reg.unregister();
+                reg = null;
+            }
+        }
+    }
+    
+    /* (non-Javadoc)
+     * @see org.apache.felix.scr.impl.ScrInfo#list(java.lang.String, java.io.PrintStream, java.io.PrintStream)
+     */
+    public void list(final String bundleIdentifier, final PrintStream out, final PrintStream err)
     {
         Component[] components;
 
@@ -166,20 +200,27 @@ class ScrCommand
             }
         }
 
-        out.println("   Id   State          Name");
+        Arrays.sort( components, new Comparator<Component>() 
+                {
+
+                    public int compare(Component c1, Component c2)
+                    {
+                        return Long.signum(c1.getId() - c2.getId());
+                    }
+            
+                });
+        
+        out.println(" Id   State BundleId Name");
         for ( Component component : components )
         {
-            out.print( '[' );
-            out.print( pad( String.valueOf( component.getId() ), -4 ) );
-            out.print( "] [" );
-            out.print( pad( toStateString( component.getState() ), 13 ) );
-            out.print( "] " );
-            out.print( component.getName() );
-            out.println();
+            out.println( String.format( "[%1$4d] [%2$s] [%3$4d] %4$s", component.getId(), toStateString( component.getState() ), component.getBundle().getBundleId(), component.getName() ) );
         }
     }
 
-    void info(final String componentId, PrintStream out, PrintStream err)
+    /* (non-Javadoc)
+     * @see org.apache.felix.scr.impl.ScrInfo#info(java.lang.String, java.io.PrintStream, java.io.PrintStream)
+     */
+    public void info(final String componentId, PrintStream out, PrintStream err)
     {
         Component[] components = getComponentFromArg(componentId, err);
         if (components == null)
@@ -187,8 +228,40 @@ class ScrCommand
             return;
         }
 
+        Arrays.sort( components, new Comparator<Component>() 
+                {
+
+                    public int compare(Component c1, Component c2)
+                    {
+                        long bundleId1 = c1.getBundle().getBundleId();
+                        long bundleId2 = c2.getBundle().getBundleId();
+                        int result = Long.signum(bundleId1 - bundleId2);
+                        if (result == 0) {
+                            result = Long.signum(c1.getId() - c2.getId());
+                        }
+                        return result;
+                    }
+            
+                });
+        
+        long bundleId = -1;
+
         for ( Component component : components )
         {
+            if (components.length > 1) 
+            {
+                if ( component.getBundle().getBundleId() != bundleId ) 
+                {
+                    if ( bundleId != -1 )
+                    {
+                        out.println();
+                        out.println();
+                    }
+                    bundleId = component.getBundle().getBundleId();
+                    out.println(String.format("*** Bundle: %1$s (%2$d)", component.getBundle().getSymbolicName(), bundleId));
+                }
+                out.println();
+            }
             out.print( "ID: " );
             out.println( component.getId() );
             out.print( "Name: " );
@@ -292,6 +365,10 @@ class ScrCommand
                             out.println( serviceRefs[k] );
                         }
                     }
+                    else
+                    {
+                        out.println( "    (unbound)" );
+                    }
                 }
             }
 
@@ -360,7 +437,10 @@ class ScrCommand
         }
     }
 
-    void config(PrintStream out)
+    /* (non-Javadoc)
+     * @see org.apache.felix.scr.impl.ScrInfo#config(java.io.PrintStream)
+     */
+    public void config(PrintStream out)
     {
         out.print("Log Level: ");
         out.println(scrConfiguration.getLogLevel());
@@ -368,58 +448,36 @@ class ScrCommand
         out.println(scrConfiguration.isFactoryEnabled() ? "Supported" : "Unsupported");
     }
 
-    private String pad(String value, int size)
-    {
-        boolean right = size < 0;
-        size = right ? -size : size;
-
-        if (value.length() >= size)
-        {
-            return value;
-        }
-
-        char[] buf = new char[size];
-        int padLen = size - value.length();
-        int valOff = right ? padLen : 0;
-        int padOff = right ? 0 : value.length();
-
-        value.getChars(0, value.length(), buf, valOff);
-        Arrays.fill(buf, padOff, padOff + padLen, ' ');
-
-        return new String(buf);
-    }
-
     private String toStateString(int state)
     {
-        switch (state)
-        {
-            case Component.STATE_DISABLED:
-                return "disabled";
-            case Component.STATE_UNSATISFIED:
-                return "unsatisfied";
-            case Component.STATE_ACTIVE:
-                return "active";
-            case Component.STATE_REGISTERED:
-                return "registered";
-            case Component.STATE_FACTORY:
-                return "factory";
-            case Component.STATE_DISPOSED:
-                return "disposed";
+        switch (state) {
 
-            case Component.STATE_ENABLING:
-                return "enabling";
-            case Component.STATE_ENABLED:
-                return "enabled";
-            case Component.STATE_ACTIVATING:
-                return "activating";
-            case Component.STATE_DEACTIVATING:
-                return "deactivating";
-            case Component.STATE_DISABLING:
-                return "disabling";
-            case Component.STATE_DISPOSING:
-                return "disposing";
-            default:
-                return String.valueOf(state);
+        case (Component.STATE_DISABLED):
+            return "disabled    ";
+        case (Component.STATE_ENABLING):
+            return "enabling    ";
+        case (Component.STATE_ENABLED):
+            return "enabled     ";
+        case (Component.STATE_UNSATISFIED):
+            return "unsatisfied ";
+        case (Component.STATE_ACTIVATING):
+            return "activating  ";
+        case (Component.STATE_ACTIVE):
+            return "active      ";
+        case (Component.STATE_REGISTERED):
+            return "registered  ";
+        case (Component.STATE_FACTORY):
+            return "factory     ";
+        case (Component.STATE_DEACTIVATING):
+            return "deactivating";
+        case (Component.STATE_DISABLING):
+            return "disabling   ";
+        case (Component.STATE_DISPOSING):
+            return "disposing   ";
+        case (Component.STATE_DISPOSED):
+            return "disposed    ";
+        default:
+            return "unkown: " + state;
         }
     }
 
@@ -438,12 +496,13 @@ class ScrCommand
                 }
                 else
                 {
-                    components = new Component[]
+                    return new Component[]
                         { component };
                 }
             }
             catch (NumberFormatException nfe)
             {
+                
                 // check whether it is a component name
                 components = scrService.getComponents(componentIdentifier);
                 if (components == null)
@@ -452,10 +511,22 @@ class ScrCommand
                 }
             }
         }
-        else
+        if ( components == null)
         {
-
-            err.println("Component ID required");
+            components = scrService.getComponents();
+            if (componentIdentifier != null)
+            {
+                ArrayList<Component> cs = new ArrayList<Component>(components.length);
+                Pattern p = Pattern.compile(componentIdentifier);
+                for (Component component: components)
+                {
+                    if ( p.matcher( component.getName()).matches() )
+                    {
+                        cs.add( component );
+                    }
+                }
+                components = cs.toArray( new Component[cs.size()] );
+            }
         }
 
         return components;
