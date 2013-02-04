@@ -50,7 +50,13 @@ public interface Reference
      */
     ServiceReference[] getServiceReferences();
 
-
+    /**
+     * added by mistake.  Use getServiceReferences();
+     * @return
+     */
+    @Deprecated
+    ServiceReference[] getBoundServiceReferences();
+    
     /**
      * Returns whether this reference is satisified. A {@link #isOptional() optional}
      * component is always satsified. Otherwise <code>true</code> is only

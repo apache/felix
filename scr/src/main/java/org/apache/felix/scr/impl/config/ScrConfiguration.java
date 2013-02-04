@@ -22,6 +22,7 @@ package org.apache.felix.scr.impl.config;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.felix.scr.impl.ScrCommand;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -61,6 +62,8 @@ public class ScrConfiguration
 
     public static final String PROP_DELAYED_KEEP_INSTANCES = "ds.delayed.keepInstances";
 
+    public static final String PROP_INFO_SERVICE = "ds.info.service";
+    
     public static final String PROP_LOGLEVEL = "ds.loglevel";
 
     private static final String LOG_LEVEL_DEBUG = "debug";
@@ -80,10 +83,14 @@ public class ScrConfiguration
     private boolean factoryEnabled;
 
     private boolean keepInstances;
+    
+    private boolean infoAsService;
 
     private BundleContext bundleContext;
 
     private ServiceRegistration managedService;
+    
+    private ScrCommand scrCommand;
 
     public ScrConfiguration( )
     {
@@ -114,6 +121,12 @@ public class ScrConfiguration
 
         this.bundleContext = null;
     }
+    
+    public void setScrCommand(ScrCommand scrCommand)
+    {
+        this.scrCommand = scrCommand;
+        scrCommand.update(infoAsService());
+    }
 
     // Called from the ScrManagedService.updated method to reconfigure
     void configure( Dictionary config )
@@ -125,12 +138,14 @@ public class ScrConfiguration
                 logLevel = LogService.LOG_ERROR;
                 factoryEnabled = false;
                 keepInstances = false;
+                infoAsService = false;
             }
             else
             {
                 logLevel = getDefaultLogLevel();
                 factoryEnabled = getDefaultFactoryEnabled();
                 keepInstances = getDefaultKeepInstances();
+                infoAsService = getDefaultInfoAsService();
             }
         }
         else
@@ -138,6 +153,11 @@ public class ScrConfiguration
             logLevel = getLogLevel( config.get( PROP_LOGLEVEL ) );
             factoryEnabled = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_FACTORY_ENABLED ) ) );
             keepInstances = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_DELAYED_KEEP_INSTANCES ) ) );
+            infoAsService = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_INFO_SERVICE) ) );
+        }
+        if ( scrCommand != null )
+        {
+            scrCommand.update( infoAsService() );
         }
     }
 
@@ -161,6 +181,11 @@ public class ScrConfiguration
     {
         return keepInstances;
     }
+    
+    public boolean infoAsService()
+    {
+        return infoAsService;
+    }
 
 
     private boolean getDefaultFactoryEnabled()
@@ -178,6 +203,11 @@ public class ScrConfiguration
     private int getDefaultLogLevel()
     {
         return getLogLevel( bundleContext.getProperty( PROP_LOGLEVEL ) );
+    }
+    
+    private boolean getDefaultInfoAsService()
+    {
+        return VALUE_TRUE.equalsIgnoreCase( bundleContext.getProperty( PROP_INFO_SERVICE) );
     }
 
 

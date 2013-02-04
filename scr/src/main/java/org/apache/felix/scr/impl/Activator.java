@@ -108,7 +108,8 @@ public class Activator implements BundleActivator, SynchronousBundleListener
         loadAllComponents( context );
 
         // register the Gogo and old Shell commands
-        ScrCommand.register(context, m_componentRegistry, m_configuration);
+        ScrCommand scrCommand = ScrCommand.register(context, m_componentRegistry, m_configuration);
+        m_configuration.setScrCommand( scrCommand );
     }
 
 

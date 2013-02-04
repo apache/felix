@@ -1133,7 +1133,15 @@ public class DependencyManager<S, T> implements Reference
         return result;
     }
 
-
+    /**
+     * a mistake, use getServiceReferences instead
+     */
+    @Deprecated
+    public ServiceReference[] getBoundServiceReferences() 
+    {
+        return getServiceReferences();
+    }
+    
     /**
      * Returns the RefPair containing the given service reference and the bound service
      * or <code>null</code> if this is instance is not currently bound to that
