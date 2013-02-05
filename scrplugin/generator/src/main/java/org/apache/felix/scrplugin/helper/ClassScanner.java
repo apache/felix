@@ -88,7 +88,7 @@ public class ClassScanner {
     /** Source for all generated descriptions. */
     private static final String GENERATED = "<generated>";
 
-    /** With this syntax array pameters names are returned by reflection API */
+    /** With this syntax array parameters names are returned by reflection API */
     private static final Pattern ARRAY_PARAM_TYPE_NAME = Pattern.compile("^\\[L(.*);$");
 
     /** Component descriptions loaded from dependencies*/
@@ -129,7 +129,7 @@ public class ClassScanner {
      * Scan all source class files for annotations and process them.
      */
     public List<ClassDescription> scanSources()
-            throws SCRDescriptorException, SCRDescriptorFailureException {
+            throws SCRDescriptorFailureException, SCRDescriptorException {
         final List<ClassDescription> result = new ArrayList<ClassDescription>();
 
         for (final Source src : project.getSources()) {
@@ -145,7 +145,7 @@ public class ClassScanner {
 
                 this.process(annotatedClass, src, result);
             } catch (final ClassNotFoundException cnfe) {
-                throw new SCRDescriptorFailureException("Unable to load compiled class: " + src.getClassName(), cnfe);
+                throw new SCRDescriptorException("Unable to load compiled class: " + src.getClassName(), src.getFile().toString(), cnfe);
             }
         }
         return result;
@@ -216,7 +216,7 @@ public class ClassScanner {
                 return desc;
             }
         } catch (final IOException ioe) {
-            throw new SCRDescriptorFailureException("Unable to scan class files: " + annotatedClass.getName(), ioe);
+            throw new SCRDescriptorException("Unable to scan class files: " + annotatedClass.getName(), location, ioe);
         }
         return null;
     }
