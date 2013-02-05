@@ -39,6 +39,7 @@ import org.apache.felix.framework.resolver.ResolverWire;
 import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.util.manifestparser.R4Library;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.apache.felix.framework.wiring.BundleWireImpl;
 import org.osgi.framework.Bundle;
@@ -62,9 +63,7 @@ class StatefulResolver
     private final Logger m_logger;
     private final Felix m_felix;
     private final Resolver m_resolver;
-    private final List<ResolverHook> m_hooks = new ArrayList<ResolverHook>();
     private boolean m_isResolving = false;
-    private Collection<BundleRevision> m_whitelist = null;
 
     // Set of all revisions.
     private final Set<BundleRevision> m_revisions;
@@ -172,7 +171,14 @@ class StatefulResolver
     synchronized List<BundleCapability> findProviders(
         BundleRequirement req, boolean obeyMandatory)
     {
-        BundleRevisionImpl reqRevision = (BundleRevisionImpl) req.getRevision();
+        ResolverHookRecord record = new ResolverHookRecord(
+            Collections.EMPTY_SET, Collections.EMPTY_LIST, null);
+        return findProvidersInternal(record, req, obeyMandatory);
+    }
+
+    synchronized List<BundleCapability> findProvidersInternal(
+        ResolverHookRecord record, BundleRequirement req, boolean obeyMandatory)
+    {
         List<BundleCapability> result = new ArrayList<BundleCapability>();
 
         CapabilitySet capSet = m_capSets.get(req.getNamespace());
@@ -181,7 +187,7 @@ class StatefulResolver
             // Get the requirement's filter; if this is our own impl we
             // have a shortcut to get the already parsed filter, otherwise
             // we must parse it from the directive.
-            SimpleFilter sf = null;
+            SimpleFilter sf;
             if (req instanceof BundleRequirementImpl)
             {
                 sf = ((BundleRequirementImpl) req).getFilter();
@@ -223,15 +229,15 @@ class StatefulResolver
 
         // If we have resolver hooks, then we may need to filter our results
         // based on a whitelist and/or fine-grained candidate filtering.
-        if (!result.isEmpty() && !m_hooks.isEmpty())
+        if (!result.isEmpty() && !record.m_resolverHooks.isEmpty())
         {
             // It we have a whitelist, then first filter out candidates
             // from disallowed revisions.
-            if (m_whitelist != null)
+            if (record.m_brWhitelist != null)
             {
                 for (Iterator<BundleCapability> it = result.iterator(); it.hasNext(); )
                 {
-                    if (!m_whitelist.contains(it.next().getRevision()))
+                    if (!record.m_brWhitelist.contains(it.next().getRevision()))
                     {
                         it.remove();
                     }
@@ -241,7 +247,7 @@ class StatefulResolver
             // Now give the hooks a chance to do fine-grained filtering.
             ShrinkableCollection<BundleCapability> shrinkable =
                 new ShrinkableCollection<BundleCapability>(result);
-            for (ResolverHook hook : m_hooks)
+            for (ResolverHook hook : record.m_resolverHooks)
             {
                 try
                 {
@@ -355,11 +361,10 @@ class StatefulResolver
                 ? optional : new HashSet<BundleRevision>(optional);
 
             // Prepare resolver hooks, if any.
-            Set<ServiceReference<ResolverHookFactory>> hookRefs =
-                prepareResolverHooks(mandatory, optional);
+            ResolverHookRecord record = prepareResolverHooks(mandatory, optional);
 
             // Select any singletons in the resolver state.
-            selectSingletons();
+            selectSingletons(record);
 
             // Extensions are resolved differently.
             for (Iterator<BundleRevision> it = mandatory.iterator(); it.hasNext(); )
@@ -399,6 +404,7 @@ class StatefulResolver
                     new ResolveContextImpl(
                         this,
                         getWirings(),
+                        record,
                         mandatory,
                         optional,
                         getFragments()));
@@ -409,7 +415,7 @@ class StatefulResolver
             }
 
             // Release resolver hooks, if any.
-            releaseResolverHooks(hookRefs);
+            releaseResolverHooks(record);
 
             // If the resolve failed, rethrow the exception.
             if (rethrow != null)
@@ -424,10 +430,6 @@ class StatefulResolver
         {
             // Clear resolving flag.
             m_isResolving = false;
-            // Clear whitelist.
-            m_whitelist = null;
-            // Always clear any hooks.
-            m_hooks.clear();
             // Always release the global lock.
             m_felix.releaseGlobalLock();
         }
@@ -476,12 +478,12 @@ class StatefulResolver
                 if (provider == null)
                 {
                     // Prepare resolver hooks, if any.
-                    Set<ServiceReference<ResolverHookFactory>> hookRefs =
+                    ResolverHookRecord record =
                         prepareResolverHooks(
                             Collections.singleton(revision), Collections.EMPTY_SET);
 
                     // Select any singletons in the resolver state.
-                    selectSingletons();
+                    selectSingletons(record);
 
                     // Catch any resolve exception to rethrow later because
                     // we may need to call end() on resolver hooks.
@@ -492,6 +494,7 @@ class StatefulResolver
                             new ResolveContextImpl(
                                 this,
                                 getWirings(),
+                                record,
                                 Collections.EMPTY_LIST,
                                 Collections.EMPTY_LIST,
                                 getFragments()),
@@ -503,7 +506,7 @@ class StatefulResolver
                     }
 
                     // Release resolver hooks, if any.
-                    releaseResolverHooks(hookRefs);
+                    releaseResolverHooks(record);
 
                     // If the resolve failed, rethrow the exception.
                     if (rethrow != null)
@@ -546,10 +549,6 @@ class StatefulResolver
             {
                 // Clear resolving flag.
                 m_isResolving = false;
-                // Clear whitelist.
-                m_whitelist = null;
-                // Always clear any hooks.
-                m_hooks.clear();
                 // Always release the global lock.
                 m_felix.releaseGlobalLock();
             }
@@ -560,15 +559,20 @@ class StatefulResolver
         return provider;
     }
 
-    private Set<ServiceReference<ResolverHookFactory>> prepareResolverHooks(
+    private ResolverHookRecord prepareResolverHooks(
         Set<BundleRevision> mandatory, Set<BundleRevision> optional)
         throws BundleException
     {
         // Get resolver hook factories.
         Set<ServiceReference<ResolverHookFactory>> hookRefs =
             m_felix.getHooks(ResolverHookFactory.class);
+        List<ResolverHook> hooks;
+        Collection<BundleRevision> whitelist;
+
         if (!hookRefs.isEmpty())
         {
+            hooks = new ArrayList<ResolverHook>();
+
             // Create triggers list.
             Set<BundleRevision> triggers;
             if (!mandatory.isEmpty() && !optional.isEmpty())
@@ -596,7 +600,7 @@ class StatefulResolver
                                 .invokeResolverHookFactory(rhf, triggers);
                         if (hook != null)
                         {
-                            m_hooks.add(hook);
+                            hooks.add(hook);
                         }
                     }
                 }
@@ -610,14 +614,14 @@ class StatefulResolver
             }
 
             // Ask hooks to indicate which revisions should not be resolved.
-            m_whitelist = new ShrinkableCollection<BundleRevision>(getUnresolvedRevisions());
-            int originalSize = m_whitelist.size();
-            for (ResolverHook hook : m_hooks)
+            whitelist = new ShrinkableCollection<BundleRevision>(getUnresolvedRevisions());
+            int originalSize = whitelist.size();
+            for (ResolverHook hook : hooks)
             {
                 try
                 {
                     Felix.m_secureAction
-                        .invokeResolverHookResolvable(hook, m_whitelist);
+                        .invokeResolverHookResolvable(hook, whitelist);
                 }
                 catch (Throwable ex)
                 {
@@ -629,13 +633,13 @@ class StatefulResolver
             }
             // If nothing was removed, then just null the whitelist
             // as an optimization.
-            if (m_whitelist.size() == originalSize)
+            if (whitelist.size() == originalSize)
             {
-                m_whitelist = null;
+                whitelist = null;
             }
 
             // Check to make sure the target revisions are allowed to resolve.
-            if (m_whitelist != null)
+            if (whitelist != null)
             {
                 // We only need to check this for the non-dynamic import
                 // case. The dynamic import case will only have one resolved
@@ -644,8 +648,8 @@ class StatefulResolver
                     || !optional.isEmpty()
                     || (mandatory.iterator().next().getWiring() == null))
                 {
-                    mandatory.retainAll(m_whitelist);
-                    optional.retainAll(m_whitelist);
+                    mandatory.retainAll(whitelist);
+                    optional.retainAll(whitelist);
                     if (mandatory.isEmpty() && optional.isEmpty())
                     {
                         throw new ResolveException(
@@ -656,21 +660,22 @@ class StatefulResolver
         }
         else
         {
-            m_hooks.clear();
+            hooks = Collections.EMPTY_LIST;
+            whitelist = null;
         }
 
-        return hookRefs;
+        return new ResolverHookRecord(hookRefs, hooks, whitelist);
     }
 
-    private void releaseResolverHooks(Set<ServiceReference<ResolverHookFactory>> hookRefs)
+    private void releaseResolverHooks(ResolverHookRecord record)
         throws BundleException
     {
         // If we have resolver hooks, we must call end() on them.
-        if (!hookRefs.isEmpty())
+        if (!record.m_resolveHookRefs.isEmpty())
         {
             // Verify that all resolver hook service references are still valid
             // Call end() on resolver hooks.
-            for (ResolverHook hook : m_hooks)
+            for (ResolverHook hook : record.m_resolverHooks)
             {
 // TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
 //       to their svc ref since we aren't supposed to call end() on unregistered
@@ -688,7 +693,7 @@ class StatefulResolver
             // Verify that all hook service references are still valid
             // and unget all resolver hook factories.
             boolean invalid = false;
-            for (ServiceReference<ResolverHookFactory> ref : hookRefs)
+            for (ServiceReference<ResolverHookFactory> ref : record.m_resolveHookRefs)
             {
                 if (ref.getBundle() == null)
                 {
@@ -707,6 +712,7 @@ class StatefulResolver
 
     // This method duplicates a lot of logic from:
     // ResolverImpl.getDynamicImportCandidates()
+    // This is only a rough check since it doesn't include resolver hooks.
     boolean isAllowedDynamicImport(BundleRevision revision, String pkgName)
     {
         // Unresolved revisions cannot dynamically import, nor can the default
@@ -1151,7 +1157,7 @@ class StatefulResolver
         return m_selectedSingletons.contains(br);
     }
 
-    private synchronized void selectSingletons()
+    private synchronized void selectSingletons(ResolverHookRecord record)
         throws BundleException
     {
         // First deindex any unresolved singletons to make sure
@@ -1173,13 +1179,13 @@ class StatefulResolver
 
         // If no resolver hooks, then use default singleton selection
         // algorithm, otherwise defer to the resolver hooks.
-        if (m_hooks.isEmpty())
+        if (record.m_resolverHooks.isEmpty())
         {
-            selectDefaultSingletons();
+            selectDefaultSingletons(record);
         }
         else
         {
-            selectSingletonsUsingHooks();
+            selectSingletonsUsingHooks(record);
         }
     }
 
@@ -1188,12 +1194,12 @@ class StatefulResolver
      * based on the symbolic name. No selection is made if the group
      * already has a resolved singleton.
      */
-    private void selectDefaultSingletons()
+    private void selectDefaultSingletons(ResolverHookRecord record)
     {
         // Now select the singletons available for this resolve operation.
         for (Entry<String, List<BundleRevision>> entry : m_singletons.entrySet())
         {
-            selectSingleton(entry.getValue());
+            selectSingleton(record, entry.getValue());
         }
     }
 
@@ -1203,7 +1209,7 @@ class StatefulResolver
      * the resolver hook whitelist. No selection is made if a group already
      * has a resolved singleton in it.
      */
-    private void selectSingletonsUsingHooks()
+    private void selectSingletonsUsingHooks(ResolverHookRecord record)
         throws BundleException
     {
         // Convert singleton bundle revision map into a map using
@@ -1236,7 +1242,7 @@ class StatefulResolver
         }
 
         // Invoke hooks to allow them to filter singleton collisions.
-        for (ResolverHook hook : m_hooks)
+        for (ResolverHook hook : record.m_resolverHooks)
         {
             for (Entry<BundleCapability, Collection<BundleCapability>> entry
                 : allCollisions.entrySet())
@@ -1268,7 +1274,7 @@ class StatefulResolver
         // Now select the singletons available for this resolve operation.
         for (List<BundleRevision> group : groups)
         {
-            selectSingleton(group);
+            selectSingleton(record, group);
         }
     }
 
@@ -1319,7 +1325,7 @@ class StatefulResolver
      * selection is made if there is an already resolved singleton
      * in the group, since it is already indexed.
      */
-    private void selectSingleton(List<BundleRevision> singletons)
+    private void selectSingleton(ResolverHookRecord record, List<BundleRevision> singletons)
     {
         BundleRevision selected = null;
         for (BundleRevision singleton : singletons)
@@ -1335,7 +1341,7 @@ class StatefulResolver
             // be selected. If it is, in can only be selected if it has
             // a higher version than the currently selected singleton, if
             // there is one.
-            if (((m_whitelist == null) || m_whitelist.contains(singleton))
+            if (((record.m_brWhitelist == null) || record.m_brWhitelist.contains(singleton))
                 && ((selected == null)
                     || (selected.getVersion().compareTo(singleton.getVersion()) > 0)))
             {
@@ -1502,5 +1508,21 @@ class StatefulResolver
         }
         revisions.add(br);
         singletons.put(br.getSymbolicName(), revisions);
+    }
+
+    static class ResolverHookRecord
+    {
+        final Set<ServiceReference<ResolverHookFactory>> m_resolveHookRefs;
+        final List<ResolverHook> m_resolverHooks;
+        final Collection<BundleRevision> m_brWhitelist;
+
+        ResolverHookRecord(Set<ServiceReference<ResolverHookFactory>> resolveHookRefs,
+            List<ResolverHook> resolverHooks,
+            Collection<BundleRevision> brWhitelist)
+        {
+            m_resolveHookRefs = resolveHookRefs;
+            m_resolverHooks = resolverHooks;
+            m_brWhitelist = brWhitelist;
+        }
     }
 }
