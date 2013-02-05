@@ -1,3 +1,67 @@
+Changes from 4.0.3 to 4.2.0
+---------------------------
+** Bug
+    * [FELIX-2780] - Extension bundle implementation relies on urlhandlers  service to start extension bundles
+    * [FELIX-3160] - NPE in BundleRevisionImpl.close() when uninstalling a bundle
+    * [FELIX-3242] - Concurrent modification problem in StatefulResolver$ResolverStateImpl.getCandidates
+    * [FELIX-3273] - Possible exception when accessing headers
+    * [FELIX-3306] - Lazy activation of bundles is not always working as expected
+    * [FELIX-3343] - Installing an fragment bundle without Bundle-ManifestVersion: 2 causes NPE in resolver
+    * [FELIX-3348] - StartLevel thread may terminate on uncaught exception
+    * [FELIX-3353] - The implementation of org.osgi.service.packageadmin.PackageAdmin#getExportedPackages(Bundle), does not follow the spec.
+    * [FELIX-3367] - getClassloader permission
+    * [FELIX-3397] - NPE when trying to resolve invalid fragments
+    * [FELIX-3411] - The implementation of org.osgi.service.startlevel.StartLevel#setStartLevel(int) does not follow the spec
+    * [FELIX-3413] - NPE and thread blocked in org.osgi.service.packageadmin.PackageAdmin#refreshPackages(Bundle[])
+    * [FELIX-3455] - Framework JARs for JDK 7
+    * [FELIX-3465] - Multi root resolve operations may cause duplicate blame chains to be created
+    * [FELIX-3618] - [Framework] Should not allow bundles to use generic cap/req headers for osgi.wiring.* namespaces
+    * [FELIX-3626] - Issue of felix on android 4.1
+    * [FELIX-3632] - [Framework] Parsing of delimited strings in manifest parser collapses all consecutive escapes
+    * [FELIX-3670] - PackageAdmin.isBundleType throws NPE for uninstalled bundle
+    * [FELIX-3713] - Bundle.start() returns without starting the bundle
+    * [FELIX-3743] - Potential endless loop setting the active framework startlevel
+    * [FELIX-3753] - Felix crashes when embedded within Felix
+    * [FELIX-3761] - When a bundle registers a service, the bundle lock is obtained without any real purpose
+    * [FELIX-3766] - Slightly invalid logic for pre-checking dynamic imports which cause the framework the grab the lock with no real need
+    * [FELIX-3803] - Bundle#getResource always try to resolve the bundle
+    * [FELIX-3824] - Possible InvalidStateException thrown while unregistering bundle services
+    * [FELIX-3840] - problem with URLHandlers when running 2 frameworks in one jvm in separate class loaders
+    * [FELIX-3844] - Native bundles cannot be installed on Windows 8 and Windows Server 2012
+    * [FELIX-3852] - InstallBundle throws ClassCastException: java.util.jar.Attributes$Name cannot be cast to java.lang.String
+    * [FELIX-3887] - ClassCastException during resolution of Require-Bundle: system.bundle
+
+** Improvement
+    * [FELIX-3344] - [Framework] Filter parsing treats ** as invalid syntax
+    * [FELIX-3372] - Add the ability to handle a blank on the property "org.osgi.framework.system.packages.extra"
+    * [FELIX-3394] - [Framework] Refactor internal resolver APIs to better align with upcoming OSGi resolver spec
+    * [FELIX-3447] - Optimize read only collections by using a specific class and not a wrapper which is slower
+    * [FELIX-3553] - Use of parallel class loading capability of JDK7
+    * [FELIX-3609] - Small optimizations
+    * [FELIX-3611] - Bundle certificates are not added to the CodeSource when building the BundleProtectionDomain
+    * [FELIX-3807] - Refreshing bundles should first grab all the bundle locks to avoid concurrent modifications of those bundles
+
+** New Feature
+    * [FELIX-3504] - [Framework] Move to OSGi R5 packages
+
+** Task
+    * [FELIX-3786] - Create system package definintions for Java 8
+
+
+Changes from 4.0.2 to 4.0.3
+---------------------------
+
+** Bug
+    * [FELIX-3003] - NPE in ResolverImpl.permutateIfNeeded
+    * [FELIX-3296] - URLHandlers caches null as values for common protocols
+    * [FELIX-3302] - Adapt the URLHandlers for the 4.0 refactoring
+    * [FELIX-3363] - Native bundles cannot be installed on Windows Server 2008 r2 with the tag win32
+    * [FELIX-3393] - Possible deadlock with reentrant calls
+    * [FELIX-3572] - [Framework] Resolver is not checking package space consistency for dynamic imports
+
+** Improvement
+    * [FELIX-3262] - Startup delay due to URLHandlersBundleStreamHandler
+
 Changes from 4.0.1 to 4.0.2
 ---------------------------
 
