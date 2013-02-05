@@ -58,6 +58,7 @@ class BundleImpl implements Bundle, BundleRevisions
     private BundleActivator m_activator = null;
     private volatile BundleContext m_context = null;
     private final Map m_cachedHeaders = new HashMap();
+    private Map m_uninstalledHeaders = null;
     private long m_cachedHeadersTimestamp;
 
     // Indicates whether the bundle is stale, meaning that it has
@@ -186,8 +187,12 @@ class BundleImpl implements Bundle, BundleRevisions
             // Reset the bundle state.
             m_state = Bundle.INSTALLED;
             m_stale = false;
-            m_cachedHeaders.clear();
-            m_cachedHeadersTimestamp = 0;
+
+            synchronized (m_cachedHeaders)
+            {
+                m_cachedHeaders.clear();
+                m_cachedHeadersTimestamp = 0;
+            }
         }
     }
 
@@ -345,12 +350,12 @@ class BundleImpl implements Bundle, BundleRevisions
         {
             synchronized (m_cachedHeaders)
             {
-                // If the bundle is uninstalled, then the cached headers should
-                // only contain the localized headers for the default locale at
-                // the time of uninstall, so just return that.
-                if (getState() == Bundle.UNINSTALLED)
+                // If the bundle is uninstalled, then we should always return
+                // the uninstalled headers, which are the default locale as per
+                // the spec.
+                if (m_uninstalledHeaders != null)
                 {
-                    result = (Map) m_cachedHeaders.values().iterator().next();
+                    result = m_uninstalledHeaders;
                 }
                 // If the bundle has been updated, clear the cached headers.
                 else if (getLastModified() > m_cachedHeadersTimestamp)
@@ -474,8 +479,11 @@ class BundleImpl implements Bundle, BundleRevisions
     {
         synchronized (m_cachedHeaders)
         {
-            m_cachedHeaders.put(locale, localizedHeaders);
-            m_cachedHeadersTimestamp = System.currentTimeMillis();
+            if (m_uninstalledHeaders == null)
+            {
+                m_cachedHeaders.put(locale, localizedHeaders);
+                m_cachedHeadersTimestamp = System.currentTimeMillis();
+            }
         }
     }
 
@@ -1003,11 +1011,10 @@ class BundleImpl implements Bundle, BundleRevisions
         // only the default locale will be left in the header cache.
         synchronized (m_cachedHeaders)
         {
-            if ((m_cachedHeaders.size() > 1)
-                || !m_cachedHeaders.containsKey(Locale.getDefault().toString()))
+            if (m_uninstalledHeaders == null)
             {
+                m_uninstalledHeaders = getCurrentLocalizedHeader(Locale.getDefault().toString());
                 m_cachedHeaders.clear();
-                Map map = getCurrentLocalizedHeader(Locale.getDefault().toString());
             }
         }
 
