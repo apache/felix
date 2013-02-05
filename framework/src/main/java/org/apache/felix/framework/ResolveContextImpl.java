@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.apache.felix.framework.StatefulResolver.ResolverHookRecord;
 import org.apache.felix.framework.resolver.CandidateComparator;
 import org.apache.felix.framework.resolver.HostedCapability;
 import org.apache.felix.framework.resolver.ResolveContext;
@@ -40,17 +41,19 @@ public class ResolveContextImpl extends ResolveContext
 {
     private final StatefulResolver m_state;
     private final Map<BundleRevision, BundleWiring> m_wirings;
+    private final ResolverHookRecord m_resolverHookrecord;
     private final Collection<BundleRevision> m_mandatory;
     private final Collection<BundleRevision> m_optional;
     private final Collection<BundleRevision> m_ondemand;
 
     ResolveContextImpl(
         StatefulResolver state, Map<BundleRevision, BundleWiring> wirings,
-        Collection<BundleRevision> mandatory, Collection<BundleRevision> optional,
-        Collection<BundleRevision> ondemand)
+        ResolverHookRecord resolverHookRecord, Collection<BundleRevision> mandatory,
+        Collection<BundleRevision> optional, Collection<BundleRevision> ondemand)
     {
         m_state = state;
         m_wirings = wirings;
+        m_resolverHookrecord = resolverHookRecord;
         m_mandatory = mandatory;
         m_optional = optional;
         m_ondemand = ondemand;
@@ -75,7 +78,7 @@ public class ResolveContextImpl extends ResolveContext
 
     public List<BundleCapability> findProviders(BundleRequirement br, boolean obeyMandatory)
     {
-        return m_state.findProviders(br, obeyMandatory);
+        return m_state.findProvidersInternal(m_resolverHookrecord, br, obeyMandatory);
     }
 
     public int insertHostedCapability(List<BundleCapability> caps, HostedCapability hc)
