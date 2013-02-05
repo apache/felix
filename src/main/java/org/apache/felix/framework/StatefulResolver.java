@@ -761,6 +761,45 @@ class StatefulResolver
             attrs);
         List<BundleCapability> candidates = findProviders(req, false);
 
+        // Try to find a dynamic requirement that matches the capabilities.
+        BundleRequirementImpl dynReq = null;
+        for (int dynIdx = 0;
+            (candidates.size() > 0) && (dynReq == null) && (dynIdx < dynamics.size());
+            dynIdx++)
+        {
+            for (Iterator<BundleCapability> itCand = candidates.iterator();
+                (dynReq == null) && itCand.hasNext(); )
+            {
+                BundleCapability cap = itCand.next();
+                if (CapabilitySet.matches(
+                    (BundleCapabilityImpl) cap,
+                    ((BundleRequirementImpl) dynamics.get(dynIdx)).getFilter()))
+                {
+                    dynReq = (BundleRequirementImpl) dynamics.get(dynIdx);
+                }
+            }
+        }
+
+        // If we found a matching dynamic requirement, then filter out
+        // any candidates that do not match it.
+        if (dynReq != null)
+        {
+            for (Iterator<BundleCapability> itCand = candidates.iterator();
+                itCand.hasNext(); )
+            {
+                BundleCapability cap = itCand.next();
+                if (!CapabilitySet.matches(
+                    (BundleCapabilityImpl) cap, dynReq.getFilter()))
+                {
+                    itCand.remove();
+                }
+            }
+        }
+        else
+        {
+            candidates.clear();
+        }
+
         return !candidates.isEmpty();
     }
 
