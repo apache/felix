@@ -1195,6 +1195,7 @@ public class Felix extends BundleImpl implements Framework
             // Determine the range of start levels to process.
             int low = (isLowering) ? m_targetStartLevel + 1 : m_activeStartLevel + 1;
             int high = (isLowering) ? m_activeStartLevel : m_targetStartLevel;
+            m_activeStartLevel = (isLowering) ? high : low;
 
             // Process bundles and stop or start them accordingly.
             while (bundlesRemaining)
