@@ -105,8 +105,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     private final ReentrantLock m_stateLock;
 
-    private long m_timeout = 5000;
-
     protected volatile boolean enabled;
     protected volatile CountDownLatch enabledLatch;
     private final Object enabledLatchLock = new Object();
@@ -180,7 +178,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     {
         try
         {
-            if (!m_stateLock.tryLock( m_timeout, TimeUnit.MILLISECONDS ) )
+            if (!m_stateLock.tryLock( getActivator().getConfiguration().lockTimeout(), TimeUnit.MILLISECONDS ) )
             {
             	dumpThreads();
                 throw new IllegalStateException( "Could not obtain lock" );

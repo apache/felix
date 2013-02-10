@@ -64,6 +64,8 @@ public class ScrConfiguration
 
     public static final String PROP_INFO_SERVICE = "ds.info.service";
     
+    public static final String PROP_LOCK_TIMEOUT = "ds.lock.timeout.milliseconds";
+    
     public static final String PROP_LOGLEVEL = "ds.loglevel";
 
     private static final String LOG_LEVEL_DEBUG = "debug";
@@ -85,6 +87,8 @@ public class ScrConfiguration
     private boolean keepInstances;
     
     private boolean infoAsService;
+    
+    private long lockTimeout = 5000;//milliseconds
 
     private BundleContext bundleContext;
 
@@ -139,6 +143,7 @@ public class ScrConfiguration
                 factoryEnabled = false;
                 keepInstances = false;
                 infoAsService = false;
+                lockTimeout = 5000;
             }
             else
             {
@@ -146,6 +151,7 @@ public class ScrConfiguration
                 factoryEnabled = getDefaultFactoryEnabled();
                 keepInstances = getDefaultKeepInstances();
                 infoAsService = getDefaultInfoAsService();
+                lockTimeout = getDefaultLockTimeout();
             }
         }
         else
@@ -154,6 +160,8 @@ public class ScrConfiguration
             factoryEnabled = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_FACTORY_ENABLED ) ) );
             keepInstances = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_DELAYED_KEEP_INSTANCES ) ) );
             infoAsService = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_INFO_SERVICE) ) );
+            Long timeout = ( Long ) config.get( PROP_LOCK_TIMEOUT );
+            lockTimeout = timeout == null? 5000: timeout;
         }
         if ( scrCommand != null )
         {
@@ -187,6 +195,10 @@ public class ScrConfiguration
         return infoAsService;
     }
 
+    public long lockTimeout()
+    {
+        return lockTimeout;
+    }
 
     private boolean getDefaultFactoryEnabled()
     {
@@ -208,6 +220,16 @@ public class ScrConfiguration
     private boolean getDefaultInfoAsService()
     {
         return VALUE_TRUE.equalsIgnoreCase( bundleContext.getProperty( PROP_INFO_SERVICE) );
+    }
+
+    private long getDefaultLockTimeout()
+    {
+        String val = bundleContext.getProperty( PROP_LOCK_TIMEOUT);
+        if ( val == null)
+        {
+            return 5000;
+        }
+        return Long.parseLong( val );
     }
 
 
