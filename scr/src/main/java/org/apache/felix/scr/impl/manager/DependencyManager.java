@@ -1358,7 +1358,7 @@ public class DependencyManager<S, T> implements Reference
         m_componentManager.waitForTracked( trackingCount.get() );
         for ( RefPair<T> boundRef : refPairs )
         {
-            if ( doUnbind )
+            if ( doUnbind && !boundRef.isFailed() )
             {
                 invokeUnbindMethod( componentInstance, boundRef, trackingCount.get() );
             }
