@@ -40,13 +40,14 @@ import org.osgi.service.log.LogService;
 
 public class Main implements Runnable
 {
+    private static final int LATCH_TIMEOUT = 10000;
     private volatile ComponentContext m_ctx;
     private volatile AtomicInteger m_counter = new AtomicInteger();
     private volatile CountDownLatch m_enabledLatch;
     private volatile CountDownLatch m_disabledLatch;
     private volatile LogService m_logService;
     private ScrService m_scr;
-    private final Executor m_exec = Executors.newFixedThreadPool( 50 );
+    private final Executor m_exec = Executors.newFixedThreadPool( 12 );
     private volatile BundleContext m_bctx;
     volatile ConcurrentHashMap<Class, ServiceRegistration> m_registrations = new ConcurrentHashMap<Class, ServiceRegistration>();
     volatile Exception _bindStackTrace;
@@ -169,7 +170,7 @@ public class Main implements Runnable
 
         _bindStackTrace = trace;
 
-        A a = ( A ) sr.getBundle().getBundleContext().getService( sr );
+        A a = ( A ) m_ctx.locateService( "a", sr );
         if ( a == null )
         {
             throw new IllegalStateException( "bindA: bundleContext.getService returned null" );
@@ -220,7 +221,7 @@ public class Main implements Runnable
 
             try
             {
-                if ( !m_enabledLatch.await( 10000, TimeUnit.MILLISECONDS ) )
+                if ( !m_enabledLatch.await( LATCH_TIMEOUT, TimeUnit.MILLISECONDS ) )
                 {
                     System.out.println( "Did not get A injected timely ... see logs.txt" );
                     m_logService.log( LogService.LOG_ERROR, "enableLatch TIMEOUT" );
@@ -236,7 +237,7 @@ public class Main implements Runnable
             registry.unregisterBCDEFGHIJK( m_exec );
             try
             {
-                if ( !m_disabledLatch.await( 10000, TimeUnit.MILLISECONDS ) )
+                if ( !m_disabledLatch.await( LATCH_TIMEOUT, TimeUnit.MILLISECONDS ) )
                 {
                     System.out.println( "Could not disable components timely ... see logs.txt" );
                     m_logService.log( LogService.LOG_ERROR, "disableLatch TIMEOUT" );
