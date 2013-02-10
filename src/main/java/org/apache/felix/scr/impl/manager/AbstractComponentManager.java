@@ -619,9 +619,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         m_internalEnabled = true;
     }
 
-    final boolean activateInternal( int trackingCount )
+    final void activateInternal( int trackingCount )
     {
-        return m_state.activate( this );
+         m_state.activate( this );
     }
 
     final void deactivateInternal( int reason, boolean disable, int trackingCount )
@@ -1334,10 +1334,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
 
 
-        boolean activate( AbstractComponentManager acm )
+        void activate( AbstractComponentManager acm )
         {
             log( acm, "activate" );
-            return false;
         }
 
 
@@ -1369,7 +1368,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             try
             {
-                acm.unregisterService();
+                if ( !acm.unregisterService() )
+                {
+                    //another thread is deactivating.
+                    return;
+                }
                 acm.obtainWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
                 try
                 {
@@ -1483,15 +1486,14 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
          * returns true if this thread succeeds in activating the component, or the component is not able to be activated.
          * Returns false if some other thread succeeds in activating the component.
          * @param acm
-         * @return
          */
-        boolean activate( AbstractComponentManager acm )
+        void activate( AbstractComponentManager acm )
         {
             if ( !acm.isActivatorActive() )
             {
                 acm.log( LogService.LOG_DEBUG, "Bundle's component activator is not active; not activating component",
                     null );
-                return true;
+                return;
             }
 
             acm.log( LogService.LOG_DEBUG, "Activating component from state {0}", new Object[] {this},  null );
@@ -1501,7 +1503,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             if ( !acm.hasConfiguration() && acm.getComponentMetadata().isConfigurationRequired() )
             {
                 acm.log( LogService.LOG_DEBUG, "Missing required configuration, cannot activate", null );
-                return true;
+                return;
             }
 
             // Before creating the implementation object, we are going to
@@ -1510,7 +1512,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             {
                 acm.log( LogService.LOG_DEBUG, "Component is not permitted to register all services, cannot activate",
                     null );
-                return true;
+                return;
             }
 
             // Update our target filters.
@@ -1522,7 +1524,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             if ( !acm.verifyDependencyManagers() )
             {
                 acm.log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
-                return true;
+                return;
             }
 
             // set satisfied state before registering the service because
@@ -1537,7 +1539,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             final State satisfiedState = acm.getSatisfiedState();
             acm.changeState( satisfiedState );
 
-            acm.registerService();
+            if ( !acm.registerService() )
+            {
+                //some other thread is activating us, or we got concurrently deactivated.
+                return;
+            }
 
             // 1. Load the component implementation class
             // 2. Create the component instance and component context
@@ -1551,7 +1557,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                     if ( !acm.collectDependencies() )
                     {
                         acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object (1)", null );
-                        return false;
+                        return;
                     }
                     else
                     {
@@ -1563,12 +1569,12 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 catch ( IllegalStateException e )
                 {
                     acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object (2)", null );
-                    return false;
+                    return;
                 }
                 catch ( Throwable t )
                 {
                     acm.log( LogService.LOG_ERROR, "Unexpected throwable from attempt to collect dependencies", t );
-                    return false;
+                    return;
                 }
                 acm.obtainWriteLock( "AbstractComponentManager.Unsatisfied.activate.1" );
                 try
@@ -1587,8 +1593,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 }
 
             }
-            return true;
-
+ 
         }
 
         void deactivate( AbstractComponentManager acm, int reason, boolean disable )
@@ -1868,7 +1873,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return m_inst;
         }
 
-        boolean activate( AbstractComponentManager acm )
+        void activate( AbstractComponentManager acm )
         {
             throw new IllegalStateException( "activate: " + this );
         }
