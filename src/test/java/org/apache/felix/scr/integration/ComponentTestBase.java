@@ -669,7 +669,7 @@ public abstract class ComponentTestBase
         private final SimpleDateFormat m_sdf = new SimpleDateFormat( "HH:mm:ss,S" );
         private final static PrintStream m_out = new PrintStream( new BufferedOutputStream( new FileOutputStream(
             FileDescriptor.err ), 128 ) );
-        private final List<String> m_warnings = Collections.synchronizedList( new ArrayList<String>() );//<String>
+        private final List<String> m_warnings = Collections.synchronizedList( new ArrayList<String>() );
         private LinkedBlockingQueue<LogEntry> m_logQueue = new LinkedBlockingQueue<LogEntry>();
         private volatile Thread m_logThread;
         private volatile PrintStream m_realOut;
