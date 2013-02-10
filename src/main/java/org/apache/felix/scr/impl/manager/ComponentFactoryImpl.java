@@ -186,11 +186,10 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    protected void registerService()
+    @Override
+    protected String[] getProvidedServices()
     {
-        log( LogService.LOG_DEBUG, "registering component factory", null );
-        registerService(new String[]
-            { ComponentFactory.class.getName() });
+        return new String[] { ComponentFactory.class.getName() };
     }
 
 

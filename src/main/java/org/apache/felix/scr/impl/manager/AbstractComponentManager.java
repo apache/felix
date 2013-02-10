@@ -30,9 +30,11 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.felix.scr.Component;
@@ -96,7 +98,10 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     private BundleComponentActivator m_activator;
 
     // The ServiceRegistration
-    private final AtomicReference<ServiceRegistration<S>> m_serviceRegistration;
+    private enum RegState {unregistered, registered};
+    private RegState m_desiredServiceRegistrationFlag;
+    private RegState m_serviceRegistrationFlag;
+    private volatile ServiceRegistration<S> m_serviceRegistration;
 
     private final ReentrantLock m_stateLock;
 
@@ -142,7 +147,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         m_dependencyManagers = loadDependencyManagers( metadata );
 
         m_stateLock = new ReentrantLock( true );
-        m_serviceRegistration = new AtomicReference<ServiceRegistration<S>>();
 
         // dump component details
         if ( isLogEnabled( LogService.LOG_DEBUG ) )
@@ -701,87 +705,132 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     {
         return m_componentMethods;
     }
-    /**
-     * Registers the service on behalf of the component.
-     *
-     * @return The <code>ServiceRegistration</code> for the registered
-     *      service or <code>null</code> if no service is registered.
-     */
-    protected void registerService()
+    
+    protected String[] getProvidedServices()
     {
         if ( getComponentMetadata().getServiceMetadata() != null )
         {
             String[] provides = getComponentMetadata().getServiceMetadata().getProvides();
-            registerService( provides );
+            return provides;
         }
+        return null;
+        
     }
-
-    protected void registerService( String[] provides )
-    {
-        synchronized ( m_serviceRegistration )
-        {
-            ServiceRegistration existing = m_serviceRegistration.get();
-            if ( existing == null )
-            {
-                log( LogService.LOG_DEBUG, "registering services", null );
-
-                // get a copy of the component properties as service properties
-                final Dictionary<String, Object> serviceProperties = getServiceProperties();
-
-                ServiceRegistration newRegistration = getActivator().getBundleContext().registerService(
-                        provides,
-                        getService(), serviceProperties );
-                boolean weWon = !disposed && m_serviceRegistration.compareAndSet( existing, newRegistration );
-                if ( weWon )
-                {
-                    return;
-                }
-                newRegistration.unregister();
-            }
-            else
-            {
-                log( LogService.LOG_DEBUG, "Existing service registration, not registering", null );
-            }
-        }
-
-    }
-
     /**
-     * Registers the service on behalf of the component using the
-     * {@link #registerService()} method. Also records the service
-     * registration for later {@link #unregisterComponentService()}.
-     * <p>
-     * Due to more extensive locking FELIX-3317 is no longer relevant.
+     * Registers the service on behalf of the component.
      *
      */
-    final void registerComponentService()
+    protected boolean registerService()
     {
-        registerService();
+        String[] services = getProvidedServices();
+        if ( services != null )
+        {
+            return changeRegistration( RegState.registered, services);
+        }
+        return true;
     }
 
-    final void unregisterComponentService()
+    protected boolean unregisterService()
     {
-        if ( !disposed || m_serviceRegistration.get() != null )
+        String[] services = getProvidedServices();
+        if ( services != null )
         {
-            synchronized ( m_serviceRegistration )
-            {
-                ServiceRegistration sr = m_serviceRegistration.get();
-
-                if ( sr != null && m_serviceRegistration.compareAndSet( sr, null ) )
+            return changeRegistration( RegState.unregistered, services );
+        }
+        return true;
+    }
+    
+    private final Lock lock = new ReentrantLock();
+    
+    /**
+     * 
+     * @param desired
+     * @return true if this thread reached the requested state
+     */
+    private boolean changeRegistration( RegState desired, String[] services )
+    {
+        lock.lock();
+        try
+        {
+            do {
+                if ( desired.equals(m_desiredServiceRegistrationFlag))
                 {
-                    log( LogService.LOG_DEBUG, "Unregistering services", null );
-                    sr.unregister();
+                    //another thread is already trying the same state change
+                    return false;
                 }
-                else if (sr == null)
+                m_desiredServiceRegistrationFlag = desired;
+                if ( desired.equals(m_serviceRegistrationFlag))
                 {
-                    log( LogService.LOG_DEBUG, "Service already unregistered", null);
+                    //already in the desired state but leaving it
+                    continue;
+                }
+
+                if (desired.equals( RegState.registered ))
+                {
+                    log( LogService.LOG_DEBUG, "registering services", null );
+
+                    // get a copy of the component properties as service properties
+                    final Dictionary<String, Object> serviceProperties = getServiceProperties();
+
+                    ServiceRegistration<S> serviceRegistration = null;
+                    lock.unlock();
+                    try {
+                        serviceRegistration = ( ServiceRegistration<S> ) getActivator().getBundleContext().registerService(
+                                services,
+                                getService(), serviceProperties );
+                    }
+                    finally
+                    {
+                        lock.lock();
+                    }
+                    if ( desired.equals(m_desiredServiceRegistrationFlag ) && !disposed )
+                    {
+                        m_serviceRegistration = serviceRegistration;
+                        m_serviceRegistrationFlag = desired;
+                        return true;
+                    }
+                    else 
+                    {
+                        log( LogService.LOG_DEBUG, "unregistering services after concurrent registration", null );
+                        m_serviceRegistrationFlag = RegState.unregistered;
+                        lock.unlock();
+                        try
+                        {
+                            serviceRegistration.unregister();
+                        }
+                        finally
+                        {
+                            lock.lock();
+                        }
+                    }
+
                 }
                 else
                 {
-                    log( LogService.LOG_DEBUG, "Service unregistered concurrently by another thread", null);
+                    ServiceRegistration<S> serviceRegistration = m_serviceRegistration;
+                    m_serviceRegistration = null;
+                    m_serviceRegistrationFlag = desired;
+                    lock.unlock();
+                    try
+                    {
+                        serviceRegistration.unregister();
+                    }
+                    finally
+                    {
+                        lock.lock();
+                    }
+                    if ( desired.equals(m_desiredServiceRegistrationFlag ) )
+                    {
+                        return true;
+                    }
                 }
-            }
+            } while (true);
         }
+        finally
+        {
+            lock.unlock();
+        }
+
     }
 
     AtomicInteger getTrackingCount()
@@ -885,7 +934,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     final ServiceRegistration<?> getServiceRegistration()
     {
-        return m_serviceRegistration.get();
+        return m_serviceRegistration;
     }
 
 
@@ -1201,7 +1250,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     void changeState( State newState )
     {
         log( LogService.LOG_DEBUG, "State transition : {0} -> {1} : service reg: {2}", new Object[]
-            { m_state, newState, m_serviceRegistration.get() }, null );
+            { m_state, newState, m_serviceRegistration }, null );
         m_state = newState;
     }
 
@@ -1313,14 +1362,14 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         private void log( AbstractComponentManager acm, String event )
         {
             acm.log( LogService.LOG_DEBUG, "Current state: {0}, Event: {1}, Service registration: {2}", new Object[]
-                { m_name, event, acm.m_serviceRegistration.get() }, null );
+                { m_name, event, acm.m_serviceRegistration }, null );
         }
 
         void doDeactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
             try
             {
-                acm.unregisterComponentService();
+                acm.unregisterService();
                 acm.obtainWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
                 try
                 {
@@ -1445,7 +1494,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 return true;
             }
 
-            acm.log( LogService.LOG_DEBUG, "Activating component from state ", new Object[] {this},  null );
+            acm.log( LogService.LOG_DEBUG, "Activating component from state {0}", new Object[] {this},  null );
 
             // Before creating the implementation object, we are going to
             // test if we have configuration if such is required
@@ -1488,7 +1537,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             final State satisfiedState = acm.getSatisfiedState();
             acm.changeState( satisfiedState );
 
-            acm.registerComponentService();
+            acm.registerService();
 
             // 1. Load the component implementation class
             // 2. Create the component instance and component context
