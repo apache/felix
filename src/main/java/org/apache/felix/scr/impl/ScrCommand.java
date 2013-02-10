@@ -457,6 +457,8 @@ public class ScrCommand implements ScrInfo
         out.println(scrConfiguration.isFactoryEnabled() ? "Supported" : "Unsupported");
         out.print("Keep instances with no references: ");
         out.println(scrConfiguration.keepInstances() ? "Supported" : "Unsupported");
+        out.print("Lock timeount milliseconds: ");
+        out.println(scrConfiguration.lockTimeout());
         out.print("Info Service registered: ");
         out.println(scrConfiguration.infoAsService() ? "Supported" : "Unsupported");
     }

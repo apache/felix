@@ -105,8 +105,16 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
         adList.add( new AttributeDefinitionImpl(
                 ScrConfiguration.PROP_INFO_SERVICE,
                 "Bind Info Service",
-                "Whether to bind a service backing the console commands providing info on components ", 
+                "Whether to bind a service backing the console commands providing info on components.", 
                 this.getScrConfiguration().infoAsService() ) );
+
+        adList.add( new AttributeDefinitionImpl(
+                ScrConfiguration.PROP_LOCK_TIMEOUT,
+                "Lock timeout milliseconds",
+                "How long a lock is held before releasing due to suspected deadlock", 
+                AttributeDefinition.LONG,
+                new String[] { String.valueOf(this.getScrConfiguration().lockTimeout())}, 
+                0, null, null) );
 
         return new ObjectClassDefinition()
         {
