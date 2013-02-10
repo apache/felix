@@ -63,7 +63,7 @@ public class Felix3680_2Test extends ComponentTestBase
 
 
     @Test
-    public void test_concurrent_injetion_with_bundleContext()
+    public void test_concurrent_injection_with_bundleContext()
     {
         final Component main = findComponentByName( "org.apache.felix.scr.integration.components.felix3680_2.Main" );
         TestCase.assertNotNull( main );
@@ -75,10 +75,6 @@ public class Felix3680_2Test extends ComponentTestBase
         for ( Iterator it = log.foundWarnings().iterator(); it.hasNext(); )
         {
             String message = ( String ) it.next();
-            if ( message.startsWith( "Performed " ) && message.endsWith( " tests." ) )
-            {
-                continue;
-            }
             TestCase.fail( "unexpected warning or error logged: " + message );
         }
     }
