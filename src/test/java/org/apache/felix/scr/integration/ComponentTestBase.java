@@ -749,7 +749,7 @@ public abstract class ComponentTestBase
                         else
                         {
                             // Avoid out of memory ...
-                            m_warnings.add( 1024, "Unexpected errors logged. Please look at previous logs" );
+                            m_warnings.set( 1023, "Unexpected errors logged. Please look at previous logs" );
                         }
                     }
 
