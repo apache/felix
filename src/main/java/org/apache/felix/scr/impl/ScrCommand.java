@@ -455,6 +455,10 @@ public class ScrCommand implements ScrInfo
         out.println(scrConfiguration.getLogLevel());
         out.print("Component Factory with Factory Configuration: ");
         out.println(scrConfiguration.isFactoryEnabled() ? "Supported" : "Unsupported");
+        out.print("Keep instances with no references: ");
+        out.println(scrConfiguration.keepInstances() ? "Supported" : "Unsupported");
+        out.print("Info Service registered: ");
+        out.println(scrConfiguration.infoAsService() ? "Supported" : "Unsupported");
     }
 
     private String toStateString(int state)
