@@ -461,7 +461,7 @@ public final class ConditionalPermissionAdminImpl implements
 			return 0;
 		}
 
-		public <A> A adapt(Class<A> arg0) {
+		public Object adapt(Class arg0) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -470,6 +470,11 @@ public final class ConditionalPermissionAdminImpl implements
 			// TODO Auto-generated method stub
 			return null;
 		}
+
+        public int compareTo(Object t)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
     }
 
     private static class FakeCert extends X509Certificate
@@ -808,7 +813,7 @@ public final class ConditionalPermissionAdminImpl implements
      * it keeps track it builds up a list of postponed tuples which it will
      * evaluate at the last domain. See the core spec 9.5.1 and following for a
      * general description.
-     * 
+     *
      * @param felixBundle
      *            the bundle in question.
      * @param loader
