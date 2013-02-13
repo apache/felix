@@ -49,8 +49,8 @@ class DMNotAvail(val bc:BundleContext) extends ServiceDiagnosticsPlugin
             comp <- dm.getComponents.map(_.asInstanceOf[Component])
             compdec = comp.asInstanceOf[ComponentDeclaration]
             deps = compdec.getComponentDependencies
-                          .map(dep => new Dependency(dep.getName.takeWhile(_ != ' '), 
-                                           dep.getName.dropWhile(_ != ' ').trim,
+                          .map(dep => new Dependency(dep.getName.takeWhile(_ != '('), 
+                                           dep.getName.dropWhile(_ != '(').trim,
                                            dep.getState != STATE_UNAVAILABLE_REQUIRED)).toList
           }
             // yield Comp builds a list of Comp out of the for comprehension

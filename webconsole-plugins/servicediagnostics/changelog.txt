@@ -1,4 +1,13 @@
-Changes from 0.1.1 to 0.2.0
+Changes from 0.1.2 to 0.1.3
+---------------------------
+
+** Bug
+  * [FELIX-3898] name parsing issue on BundleDependency
+
+** Improvement
+  * [FELIX-3899] switch to Scala 2.10
+
+Changes from 0.1.1 to 0.1.2
 ---------------------------
 
 ** Bug

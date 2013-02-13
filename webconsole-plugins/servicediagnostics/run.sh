@@ -4,7 +4,7 @@ CLASSPATH=$SCALA:$REPO/org/apache/felix/org.apache.felix.main/4.0.3/org.apache.f
 #scala 
 java -classpath $CLASSPATH org.apache.felix.servicediagnostics.sample.FelixLauncher \
   $SCALA\
-  core/target/org.apache.felix.servicediagnostics.plugin-0.1.2-SNAPSHOT.jar\
+  core/target/org.apache.felix.servicediagnostics.plugin-0.1.3-SNAPSHOT.jar\
   sample/target/servicediagnostics.sample-0.1.1-SNAPSHOT.jar\
   $REPO/org/apache/felix/org.apache.felix.main/4.0.3/org.apache.felix.main-4.0.3.jar\
   $REPO/org/apache/felix/org.apache.felix.dependencymanager/3.0.0/org.apache.felix.dependencymanager-3.0.0.jar\
