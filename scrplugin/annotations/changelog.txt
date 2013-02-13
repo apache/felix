@@ -1,3 +1,9 @@
+Changes from 1.8.0 to 1.7.0
+----------------------------
+** Improvement
+    * [FELIX-3169] - Add support for new PASSWORD attribute type of Metatype service
+
+
 Changes from 1.6.0 to 1.7.0
 ---------------------------
 

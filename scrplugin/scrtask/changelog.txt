@@ -1,3 +1,21 @@
+Changes from 1.4.0 to 1.3.0
+----------------------------
+** Improvement
+    * [FELIX-3794] - Use DS specification version per component
+    * [FELIX-3636] - Using @Service without @Component should log a warning
+    * [FELIX-2929] - Read @Property from interfaces of types annotated with @Component
+    * [FELIX-3169] - Add support for new PASSWORD attribute type of Metatype service
+    * [FELIX-3886] - Improve error message for empty *.java-File
+
+** Task
+    * [FELIX-3867] - Drop support for JDK 1.4 completely
+
+** Bug
+    * [FELIX-3815] - Maven SCR Plugin does not correctly set specVersion to 1.1 if bind method with two parameters are used (OSGi Comp 4.2 $112.3.1)
+    * [FELIX-3858] - Service descriptor written in wrong encoding
+    * [FELIX-3232] - SCR annotations @Activate @Deactivate @Modified in outer classes also affect nested classes, annotations in nested classes are ignored 
+
+
 Changes from 1.3.0 to 1.2.0
 ---------------------------
 ** Improvement
