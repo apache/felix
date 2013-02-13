@@ -41,10 +41,13 @@ class DSNotAvail extends ServiceDiagnosticsPlugin
         // this involves a bit of type casting gymnastics because the underlying 
         // API uses mutables and no generic types
         // Option is used to avoid null pointers
+        /*val comps = scrService.getComponents
+        if (comps == null) Nil
+        else */
         (for {
-            comp <- Option(scrService.getComponents).flatten.map(_.asInstanceOf[Component])
-            service <- Option(comp.getServices).flatten
-            deps = Option(comp.getReferences).flatten
+            comp <- Option[Array[Component]](scrService.getComponents).getOrElse(Array())
+            service <- Option[Array[String]](comp.getServices).getOrElse(Array())
+            deps = Option[Array[Reference]](comp.getReferences).getOrElse(Array())
                           .map(dep => new Dependency(dep.getServiceName,
                                                      dep.getTarget,
                                                      dep.isSatisfied)).toList

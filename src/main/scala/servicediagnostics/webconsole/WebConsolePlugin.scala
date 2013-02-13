@@ -38,6 +38,7 @@ import org.apache.felix.servicediagnostics.ServiceDiagnostics
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+//class WebConsolePlugin extends SimpleWebConsolePlugin("servicegraph", "Service Graph", "OSGi", Array[String]()) 
 class WebConsolePlugin extends SimpleWebConsolePlugin("servicegraph", "Service Graph", Array[String]()) 
 {
     var engine:ServiceDiagnostics = _ //dependency injection. see Activator.
