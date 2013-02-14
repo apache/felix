@@ -120,7 +120,9 @@ public class HandlerDeclarationVisitor extends EmptyVisitor implements Annotatio
             NamedNodeMap attributes = xmlElement.getAttributes();
             for (int i = 0; i < attributes.getLength(); i++) {
                 Attr attr = (Attr) attributes.item(i);
-                root.addAttribute(transformAttribute(attr));
+                if (!"xmlns".equals(attr.getPrefix())) {
+                    root.addAttribute(transformAttribute(attr));
+                }
             }
         }
 
@@ -144,7 +146,7 @@ public class HandlerDeclarationVisitor extends EmptyVisitor implements Annotatio
     }
 
     private static Attribute transformAttribute(Attr attr) {
-        return new Attribute(attr.getName(),
+        return new Attribute(attr.getLocalName(),
                 attr.getNamespaceURI(),
                 attr.getValue());
     }
