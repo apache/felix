@@ -81,7 +81,7 @@ public class ComponentWorkbenchTestCase extends TestCase {
     }
 
 
-    private static ClassNode node() {
+    public static ClassNode node() {
         ClassNode node = new ClassNode();
         node.name = "my/Component";
         return node;
