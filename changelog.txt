@@ -16,6 +16,7 @@ Changes from 1.6.2 to 1.8
     * [FELIX-3888] - [DS] Expose the insides of ScrCommand as a service directly and enhance it
     * [FELIX-3890] - [DS] We might try to unbind a service we couldn't get and didn't bind
     * [FELIX-3891] - [DS] synchronization around registerService can create deadlocks
+    * [FELIX-3902] - [DS] Single dynamic mandatory reference problem on target filter update
 
 Changes from 1.6.0 to 1.6.2
 ---------------------------
