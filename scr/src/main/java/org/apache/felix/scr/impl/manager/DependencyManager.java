@@ -626,7 +626,7 @@ public class DependencyManager<S, T> implements Reference
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
         	boolean tracked = false;
-            if ( getPreviousRefMap().get( serviceReference ) == null )
+            if ( getPreviousRefMap().remove( serviceReference ) == null )
             {
                 if (isActive() )
                 {
