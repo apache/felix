@@ -313,6 +313,106 @@ public class ComponentConfigurationTest extends ComponentTestBase
         }
     }
 
+    /**
+     * FELIX-3902.  Start with filter matching two services, remove one, then change the filter
+     * to (still) match the other one.  2nd service should remain bound.
+     */
+    @Test
+    public void test_SimpleComponent_dynamic_configuration_with_required_service2()
+    {
+        final String targetProp = "ref.target";
+        final String filterProp1 = "one";
+        final String filterProp2 = "two";
+        final SimpleServiceImpl service1 = SimpleServiceImpl.create( bundleContext, "one", 1 ).setFilterProperty( filterProp1 );
+        final SimpleServiceImpl service2 = SimpleServiceImpl.create( bundleContext, "two", 2 ).setFilterProperty( filterProp2 );
+        try
+        {
+            final String pid = "DynamicConfigurationComponentWithRequiredReference";
+            final Component component = findComponentByName( pid );
+
+            deleteConfig( pid );
+            delay();
+
+            TestCase.assertNotNull( component );
+            TestCase.assertFalse( component.isDefaultEnabled() );
+
+            TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+            TestCase.assertNull( SimpleComponent.INSTANCE );
+
+            component.enable();
+            delay();
+
+            // mandatory ref missing --> component unsatisfied
+            TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+
+            // dynamically configure without the correct target
+            configure( pid );
+            delay();
+
+            // mandatory ref missing --> component unsatisfied
+            TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+
+            // dynamically configure with correct target
+            theConfig.put( targetProp, "(|(filterprop=" + filterProp1 + ")(filterprop=" + filterProp2 + "))" );
+            configure( pid );
+            delay();
+
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertNotNull( SimpleComponent.INSTANCE );
+            TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
+            TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+
+            final SimpleComponent instance = SimpleComponent.INSTANCE;
+
+            configure( pid );
+            delay();
+
+            //remove higher ranked service
+            if (service2 != null)
+            {
+                service2.drop();
+            }
+             // same instance after reconfiguration
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
+            TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
+            TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+            TestCase.assertNotNull( SimpleComponent.INSTANCE.m_singleRef );
+
+            // reconfigure with new filter --> active
+            theConfig.put( targetProp, "(filterprop=" + filterProp1 + ")" );
+            configure( pid );
+            delay();
+
+            // same instance after reconfiguration
+            TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+            TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
+            TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
+            TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
+            TestCase.assertNotNull( SimpleComponent.INSTANCE.m_singleRef );
+
+            deleteConfig( pid );
+            delay();
+
+            // mandatory ref missing --> component unsatisfied
+            TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+
+            component.disable();
+            delay();
+
+            TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+            TestCase.assertNull( SimpleComponent.INSTANCE );
+        }
+        finally
+        {
+            theConfig.remove( targetProp );
+            if ( service1 != null )
+            {
+                service1.drop();
+            }
+        }
+    }
+
     @Test
     public void test_SimpleComponent_dynamic_configuration_with_optional_service() throws Exception
     {
