@@ -1,0 +1,5 @@
+<ipojo>
+    <component immediate="true" classname="org.apache.felix.ipojo.runtime.core.components.MyErroneousComponent">
+        <provides/>
+    </component>
+</ipojo>
