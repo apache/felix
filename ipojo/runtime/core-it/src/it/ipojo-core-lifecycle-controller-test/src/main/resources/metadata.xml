@@ -1,0 +1,35 @@
+<ipojo
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd"
+        xmlns="org.apache.felix.ipojo">
+    <component
+            classname="org.apache.felix.ipojo.runtime.core.components.LifecycleControllerTest"
+            name="LFC-Test">
+        <provides />
+        <controller field="m_state" />
+        <properties>
+            <property name="conf" field="m_conf" method="setConf" />
+        </properties>
+    </component>
+
+    <component
+            classname="org.apache.felix.ipojo.runtime.core.components.LifecycleControllerTest"
+            name="LFC-Test-Immediate" immediate="true" architecture="true">
+        <provides />
+        <controller field="m_state" />
+        <properties>
+            <property name="conf" field="m_conf" method="setConf" />
+        </properties>
+    </component>
+
+    <component
+            classname="org.apache.felix.ipojo.runtime.core.components.ConfigurableLifecycleControllerTest"
+            name="LFC-Test-Configurable" architecture="true">
+        <provides />
+        <!-- The property and the controller share the same field -->
+        <controller field="m_state" />
+        <properties>
+            <property name="state" field="m_state" />
+        </properties>
+    </component>
+</ipojo>
