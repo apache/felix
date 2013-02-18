@@ -1,0 +1,6 @@
+<ipojo>
+    <component classname="org.apache.felix.ipojo.runtime.core.components.MyComponent">
+        <provides/>
+    </component>
+    <instance component="org.apache.felix.ipojo.runtime.core.components.MyComponent"/>
+</ipojo>
