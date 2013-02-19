@@ -15,9 +15,10 @@ public class Tools {
      */
     public static Factory getValidFactory(final OSGiHelper osgi, final String name) {
         // Get The Factory ServiceReference
-        ServiceReference facref = osgiHelper.getServiceReference(Factory.class.getName(), "(&(factory.state=1)(factory.name=" + name + "))");
+        ServiceReference facref = osgi.getServiceReference(Factory.class.getName(),
+                "(&(factory.state=1)(factory.name=" + name + "))");
         // Get the factory
-        Factory factory = (Factory) osgiHelper.getServiceObject(facref);
+        Factory factory = (Factory) osgi.getServiceObject(facref);
 
         return factory;
     }
