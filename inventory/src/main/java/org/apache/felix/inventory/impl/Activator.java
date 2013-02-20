@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.status.impl;
+package org.apache.felix.inventory.impl;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.status.StatusPrinterManager;
-import org.apache.felix.status.impl.webconsole.WebConsoleAdapter;
+import org.apache.felix.inventory.StatusPrinterManager;
+import org.apache.felix.inventory.impl.webconsole.WebConsoleAdapter;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;

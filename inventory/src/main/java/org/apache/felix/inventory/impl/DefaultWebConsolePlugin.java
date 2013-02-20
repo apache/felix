@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.status.impl;
+package org.apache.felix.inventory.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -22,10 +22,10 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.felix.status.PrinterMode;
-import org.apache.felix.status.StatusPrinterHandler;
-import org.apache.felix.status.StatusPrinterManager;
-import org.apache.felix.status.impl.webconsole.ConsoleConstants;
+import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.StatusPrinterHandler;
+import org.apache.felix.inventory.StatusPrinterManager;
+import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;

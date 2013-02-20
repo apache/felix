@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.status.impl;
+package org.apache.felix.inventory.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,11 +24,11 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.felix.status.PrinterMode;
-import org.apache.felix.status.StatusPrinter;
-import org.apache.felix.status.StatusPrinterHandler;
-import org.apache.felix.status.StatusPrinterManager;
-import org.apache.felix.status.ZipAttachmentProvider;
+import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.StatusPrinter;
+import org.apache.felix.inventory.StatusPrinterHandler;
+import org.apache.felix.inventory.StatusPrinterManager;
+import org.apache.felix.inventory.ZipAttachmentProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 

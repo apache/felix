@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.status.impl.webconsole;
+package org.apache.felix.inventory.impl.webconsole;
 
 
 import java.io.IOException;
@@ -29,9 +29,9 @@ import java.util.ResourceBundle;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.felix.status.PrinterMode;
-import org.apache.felix.status.StatusPrinter;
-import org.apache.felix.status.ZipAttachmentProvider;
+import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.StatusPrinter;
+import org.apache.felix.inventory.ZipAttachmentProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
