@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.status.impl;
+package org.apache.felix.inventory.impl;
 
 
 import java.util.ArrayList;
@@ -27,10 +27,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import org.apache.felix.status.PrinterMode;
-import org.apache.felix.status.StatusPrinter;
-import org.apache.felix.status.StatusPrinterHandler;
-import org.apache.felix.status.StatusPrinterManager;
+import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.StatusPrinter;
+import org.apache.felix.inventory.StatusPrinterHandler;
+import org.apache.felix.inventory.StatusPrinterManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;

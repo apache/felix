@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.status.impl.webconsole;
+package org.apache.felix.inventory.impl.webconsole;
 
 
 import java.io.IOException;

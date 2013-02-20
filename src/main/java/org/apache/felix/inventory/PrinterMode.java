@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.status;
+package org.apache.felix.inventory;
 
 /**
  * Enumeration for the different printer modes.

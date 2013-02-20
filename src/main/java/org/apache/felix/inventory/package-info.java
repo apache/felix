@@ -24,7 +24,7 @@
  */
 @Version("1.0.0")
 @Export(optional = "provide:=true")
-package org.apache.felix.status;
+package org.apache.felix.inventory;
 
 import aQute.bnd.annotation.Export;
 import aQute.bnd.annotation.Version;

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.status.impl;
+package org.apache.felix.inventory.impl;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -31,9 +31,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.status.PrinterMode;
-import org.apache.felix.status.StatusPrinterHandler;
-import org.apache.felix.status.StatusPrinterManager;
+import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.StatusPrinterHandler;
+import org.apache.felix.inventory.StatusPrinterManager;
 
 /**
  * The web console plugin for a status printer.

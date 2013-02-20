@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.felix.status.impl.webconsole;
+package org.apache.felix.inventory.impl.webconsole;
 
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
@@ -24,8 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.felix.status.PrinterMode;
-import org.apache.felix.status.impl.ClassUtils;
+import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.impl.ClassUtils;
 import org.osgi.framework.ServiceReference;
 
 /**
