@@ -178,7 +178,7 @@ public class ConfigurationPrinterAdapter {
     }
 
     /**
-     * Map the modes to status printer modes
+     * Map the modes to inventory printer modes
      */
     public String[] getPrinterModes() {
         final Set<String> list = new HashSet<String>();

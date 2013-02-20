@@ -22,18 +22,18 @@ import java.io.IOException;
 import java.util.zip.ZipOutputStream;
 
 /**
- * This is an optional extension of the {@link StatusPrinter}.
- * If a status printer implements this interface, the printer
+ * This is an optional extension of the {@link InventoryPrinter}.
+ * If a inventory printer implements this interface, the printer
  * can add additional attachments to the output of the
- * configuration zip.
+ * configuration ZIP.
  *
  * A service implementing this method must still register itself
- * as a {@link StatusPrinter} but not as a
+ * as a {@link InventoryPrinter} but not as a
  * {@link ZipAttachmentProvider} service and the provider
  * should either support {@link PrinterMode.ZIP_FILE_JSON}
  * or {@link PrinterMode.ZIP_FILE_TEXT}
  */
-public interface ZipAttachmentProvider extends StatusPrinter {
+public interface ZipAttachmentProvider extends InventoryPrinter {
 
     /**
      * Add attachments to the zip output stream.

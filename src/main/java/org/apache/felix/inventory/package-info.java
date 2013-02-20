@@ -18,7 +18,7 @@
  */
 
 /**
- * Interfaces for getting status information about the current instance
+ * Interfaces for getting inventory information about the current instance
  *
  * @version 1.0.0
  */

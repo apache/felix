@@ -19,28 +19,28 @@
 package org.apache.felix.inventory;
 
 /**
- * The manager allows to access status printers.
- * Instead of directly returning a status printer, a status
+ * The manager allows to access inventory printers.
+ * Instead of directly returning a inventory printer, a inventory
  * printer handler is returned which provides access to the
  * meta information of the printer and other utility methods.
  */
-public interface StatusPrinterManager {
+public interface InventoryPrinterManager {
 
     /**
-     * Get all status printer handlers.
+     * Get all inventory printer handlers.
      * @return A list of handlers - might be empty.
      */
-    StatusPrinterHandler[] getAllHandlers();
+    InventoryPrinterHandler[] getAllHandlers();
 
     /**
      * Get all handlers supporting the mode.
      * @return A list of handlers - might be empty.
      */
-    StatusPrinterHandler[] getHandlers( final PrinterMode mode);
+    InventoryPrinterHandler[] getHandlers( final PrinterMode mode);
 
     /**
      * Return a handler for the unique name.
      * @return The corresponding handler or <code>null</code>.
      */
-    StatusPrinterHandler getHandler( final String name );
+    InventoryPrinterHandler getHandler( final String name );
 }

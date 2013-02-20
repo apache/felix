@@ -18,14 +18,14 @@ package org.apache.felix.inventory.impl;
 
 import java.util.Arrays;
 
+import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.inventory.PrinterMode;
-import org.apache.felix.inventory.StatusPrinter;
 import org.osgi.framework.ServiceReference;
 
 /**
  * Helper class for a configuration printer.
  */
-public class StatusPrinterDescription implements Comparable<StatusPrinterDescription> {
+public class InventoryPrinterDescription implements Comparable<InventoryPrinterDescription> {
 
     private final ServiceReference reference;
 
@@ -39,11 +39,11 @@ public class StatusPrinterDescription implements Comparable<StatusPrinterDescrip
 
     private final String category;
 
-    public StatusPrinterDescription(final ServiceReference ref) {
+    public InventoryPrinterDescription(final ServiceReference ref) {
         this.reference = ref;
 
         // check modes
-        final Object modesCfg = ref.getProperty(StatusPrinter.CONFIG_PRINTER_MODES);
+        final Object modesCfg = ref.getProperty(InventoryPrinter.CONFIG_PRINTER_MODES);
         if ( modesCfg instanceof String ) {
             this.modes = new PrinterMode[] { PrinterMode.valueOf((String)modesCfg)};
         } else if ( modesCfg instanceof String[] ) {
@@ -57,15 +57,15 @@ public class StatusPrinterDescription implements Comparable<StatusPrinterDescrip
         }
 
         // check name
-        if ( ref.getProperty(StatusPrinter.CONFIG_NAME) != null ) {
-            this.name = ref.getProperty(StatusPrinter.CONFIG_NAME).toString();
+        if ( ref.getProperty(InventoryPrinter.CONFIG_NAME) != null ) {
+            this.name = ref.getProperty(InventoryPrinter.CONFIG_NAME).toString();
         } else {
             this.name = null;
         }
 
         // check title
-        if ( ref.getProperty(StatusPrinter.CONFIG_TITLE) != null ) {
-            this.title = ref.getProperty(StatusPrinter.CONFIG_TITLE).toString();
+        if ( ref.getProperty(InventoryPrinter.CONFIG_TITLE) != null ) {
+            this.title = ref.getProperty(InventoryPrinter.CONFIG_TITLE).toString();
             if ( this.title.startsWith("%") ) {
                 this.sortKey = this.title.substring(1);
             } else {
@@ -77,8 +77,8 @@ public class StatusPrinterDescription implements Comparable<StatusPrinterDescrip
         }
 
         // check category
-        if ( ref.getProperty(StatusPrinter.CONFIG_CATEGORY) != null ) {
-            this.category = ref.getProperty(StatusPrinter.CONFIG_CATEGORY).toString();
+        if ( ref.getProperty(InventoryPrinter.CONFIG_CATEGORY) != null ) {
+            this.category = ref.getProperty(InventoryPrinter.CONFIG_CATEGORY).toString();
         } else {
             this.category = null;
         }
@@ -111,7 +111,7 @@ public class StatusPrinterDescription implements Comparable<StatusPrinterDescrip
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(final StatusPrinterDescription spa) {
+    public int compareTo(final InventoryPrinterDescription spa) {
         return this.reference.compareTo(spa.reference);
     }
 
@@ -127,7 +127,7 @@ public class StatusPrinterDescription implements Comparable<StatusPrinterDescrip
 
     @Override
     public String toString() {
-        return "StatusPrinterDescription [title=" + title + ", name=" + name
+        return "InventoryPrinterDescription [title=" + title + ", name=" + name
                 + ", modes=" + Arrays.toString(modes) + ", sortKey=" + sortKey
                 + ", category=" + category + "]";
     }

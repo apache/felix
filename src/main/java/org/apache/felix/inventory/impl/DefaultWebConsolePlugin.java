@@ -22,9 +22,9 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.felix.inventory.InventoryPrinterHandler;
+import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.PrinterMode;
-import org.apache.felix.inventory.StatusPrinterHandler;
-import org.apache.felix.inventory.StatusPrinterManager;
 import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -32,76 +32,76 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * The web console plugin for a status printer.
+ * The web console plugin for a inventory printer.
  */
-public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements StatusPrinterHandler {
+public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements InventoryPrinterHandler {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * Constructor
-     * @param statusPrinterAdapter The adapter
+     * @param inventoryPrinterAdapter The adapter
      */
-    DefaultWebConsolePlugin(final StatusPrinterManager statusPrinterManager) {
-        super(statusPrinterManager);
+    DefaultWebConsolePlugin(final InventoryPrinterManager inventoryPrinterManager) {
+        super(inventoryPrinterManager);
     }
 
     @Override
-    protected StatusPrinterHandler getStatusPrinterHandler() {
+    protected InventoryPrinterHandler getInventoryPrinterHandler() {
         return this;
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#getTitle()
+     * @see org.apache.felix.inventory.InventoryPrinterHandler#getTitle()
      */
     public String getTitle() {
         return "Overview";
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#getName()
+     * @see org.apache.felix.inventory.InventoryPrinterHandler#getName()
      */
     public String getName() {
         return "config";
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#getCategory()
+     * @see org.apache.felix.inventory.InventoryPrinterHandler#getCategory()
      */
     public String getCategory() {
-        return "Status";
+        return "Inventory";
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#getModes()
+     * @see org.apache.felix.inventory.InventoryPrinterHandler#getModes()
      */
     public PrinterMode[] getModes() {
         return new PrinterMode[] {PrinterMode.TEXT};
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#supports(org.apache.felix.status.PrinterMode)
+     * @see org.apache.felix.inventory.InventoryPrinterHandler#supports(org.apache.felix.inventory.PrinterMode)
      */
     public boolean supports(final PrinterMode mode) {
         return mode == PrinterMode.TEXT;
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinter#print(org.apache.felix.status.PrinterMode, java.io.PrintWriter)
+     * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode, java.io.PrintWriter)
      */
     public void print(final PrinterMode mode, final PrintWriter printWriter) {
-        final StatusPrinterHandler[] handlers = this.statusPrinterManager.getAllHandlers();
+        final InventoryPrinterHandler[] handlers = this.inventoryPrinterManager.getAllHandlers();
         printWriter.print("Currently registered ");
         printWriter.print(String.valueOf(handlers.length));
-        printWriter.println(" status printer.");
+        printWriter.println(" inventory printer.");
         printWriter.println();
-        for(final StatusPrinterHandler handler : handlers) {
+        for(final InventoryPrinterHandler handler : handlers) {
             printWriter.println(handler.getTitle());
         }
     }
 
     /**
-     * @see org.apache.felix.status.ZipAttachmentProvider#addAttachments(java.lang.String, java.util.zip.ZipOutputStream)
+     * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.lang.String, java.util.zip.ZipOutputStream)
      */
     public void addAttachments(String namePrefix, ZipOutputStream zos)
     throws IOException {
@@ -109,7 +109,7 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
     }
 
     public static ServiceRegistration register(final BundleContext context,
-            final StatusPrinterManager manager) {
+            final InventoryPrinterManager manager) {
         final DefaultWebConsolePlugin dwcp = new DefaultWebConsolePlugin(manager);
 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();

@@ -19,8 +19,8 @@ package org.apache.felix.inventory.impl;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.inventory.StatusPrinterHandler;
-import org.apache.felix.inventory.StatusPrinterManager;
+import org.apache.felix.inventory.InventoryPrinterHandler;
+import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -28,7 +28,7 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * The web console plugin for a status printer.
+ * The web console plugin for a inventory printer.
  */
 public class WebConsolePlugin extends AbstractWebConsolePlugin {
 
@@ -39,28 +39,28 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
 
     /**
      * Constructor
-     * @param statusPrinterManager The status printer manager.
+     * @param inventoryPrinterManager The inventory printer manager.
      * @param printerName The name of the printer this plugin is displaying.
      */
-    WebConsolePlugin(final StatusPrinterManager statusPrinterManager,
+    WebConsolePlugin(final InventoryPrinterManager inventoryPrinterManager,
             final String printerName) {
-        super(statusPrinterManager);
+        super(inventoryPrinterManager);
         this.printerName = printerName;
     }
 
     @Override
-    protected StatusPrinterHandler getStatusPrinterHandler() {
-        return this.statusPrinterManager.getHandler(this.printerName);
+    protected InventoryPrinterHandler getInventoryPrinterHandler() {
+        return this.inventoryPrinterManager.getHandler(this.printerName);
     }
 
     public static ServiceRegistration register(
             final BundleContext context,
-            final StatusPrinterManager manager,
-            final StatusPrinterDescription desc) {
+            final InventoryPrinterManager manager,
+            final InventoryPrinterDescription desc) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(ConsoleConstants.PLUGIN_LABEL, "status-" + desc.getName());
+        props.put(ConsoleConstants.PLUGIN_LABEL, "inventory-" + desc.getName());
         props.put(ConsoleConstants.PLUGIN_TITLE, desc.getTitle());
-        props.put(ConsoleConstants.PLUGIN_CATEGORY, desc.getCategory() == null ? "Status" : desc.getCategory());
+        props.put(ConsoleConstants.PLUGIN_CATEGORY, desc.getCategory() == null ? "Inventory" : desc.getCategory());
         return context.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory() {
 
             public void ungetService(final Bundle bundle, final ServiceRegistration registration,
