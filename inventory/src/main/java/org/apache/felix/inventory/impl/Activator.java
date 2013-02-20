@@ -19,7 +19,7 @@ package org.apache.felix.inventory.impl;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.inventory.StatusPrinterManager;
+import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.impl.webconsole.WebConsoleAdapter;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -31,7 +31,7 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class Activator implements BundleActivator {
 
-    private StatusPrinterManagerImpl printerManager;
+    private InventoryPrinterManagerImpl printerManager;
 
     private ServiceRegistration managerRegistration;
 
@@ -42,12 +42,12 @@ public class Activator implements BundleActivator {
      */
     public void start(final BundleContext context) throws Exception {
         this.webAdapter = new WebConsoleAdapter(context);
-        this.printerManager = new StatusPrinterManagerImpl(context);
+        this.printerManager = new InventoryPrinterManagerImpl(context);
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.SERVICE_DESCRIPTION, "Apache Felix Status Printer Manager");
+        props.put(Constants.SERVICE_DESCRIPTION, "Apache Felix Inventory Printer Manager");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.managerRegistration = context.registerService(
-                StatusPrinterManager.class.getName(),
+                InventoryPrinterManager.class.getName(),
                 this.printerManager, props);
 }
 

@@ -29,8 +29,8 @@ import java.util.ResourceBundle;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.inventory.PrinterMode;
-import org.apache.felix.inventory.StatusPrinter;
 import org.apache.felix.inventory.ZipAttachmentProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -95,17 +95,17 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer {
                 cpa.label = cpa.title;
             }
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(StatusPrinter.CONFIG_NAME, cpa.label);
-            props.put(StatusPrinter.CONFIG_TITLE, cpa.title);
-            props.put(StatusPrinter.CONFIG_PRINTER_MODES, cpa.getPrinterModes());
+            props.put(InventoryPrinter.CONFIG_NAME, cpa.label);
+            props.put(InventoryPrinter.CONFIG_TITLE, cpa.title);
+            props.put(InventoryPrinter.CONFIG_PRINTER_MODES, cpa.getPrinterModes());
 
             if ( reference.getProperty(ConsoleConstants.PLUGIN_CATEGORY) != null ) {
-                props.put(StatusPrinter.CONFIG_CATEGORY, reference.getProperty(ConsoleConstants.PLUGIN_CATEGORY));
+                props.put(InventoryPrinter.CONFIG_CATEGORY, reference.getProperty(ConsoleConstants.PLUGIN_CATEGORY));
             }
-            final ServiceRegistration reg = this.bundleContext.registerService(StatusPrinter.class.getName(), new ZipAttachmentProvider() {
+            final ServiceRegistration reg = this.bundleContext.registerService(InventoryPrinter.class.getName(), new ZipAttachmentProvider() {
 
                 /**
-                 * @see org.apache.felix.status.StatusPrinter#print(org.apache.felix.status.PrinterMode, java.io.PrintWriter)
+                 * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode, java.io.PrintWriter)
                  */
                 public void print(final PrinterMode mode, final PrintWriter printWriter) {
                     final String m;
@@ -124,7 +124,7 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer {
                 }
 
                 /**
-                 * @see org.apache.felix.status.ZipAttachmentProvider#addAttachments(java.lang.String, java.util.zip.ZipOutputStream)
+                 * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.lang.String, java.util.zip.ZipOutputStream)
                  */
                 public void addAttachments(final String namePrefix, final ZipOutputStream zos)
                 throws IOException {

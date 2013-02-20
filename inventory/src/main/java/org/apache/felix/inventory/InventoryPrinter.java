@@ -21,24 +21,24 @@ package org.apache.felix.inventory;
 import java.io.PrintWriter;
 
 /**
- * The <code>StatusPrinter</code> is a service interface to be
+ * The <code>InventoryPrinter</code> is a service interface to be
  * implemented by providers which want to hook into the display of the
  * current configuration and state of the OSGi framework and application.
  *
- * A status printer must configure at least these three configuration properties
+ * A inventory printer must configure at least these three configuration properties
  * <ul>
  *   <li>{@link #CONFIG_PRINTER_MODES} - the supported modes</li>
  *   <li>{@link #CONFIG_TITLE} - the printer title</li>
  *   <li>{@link #CONFIG_NAME} - the printer name</li>
  * </ul>
  */
-public interface StatusPrinter {
+public interface InventoryPrinter {
 
     /**
      * The service name under which services of this class must be registered
      * to be picked for inclusion in the configuration report.
      */
-    String SERVICE = StatusPrinter.class.getName(); //$NON-NLS-1$
+    String SERVICE = InventoryPrinter.class.getName(); //$NON-NLS-1$
 
     /**
      * The property defining the supported rendering modes.
@@ -48,7 +48,7 @@ public interface StatusPrinter {
      * If this property is missing or contains invalid values,
      * the printer is ignored.
      */
-    String CONFIG_PRINTER_MODES = "felix.statusprinter.modes"; //$NON-NLS-1$
+    String CONFIG_PRINTER_MODES = "felix.inventory.printer.modes"; //$NON-NLS-1$
 
     /**
      * The unique name of the printer.
@@ -56,20 +56,20 @@ public interface StatusPrinter {
      * If there are two or more services with the same name, the
      * services with the highest ranking is used.
      */
-    String CONFIG_NAME = "felix.statusprinter.name"; //$NON-NLS-1$
+    String CONFIG_NAME = "felix.inventory.printer.name"; //$NON-NLS-1$
 
     /**
      * The title displayed by tools when this printer is used. It should be
      * descriptive but short.
      * If this property is missing the printer is ignored.
      */
-    String CONFIG_TITLE = "felix.statusprinter.title"; //$NON-NLS-1$
+    String CONFIG_TITLE = "felix.inventory.printer.title"; //$NON-NLS-1$
 
     /**
      * The category under which this printer is categorized.
      * This property is optional.
      */
-    String CONFIG_CATEGORY = "felix.statusprinter.category"; //$NON-NLS-1$
+    String CONFIG_CATEGORY = "felix.inventory.printer.category"; //$NON-NLS-1$
 
     /**
      * Prints the configuration report to the given <code>printWriter</code>.

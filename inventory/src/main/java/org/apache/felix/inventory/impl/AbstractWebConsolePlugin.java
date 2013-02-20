@@ -31,41 +31,41 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.inventory.InventoryPrinterHandler;
+import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.PrinterMode;
-import org.apache.felix.inventory.StatusPrinterHandler;
-import org.apache.felix.inventory.StatusPrinterManager;
 
 /**
- * The web console plugin for a status printer.
+ * The web console plugin for a inventory printer.
  */
 public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    /** The status printer manager. */
-    protected final StatusPrinterManager statusPrinterManager;
+    /** The inventory printer manager. */
+    protected final InventoryPrinterManager inventoryPrinterManager;
 
     /**
      * Constructor
-     * @param statusPrinterManager The manager
+     * @param inventoryPrinterManager The manager
      */
-    AbstractWebConsolePlugin(final StatusPrinterManager statusPrinterManager) {
-        this.statusPrinterManager = statusPrinterManager;
+    AbstractWebConsolePlugin(final InventoryPrinterManager inventoryPrinterManager) {
+        this.inventoryPrinterManager = inventoryPrinterManager;
     }
 
-    protected abstract StatusPrinterHandler getStatusPrinterHandler();
+    protected abstract InventoryPrinterHandler getInventoryPrinterHandler();
 
-    private void printConfigurationStatus( final ConfigurationWriter pw,
+    private void printConfigurationInventory( final ConfigurationWriter pw,
             final PrinterMode mode,
-            final StatusPrinterHandler handler )
+            final InventoryPrinterHandler handler )
     throws IOException {
         if ( handler == null ) {
-            for(final StatusPrinterHandler sph : this.statusPrinterManager.getHandlers(mode)) {
-                pw.printStatus(mode, sph);
+            for(final InventoryPrinterHandler sph : this.inventoryPrinterManager.getHandlers(mode)) {
+                pw.printInventory(mode, sph);
             }
         } else {
             if ( handler.supports(mode) ) {
-                pw.printStatus(mode, handler);
+                pw.printInventory(mode, handler);
             }
         }
     }
@@ -96,11 +96,11 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         this.setNoCache( response );
 
         // full request?
-        final StatusPrinterHandler handler;
+        final InventoryPrinterHandler handler;
         if ( request.getPathInfo().lastIndexOf('/') > 0 ) {
             handler = null; // all;
         } else {
-            handler = this.getStatusPrinterHandler();
+            handler = this.getInventoryPrinterHandler();
             if ( handler == null ) {
                 response.sendError( HttpServletResponse.SC_NOT_FOUND );
                 return;
@@ -110,7 +110,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         if ( request.getPathInfo().endsWith( ".txt" ) ) { //$NON-NLS-2$
             response.setContentType( "text/plain; charset=utf-8" ); //$NON-NLS-2$
             final ConfigurationWriter pw = new PlainTextConfigurationWriter( response.getWriter() );
-            printConfigurationStatus( pw, PrinterMode.TEXT, handler );
+            printConfigurationInventory( pw, PrinterMode.TEXT, handler );
             pw.flush();
         } else if ( request.getPathInfo().endsWith( ".zip" ) ) { //$NON-NLS-2$
             String type = getServletContext().getMimeType( request.getPathInfo() );
@@ -130,8 +130,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             zip.putNextEntry( entry );
             final StringBuilder sb = new StringBuilder();
             sb.append("Date: ");
-            synchronized ( StatusPrinterAdapter.DISPLAY_DATE_FORMAT )                             {
-                sb.append(StatusPrinterAdapter.DISPLAY_DATE_FORMAT.format(now));
+            synchronized ( InventoryPrinterAdapter.DISPLAY_DATE_FORMAT )                             {
+                sb.append(InventoryPrinterAdapter.DISPLAY_DATE_FORMAT.format(now));
             }
             sb.append(" (");
             sb.append(String.valueOf(now.getTime()));
@@ -141,9 +141,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             zip.closeEntry();
 
             final ZipConfigurationWriter pw = new ZipConfigurationWriter( zip );
-            printConfigurationStatus( pw, PrinterMode.ZIP_FILE_TEXT, handler );
+            printConfigurationInventory( pw, PrinterMode.ZIP_FILE_TEXT, handler );
             pw.counter = 0;
-            printConfigurationStatus( pw, PrinterMode.ZIP_FILE_JSON, handler );
+            printConfigurationInventory( pw, PrinterMode.ZIP_FILE_JSON, handler );
 
             zip.finish();
         } else if ( request.getPathInfo().endsWith( ".nfo" ) ) {
@@ -177,7 +177,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             response.setCharacterEncoding( "UTF-8" ); //$NON-NLS-1$
 
             final JSONConfigurationWriter jcw = new JSONConfigurationWriter(response.getWriter());
-            printConfigurationStatus( jcw, PrinterMode.JSON, handler );
+            printConfigurationInventory( jcw, PrinterMode.JSON, handler );
         } else {
             if ( handler == null ) {
                 response.sendError( HttpServletResponse.SC_NOT_FOUND);
@@ -209,9 +209,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             pw.println( "<br/><p class=\"statline\">");
 
             final Date currentTime = new Date();
-            synchronized ( StatusPrinterAdapter.DISPLAY_DATE_FORMAT )                             {
+            synchronized ( InventoryPrinterAdapter.DISPLAY_DATE_FORMAT )                             {
                 pw.print("Date: ");
-                pw.println(StatusPrinterAdapter.DISPLAY_DATE_FORMAT.format(currentTime));
+                pw.println(InventoryPrinterAdapter.DISPLAY_DATE_FORMAT.format(currentTime));
             }
 
             pw.print("<button type=\"button\" class=\"downloadFullZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Full Zip</button>");
@@ -258,9 +258,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             // dummy implementation
         }
 
-        public void printStatus(
+        public void printInventory(
                 final PrinterMode mode,
-                final StatusPrinterHandler handler)
+                final InventoryPrinterHandler handler)
         throws IOException {
             this.title(handler.getTitle());
             handler.print(mode, this);
@@ -413,9 +413,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
     /**
      * The ZIP configuration writer creates a zip with
-     * - txt output of a status printers (if supported)
-     * - json output of a status printers (if supported)
-     * - attachments from a status printer (if supported)
+     * - txt output of a inventory printers (if supported)
+     * - json output of a inventory printers (if supported)
+     * - attachments from a inventory printer (if supported)
      */
     private static class ZipConfigurationWriter extends ConfigurationWriter {
 
@@ -451,13 +451,13 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         }
 
         @Override
-        public void printStatus(
+        public void printInventory(
                 final PrinterMode mode,
-                final StatusPrinterHandler handler)
+                final InventoryPrinterHandler handler)
         throws IOException {
             final String title = getFormattedTitle(handler.getTitle());
             if ( mode == PrinterMode.ZIP_FILE_TEXT ) {
-                super.printStatus(mode, handler);
+                super.printInventory(mode, handler);
                 handler.addAttachments(title.concat("/"), this.zip);
             } else {
                 counter++;

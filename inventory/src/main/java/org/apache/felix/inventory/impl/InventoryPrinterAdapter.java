@@ -24,21 +24,21 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.felix.inventory.InventoryPrinter;
+import org.apache.felix.inventory.InventoryPrinterHandler;
+import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.PrinterMode;
-import org.apache.felix.inventory.StatusPrinter;
-import org.apache.felix.inventory.StatusPrinterHandler;
-import org.apache.felix.inventory.StatusPrinterManager;
 import org.apache.felix.inventory.ZipAttachmentProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * Helper class for a status printer.
+ * Helper class for a inventory printer.
  */
-public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<StatusPrinterAdapter> {
+public class InventoryPrinterAdapter implements InventoryPrinterHandler, Comparable<InventoryPrinterAdapter> {
 
     /**
-     * Formatter pattern to render the current time of status generation.
+     * Formatter pattern to render the current time of inventory generation.
      */
     static final DateFormat DISPLAY_DATE_FORMAT = DateFormat.getDateTimeInstance( DateFormat.LONG,
         DateFormat.LONG, Locale.US );
@@ -48,11 +48,11 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
      * the print method.
      * @return An adapter or <code>null</code> if the method is missing.
      */
-    public static StatusPrinterAdapter createAdapter(final StatusPrinterDescription description,
+    public static InventoryPrinterAdapter createAdapter(final InventoryPrinterDescription description,
             final Object service) {
 
         Method printMethod = null;
-        if ( !(service instanceof StatusPrinter) ) {
+        if ( !(service instanceof InventoryPrinter) ) {
 
             // print(String, PrintWriter)
             printMethod = ClassUtils.searchMethod(service.getClass(), "print",
@@ -68,7 +68,7 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
             attachmentMethod = ClassUtils.searchMethod(service.getClass(), "addAttachments",
                     new Class[] {String.class, ZipOutputStream.class});
         }
-        return new StatusPrinterAdapter(
+        return new InventoryPrinterAdapter(
                 description,
                 service,
                 printMethod,
@@ -78,18 +78,18 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
     /**
      * Comparator for adapters based on the service ranking.
      */
-    public static final Comparator<StatusPrinterAdapter> RANKING_COMPARATOR = new Comparator<StatusPrinterAdapter>() {
+    public static final Comparator<InventoryPrinterAdapter> RANKING_COMPARATOR = new Comparator<InventoryPrinterAdapter>() {
 
-        public int compare(final StatusPrinterAdapter o1, final StatusPrinterAdapter o2) {
+        public int compare(final InventoryPrinterAdapter o1, final InventoryPrinterAdapter o2) {
             return o1.description.compareTo(o2.description);
         }
     };
 
-    /** The status printer service. */
+    /** The Inventory printer service. */
     private final Object printer;
 
     /** The printer description. */
-    private final StatusPrinterDescription description;
+    private final InventoryPrinterDescription description;
 
     /** The method to use if printer does not implement the service interface. */
     private final Method printMethod;
@@ -102,7 +102,7 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
     /**
      * Constructor.
      */
-    public StatusPrinterAdapter( final StatusPrinterDescription description,
+    public InventoryPrinterAdapter( final InventoryPrinterDescription description,
             final Object printer,
             final Method printMethod,
             final Method attachmentMethod) {
@@ -112,7 +112,7 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
         this.attachmentMethod = attachmentMethod;
     }
 
-    public void registerConsole(final BundleContext context, final StatusPrinterManager manager) {
+    public void registerConsole(final BundleContext context, final InventoryPrinterManager manager) {
         if ( this.registration == null &&
              (supports(PrinterMode.HTML_BODY) || supports(PrinterMode.TEXT))) {
             this.registration = WebConsolePlugin.register(context, manager, this.description);
@@ -127,35 +127,35 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#getTitle()
+     * @see org.apache.felix.inventory.InventoryPrinterHandler#getTitle()
      */
     public String getTitle() {
         return this.description.getTitle();
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#getName()
+     * @see org.apache.felix.inventory.InventoryPrinterHandler#getName()
      */
     public String getName() {
         return this.description.getName();
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#getCategory()
+     * @see org.apache.felix.inventory.InventoryPrinterHandler#getCategory()
      */
     public String getCategory() {
         return this.description.getCategory();
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#getModes()
+     * @see org.apache.felix.inventory.InventoryPrinterHandler#getModes()
      */
     public PrinterMode[] getModes() {
         return this.description.getModes();
     }
 
     /**
-     * @see org.apache.felix.status.ZipAttachmentProvider#addAttachments(java.lang.String, java.util.zip.ZipOutputStream)
+     * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.lang.String, java.util.zip.ZipOutputStream)
      */
     public void addAttachments(final String namePrefix, final ZipOutputStream zos)
     throws IOException {
@@ -168,7 +168,7 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinterHandler#supports(org.apache.felix.status.PrinterMode)
+     * @see org.apache.felix.inventory.InventoryPrinterHandler#supports(org.apache.felix.inventory.PrinterMode)
      */
     public boolean supports(final PrinterMode mode) {
         for(int i=0; i<this.description.getModes().length; i++) {
@@ -180,13 +180,13 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
     }
 
     /**
-     * @see org.apache.felix.status.StatusPrinter#print(org.apache.felix.status.PrinterMode, java.io.PrintWriter)
+     * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode, java.io.PrintWriter)
      */
     public void print(final PrinterMode mode,
             final PrintWriter printWriter) {
         if ( this.supports(mode) ) {
-            if ( this.printer instanceof StatusPrinter ) {
-                ((StatusPrinter)this.printer).print(mode, printWriter);
+            if ( this.printer instanceof InventoryPrinter ) {
+                ((InventoryPrinter)this.printer).print(mode, printWriter);
             } else {
                 ClassUtils.invoke(this.printer, this.printMethod, new Object[] {mode.toString(), printWriter});
             }
@@ -204,11 +204,11 @@ public class StatusPrinterAdapter implements StatusPrinterHandler, Comparable<St
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(final StatusPrinterAdapter spa) {
+    public int compareTo(final InventoryPrinterAdapter spa) {
         return this.description.getSortKey().compareTo(spa.description.getSortKey());
     }
 
-    public StatusPrinterDescription getDescription() {
+    public InventoryPrinterDescription getDescription() {
         return this.description;
     }
  }

@@ -20,19 +20,19 @@ package org.apache.felix.inventory;
 
 
 /**
- * The status printer handler can be used by clients to access
- * a status printer. The handlers can be get from the {@link StatusPrinterManager}.
+ * The inventory printer handler can be used by clients to access
+ * a inventory printer. The handlers can be get from the {@link InventoryPrinterManager}.
  *
- * For clients using status printers, a handler simplifies accessing and
- * working with the status printer. A client should never lookup a
- * status printer directly.
+ * For clients using inventory printers, a handler simplifies accessing and
+ * working with the inventory printer. A client should never lookup a
+ * inventory printer directly.
  */
-public interface StatusPrinterHandler extends StatusPrinter, ZipAttachmentProvider {
+public interface InventoryPrinterHandler extends InventoryPrinter, ZipAttachmentProvider {
 
     /** The unique name of the printer. */
     String getName();
 
-    /** The human readable title for the status printer. */
+    /** The human readable title for the inventory printer. */
     String getTitle();
 
     /** The optional category for this printer. */
