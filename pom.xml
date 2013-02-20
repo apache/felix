@@ -26,14 +26,12 @@
         <relativePath>../pom/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.felix.status</artifactId>
+    <artifactId>org.apache.felix.inventory</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>Apache Felix Status</name>
-    <description>
-    Status Provider
-    </description>
+    <name>Apache Felix Inventory</name>
+    <description>Apache Felix Inventory provides some mechanisms to get the current state of the system and therefore provides an inventory of the system.</description>
     
     <build>
         <plugins>
@@ -48,7 +46,7 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <DynamicImport-Package>javax.servlet, javax.servlet.http</DynamicImport-Package>
-                        <Bundle-Activator>org.apache.felix.status.impl.Activator</Bundle-Activator>
+                        <Bundle-Activator>org.apache.felix.inventory.impl.Activator</Bundle-Activator>
                     </instructions>
                 </configuration>
             </plugin>
@@ -66,9 +64,9 @@
     </build>    
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/status-printer</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/status-printer</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/status-printer</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/inventory</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/inventory</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/inventory</url>
     </scm>
 
     <dependencies>
