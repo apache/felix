@@ -238,7 +238,7 @@
                                             org.apache.commons.io.filefilter,
                                             org.apache.commons.io.output,
                                             org.json;version=${org.json.version.osgi},
-                                            org.apache.felix.status;version=1.0.0;provide:=true,
+                                            org.apache.felix.inventory;version=1.0.0;provide:=true,
                                             ${webconsole.exports}
                                        </Export-Package>
                                        <Embed-Dependency>
@@ -249,7 +249,7 @@
                                            <!-- ServiceTracker -->
                                            org.osgi.compendium;
                                               inline=org/osgi/util/tracker/*,
-                                           org.apache.felix.status
+                                           org.apache.felix.inventory
                                        </Embed-Dependency>
                                        
                                        <_removeheaders>
@@ -429,7 +429,7 @@
         
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.status</artifactId>
+            <artifactId>org.apache.felix.inventory</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
