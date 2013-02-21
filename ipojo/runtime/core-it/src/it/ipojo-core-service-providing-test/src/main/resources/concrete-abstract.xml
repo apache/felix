@@ -1,0 +1,33 @@
+<ipojo
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns="org.apache.felix.ipojo"
+>
+
+    <!-- Concrete and abstract class -->
+    <component
+     classname="org.apache.felix.ipojo.runtime.core.components.inherited.ProcessParentImplementation"
+     name="PS-PI4" architecture="true">
+        <provides specifications="org.apache.felix.ipojo.runtime.core.components.inherited.ProcessParentImplementation"/>
+    </component>
+    <component
+     classname="org.apache.felix.ipojo.runtime.core.components.inherited.ProcessImplementation2"
+     name="PS-PI5" architecture="true">
+        <provides specifications="org.apache.felix.ipojo.runtime.core.components.inherited.ProcessParentImplementation"/>
+    </component>
+    <component
+     classname="org.apache.felix.ipojo.runtime.core.components.inherited.ProcessImplementation4"
+     name="PS-PI6" architecture="true">
+        <provides specifications="org.apache.felix.ipojo.runtime.core.components.inherited.ProcessParentImplementation"/>
+    </component>
+    <component
+     classname="org.apache.felix.ipojo.runtime.core.components.inherited.ProcessImplementation3"
+     name="PS-PI7" architecture="true">
+        <provides specifications="[org.apache.felix.ipojo.runtime.core.components.inherited.ProcessParentImplementation, org.apache.felix.ipojo.runtime.core.services.FooService]"/>
+    </component>
+
+	<component
+	classname="org.apache.felix.ipojo.runtime.core.components.SimpleClass">
+		<provides/>
+	</component>
+
+</ipojo>
