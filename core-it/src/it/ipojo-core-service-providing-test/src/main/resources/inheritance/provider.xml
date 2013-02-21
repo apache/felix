@@ -1,0 +1,3 @@
+<ipojo>
+<instance component="org.apache.felix.ipojo.runtime.core.components.inheritance.c.C" name="c"/>
+</ipojo>

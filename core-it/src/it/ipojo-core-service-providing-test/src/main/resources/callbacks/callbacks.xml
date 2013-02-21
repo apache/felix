@@ -1,0 +1,41 @@
+<ipojo
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns="org.apache.felix.ipojo"
+>
+    <!-- Registration callbacks -->
+    <component
+     classname="org.apache.felix.ipojo.runtime.core.components.callbacks.CallbacksCheckService"
+     name="PS-Callbacks-reg-only">
+        <provides post-registration="registered"/>
+    </component>
+    <component
+     classname="org.apache.felix.ipojo.runtime.core.components.callbacks.CallbacksCheckService"
+     name="PS-Callbacks-both">
+        <provides post-registration="registered" post-unregistration="unregistered"/>
+    </component>
+	<component
+     classname="org.apache.felix.ipojo.runtime.core.components.callbacks.CallbacksCheckService"
+     name="PS-Callbacks-unreg-only">
+        <provides post-unregistration="unregistered"/>
+    </component>
+	<component
+     classname="org.apache.felix.ipojo.runtime.core.components.callbacks.CallbacksCheckService"
+     name="PS-Callbacks-both-2">
+        <provides
+			specifications="org.apache.felix.ipojo.runtime.core.services.FooService"
+			post-unregistration="unregistered" post-registration="registered"/>
+		<provides
+			specifications="org.apache.felix.ipojo.runtime.core.services.CheckService"
+			post-unregistration="unregistered2" post-registration="registered2"/>
+    </component>
+	<component
+     classname="org.apache.felix.ipojo.runtime.core.components.callbacks.CallbacksCheckService"
+     name="PS-Callbacks-both-1">
+        <provides
+			specifications="org.apache.felix.ipojo.runtime.core.services.FooService"
+			post-unregistration="unregistered" post-registration="registered"/>
+		<provides
+			specifications="org.apache.felix.ipojo.runtime.core.services.CheckService"
+			post-unregistration="unregistered" post-registration="registered"/>
+    </component>
+</ipojo>
