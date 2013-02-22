@@ -14,6 +14,7 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.useradmin.User;
 import org.ow2.chameleon.testing.tinybundles.ipojo.IPOJOStrategy;
@@ -28,6 +29,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.streamBundle;
+import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
 
 
 @ExamReactorStrategy(PerMethod.class)
@@ -58,16 +61,19 @@ public class DummyHandlerTest extends Common {
         File dummyJar = new File("target/bundles/dummy.jar");
         FileUtils.copyInputStreamToFile(
                 TinyBundles.bundle()
-                        .add(Dummy.class)
                         .add(DummyImpl.class)
-                        .set(org.osgi.framework.Constants.EXPORT_PACKAGE, "org.apache.felix.ipojo.runtime.core" +
-                                ".services")
                         .set(org.osgi.framework.Constants.BUNDLE_SYMBOLICNAME, "Dummy.Bundle")
                         .build(IPOJOStrategy.withiPOJO(new File("src/main/resources/dummy-component.xml"))),
                 dummyJar);
 
 
         return OptionUtils.combine(options,
+                streamBundle(TinyBundles.bundle()
+                        .add(Dummy.class)
+                        .set(Constants.EXPORT_PACKAGE, "org.apache.felix.ipojo.runtime.core.services")
+                        .set(Constants.BUNDLE_SYMBOLICNAME, "service")
+                        .build(withBnd())
+                ),
                 bundle(handlerJar.toURI().toURL().toExternalForm()),
                 bundle(dummyJar.toURI().toURL().toExternalForm()),
                 mavenBundle().groupId("org.apache.felix").artifactId("org.osgi.compendium").version("1.4.0"));

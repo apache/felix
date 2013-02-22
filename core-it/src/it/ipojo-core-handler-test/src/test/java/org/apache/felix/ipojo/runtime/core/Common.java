@@ -56,6 +56,7 @@ public class Common {
         root.setLevel(Level.INFO);
 
         return options(
+                cleanCaches(),
                 ipojoBundles(),
                 junitAndMockitoBundles(),
                 // No tested bundle in this project
@@ -69,18 +70,19 @@ public class Common {
                 repository("http://repository.springsource.com/maven/bundles/external").id(
                         "com.springsource.repository.bundles.external"),
 
-                // Mockito without Hamcrest and Objenesis
-                mavenBundle("org.mockito", "mockito-core", "1.9.5"),
-
                 // Hamcrest with a version matching the range expected by Mockito
                 mavenBundle("org.hamcrest", "com.springsource.org.hamcrest.core", "1.1.0"),
+
+                // Mockito core does not includes Hamcrest
+                mavenBundle("org.mockito", "mockito-core", "1.9.5"),
 
                 // Objenesis with a version matching the range expected by Mockito
                 wrappedBundle(mavenBundle("org.objenesis", "objenesis", "1.2"))
                         .exports("*;version=1.2"),
 
                 // The default JUnit bundle also exports Hamcrest, but with an (incorrect) version of
-                // 4.9 which does not match the Mockito import.
+                // 4.9 which does not match the Mockito import. When deployed after the hamcrest bundles, it gets
+                // resolved correctly.
                 CoreOptions.junitBundles(),
 
                 /*
@@ -94,7 +96,7 @@ public class Common {
                  * org/mockito/cglib/proxy/Factory have different Class objects for the type org/mockito/cglib/
                  * proxy/Callback used in the signature
                  *
-                 * So we disable the bootdelegation.
+                 * So we disable the bootdelegation. this property has no effect on the other OSGi implementation.
                  */
                 frameworkProperty("felix.bootdelegation.implicit").value("false")
         );
@@ -157,7 +159,7 @@ public class Common {
         osgiHelper.dispose();
     }
 
-    public CompositeOption ipojoBundles() {
+    public static CompositeOption ipojoBundles() {
         return new DefaultCompositeOption(
                 mavenBundle("org.apache.felix", "org.apache.felix.ipojo").versionAsInProject(),
                 mavenBundle("org.ow2.chameleon.testing", "osgi-helpers").versionAsInProject(),
