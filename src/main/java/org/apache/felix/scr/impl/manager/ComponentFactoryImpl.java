@@ -78,11 +78,16 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     private volatile Dictionary<String, Object> m_configuration;
     
     /**
-     * Flag telling if our component factory is configured from config admin.
+     * Flag telling if our component factory is currently configured from config admin.
      * We are configured when configuration policy is required and we have received the
      * config admin properties, or when configuration policy is optional or ignored.
      */
-    public volatile boolean m_isConfigured;
+    private volatile boolean m_hasConfiguration;
+    
+    /**
+     * whether this holder has ever been configured.
+     */
+    private volatile boolean m_isConfigured;
 
     public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
@@ -202,7 +207,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
     public boolean hasConfiguration()
     {
-        return m_isConfigured;
+        return m_hasConfiguration;
     }
 
 
@@ -314,14 +319,14 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             log( LogService.LOG_DEBUG, "Handling configuration removal", null );
 
             // nothing to do if there is no configuration currently known.
-            if ( !m_isConfigured )
+            if ( !m_hasConfiguration )
             {
                 log( LogService.LOG_DEBUG, "ignoring configuration removal: not currently configured", null );
                 return;
             }
 
             // So far, we were configured: clear the current configuration.
-            m_isConfigured = false;
+            m_hasConfiguration = false;
             m_configuration = new Hashtable();
 
             log( LogService.LOG_DEBUG, "Current component factory state={0}", new Object[] {getState()}, null );
@@ -343,6 +348,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
     public void configurationUpdated( String pid, Dictionary<String, Object> configuration )
     {
+        m_isConfigured = true;
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             log( LogService.LOG_INFO, "Configuration PID updated for Component Factory", null );
@@ -357,7 +363,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             m_configuration = configuration;
 
             // We are now configured from config admin.
-            m_isConfigured = true;
+            m_hasConfiguration = true;
 
             log( LogService.LOG_INFO, "Current ComponentFactory state={0}", new Object[]
                     {getState()}, null );
@@ -398,6 +404,11 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
+    public boolean isConfigured()
+    {
+        return m_isConfigured;
+    }
+    
     public Component[] getComponents()
     {
         List<AbstractComponentManager> cms = getComponentList();

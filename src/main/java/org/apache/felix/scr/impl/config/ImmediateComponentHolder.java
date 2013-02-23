@@ -105,6 +105,8 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
      */
     private volatile boolean m_enabled;
     private final ComponentMethods m_componentMethods;
+    
+    private volatile boolean m_configured;
 
 
     public ImmediateComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
@@ -268,11 +270,12 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
      * this case a new component is created, configured and stored in the map</li>
      * </ul>
      */
-    public void configurationUpdated( final String pid, final Dictionary props )
+    public void configurationUpdated( final String pid, final Dictionary<String, Object> props )
     {
         log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration updated for pid {0} with properties {1}",
                 new Object[] {pid, props}, null);
 
+        m_configured = true;
         // component to update or create
         final ImmediateComponentManager icm;
         final String message;
@@ -356,6 +359,10 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         }
     }
 
+    public boolean isConfigured()
+    {
+        return m_configured;
+    }
 
     public Component[] getComponents()
     {
