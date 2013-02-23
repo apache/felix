@@ -19,6 +19,7 @@
 package org.apache.felix.scr.impl.config;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -182,33 +183,32 @@ public class ConfigurationSupport implements ConfigurationListener
 
         // iterate over all components which must be configured with this pid
         // (since DS 1.2, components may specify a specific configuration PID (112.4.4 configuration-pid)
-        Iterator it;
+        Collection<ComponentHolder> holders;
 
         if (factoryPid == null)
         {
-            it = this.m_registry.getComponentHoldersByPid(pid);
+            holders = this.m_registry.getComponentHoldersByPid(pid);
         }
         else
         {
-            it = this.m_registry.getComponentHoldersByPid(factoryPid);
+            holders = this.m_registry.getComponentHoldersByPid(factoryPid);
         }
 
         Activator.log(LogService.LOG_DEBUG, null, "configurationEvent: Handling "
                 + ((event.getType() == ConfigurationEvent.CM_DELETED) ? "DELETE" : "UPDATE")
                 + " of Configuration PID=" + pid, null);
 
-        while (it.hasNext())
+        for  ( ComponentHolder componentHolder: holders )
         {
-            final ComponentHolder cm = (ComponentHolder) it.next();
-            if (!cm.getComponentMetadata().isConfigurationIgnored())
+            if (!componentHolder.getComponentMetadata().isConfigurationIgnored())
             {
                 switch (event.getType()) {
                 case ConfigurationEvent.CM_DELETED:
-                    cm.configurationDeleted(pid);
+                    componentHolder.configurationDeleted(pid);
                     break;
 
                 case ConfigurationEvent.CM_UPDATED:
-                    final BundleComponentActivator activator = cm.getActivator();
+                    final BundleComponentActivator activator = componentHolder.getActivator();
                     if (activator == null)
                     {
                         break;
@@ -238,13 +238,13 @@ public class ConfigurationSupport implements ConfigurationListener
                                             .getBundle().getLocation() );
                                         if ( dict != null )
                                         {
-                                            cm.configurationUpdated( pid, dict );
+                                            componentHolder.configurationUpdated( pid, dict );
                                         }
                                     }
                                     else
                                     {
                                         Activator.log( LogService.LOG_WARNING, null, "Cannot reconfigure component "
-                                            + cm.getComponentMetadata().getName(), null );
+                                            + componentHolder.getComponentMetadata().getName(), null );
                                         Activator.log( LogService.LOG_WARNING, null,
                                             "Component Bundle's Configuration Admin is not compatible with " +
                                             "ours. This happens if multiple Configuration Admin API versions " +
