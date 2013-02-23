@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -380,12 +381,12 @@ public class ComponentRegistry implements ScrService, ServiceListener
      * method throws a {@link ComponentException}.
      *
      * @param name The name to register the component under
-     * @param component The component to register
+     * @param componentHolder The component to register
      *
      * @throws ComponentException if the name has not been reserved through
      *      {@link #checkComponentName(String)} yet.
      */
-    final void registerComponentHolder( final ComponentRegistryKey key, ComponentHolder component )
+    final void registerComponentHolder( final ComponentRegistryKey key, ComponentHolder componentHolder )
     {
         synchronized ( m_componentHoldersByName )
         {
@@ -393,17 +394,17 @@ public class ComponentRegistry implements ScrService, ServiceListener
             if ( m_componentHoldersByName.get( key ) != null )
             {
                 // this is not expected if all works ok
-                throw new ComponentException( "The component name '" + component.getComponentMetadata().getName()
+                throw new ComponentException( "The component name '" + componentHolder.getComponentMetadata().getName()
                     + "' has already been registered." );
             }
 
-            m_componentHoldersByName.put( key, component );
+            m_componentHoldersByName.put( key, componentHolder );
         }
 
         synchronized (m_componentHoldersByPid)
         {
             // See if the component declares a specific configuration pid (112.4.4 configuration-pid)
-            String configurationPid = component.getComponentMetadata().getConfigurationPid();
+            String configurationPid = componentHolder.getComponentMetadata().getConfigurationPid();
 
             // Since several components may refer to the same configuration pid, we have to
             // store the component holder in a Set, in order to be able to lookup every
@@ -414,9 +415,15 @@ public class ComponentRegistry implements ScrService, ServiceListener
                 set = new HashSet<ComponentHolder>();
                 m_componentHoldersByPid.put(configurationPid, set);
             }
-            set.add(component);
+            set.add(componentHolder);
         }
-    }
+        
+        if (configurationSupport != null)
+        {
+            configurationSupport.configureComponentHolder(componentHolder);
+        }
+
+  }
 
     /**
      * Returns the component registered under the given name or <code>null</code>
@@ -440,13 +447,12 @@ public class ComponentRegistry implements ScrService, ServiceListener
     }
 
     /**
-     * Returns the list of ComponentHolder instances whose configuration pids are matching
+     * Returns the set of ComponentHolder instances whose configuration pids are matching
      * the given pid.
      * @param pid the pid candidate
-     * @return a iterator of ComponentHolder, or an empty iterator if no ComponentHolders
-     * are found
+     * @return the set of ComponentHolders matching the singleton pid supplied
      */
-    public final Iterator<ComponentHolder> getComponentHoldersByPid(String pid)
+    public final Collection<ComponentHolder> getComponentHoldersByPid(String pid)
     {
         Set<ComponentHolder> componentHoldersUsingPid = new HashSet<ComponentHolder>();
         synchronized (m_componentHoldersByPid)
@@ -458,7 +464,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
                 componentHoldersUsingPid.addAll(set);
             }
         }
-        return componentHoldersUsingPid.iterator();
+        return componentHoldersUsingPid;
     }
 
     /**
@@ -546,11 +552,6 @@ public class ComponentRegistry implements ScrService, ServiceListener
         else
         {
             holder = new ImmediateComponentHolder(activator, metadata);
-        }
-
-        if (configurationSupport != null)
-        {
-            configurationSupport.configureComponentHolder(holder);
         }
 
         return holder;
