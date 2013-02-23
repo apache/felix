@@ -69,6 +69,12 @@ public interface ComponentHolder
      * @param pid The PID of the configuration used to configure the component
      */
     void configurationUpdated( String pid, Dictionary<String, Object> props );
+    
+    /**
+     * Has this component holder ever been configured?  Used to avoid double update during startup
+     * @return true if configurationUpdated has ever been called on this holder.
+     */
+    boolean isConfigured();
 
     /**
      * Returns all <code>Component</code> instances held by this holder.

@@ -74,7 +74,7 @@ public class ConfigurationSupport implements ConfigurationListener
     {
 
         // 112.7 configure unless configuration not required
-        if (!holder.getComponentMetadata().isConfigurationIgnored())
+        if (!holder.isConfigured() && !holder.getComponentMetadata().isConfigurationIgnored())
         {
             final BundleContext bundleContext = holder.getActivator().getBundleContext();
             final String bundleLocation = bundleContext.getBundle().getLocation();
