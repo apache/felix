@@ -16,5 +16,35 @@
     <artifactId>ipojo-core-logger-test</artifactId>
 
     <name>${project.artifactId}</name>
+
+    <!--
+     Those tests are disabled on equinox, because equinox comes with a broken implementation of the log reader
+     service returning an empty enumeration instead of the collection of logged messages.
+
+     From ExtendedLogReaderServiceFactory.java line 204:
+     Enumeration getLog() {
+        return EMPTY_ENUMERATION;
+     }
+
+     As the tests are based on this, we can't run them on equinox. In addition, registering a log listener is not enough
+     as we miss all messages logged before the registration of the listener.
+     -->
+
+    <profiles>
+        <profile>
+            <id>equinox</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skipTests>true</skipTests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     
 </project>
