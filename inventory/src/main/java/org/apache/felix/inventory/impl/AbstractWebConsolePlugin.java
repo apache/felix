@@ -455,12 +455,13 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                 final PrinterMode mode,
                 final InventoryPrinterHandler handler)
         throws IOException {
-            final String title = getFormattedTitle(handler.getTitle());
             if ( mode == PrinterMode.ZIP_FILE_TEXT ) {
                 super.printInventory(mode, handler);
+                final String title = getFormattedTitle(handler.getTitle());
                 handler.addAttachments(title.concat("/"), this.zip);
             } else {
                 counter++;
+                final String title = getFormattedTitle(handler.getTitle());
                 final String name = "json/".concat(title).concat(".json");
 
                 final ZipEntry entry = new ZipEntry( name );
