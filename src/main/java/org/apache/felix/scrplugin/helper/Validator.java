@@ -608,6 +608,9 @@ public class Validator {
                 }
             }
 
+            if ( method == null ) {
+                return null;
+            }
             final MethodResult result = new MethodResult();
             result.method = method;
             result.requiredSpecVersion = requiredVersion;
