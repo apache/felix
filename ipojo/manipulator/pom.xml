@@ -36,6 +36,7 @@
 
     <modules>
         <module>manipulator</module>
+        <module>manipulator-it</module>
         <module>ipojo-ant-task</module>
         <module>maven-ipojo-plugin</module>
         <module>bnd-ipojo-plugin</module>
