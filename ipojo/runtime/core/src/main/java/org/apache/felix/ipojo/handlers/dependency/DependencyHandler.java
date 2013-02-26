@@ -442,6 +442,14 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             boolean isProxy = true;
             // Detect proxy default value.
             String setting = getInstanceManager().getContext().getProperty(PROXY_SETTINGS_PROPERTY);
+
+            // Felix also includes system properties in the bundle context property, however it is not the case of the
+            // other frameworks, so if it's null we should call System.getProperty.
+
+            if (setting == null) {
+                setting = System.getProperty(PROXY_SETTINGS_PROPERTY);
+            }
+
             if (setting == null || PROXY_ENABLED.equals(setting)) { // If not set => Enabled
                 isProxy = true;
             } else if (setting != null  && PROXY_DISABLED.equals(setting)) {
