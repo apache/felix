@@ -1,0 +1,36 @@
+<ipojo 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd"
+    xmlns="org.apache.felix.ipojo"
+>
+	<component classname="org.apache.felix.ipojo.runtime.core.test.components.comparator.GradedFooServiceProvider"
+		name="COMPARATOR-gradedFooProvider">
+		<provides>
+			<property field="grade"/>
+		</provides>
+	</component>
+	
+	
+	<component classname="org.apache.felix.ipojo.runtime.core.test.components.comparator.CheckServiceProvider"
+		name="COMPARATOR-DynamicCheckService">
+		<provides/>
+		<requires field="fs" comparator="org.apache.felix.ipojo.runtime.core.test.components.comparator.GradeComparator"/>
+		<requires field="fss" comparator="org.apache.felix.ipojo.runtime.core.test.components.comparator.GradeComparator"/>
+		<requires comparator="org.apache.felix.ipojo.runtime.core.test.components.comparator.GradeComparator">
+			<callback type="bind" method="bind"/>
+			<callback type="unbind" method="unbind"/>
+		</requires>
+	</component>
+	
+	<component classname="org.apache.felix.ipojo.runtime.core.test.components.comparator.CheckServiceProvider"
+		name="COMPARATOR-DynamicPriorityCheckService">
+		<provides/>
+		<requires policy="dynamic-priority" field="fs" comparator="org.apache.felix.ipojo.runtime.core.test.components.comparator.GradeComparator"/>
+		<requires policy="dynamic-priority" field="fss" comparator="org.apache.felix.ipojo.runtime.core.test.components.comparator.GradeComparator"/>
+		<requires policy="dynamic-priority" comparator="org.apache.felix.ipojo.runtime.core.test.components.comparator.GradeComparator">
+			<callback type="bind" method="bind"/>
+			<callback type="unbind" method="unbind"/>
+		</requires>
+	</component>
+	
+</ipojo>
