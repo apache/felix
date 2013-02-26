@@ -94,6 +94,11 @@ public class ErrorPrintingServiceFactoryProxy implements InvocationHandler {
             return null;
         }
 
+        // KF is calling hashCode, we return the proxy hashCode.
+        if (method.getName().equals("hashCode")) {
+            return this.hashCode();
+        }
+
         // All other methods are rejected
         throw new UnsupportedOperationException("This service requires an advanced creation policy. "
                         + "Before calling the service, call the IPOJOServiceFactory.getService(ComponentInstance) "
