@@ -25,6 +25,7 @@ public class D {
         for (IB iimpl : cImpls) {
 
             // works just fine
+            System.out.println("iimpl : " + iimpl);
             System.out.println(iimpl.methTwo());
 
             // following produces 

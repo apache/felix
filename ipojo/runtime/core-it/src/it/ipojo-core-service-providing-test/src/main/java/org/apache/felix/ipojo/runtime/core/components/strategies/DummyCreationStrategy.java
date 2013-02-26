@@ -42,6 +42,15 @@ public class DummyCreationStrategy extends CreationStrategy implements Invocatio
      * @see java.lang.reflect.InvocationHandler#invoke(Object, java.lang.reflect.Method, Object[])
      */
     public Object invoke(Object arg0, Method arg1, Object[] arg2) {
+
+        if ("hashCode".equals(arg1.getName())) {
+            return this.hashCode();
+        }
+
+        if ("equals".equals(arg1.getName())  && arg2.length == 1) {
+            return this.equals(arg2[0]);
+        }
+
         if (isGetServiceMethod(arg1)) {
             return getService((ComponentInstance) arg2[0]);
         }
@@ -89,7 +98,6 @@ public class DummyCreationStrategy extends CreationStrategy implements Invocatio
      * @param im the instance manager
      * @param interfaces the published interfaces
      * @param props the properties
-     * @see org.apache.felix.ipojo.handlers.providedservice.CreationStrategy#onPublication(org.osgi.framework.BundleContext, String[], java.util.Properties)
      */
     public void onPublication(InstanceManager im, String[] interfaces,
             Properties props) {

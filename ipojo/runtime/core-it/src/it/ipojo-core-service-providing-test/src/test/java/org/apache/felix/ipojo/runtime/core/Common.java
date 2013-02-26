@@ -60,6 +60,7 @@ public class Common {
 
         if (deployTestedBundle) {
             return options(
+                    cleanCaches(),
                     ipojoBundles(),
                     junitBundles(),
                     testedBundle(),
@@ -67,6 +68,7 @@ public class Common {
             );
         } else {
             return options(
+                    cleanCaches(),
                     ipojoBundles(),
                     junitBundles(),
                     systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN")
