@@ -24,12 +24,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.inventory.InventoryPrinterHandler;
-import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.PrinterMode;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -46,8 +45,7 @@ import org.slf4j.LoggerFactory;
  * based on their name. If more than one printer with the same name
  * is registered, the one with highest service ranking is used.
  */
-public class InventoryPrinterManagerImpl implements InventoryPrinterManager,
-    ServiceTrackerCustomizer {
+public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer {
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -58,11 +56,11 @@ public class InventoryPrinterManagerImpl implements InventoryPrinterManager,
     /** Service tracker for Inventory printers. */
     private final ServiceTracker cfgPrinterTracker;
 
-    /** All adapters mapped by their name. */
-    private final Map<String, List<InventoryPrinterAdapter>> allAdapters = new HashMap<String, List<InventoryPrinterAdapter>>();
+    /** All adapters mapped by their name. Type of the map: String, List<InventoryPrinterAdapter> */
+    private final Map allAdapters = new HashMap();
 
-    /** Used adapters. */
-    private final Set<InventoryPrinterAdapter> usedAdapters = new ConcurrentSkipListSet<InventoryPrinterAdapter>();
+    /** Used adapters. Type of the set: InventoryPrinterAdapter */
+    private final Set usedAdapters = new ConcurrentSkipListSet();
 
     /** Registration for the web console. */
     private final ServiceRegistration pluginRegistration;
@@ -149,14 +147,14 @@ public class InventoryPrinterManagerImpl implements InventoryPrinterManager,
 
         final String key = adapter.getName();
         synchronized ( this.allAdapters ) {
-            List<InventoryPrinterAdapter> list = this.allAdapters.get(key);
+            List list = (List) this.allAdapters.get(key);
             final InventoryPrinterAdapter first;
             if ( list == null ) {
-                list = new LinkedList<InventoryPrinterAdapter>();
+                list = new LinkedList();
                 this.allAdapters.put(key, list);
                 first = null;
             } else {
-                first = list.get(0);
+                first = (InventoryPrinterAdapter) list.get(0);
             }
             list.add(adapter);
             Collections.sort(list, InventoryPrinterAdapter.RANKING_COMPARATOR);
@@ -172,7 +170,7 @@ public class InventoryPrinterManagerImpl implements InventoryPrinterManager,
             }
         }
         if ( removeAdapter != null ) {
-            final Iterator<InventoryPrinterAdapter> i = this.usedAdapters.iterator();
+            final Iterator i = this.usedAdapters.iterator();
             while ( i.hasNext() ) {
                 if ( i.next() == removeAdapter ) {
                     i.remove();
@@ -197,13 +195,13 @@ public class InventoryPrinterManagerImpl implements InventoryPrinterManager,
 
     private void removeService(final ServiceReference reference) {
         synchronized ( this.allAdapters ) {
-            final Iterator<Map.Entry<String, List<InventoryPrinterAdapter>>> i = this.allAdapters.entrySet().iterator();
+            final Iterator i = this.allAdapters.entrySet().iterator();
             while ( i.hasNext() ) {
-                final Map.Entry<String, List<InventoryPrinterAdapter>> entry = i.next();
-                final Iterator<InventoryPrinterAdapter> iter = entry.getValue().iterator();
+                final Map.Entry entry = (Entry) i.next();
+                final Iterator iter = ((List) entry.getValue()).iterator();
                 boolean removed = false;
                 while ( iter.hasNext() ) {
-                    final InventoryPrinterAdapter adapter = iter.next();
+                    final InventoryPrinterAdapter adapter = (InventoryPrinterAdapter) iter.next();
                     if ( adapter.getDescription().getServiceReference().compareTo(reference) == 0 ) {
                         iter.remove();
                         removed = true;
@@ -211,16 +209,16 @@ public class InventoryPrinterManagerImpl implements InventoryPrinterManager,
                     }
                 }
                 if ( removed ) {
-                    if ( entry.getValue().size() == 0 ) {
+                    if ( ((List)entry.getValue()).size() == 0 ) {
                         i.remove();
                     }
                     break;
                 }
             }
         }
-        final Iterator<InventoryPrinterAdapter> iter = this.usedAdapters.iterator();
+        final Iterator iter = this.usedAdapters.iterator();
         while ( iter.hasNext() ) {
-            final InventoryPrinterAdapter adapter = iter.next();
+            final InventoryPrinterAdapter adapter = (InventoryPrinterAdapter) iter.next();
             if ( adapter.getDescription().getServiceReference().compareTo(reference) == 0 ) {
                 iter.remove();
                 adapter.unregisterConsole();
@@ -230,30 +228,37 @@ public class InventoryPrinterManagerImpl implements InventoryPrinterManager,
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterManager#getAllHandlers()
+     * Get all inventory printer handlers.
+     * @return A list of handlers - might be empty.
      */
     public InventoryPrinterHandler[] getAllHandlers() {
-        return this.usedAdapters.toArray(new InventoryPrinterHandler[this.usedAdapters.size()]);
+        return (InventoryPrinterHandler[]) this.usedAdapters.toArray(new InventoryPrinterHandler[this.usedAdapters.size()]);
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterManager#getHandlers(org.apache.felix.inventory.PrinterMode)
+     * Get all handlers supporting the mode.
+     * @return A list of handlers - might be empty.
      */
     public InventoryPrinterHandler[] getHandlers(final PrinterMode mode) {
-        final List<InventoryPrinterHandler> result = new ArrayList<InventoryPrinterHandler>();
-        for(final InventoryPrinterAdapter printer : this.usedAdapters) {
+        final List result = new ArrayList();
+        final Iterator i = this.usedAdapters.iterator();
+        while ( i .hasNext() ) {
+            final InventoryPrinterAdapter printer = (InventoryPrinterAdapter) i.next();
             if ( printer.supports(mode) ) {
                 result.add(printer);
             }
         }
-        return result.toArray(new InventoryPrinterHandler[result.size()]);
+        return (InventoryPrinterHandler[]) result.toArray(new InventoryPrinterHandler[result.size()]);
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterManager#getHandler(java.lang.String)
+     * Return a handler for the unique name.
+     * @return The corresponding handler or <code>null</code>.
      */
     public InventoryPrinterHandler getHandler(final String name) {
-        for(final InventoryPrinterAdapter printer : this.usedAdapters) {
+        final Iterator i = this.usedAdapters.iterator();
+        while ( i .hasNext() ) {
+            final InventoryPrinterAdapter printer = (InventoryPrinterAdapter) i.next();
             if ( name.equals(printer.getName()) ) {
                 return printer;
             }

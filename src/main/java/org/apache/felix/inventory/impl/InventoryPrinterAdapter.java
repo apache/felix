@@ -25,8 +25,6 @@ import java.util.Locale;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.inventory.InventoryPrinterHandler;
-import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.PrinterMode;
 import org.apache.felix.inventory.ZipAttachmentProvider;
 import org.osgi.framework.BundleContext;
@@ -34,8 +32,10 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Helper class for a inventory printer.
+ *
+ * The adapter simplifies accessing and working with the inventory printer.
  */
-public class InventoryPrinterAdapter implements InventoryPrinterHandler, Comparable<InventoryPrinterAdapter> {
+public class InventoryPrinterAdapter implements InventoryPrinterHandler, Comparable {
 
     /**
      * Formatter pattern to render the current time of inventory generation.
@@ -78,10 +78,10 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     /**
      * Comparator for adapters based on the service ranking.
      */
-    public static final Comparator<InventoryPrinterAdapter> RANKING_COMPARATOR = new Comparator<InventoryPrinterAdapter>() {
+    public static final Comparator RANKING_COMPARATOR = new Comparator() {
 
-        public int compare(final InventoryPrinterAdapter o1, final InventoryPrinterAdapter o2) {
-            return o1.description.compareTo(o2.description);
+        public int compare(final Object o1, final Object o2) {
+            return ((InventoryPrinterAdapter)o1).description.compareTo(((InventoryPrinterAdapter)o2).description);
         }
     };
 
@@ -112,7 +112,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
         this.attachmentMethod = attachmentMethod;
     }
 
-    public void registerConsole(final BundleContext context, final InventoryPrinterManager manager) {
+    public void registerConsole(final BundleContext context, final InventoryPrinterManagerImpl manager) {
         if ( this.registration == null &&
              (supports(PrinterMode.HTML_BODY) || supports(PrinterMode.TEXT))) {
             this.registration = WebConsolePlugin.register(context, manager, this.description);
@@ -127,28 +127,21 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterHandler#getTitle()
+     * The human readable title for the inventory printer.
      */
     public String getTitle() {
         return this.description.getTitle();
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterHandler#getName()
+     * The unique name of the printer.
      */
     public String getName() {
         return this.description.getName();
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterHandler#getCategory()
-     */
-    public String getCategory() {
-        return this.description.getCategory();
-    }
-
-    /**
-     * @see org.apache.felix.inventory.InventoryPrinterHandler#getModes()
+     * All supported modes.
      */
     public PrinterMode[] getModes() {
         return this.description.getModes();
@@ -168,7 +161,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterHandler#supports(org.apache.felix.inventory.PrinterMode)
+     * Whether the printer supports this mode.
      */
     public boolean supports(final PrinterMode mode) {
         for(int i=0; i<this.description.getModes().length; i++) {
@@ -196,7 +189,6 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     /**
      * @see java.lang.Object#toString()
      */
-    @Override
     public String toString() {
         return printer.getClass() + "(" + super.toString() + ")";
     }
@@ -204,8 +196,8 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(final InventoryPrinterAdapter spa) {
-        return this.description.getSortKey().compareTo(spa.description.getSortKey());
+    public int compareTo(final Object spa) {
+        return this.description.getSortKey().compareTo(((InventoryPrinterAdapter)spa).description.getSortKey());
     }
 
     public InventoryPrinterDescription getDescription() {

@@ -19,8 +19,6 @@ package org.apache.felix.inventory.impl;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.felix.inventory.InventoryPrinterHandler;
-import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -42,25 +40,24 @@ public class WebConsolePlugin extends AbstractWebConsolePlugin {
      * @param inventoryPrinterManager The inventory printer manager.
      * @param printerName The name of the printer this plugin is displaying.
      */
-    WebConsolePlugin(final InventoryPrinterManager inventoryPrinterManager,
+    WebConsolePlugin(final InventoryPrinterManagerImpl inventoryPrinterManager,
             final String printerName) {
         super(inventoryPrinterManager);
         this.printerName = printerName;
     }
 
-    @Override
     protected InventoryPrinterHandler getInventoryPrinterHandler() {
         return this.inventoryPrinterManager.getHandler(this.printerName);
     }
 
     public static ServiceRegistration register(
             final BundleContext context,
-            final InventoryPrinterManager manager,
+            final InventoryPrinterManagerImpl manager,
             final InventoryPrinterDescription desc) {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(ConsoleConstants.PLUGIN_LABEL, "inventory-" + desc.getName());
+        final Dictionary props = new Hashtable();
+        props.put(ConsoleConstants.PLUGIN_LABEL, "status-" + desc.getName());
         props.put(ConsoleConstants.PLUGIN_TITLE, desc.getTitle());
-        props.put(ConsoleConstants.PLUGIN_CATEGORY, desc.getCategory() == null ? "Inventory" : desc.getCategory());
+        props.put(ConsoleConstants.PLUGIN_CATEGORY, ConsoleConstants.WEB_CONSOLE_CATEGORY);
         return context.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory() {
 
             public void ungetService(final Bundle bundle, final ServiceRegistration registration,

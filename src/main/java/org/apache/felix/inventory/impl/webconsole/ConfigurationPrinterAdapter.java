@@ -41,7 +41,7 @@ public class ConfigurationPrinterAdapter {
     private final Method printMethod;
     private final Method attachmentMethod;
 
-    private static final List<String> CUSTOM_MODES = new ArrayList<String>();
+    private static final List CUSTOM_MODES = new ArrayList();
     static {
         CUSTOM_MODES.add( ConsoleConstants.MODE_TXT);
         CUSTOM_MODES.add( ConsoleConstants.MODE_WEB );
@@ -52,9 +52,10 @@ public class ConfigurationPrinterAdapter {
      * Check whether the class implements the configuration printer.
      * This is done manually to avoid having the configuration printer class available.
      */
-    private static boolean isConfigurationPrinter(final Class<?> clazz) {
-        for(final Class<?> i : clazz.getInterfaces() ) {
-            if ( i.getName().equals(ConsoleConstants.INTERFACE_CONFIGURATION_PRINTER) ) {
+    private static boolean isConfigurationPrinter(final Class clazz) {
+        final Class[] interf = clazz.getInterfaces();
+        for(int i=0; i<interf.length; i++) {
+            if ( interf[i].getName().equals(ConsoleConstants.INTERFACE_CONFIGURATION_PRINTER) ) {
                 return true;
             }
         }
@@ -181,7 +182,7 @@ public class ConfigurationPrinterAdapter {
      * Map the modes to inventory printer modes
      */
     public String[] getPrinterModes() {
-        final Set<String> list = new HashSet<String>();
+        final Set list = new HashSet();
         if ( this.match(ConsoleConstants.MODE_TXT) || this.match(ConsoleConstants.MODE_ZIP) ) {
             list.add(PrinterMode.ZIP_FILE_TEXT.name());
         }
@@ -192,7 +193,7 @@ public class ConfigurationPrinterAdapter {
                 list.add(PrinterMode.TEXT.name());
             }
         }
-        return list.toArray(new String[list.size()]);
+        return (String[]) list.toArray(new String[list.size()]);
     }
 
     private boolean match(final String mode) {
@@ -227,7 +228,6 @@ public class ConfigurationPrinterAdapter {
     /**
      * @see java.lang.Object#toString()
      */
-    @Override
     public String toString() {
         return title + " (" + printer.getClass() + ")";
     }

@@ -25,7 +25,7 @@ import org.osgi.framework.ServiceReference;
 /**
  * Helper class for a configuration printer.
  */
-public class InventoryPrinterDescription implements Comparable<InventoryPrinterDescription> {
+public class InventoryPrinterDescription implements Comparable {
 
     private final ServiceReference reference;
 
@@ -36,8 +36,6 @@ public class InventoryPrinterDescription implements Comparable<InventoryPrinterD
     private final String title;
 
     private final String sortKey;
-
-    private final String category;
 
     public InventoryPrinterDescription(final ServiceReference ref) {
         this.reference = ref;
@@ -75,13 +73,6 @@ public class InventoryPrinterDescription implements Comparable<InventoryPrinterD
             this.title = null;
             this.sortKey = null;
         }
-
-        // check category
-        if ( ref.getProperty(InventoryPrinter.CONFIG_CATEGORY) != null ) {
-            this.category = ref.getProperty(InventoryPrinter.CONFIG_CATEGORY).toString();
-        } else {
-            this.category = null;
-        }
     }
 
     public String getTitle() {
@@ -96,10 +87,6 @@ public class InventoryPrinterDescription implements Comparable<InventoryPrinterD
         return this.name;
     }
 
-    public String getCategory() {
-        return this.category;
-    }
-
     public PrinterMode[] getModes() {
         return this.modes;
     }
@@ -111,24 +98,20 @@ public class InventoryPrinterDescription implements Comparable<InventoryPrinterD
     /**
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(final InventoryPrinterDescription spa) {
-        return this.reference.compareTo(spa.reference);
+    public int compareTo(final Object spa) {
+        return this.reference.compareTo(((InventoryPrinterDescription)spa).reference);
     }
 
-    @Override
     public boolean equals(final Object obj) {
         return this.reference.equals(obj);
     }
 
-    @Override
     public int hashCode() {
         return this.reference.hashCode();
     }
 
-    @Override
     public String toString() {
         return "InventoryPrinterDescription [title=" + title + ", name=" + name
-                + ", modes=" + Arrays.toString(modes) + ", sortKey=" + sortKey
-                + ", category=" + category + "]";
+                + ", modes=" + Arrays.toString(modes) + ", sortKey=" + sortKey + "]";
     }
 }

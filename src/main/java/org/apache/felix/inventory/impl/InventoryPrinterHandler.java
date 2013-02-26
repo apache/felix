@@ -16,16 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.inventory;
+package org.apache.felix.inventory.impl;
+
+import org.apache.felix.inventory.InventoryPrinter;
+import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.ZipAttachmentProvider;
 
 
 /**
  * The inventory printer handler can be used by clients to access
- * a inventory printer. The handlers can be get from the {@link InventoryPrinterManager}.
+ * a inventory printer.
  *
  * For clients using inventory printers, a handler simplifies accessing and
- * working with the inventory printer. A client should never lookup a
- * inventory printer directly.
+ * working with the inventory printer.
  */
 public interface InventoryPrinterHandler extends InventoryPrinter, ZipAttachmentProvider {
 
@@ -34,9 +37,6 @@ public interface InventoryPrinterHandler extends InventoryPrinter, ZipAttachment
 
     /** The human readable title for the inventory printer. */
     String getTitle();
-
-    /** The optional category for this printer. */
-    String getCategory();
 
     /** All supported modes. */
     PrinterMode[] getModes();

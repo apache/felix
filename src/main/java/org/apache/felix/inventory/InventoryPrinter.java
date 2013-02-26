@@ -66,12 +66,6 @@ public interface InventoryPrinter {
     String CONFIG_TITLE = "felix.inventory.printer.title"; //$NON-NLS-1$
 
     /**
-     * The category under which this printer is categorized.
-     * This property is optional.
-     */
-    String CONFIG_CATEGORY = "felix.inventory.printer.category"; //$NON-NLS-1$
-
-    /**
      * Prints the configuration report to the given <code>printWriter</code>.
      * Implementations are free to print whatever information they deem useful.
      *
