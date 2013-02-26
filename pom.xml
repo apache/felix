@@ -34,9 +34,11 @@
     </description>
 
     <modules>
-        <module>core</module>
-        <module>composite</module>
         <module>annotations</module>
+        <module>core</module>
+        <module>core-it</module>
+        <module>composite</module>
+        <module>composite-it</module>
     </modules>
 
     <build>
@@ -57,6 +59,18 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>test</id>
+            <modules>
+                <module>core-it</module>
+            </modules>    
+        </profile>
+        <profile>
+            <id>test-all</id>
+            <modules>
+                <module>core-it</module>
+            </modules>    
+        </profile>
         <profile>
             <id>release</id>
             <build>
