@@ -57,10 +57,10 @@ public class Common {
         root.setLevel(Level.INFO);
 
         return options(
+                cleanCaches(),
                 ipojoBundles(),
                 junitBundles(),
                 testedBundle(),
-                eventadmin(),
                 systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN")
         );
     }
