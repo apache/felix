@@ -21,11 +21,69 @@ package org.apache.felix.inventory;
 /**
  * Enumeration for the different printer modes.
  */
-public enum PrinterMode {
+public final class PrinterMode {
 
-    TEXT,          // plain text
-    HTML_BODY,     // HTML which can be placed inside a HTML body element (no external references)
-    JSON,          // JSON output
-    ZIP_FILE_TEXT, // file content for a zip
-    ZIP_FILE_JSON  // json file content for a zip
+    // plain text
+    public static PrinterMode TEXT = new PrinterMode("TEXT");
+
+    // HTML which can be placed inside a HTML body element (no external references)
+    public static PrinterMode HTML_BODY = new PrinterMode("HTML_BODY");
+
+    // JSON output
+    public static PrinterMode JSON = new PrinterMode("JSON");
+
+    // file content for a zip
+    public static PrinterMode ZIP_FILE_TEXT = new PrinterMode("ZIP_FILE_TEXT");
+
+    // json file content for a zip
+    public static PrinterMode ZIP_FILE_JSON = new PrinterMode("ZIP_FILE_JSON");
+
+    private final String mode;
+
+    private PrinterMode(final String mode) {
+        this.mode = mode;
+    }
+
+    public static PrinterMode valueOf(final String m) {
+        if ( TEXT.name().equals(m) ) {
+            return TEXT;
+        } else if ( HTML_BODY.equals(m) ) {
+            return HTML_BODY;
+        } else if ( JSON.equals(m) ) {
+            return JSON;
+        } else if ( ZIP_FILE_TEXT.equals(m) ) {
+            return ZIP_FILE_TEXT;
+        } else if ( ZIP_FILE_JSON.equals(m) ) {
+            return ZIP_FILE_JSON;
+        }
+        return null;
+    }
+
+    public String name() {
+        return this.mode;
+    }
+
+    /**
+     * @see java.lang.Object#hashCode()
+     */
+    public int hashCode() {
+        return mode.hashCode();
+    }
+
+    /**
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PrinterMode other = (PrinterMode) obj;
+        return mode.equals(other.mode);
+    }
 }

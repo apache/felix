@@ -45,7 +45,7 @@ public class ResourceBundleManager implements BundleListener
 
     private final BundleContext bundleContext;
 
-    private final Map<Long, ResourceBundle> resourceBundleCaches;
+    private final Map resourceBundleCaches;
 
 
     /**
@@ -56,7 +56,7 @@ public class ResourceBundleManager implements BundleListener
     public ResourceBundleManager( final BundleContext bundleContext )
     {
         this.bundleContext = bundleContext;
-        this.resourceBundleCaches = new HashMap<Long, ResourceBundle>();
+        this.resourceBundleCaches = new HashMap();
 
         bundleContext.addBundleListener( this );
     }
@@ -82,7 +82,7 @@ public class ResourceBundleManager implements BundleListener
         ResourceBundle cache;
         final Long key = new Long( provider.getBundleId() );
         synchronized ( resourceBundleCaches ) {
-            cache = resourceBundleCaches.get( key );
+            cache = (ResourceBundle) resourceBundleCaches.get( key );
             if ( cache == null && !resourceBundleCaches.containsKey(key)) {
                 cache = this.loadResourceBundle(provider);
                 resourceBundleCaches.put( key, cache );

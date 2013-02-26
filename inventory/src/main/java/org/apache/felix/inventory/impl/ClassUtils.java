@@ -27,7 +27,7 @@ public class ClassUtils {
      * Search a method with the given name and signature.
      * @return The method or <code>null</code> if not found.
      */
-    public static Method searchMethod(final Class<?> clazz, final String mName, final Class<?>[] params) {
+    public static Method searchMethod(final Class clazz, final String mName, final Class[] params) {
         try {
             final Method m = clazz.getMethod(mName, params);
             m.setAccessible(true);

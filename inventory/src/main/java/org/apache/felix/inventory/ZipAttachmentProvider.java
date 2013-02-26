@@ -33,7 +33,7 @@ import java.util.zip.ZipOutputStream;
  * should either support {@link PrinterMode.ZIP_FILE_JSON}
  * or {@link PrinterMode.ZIP_FILE_TEXT}
  */
-public interface ZipAttachmentProvider extends InventoryPrinter {
+public interface ZipAttachmentProvider {
 
     /**
      * Add attachments to the zip output stream.

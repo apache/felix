@@ -42,4 +42,6 @@ public class ConsoleConstants {
     public static final String MODE_TXT = "txt"; //$NON-NLS-1$
 
     public static final String PROPERTY_MODES = "modes"; //$NON-NLS-1$
+
+    public static final String WEB_CONSOLE_CATEGORY = "Status"; //$NON-NLS-1$
 }

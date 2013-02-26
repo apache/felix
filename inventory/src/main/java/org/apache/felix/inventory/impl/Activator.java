@@ -16,24 +16,16 @@
  */
 package org.apache.felix.inventory.impl;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.impl.webconsole.WebConsoleAdapter;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 
 /**
- * Activate bridges and register manager.
+ * Activate bridges and internal manager.
  */
 public class Activator implements BundleActivator {
 
     private InventoryPrinterManagerImpl printerManager;
-
-    private ServiceRegistration managerRegistration;
 
     private WebConsoleAdapter webAdapter;
 
@@ -43,22 +35,12 @@ public class Activator implements BundleActivator {
     public void start(final BundleContext context) throws Exception {
         this.webAdapter = new WebConsoleAdapter(context);
         this.printerManager = new InventoryPrinterManagerImpl(context);
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.SERVICE_DESCRIPTION, "Apache Felix Inventory Printer Manager");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        this.managerRegistration = context.registerService(
-                InventoryPrinterManager.class.getName(),
-                this.printerManager, props);
 }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(final BundleContext context) throws Exception {
-        if( this.managerRegistration != null ) {
-            this.managerRegistration.unregister();
-            this.managerRegistration = null;
-        }
         if ( this.printerManager != null ) {
             this.printerManager.dispose();
             this.printerManager = null;
@@ -68,5 +50,4 @@ public class Activator implements BundleActivator {
             this.webAdapter = null;
         }
     }
-
 }

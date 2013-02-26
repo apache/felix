@@ -31,8 +31,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.inventory.InventoryPrinterHandler;
-import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.PrinterMode;
 
 /**
@@ -43,13 +41,13 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     /** The inventory printer manager. */
-    protected final InventoryPrinterManager inventoryPrinterManager;
+    protected final InventoryPrinterManagerImpl inventoryPrinterManager;
 
     /**
      * Constructor
      * @param inventoryPrinterManager The manager
      */
-    AbstractWebConsolePlugin(final InventoryPrinterManager inventoryPrinterManager) {
+    AbstractWebConsolePlugin(final InventoryPrinterManagerImpl inventoryPrinterManager) {
         this.inventoryPrinterManager = inventoryPrinterManager;
     }
 
@@ -60,8 +58,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             final InventoryPrinterHandler handler )
     throws IOException {
         if ( handler == null ) {
-            for(final InventoryPrinterHandler sph : this.inventoryPrinterManager.getHandlers(mode)) {
-                pw.printInventory(mode, sph);
+            final InventoryPrinterHandler[] adapters = this.inventoryPrinterManager.getHandlers(mode);
+            for(int i = 0; i < adapters.length; i++) {
+                pw.printInventory(mode, adapters[i]);
             }
         } else {
             if ( handler.supports(mode) ) {
@@ -89,7 +88,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         response.setHeader("Pragma", "no-cache"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    @Override
     protected void doGet(final HttpServletRequest request,
             final HttpServletResponse response)
     throws ServletException, IOException {
@@ -299,7 +297,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         // IE has an issue with white-space:pre in our case so, we write
         // <br/> instead of [CR]LF to get the line break. This also works
         // in other browsers.
-        @Override
         public void println() {
             if ( doFilter ) {
                 this.write('\n'); // write <br/>
@@ -311,7 +308,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         // some VM implementation directly write in underlying stream, instead of
         // delegation to the write() method. So we need to override this, to make
         // sure, that everything is escaped correctly
-        @Override
         public void print(final String str) {
             final char[] chars = str.toCharArray();
             write(chars, 0, chars.length);
@@ -322,7 +318,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
         // always delegate to write(char[], int, int) otherwise in some VM
         // it cause endless cycle and StackOverflowError
-        @Override
         public void write(final int character) {
             synchronized (oneChar) {
                 oneChar[0] = (char) character;
@@ -332,7 +327,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
         // write the characters unmodified unless filtering is enabled in
         // which case the writeFiltered(String) method is called for filtering
-        @Override
         public void write(char[] chars, int off, int len) {
             if (doFilter) {
                 chars = this.escapeHtml(new String(chars, off, len)).toCharArray();
@@ -344,7 +338,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
         // write the string unmodified unless filtering is enabled in
         // which case the writeFiltered(String) method is called for filtering
-        @Override
         public void write( final String string, final int off, final int len ) {
             write(string.toCharArray(), off, len);
         }
@@ -397,7 +390,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             super( delegatee );
         }
 
-        @Override
         protected void title( final String title ) throws IOException {
             print( "*** " );
             print( title );
@@ -405,7 +397,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
         }
 
 
-        @Override
         protected void end() throws IOException {
             println();
         }
@@ -433,7 +424,6 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                     { new Integer( counter ), title } );
         }
 
-        @Override
         protected void title( final String title ) throws IOException {
             counter++;
 
@@ -443,14 +433,12 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             zip.putNextEntry( entry );
         }
 
-        @Override
         protected void end() throws IOException {
             flush();
 
             zip.closeEntry();
         }
 
-        @Override
         public void printInventory(
                 final PrinterMode mode,
                 final InventoryPrinterHandler handler)

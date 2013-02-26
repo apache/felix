@@ -22,8 +22,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.felix.inventory.InventoryPrinterHandler;
-import org.apache.felix.inventory.InventoryPrinterManager;
 import org.apache.felix.inventory.PrinterMode;
 import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
 import org.osgi.framework.Bundle;
@@ -42,45 +40,37 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
      * Constructor
      * @param inventoryPrinterAdapter The adapter
      */
-    DefaultWebConsolePlugin(final InventoryPrinterManager inventoryPrinterManager) {
+    DefaultWebConsolePlugin(final InventoryPrinterManagerImpl inventoryPrinterManager) {
         super(inventoryPrinterManager);
     }
 
-    @Override
     protected InventoryPrinterHandler getInventoryPrinterHandler() {
         return this;
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterHandler#getTitle()
+     * @see org.apache.felix.inventory.impl.InventoryPrinterHandler#getTitle()
      */
     public String getTitle() {
         return "Overview";
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterHandler#getName()
+     * @see org.apache.felix.inventory.impl.InventoryPrinterHandler#getName()
      */
     public String getName() {
         return "config";
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterHandler#getCategory()
-     */
-    public String getCategory() {
-        return "Inventory";
-    }
-
-    /**
-     * @see org.apache.felix.inventory.InventoryPrinterHandler#getModes()
+     * @see org.apache.felix.inventory..implInventoryPrinterHandler#getModes()
      */
     public PrinterMode[] getModes() {
         return new PrinterMode[] {PrinterMode.TEXT};
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinterHandler#supports(org.apache.felix.inventory.PrinterMode)
+     * @see org.apache.felix.inventory.impl.InventoryPrinterHandler#supports(org.apache.felix.inventory.PrinterMode)
      */
     public boolean supports(final PrinterMode mode) {
         return mode == PrinterMode.TEXT;
@@ -93,10 +83,10 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
         final InventoryPrinterHandler[] handlers = this.inventoryPrinterManager.getAllHandlers();
         printWriter.print("Currently registered ");
         printWriter.print(String.valueOf(handlers.length));
-        printWriter.println(" inventory printer.");
+        printWriter.println(" printer(s).");
         printWriter.println();
-        for(final InventoryPrinterHandler handler : handlers) {
-            printWriter.println(handler.getTitle());
+        for(int i=0; i<handlers.length; i++) {
+            printWriter.println(handlers[i].getTitle());
         }
     }
 
@@ -109,13 +99,13 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
     }
 
     public static ServiceRegistration register(final BundleContext context,
-            final InventoryPrinterManager manager) {
+            final InventoryPrinterManagerImpl manager) {
         final DefaultWebConsolePlugin dwcp = new DefaultWebConsolePlugin(manager);
 
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary props = new Hashtable();
         props.put(ConsoleConstants.PLUGIN_LABEL, dwcp.getName());
         props.put(ConsoleConstants.PLUGIN_TITLE, dwcp.getTitle());
-        props.put(ConsoleConstants.PLUGIN_CATEGORY, dwcp.getCategory());
+        props.put(ConsoleConstants.PLUGIN_CATEGORY, ConsoleConstants.WEB_CONSOLE_CATEGORY);
         return context.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory() {
 
             public void ungetService(final Bundle bundle, final ServiceRegistration registration,
