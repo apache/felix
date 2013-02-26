@@ -419,6 +419,13 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                 // Can we really proxy ? We can proxy only interfaces.
                 if (getSpecification().isInterface()) {
                     String type = getHandler().getInstanceManager().getContext().getProperty(DependencyHandler.PROXY_TYPE_PROPERTY);
+
+                    // If it's null we should check on the System directly, Felix delegates to it,
+                    // but not other frameworks
+                    if (type == null) {
+                        type = System.getProperty(DependencyHandler.PROXY_TYPE_PROPERTY);
+                    }
+
                     if (type == null || type.equals(DependencyHandler.SMART_PROXY)) {
                         SmartProxyFactory proxyFactory = new SmartProxyFactory(this.getClass().getClassLoader());
                         m_proxyObject = proxyFactory.getProxy(getSpecification(), this);
