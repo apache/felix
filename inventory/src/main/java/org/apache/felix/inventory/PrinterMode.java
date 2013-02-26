@@ -47,13 +47,13 @@ public final class PrinterMode {
     public static PrinterMode valueOf(final String m) {
         if ( TEXT.name().equals(m) ) {
             return TEXT;
-        } else if ( HTML_BODY.equals(m) ) {
+        } else if ( HTML_BODY.name().equals(m) ) {
             return HTML_BODY;
-        } else if ( JSON.equals(m) ) {
+        } else if ( JSON.name().equals(m) ) {
             return JSON;
-        } else if ( ZIP_FILE_TEXT.equals(m) ) {
+        } else if ( ZIP_FILE_TEXT.name().equals(m) ) {
             return ZIP_FILE_TEXT;
-        } else if ( ZIP_FILE_JSON.equals(m) ) {
+        } else if ( ZIP_FILE_JSON.name().equals(m) ) {
             return ZIP_FILE_JSON;
         }
         return null;
