@@ -82,7 +82,7 @@ public class TestPropertiesInAnonymousClass extends Common {
     }
 
     @Test
-    public void testSwingWorker() {
+    public void testWorkerThread() {
         ServiceReference sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProviderAno-1");
         assertNotNull("Check the availability of the FS service", sr);
 
