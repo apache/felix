@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.text.MessageFormat;
 import java.util.Date;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -139,9 +138,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             zip.closeEntry();
 
             final ZipConfigurationWriter pw = new ZipConfigurationWriter( zip );
-            printConfigurationInventory( pw, PrinterMode.ZIP_FILE_TEXT, handler );
-            pw.counter = 0;
-            printConfigurationInventory( pw, PrinterMode.ZIP_FILE_JSON, handler );
+            printConfigurationInventory( pw, PrinterMode.TEXT, handler );
+            printConfigurationInventory( pw, PrinterMode.JSON, handler );
 
             zip.finish();
         } else if ( request.getPathInfo().endsWith( ".nfo" ) ) {
@@ -157,11 +155,15 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             pw.println ( "<html xmlns=\"http://www.w3.org/1999/xhtml\">" );
             pw.println ( "<head><title>dummy</title></head><body><div>" );
 
-            if ( handler.supports(PrinterMode.HTML_BODY) ) {
-                handler.print(PrinterMode.HTML_BODY, pw);
+            if ( handler.supports(PrinterMode.HTML_FRAGMENT) ) {
+                handler.print(PrinterMode.HTML_FRAGMENT, pw, false);
+            } else if ( handler.supports(PrinterMode.TEXT) ) {
+                pw.enableFilter( true );
+                handler.print(PrinterMode.TEXT, pw, false);
+                pw.enableFilter( false );
             } else {
                 pw.enableFilter( true );
-                handler.print(PrinterMode.TEXT, pw);
+                handler.print(PrinterMode.JSON, pw, false);
                 pw.enableFilter( false );
             }
             pw.println( "</div></body></html>" );
@@ -218,20 +220,18 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
             if ( handler.supports(PrinterMode.JSON) ) {
                 pw.print("<button type=\"button\" class=\"downloadJson\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As JSON</button>");
             }
-            if ( handler.supports(PrinterMode.ZIP_FILE_TEXT) || handler.supports(PrinterMode.ZIP_FILE_JSON) ) {
-                pw.print("<button type=\"button\" class=\"downloadZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As Zip</button>");
-            }
+            pw.print("<button type=\"button\" class=\"downloadZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As Zip</button>");
             if ( handler.supports(PrinterMode.TEXT ) ) {
                 pw.print("<button type=\"button\" class=\"downloadTxt\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As Text</button>");
             }
 
             pw.println("<br/>&nbsp;</p>"); // status line
             pw.print("<div>");
-            if ( handler.supports(PrinterMode.HTML_BODY) ) {
-                handler.print(PrinterMode.HTML_BODY, pw);
+            if ( handler.supports(PrinterMode.HTML_FRAGMENT) ) {
+                handler.print(PrinterMode.HTML_FRAGMENT, pw, false);
             } else {
                 pw.enableFilter( true );
-                handler.print(PrinterMode.TEXT, pw);
+                handler.print(PrinterMode.TEXT, pw, false);
                 pw.enableFilter( false );
             }
             pw.print("</div>");
@@ -261,7 +261,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
                 final InventoryPrinterHandler handler)
         throws IOException {
             this.title(handler.getTitle());
-            handler.print(mode, this);
+            handler.print(mode, this, false);
             this.end();
         }
     }
@@ -412,54 +412,34 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet {
 
         private final ZipOutputStream zip;
 
-        private int counter;
-
         ZipConfigurationWriter( final ZipOutputStream zip ) {
             super( new OutputStreamWriter( zip ) );
             this.zip = zip;
-        }
-
-        private String getFormattedTitle(final String title) {
-            return MessageFormat.format( "{0,number,000}-{1}", new Object[]
-                    { new Integer( counter ), title } );
-        }
-
-        protected void title( final String title ) throws IOException {
-            counter++;
-
-            final String name = getFormattedTitle(title).concat(".txt");
-
-            final ZipEntry entry = new ZipEntry( name );
-            zip.putNextEntry( entry );
-        }
-
-        protected void end() throws IOException {
-            flush();
-
-            zip.closeEntry();
         }
 
         public void printInventory(
                 final PrinterMode mode,
                 final InventoryPrinterHandler handler)
         throws IOException {
-            if ( mode == PrinterMode.ZIP_FILE_TEXT ) {
-                super.printInventory(mode, handler);
-                final String title = getFormattedTitle(handler.getTitle());
-                handler.addAttachments(title.concat("/"), this.zip);
-            } else {
-                counter++;
-                final String title = getFormattedTitle(handler.getTitle());
-                final String name = "json/".concat(title).concat(".json");
+            if ( mode == PrinterMode.TEXT ) {
+                final ZipEntry entry = new ZipEntry( handler.getName().concat(".txt") );
+                zip.putNextEntry( entry );
+                handler.print(mode, this, false);
+                flush();
+                zip.closeEntry();
+
+                handler.addAttachments(handler.getName().concat("/"), this.zip);
+            } else if ( mode == PrinterMode.JSON ) {
+                final String name = "json/".concat(handler.getName()).concat(".json");
 
                 final ZipEntry entry = new ZipEntry( name );
                 zip.putNextEntry( entry );
-                handler.print(PrinterMode.ZIP_FILE_JSON, this);
+                handler.print(PrinterMode.JSON, this, true);
                 flush();
 
                 zip.closeEntry();
-                if ( !handler.supports(PrinterMode.ZIP_FILE_TEXT) ) {
-                    handler.addAttachments(title.concat("/"), this.zip);
+                if ( !handler.supports(PrinterMode.TEXT) ) {
+                    handler.addAttachments(handler.getName().concat("/"), this.zip);
                 }
             }
         }

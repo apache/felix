@@ -26,17 +26,11 @@ public final class PrinterMode {
     // plain text
     public static PrinterMode TEXT = new PrinterMode("TEXT");
 
-    // HTML which can be placed inside a HTML body element (no external references)
-    public static PrinterMode HTML_BODY = new PrinterMode("HTML_BODY");
+    // valid HTML fragment (no external references)
+    public static PrinterMode HTML_FRAGMENT = new PrinterMode("HTML_FRAGMENT");
 
     // JSON output
     public static PrinterMode JSON = new PrinterMode("JSON");
-
-    // file content for a zip
-    public static PrinterMode ZIP_FILE_TEXT = new PrinterMode("ZIP_FILE_TEXT");
-
-    // json file content for a zip
-    public static PrinterMode ZIP_FILE_JSON = new PrinterMode("ZIP_FILE_JSON");
 
     private final String mode;
 
@@ -47,14 +41,10 @@ public final class PrinterMode {
     public static PrinterMode valueOf(final String m) {
         if ( TEXT.name().equals(m) ) {
             return TEXT;
-        } else if ( HTML_BODY.name().equals(m) ) {
-            return HTML_BODY;
+        } else if ( HTML_FRAGMENT.name().equals(m) ) {
+            return HTML_FRAGMENT;
         } else if ( JSON.name().equals(m) ) {
             return JSON;
-        } else if ( ZIP_FILE_TEXT.name().equals(m) ) {
-            return ZIP_FILE_TEXT;
-        } else if ( ZIP_FILE_JSON.name().equals(m) ) {
-            return ZIP_FILE_JSON;
         }
         return null;
     }

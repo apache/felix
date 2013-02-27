@@ -162,13 +162,13 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer {
         /**
          * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode, java.io.PrintWriter)
          */
-        public void print(final PrinterMode mode, final PrintWriter printWriter) {
+        public void print(final PrinterMode mode, final PrintWriter printWriter, final boolean isZip ) {
             final String m;
-            if ( mode == PrinterMode.HTML_BODY ) {
+            if ( !isZip && mode == PrinterMode.HTML_FRAGMENT ) {
                 m = ConsoleConstants.MODE_WEB;
-            } else if ( mode == PrinterMode.TEXT ) {
+            } else if ( !isZip && mode == PrinterMode.TEXT ) {
                 m = ConsoleConstants.MODE_TXT;
-            } else if ( mode == PrinterMode.ZIP_FILE_TEXT ) {
+            } else if (isZip && (mode == PrinterMode.TEXT || mode == PrinterMode.HTML_FRAGMENT) ) {
                 m = ConsoleConstants.MODE_ZIP;
             } else {
                 m = null;

@@ -77,9 +77,9 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode, java.io.PrintWriter)
+     * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode, java.io.PrintWriter, boolean)
      */
-    public void print(final PrinterMode mode, final PrintWriter printWriter) {
+    public void print(final PrinterMode mode, final PrintWriter printWriter, final boolean isZip) {
         final InventoryPrinterHandler[] handlers = this.inventoryPrinterManager.getAllHandlers();
         printWriter.print("Currently registered ");
         printWriter.print(String.valueOf(handlers.length));
