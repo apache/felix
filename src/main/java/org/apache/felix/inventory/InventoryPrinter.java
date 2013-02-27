@@ -66,6 +66,13 @@ public interface InventoryPrinter {
     String CONFIG_TITLE = "felix.inventory.printer.title"; //$NON-NLS-1$
 
     /**
+     * Optional property controlling whether the printer will be displayed
+     * in the web console. By default, a printer is displayed in the
+     * web console, unless this property is added with the value 'false'.
+     */
+    String CONFIG_WEBCONSOLE = "felix.inventory.printer.webconsole"; //$NON-NLS-1$
+
+    /**
      * Prints the configuration report to the given <code>printWriter</code>.
      * Implementations are free to print whatever information they deem useful.
      *
@@ -75,6 +82,7 @@ public interface InventoryPrinter {
      * @param mode The render mode.
      * @param printWriter where to write the configuration data. It might be flushed,
      * but must not be closed.
+     * @param isZip whether this is included in a zip file or used directly
      */
-    void print( PrinterMode mode, PrintWriter printWriter );
+    void print( PrinterMode mode, PrintWriter printWriter, boolean isZip );
 }

@@ -43,12 +43,26 @@ public class InventoryPrinterDescription implements Comparable {
         // check modes
         final Object modesCfg = ref.getProperty(InventoryPrinter.CONFIG_PRINTER_MODES);
         if ( modesCfg instanceof String ) {
-            this.modes = new PrinterMode[] { PrinterMode.valueOf((String)modesCfg)};
+            final PrinterMode mode = PrinterMode.valueOf((String)modesCfg);
+            if ( mode != null ) {
+                this.modes = new PrinterMode[] {mode};
+            } else {
+                this.modes = null;
+            }
         } else if ( modesCfg instanceof String[] ) {
             final String[] modesCfgArray = (String[])modesCfg;
-            this.modes = new PrinterMode[modesCfgArray.length];
+            final PrinterMode[] pModes = new PrinterMode[modesCfgArray.length];
+            boolean invalid = false;
             for(int i=0; i<modesCfgArray.length;i++) {
-                this.modes[i] = PrinterMode.valueOf(modesCfgArray[i]);
+                pModes[i] = PrinterMode.valueOf(modesCfgArray[i]);
+                if ( pModes[i] == null ) {
+                    invalid = true;
+                }
+            }
+            if ( invalid ) {
+                this.modes = null;
+            } else {
+                this.modes = pModes;
             }
         } else {
             this.modes = null;

@@ -56,7 +56,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
 
             // print(String, PrintWriter)
             printMethod = ClassUtils.searchMethod(service.getClass(), "print",
-                    new Class[] {String.class, PrintWriter.class});
+                    new Class[] {String.class, PrintWriter.class, Boolean.class});
             if ( printMethod == null ) {
                 return null;
             }
@@ -113,9 +113,11 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     }
 
     public void registerConsole(final BundleContext context, final InventoryPrinterManagerImpl manager) {
-        if ( this.registration == null &&
-             (supports(PrinterMode.HTML_BODY) || supports(PrinterMode.TEXT))) {
-            this.registration = WebConsolePlugin.register(context, manager, this.description);
+        if ( this.registration == null ) {
+            final Object value = this.description.getServiceReference().getProperty(InventoryPrinter.CONFIG_WEBCONSOLE);
+            if ( value == null || !"false".equalsIgnoreCase(value.toString()) ) {
+                this.registration = WebConsolePlugin.register(context, manager, this.description);
+            }
         }
     }
 
@@ -176,12 +178,13 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
      * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode, java.io.PrintWriter)
      */
     public void print(final PrinterMode mode,
-            final PrintWriter printWriter) {
+            final PrintWriter printWriter,
+            final boolean isZip) {
         if ( this.supports(mode) ) {
             if ( this.printer instanceof InventoryPrinter ) {
-                ((InventoryPrinter)this.printer).print(mode, printWriter);
+                ((InventoryPrinter)this.printer).print(mode, printWriter, isZip);
             } else {
-                ClassUtils.invoke(this.printer, this.printMethod, new Object[] {mode.toString(), printWriter});
+                ClassUtils.invoke(this.printer, this.printMethod, new Object[] {mode.toString(), printWriter, Boolean.valueOf(isZip)});
             }
         }
     }
