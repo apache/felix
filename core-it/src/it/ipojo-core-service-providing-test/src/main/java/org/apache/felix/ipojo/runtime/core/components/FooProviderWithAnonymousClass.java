@@ -20,78 +20,94 @@ package org.apache.felix.ipojo.runtime.core.components;
 
 import org.apache.felix.ipojo.runtime.core.services.FooService;
 
-import javax.swing.*;
 import java.util.Properties;
 
 public class FooProviderWithAnonymousClass implements FooService {
 
-	private int intProp;
-	private String strProp;
-	private String[] strAProp;
-	private int[] intAProp;
-	private boolean boolProp;
+    private int intProp;
+    private String strProp;
+    private String[] strAProp;
+    private int[] intAProp;
+    private boolean boolProp;
 
-	public boolean foo() {
-		Runnable runnable = new Runnable() {
-			public void run() {
-				intProp = 3;
-				boolProp = true;
-				if(strProp.equals("foo")) { strProp = "bar"; }
-				else { strProp = "foo"; }
-				strAProp = new String[] {"foo", "bar", "baz"};
-				intAProp = new int[] {3, 2, 1};
-			}
-		};
-		new Thread(runnable).start();
+    public boolean foo() {
+        Runnable runnable = new Runnable() {
+            public void run() {
+                intProp = 3;
+                boolProp = true;
+                if (strProp.equals("foo")) {
+                    strProp = "bar";
+                } else {
+                    strProp = "foo";
+                }
+                strAProp = new String[]{"foo", "bar", "baz"};
+                intAProp = new int[]{3, 2, 1};
+            }
+        };
+        new Thread(runnable).start();
 
-		try {
-			Thread.sleep(500);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	public Properties fooProps() {
-		Properties p = new Properties();
-		p.put("intProp", new Integer(intProp));
-		p.put("boolProp", new Boolean(boolProp));
-		p.put("strProp", strProp);
-		p.put("strAProp", strAProp);
-		p.put("intAProp", intAProp);
-		return p;
-	}
+    public Properties fooProps() {
+        Properties p = new Properties();
+        p.put("intProp", new Integer(intProp));
+        p.put("boolProp", new Boolean(boolProp));
+        p.put("strProp", strProp);
+        p.put("strAProp", strAProp);
+        p.put("intAProp", intAProp);
+        return p;
+    }
 
-	public boolean getBoolean() {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				intProp = 3;
-				boolProp = true;
-				if(strProp.equals("foo")) { strProp = "bar"; }
-				else { strProp = "foo"; }
-				strAProp = new String[] {"foo", "bar", "baz"};
-				intAProp = new int[] {3, 2, 1};
-			}
-		});
+    public boolean getBoolean() {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                intProp = 3;
+                boolProp = true;
+                if (strProp.equals("foo")) {
+                    strProp = "bar";
+                } else {
+                    strProp = "foo";
+                }
+                strAProp = new String[]{"foo", "bar", "baz"};
+                intAProp = new int[]{3, 2, 1};
+            }
+        };
 
-		try {
-			Thread.sleep(500);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+        Thread thread = new Thread(runnable);
+        thread.start();
 
-		return true;
-	}
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-	public double getDouble() { return 1.0; }
+        return true;
+    }
 
-	public int getInt() { return 1; }
+    public double getDouble() {
+        return 1.0;
+    }
 
-	public long getLong() { return 1; }
+    public int getInt() {
+        return 1;
+    }
 
-	public Boolean getObject() { return new Boolean(true); }
+    public long getLong() {
+        return 1;
+    }
 
+    public Boolean getObject() {
+        return new Boolean(true);
+    }
 
 
 }
