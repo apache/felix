@@ -21,7 +21,7 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
         <version>1.2.1</version>
-        <relativePath>../../pom/pom.xml</relativePath>
+        <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.handler.event-admin-handler-project</artifactId>
@@ -52,18 +52,6 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>test</id>
-            <modules>
-                <module>core-it</module>
-            </modules>    
-        </profile>
-        <profile>
-            <id>test-all</id>
-            <modules>
-                <module>core-it</module>
-            </modules>    
-        </profile>
         <profile>
             <id>release</id>
             <build>
