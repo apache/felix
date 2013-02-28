@@ -28,7 +28,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.streamBundle;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
 
@@ -37,12 +36,10 @@ import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
 public class DummyHandlerTest extends Common {
 
     private static final String DUMMY_TEST_FACTORY = "dummy.test";
-
     /*
      * Number of mock object by test.
      */
     private static final int NB_MOCK = 10;
-
 
     @Configuration
     public Option[] config() throws IOException {
@@ -75,8 +72,8 @@ public class DummyHandlerTest extends Common {
                         .build(withBnd())
                 ),
                 bundle(handlerJar.toURI().toURL().toExternalForm()),
-                bundle(dummyJar.toURI().toURL().toExternalForm()),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.osgi.compendium").version("1.4.0"));
+                bundle(dummyJar.toURI().toURL().toExternalForm())
+        );
     }
 
     /**
@@ -149,7 +146,6 @@ public class DummyHandlerTest extends Common {
             Mockito.verifyNoMoreInteractions(user);
         }
     }
-
 
     /**
      * Test if the bind and unbind methods when the bind services are registered before the instance creation
