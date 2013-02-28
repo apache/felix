@@ -2185,7 +2185,12 @@ public class BundleWiringImpl implements BundleWiring
                                 if (getPackage(pkgName) == null)
                                 {
                                     Object[] params = definePackage(pkgName);
-                                    if (params != null)
+
+                                    // This is a harmless check-then-act situation,
+                                    // where threads might be racing to create different
+                                    // classes in the same package, so catch and ignore
+                                    // any IAEs that may occur.
+                                    try
                                     {
                                         definePackage(
                                             pkgName,
@@ -2197,10 +2202,9 @@ public class BundleWiringImpl implements BundleWiring
                                             (String) params[5],
                                             null);
                                     }
-                                    else
+                                    catch (IllegalArgumentException ex)
                                     {
-                                        definePackage(pkgName, null, null,
-                                            null, null, null, null, null);
+                                        // Ignore.
                                     }
                                 }
                             }
@@ -2315,7 +2319,7 @@ public class BundleWiringImpl implements BundleWiring
                     spectitle, specversion, specvendor, impltitle, implversion, implvendor
                 };
             }
-            return null;
+            return new Object[] {null, null, null, null, null, null};
         }
 
         private Class getDexFileClass(JarContent content, String name, ClassLoader loader)
