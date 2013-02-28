@@ -39,6 +39,7 @@ public class TestOptionalMultipleImport extends Common {
 
     @Before
     public void setUp() {
+        osgiHelper.waitForService(Factory.class, "(factory.name=COMPO-FooProviderType-1)", 1000);
         fooProvider = ipojoHelper.getFactory("COMPO-FooProviderType-1");
         assertNotNull("Check fooProvider availability", fooProvider);
 
