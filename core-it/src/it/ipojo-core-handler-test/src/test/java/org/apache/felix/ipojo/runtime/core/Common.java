@@ -163,9 +163,6 @@ public class Common {
         return new DefaultCompositeOption(
                 mavenBundle("org.apache.felix", "org.apache.felix.ipojo").versionAsInProject(),
                 mavenBundle("org.ow2.chameleon.testing", "osgi-helpers").versionAsInProject(),
-                // harmcrest-all
-                //mavenBundle("de.twentyeleven.skysail", "org.hamcrest.hamcrest-all-osgi").versionAsInProject(),
-                // configuration admin
                 mavenBundle("org.apache.felix",  "org.apache.felix.configadmin").versionAsInProject()
         );
     }
