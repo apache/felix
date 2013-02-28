@@ -66,7 +66,7 @@ public class PropertyField {
         if (isRightsValid(rights)) {
             this.setRights(rights);
         } else {
-            this.setField("r"); // default rights is read only
+            this.setRights("r"); // default rights is read only
         }
     }
 
