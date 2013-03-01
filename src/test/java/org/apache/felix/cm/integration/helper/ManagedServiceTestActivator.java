@@ -51,7 +51,7 @@ public class ManagedServiceTestActivator extends BaseTestActivator
 
     public void changePid( final String newPid )
     {
-        this.registrationProps.put( Constants.SERVICE_PID, newPid );
+        this.registrationProps.put( Constants.SERVICE_PID, toServicePidObject( newPid ) );
         this.registration.setProperties( this.registrationProps );
     }
 }
