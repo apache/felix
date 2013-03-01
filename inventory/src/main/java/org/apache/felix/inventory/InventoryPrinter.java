@@ -1,18 +1,18 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
+ * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
+ * regarding copyright ownership. The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
+ * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
@@ -24,16 +24,18 @@ import java.io.PrintWriter;
  * The <code>InventoryPrinter</code> is a service interface to be
  * implemented by providers which want to hook into the display of the
  * current configuration and state of the OSGi framework and application.
- *
- * A inventory printer must configure at least these three configuration properties
+ * 
+ * A inventory printer must configure at least these three configuration
+ * properties
  * <ul>
- *   <li>{@link #CONFIG_PRINTER_MODES} - the supported modes</li>
- *   <li>{@link #CONFIG_TITLE} - the printer title</li>
- *   <li>{@link #CONFIG_NAME} - the printer name</li>
+ * <li>{@link #CONFIG_PRINTER_MODES} - the supported modes</li>
+ * <li>{@link #CONFIG_TITLE} - the printer title</li>
+ * <li>{@link #CONFIG_NAME} - the printer name</li>
  * </ul>
- *
+ * 
  */
-public interface InventoryPrinter {
+public interface InventoryPrinter
+{
 
     /**
      * The service name under which services of this class must be registered
@@ -43,9 +45,10 @@ public interface InventoryPrinter {
 
     /**
      * The property defining the supported rendering modes.
-     * The value of this property is either a string or a string array containing
+     * The value of this property is either a string or a string array
+     * containing
      * valid names of {@link PrinterMode}.
-     *
+     * 
      * If this property is missing or contains invalid values,
      * the printer is ignored.
      */
@@ -77,19 +80,21 @@ public interface InventoryPrinter {
     /**
      * Prints the configuration report to the given <code>printWriter</code>.
      * Implementations are free to print whatever information they deem useful.
-     *
-     * If a printer is invoked with a mode it doesn't support ({@link #CONFIG_PRINTER_MODES})
+     * 
+     * If a printer is invoked with a mode it doesn't support (
+     * {@link #CONFIG_PRINTER_MODES})
      * the printer should just do/print nothing and directly return.
-     *
+     * 
      * A printer might be used in one of two different situations: either for
      * directly displaying the information to a user (like in the web console)
      * or the output is included in a ZIP. The printer might want to return
      * different output depending on the usage situation.
-     *
+     * 
      * @param mode The render mode.
-     * @param printWriter where to write the configuration data. It might be flushed,
-     * but must not be closed.
+     * @param printWriter where to write the configuration data. It might be
+     *            flushed,
+     *            but must not be closed.
      * @param isZip whether this is included in a ZIP file or used directly
      */
-    void print( PrinterMode mode, PrintWriter printWriter, boolean isZip );
+    void print(PrinterMode mode, PrintWriter printWriter, boolean isZip);
 }

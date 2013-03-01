@@ -1,13 +1,13 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
+ * contributor license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 package org.apache.felix.inventory.impl.webconsole;
-
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,12 +42,12 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-
 /**
  * The web console adapter registers web console status printers
  * as inventory printers.
  */
-public class WebConsoleAdapter implements ServiceTrackerCustomizer {
+public class WebConsoleAdapter implements ServiceTrackerCustomizer
+{
 
     private final BundleContext bundleContext;
 
@@ -58,49 +57,58 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer {
 
     private final ResourceBundleManager rbManager;
 
-    public WebConsoleAdapter(final BundleContext btx) throws InvalidSyntaxException {
+    public WebConsoleAdapter(final BundleContext btx) throws InvalidSyntaxException
+    {
         this.bundleContext = btx;
         this.rbManager = new ResourceBundleManager(btx);
-        this.cfgPrinterTracker = new ServiceTracker( this.bundleContext,
-                this.bundleContext.createFilter("(|(" + Constants.OBJECTCLASS + "=" + ConsoleConstants.INTERFACE_CONFIGURATION_PRINTER + ")" +
-                        "(&(" + ConsoleConstants.PLUGIN_LABEL + "=*)(&("
-                        + ConsoleConstants.PLUGIN_TITLE + "=*)("
-                        + ConsoleConstants.CONFIG_PRINTER_MODES + "=*))))"),
-                this );
+        this.cfgPrinterTracker = new ServiceTracker(this.bundleContext, this.bundleContext.createFilter("(|("
+            + Constants.OBJECTCLASS + "=" + ConsoleConstants.INTERFACE_CONFIGURATION_PRINTER + ")" + "(&("
+            + ConsoleConstants.PLUGIN_LABEL + "=*)(&(" + ConsoleConstants.PLUGIN_TITLE + "=*)("
+            + ConsoleConstants.CONFIG_PRINTER_MODES + "=*))))"), this);
         this.cfgPrinterTracker.open();
     }
 
     /**
      * Dispose this service
      */
-    public void dispose() {
+    public void dispose()
+    {
         this.cfgPrinterTracker.close();
         final List regs = new ArrayList();
-        synchronized ( this.registrations ) {
-            regs.addAll( this.registrations.values() );
+        synchronized (this.registrations)
+        {
+            regs.addAll(this.registrations.values());
             this.registrations.clear();
         }
         final Iterator i = regs.iterator();
-        while (i.hasNext()) {
+        while (i.hasNext())
+        {
             final ServiceRegistration reg = (ServiceRegistration) i.next();
             reg.unregister();
         }
         this.rbManager.dispose();
     }
 
-    private void add(final ServiceReference reference, final Object service) {
+    private void add(final ServiceReference reference, final Object service)
+    {
         final ConfigurationPrinterAdapter cpa = ConfigurationPrinterAdapter.createAdapter(service, reference);
-        if ( cpa != null && cpa.title != null ) {
-            if ( cpa.title.startsWith("%") ) {
+        if (cpa != null && cpa.title != null)
+        {
+            if (cpa.title.startsWith("%"))
+            {
                 final String key = cpa.title.substring(1);
                 final ResourceBundle rb = this.rbManager.getResourceBundle(reference.getBundle());
-                if ( rb == null || !rb.containsKey(key) ) {
+                if (rb == null || !rb.containsKey(key))
+                {
                     cpa.title = key;
-                } else {
+                }
+                else
+                {
                     cpa.title = rb.getString(key);
                 }
             }
-            if ( cpa.label == null ) {
+            if (cpa.label == null)
+            {
                 cpa.label = cpa.title;
             }
             final Dictionary props = new Hashtable();
@@ -108,19 +116,24 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer {
             props.put(InventoryPrinter.CONFIG_TITLE, cpa.title);
             props.put(InventoryPrinter.CONFIG_PRINTER_MODES, cpa.getPrinterModes());
 
-            final ServiceRegistration reg = this.bundleContext.registerService(InventoryPrinter.class.getName(), new WebConsolePrinter(cpa), props);
-            synchronized ( this.registrations ) {
+            final ServiceRegistration reg = this.bundleContext.registerService(InventoryPrinter.class.getName(),
+                new WebConsolePrinter(cpa), props);
+            synchronized (this.registrations)
+            {
                 this.registrations.put(reference, reg);
             }
         }
     }
 
-    private final void remove(final ServiceReference reference) {
+    private final void remove(final ServiceReference reference)
+    {
         final ServiceRegistration reg;
-        synchronized ( this.registrations ) {
+        synchronized (this.registrations)
+        {
             reg = (ServiceRegistration) this.registrations.remove(reference);
         }
-        if ( reg != null ) {
+        if (reg != null)
+        {
             reg.unregister();
         }
     }
@@ -128,87 +141,123 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer {
     /**
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
      */
-    public Object addingService(final ServiceReference reference) {
+    public Object addingService(final ServiceReference reference)
+    {
         final Object service = this.bundleContext.getService(reference);
-        if ( service != null ) {
+        if (service != null)
+        {
             this.add(reference, service);
         }
         return service;
     }
+
     /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
+     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference,
+     *      java.lang.Object)
      */
-    public void modifiedService(final ServiceReference reference, final Object service) {
+    public void modifiedService(final ServiceReference reference, final Object service)
+    {
         this.remove(reference);
         this.add(reference, service);
     }
 
     /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
+     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
+     *      java.lang.Object)
      */
-    public void removedService(final ServiceReference reference, final Object service) {
+    public void removedService(final ServiceReference reference, final Object service)
+    {
         this.remove(reference);
         this.bundleContext.ungetService(reference);
     }
 
-    private static class WebConsolePrinter implements InventoryPrinter, ZipAttachmentProvider {
+    private static class WebConsolePrinter implements InventoryPrinter, ZipAttachmentProvider
+    {
 
         final ConfigurationPrinterAdapter cpa;
 
-        public WebConsolePrinter(final ConfigurationPrinterAdapter cpa) {
+        public WebConsolePrinter(final ConfigurationPrinterAdapter cpa)
+        {
             this.cpa = cpa;
         }
 
         /**
-         * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode, java.io.PrintWriter)
+         * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode,
+         *      java.io.PrintWriter)
          */
-        public void print(final PrinterMode mode, final PrintWriter printWriter, final boolean isZip ) {
+        public void print(final PrinterMode mode, final PrintWriter printWriter, final boolean isZip)
+        {
             final String m;
-            if ( !isZip && mode == PrinterMode.HTML_FRAGMENT ) {
+            if (!isZip && mode == PrinterMode.HTML_FRAGMENT)
+            {
                 m = ConsoleConstants.MODE_WEB;
-            } else if ( !isZip && mode == PrinterMode.TEXT ) {
+            }
+            else if (!isZip && mode == PrinterMode.TEXT)
+            {
                 m = ConsoleConstants.MODE_TXT;
-            } else if (isZip && (mode == PrinterMode.TEXT || mode == PrinterMode.HTML_FRAGMENT) ) {
+            }
+            else if (isZip && (mode == PrinterMode.TEXT || mode == PrinterMode.HTML_FRAGMENT))
+            {
                 m = ConsoleConstants.MODE_ZIP;
-            } else {
+            }
+            else
+            {
                 m = null;
             }
-            if ( m != null ) {
+            if (m != null)
+            {
                 cpa.printConfiguration(printWriter, m);
             }
         }
 
         /**
-         * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.lang.String, java.util.zip.ZipOutputStream)
+         * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.lang.String,
+         *      java.util.zip.ZipOutputStream)
          */
-        public void addAttachments(final String namePrefix, final ZipOutputStream zos)
-        throws IOException {
+        public void addAttachments(final String namePrefix, final ZipOutputStream zos) throws IOException
+        {
             final URL[] attachments = cpa.getAttachments();
-            if ( attachments != null ) {
-                for(int i=0;i<attachments.length;i++) {
+            if (attachments != null)
+            {
+                for (int i = 0; i < attachments.length; i++)
+                {
                     final URL current = attachments[i];
                     final String path = current.getPath();
                     final String name;
-                    if ( path == null || path.length() == 0 ) {
+                    if (path == null || path.length() == 0)
+                    {
                         // sanity code, we should have a path, but if not let's
                         // just create some random name
-                        name = "file" + Double.doubleToLongBits( Math.random() );
-                    } else {
+                        name = "file" + Double.doubleToLongBits(Math.random());
+                    }
+                    else
+                    {
                         final int pos = path.lastIndexOf('/');
                         name = (pos == -1 ? path : path.substring(pos + 1));
                     }
                     final ZipEntry entry = new ZipEntry(namePrefix + name);
                     zos.putNextEntry(entry);
                     final InputStream is = current.openStream();
-                    try {
+                    try
+                    {
                         byte[] buffer = new byte[4096];
                         int n = 0;
-                        while (-1 != (n = is.read(buffer))) {
+                        while (-1 != (n = is.read(buffer)))
+                        {
                             zos.write(buffer, 0, n);
                         }
-                    } finally {
-                        if ( is != null ) {
-                            try { is.close(); } catch (final IOException ignore) {}
+                    }
+                    finally
+                    {
+                        if (is != null)
+                        {
+                            try
+                            {
+                                is.close();
+                            }
+                            catch (final IOException ignore)
+                            {
+                            }
                         }
                     }
                     zos.closeEntry();
