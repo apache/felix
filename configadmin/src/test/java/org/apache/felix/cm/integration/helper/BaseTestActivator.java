@@ -53,6 +53,11 @@ public abstract class BaseTestActivator implements BundleActivator, ManagedServi
     {
         numManagedServiceUpdatedCalls++;
         this.props = props;
+
+        if ( props != null )
+        {
+            this.configs.put( ( String ) props.get( Constants.SERVICE_PID ), props );
+        }
     }
 
 
@@ -86,21 +91,7 @@ public abstract class BaseTestActivator implements BundleActivator, ManagedServi
             final Hashtable props = new Hashtable();
 
             // multi-value PID support
-            final String pid = ( String ) prop;
-            if ( pid.indexOf( ',' ) > 0 )
-            {
-                final String[] pids = pid.split( "," );
-                props.put( Constants.SERVICE_PID, pids );
-            }
-            else if ( pid.indexOf( ';' ) > 0 )
-            {
-                final String[] pids = pid.split( ";" );
-                props.put( Constants.SERVICE_PID, Arrays.asList( pids ) );
-            }
-            else
-            {
-                props.put( Constants.SERVICE_PID, pid );
-            }
+            props.put( Constants.SERVICE_PID, toServicePidObject( ( String ) prop ) );
 
             return props;
         }
@@ -109,4 +100,22 @@ public abstract class BaseTestActivator implements BundleActivator, ManagedServi
         throw new Exception( "Missing " + HEADER_PID + " manifest header, cannot start" );
     }
 
+
+    protected Object toServicePidObject( final String pid )
+    {
+        if ( pid.indexOf( ',' ) > 0 )
+        {
+            final String[] pids = pid.split( "," );
+            return pids;
+        }
+        else if ( pid.indexOf( ';' ) > 0 )
+        {
+            final String[] pids = pid.split( ";" );
+            return Arrays.asList( pids );
+        }
+        else
+        {
+            return pid;
+        }
+    }
 }

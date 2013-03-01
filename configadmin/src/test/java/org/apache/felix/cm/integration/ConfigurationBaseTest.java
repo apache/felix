@@ -915,7 +915,8 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         // 6. test bundle calls cm.getConfiguration(pid1)
         final Configuration get2 = getConfigurationAdmin().getConfiguration( pid );
         TestCase.assertEquals( bundle.getLocation(), get2.getBundleLocation() );
-}
+    }
+
 
     @Test
     public void test_ManagedService_change_pid() throws BundleException, IOException
@@ -959,6 +960,80 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         // ==> update with null
         TestCase.assertNull( tester.props );
         TestCase.assertEquals( 3, tester.numManagedServiceUpdatedCalls );
+    }
+
+
+    @Test
+    public void test_ManagedService_change_pid_overlap() throws BundleException, IOException
+    {
+        final String pid0 = "test_ManagedService_change_pid_0";
+        final String pid1 = "test_ManagedService_change_pid_1";
+        final String pid2 = "test_ManagedService_change_pid_2";
+
+        final Configuration config0 = configure( pid0, null, true );
+        final Configuration config1 = configure( pid1, null, true );
+        final Configuration config2 = configure( pid2, null, true );
+        delay();
+
+        // register ManagedService ms1 with pid from said locationA
+        bundle = installBundle( pid0 + "," + pid1, ManagedServiceTestActivator.class );
+        bundle.start();
+        delay();
+
+        final ManagedServiceTestActivator tester = ManagedServiceTestActivator.INSTANCE;
+        TestCase.assertNotNull( tester.props );
+
+        TestCase.assertEquals( pid0, tester.configs.get( pid0 ).get( Constants.SERVICE_PID ) );
+        TestCase.assertNull( tester.configs.get( pid0 ).get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( tester.configs.get( pid0 ).get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, tester.configs.get( pid0 ).get( PROP_NAME ) );
+
+        TestCase.assertEquals( pid1, tester.configs.get( pid1 ).get( Constants.SERVICE_PID ) );
+        TestCase.assertNull( tester.configs.get( pid1 ).get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( tester.configs.get( pid1 ).get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, tester.configs.get( pid1 ).get( PROP_NAME ) );
+
+        // two pids, two calls
+        TestCase.assertEquals( 2, tester.numManagedServiceUpdatedCalls );
+
+        // change ManagedService PID
+        tester.changePid( pid1 + "," + pid2 );
+        delay();
+
+        TestCase.assertNotNull( tester.props );
+
+        // config pid0 is not "removed"
+        TestCase.assertEquals( pid0, tester.configs.get( pid0 ).get( Constants.SERVICE_PID ) );
+        TestCase.assertNull( tester.configs.get( pid0 ).get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( tester.configs.get( pid0 ).get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, tester.configs.get( pid0 ).get( PROP_NAME ) );
+
+        // config pid1 is retained
+        TestCase.assertEquals( pid1, tester.configs.get( pid1 ).get( Constants.SERVICE_PID ) );
+        TestCase.assertNull( tester.configs.get( pid1 ).get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( tester.configs.get( pid1 ).get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, tester.configs.get( pid1 ).get( PROP_NAME ) );
+
+        // config pid2 is added
+        TestCase.assertEquals( pid2, tester.configs.get( pid2 ).get( Constants.SERVICE_PID ) );
+        TestCase.assertNull( tester.configs.get( pid2 ).get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( tester.configs.get( pid2 ).get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, tester.configs.get( pid2 ).get( PROP_NAME ) );
+
+        // one "additional" pid, one additional call
+        TestCase.assertEquals( 3, tester.numManagedServiceUpdatedCalls );
+
+        // delete
+        config0.delete(); // ignored by MS
+        config1.delete();
+        config2.delete();
+        delay();
+
+        // ==> update with null
+        TestCase.assertNull( tester.props );
+
+        // two pids removed, two calls
+        TestCase.assertEquals( 5, tester.numManagedServiceUpdatedCalls );
     }
 
 
@@ -1027,6 +1102,96 @@ public class ConfigurationBaseTest extends ConfigurationTestBase
         TestCase.assertEquals( 2, tester.numManagedServiceFactoryUpdatedCalls );
         TestCase.assertEquals( 1, tester.numManagedServiceFactoryDeleteCalls );
     }
+
+
+    @Test
+    public void test_ManagedServiceFactory_change_pid_overlap() throws BundleException, IOException
+    {
+
+        final String factoryPid0 = "test_ManagedServiceFactory_change_pid_0";
+        final String factoryPid1 = "test_ManagedServiceFactory_change_pid_1";
+        final String factoryPid2 = "test_ManagedServiceFactory_change_pid_2";
+
+        final Configuration config0 = createFactoryConfiguration( factoryPid0, null, true );
+        final String pid0 = config0.getPid();
+        final Configuration config1 = createFactoryConfiguration( factoryPid1, null, true );
+        final String pid1 = config1.getPid();
+        final Configuration config2 = createFactoryConfiguration( factoryPid2, null, true );
+        final String pid2 = config2.getPid();
+        delay();
+
+        bundle = installBundle( factoryPid0 + "," + factoryPid1, ManagedServiceFactoryTestActivator.class );
+        bundle.start();
+        delay();
+
+        // pid0 properties provided on registration
+        final ManagedServiceFactoryTestActivator tester = ManagedServiceFactoryTestActivator.INSTANCE;
+        Dictionary<?, ?> props0 = tester.configs.get( pid0 );
+        TestCase.assertNotNull( props0 );
+        TestCase.assertEquals( pid0, props0.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid0, props0.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props0.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props0.get( PROP_NAME ) );
+
+        Dictionary<?, ?> props1 = tester.configs.get( pid1 );
+        TestCase.assertNotNull( props1 );
+        TestCase.assertEquals( pid1, props1.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid1, props1.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props1.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props1.get( PROP_NAME ) );
+
+        TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 2, tester.numManagedServiceFactoryUpdatedCalls );
+        TestCase.assertEquals( 0, tester.numManagedServiceFactoryDeleteCalls );
+
+        // change ManagedService PID
+        tester.changePid( factoryPid1 + "," + factoryPid2 );
+        delay();
+
+        // pid2 properties must have been added
+        Dictionary<?, ?> props2 = tester.configs.get( pid2 );
+        TestCase.assertNotNull( props2 );
+        TestCase.assertEquals( pid2, props2.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid2, props2.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props2.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props2.get( PROP_NAME ) );
+
+        // pid0 properties must still exist !
+        Dictionary<?, ?> props01 = tester.configs.get( pid0 );
+        TestCase.assertNotNull( props01 );
+        TestCase.assertEquals( pid0, props01.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid0, props01.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props01.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props01.get( PROP_NAME ) );
+
+        // pid1 properties must still exist !
+        Dictionary<?, ?> props11 = tester.configs.get( pid1 );
+        TestCase.assertNotNull( props11 );
+        TestCase.assertEquals( pid1, props11.get( Constants.SERVICE_PID ) );
+        TestCase.assertEquals( factoryPid1, props11.get( ConfigurationAdmin.SERVICE_FACTORYPID ) );
+        TestCase.assertNull( props11.get( ConfigurationAdmin.SERVICE_BUNDLELOCATION ) );
+        TestCase.assertEquals( PROP_NAME, props11.get( PROP_NAME ) );
+
+        TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 3, tester.numManagedServiceFactoryUpdatedCalls );
+        TestCase.assertEquals( 0, tester.numManagedServiceFactoryDeleteCalls );
+
+        // delete
+        config0.delete();
+        config1.delete();
+        config2.delete();
+        delay();
+
+        // only pid1 and pid2 properties removed because pid0 is not registered any longer
+        TestCase.assertNotNull( tester.configs.get( pid0 ) );
+        TestCase.assertNull( tester.configs.get( pid1 ) );
+        TestCase.assertNull( tester.configs.get( pid2 ) );
+
+        TestCase.assertEquals( 0, tester.numManagedServiceUpdatedCalls );
+        TestCase.assertEquals( 3, tester.numManagedServiceFactoryUpdatedCalls );
+        TestCase.assertEquals( 2, tester.numManagedServiceFactoryDeleteCalls );
+    }
+
 
     @Test
     public void test_factory_configuration_collision() throws IOException, InvalidSyntaxException, BundleException {
