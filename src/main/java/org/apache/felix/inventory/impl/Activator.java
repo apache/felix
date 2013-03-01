@@ -1,13 +1,13 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
+ * contributor license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,8 @@ import org.osgi.framework.BundleContext;
 /**
  * Activate bridges and internal manager.
  */
-public class Activator implements BundleActivator {
+public class Activator implements BundleActivator
+{
 
     private InventoryPrinterManagerImpl printerManager;
 
@@ -32,20 +33,24 @@ public class Activator implements BundleActivator {
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
-    public void start(final BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception
+    {
         this.webAdapter = new WebConsoleAdapter(context);
         this.printerManager = new InventoryPrinterManagerImpl(context);
-}
+    }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
-    public void stop(final BundleContext context) throws Exception {
-        if ( this.printerManager != null ) {
+    public void stop(final BundleContext context) throws Exception
+    {
+        if (this.printerManager != null)
+        {
             this.printerManager.dispose();
             this.printerManager = null;
         }
-        if ( this.webAdapter != null ) {
+        if (this.webAdapter != null)
+        {
             this.webAdapter.dispose();
             this.webAdapter = null;
         }

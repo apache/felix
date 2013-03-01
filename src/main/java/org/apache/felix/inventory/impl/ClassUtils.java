@@ -1,13 +1,13 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
+ * contributor license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,22 +21,30 @@ import java.lang.reflect.Method;
 /**
  * Utility methods for dynamic method invocations
  */
-public class ClassUtils {
+public class ClassUtils
+{
 
     /**
      * Search a method with the given name and signature.
+     * 
      * @return The method or <code>null</code> if not found.
      */
-    public static Method searchMethod(final Class clazz, final String mName, final Class[] params) {
-        try {
+    public static Method searchMethod(final Class clazz, final String mName, final Class[] params)
+    {
+        try
+        {
             final Method m = clazz.getMethod(mName, params);
             m.setAccessible(true);
             return m;
-        } catch (Throwable nsme) {
-            // ignore, we catch Throwable above to not only catch NoSuchMethodException
+        }
+        catch (Throwable nsme)
+        {
+            // ignore, we catch Throwable above to not only catch
+            // NoSuchMethodException
             // but also other ones like ClassDefNotFoundError etc.
         }
-        if ( clazz.getSuperclass() != null ) {
+        if (clazz.getSuperclass() != null)
+        {
             // try super class
             return searchMethod(clazz.getSuperclass(), mName, params);
         }
@@ -45,12 +53,18 @@ public class ClassUtils {
 
     /**
      * Invoke the method on the object with the arguments.
-     * @return The result of the method invocation or <code>null</code> if an exception occurs.
+     * 
+     * @return The result of the method invocation or <code>null</code> if an
+     *         exception occurs.
      */
-    public static Object invoke(final Object obj, final Method m, final Object[] args) {
-        try {
+    public static Object invoke(final Object obj, final Method m, final Object[] args)
+    {
+        try
+        {
             return m.invoke(obj, args);
-        } catch (final Throwable e) {
+        }
+        catch (final Throwable e)
+        {
             // ignore
         }
         return null;
