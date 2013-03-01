@@ -191,8 +191,7 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
      */
     private ComponentDescription createComponent(final ClassAnnotation cad, final ScannedClass scannedClass) {
         final ComponentDescription component = new ComponentDescription(cad);
-
-        final boolean classIsAbstract = Modifier.isAbstract(scannedClass.getClass().getModifiers());
+        final boolean classIsAbstract = Modifier.isAbstract(scannedClass.getScannedClass().getModifiers());
         component.setAbstract(cad.getBooleanValue("componentAbstract", classIsAbstract));
 
         component.setCreatePid(cad.getBooleanValue("createPid", true));
