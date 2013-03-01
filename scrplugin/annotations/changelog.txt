@@ -1,4 +1,10 @@
-Changes from 1.8.0 to 1.7.0
+ Changes from 1.9.0 to 1.8.0
+----------------------------
+** Bug
+    * [FELIX-3940] - Abstract class is not detected 
+ 
+ 
+ Changes from 1.8.0 to 1.7.0
 ----------------------------
 ** Improvement
     * [FELIX-3169] - Add support for new PASSWORD attribute type of Metatype service
