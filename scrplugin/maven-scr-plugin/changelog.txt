@@ -1,3 +1,14 @@
+Changes from 1.11.0 to 1.10.0
+----------------------------
+** Improvement
+    * [FELIX-3943] - Maven Plugin should require latest SCR annotations 
+** Task
+    * [FELIX-3942] - IT Tests should use newer version of annotations 
+** Bug
+    * [FELIX-3917] - bind/unbind methods are not generated
+    * [FELIX-3941] - Dependency to annotations should not be in the plugin
+
+ 
 Changes from 1.10.0 to 1.9.0
 ----------------------------
 ** Improvement
