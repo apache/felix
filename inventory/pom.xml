@@ -33,6 +33,12 @@
     <name>Apache Felix Inventory</name>
     <description>Apache Felix Inventory provides some mechanisms to get the current state of the system and therefore provides an inventory of the system.</description>
     
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/inventory</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/inventory</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/inventory</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
@@ -40,25 +46,26 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>2.3.7</version>
                 <extensions>true</extensions>
-                <configuration>
+                    <configuration>
                     <instructions>
-                        <Package-Export>org.apache.felix.inventory;version=1.0.0</Package-Export>
                         <Bundle-Category>osgi</Bundle-Category>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                        <DynamicImport-Package>javax.servlet, javax.servlet.http</DynamicImport-Package>
-                        <Bundle-Activator>org.apache.felix.inventory.impl.Activator</Bundle-Activator>
+                        <Bundle-SymbolicName>
+                            ${project.artifactId}
+                        </Bundle-SymbolicName>
+                        <Bundle-Activator>
+                            org.apache.felix.inventory.impl.Activator
+                        </Bundle-Activator>
+                        <Export-Package>
+                            org.apache.felix.inventory;version=1.0.0
+                        </Export-Package>
+                        <DynamicImport-Package>
+                            javax.servlet, javax.servlet.http
+                        </DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>        
     </build>    
-
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/inventory</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/inventory</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/inventory</url>
-    </scm>
 
     <dependencies>
         <dependency>
@@ -80,10 +87,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bndlib</artifactId>
-            <version>1.43.0</version>
-            <scope>provided</scope>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
