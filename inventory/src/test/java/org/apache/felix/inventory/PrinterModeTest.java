@@ -17,14 +17,11 @@
  **************************************************************************/
 package org.apache.felix.inventory;
 
-import org.junit.Test;
-
 import junit.framework.TestCase;
 
-public class PrinterModeTest
+public class PrinterModeTest extends TestCase
 {
 
-    @Test
     public void test_valueOf()
     {
         TestCase.assertSame(PrinterMode.TEXT, PrinterMode.valueOf("TEXT"));
@@ -34,7 +31,6 @@ public class PrinterModeTest
         TestCase.assertNull(PrinterMode.valueOf("unsupported_name"));
     }
 
-    @Test
     public void test_name()
     {
         TestCase.assertEquals("TEXT", PrinterMode.TEXT.name());
@@ -42,7 +38,6 @@ public class PrinterModeTest
         TestCase.assertEquals("HTML_FRAGMENT", PrinterMode.HTML_FRAGMENT.name());
     }
 
-    @Test
     public void test_equals()
     {
         TestCase.assertTrue(PrinterMode.TEXT.equals(PrinterMode.TEXT));
