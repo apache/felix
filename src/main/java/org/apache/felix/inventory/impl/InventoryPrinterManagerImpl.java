@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,10 +33,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The manager keeps track of all inventory printers and maintains them
@@ -45,9 +44,6 @@ import org.slf4j.LoggerFactory;
  */
 public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
 {
-
-    /** Logger. */
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** Bundle Context . */
     private final BundleContext bundleContext;
@@ -69,7 +65,7 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
 
     /**
      * Create the inventory printer manager
-     * 
+     *
      * @param btx Bundle Context
      * @throws InvalidSyntaxException Should only happen if we have an error in
      *             the code
@@ -132,17 +128,20 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
         boolean valid = true;
         if (desc.getModes() == null)
         {
-            logger.info("Ignoring inventory printer - printer modes configuration is missing: {}", reference);
+            Activator.log(null, LogService.LOG_INFO,
+                "Ignoring inventory printer - printer modes configuration is missing: " + reference, null);
             valid = false;
         }
         if (desc.getName() == null)
         {
-            logger.info("Ignoring inventory printer - name configuration is missing: {}", reference);
+            Activator.log(null, LogService.LOG_INFO, "Ignoring inventory printer - name configuration is missing: "
+                + reference, null);
             valid = false;
         }
         if (desc.getTitle() == null)
         {
-            logger.info("Ignoring inventory printer - title configuration is missing: {}", reference);
+            Activator.log(null, LogService.LOG_INFO, "Ignoring inventory printer - title configuration is missing: "
+                + reference, null);
             valid = false;
         }
         if (valid)
@@ -150,7 +149,8 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
             final InventoryPrinterAdapter adapter = InventoryPrinterAdapter.createAdapter(desc, obj);
             if (adapter == null)
             {
-                logger.info("Ignoring inventory printer - printer method is missing: {}", reference);
+                Activator.log(null, LogService.LOG_INFO, "Ignoring inventory printer - printer method is missing: "
+                    + reference, null);
             }
             else
             {
@@ -271,7 +271,7 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
 
     /**
      * Get all inventory printer handlers.
-     * 
+     *
      * @return A list of handlers - might be empty.
      */
     public InventoryPrinterHandler[] getAllHandlers()
@@ -282,7 +282,7 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
 
     /**
      * Get all handlers supporting the mode.
-     * 
+     *
      * @return A list of handlers - might be empty.
      */
     public InventoryPrinterHandler[] getHandlers(final PrinterMode mode)
@@ -302,7 +302,7 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
 
     /**
      * Return a handler for the unique name.
-     * 
+     *
      * @return The corresponding handler or <code>null</code>.
      */
     public InventoryPrinterHandler getHandler(final String name)
