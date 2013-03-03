@@ -99,8 +99,10 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     // The ServiceRegistration
     private enum RegState {unregistered, registered};
-    private RegState m_desiredServiceRegistrationFlag;
-    private RegState m_serviceRegistrationFlag;
+    private final Lock registrationLock = new ReentrantLock();
+    //Deque, ArrayDeque if we had java 6
+    private final List<RegState> opqueue = new ArrayList<RegState>();
+
     private volatile ServiceRegistration<S> m_serviceRegistration;
 
     private final ReentrantLock m_stateLock;
@@ -650,25 +652,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     final ServiceReference getServiceReference()
     {
-        // This method is not synchronized even though it accesses the state.
-        // The reason for this is that we just want to have the state return
-        // the service reference which comes from the service registration.
-        // The only thing that may happen is that the service registration is
-        // still set on this instance but the service has already been
-        // unregistered. In this case an IllegalStateException may be thrown
-        // which we just catch and ignore returning null
-        State state = m_state;
-        try
+        ServiceRegistration reg = m_serviceRegistration;
+        if (reg != null)
         {
-            return state.getServiceReference( this );
+            return reg.getReference();
         }
-        catch ( IllegalStateException ise )
-        {
-            // may be thrown if the service has already been unregistered but
-            // the service registration is still set on this component manager
-            // we ignore this exception and assume there is no service reference
-        }
-
         return null;
     }
 
@@ -738,8 +726,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return true;
     }
     
-    private final Lock lock = new ReentrantLock();
-    
     /**
      * 
      * @param desired
@@ -747,86 +733,77 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     private boolean changeRegistration( RegState desired, String[] services )
     {
-        lock.lock();
+        registrationLock.lock();
         try
         {
-            do {
-                if ( desired.equals(m_desiredServiceRegistrationFlag))
+            if (opqueue.isEmpty())
+            {
+                if ((desired == RegState.unregistered) == (m_serviceRegistration == null))
                 {
-                    //another thread is already trying the same state change
-                    return false;
+                    return false; //already in desired state
                 }
-                m_desiredServiceRegistrationFlag = desired;
-                if ( desired.equals(m_serviceRegistrationFlag))
+            }
+            else if (opqueue.get(0) == desired)
+            {
+                return false; //another thread will do our work.
+            }
+            opqueue.add( desired );
+            if (opqueue.size() > 1)
+            {
+                return false; //some other thread will do it later
+            }
+            //we're next
+            do
+            {
+                log( LogService.LOG_DEBUG, "registration change queue {0}", new Object[]
+                        {opqueue}, null );
+                desired = opqueue.get( 0 );
+                ServiceRegistration<S> serviceRegistration = m_serviceRegistration;
+                if ( desired == RegState.unregistered)
                 {
-                    //already in the desired state but leaving it
-                    continue;
+                    m_serviceRegistration = null;
                 }
-
-                if (desired.equals( RegState.registered ))
+                    
+                registrationLock.unlock();
+                try
                 {
-                    log( LogService.LOG_DEBUG, "registering services", null );
-
-                    // get a copy of the component properties as service properties
-                    final Dictionary<String, Object> serviceProperties = getServiceProperties();
-
-                    ServiceRegistration<S> serviceRegistration = null;
-                    lock.unlock();
-                    try {
-                        serviceRegistration = ( ServiceRegistration<S> ) getActivator().getBundleContext().registerService(
-                                services,
-                                getService(), serviceProperties );
-                    }
-                    finally
+                    if (desired == RegState.registered)
                     {
-                        lock.lock();
-                    }
-                    if ( desired.equals(m_desiredServiceRegistrationFlag ) && !disposed )
-                    {
-                        m_serviceRegistration = serviceRegistration;
-                        m_serviceRegistrationFlag = desired;
-                        return true;
+                        final Dictionary<String, Object> serviceProperties = getServiceProperties();
+                        serviceRegistration = ( ServiceRegistration<S> ) getActivator().getBundleContext()
+                                .registerService( services, getService(), serviceProperties );
+
                     }
                     else 
                     {
-                        log( LogService.LOG_DEBUG, "unregistering services after concurrent registration", null );
-                        m_serviceRegistrationFlag = RegState.unregistered;
-                        lock.unlock();
-                        try
+                        if ( serviceRegistration != null )
                         {
                             serviceRegistration.unregister();
                         }
-                        finally
+                        else
                         {
-                            lock.lock();
+                            log( LogService.LOG_ERROR, "Unexpected unregistration request with no registration present", new Object[]
+                                    {}, new Exception("Stack trace") );
+                           
                         }
                     }
-
                 }
-                else
+                finally
                 {
-                    ServiceRegistration<S> serviceRegistration = m_serviceRegistration;
-                    m_serviceRegistration = null;
-                    m_serviceRegistrationFlag = desired;
-                    lock.unlock();
-                    try
+                    registrationLock.lock();
+                    opqueue.remove(0);
+                    if ( desired == RegState.registered)
                     {
-                        serviceRegistration.unregister();
-                    }
-                    finally
-                    {
-                        lock.lock();
-                    }
-                    if ( desired.equals(m_desiredServiceRegistrationFlag ) )
-                    {
-                        return true;
+                        m_serviceRegistration = serviceRegistration;
                     }
                 }
-            } while (true);
+            }
+            while (!opqueue.isEmpty());
+            return true;
         }
         finally
         {
-            lock.unlock();
+            registrationLock.unlock();
         }
 
     }
@@ -1308,12 +1285,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
 
 
-        ServiceReference<?> getServiceReference( AbstractComponentManager acm )
-        {
-            throw new IllegalStateException("getServiceReference" + this);
-        }
-
-
         Object getService( ImmediateComponentManager dcm )
         {
             throw new IllegalStateException("getService" + this);
@@ -1644,14 +1615,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             super( name, state );
         }
-
-
-        ServiceReference getServiceReference( AbstractComponentManager acm )
-        {
-            ServiceRegistration sr = acm.getServiceRegistration();
-            return sr == null ? null : sr.getReference();
-        }
-
 
         void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
