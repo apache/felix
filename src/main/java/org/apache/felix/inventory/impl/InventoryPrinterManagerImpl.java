@@ -18,7 +18,9 @@ package org.apache.felix.inventory.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,8 +31,11 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
@@ -78,7 +83,22 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
             + InventoryPrinter.CONFIG_TITLE + "=*))"), this);
         this.cfgPrinterTracker.open();
 
-        this.pluginRegistration = DefaultWebConsolePlugin.register(btx, this);
+        final Dictionary props = new Hashtable();
+        props.put(ConsoleConstants.PLUGIN_LABEL, ConsoleConstants.NAME);
+        props.put(ConsoleConstants.PLUGIN_TITLE, ConsoleConstants.TITLE);
+        props.put(ConsoleConstants.PLUGIN_CATEGORY, ConsoleConstants.WEB_CONSOLE_CATEGORY);
+        this.pluginRegistration = btx.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory()
+        {
+            public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
+            {
+                // nothing to do
+            }
+
+            public Object getService(final Bundle bundle, final ServiceRegistration registration)
+            {
+                return new DefaultWebConsolePlugin(InventoryPrinterManagerImpl.this);
+            }
+        }, props);
     }
 
     /**
