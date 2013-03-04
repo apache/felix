@@ -368,7 +368,6 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             for (int i = 0; m_callbacks != null && i < m_callbacks.length; i++) {
                 if (m_callbacks[i].getMethodType() == DependencyCallback.BIND) {
                     Object svc = getService(ref);
-                    System.out.println("Svc injected in the bind method : " + svc);
                     if (svc != null) {
                         invokeCallback(m_callbacks[i], ref, svc, null);
                     } else {
