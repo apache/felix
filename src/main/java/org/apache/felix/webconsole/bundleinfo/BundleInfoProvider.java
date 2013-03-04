@@ -16,9 +16,11 @@
  */
 package org.apache.felix.webconsole.bundleinfo;
 
+
 import java.util.Locale;
 
 import org.osgi.framework.Bundle;
+
 
 /**
  * The bundle info provider allows the user to supply additional information
@@ -35,7 +37,7 @@ import org.osgi.framework.Bundle;
  * 
  * @author Valentin Valchev
  */
-public interface BundleInfoProvider 
+public interface BundleInfoProvider
 {
 
     /**
@@ -44,6 +46,7 @@ public interface BundleInfoProvider
      */
     public static final BundleInfo[] NO_INFO = new BundleInfo[0];
 
+
     /**
      * Gets the name of the bundle info provider as localized string.
      * 
@@ -51,7 +54,8 @@ public interface BundleInfoProvider
      *            the locale in which the name should be returned
      * @return the name of the bundle info provider.
      */
-    String getName(Locale locale);
+    String getName( Locale locale );
+
 
     /**
      * Gets the associated bundle information with the specified bundle (by it's
@@ -65,6 +69,5 @@ public interface BundleInfoProvider
      *            the locale in which the key-value pair should be returned.
      * @return array of available {@link BundleInfo} or empty array if none.
      */
-    BundleInfo[] getBundleInfo(Bundle bundle, String webConsoleRoot,
-	    Locale locale);
+    BundleInfo[] getBundleInfo( Bundle bundle, String webConsoleRoot, Locale locale );
 }
