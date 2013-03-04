@@ -16,14 +16,16 @@
  */
 package org.apache.felix.webconsole.bundleinfo;
 
+
 import java.net.URL;
+
 
 /**
  * This pre-java 5 enum defines all valid bundle information value types.
  * 
  * @author Valentin Valchev
  */
-public final class BundleInfoType 
+public final class BundleInfoType
 {
 
     /**
@@ -36,28 +38,30 @@ public final class BundleInfoType
      * for security reasons, the protocol cannot be <code>file</code> for
      * external links.
      */
-    public static final BundleInfoType LINK = new BundleInfoType("link"); //$NON-NLS-1$
+    public static final BundleInfoType LINK = new BundleInfoType( "link" ); //$NON-NLS-1$
     /**
      * This information type, specifies that the value of the information is URL
      * object, that points to a resource. In that case the UI could consider
      * that as a <em>download</em> link.
      */
-    public static final BundleInfoType RESOURCE = new BundleInfoType("resource"); //$NON-NLS-1$
+    public static final BundleInfoType RESOURCE = new BundleInfoType( "resource" ); //$NON-NLS-1$
     /**
      * That information type is for normal information keys, that provide a
      * normal (not link) value as information. The type of the value is
      * <code>Object</code> and UI will visualize it by using it's
      * {@link Object#toString()} method.
      */
-    public static final BundleInfoType VALUE = new BundleInfoType("value"); //$NON-NLS-1$
+    public static final BundleInfoType VALUE = new BundleInfoType( "value" ); //$NON-NLS-1$
 
     private final String name;
 
-    private BundleInfoType(String name)
+
+    private BundleInfoType( String name )
     {
-	/* prevent instantiation */
-	this.name = name;
+        /* prevent instantiation */
+        this.name = name;
     }
+
 
     /**
      * Returns the name of the type.
@@ -66,8 +70,9 @@ public final class BundleInfoType
      */
     public final String getName()
     {
-	return name;
+        return name;
     }
+
 
     /**
      * That method is used to validate if the object is correct for the
@@ -76,33 +81,32 @@ public final class BundleInfoType
      * @param value
      *            the value that will be validated.
      */
-    public final void validate(final Object value)
+    public final void validate( final Object value )
     {
-	if (this == LINK)
-	{
-	    if (!(value instanceof String))
-		throw new IllegalArgumentException("Not a String");
-	    final String val = (String) value;
-	    final int idx = val.indexOf("://"); //$NON-NLS-1$
-	    // check local
-	    if (idx == -1)
-	    {
-		if (!val.startsWith("/")) //$NON-NLS-1$
-		    throw new IllegalArgumentException("Invalid local link");
-	    }
-	    else
-	    {
-		// check external link
-		if (val.substring(0, idx).equalsIgnoreCase("file")) //$NON-NLS-1$
-		    throw new IllegalArgumentException(
-			    "External link cannot use file protocol");
-	    }
-	}
-	else if (this == RESOURCE) 
-	{
-	    if (!(value instanceof URL))
-		throw new IllegalArgumentException("Invalid URL");
-	}
+        if ( this == LINK )
+        {
+            if ( !( value instanceof String ) )
+                throw new IllegalArgumentException( "Not a String" );
+            final String val = ( String ) value;
+            final int idx = val.indexOf( "://" ); //$NON-NLS-1$
+            // check local
+            if ( idx == -1 )
+            {
+                if ( !val.startsWith( "/" ) ) //$NON-NLS-1$
+                    throw new IllegalArgumentException( "Invalid local link" );
+            }
+            else
+            {
+                // check external link
+                if ( val.substring( 0, idx ).equalsIgnoreCase( "file" ) ) //$NON-NLS-1$
+                    throw new IllegalArgumentException( "External link cannot use file protocol" );
+            }
+        }
+        else if ( this == RESOURCE )
+        {
+            if ( !( value instanceof URL ) )
+                throw new IllegalArgumentException( "Invalid URL" );
+        }
     }
 
 }

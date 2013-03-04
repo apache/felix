@@ -16,6 +16,7 @@
  */
 package org.apache.felix.webconsole.bundleinfo;
 
+
 /**
  * This entity defines additional bundle information entry, that is provided by
  * the {@link BundleInfoProvider}. Each information entry is featured by name,
@@ -23,13 +24,14 @@ package org.apache.felix.webconsole.bundleinfo;
  * 
  * @author Valentin Valchev
  */
-public class BundleInfo 
+public class BundleInfo
 {
 
     private final String name;
     private final String description;
     private final Object value;
     private final BundleInfoType type;
+
 
     /**
      * Creates a new bundle information entry.
@@ -43,15 +45,15 @@ public class BundleInfo
      * @param description
      *            additional, user-friendly description for that value.
      */
-    public BundleInfo(String name, Object value, BundleInfoType type,
-	    String description) 
+    public BundleInfo( String name, Object value, BundleInfoType type, String description )
     {
-	this.name = name;
-	this.value = value;
-	this.type = type;
-	this.description = description;
-	type.validate(value);
+        this.name = name;
+        this.value = value;
+        this.type = type;
+        this.description = description;
+        type.validate( value );
     }
+
 
     /**
      * Gets the name of the information entry. The name should be localized
@@ -59,10 +61,11 @@ public class BundleInfo
      * 
      * @return the name of that information key.
      */
-    public String getName() 
+    public String getName()
     {
-	return name;
+        return name;
     }
+
 
     /**
      * Gets user-friendly description of the key pair. The description should be
@@ -70,29 +73,31 @@ public class BundleInfo
      * 
      * @return the description for that information key.
      */
-    public String getDescription() 
+    public String getDescription()
     {
-	return description;
+        return description;
     }
+
 
     /**
      * Gets the information value.
      * 
      * @return the value.
      */
-    public Object getValue() 
+    public Object getValue()
     {
-	return value;
+        return value;
     }
+
 
     /**
      * Gets the type of the information value.
      * 
      * @return the information type.
      */
-    public BundleInfoType getType() 
+    public BundleInfoType getType()
     {
-	return type;
+        return type;
     }
 
 }
