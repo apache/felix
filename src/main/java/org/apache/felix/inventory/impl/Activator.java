@@ -58,10 +58,8 @@ public class Activator implements BundleActivator
         };
         this.logServiceTracker.open();
 
-//        this.webAdapter = new WebConsoleAdapter(context);
-//        this.printerManager = new InventoryPrinterManagerImpl(context);
-
-        log(null, LogService.LOG_INFO, "Starting Framework Inventory Support", null);
+        this.webAdapter = new WebConsoleAdapter(context);
+        this.printerManager = new InventoryPrinterManagerImpl(context);
     }
 
     /**
