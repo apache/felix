@@ -20,6 +20,7 @@ package org.apache.felix.resolver.test;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Resource;
@@ -30,12 +31,13 @@ class IdentityCapability implements Capability
     private final Map<String, String> m_dirs;
     private final Map<String, Object> m_attrs;
 
-    public IdentityCapability(Resource resource, String name)
+    public IdentityCapability(Resource resource, String name, String type)
     {
         m_resource = resource;
         m_dirs = new HashMap<String, String>();
         m_attrs = new HashMap<String, Object>();
         m_attrs.put(IdentityNamespace.IDENTITY_NAMESPACE, name);
+        m_attrs.put(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, type);
     }
 
     public String getNamespace()
