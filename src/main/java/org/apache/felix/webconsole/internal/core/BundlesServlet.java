@@ -219,25 +219,50 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
                         if ( !props.isNull( pi ) )
                         {
                             JSONObject entry = props.getJSONObject( pi );
-
-                            pw.print( "    " + entry.get( "key" ) + ": " );
-
-                            Object entryValue = entry.get( "value" );
-                            if ( entryValue instanceof JSONArray )
+                            String key = ( String ) entry.get( "key" );
+                            if ( "nfo".equals( key ) )
                             {
-                                pw.println();
-                                JSONArray entryArray = ( JSONArray ) entryValue;
-                                for ( int ei = 0; ei < entryArray.length(); ei++ )
+                                // BundleInfo (see #bundleInfo & #bundleInfoDetails
+                                JSONObject infos = ( JSONObject ) entry.get( "value" );
+                                Iterator infoKeys = infos.keys();
+                                while ( infoKeys.hasNext() )
                                 {
-                                    if ( !entryArray.isNull( ei ) )
+                                    String infoKey = ( String ) infoKeys.next();
+                                    pw.println( "    " + infoKey + ": " );
+
+                                    JSONArray infoA = infos.getJSONArray( infoKey );
+                                    for ( int iai = 0; iai < infoA.length(); iai++ )
                                     {
-                                        pw.println( "        " + entryArray.get( ei ) );
+                                        if ( !infoA.isNull( iai ) )
+                                        {
+                                            JSONObject info = infoA.getJSONObject( iai );
+                                            pw.println( "        " + info.get( "name" ) );
+                                        }
                                     }
                                 }
                             }
                             else
                             {
-                                pw.println( entryValue );
+                                // regular data
+                                pw.print( "    " + key + ": " );
+
+                                Object entryValue = entry.get( "value" );
+                                if ( entryValue instanceof JSONArray )
+                                {
+                                    pw.println();
+                                    JSONArray entryArray = ( JSONArray ) entryValue;
+                                    for ( int ei = 0; ei < entryArray.length(); ei++ )
+                                    {
+                                        if ( !entryArray.isNull( ei ) )
+                                        {
+                                            pw.println( "        " + entryArray.get( ei ) );
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    pw.println( entryValue );
+                                }
                             }
                         }
                     }
@@ -803,7 +828,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         }
 
         listHeaders( jw, bundle );
-        bundleInfoDetails(jw, bundle, pluginRoot.substring(0, pluginRoot.lastIndexOf("/")), locale);
+        final String appRoot = ( pluginRoot == null ) ? null : pluginRoot.substring( 0, pluginRoot.lastIndexOf( "/" ) );
+        bundleInfoDetails( jw, bundle, appRoot, locale );
 
         jw.endArray();
     }
@@ -837,19 +863,21 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         jw.endObject();
     }
 
+
     private static final void bundleInfo( JSONWriter jw, BundleInfo info ) throws JSONException
     {
-	jw.object();
-	jw.key("name");
-	jw.value( info.getName() );
-	jw.key("description");
-	jw.value( info.getDescription() );
-	jw.key("type");
-	jw.value( info.getType().getName() );
-	jw.key("value");
-	jw.value( info.getValue() );
-	jw.endObject();
+        jw.object();
+        jw.key( "name" );
+        jw.value( info.getName() );
+        jw.key( "description" );
+        jw.value( info.getDescription() );
+        jw.key( "type" );
+        jw.value( info.getType().getName() );
+        jw.key( "value" );
+        jw.value( info.getValue() );
+        jw.endObject();
     }
+
 
     private final Integer getStartLevel( Bundle bundle )
     {
