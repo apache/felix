@@ -25,16 +25,16 @@ import org.osgi.framework.Bundle;
 /**
  * The bundle info provider allows the user to supply additional information
  * that will be used by the Web Console bundle plugin.
- * 
+ *
  * The API allows the user to register a special service, that could bind a
  * custom, implementation-specific information to a bundle.
- * 
+ *
  * A typical use-case for that API would be the Declarative Services, that could
  * provide information about the components provided by this bundle (and link to
  * the component plugin too). Another usage could be the ProSyst resource
  * manager, that would provide information about the memory and CPU usage of the
  * bundle.
- * 
+ *
  * @author Valentin Valchev
  */
 public interface BundleInfoProvider
@@ -49,7 +49,7 @@ public interface BundleInfoProvider
 
     /**
      * Gets the name of the bundle info provider as localized string.
-     * 
+     *
      * @param locale
      *            the locale in which the name should be returned
      * @return the name of the bundle info provider.
@@ -60,11 +60,18 @@ public interface BundleInfoProvider
     /**
      * Gets the associated bundle information with the specified bundle (by it's
      * ID)
-     * 
+     *
+     * The Service may also be called outside through the new Inventory bundle
+     * due to mapping the BundlesServlet to an InventoryPrinter and for example
+     * calling it from a Gogo Shell. In this case the {@code webConsoleRoot}
+     * parameter will be null a {@link BundleInfo} objects of type
+     * {@link BundleInfoType#LINK} must not be generated.
+     *
      * @param bundle
      *            the bundle, for which additional information is requested.
      * @param webConsoleRoot
-     *            the root alias of the web console itself.
+     *            the root alias of the web console itself or {@code null}
+     *            if this method is not called through the Web Console itself.
      * @param locale
      *            the locale in which the key-value pair should be returned.
      * @return array of available {@link BundleInfo} or empty array if none.
