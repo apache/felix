@@ -78,7 +78,7 @@ public class TestAnnotations {
         InputStream test = TinyBundles.newBundle()
             .add(ComponentUsingAnnotations.class)
             .set(Constants.BUNDLE_SYMBOLICNAME,"TransactionAnnotationTest")
-            .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.transaction.test.service, javax.transaction")
+            .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.transaction.test.service, javax.transaction;version=1.1")
             .build( withiPOJO(new File(ROOT, "annotations.jar"), new File(TEST, "annotation.xml"))  );
 
 

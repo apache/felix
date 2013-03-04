@@ -86,7 +86,7 @@ public class TestNever {
         InputStream test = TinyBundles.newBundle()
         .add(FooDelegator.class)
         .set(Constants.BUNDLE_SYMBOLICNAME,"NeverTransactionPropagation")
-        .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.transaction.test.service, javax.transaction")
+        .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.transaction.test.service, javax.transaction;version=1.1")
         .build( withiPOJO(new File(ROOT, "never.jar"), new File(TEST, "never.xml"))  );
 
         Option[] opt =  options(

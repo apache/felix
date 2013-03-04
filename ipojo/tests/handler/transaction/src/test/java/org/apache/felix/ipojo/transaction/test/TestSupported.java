@@ -86,7 +86,7 @@ public class TestSupported {
         InputStream test = TinyBundles.newBundle()
         .add(FooDelegator.class)
         .set(Constants.BUNDLE_SYMBOLICNAME,"SupportedTransactionPropagation")
-        .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.transaction.test.service, javax.transaction")
+        .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.transaction.test.service, javax.transaction;version=1.1")
         .build( withiPOJO(new File(ROOT, "supported.jar"), new File(TEST, "supported.xml"))    );
 
         Option[] opt =  options(

@@ -88,7 +88,7 @@ public class TestInvalidation {
         InputStream test = TinyBundles.newBundle()
             .add(FooDelegator.class)
             .set(Constants.BUNDLE_SYMBOLICNAME,"RequiredTransactionPropagation")
-            .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.transaction.test.service, javax.transaction")
+            .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.transaction.test.service, javax.transaction;version=1.1")
             .build( withiPOJO(new File(ROOT, "requires.jar"), new File(TEST, "requires.xml"))  );
 
 
