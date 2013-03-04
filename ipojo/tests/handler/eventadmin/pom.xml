@@ -79,6 +79,7 @@
                     <instructions>
                         <Private-Package>org.apache.felix.ipojo.test.*
                             </Private-Package>
+                        <Import-Package>org.apache.felix.ipojo.handlers.event, *</Import-Package>    
                         <Test-Suite>
                             org.apache.felix.ipojo.test.EahTestSuite
                         </Test-Suite>
@@ -111,7 +112,7 @@
                   <goal>test</goal>
                 </goals>
                 <configuration>
-                  <hideOutputs>false</hideOutputs>
+                  
                 </configuration>
               </execution>
             </executions>
