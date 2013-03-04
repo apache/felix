@@ -24,9 +24,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.felix.resolver.Logger;
 import org.apache.felix.resolver.ResolverImpl;
 import org.osgi.framework.namespace.BundleNamespace;
+import org.osgi.framework.namespace.HostNamespace;
+import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Namespace;
@@ -45,11 +48,14 @@ public class Main
 
         Map<Resource, Wiring> wirings = new HashMap<Resource, Wiring>();
         Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+        List<Resource> mandatory;
+        ResolveContextImpl rci;
+        Map<Resource, List<Wire>> wireMap;
 
         System.out.println("\nSCENARIO 1\n");
-        List<Resource> mandatory = populateScenario1(wirings, candMap);
-        ResolveContextImpl rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.EMPTY_LIST);
-        Map<Resource, List<Wire>> wireMap = resolver.resolve(rci);
+        mandatory = populateScenario1(wirings, candMap);
+        rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.EMPTY_LIST);
+        wireMap = resolver.resolve(rci);
         System.out.println("RESULT " + wireMap);
 
         System.out.println("\nSCENARIO 2\n");
@@ -98,6 +104,11 @@ public class Main
         wireMap = resolver.resolve(rci);
         System.out.println("RESULT " + wireMap);
 
+        System.out.println("\nSCENARIO 7\n");
+        mandatory = populateScenario7(wirings, candMap);
+        rci = new ResolveContextImpl(wirings, candMap, mandatory, Collections.EMPTY_LIST);
+        wireMap = resolver.resolve(rci);
+        System.out.println("RESULT " + wireMap);
     }
 
     private static List<Resource> populateScenario1(
@@ -397,6 +408,49 @@ public class Main
         List<Resource> resources = new ArrayList<Resource>();
         resources.add(a1);
         resources.add(a2);
+        return resources;
+    }
+
+    private static List<Resource> populateScenario7(
+            Map<Resource, Wiring> wirings, Map<Requirement, List<Capability>> candMap)
+    {
+        wirings.clear();
+        candMap.clear();
+
+        ResourceImpl a1 = new ResourceImpl("A");
+        GenericCapability a1_hostCap = new GenericCapability(a1, HostNamespace.HOST_NAMESPACE);
+        a1_hostCap.addAttribute(HostNamespace.HOST_NAMESPACE, "A");
+        a1.addCapability(a1_hostCap);
+
+        ResourceImpl f1 = new ResourceImpl("F1", IdentityNamespace.TYPE_FRAGMENT);
+        GenericRequirement f1_hostReq = new GenericRequirement(f1, HostNamespace.HOST_NAMESPACE);
+        f1_hostReq.addDirective(Namespace.REQUIREMENT_FILTER_DIRECTIVE, "(" + HostNamespace.HOST_NAMESPACE + "=A)");
+        f1.addRequirement(f1_hostReq);
+
+        ResourceImpl f2 = new ResourceImpl("F2", IdentityNamespace.TYPE_FRAGMENT);
+        GenericRequirement f2_hostReq = new GenericRequirement(f2, HostNamespace.HOST_NAMESPACE);
+        f2_hostReq.addDirective(Namespace.REQUIREMENT_FILTER_DIRECTIVE, "(" + HostNamespace.HOST_NAMESPACE + "=A)");
+        f2.addRequirement(f2_hostReq);
+
+        ResourceImpl b1 = new ResourceImpl("B");
+        GenericRequirement b1_identityReq = new GenericRequirement(f2, IdentityNamespace.IDENTITY_NAMESPACE);
+        b1_identityReq.addDirective(Namespace.REQUIREMENT_FILTER_DIRECTIVE, "(" + IdentityNamespace.IDENTITY_NAMESPACE + "=F2)");
+        b1.addRequirement(b1_identityReq);
+
+        candMap.put(
+            f1.getRequirements(null).get(0),
+            a1.getCapabilities(HostNamespace.HOST_NAMESPACE));
+        candMap.put(
+            f2.getRequirements(null).get(0),
+            a1.getCapabilities(HostNamespace.HOST_NAMESPACE));
+        candMap.put(
+            b1.getRequirements(null).get(0),
+            f2.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE));
+        List<Resource> resources = new ArrayList<Resource>();
+        resources.add(a1);
+        resources.add(f1);
+        resources.add(f2);
+        resources.add(b1);
         return resources;
     }
 }

@@ -30,10 +30,13 @@ public class ResourceImpl implements Resource
     private final List<Capability> m_caps;
     private final List<Requirement> m_reqs;
 
-    public ResourceImpl(String name)
+    public ResourceImpl(String name) {
+        this(name, IdentityNamespace.TYPE_BUNDLE);
+    }
+    public ResourceImpl(String name, String type)
     {
         m_caps = new ArrayList<Capability>();
-        m_caps.add(0, new IdentityCapability(this, name));
+        m_caps.add(0, new IdentityCapability(this, name, type));
         m_reqs = new ArrayList<Requirement>();
     }
 

@@ -29,9 +29,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
+
 import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.ExecutionEnvironmentNamespace;
 import org.osgi.framework.namespace.HostNamespace;
+import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Namespace;
@@ -1725,11 +1727,28 @@ public class ResolverImpl implements Resolver
                         if (!cand.getNamespace().startsWith("osgi.wiring.")
                             || !resource.equals(cand.getResource()))
                         {
+                            // If we don't already have wires for the candidate,
+                            // then recursively populate them.
                             if (!rc.getWirings().containsKey(cand.getResource()))
                             {
-                                populateWireMap(rc, cand.getResource(),
+                                // Need to special case the candidate for identity
+                                // capabilities since it may be from a fragment and
+                                // we don't want to populate wires for the fragment,
+                                // but rather the host to which it is attached.
+                                Resource targetCand = cand.getResource();
+                                if (IdentityNamespace.IDENTITY_NAMESPACE.equals(cand.getNamespace())
+                                    && Util.isFragment(targetCand))
+                                {
+                                    targetCand = allCandidates.getCandidates(
+                                        targetCand.getRequirements(HostNamespace.HOST_NAMESPACE).get(0))
+                                            .iterator().next().getResource();
+                                    targetCand = allCandidates.getWrappedHost(targetCand);
+                                }
+
+                                populateWireMap(rc, targetCand,
                                     resourcePkgMap, wireMap, allCandidates);
                             }
+
                             Wire wire = new WireImpl(
                                 unwrappedResource,
                                 getDeclaredRequirement(req),
