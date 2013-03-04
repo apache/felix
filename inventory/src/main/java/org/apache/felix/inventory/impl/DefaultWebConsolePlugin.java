@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,16 +18,10 @@ package org.apache.felix.inventory.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.felix.inventory.PrinterMode;
 import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceRegistration;
 
 /**
  * The web console plugin for a inventory printer.
@@ -39,7 +33,7 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
 
     /**
      * Constructor
-     * 
+     *
      * @param inventoryPrinterAdapter The adapter
      */
     DefaultWebConsolePlugin(final InventoryPrinterManagerImpl inventoryPrinterManager)
@@ -57,7 +51,7 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
      */
     public String getTitle()
     {
-        return "Overview";
+        return ConsoleConstants.TITLE;
     }
 
     /**
@@ -65,7 +59,7 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
      */
     public String getName()
     {
-        return "config";
+        return ConsoleConstants.NAME;
     }
 
     /**
@@ -109,29 +103,5 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
     public void addAttachments(String namePrefix, ZipOutputStream zos) throws IOException
     {
         // no attachments support
-    }
-
-    public static ServiceRegistration register(final BundleContext context, final InventoryPrinterManagerImpl manager)
-    {
-        final DefaultWebConsolePlugin dwcp = new DefaultWebConsolePlugin(manager);
-
-        final Dictionary props = new Hashtable();
-        props.put(ConsoleConstants.PLUGIN_LABEL, dwcp.getName());
-        props.put(ConsoleConstants.PLUGIN_TITLE, dwcp.getTitle());
-        props.put(ConsoleConstants.PLUGIN_CATEGORY, ConsoleConstants.WEB_CONSOLE_CATEGORY);
-        return context.registerService(ConsoleConstants.INTERFACE_SERVLET, new ServiceFactory()
-        {
-
-            public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
-            {
-                // nothing to do
-            }
-
-            public Object getService(final Bundle bundle, final ServiceRegistration registration)
-            {
-                return dwcp;
-            }
-
-        }, props);
     }
 }
