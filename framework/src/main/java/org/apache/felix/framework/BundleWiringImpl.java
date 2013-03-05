@@ -641,13 +641,20 @@ public class BundleWiringImpl implements BundleWiring
         return m_revision;
     }
 
-    public synchronized ClassLoader getClassLoader()
+    public ClassLoader getClassLoader()
     {
         if (m_isDisposed)
         {
             return null;
         }
-        if (m_classLoader == null)
+        return getClassLoaderInternal();
+    }
+
+    private synchronized ClassLoader getClassLoaderInternal()
+    {
+        // Only try to create the class loader if the bundle
+        // is not disposed.
+        if (!m_isDisposed && (m_classLoader == null))
         {
             // Determine which class loader to use based on which
             // Java platform we are running on.
@@ -1354,7 +1361,17 @@ public class BundleWiringImpl implements BundleWiring
             throw new ClassNotFoundException(name);
         }
 
-        return getClassLoader().loadClass(name);
+        ClassLoader cl = getClassLoaderInternal();
+        if (cl == null)
+        {
+            throw new ClassNotFoundException(
+                "Unable to load class '"
+                + name
+                + "' because the bundle wiring for "
+                + m_revision.getSymbolicName()
+                + " is no longer valid.");
+        }
+        return cl.loadClass(name);
     }
 
     private boolean isFiltered(String name)
@@ -1469,9 +1486,24 @@ public class BundleWiringImpl implements BundleWiring
                 // If not found, try the revision's own class path.
                 if (result == null)
                 {
-                    result = (isClass)
-                        ? (Object) ((BundleClassLoader) getClassLoader()).findClass(name)
-                        : (Object) m_revision.getResourceLocal(name);
+                    if (isClass)
+                    {
+                        ClassLoader cl = getClassLoaderInternal();
+                        if (cl == null)
+                        {
+                            throw new ClassNotFoundException(
+                                "Unable to load class '"
+                                + name
+                                + "' because the bundle wiring for "
+                                + m_revision.getSymbolicName()
+                                + " is no longer valid.");
+                        }
+                        result = (Object) ((BundleClassLoader) cl).findClass(name);
+                    }
+                    else
+                    {
+                        result = (Object) m_revision.getResourceLocal(name);
+                    }
 
                     // If still not found, then try the revision's dynamic imports.
                     if (result == null)
@@ -1953,6 +1985,21 @@ public class BundleWiringImpl implements BundleWiring
         protected Class findClass(String name) throws ClassNotFoundException
         {
             Class clazz = null;
+
+            // Do a quick check to try to avoid searching for classes on a
+            // disposed class loader, which will avoid some odd exception.
+            // This won't prevent all weird exception, since the wiring could
+            // still get disposed of after this check, but it will prevent
+            // some, perhaps.
+            if (m_wiring.m_isDisposed)
+            {
+                throw new ClassNotFoundException(
+                    "Unable to load class '"
+                    + name
+                    + "' because the bundle wiring for "
+                    + m_wiring.m_revision.getSymbolicName()
+                    + " is no longer valid.");
+            }
 
             // Search for class in bundle revision.
             if (clazz == null)
