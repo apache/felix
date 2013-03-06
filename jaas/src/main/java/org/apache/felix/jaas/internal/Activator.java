@@ -21,6 +21,7 @@ package org.apache.felix.jaas.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.log.LogService;
 
 public class Activator implements BundleActivator
 {
@@ -38,7 +39,7 @@ public class Activator implements BundleActivator
         loginModuleCreator = new BundleLoginModuleCreator(context, logger);
         jaasConfigFactory = new JaasConfigFactory(context, loginModuleCreator, logger);
         configSpi = new ConfigSpiOsgi(context, logger);
-        webConsolePlugin = new JaasWebConsolePlugin(context, configSpi,loginModuleCreator);
+        registerWebConsolePlugin(context);
 
         logger.open();
         loginModuleCreator.open();
@@ -63,4 +64,14 @@ public class Activator implements BundleActivator
             logger.close();
         }
     }
+
+    private void registerWebConsolePlugin(BundleContext context){
+        try{
+            webConsolePlugin = new JaasWebConsolePlugin(context, configSpi,loginModuleCreator);
+        }catch(NoClassDefFoundError t){
+            //Servlet API is not present. This is an optional requirement
+            logger.log(LogService.LOG_INFO,"HTTP support not found. JAAS WebConsole Plugin would not be registered");
+        }
+    }
+
 }
