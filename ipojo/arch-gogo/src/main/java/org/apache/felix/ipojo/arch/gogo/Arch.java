@@ -19,6 +19,7 @@
 package org.apache.felix.ipojo.arch.gogo;
 
 import java.io.PrintStream;
+import java.util.Dictionary;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.Factory;
@@ -30,6 +31,9 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.architecture.InstanceDescription;
+import org.apache.felix.ipojo.extender.ExtensionDeclaration;
+import org.apache.felix.ipojo.extender.InstanceDeclaration;
+import org.apache.felix.ipojo.extender.TypeDeclaration;
 import org.apache.felix.service.command.Descriptor;
 /**
  * iPOJO Arch command giving information about the current
@@ -56,7 +60,8 @@ public class Arch {
         "instance",
         "factory",
         "factories",
-        "handlers"
+        "handlers",
+        "extensions"
     };
     
     /**
@@ -76,7 +81,16 @@ public class Arch {
      */
     @Requires(optional = true)
     private HandlerFactory[] m_handlers;
-    
+
+    @Requires(optional = true)
+    private InstanceDeclaration[] m_instances;
+
+    @Requires(optional = true)
+    private TypeDeclaration[] m_types;
+
+    @Requires(optional = true)
+    private ExtensionDeclaration[] m_extensions;
+
     /**
      * Displays iPOJO instances.
      */
@@ -95,6 +109,15 @@ public class Arch {
                 buffer.append("Instance " + instance.getName() + " -> stopped \n");
             }
         }
+
+        for (InstanceDeclaration instance : m_instances) {
+            // Only print unbound instances (others already printed above)
+            if (!instance.getStatus().isBound()) {
+                buffer.append("Instance " + name(instance.getConfiguration()) + " of type " + instance.getConfiguration().get("component") + " is not bound.\n");
+                buffer.append("  Reason: " + instance.getStatus().getMessage());
+                buffer.append("\n");
+            }
+        }
         
         if (buffer.length() == 0) {
             buffer.append("No instances \n");
@@ -102,7 +125,15 @@ public class Arch {
         
         System.out.println(buffer.toString());   
     }
-    
+
+    private String name(Dictionary<String, Object> configuration) {
+        String name = (String) configuration.get("instance.name");
+        if (name == null) {
+            name = "unnamed";
+        }
+        return name;
+    }
+
     /**
      * Displays the architecture of a specific instance.
      * @param instance the instance name
@@ -116,6 +147,17 @@ public class Arch {
                 return;
             }
         }
+
+        for (InstanceDeclaration instanceDeclaration : m_instances) {
+            if (!instanceDeclaration.getStatus().isBound()) {
+                if (instance.equals(name(instanceDeclaration.getConfiguration()))) {
+                    System.out.println("Instance " + instance + " not bound to its factory");
+                    System.out.println(" -> " + instanceDeclaration.getStatus().getMessage());
+                    return;
+                }
+            }
+        }
+
         System.err.println("Instance " + instance + " not found");
     }
     
@@ -140,7 +182,17 @@ public class Arch {
                 found = true;
             }
         }
-        
+
+
+        for (TypeDeclaration type : m_types) {
+            if (!type.getStatus().isBound()) {
+                if (factory.equals(type.getComponentName())) {
+                    System.out.println("Factory " + factory + " not bound");
+                    System.out.println(" -> " + type.getStatus().getMessage());
+                    found = true;
+                }
+            }
+        }
         if (! found) {
             System.err.println("Factory " + factory + " not found");
         }
@@ -159,6 +211,14 @@ public class Arch {
                 buffer.append("Factory " + m_factories[i].getName() + " (INVALID : " + m_factories[i].getMissingHandlers() + ") \n");
             }
         }
+
+        for (TypeDeclaration type : m_types) {
+            if (!type.getStatus().isBound()) {
+                buffer.append("Factory " + type.getComponentName() + " is not bound\n");
+                buffer.append("  Reason: " + type.getStatus().getMessage());
+                buffer.append("\n");
+            }
+        }
         
         if (buffer.length() == 0) {
             buffer.append("No factories \n");
@@ -166,7 +226,7 @@ public class Arch {
         
         System.out.println(buffer.toString());
     }
-    
+
     /**
      * Displays the list of available handlers.
      */
@@ -183,6 +243,25 @@ public class Arch {
             } else {
                 out.println("Handler " + name + " (INVALID : " + m_handlers[i].getMissingHandlers() + ")");
             }
+        }
+
+        for (TypeDeclaration type : m_types) {
+            if (!type.getStatus().isBound()) {
+                out.println("HandlerFactory " + type.getComponentName() + " is not bound");
+                out.println("  Reason: " + type.getStatus().getMessage());
+            }
+        }
+    }
+
+    /**
+     * Displays the list of available extensions.
+     */
+    @Descriptor("Display iPOJO extensions")
+    public void extensions() {
+        PrintStream out = System.out;
+        out.println("Available extensions:");
+        for (ExtensionDeclaration extension : m_extensions) {
+            out.println("  * " + extension.getExtensionName());
         }
     }
 

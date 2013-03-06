@@ -32,10 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.felix.ipojo.ComponentInstance;
-import org.apache.felix.ipojo.ConfigurationException;
-import org.apache.felix.ipojo.IPOJOServiceFactory;
-import org.apache.felix.ipojo.InstanceManager;
+import org.apache.felix.ipojo.*;
 import org.apache.felix.ipojo.util.Callback;
 import org.apache.felix.ipojo.util.Property;
 import org.apache.felix.ipojo.util.SecurityHelper;
@@ -152,11 +149,11 @@ public class ProvidedService implements ServiceFactory {
 
         // Add instance name, factory name and factory version is set.
         try {
-            addProperty(new Property("instance.name", null, null, handler.getInstanceManager().getInstanceName(), String.class.getName(), handler.getInstanceManager(), handler));
+            addProperty(new Property(Factory.INSTANCE_NAME_PROPERTY, null, null, handler.getInstanceManager().getInstanceName(), String.class.getName(), handler.getInstanceManager(), handler));
             addProperty(new Property("factory.name", null, null, handler.getInstanceManager().getFactory().getFactoryName(), String.class.getName(), handler.getInstanceManager(), handler));
 
             if (handler.getInstanceManager().getFactory().getVersion() != null) {
-                addProperty(new Property("factory.version", null, null, handler.getInstanceManager().getFactory().getVersion(), String.class.getName(), handler.getInstanceManager(), handler));
+                addProperty(new Property(Factory.FACTORY_VERSION_PROPERTY, null, null, handler.getInstanceManager().getFactory().getVersion(), String.class.getName(), handler.getInstanceManager(), handler));
             }
 
             // Add the service.* if defined
@@ -485,8 +482,8 @@ public class ProvidedService implements ServiceFactory {
             Dictionary newProps = (Dictionary) (updated.clone());
 
             // Remove keys that must not be compared
-            newProps.remove("instance.name");
-            oldProps.remove("instance.name");
+            newProps.remove(Factory.INSTANCE_NAME_PROPERTY);
+            oldProps.remove(Factory.INSTANCE_NAME_PROPERTY);
             newProps.remove(Constants.SERVICE_ID);
             oldProps.remove(Constants.SERVICE_ID);
             newProps.remove(Constants.SERVICE_PID);

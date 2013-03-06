@@ -44,6 +44,17 @@ public interface Factory {
      */
     int INVALID = 0;
 
+
+    /**
+     * Instance configuration can set the instance name using this property.
+     */
+    String INSTANCE_NAME_PROPERTY = "instance.name";
+
+    /**
+     * Instance configuration can set the factory version they target using this property.
+     */
+    String FACTORY_VERSION_PROPERTY = "factory.version";
+
     /**
      * Creates an instance manager (i.e. component type instance).
      * @param configuration the configuration properties for this component.

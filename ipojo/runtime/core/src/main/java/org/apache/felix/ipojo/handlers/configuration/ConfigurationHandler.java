@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.handlers.configuration;
 import java.util.*;
 
 import org.apache.felix.ipojo.ConfigurationException;
+import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.HandlerFactory;
 import org.apache.felix.ipojo.PrimitiveHandler;
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
@@ -352,7 +353,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
         if (m_managedServicePID != null && m_sr == null) {
             Properties props = new Properties();
             props.put(Constants.SERVICE_PID, m_managedServicePID);
-            props.put("instance.name", getInstanceManager().getInstanceName());
+            props.put(Factory.INSTANCE_NAME_PROPERTY, getInstanceManager().getInstanceName());
             props.put("factory.name", getInstanceManager().getFactory().getFactoryName());
 
             // Security Check
@@ -562,7 +563,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 Enumeration e = m_propagatedFromCA.keys();
                 while (e.hasMoreElements()) {
                     String k = (String) e.nextElement();
-                    if (! k.equals("instance.name")) {
+                    if (! k.equals(Factory.INSTANCE_NAME_PROPERTY)) {
                         props.put(k, m_propagatedFromCA.get(k));
                     }
                 }
@@ -572,7 +573,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 Enumeration e = m_propagatedFromInstance.keys();
                 while (e.hasMoreElements()) {
                     String k = (String) e.nextElement();
-                    if (! k.equals("instance.name")) { // Skip instance.name
+                    if (! k.equals(Factory.INSTANCE_NAME_PROPERTY)) { // Skip instance.name
                         props.put(k, m_propagatedFromInstance.get(k));
                     }
                 }

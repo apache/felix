@@ -20,7 +20,7 @@ package org.apache.felix.ipojo.util;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ErrorHandler;
-import org.apache.felix.ipojo.Extender;
+import org.apache.felix.ipojo.extender.internal.Extender;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
@@ -32,7 +32,7 @@ import org.osgi.service.log.LogService;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Logger {
+public class Logger implements Log {
 
     /**
      * The iPOJO default log level property.
@@ -50,22 +50,22 @@ public class Logger {
     /**
      * The Log Level ERROR.
      */
-    public static final int ERROR = 1;
+    public static final int ERROR = Log.ERROR;
 
     /**
      * The Log Level WARNING.
      */
-    public static final int WARNING = 2;
+    public static final int WARNING = Log.WARNING;
 
     /**
      * The Log Level INFO.
      */
-    public static final int INFO = 3;
+    public static final int INFO = Log.INFO;
 
     /**
      * The Log Level DEBUG.
      */
-    public static final int DEBUG = 4;
+    public static final int DEBUG = Log.DEBUG;
 
     /**
      * The Bundle Context used to get the
@@ -332,7 +332,6 @@ public class Logger {
                     handler.onWarning(m_instance, msg, error);
                 } // The others case are not supported
                 m_context.ungetService(ref);
-                return;
             } // Else do nothing...
         } catch (IllegalStateException e) {
             // Ignore

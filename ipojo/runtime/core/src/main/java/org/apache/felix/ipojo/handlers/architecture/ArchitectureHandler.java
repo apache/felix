@@ -20,6 +20,7 @@ package org.apache.felix.ipojo.handlers.architecture;
 
 import java.util.Dictionary;
 
+import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.PrimitiveHandler;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.architecture.InstanceDescription;
@@ -43,7 +44,7 @@ public class ArchitectureHandler extends PrimitiveHandler implements Architectur
      * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary configuration) {
-        m_name = (String) configuration.get("instance.name");
+        m_name = (String) configuration.get(Factory.INSTANCE_NAME_PROPERTY);
     }
 
     /**

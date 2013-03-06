@@ -18,18 +18,9 @@
  */
 package org.apache.felix.ipojo;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
+import org.apache.felix.ipojo.extender.internal.Extender;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.util.Logger;
 import org.apache.felix.ipojo.util.SecurityHelper;
@@ -38,6 +29,8 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedServiceFactory;
+
+import java.util.*;
 
 /**
  * This class defines common mechanisms of iPOJO component factories
@@ -276,12 +269,12 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
 
         // Find name in the configuration
         String name;
-        if (configuration.get("instance.name") == null && configuration.get("name") == null) {
+        if (configuration.get(Factory.INSTANCE_NAME_PROPERTY) == null && configuration.get("name") == null) {
             // No name provided
             name = null;
         } else {
             // Support both instance.name & name
-            name = (String) configuration.get("instance.name");
+            name = (String) configuration.get(Factory.INSTANCE_NAME_PROPERTY);
             if (name == null) {
                 name = (String) configuration.get("name");
                 getLogger().log(Logger.WARNING, "The 'name' (" + name + ") attribute, used as the instance name, is deprecated, please use the 'instance.name' attribute");
@@ -292,9 +285,9 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         // Generate a unique name if required and verify uniqueness
         // We extract the version from the configuration because it may help to compute a unique name by appending
         // the version to the given name.
-        String version = (String) configuration.get("factory.version");
+        String version = (String) configuration.get(Factory.FACTORY_VERSION_PROPERTY);
         name = m_generator.generate(name, version);
-        configuration.put("instance.name", name);
+        configuration.put(Factory.INSTANCE_NAME_PROPERTY, name);
 
         // Here we are sure to be valid until the end of the method.
         HandlerManager[] handlers = new HandlerManager[m_requiredHandlers.size()];
@@ -478,11 +471,11 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
      * @see org.apache.felix.ipojo.Factory#reconfigure(java.util.Dictionary)
      */
     public synchronized void reconfigure(Dictionary properties) throws UnacceptableConfiguration, MissingHandlerException {
-        if (properties == null || (properties.get("instance.name") == null && properties.get("name") == null)) { // Support both instance.name and name
+        if (properties == null || (properties.get(Factory.INSTANCE_NAME_PROPERTY) == null && properties.get("name") == null)) { // Support both instance.name and name
             throw new UnacceptableConfiguration("The configuration does not contains the \"instance.name\" property");
         }
 
-        String name = (String) properties.get("instance.name");
+        String name = (String) properties.get(Factory.INSTANCE_NAME_PROPERTY);
         if (name == null) {
             name = (String) properties.get("name");
         }
@@ -653,7 +646,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
 
         if (instance == null) {
             try {
-                properties.put("instance.name", name); // Add the name in the configuration
+                properties.put(Factory.INSTANCE_NAME_PROPERTY, name); // Add the name in the configuration
                 // If an instance with this name was created before, this creation will failed.
                 createComponentInstance(properties);
             } catch (UnacceptableConfiguration e) {
@@ -668,7 +661,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
             }
         } else {
             try {
-                properties.put("instance.name", name); // Add the name in the configuration
+                properties.put(Factory.INSTANCE_NAME_PROPERTY, name); // Add the name in the configuration
                 reconfigure(properties); // re-configure the component
             } catch (UnacceptableConfiguration e) {
                 m_logger.log(Logger.ERROR, "The configuration is not acceptable : " + e.getMessage());
