@@ -77,6 +77,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     // the component properties from the Configuration Admin Service
     // this is null, if none exist or none are provided
     private Dictionary<String, Object> m_configurationProperties;
+    
+    private volatile long m_changeCount = -1;
 
     /**
      * The constructor receives both the activator and the metadata
@@ -517,9 +519,25 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
      * @param configuration The configuration properties for the component from
      *                      the Configuration Admin Service or <code>null</code> if there is
      *                      no configuration or if the configuration has just been deleted.
+     * @param changeCount TODO
      */
-    public void reconfigure( Dictionary<String, Object> configuration )
+    public void reconfigure( Dictionary<String, Object> configuration, long changeCount )
     {
+        if ( configuration != null )
+        {
+            if ( changeCount <= m_changeCount )
+            {
+                log( LogService.LOG_DEBUG,
+                        "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
+                        new Object[] { getConfigurationPid(), m_changeCount, changeCount }, null );
+                return;
+            }
+            m_changeCount = changeCount;
+        }
+        else 
+        {
+            m_changeCount = -1;
+        }
         // nothing to do if there is no configuration (see FELIX-714)
         if ( configuration == null && m_configurationProperties == null )
         {
@@ -779,5 +797,10 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 }
             }
         }
+    }
+
+    public long getChangeCount()
+    {
+        return m_changeCount;
     }
 }

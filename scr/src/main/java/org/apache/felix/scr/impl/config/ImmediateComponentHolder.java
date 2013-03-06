@@ -100,14 +100,12 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
      * Whether components have already been enabled by calling the
      * {@link #enableComponents(boolean)} method. If this field is <code>true</code>
      * component instances created per configuration by the
-     * {@link #configurationUpdated(String, Dictionary)} method are also
+     * {@link #configurationUpdated(String, Dictionary, long)} method are also
      * enabled. Otherwise they are not enabled immediately.
      */
     private volatile boolean m_enabled;
     private final ComponentMethods m_componentMethods;
     
-    private volatile boolean m_configured;
-
 
     public ImmediateComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
     {
@@ -248,7 +246,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         // is not the "last" and has to be disposed off
         if ( deconfigure )
         {
-	        icm.reconfigure( null );
+	        icm.reconfigure( null, -1 );
         }
         else
         {
@@ -270,12 +268,11 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
      * this case a new component is created, configured and stored in the map</li>
      * </ul>
      */
-    public void configurationUpdated( final String pid, final Dictionary<String, Object> props )
+    public void configurationUpdated( final String pid, final Dictionary<String, Object> props, long changeCount )
     {
         log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration updated for pid {0} with properties {1}",
                 new Object[] {pid, props}, null);
 
-        m_configured = true;
         // component to update or create
         final ImmediateComponentManager icm;
         final String message;
@@ -342,7 +339,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         log( LogService.LOG_DEBUG, message, new Object[] {pid}, null);
 
         // configure the component
-        icm.reconfigure( props );
+        icm.reconfigure( props, changeCount );
         log( LogService.LOG_DEBUG, "ImmediateComponentHolder Finished configuring the dependency managers for component for pid {0} ",
                 new Object[] {pid}, null );
 
@@ -359,9 +356,12 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         }
     }
 
-    public boolean isConfigured()
+    public synchronized long getChangeCount( String pid)
     {
-        return m_configured;
+        
+        ImmediateComponentManager icm =  pid.equals( getComponentMetadata().getConfigurationPid())? 
+                m_singleComponent: m_components.get( pid );
+        return icm == null? -1: icm.getChangeCount();
     }
 
     public Component[] getComponents()

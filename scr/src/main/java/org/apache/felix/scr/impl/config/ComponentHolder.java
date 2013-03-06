@@ -66,15 +66,17 @@ public interface ComponentHolder
     /**
      * Configure a component with configuration from the given PID.
      *
-     * @param pid The PID of the configuration used to configure the component
+     * @param pid The PID of the configuration used to configure the component.
+     * @param props the property dictionary from the configuration.
+     * @param changeCount change count of the configuration, or R4 imitation.
      */
-    void configurationUpdated( String pid, Dictionary<String, Object> props );
+    void configurationUpdated( String pid, Dictionary<String, Object> props, long changeCount );
     
     /**
-     * Has this component holder ever been configured?  Used to avoid double update during startup
-     * @return true if configurationUpdated has ever been called on this holder.
+     * Change count (or fake R4 imitation)
+     * @return the last change count from a configurationUpdated call for the given pid.
      */
-    boolean isConfigured();
+    long getChangeCount( String pid );
 
     /**
      * Returns all <code>Component</code> instances held by this holder.

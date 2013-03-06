@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.manager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -85,9 +86,9 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     private volatile boolean m_hasConfiguration;
     
     /**
-     * whether this holder has ever been configured.
+     * Configuration change count (R5) or imitation (R4)
      */
-    private volatile boolean m_isConfigured;
+    protected volatile long m_changeCount = -1;
 
     public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
@@ -115,7 +116,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         ComponentInstance instance;
         cm.setFactoryProperties( dictionary );
         //configure the properties
-        cm.reconfigure( m_configuration );
+        cm.reconfigure( m_configuration, m_changeCount );
         // enable
         cm.enableInternal();
         //activate immediately
@@ -274,16 +275,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
     protected boolean collectDependencies()
     {
-//        Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> old = getDependencyMap();
-//        if ( old == null )
-//        {
-//            Map<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>> dependenciesMap = new HashMap<DependencyManager<S, ?>, Map<ServiceReference<?>, RefPair<?>>>();
-//            for (DependencyManager dm: getDependencyManagers() )
-//            {
-//                dependenciesMap.put( dm, Collections.EMPTY_MAP );
-//            }
-//            setDependencyMap( old, dependenciesMap );
-//        }
         return true;
     }
 
@@ -318,6 +309,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         {
             log( LogService.LOG_DEBUG, "Handling configuration removal", null );
 
+            m_changeCount = -1;
             // nothing to do if there is no configuration currently known.
             if ( !m_hasConfiguration )
             {
@@ -346,9 +338,23 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public void configurationUpdated( String pid, Dictionary<String, Object> configuration )
+    public void configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount )
     {
-        m_isConfigured = true;
+        if ( configuration != null )
+        {
+            if ( changeCount <= m_changeCount )
+            {
+                log( LogService.LOG_DEBUG,
+                        "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
+                        new Object[] { getConfigurationPid(), m_changeCount, changeCount }, null );
+                return;
+            }
+            m_changeCount = changeCount;
+        }
+        else 
+        {
+            m_changeCount = -1;
+        }
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             log( LogService.LOG_INFO, "Configuration PID updated for Component Factory", null );
@@ -404,11 +410,12 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public boolean isConfigured()
+    public synchronized long getChangeCount( String pid)
     {
-        return m_isConfigured;
+        
+        return m_changeCount;
     }
-    
+
     public Component[] getComponents()
     {
         List<AbstractComponentManager> cms = getComponentList();
