@@ -38,8 +38,7 @@ public class Activator implements BundleActivator
         loginModuleCreator = new BundleLoginModuleCreator(context, logger);
         jaasConfigFactory = new JaasConfigFactory(context, loginModuleCreator, logger);
         configSpi = new ConfigSpiOsgi(context, logger);
-        webConsolePlugin = new JaasWebConsolePlugin(context, configSpi,
-            loginModuleCreator);
+        webConsolePlugin = new JaasWebConsolePlugin(context, configSpi,loginModuleCreator);
 
         logger.open();
         loginModuleCreator.open();
