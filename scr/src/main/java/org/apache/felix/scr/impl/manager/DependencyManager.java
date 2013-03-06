@@ -316,6 +316,7 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic added {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
         	boolean tracked = false;
             if ( getPreviousRefMap().remove( serviceReference ) == null )
             {
@@ -336,7 +337,7 @@ public class DependencyManager<S, T> implements Reference
                     m_componentManager.activateInternal( trackingCount );
                 }
             }
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic added {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             if ( !tracked )
             {
 				tracked(trackingCount);
@@ -345,16 +346,18 @@ public class DependencyManager<S, T> implements Reference
 
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic modified {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             if (isActive())
             {
                 m_componentManager.update( DependencyManager.this, refPair, trackingCount );
             }
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic modified {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic modified {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
         }
 
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             if ( isActive() )
             {
                 boolean unbind = isOptional() || !getTracker().isEmpty();
@@ -368,10 +371,10 @@ public class DependencyManager<S, T> implements Reference
                 {
                     lastRefPair = refPair;
                     lastRefPairTrackingCount = trackingCount;
-                    m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed (deactivate) {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
                     tracked( trackingCount );
                     m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
                     lastRefPair = null;
+                    m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed (deactivate) {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
                 }
             }
             else
@@ -444,6 +447,7 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy added {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
             if (isActive())
             {
@@ -458,21 +462,23 @@ public class DependencyManager<S, T> implements Reference
             {
                 m_componentManager.activateInternal( trackingCount );
             }
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy added {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
         }
 
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy modified {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             if (isActive())
             {
                 m_componentManager.update( DependencyManager.this, refPair, trackingCount );
             }
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy modified {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy modified {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
         }
 
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy removed {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
             if ( isActive() )
             {
@@ -486,7 +492,7 @@ public class DependencyManager<S, T> implements Reference
             }
             //This is unlikely
             ungetService( refPair );
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy removed {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy removed {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
         }
 
         public boolean open()
@@ -533,26 +539,29 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant added {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
             if ( isTrackerOpened() && !isOptional() && !isActive())
             {
                 m_componentManager.activateInternal( trackingCount );
             }
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant added {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
         }
 
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant modified {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             if (isActive())
             {
                 m_componentManager.update( DependencyManager.this, refPair, trackingCount );
             }
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant modified {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant modified {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
         }
 
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant removed {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
             if ( isActive() )
             {
@@ -570,7 +579,7 @@ public class DependencyManager<S, T> implements Reference
                 }
             }
             ungetService( refPair );
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant removed {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant removed {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
         }
 
         public boolean open()
@@ -625,6 +634,7 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic added {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
         	boolean tracked = false;
             if ( getPreviousRefMap().remove( serviceReference ) == null )
             {
@@ -660,7 +670,7 @@ public class DependencyManager<S, T> implements Reference
                 }
             }
             this.trackingCount = trackingCount;
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic added {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             if ( !tracked )
             {
 				tracked(trackingCount);
@@ -669,17 +679,19 @@ public class DependencyManager<S, T> implements Reference
 
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic modified {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             if (isActive())
             {
                 m_componentManager.update( DependencyManager.this, refPair, trackingCount );
             }
             this.trackingCount = trackingCount;
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic modified {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic modified {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
         }
 
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic removed {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             if (refPair == this.refPair)
             {
                 if ( isActive() )
@@ -731,7 +743,7 @@ public class DependencyManager<S, T> implements Reference
                 this.trackingCount = trackingCount;
                 tracked( trackingCount );
             }
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic removed {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic removed {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
         }
 
         public boolean open()
@@ -794,6 +806,7 @@ public class DependencyManager<S, T> implements Reference
 
         public void addedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic added {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             this.trackingCount = trackingCount;
             tracked( trackingCount );
             if ( isActive() )
@@ -808,22 +821,24 @@ public class DependencyManager<S, T> implements Reference
             {
                 m_componentManager.activateInternal( trackingCount );
             }
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic added {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic added {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
         }
 
         public void modifiedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             if ( isActive() )
             {
                 m_componentManager.update( DependencyManager.this, refPair, trackingCount );
             }
             this.trackingCount = trackingCount;
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
         }
 
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2} (enter)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
             this.trackingCount = trackingCount;
             tracked( trackingCount );
             if ( isActive() && refPair == this.refPair )
@@ -831,7 +846,7 @@ public class DependencyManager<S, T> implements Reference
                 m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
                 m_componentManager.activateInternal( trackingCount );
             }
-            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2}", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
+            m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2} (exit)", new Object[] {m_dependencyMetadata.getName(), trackingCount, serviceReference}, null );
         }
 
         public boolean open()

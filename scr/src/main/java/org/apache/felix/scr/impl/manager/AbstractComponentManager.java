@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -119,6 +120,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     private volatile int ceiling;
 
+    private final Lock missingLock = new ReentrantLock();
+    private final Condition missingCondition = missingLock.newCondition();
     private final Set<Integer> missing = new TreeSet<Integer>( );
 
 
@@ -218,7 +221,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     //service event tracking
     void tracked( int trackingCount )
     {
-        synchronized ( missing )
+        missingLock.lock();
+        try
         {
             if (trackingCount == floor + 1 )
             {
@@ -237,13 +241,18 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 }
                 ceiling = trackingCount;
             }
-            missing.notifyAll();
+            missingCondition.signalAll();
+        }
+        finally
+        {
+            missingLock.unlock();
         }
     }
 
     void waitForTracked( int trackingCount )
     {
-        synchronized ( missing )
+        missingLock.lock();
+        try
         {
             while ( ceiling  < trackingCount || ( !missing.isEmpty() && missing.iterator().next() < trackingCount))
             {
@@ -251,13 +260,24 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                         new Object[] {trackingCount, ceiling, missing}, null );
                 try
                 {
-                    missing.wait( );
+                    if ( !missingCondition.await( getLockTimeout(), TimeUnit.MILLISECONDS ))
+                    {
+                        log( LogService.LOG_ERROR, "waitForTracked timed out: {0} ceiling: {1} missing: {2},  Expect further errors",
+                                new Object[] {trackingCount, ceiling, missing}, null );
+                        missing.clear();
+                        return;
+                        
+                    }
                 }
                 catch ( InterruptedException e )
                 {
                     //??
                 }
             }
+        }
+        finally
+        {
+            missingLock.unlock();
         }
     }
 
