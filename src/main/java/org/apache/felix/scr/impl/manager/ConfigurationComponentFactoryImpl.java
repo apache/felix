@@ -56,7 +56,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
      * {@link org.apache.felix.scr.impl.manager.ImmediateComponentManager} for configuration updating this map is
      * lazily created.
      */
-    private Map m_configuredServices;
+    private Map<String, ImmediateComponentManager> m_configuredServices;
 
     public ConfigurationComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
@@ -132,23 +132,23 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
     }
 
 
-    public void configurationUpdated( String pid, Dictionary<String, Object> configuration )
+    public void configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount )
     {
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            super.configurationUpdated( pid, configuration );
+            super.configurationUpdated( pid, configuration, changeCount );
         }
         else   //non-spec backwards compatible
         {
             ImmediateComponentManager cm;
-            Map configuredServices = m_configuredServices;
+            Map<String, ImmediateComponentManager> configuredServices = m_configuredServices;
             if ( configuredServices != null )
             {
                 cm = ( ImmediateComponentManager ) configuredServices.get( pid );
             }
             else
             {
-                m_configuredServices = new HashMap();
+                m_configuredServices = new HashMap<String, ImmediateComponentManager>();
                 configuredServices = m_configuredServices;
                 cm = null;
             }
@@ -160,7 +160,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
 
                 // this should not call component reactivation because it is
                 // not active yet
-                cm.reconfigure( configuration );
+                cm.reconfigure( configuration, changeCount );
 
                 // enable asynchronously if components are already enabled
                 if ( getState() == STATE_FACTORY )
@@ -175,7 +175,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
             else
             {
                 // update the configuration as if called as ManagedService
-                cm.reconfigure( configuration );
+                cm.reconfigure( configuration, changeCount );
             }
         }
     }
@@ -212,6 +212,20 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
         dispose( reason );
     }
 
+    public synchronized long getChangeCount( String pid)
+    {
+
+        if (pid.equals( getComponentMetadata().getConfigurationPid())) 
+        {
+            return m_changeCount;
+        }
+        if (m_configuredServices == null)
+        {
+            return -1;
+        }
+        ImmediateComponentManager icm =  m_configuredServices.get( pid );
+        return icm == null? -1: icm.getChangeCount();
+    }
 
 
     //---------- internal

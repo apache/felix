@@ -117,6 +117,8 @@ public abstract class ComponentTestBase
 
     //set to true to only get last 1000 lines of log.
     protected static boolean restrictedLogging;
+    
+    protected static String felixCaVersion = System.getProperty( "felix.ca.version" );
 
 
     static
@@ -153,7 +155,7 @@ public abstract class ComponentTestBase
             provision(
                 CoreOptions.bundle( bundleFile.toURI().toString() ),
                 mavenBundle( "org.ops4j.pax.tinybundles", "tinybundles", "1.0.0" ),
-                mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", "1.0.10" )
+                mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", felixCaVersion )
              ),
              junitBundles(),
              systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),

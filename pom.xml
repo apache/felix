@@ -70,6 +70,7 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
+        <felix.ca.version>1.0.10</felix.ca.version>
     </properties>
     
     
@@ -77,13 +78,13 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.3.1</version>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.3.1</version>
+            <artifactId>org.osgi.enterprise</artifactId>
+            <version>5.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -201,12 +202,12 @@
             <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
-	<dependency>
-		<groupId>org.codehaus.mojo</groupId>
-		<artifactId>animal-sniffer-annotations</artifactId>
-		<version>1.10-SNAPSHOT</version>
-		<scope>compile</scope>
-	</dependency>
+		<dependency>
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>animal-sniffer-annotations</artifactId>
+			<version>1.10-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
     </dependencies>
     <build>
         <directory>${bundle.build.name}</directory>
@@ -371,12 +372,10 @@
                   </execution>
                 </executions>
                 <configuration>
-                    <systemProperties>
-                        <property>
-                            <name>project.bundle.file</name>
-                            <value>${bundle.file.name}</value>
-                        </property>
-                    </systemProperties>
+                    <systemPropertyVariables>
+                        <project.bundle.file>${bundle.file.name}</project.bundle.file>
+                        <felix.ca.version>${felix.ca.version}</felix.ca.version>    
+                    </systemPropertyVariables>
                     <excludes>
                         <exclude>**/components/**</exclude>
                     </excludes>
@@ -467,6 +466,14 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
+        </profile>
+        <profile>
+            <!--  use to test with R5 ca, change count, targetetPids -->
+            <!--  remember you need to specify all profiles using this, e.g. -PcaR5,felix -->
+            <id>caR5</id>
+            <properties>
+                <felix.ca.version>1.6.0</felix.ca.version>
+            </properties>
         </profile>
     </profiles>
         

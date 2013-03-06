@@ -19,6 +19,8 @@
 package org.apache.felix.scr.impl.config;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -40,6 +42,27 @@ import org.osgi.service.log.LogService;
 
 public class ConfigurationSupport implements ConfigurationListener
 {
+    private static final ChangeCount changeCounter;
+    static
+    {
+        ChangeCount cc = null;
+        try
+        {
+            Configuration.class.getMethod( "getChangeCount", null );
+            cc = new R5ChangeCount();
+        }
+        catch ( SecurityException e )
+        {
+        }
+        catch ( NoSuchMethodException e )
+        {
+        }
+        if ( cc == null )
+        {
+            cc = new R4ChangeCount();
+        }
+        changeCounter = cc;
+    }
 
     // the registry of components to be configured
     private final ComponentRegistry m_registry;
@@ -74,7 +97,7 @@ public class ConfigurationSupport implements ConfigurationListener
     {
 
         // 112.7 configure unless configuration not required
-        if (!holder.isConfigured() && !holder.getComponentMetadata().isConfigurationIgnored())
+        if (!holder.getComponentMetadata().isConfigurationIgnored())
         {
             final BundleContext bundleContext = holder.getActivator().getBundleContext();
             final String bundleLocation = bundleContext.getBundle().getLocation();
@@ -97,8 +120,9 @@ public class ConfigurationSupport implements ConfigurationListener
                                 for (int i = 0; i < factory.length; i++)
                                 {
                                     final String pid = factory[i].getPid();
-                                    final Dictionary props = getConfiguration(ca, pid, bundleLocation);
-                                    holder.configurationUpdated(pid, props);
+                                    final Configuration config = getConfiguration(ca, pid, bundleLocation);
+                                    long changeCount = changeCounter.getChangeCount( config, false, -1 );
+                                    holder.configurationUpdated(pid, config.getProperties(), changeCount);
                                 }
                             }
                             else
@@ -107,8 +131,9 @@ public class ConfigurationSupport implements ConfigurationListener
                                 final Configuration singleton = findSingletonConfiguration(ca, confPid);
                                 if (singleton != null)
                                 {
-                                    final Dictionary props = getConfiguration(ca, confPid, bundleLocation);
-                                    holder.configurationUpdated(confPid, props);
+                                    final Configuration config = getConfiguration(ca, confPid, bundleLocation);
+                                    long changeCount = changeCounter.getChangeCount( config, false, -1 );
+                                    holder.configurationUpdated(confPid, config.getProperties(), changeCount);
                                 }
                             }
                         }
@@ -234,11 +259,12 @@ public class ConfigurationSupport implements ConfigurationListener
                                     if ( cao instanceof ConfigurationAdmin )
                                     {
                                         final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
-                                        final Dictionary dict = getConfiguration( ca, pid, bundleContext
+                                        final Configuration config = getConfiguration( ca, pid, bundleContext
                                             .getBundle().getLocation() );
-                                        if ( dict != null )
+                                        if ( config != null )
                                         {
-                                            componentHolder.configurationUpdated( pid, dict );
+                                            long changeCount = changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid ) );
+                                            componentHolder.configurationUpdated( pid, config.getProperties(), changeCount );
                                         }
                                     }
                                     else
@@ -280,14 +306,14 @@ public class ConfigurationSupport implements ConfigurationListener
         }
     }
 
-    private Dictionary getConfiguration(final ConfigurationAdmin ca, final String pid, final String bundleLocation)
+    private Configuration getConfiguration(final ConfigurationAdmin ca, final String pid, final String bundleLocation)
     {
         try
         {
             final Configuration cfg = ca.getConfiguration(pid);
             if (bundleLocation.equals(cfg.getBundleLocation()))
             {
-                return cfg.getProperties();
+                return cfg;
             }
 
             // configuration belongs to another bundle, cannot be used here
@@ -348,5 +374,27 @@ public class ConfigurationSupport implements ConfigurationListener
 
         // no factories in case of problems
         return null;
+    }
+    
+    
+    private interface ChangeCount {
+        long getChangeCount( Configuration configuration, boolean fromEvent, long previous );
+    }
+    
+    private static class R5ChangeCount implements ChangeCount {
+
+        public long getChangeCount(Configuration configuration, boolean fromEvent, long previous)
+        {
+            return configuration.getChangeCount();
+        }
+    }   
+    
+    private static class R4ChangeCount implements ChangeCount {
+
+        public long getChangeCount(Configuration configuration, boolean fromEvent, long previous)
+        {
+            return fromEvent? previous + 1:0;
+        }
+        
     }
 }
