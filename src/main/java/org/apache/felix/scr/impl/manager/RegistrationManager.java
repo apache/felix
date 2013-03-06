@@ -3,6 +3,8 @@ package org.apache.felix.scr.impl.manager;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -11,9 +13,40 @@ import org.osgi.service.log.LogService;
 abstract class RegistrationManager<T>
 {
     enum RegState {unregistered, registered};
+    private static class RegStateWrapper 
+    {
+        private final CountDownLatch latch = new CountDownLatch(1);
+        private final RegState regState;
+        
+        RegStateWrapper( RegState regState )
+        {
+            this.regState = regState;
+        }
+        
+        public RegState getRegState()
+        {
+            return regState;
+        }
+        
+        public CountDownLatch getLatch()
+        {
+            return latch;
+        }
+        
+        public int hashCode()
+        {
+            return regState.hashCode();
+        }
+        
+        public boolean equals(Object other)
+        {
+            return other instanceof RegStateWrapper && regState == ((RegStateWrapper)other).getRegState();
+        }
+        
+    }
     private final Lock registrationLock = new ReentrantLock();
     //Deque, ArrayDeque if we had java 6
-    private final List<RegState> opqueue = new ArrayList<RegState>();
+    private final List<RegStateWrapper> opqueue = new ArrayList<RegStateWrapper>();
 
     private volatile T m_serviceRegistration;
     /**
@@ -24,6 +57,7 @@ abstract class RegistrationManager<T>
      */
     boolean changeRegistration( RegState desired, String[] services )
     {
+        RegStateWrapper rsw = null;
         registrationLock.lock();
         try
         {
@@ -34,11 +68,13 @@ abstract class RegistrationManager<T>
                     return false; //already in desired state
                 }
             }
-            else if (opqueue.get( opqueue.size() - 1 ) == desired)
+            else if (opqueue.get( opqueue.size() - 1 ).getRegState() == desired)
             {
+                rsw = opqueue.get( opqueue.size() - 1 );
                 return false; //another thread will do our work.
             }
-            opqueue.add( desired );
+            rsw = new RegStateWrapper( desired );
+            opqueue.add( rsw );
             if (opqueue.size() > 1)
             {
                 return false; //some other thread will do it later
@@ -48,9 +84,9 @@ abstract class RegistrationManager<T>
             {
                 log( LogService.LOG_DEBUG, "registration change queue {0}", new Object[]
                         {opqueue}, null );
-                desired = opqueue.get( 0 );
+                RegStateWrapper next = opqueue.get( 0 );
                 T serviceRegistration = m_serviceRegistration;
-                if ( desired == RegState.unregistered)
+                if ( next.getRegState() == RegState.unregistered)
                 {
                     m_serviceRegistration = null;
                 }
@@ -58,7 +94,7 @@ abstract class RegistrationManager<T>
                 registrationLock.unlock();
                 try
                 {
-                    if (desired == RegState.registered)
+                    if (next.getRegState() == RegState.registered)
                     {
                         serviceRegistration = register(services );
 
@@ -81,10 +117,11 @@ abstract class RegistrationManager<T>
                 {
                     registrationLock.lock();
                     opqueue.remove(0);
-                    if ( desired == RegState.registered)
+                    if ( next.getRegState() == RegState.registered)
                     {
                         m_serviceRegistration = serviceRegistration;
                     }
+                    next.getLatch().countDown();
                 }
             }
             while (!opqueue.isEmpty());
@@ -93,6 +130,22 @@ abstract class RegistrationManager<T>
         finally
         {
             registrationLock.unlock();
+            if (rsw != null)
+            {
+                try
+                {
+                    if ( !rsw.getLatch().await( getTimeout(), TimeUnit.MILLISECONDS ))
+                    {
+                        log( LogService.LOG_ERROR, "Timeout waiting for reg change to complete {0}", new Object[]
+                                {rsw.getRegState()}, null);
+                    }
+                }
+                catch ( InterruptedException e )
+                {
+                    log( LogService.LOG_ERROR, "Interrupted exception waiting for reg change to complete {0}", new Object[]
+                            {rsw.getRegState()}, null);
+                }
+            }
         }
 
     }
@@ -102,6 +155,8 @@ abstract class RegistrationManager<T>
     abstract void unregister(T serviceRegistration);
     
     abstract void log( int level, String message, Object[] arguments, Throwable ex );
+    
+    abstract long getTimeout();
     
     T getServiceRegistration()
     {

@@ -174,7 +174,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     {
         try
         {
-            if (!m_stateLock.tryLock( getActivator().getConfiguration().lockTimeout(), TimeUnit.MILLISECONDS ) )
+            if (!m_stateLock.tryLock( getLockTimeout(), TimeUnit.MILLISECONDS ) )
             {
             	dumpThreads();
                 throw new IllegalStateException( "Could not obtain lock" );
@@ -185,6 +185,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             //TODO this is so wrong
             throw new IllegalStateException( "Could not obtain lock (Reason: " + e + ")" );
         }
+    }
+
+    private long getLockTimeout()
+    {
+        return getActivator().getConfiguration().lockTimeout();
     }
 
     final void releaseWriteLock( String source )
@@ -719,6 +724,12 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         void log(int level, String message, Object[] arguments, Throwable ex)
         {
             AbstractComponentManager.this.log(level, message, arguments, ex);
+        }
+
+        @Override
+        long getTimeout()
+        {
+            return getLockTimeout();
         }
         
     };

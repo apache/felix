@@ -108,6 +108,13 @@ public class RegistrationManagerTest
             }
             
         }
+
+        @Override
+        long getTimeout()
+        {
+            // TODO Auto-generated method stub
+            return 10;
+        }
         
     }
 }
