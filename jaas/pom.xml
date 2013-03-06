@@ -40,6 +40,13 @@
     </scm>
 
     <properties>
+      <pax-exam.version>3.0.0</pax-exam.version>
+      <bundle.build.name>
+        ${basedir}/target
+      </bundle.build.name>
+      <bundle.file.name>
+        ${bundle.build.name}/${project.build.finalName}.jar
+      </bundle.file.name>
     </properties>
     
     <build>
@@ -133,6 +140,33 @@
                     </execution>
                 </executions>
             </plugin>
+          <!-- integration tests run with pax-exam -->
+            <plugin>
+              <artifactId>maven-failsafe-plugin</artifactId>
+              <version>2.12</version>
+              <executions>
+                <execution>
+                  <goals>
+                    <goal>integration-test</goal>
+                    <goal>verify</goal>
+                  </goals>
+                </execution>
+              </executions>
+              <configuration>
+                <systemPropertyVariables>
+                  <project.bundle.file>${bundle.file.name}</project.bundle.file>
+                  <felix.ca.version>${felix.ca.version}</felix.ca.version>
+                </systemPropertyVariables>
+              </configuration>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-javadoc-plugin</artifactId>
+              <configuration>
+                <encoding>${project.build.sourceEncoding}</encoding>
+                <excludePackageNames>*.internal</excludePackageNames>
+              </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -169,6 +203,43 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
             <version>4.10</version>
+        </dependency>
+      <!-- Pax Exam Dependencies -->
+        <dependency>
+          <groupId>org.ops4j.pax.exam</groupId>
+          <artifactId>pax-exam-container-forked</artifactId>
+          <version>${pax-exam.version}</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.ops4j.pax.exam</groupId>
+          <artifactId>pax-exam-junit4</artifactId>
+          <version>${pax-exam.version}</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.ops4j.pax.exam</groupId>
+          <artifactId>pax-exam-link-mvn</artifactId>
+          <version>${pax-exam.version}</version>
+          <scope>test</scope>
+        </dependency>
+      <dependency>
+        <groupId>org.ops4j.pax.tinybundles</groupId>
+        <artifactId>tinybundles</artifactId>
+        <version>1.0.0</version>
+        <scope>test</scope>
+      </dependency>
+        <dependency>
+          <groupId>javax.inject</groupId>
+          <artifactId>javax.inject</artifactId>
+          <version>1</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+          <version>1.6.0</version>
+          <scope>test</scope>
         </dependency>
     </dependencies>
 
