@@ -21,18 +21,33 @@ package org.apache.felix.jaas;
 
 import javax.security.auth.spi.LoginModule;
 
-
 /**
- * User: chetanm
- * Date: 7/9/12
- * Time: 5:43 PM
+ * 
  */
 public interface LoginModuleFactory
 {
-
+    /**
+     * Property name specifying whether or not a <code>LoginModule</code> is
+     * REQUIRED, REQUISITE, SUFFICIENT or OPTIONAL. Refer to {@link javax.security.auth.login.Configuration}
+     * for more details around the meaning of these flags
+     *
+     * By default the value is set to REQUIRED
+     */
     String JAAS_CONTROL_FLAG = "jaas.controlFlag";
+
+    /**
+     * Property name specifying the Realm name (or application name) against which the
+     * LoginModule would be registered.
+     *
+     * <p>If no realm name is provided then LoginModule would registered with a default realm
+     * as configured
+     */
     String JAAS_REALM_NAME = "jaas.realmName";
 
+    /**
+     * Creates the LoginModule instance
+     * @return loginModule instance
+     */
     LoginModule createLoginModule();
 
 }

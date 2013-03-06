@@ -37,7 +37,9 @@ final class ConfigLoginModuleProvider implements LoginModuleProvider
     private final LoginModuleCreator moduleCreator;
 
     @SuppressWarnings("unchecked")
-    ConfigLoginModuleProvider(String realmName, String className, Map options, LoginModuleControlFlag controlFlag, int order, LoginModuleCreator moduleCreator)
+    ConfigLoginModuleProvider(String realmName, String className, Map options,
+                              LoginModuleControlFlag controlFlag, int order,
+                              LoginModuleCreator moduleCreator)
     {
         this.options = Collections.unmodifiableMap(options);
         this.controlFlag = controlFlag;

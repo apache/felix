@@ -35,6 +35,10 @@ public interface LoginModuleProvider extends LoginModuleFactory, ProxyLoginModul
 
     int ranking();
 
+    /**
+     * Realm name with which LoginModule is registered. Can be <code>null</code>
+     * @return realmName or null if not provided
+     */
     String realmName();
 
     String getClassName();

@@ -47,8 +47,14 @@ import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-@Component(label = "%jaas.spi.name", description = "%jaas.spi.description", metatype = true, ds = false, name = "org.apache.felix.jaas.ConfigurationSpi", policy = ConfigurationPolicy.REQUIRE)
-public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService, ServiceTrackerCustomizer, LoginContextFactory
+@Component(label = "%jaas.spi.name",
+        description = "%jaas.spi.description",
+        metatype = true,
+        ds = false,
+        name = "org.apache.felix.jaas.ConfigurationSpi",
+        policy = ConfigurationPolicy.REQUIRE)
+public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
+        ServiceTrackerCustomizer, LoginContextFactory
 {
     /**
      * Name of the algorithm to use to fetch JAAS Config
