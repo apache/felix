@@ -186,7 +186,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         m_className = metadata.getAttribute("classname");
 
         // Add the name
-        m_name = (String) configuration.get("instance.name");
+        m_name = (String) configuration.get(Factory.INSTANCE_NAME_PROPERTY);
 
         // Check if an object is injected in the instance
         Object obj = configuration.get("instance.object");

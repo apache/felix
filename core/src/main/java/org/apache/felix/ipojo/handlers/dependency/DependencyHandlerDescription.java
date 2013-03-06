@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.handlers.dependency;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
@@ -148,10 +149,10 @@ public class DependencyHandlerDescription extends HandlerDescription {
                 while (iterator.hasNext()) {
                     Element use = new Element("Uses", "");
                     ServiceReference ref = (ServiceReference) iterator.next();
-                    use.addAttribute(new Attribute("service.id", ref.getProperty(Constants.SERVICE_ID).toString()));                
-                    String instance = (String) ref.getProperty("instance.name");
+                    use.addAttribute(new Attribute(Constants.SERVICE_ID, ref.getProperty(Constants.SERVICE_ID).toString()));
+                    String instance = (String) ref.getProperty(Factory.INSTANCE_NAME_PROPERTY);
                     if (instance != null) {
-                        use.addAttribute(new Attribute("instance.name", instance));
+                        use.addAttribute(new Attribute(Factory.INSTANCE_NAME_PROPERTY, instance));
                     }
                     dep.addElement(use);
                 }

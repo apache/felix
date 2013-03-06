@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 
@@ -91,7 +92,7 @@ public class ManifestMetadataParser {
         String version = instance.getAttribute("version");
 
         if (name != null) {
-            dict.put("instance.name", instance.getAttribute("name"));
+            dict.put(Factory.INSTANCE_NAME_PROPERTY, instance.getAttribute("name"));
         }
 
         if (comp == null) {
@@ -101,7 +102,7 @@ public class ManifestMetadataParser {
         dict.put("component", comp);
 
         if (version != null) {
-            dict.put("factory.version", version);
+            dict.put(Factory.FACTORY_VERSION_PROPERTY, version);
         }
 
         Element[] props = instance.getElements("property");

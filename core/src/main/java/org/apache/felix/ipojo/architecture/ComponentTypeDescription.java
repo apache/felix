@@ -214,7 +214,7 @@ public class ComponentTypeDescription {
         // Add the version if set
         String v = getVersion();
         if (v != null) {
-            props.put("factory.version", v);
+            props.put(Factory.FACTORY_VERSION_PROPERTY, v);
         }
 
         props.put("component.providedServiceSpecifications", m_providedServiceSpecification);
