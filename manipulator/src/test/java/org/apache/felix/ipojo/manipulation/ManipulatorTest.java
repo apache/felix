@@ -195,8 +195,7 @@ public class ManipulatorTest extends TestCase {
 
     }
 
-    //TODO CE - 19/10/2011 Why do we have a classloader issue in this test
-    public void _testManipulatingTheInner() throws Exception {
+    public void testManipulatingTheInner() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/PojoWithInner.class")));
         ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.PojoWithInner", clazz);

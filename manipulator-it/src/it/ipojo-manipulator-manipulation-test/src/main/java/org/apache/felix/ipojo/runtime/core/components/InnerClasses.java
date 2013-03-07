@@ -1,6 +1,7 @@
 package org.apache.felix.ipojo.runtime.core.components;
 
 import org.apache.felix.ipojo.runtime.core.services.CheckService;
+import org.apache.felix.ipojo.runtime.core.services.Job;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,7 @@ public class InnerClasses implements CheckService {
         props.put("privateInner", new PrivateNested().doSomething());
         props.put("constructorInner", new ConstructorNested().doSomething());
         props.put("staticInner", new StaticNested().doSomething());
+        props.put("packageStaticInner", new PackageStaticNested().doSomething());
         
         Job anonymous = new Job()  {
             public Map doSomething() {
@@ -139,6 +141,16 @@ public class InnerClasses implements CheckService {
             return map;
         }
     }
+
+    static class PackageStaticNested implements Job {
+        private Map map = new HashMap();
+
+        public Map doSomething() {
+            map.put("static", new Boolean(true));
+            map.put("staticint", new Integer(staticint));
+            return map;
+        }
+    }
     
     protected class ConstructorNested implements Job {
         Map map = new HashMap();
@@ -163,6 +175,3 @@ public class InnerClasses implements CheckService {
 
 }
 
-interface Job {
-    public Map doSomething();
-}

@@ -18,27 +18,44 @@
  */
 package org.apache.felix.ipojo.manipulation;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * A classloader used to load manipulated classes.
  */
-class ManipulatedClassLoader extends ClassLoader {
+public class ManipulatedClassLoader extends ClassLoader {
 
     private String name;
     private byte[] clazz;
+
+    private Map<String, byte[]> inners = new HashMap<String, byte[]>();
 
     public ManipulatedClassLoader(String name, byte[] clazz) {
         this.name = name;
         this.clazz = clazz;
     }
 
+    public void addInnerClasses(Map<String, byte[]> inn) {
+        inners = inn;
+    }
+
     public Class findClass(String name) throws ClassNotFoundException {
         if (name.equals(this.name)) {
             return defineClass(name, clazz, 0, clazz.length);
+        }
+        if (inners.containsKey(name)) {
+            return defineClass(name, inners.get(name), 0, inners.get(name).length);
+
         }
         return super.findClass(name);
     }
 
     public Class loadClass(String arg0) throws ClassNotFoundException {
+        if (inners.containsKey(arg0)) {
+            return defineClass(arg0, inners.get(arg0), 0, inners.get(arg0).length);
+
+        }
         return super.loadClass(arg0);
     }
 }

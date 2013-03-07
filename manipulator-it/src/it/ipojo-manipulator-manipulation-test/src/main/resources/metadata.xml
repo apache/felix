@@ -34,4 +34,8 @@
 			<property field="publicInt"/>
 		</provides>
 	</component>
+
+    <component classname="org.apache.felix.ipojo.runtime.core.components.Switches">
+        <provides/>
+    </component>
 </ipojo>

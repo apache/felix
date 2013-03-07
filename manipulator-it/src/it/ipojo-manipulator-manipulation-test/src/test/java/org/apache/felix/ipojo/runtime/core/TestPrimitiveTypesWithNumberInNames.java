@@ -82,16 +82,16 @@ public class TestPrimitiveTypesWithNumberInNames extends Common {
 
     @Test
     public void testFloat() {
-        assertEquals("Check - 1", prim.getFloat(), 1.1f);
+        assertEquals("Check - 1", prim.getFloat(), 1.1f, 0);
         prim.setFloat(2.2f);
-        assertEquals("Check - 2", prim.getFloat(), 2.2f);
+        assertEquals("Check - 2", prim.getFloat(), 2.2f, 0);
     }
 
     @Test
     public void testDouble() {
-        assertEquals("Check - 1", prim.getDouble(), 1.1);
+        assertEquals("Check - 1", prim.getDouble(), 1.1, 0);
         prim.setDouble(2.2);
-        assertEquals("Check - 2", prim.getDouble(), 2.2);
+        assertEquals("Check - 2", prim.getDouble(), 2.2, 0);
     }
 
     @Test
