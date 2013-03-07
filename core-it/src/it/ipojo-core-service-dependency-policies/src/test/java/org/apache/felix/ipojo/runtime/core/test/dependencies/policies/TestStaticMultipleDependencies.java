@@ -114,7 +114,7 @@ public class TestStaticMultipleDependencies extends Common {
         assertEquals("check ref unbind callback invocation - 1", ((Integer) props.get("refU")).intValue(), 0);
         assertEquals("Check FS invocation (int) - 1", ((Integer) props.get("int")).intValue(), 1);
         assertEquals("Check FS invocation (long) - 1", ((Long) props.get("long")).longValue(), 1);
-        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0);
+        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0, 0);
 
         fooProvider2.start();
         ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance1.getInstanceName());
@@ -133,7 +133,7 @@ public class TestStaticMultipleDependencies extends Common {
         assertEquals("check ref unbind callback invocation - 2", ((Integer) props.get("refU")).intValue(), 0);
         assertEquals("Check FS invocation (int) - 2", ((Integer) props.get("int")).intValue(), 1);
         assertEquals("Check FS invocation (long) - 2", ((Long) props.get("long")).longValue(), 1);
-        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 1.0);
+        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 1.0, 0);
 
         fooProvider1.stop();
         // instance is stopped and then restarted, so bound to fooprovider 2.
@@ -173,7 +173,7 @@ public class TestStaticMultipleDependencies extends Common {
         assertEquals("check ref unbind callback invocation - 1", ((Integer) props.get("refU")).intValue(), 0);
         assertEquals("Check FS invocation (int) - 1", ((Integer) props.get("int")).intValue(), 1);
         assertEquals("Check FS invocation (long) - 1", ((Long) props.get("long")).longValue(), 1);
-        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0);
+        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0, 0);
 
         fooProvider2.start();
         id = ((Architecture) getContext().getService(arch_ref)).getInstanceDescription();
@@ -191,7 +191,7 @@ public class TestStaticMultipleDependencies extends Common {
         assertEquals("check ref unbind callback invocation - 2", ((Integer) props.get("refU")).intValue(), 0);
         assertEquals("Check FS invocation (int) - 2", ((Integer) props.get("int")).intValue(), 1);
         assertEquals("Check FS invocation (long) - 2", ((Long) props.get("long")).longValue(), 1);
-        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 1.0);
+        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 1.0, 0);
 
         fooProvider1.stop();
 
@@ -231,7 +231,7 @@ public class TestStaticMultipleDependencies extends Common {
         assertEquals("check ref unbind callback invocation - 1", ((Integer) props.get("refU")).intValue(), 0);
         assertEquals("Check FS invocation (int) - 1", ((Integer) props.get("int")).intValue(), 1);
         assertEquals("Check FS invocation (long) - 1", ((Long) props.get("long")).longValue(), 1);
-        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0);
+        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0, 0);
 
         fooProvider2.start();
         id = ((Architecture) getContext().getService(arch_ref)).getInstanceDescription();
@@ -249,7 +249,7 @@ public class TestStaticMultipleDependencies extends Common {
         assertEquals("check ref unbind callback invocation - 2", ((Integer) props.get("refU")).intValue(), 0);
         assertEquals("Check FS invocation (int) - 2", ((Integer) props.get("int")).intValue(), 1);
         assertEquals("Check FS invocation (long) - 2", ((Long) props.get("long")).longValue(), 1);
-        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 1.0);
+        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 1.0, 0);
 
         fooProvider1.stop();
         // Instance stopped and then restarted, bound to foo provider 2.
@@ -289,7 +289,7 @@ public class TestStaticMultipleDependencies extends Common {
         assertEquals("check ref unbind callback invocation - 1", ((Integer) props.get("refU")).intValue(), 0);
         assertEquals("Check FS invocation (int) - 1", ((Integer) props.get("int")).intValue(), 1);
         assertEquals("Check FS invocation (long) - 1", ((Long) props.get("long")).longValue(), 1);
-        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0);
+        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0, 0);
 
         fooProvider2.start();
         id = ((Architecture) getContext().getService(arch_ref)).getInstanceDescription();
@@ -307,7 +307,7 @@ public class TestStaticMultipleDependencies extends Common {
         assertEquals("check ref unbind callback invocation - 2", ((Integer) props.get("refU")).intValue(), 0);
         assertEquals("Check FS invocation (int) - 2", ((Integer) props.get("int")).intValue(), 1);
         assertEquals("Check FS invocation (long) - 2", ((Long) props.get("long")).longValue(), 1);
-        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 1.0);
+        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 1.0, 0);
 
         fooProvider1.stop();
         // Stop and then restarted, bound to foo provider 2.
