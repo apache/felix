@@ -102,8 +102,8 @@ public class TestBothProperties extends Common {
         assertEquals("Check s", s, new Short("1"));
         assertEquals("Check i", i, new Integer("1"));
         assertEquals("Check l", l, new Long("1"));
-        assertEquals("Check d", d, new Double("1"));
-        assertEquals("Check f", f, new Float("1"));
+        assertEquals("Check d", d, new Double("1"), 0);
+        assertEquals("Check f", f, new Float("1"), 0);
         assertEquals("Check c", c, new Character('a'));
         assertEquals("Check bool", bool, new Boolean("true"));
 
@@ -145,8 +145,8 @@ public class TestBothProperties extends Common {
         assertEquals("2) Check s", s, new Short("2"));
         assertEquals("2) Check i", i, new Integer("2"));
         assertEquals("2) Check l", l, new Long("2"));
-        assertEquals("2) Check d", d, new Double("2"));
-        assertEquals("2) Check f", f, new Float("2"));
+        assertEquals("2) Check d", d, new Double("2"), 0);
+        assertEquals("2) Check f", f, new Float("2"), 0);
         assertEquals("2) Check c", c, new Character('b'));
         assertEquals("2) Check bool", bool, new Boolean("false"));
 
@@ -190,8 +190,8 @@ public class TestBothProperties extends Common {
         assertEquals("Check s", s, new Short("1"));
         assertEquals("Check i", i, new Integer("1"));
         assertEquals("Check l", l, new Long("1"));
-        assertEquals("Check d", d, new Double("1"));
-        assertEquals("Check f", f, new Float("1"));
+        assertEquals("Check d", d, new Double("1"), 0);
+        assertEquals("Check f", f, new Float("1"), 0);
         assertEquals("Check c", c, new Character('a'));
         assertEquals("Check bool", bool, new Boolean("true"));
 
@@ -233,8 +233,8 @@ public class TestBothProperties extends Common {
         assertEquals("2) Check s", s, new Short("2"));
         assertEquals("2) Check i", i, new Integer("2"));
         assertEquals("2) Check l", l, new Long("2"));
-        assertEquals("2) Check d", d, new Double("2"));
-        assertEquals("2) Check f", f, new Float("2"));
+        assertEquals("2) Check d", d, new Double("2"), 0);
+        assertEquals("2) Check f", f, new Float("2"), 0);
         assertEquals("2) Check c", c, new Character('b'));
         assertEquals("2) Check bool", bool, new Boolean("false"));
 
@@ -286,9 +286,9 @@ public class TestBothProperties extends Common {
         assertEquals("Check l 0", l[0], 1);
         assertEquals("Check l 1", l[1], 2);
         assertEquals("Check l 2", l[2], 3);
-        assertEquals("Check d 0", d[0], 1.0);
-        assertEquals("Check d 1", d[1], 2.0);
-        assertEquals("Check d 2", d[2], 3.0);
+        assertEquals("Check d 0", d[0], 1.0, 0);
+        assertEquals("Check d 1", d[1], 2.0, 0);
+        assertEquals("Check d 2", d[2], 3.0, 0);
         assertEquals("Check f 0", f[0], 1.0, 0);
         assertEquals("Check f 1", f[1], 2.0, 0);
         assertEquals("Check f 2", f[2], 3.0, 0);
@@ -345,9 +345,9 @@ public class TestBothProperties extends Common {
         assertEquals("2) Check l 0", l[0], 3);
         assertEquals("2) Check l 1", l[1], 2);
         assertEquals("2) Check l 2", l[2], 1);
-        assertEquals("2) Check d 0", d[0], 3.0);
-        assertEquals("2) Check d 1", d[1], 2.0);
-        assertEquals("2) Check d 2", d[2], 1.0);
+        assertEquals("2) Check d 0", d[0], 3.0, 0);
+        assertEquals("2) Check d 1", d[1], 2.0, 0);
+        assertEquals("2) Check d 2", d[2], 1.0, 0);
         assertEquals("2) Check f 0", f[0], 3.0, 0);
         assertEquals("2) Check f 1", f[1], 2.0, 0);
         assertEquals("2) Check f 2", f[2], 1.0, 0);
@@ -406,9 +406,9 @@ public class TestBothProperties extends Common {
         assertEquals("Check l 0", l[0], 1);
         assertEquals("Check l 1", l[1], 2);
         assertEquals("Check l 2", l[2], 3);
-        assertEquals("Check d 0", d[0], 1.0);
-        assertEquals("Check d 1", d[1], 2.0);
-        assertEquals("Check d 2", d[2], 3.0);
+        assertEquals("Check d 0", d[0], 1.0, 0);
+        assertEquals("Check d 1", d[1], 2.0, 0);
+        assertEquals("Check d 2", d[2], 3.0, 0);
         assertEquals("Check f 0", f[0], 1, 0);
         assertEquals("Check f 1", f[1], 2, 0);
         assertEquals("Check f 2", f[2], 3, 0);
@@ -465,9 +465,9 @@ public class TestBothProperties extends Common {
         assertEquals("2) Check l 0", l[0], 3);
         assertEquals("2) Check l 1", l[1], 2);
         assertEquals("2) Check l 2", l[2], 1);
-        assertEquals("2) Check d 0", d[0], 3.0);
-        assertEquals("2) Check d 1", d[1], 2.0);
-        assertEquals("2) Check d 2", d[2], 1.0);
+        assertEquals("2) Check d 0", d[0], 3.0, 0);
+        assertEquals("2) Check d 1", d[1], 2.0, 0);
+        assertEquals("2) Check d 2", d[2], 1.0, 0);
         assertEquals("2) Check f 0", f[0], 3, 0);
         assertEquals("2) Check f 1", f[1], 2, 0);
         assertEquals("2) Check f 2", f[2], 1, 0);
@@ -652,8 +652,8 @@ public class TestBothProperties extends Common {
         assertEquals("Check s", s, new Short("0"));
         assertEquals("Check i", i, new Integer("0"));
         assertEquals("Check l", l, new Long("0"));
-        assertEquals("Check d", d, new Double("0"));
-        assertEquals("Check f", f, new Float("0"));
+        assertEquals("Check d", d, new Double("0"), 0);
+        assertEquals("Check f", f, new Float("0"), 0);
         assertEquals("Check c", c, new Character((char) 0));
         assertEquals("Check bool", bool, new Boolean(false));
 
@@ -695,8 +695,8 @@ public class TestBothProperties extends Common {
         assertEquals("2) Check s", s, new Short("2"));
         assertEquals("2) Check i", i, new Integer("2"));
         assertEquals("2) Check l", l, new Long("2"));
-        assertEquals("2) Check d", d, new Double("2"));
-        assertEquals("2) Check f", f, new Float("2"));
+        assertEquals("2) Check d", d, new Double("2"), 0);
+        assertEquals("2) Check f", f, new Float("2"), 0);
         assertEquals("2) Check c", c, new Character('b'));
         assertEquals("2) Check bool", bool, new Boolean("false"));
 
@@ -791,9 +791,9 @@ public class TestBothProperties extends Common {
         assertEquals("2) Check l 0", l[0], 3);
         assertEquals("2) Check l 1", l[1], 2);
         assertEquals("2) Check l 2", l[2], 1);
-        assertEquals("2) Check d 0", d[0], 3.0);
-        assertEquals("2) Check d 1", d[1], 2.0);
-        assertEquals("2) Check d 2", d[2], 1.0);
+        assertEquals("2) Check d 0", d[0], 3.0, 0);
+        assertEquals("2) Check d 1", d[1], 2.0, 0);
+        assertEquals("2) Check d 2", d[2], 1.0, 0);
         assertEquals("2) Check f 0", f[0], 3, 0);
         assertEquals("2) Check f 1", f[1], 2, 0);
         assertEquals("2) Check f 2", f[2], 1, 0);

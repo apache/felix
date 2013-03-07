@@ -119,7 +119,7 @@ public class TestDelayedOptionalDependencies extends Common {
         assertNotNull("Check FS invocation (object) - 1", props.get("object"));
         assertEquals("Check FS invocation (int) - 1", ((Integer) props.get("int")).intValue(), 1);
         assertEquals("Check FS invocation (long) - 1", ((Long) props.get("long")).longValue(), 1);
-        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0);
+        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0, 0);
 
         fooProvider.stop();
 
@@ -142,7 +142,7 @@ public class TestDelayedOptionalDependencies extends Common {
         assertNull("Check FS invocation (object) - 2", props.get("object"));
         assertEquals("Check FS invocation (int) - 2", ((Integer) props.get("int")).intValue(), 5);
         assertEquals("Check FS invocation (long) - 2", ((Long) props.get("long")).longValue(), 5);
-        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 5.0);
+        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 5.0, 0);
 
         id = null;
         cs = null;
@@ -177,7 +177,7 @@ public class TestDelayedOptionalDependencies extends Common {
         assertNotNull("Check FS invocation (object) - 1", props.get("object"));
         assertEquals("Check FS invocation (int) - 1", ((Integer) props.get("int")).intValue(), 1);
         assertEquals("Check FS invocation (long) - 1", ((Long) props.get("long")).longValue(), 1);
-        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0);
+        assertEquals("Check FS invocation (double) - 1", ((Double) props.get("double")).doubleValue(), 1.0, 0);
 
         fooProvider.stop();
 
@@ -200,7 +200,7 @@ public class TestDelayedOptionalDependencies extends Common {
         assertNull("Check FS invocation (object) - 2", props.get("object"));
         assertEquals("Check FS invocation (int) - 2", ((Integer) props.get("int")).intValue(), 5);
         assertEquals("Check FS invocation (long) - 2", ((Long) props.get("long")).longValue(), 5);
-        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 5.0);
+        assertEquals("Check FS invocation (double) - 2", ((Double) props.get("double")).doubleValue(), 5.0, 0);
 
         id = null;
         cs = null;

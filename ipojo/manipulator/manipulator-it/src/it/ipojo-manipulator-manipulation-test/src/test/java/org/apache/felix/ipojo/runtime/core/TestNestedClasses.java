@@ -145,6 +145,16 @@ public class TestNestedClasses extends Common {
     }
 
     @Test
+    public void testPackageStaticInnerClass() {
+        Map data = (Map) service.getProps().get("packageStaticInner");
+        assertNotNull("Check data existence", data);
+
+        assertEquals("Check static", new Boolean(true), data.get("static"));
+        assertEquals("Check static int", new Integer(6), data.get("staticint"));
+
+    }
+
+    @Test
     public void testAnonymousInnerClass() {
         Map data = (Map) service.getProps().get("anonymous");
         assertNotNull("Check data existence", data);
