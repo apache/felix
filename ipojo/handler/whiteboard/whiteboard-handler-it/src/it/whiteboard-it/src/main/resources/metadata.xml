@@ -1,0 +1,46 @@
+<ipojo
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd"
+        xmlns="org.apache.felix.ipojo"
+        xmlns:wbp="org.apache.felix.ipojo.whiteboard">
+    <component classname="org.apache.felix.ipojo.handler.whiteboard.components.FooProvider" name="fooprovider">
+        <provides>
+            <property field="foo" value="foo"/>
+        </provides>
+    </component>
+
+    <component classname="org.apache.felix.ipojo.handler.whiteboard.components.FooWhiteBoardPattern" name="under-providers">
+        <wbp:wbp
+                filter="(objectclass=org.apache.felix.ipojo.handler.whiteboard.services.FooService)"
+                onArrival="onArrival" onDeparture="onDeparture" onModification="onModification"
+                />
+        <provides/>
+    </component>
+
+    <component classname="org.apache.felix.ipojo.handler.whiteboard.components.FooWhiteBoardPattern" name="under-properties">
+        <wbp:wbp filter="(foo=foo)" onArrival="onArrival" onDeparture="onDeparture"
+                 onModification="onModification"
+                />
+        <provides/>
+    </component>
+
+    <component classname="org.apache.felix.ipojo.handler.whiteboard.components.FooWhiteBoardPattern" name="under-providers-2">
+        <wbp:whiteboards>
+            <wbp:wbp
+                    filter="(objectclass=org.apache.felix.ipojo.handler.whiteboard.services.FooService)"
+                    onArrival="onArrival" onDeparture="onDeparture" onModification="onModification"
+                    />
+        </wbp:whiteboards>
+        <provides/>
+    </component>
+
+    <component classname="org.apache.felix.ipojo.handler.whiteboard.components.FooWhiteBoardPattern" name="under-providers-lifecycle">
+        <wbp:wbp
+                filter="(objectclass=org.apache.felix.ipojo.handler.whiteboard.services.FooService)"
+                onArrival="onArrival" onDeparture="onDeparture" onModification="onModification"
+                />
+        <provides/>
+        <callback transition="validate" method="start"/>
+        <callback transition="invalidate" method="stop"/>
+    </component>
+</ipojo>

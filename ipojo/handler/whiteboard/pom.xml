@@ -16,8 +16,7 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
@@ -25,106 +24,92 @@
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <packaging>bundle</packaging>
-    <name>Apache Felix iPOJO White Board Pattern Handler</name>
-    <artifactId>org.apache.felix.ipojo.handler.whiteboard</artifactId>
-    <groupId>org.apache.felix</groupId>
+    <artifactId>org.apache.felix.ipojo.handler.whiteboard-handler-project</artifactId>
     <version>1.6.1-SNAPSHOT</version>
+    <name>Apache Felix iPOJO Whiteboard Handler Project</name>
+    <packaging>pom</packaging>
 
-    <description>
-        iPOJO extension to easily implement a white-board pattern (host).
-    </description>
-    <url>
-        http://felix.apache.org/site/white-board-pattern-handler.html
-    </url>
+    <modules>
+        <module>whiteboard-handler</module>
+        <module>whiteboard-handler-it</module>
+    </modules>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>1.6.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>4.0.0</version>
-        </dependency>
-    </dependencies>
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-Name>${project.name}</Bundle-Name>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                        <Bundle-Description>iPOJO White-Board Pattern Handler
-                        </Bundle-Description>
-                        <Bundle-DocURL>
-                            http://felix.apache.org/site/white-board-pattern-handler.html
-                        </Bundle-DocURL>
-                        <Private-Package>org.apache.felix.ipojo.handler.wbp
-                        </Private-Package>
-                        <Bundle-Name>${project.name}</Bundle-Name>
-                        <Include-Resource>
-                            META-INF/LICENSE=LICENSE,
-                            META-INF/NOTICE=NOTICE,
-                            META-INF/DEPENDENCIES=DEPENDENCIES
-                        </Include-Resource>
-                    </instructions>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-ipojo-plugin</artifactId>
-                <version>1.6.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>ipojo-bundle</goal>
-                        </goals>
-                        <configuration>
-                            <metadata>metadata.xml</metadata>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>rat-maven-plugin</artifactId>
-                <configuration>
-                    <excludeSubProjects>false</excludeSubProjects>
-                    <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-                    <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-                    <excludes>
-                        <param>doc/**/*</param>
-                        <param>maven-eclipse.xml</param>
-                        <param>.checkstyle</param>
-                        <param>.externalToolBuilders/*</param>
-                        <param>LICENSE.asm</param>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <configuration>
-                    <enableRulesSummary>false</enableRulesSummary>
-                    <violationSeverity>warning</violationSeverity>
-                    <configLocation>http://felix.apache.org/ipojo/dev/checkstyle_ipojo.xml</configLocation>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <target>1.5</target>
-                    <source>1.5</source>
-                </configuration>
-            </plugin>
-        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>.</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>LICENSE*</include>
+                    <include>NOTICE*</include>
+                    <include>DEPENDENCIES*</include>
+                </includes>
+            </resource>
+        </resources>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>make-assembly</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <descriptorRefs>
+                                        <descriptorRef>project</descriptorRef>
+                                    </descriptorRefs>
+                                    <!-- we don't want to attach all the assemblies, such as bz2 -->
+                                    <attach>false</attach>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <!-- only attach the project and bin assemblies, in tar.gz and zip flavors -->
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-assemblies</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>attach-artifact</goal>
+                                </goals>
+                                <configuration>
+                                    <artifacts>
+                                        <artifact>
+                                            <file>
+                                                ${project.build.directory}/${project.artifactId}-${project.version}-project.tar.gz
+                                            </file>
+                                            <classifier>project</classifier>
+                                            <type>tar.gz</type>
+                                        </artifact>
+                                        <artifact>
+                                            <file>
+                                                ${project.build.directory}/${project.artifactId}-${project.version}-project.zip
+                                            </file>
+                                            <classifier>project</classifier>
+                                            <type>zip</type>
+                                        </artifact>
+                                    </artifacts>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
