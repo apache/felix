@@ -42,15 +42,15 @@ public final class PrinterMode
 
     public static PrinterMode valueOf(final String m)
     {
-        if (TEXT.name().equals(m))
+        if (TEXT.name().equalsIgnoreCase(m))
         {
             return TEXT;
         }
-        else if (HTML_FRAGMENT.name().equals(m))
+        else if (HTML_FRAGMENT.name().equalsIgnoreCase(m))
         {
             return HTML_FRAGMENT;
         }
-        else if (JSON.name().equals(m))
+        else if (JSON.name().equalsIgnoreCase(m))
         {
             return JSON;
         }

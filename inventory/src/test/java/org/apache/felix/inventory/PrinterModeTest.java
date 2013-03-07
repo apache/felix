@@ -29,6 +29,14 @@ public class PrinterModeTest extends TestCase
         TestCase.assertSame(PrinterMode.JSON, PrinterMode.valueOf("JSON"));
         TestCase.assertSame(PrinterMode.HTML_FRAGMENT, PrinterMode.valueOf("HTML_FRAGMENT"));
 
+        TestCase.assertSame(PrinterMode.TEXT, PrinterMode.valueOf("text"));
+        TestCase.assertSame(PrinterMode.JSON, PrinterMode.valueOf("json"));
+        TestCase.assertSame(PrinterMode.HTML_FRAGMENT, PrinterMode.valueOf("html_fragment"));
+
+        TestCase.assertSame(PrinterMode.TEXT, PrinterMode.valueOf("Text"));
+        TestCase.assertSame(PrinterMode.JSON, PrinterMode.valueOf("Json"));
+        TestCase.assertSame(PrinterMode.HTML_FRAGMENT, PrinterMode.valueOf("HTML_Fragment"));
+
         TestCase.assertNull(PrinterMode.valueOf("unsupported_name"));
     }
 
