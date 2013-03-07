@@ -98,7 +98,7 @@ public class Common {
 
     public CompositeOption eventadmin() {
         return new DefaultCompositeOption(
-                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.2.10"),
                 mavenBundle("org.apache.felix", "org.apache.felix.ipojo.handler.eventadmin",
                         "1.8.0").versionAsInProject());
     }
@@ -181,6 +181,9 @@ public class Common {
         }
 
         if (count == 500) {
+            for (Bundle bundle : bc.getBundles()) {
+                System.out.println("Bundle " + bundle.getSymbolicName() + " - " + bundle.getState());
+            }
             System.err.println("Bundle stability isn't reached after 500 tries");
             throw new IllegalStateException("Cannot reach the bundle stability");
         }

@@ -18,8 +18,8 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.*;
-import org.osgi.service.packageadmin.ExportedPackage;
-import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 import org.ow2.chameleon.testing.tinybundles.ipojo.IPOJOStrategy;
 
 import javax.inject.Inject;
@@ -39,7 +39,6 @@ public class VersionConflictTest extends Common {
 
     @Inject
     private BundleContext context;
-
 
     @Configuration
     public Option[] config() throws IOException {
@@ -74,7 +73,7 @@ public class VersionConflictTest extends Common {
                 TinyBundles.bundle()
                         .add(MyComponent.class)
                         .set(Constants.BUNDLE_SYMBOLICNAME, "ProviderV1")
-                        .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.core.tests.services; version=\"[1.0.0, 1.0.0]\"")
+                        .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.core.tests.services; version=\"1.0.0\"")
                         .build(IPOJOStrategy.withiPOJO(new File("src/main/resources/vprovider-v1.xml"))),
                 c1);
 
@@ -83,8 +82,7 @@ public class VersionConflictTest extends Common {
                 TinyBundles.bundle()
                         .add(MyComponent.class)
                         .set(Constants.BUNDLE_SYMBOLICNAME, "ProviderV2")
-                        .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.core.tests.services; version=\"[2.0.0," +
-                                " 2.0.0]\"")
+                        .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.core.tests.services; version=\"2.0.0\"")
                         .build(IPOJOStrategy.withiPOJO(new File("src/main/resources/vprovider-v2.xml"))),
                 c2);
 
@@ -93,8 +91,7 @@ public class VersionConflictTest extends Common {
                 TinyBundles.bundle()
                         .add(MyCons.class)
                         .set(Constants.BUNDLE_SYMBOLICNAME, "MyCons")
-                        .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.core.tests.services; version=\"[2.0.0, " +
-                                "2.0.0]\"")
+                        .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.core.tests.services; version=\"2.0.0\"")
                         .set(Constants.BUNDLE_VERSION, "2.0")
                         .build(IPOJOStrategy.withiPOJO(new File("src/main/resources/cons.xml"))),
                 cons);
@@ -105,7 +102,7 @@ public class VersionConflictTest extends Common {
                         .add(MyCons.class)
                         .set(Constants.BUNDLE_SYMBOLICNAME, "MyCons")
                         .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.core.tests.services; version=\"[1.0.0, " +
-                                "2.0.0)\"")
+                                "1.1.0)\"")
                         .set(Constants.BUNDLE_VERSION, "1.0")
                         .build(IPOJOStrategy.withiPOJO(new File("src/main/resources/cons.xml"))),
                 consV1);
@@ -136,8 +133,16 @@ public class VersionConflictTest extends Common {
 //        return builder;
 //    }
 
+    public boolean isKF() {
+        return bc.getClass().toString().contains("knopflerfish");
+    }
+
     @Test
     public void deployBundlesAtRuntime() throws MalformedURLException, BundleException, InvalidSyntaxException {
+        if (isKF()) {
+            System.out.println("Test disabled on knopflerfish");
+            return;
+        }
 
         Bundle b1 = context.installBundle(context.getProperty("url1"));
         b1.start();
@@ -155,6 +160,7 @@ public class VersionConflictTest extends Common {
         Bundle b5 = context.installBundle(context.getProperty("cons"));
         b5.start();
 
+        waitForStability(bc);
 
         Bundle[] bundles = context.getBundles();
         for (Bundle bundle : bundles) {
@@ -162,23 +168,11 @@ public class VersionConflictTest extends Common {
             //Assert.assertEquals(bundles[i].getSymbolicName() + " is not active", Bundle.ACTIVE, bundles[i].getState());
         }
 
-        //TODO Migrate to new API, be aware that the new API may not be implemented on all platforms.
-        PackageAdmin pa = osgiHelper.getPackageAdmin();
-        Bundle b = pa.getBundles("ServiceInterfaceV1", null)[0];
-        ExportedPackage[] packages = pa.getExportedPackages(b);
-        if (packages == null) {
-            System.out.println("Packages  ServiceInterfaceV1 : " + 0);
-        } else {
-            System.out.println("Packages  ServiceInterfaceV1 : " + packages.length);
-            for (ExportedPackage p : packages) {
-                System.out.println("Package : " + p.getName() + " - " + p.getVersion().toString());
-            }
-        }
-        b = pa.getBundles("ServiceInterfaceV2", null)[0];
-        packages = pa.getExportedPackages(b);
-        System.out.println("Packages  ServiceInterfaceV2 : " + packages.length);
-        for (ExportedPackage p : packages) {
-            System.out.println("Package : " + p.getName() + " - " + p.getVersion().toString());
+        Bundle consBundle = osgiHelper.getBundle("MyCons");
+        BundleWiring wiring = consBundle.adapt(BundleWiring.class);
+        System.out.println("Bundle Wiring req: ");
+        for (BundleWire wire : wiring.getRequiredWires(null)) {
+            System.out.println(wire.getCapability().getAttributes() + " - " + wire.getCapability().getDirectives());
         }
 
         osgiHelper.waitForService(Architecture.class.getName(), "(architecture.instance=mycons)", 2000);
@@ -233,25 +227,6 @@ public class VersionConflictTest extends Common {
         Bundle[] bundles = context.getBundles();
         for (int i = 0; i < bundles.length; i++) {
             System.out.println("bundle " + bundles[i].getSymbolicName() + " : " + (bundles[i].getState() == Bundle.ACTIVE));
-        }
-
-
-        PackageAdmin pa = osgiHelper.getPackageAdmin();
-        Bundle b = pa.getBundles("ServiceInterfaceV1", null)[0];
-        ExportedPackage[] packages = pa.getExportedPackages(b);
-        if (packages == null) {
-            System.out.println("Packages  ServiceInterfaceV1 : " + 0);
-        } else {
-            System.out.println("Packages  ServiceInterfaceV1 : " + packages.length);
-            for (ExportedPackage p : packages) {
-                System.out.println("Package : " + p.getName() + " - " + p.getVersion().toString());
-            }
-        }
-        b = pa.getBundles("ServiceInterfaceV2", null)[0];
-        packages = pa.getExportedPackages(b);
-        System.out.println("Packages  ServiceInterfaceV2 : " + packages.length);
-        for (ExportedPackage p : packages) {
-            System.out.println("Package : " + p.getName() + " - " + p.getVersion().toString());
         }
 
         osgiHelper.waitForService(Architecture.class.getName(), "(architecture.instance=mycons)", 2000);
