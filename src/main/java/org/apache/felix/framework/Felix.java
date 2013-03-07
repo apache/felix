@@ -4770,7 +4770,10 @@ public class Felix extends BundleImpl implements Framework
                 m_oldState = m_bundle.getState();
                 if (m_oldState != Bundle.UNINSTALLED)
                 {
-                    stopBundle(m_bundle, false);
+                    if (!Util.isFragment(m_bundle.adapt(BundleRevision.class)))
+                    {
+                        stopBundle(m_bundle, false);
+                    }
                 }
             }
             catch (Throwable ex)
