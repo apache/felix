@@ -170,6 +170,9 @@ public class Felix extends BundleImpl implements Framework
     // Security Manager created by the framework
     private SecurityManager m_securityManager = null;
 
+    // Do we need to consult the default java security policy if no security provider is present?
+    private volatile boolean m_securityDefaultPolicy;
+
     /**
      * <p>
      * This constructor creates a framework instance with a specified <tt>Map</tt>
@@ -283,6 +286,11 @@ public class Felix extends BundleImpl implements Framework
      *       unsupported fragment bundles throws an exception or logs a warning.
      *       Possible values are "<tt>exception</tt>" or "<tt>warning</tt>". The
      *       default value is "<tt>exception</tt>".
+     *   </li>
+     *   <li><tt>felix.security.defaultpolicy</tt> - Flag to indicate whether
+     *       to consult the default java securtiy policy if no security extension
+     *       is present. The default value is "<tt>false</tt>".
+     *   </li>
      * </ul>
      * <p>
      * The <a href="Main.html"><tt>Main</tt></a> class implements some
@@ -362,6 +370,9 @@ public class Felix extends BundleImpl implements Framework
             }
             m_bootPkgs[i] = s;
         }
+
+        // Read the security default policy property
+        m_securityDefaultPolicy = "true".equals(getProperty(FelixConstants.SECURITY_DEFAULT_POLICY)); 
 
         // Create default bundle stream handler.
         m_bundleStreamHandler = new URLHandlersBundleStreamHandler(this);
@@ -4288,7 +4299,13 @@ public class Felix extends BundleImpl implements Framework
         {
             return m_securityProvider.hasBundlePermission(bundleProtectionDomain, permission, direct);
         }
-        return true;
+        else
+        {
+            Bundle source = bundleProtectionDomain.getBundle();
+
+            return (m_securityDefaultPolicy && (source == null || source.getBundleId() != 0)) ? 
+                bundleProtectionDomain.superImplies(permission) : true;
+        }
     }
 
     private BundleActivator createBundleActivator(Bundle impl)

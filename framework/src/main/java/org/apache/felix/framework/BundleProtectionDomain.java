@@ -43,11 +43,13 @@ public class BundleProtectionDomain extends ProtectionDomain
             new CodeSource(
                 Felix.m_secureAction.createURL(
                     Felix.m_secureAction.createURL(null, "location:", new FakeURLStreamHandler()),
-                    bundle._getLocation(),
+                    bundle._getLocation().startsWith("reference:") ? 
+                        bundle._getLocation().substring("reference:".length()) : 
+                        bundle._getLocation(),
                     new FakeURLStreamHandler()
                     ),
                 (Certificate[]) certificates),
-            null);
+            null, null, null);
         m_felix = new WeakReference(felix);
         m_bundle = new WeakReference(bundle);
         m_revision = new WeakReference(bundle.adapt(BundleRevisionImpl.class));
@@ -65,6 +67,11 @@ public class BundleProtectionDomain extends ProtectionDomain
         Felix felix = (Felix) m_felix.get();
         return (felix != null) ?
             felix.impliesBundlePermission(this, permission, false) : false;
+    }
+
+    boolean superImplies(Permission permission)
+    {
+        return super.implies(permission);
     }
 
     public boolean impliesDirect(Permission permission)

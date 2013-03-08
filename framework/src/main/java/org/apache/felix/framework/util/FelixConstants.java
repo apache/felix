@@ -64,4 +64,5 @@ public interface FelixConstants extends org.osgi.framework.Constants
     // Miscellaneous properties values.
     String FAKE_URL_PROTOCOL_VALUE = "location:";
     String FELIX_EXTENSION_ACTIVATOR = "Felix-Activator";
+    String SECURITY_DEFAULT_POLICY = "felix.security.defaultpolicy";
 }
