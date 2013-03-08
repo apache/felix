@@ -1,3 +1,11 @@
+Changes form 2.0.1 to 2.2.0
+---------------------------
+** Bug
+    * [FELIX-3498] - BundleInputStream is not able to handle bundles that only have a MANIFEST.MF entry
+    * [FELIX-3603] - Resources in META-INF/xxx/ fodlers in a signed bundle should be checked
+    * [FELIX-3604] - No error log if the certificate is not valid
+    * [FELIX-3893] - Bundle in cache doesn't pass security check anymore.
+
 Changes from 2.0.0 to 2.0.1
 ---------------------------
 
