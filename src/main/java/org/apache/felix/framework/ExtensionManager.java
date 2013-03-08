@@ -330,13 +330,13 @@ class ExtensionManager extends URLStreamHandler implements Content
         Object sm = System.getSecurityManager();
         if (sm != null)
         {
-                ((SecurityManager) sm).checkPermission(
-                    new AdminPermission(bundle, AdminPermission.EXTENSIONLIFECYCLE));
-        }
+            ((SecurityManager) sm).checkPermission(
+                new AdminPermission(bundle, AdminPermission.EXTENSIONLIFECYCLE));
 
-        if (!((BundleProtectionDomain) bundle.getProtectionDomain()).impliesDirect(new AllPermission()))
-        {
-            throw new SecurityException("Extension Bundles must have AllPermission");
+            if (!((BundleProtectionDomain) bundle.getProtectionDomain()).impliesDirect(new AllPermission()))
+            {
+                throw new SecurityException("Extension Bundles must have AllPermission");
+            }
         }
 
         String directive = ManifestParser.parseExtensionBundleHeader((String)
