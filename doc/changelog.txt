@@ -1,3 +1,9 @@
+Changes from 4.2.0 to 4.2.1
+---------------------------
+
+** Improvement
+    * Update to framework and main 4.2.1
+
 Changes from 4.0.3 to 4.2.0
 ---------------------------
 

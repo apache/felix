@@ -1,3 +1,16 @@
+Changes from 4.2.0 to 4.2.1
+---------------------------
+** Bug
+    * [FELIX-3411] - The implementation of org.osgi.service.startlevel.StartLevel#setStartLevel(int) does not follow the spec
+    * [FELIX-3893] - Bundle in cache doesn't pass security check anymore.
+    * [FELIX-3907] - NullPointerException in BundleWiringImpl when m_disposed is true.
+    * [FELIX-3939] - IllegalArgumentException from ClassLoader.definePackage
+    * [FELIX-3950] - Permission check being done even when security manager is absent
+    * [FELIX-3957] - Error events can be thrown when refreshing fragment bundles
+
+** Improvement
+    * [FELIX-3961] - Add a fallback to the default java security policy if no security provider is present
+
 Changes from 4.0.3 to 4.2.0
 ---------------------------
 ** Bug
