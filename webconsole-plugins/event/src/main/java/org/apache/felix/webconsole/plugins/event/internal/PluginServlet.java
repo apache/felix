@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.*;
 import java.util.Map.Entry;
@@ -358,14 +359,14 @@ public class PluginServlet extends HttpServlet
                 if ( value.getClass().isArray() )
                 {
                     // as we can't use 1.5 functionality we have to print the array ourselves
-                    Object[] arr = (Object[])value;
                     final StringBuffer b = new StringBuffer("[");
-                    for(int m=0; m<arr.length; m++) {
+                    final int arrayLength = Array.getLength(value);
+                    for(int m=0; m<arrayLength; m++) {
                         if ( m > 0 )
                         {
                             b.append(", ");
                         }
-                        b.append(arr[m].toString());
+                        b.append( Array.get(value, m).toString() );
                     }
                     b.append(']');
                     jsonValue(jw, b.toString());
