@@ -51,15 +51,25 @@ abstract class RegistrationManager<T>
             return latch;
         }
         
+        @Override
         public int hashCode()
         {
             return regState.hashCode();
         }
         
+        @Override
         public boolean equals(Object other)
         {
             return other instanceof RegStateWrapper && regState == ((RegStateWrapper)other).getRegState();
         }
+
+        @Override
+        public String toString()
+        {
+            return regState.toString();
+        }
+        
+        
         
     }
     private final Lock registrationLock = new ReentrantLock();
