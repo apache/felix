@@ -58,6 +58,7 @@ public class Common {
         root.setLevel(Level.INFO);
 
         return options(
+                cleanCaches(),
                 ipojoBundles(),
                 junitBundles(),
                 testedBundle(),
