@@ -25,13 +25,8 @@ public class PojoWithInner {
 	// This is a simple POJO
 
 	public boolean doSomething() {
-        System.out.println(new MySecondInner().i);
 		return m_result.getInner();
 	}
-
-    class MySecondInner {
-        int i = 0;
-    }
 
 	public class MyInner {
 

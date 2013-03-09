@@ -28,6 +28,7 @@ import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
 import org.apache.felix.ipojo.manipulator.ResourceVisitor;
 import org.apache.felix.ipojo.manipulator.render.MetadataRenderer;
+import org.apache.felix.ipojo.manipulator.util.Constants;
 import org.apache.felix.ipojo.manipulator.util.Metadatas;
 import org.apache.felix.ipojo.manipulator.util.Streams;
 import org.apache.felix.ipojo.metadata.Element;
@@ -210,7 +211,7 @@ public class BndJarResourceStore implements ResourceStore {
 
         // Add some mandatory imported packages
         Map<String, String> version = new TreeMap<String, String>();
-        version.put("version", Pojoization.IPOJO_PACKAGE_VERSION);
+        version.put("version", Constants.getPackageImportClause());
 
         if (m_analyzer.getReferred().get("org.apache.felix.ipojo") == null) {
             m_analyzer.getReferred().put("org.apache.felix.ipojo", version);
