@@ -33,6 +33,10 @@
         iPOJO bytecode manipulator. This manipulator is used to instrument java classes in order to be managed by iPOJO.
     </description>
 
+    <properties>
+            <ipojo.import.packages>[1.8.0,2.0.0)</ipojo.import.packages>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>asm</groupId>
@@ -143,6 +147,7 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
+                <filtering>true</filtering>
             </resource>
             <resource>
                 <directory>.</directory>

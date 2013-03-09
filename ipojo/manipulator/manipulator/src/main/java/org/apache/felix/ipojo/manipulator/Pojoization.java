@@ -36,6 +36,7 @@ import org.apache.felix.ipojo.manipulator.store.DirectoryResourceStore;
 import org.apache.felix.ipojo.manipulator.store.JarFileResourceStore;
 import org.apache.felix.ipojo.manipulator.store.builder.DefaultManifestBuilder;
 import org.apache.felix.ipojo.manipulator.store.mapper.WABResourceMapper;
+import org.apache.felix.ipojo.manipulator.util.Constants;
 import org.apache.felix.ipojo.manipulator.util.Metadatas;
 import org.apache.felix.ipojo.manipulator.util.Strings;
 import org.apache.felix.ipojo.manipulator.visitor.check.CheckFieldConsistencyVisitor;
@@ -48,11 +49,6 @@ import org.apache.felix.ipojo.xml.parser.SchemaResolver;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Pojoization {
-
-    /**
-     * iPOJO Imported Package Version.
-     */
-    public static final String IPOJO_PACKAGE_VERSION = " 1.8.0";
 
     /**
      * Flag describing if we need or not compute annotations.
@@ -78,6 +74,7 @@ public class Pojoization {
 
     public Pojoization(Reporter reporter) {
         m_reporter = reporter;
+        m_reporter.info("Apache Felix iPOJO Manipulator - " + Constants.getVersion());
     }
 
     /**
@@ -121,7 +118,6 @@ public class Pojoization {
      * @param metadata the iPOJO metadata input stream.
      */
     public void pojoization(File in, File out, InputStream metadata) {
-
         StreamMetadataProvider provider = new StreamMetadataProvider(metadata, m_reporter);
         provider.setValidateUsingLocalSchemas(m_useLocalXSD);
 
@@ -167,7 +163,6 @@ public class Pojoization {
      * @param metadataFile the iPOJO metadata file (XML).
      */
     public void pojoization(File in, File out, File metadataFile) {
-
         MetadataProvider provider = new EmptyMetadataProvider();
         if (metadataFile != null) {
             FileMetadataProvider fileMetadataProvider = new FileMetadataProvider(metadataFile, m_reporter);

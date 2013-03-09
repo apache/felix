@@ -151,18 +151,27 @@
             <version>1.0.0</version>
         </dependency>
 
+        <!-- The tiny bundle extension must be before the manipulator version
+        to use the right version of the manipulator -->
+        <dependency>
+            <groupId>org.ow2.chameleon.testing</groupId>
+            <artifactId>tinybundles-ipojo</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+
         <!-- Define the tested version -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
+            <version>1.9.0-SNAPSHOT</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
             <version>1.9.0-SNAPSHOT</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-            <version>1.9.0-SNAPSHOT</version>
-        </dependency>
         <!-- End of tested version -->
 
         <dependency>
@@ -183,12 +192,6 @@
             <artifactId>osgi-helpers</artifactId>
             <version>0.6.0</version>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.ow2.chameleon.testing</groupId>
-            <artifactId>tinybundles-ipojo</artifactId>
-            <version>0.3.0</version>
         </dependency>
 
         <dependency>

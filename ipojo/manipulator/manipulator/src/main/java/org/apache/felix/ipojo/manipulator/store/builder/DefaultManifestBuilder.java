@@ -33,6 +33,7 @@ import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.felix.ipojo.manipulator.QuotedTokenizer;
 import org.apache.felix.ipojo.manipulator.render.MetadataRenderer;
 import org.apache.felix.ipojo.manipulator.store.ManifestBuilder;
+import org.apache.felix.ipojo.manipulator.util.Constants;
 import org.apache.felix.ipojo.metadata.Element;
 
 /**
@@ -104,7 +105,7 @@ public class DefaultManifestBuilder implements ManifestBuilder {
     private void setImports(Attributes att) {
         Map<String, Map<String, String>> imports = parseHeader(att.getValue("Import-Package"));
         Map<String, String> ver = new TreeMap<String, String>();
-        ver.put("version", Pojoization.IPOJO_PACKAGE_VERSION);
+        ver.put("version", Constants.getPackageImportClause());
         if (!imports.containsKey("org.apache.felix.ipojo")) {
             imports.put("org.apache.felix.ipojo", ver);
         }
@@ -155,11 +156,11 @@ public class DefaultManifestBuilder implements ManifestBuilder {
     private void setCreatedBy(Attributes att) {
         String prev = att.getValue("Created-By");
         if (prev == null) {
-            att.putValue("Created-By", "iPOJO " + Pojoization.IPOJO_PACKAGE_VERSION);
+            att.putValue("Created-By", "iPOJO " + Constants.getVersion());
         } else {
             if (prev.indexOf("iPOJO") == -1) {
                 // Avoid appending iPOJO several times
-                att.putValue("Created-By", prev + " & iPOJO " + Pojoization.IPOJO_PACKAGE_VERSION);
+                att.putValue("Created-By", prev + " & iPOJO " + Constants.getVersion());
             }
         }
     }

@@ -30,6 +30,7 @@ import junit.framework.TestCase;
 import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.felix.ipojo.manipulator.store.ManifestBuilder;
 import org.apache.felix.ipojo.manipulator.store.builder.DefaultManifestBuilder;
+import org.apache.felix.ipojo.manipulator.util.Constants;
 
 public class DefaultManifestBuilderTestCase extends TestCase {
 
@@ -54,7 +55,7 @@ public class DefaultManifestBuilderTestCase extends TestCase {
         Manifest modified = builder.build(manifest);
 
         // Created by header was properly modified
-        Assert.assertEquals("TestCase & iPOJO " + Pojoization.IPOJO_PACKAGE_VERSION,
+        Assert.assertEquals("TestCase & iPOJO " + Constants.getVersion(),
                             modified.getMainAttributes().getValue("Created-By"));
 
         // As there was no metadata provided, no iPOJO-Components header should be present
