@@ -721,9 +721,9 @@ public class DependencyManager<S, T> implements Reference
                         this.refPair = null;
                         this.trackingCount = trackingCount;
                         m_componentManager.invokeUnbindMethod( DependencyManager.this, oldRefPair, trackingCount );
-                        ungetService( oldRefPair );
                         this.refPair = nextRefPair;
                         tracked( trackingCount );
+                        ungetService( oldRefPair );
                     }
                     else //required and no replacement service, deactivate
                     {
