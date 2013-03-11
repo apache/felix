@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,11 +32,47 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Helper class for a inventory printer.
- * 
+ *
  * The adapter simplifies accessing and working with the inventory printer.
  */
 public class InventoryPrinterAdapter implements InventoryPrinterHandler, Comparable
 {
+
+    /**
+     * The name of the method to look for in non-InventoryPrinter services.
+     *
+     * @see #PRINTER_SIGNATURE
+     */
+    private static final String PRINTER_METHOD = "print";
+
+    /**
+     * The signature of the {@link #PRINTER_METHOD} method to be called.
+     * This is similar to the
+     * {@link InventoryPrinter#print(PrinterMode, PrintWriter, boolean)} method
+     * where the first argument is the string value of the {@link PrinterMode}.
+     *
+     * @see InventoryPrinter#print(PrinterMode, PrintWriter, boolean)
+     */
+    private static final Class[] PRINTER_SIGNATURE = new Class[]
+        { String.class, PrintWriter.class, Boolean.TYPE };
+
+    /**
+     * The name of the method to look for in non-ZipAttachmentProvider services.
+     *
+     * @see #ATTACHMENT_SIGNATURE
+     */
+    private static final String ATTACHMENT_METHOD = "addAttachments";
+
+    /**
+     * The signature of the {@link #ATTACHMENT_METHOD} method to be called.
+     * This is similar to the
+     * {@link ZipAttachmentProvider#addAttachments(String, ZipOutputStream)}
+     * method.
+     *
+     * @see ZipAttachmentProvider#addAttachments(String, ZipOutputStream)
+     */
+    private static final Class[] ATTACHMENT_SIGNATURE = new Class[]
+        { String.class, ZipOutputStream.class };
 
     /**
      * Formatter pattern to render the current time of inventory generation.
@@ -48,7 +84,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
      * Create a new adapter if the provided service is either a printer or
      * provides
      * the print method.
-     * 
+     *
      * @return An adapter or <code>null</code> if the method is missing.
      */
     public static InventoryPrinterAdapter createAdapter(final InventoryPrinterDescription description,
@@ -60,8 +96,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
         {
 
             // print(String, PrintWriter)
-            printMethod = ClassUtils.searchMethod(service.getClass(), "print", new Class[]
-                { String.class, PrintWriter.class, Boolean.class });
+            printMethod = ClassUtils.searchMethod(service.getClass(), PRINTER_METHOD, PRINTER_SIGNATURE);
             if (printMethod == null)
             {
                 return null;
@@ -72,8 +107,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
         {
 
             // addAttachments()
-            attachmentMethod = ClassUtils.searchMethod(service.getClass(), "addAttachments", new Class[]
-                { String.class, ZipOutputStream.class });
+            attachmentMethod = ClassUtils.searchMethod(service.getClass(), ATTACHMENT_METHOD, ATTACHMENT_SIGNATURE);
         }
         return new InventoryPrinterAdapter(description, service, printMethod, attachmentMethod);
     }
