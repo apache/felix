@@ -25,7 +25,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 
 /**
  * This is a helper class for dumping thread stacks.
@@ -78,7 +80,9 @@ public class ThreadDumper
         printSummary(pw, rootGroup, groups);
         printThreadGroup(pw, rootGroup, withStackTrace);
 
-        for (int i = 0; i < numGroups; i++)
+        // don't use numGroups, but groups.length, otherwise when we get null elements
+        // sorted at the beginning, we will skip the real objects
+        for (int i = 0; i < groups.length; i++)
         {
             printThreadGroup(pw, groups[i], withStackTrace);
         }
@@ -223,6 +227,9 @@ public class ThreadDumper
         ArrayList/*<ThreadGroup>*/list = new ArrayList(groups.length + 1);
         list.add(rootGroup);
         list.addAll(Arrays.asList(groups));
+        // main group will eventually enumerate ALL threads, so don't
+        // count a thread, it if is already processed
+        Collection threadSet = new HashSet();
         for (int j = 0; j < list.size(); j++)
         {
             ThreadGroup group = (ThreadGroup) list.get(j);
@@ -241,7 +248,7 @@ public class ThreadDumper
             for (int i = 0, size = threads.length; i < size; i++)
             {
                 Thread thread = threads[i];
-                if (null != thread)
+                if (null != thread && threadSet.add(thread))
                 {
                     if (thread.isAlive())
                     {
