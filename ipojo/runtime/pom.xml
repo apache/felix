@@ -39,6 +39,8 @@
         <module>core-it</module>
         <module>composite</module>
         <module>composite-it</module>
+        <module>api</module>
+        <module>api-it</module>
     </modules>
 
     <build>
