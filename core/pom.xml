@@ -71,7 +71,6 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
             <version>${ipojo.manipulator.version}</version>
-            <!-- Switching to 1.8.2 breaks the junit4osgi tests...-->
         </dependency>
         <dependency>
             <groupId>asm</groupId>
