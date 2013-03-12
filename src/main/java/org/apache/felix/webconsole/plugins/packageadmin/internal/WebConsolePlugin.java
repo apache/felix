@@ -276,10 +276,15 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         SortedSet/*<String>*/result = new TreeSet/*<String>*/();
         while (tok.hasMoreTokens())
         {
-            final String part = tok.nextToken().trim();
+            String part = tok.nextToken().trim();
             if (part.length() > 0)
             {
                 int idx = part.lastIndexOf('.');
+                if (idx == part.length() - 1)
+                {
+                    part = part.substring(0, part.length() - 1);
+                    idx = part.lastIndexOf('.');
+                }
                 if (idx != -1)
                 {
                     char firstCharAfterLastDot = part.charAt(idx + 1);
@@ -291,6 +296,10 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                     {
                         result.add(part);
                     }
+                } 
+                else
+                {
+                    result.add(part);
                 }
             }
         }
