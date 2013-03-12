@@ -140,6 +140,13 @@ public class PrimitiveComponentType extends ComponentType {
      */
     private List m_handlers = new ArrayList();
 
+
+    /**
+     * During the manipulation, we detect is the class is already manipulated.
+     * If set to <code>false</code>, the factory is configured to use the factory classloader.
+     */
+    private boolean m_alreadyManipulated = false;
+
     /**
      * Checks that the component type is not already
      * started.
@@ -433,10 +440,11 @@ public class PrimitiveComponentType extends ComponentType {
         Element meta = m_metadata;
         meta.addElement(m_manipulation);
         try {
-            if (clazz.length == 0) { // Already manipulated
+            if (m_alreadyManipulated) { // Already manipulated
                 m_factory = new ComponentFactory(m_context, meta);
             } else {
                 m_factory = new ComponentFactory(m_context, clazz, meta);
+                m_factory.setUseFactoryClassloader(true);
             }
             m_factory.start();
         } catch (ConfigurationException e) {
@@ -455,6 +463,7 @@ public class PrimitiveComponentType extends ComponentType {
             byte[] array = getClassByteArray();
             byte[] newclazz = manipulator.manipulate(array);
             m_manipulation = manipulator.getManipulationMetadata();
+            m_alreadyManipulated = newclazz.length == array.length;
             return newclazz;
         } catch (IOException e) {
             throw new IllegalStateException("An exception occurs during implementation class manipulation : " + e.getMessage());

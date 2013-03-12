@@ -27,11 +27,11 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
     <artifactId>org.apache.felix.ipojo.api</artifactId>
-    <version>1.7.0-SNAPSHOT</version>
+    <version>1.9.0-SNAPSHOT</version>
     <name>Apache Felix iPOJO API</name>
 
     <description>
-        iPOJO API used to define component types and instances in Java.
+        iPOJO API used to define component types and instances using Java.
     </description>
     <url>http://felix.apache.org/site/apache-felix-ipojo-api.html</url>
 
@@ -113,7 +113,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>1.8.0</version>
+            <version>1.9.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -123,7 +123,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-            <version>1.8.0</version>
+            <version>1.8.6</version>
         </dependency>
         <dependency>
             <groupId>asm</groupId>
