@@ -18,22 +18,12 @@
  */
 package org.apache.felix.ipojo;
 
-import java.net.URL;
-import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.ParseUtils;
 import org.apache.felix.ipojo.parser.PojoMetadata;
+import org.apache.felix.ipojo.util.Log;
 import org.apache.felix.ipojo.util.Logger;
 import org.apache.felix.ipojo.util.Tracker;
 import org.apache.felix.ipojo.util.TrackerCustomizer;
@@ -41,6 +31,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+
+import java.net.URL;
+import java.security.ProtectionDomain;
+import java.util.*;
 
 /**
  * The component factory manages component instance objects. This management
@@ -61,39 +55,38 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      * the fully qualified name of the handler <code>namespace:name</code>.
      */
     public static final String HANDLER_AUTO_PRIMITIVE = "org.apache.felix.ipojo.handler.auto.primitive";
-
-
     /**
      * The tracker used to track required handler factories.
      * Immutable once set.
      */
     protected Tracker m_tracker;
-
     /**
      * The class loader to delegate classloading.
      * Immutable once set.
      */
     private FactoryClassloader m_classLoader;
-
     /**
      * The component implementation class.
      * (manipulated byte array)
      */
     private byte[] m_clazz;
-
     /**
      * The component implementation qualified class name.
      * Immutable once set.
      * This attribute is set during the creation of the factory.
      */
     private String m_classname;
-
     /**
      * The manipulation metadata of the implementation class.
      * Immutable once set.
      * This attribute is set during the creation of the factory.
      */
     private PojoMetadata m_manipulation;
+    /**
+     * A flag enabling / disabling the use of the Factory classloader to define the class.
+     * This flag must be enabled if the component class was manipulated on the fly.
+     */
+    private boolean m_useFactoryClassloader = false;
 
     /**
      * Creates a instance manager factory.
@@ -122,6 +115,15 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
     }
 
     /**
+     * Sets the flag enabling / disabling the factory classloader.
+     *
+     * @param use <code>true</code> enables the factory classloader.
+     */
+    public void setUseFactoryClassloader(boolean use) {
+        m_useFactoryClassloader = use;
+    }
+
+    /**
      * Gets the component type description of the current factory.
      *
      * @return the description of the component type attached to this factory.
@@ -130,7 +132,6 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
     public ComponentTypeDescription getComponentTypeDescription() {
         return new PrimitiveTypeDescription(this);
     }
-    
 
     /**
      * Allows a factory to check if the given element is well-formed.
@@ -210,6 +211,10 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      * @return the defined class object
      */
     public synchronized Class defineClass(String name, byte[] clazz, ProtectionDomain domain) {
+        if (!m_useFactoryClassloader) {
+            m_logger.log(Log.WARNING, "A class definition was required even without the factory classloader enabled");
+        }
+
         if (m_classLoader == null) {
             m_classLoader = new FactoryClassloader();
         }
@@ -236,12 +241,15 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      * If it is, the factory classloader is used, else
      * the {@link Bundle#loadClass(String)} is called.
      *
+     * The implementation class is loaded using the factory classloader only if the factory classloader was enabled
+     *
      * @param className the name of the class to load
      * @return the resulting Class object
      * @throws ClassNotFoundException if the class is not found
+     * @see #setUseFactoryClassloader(boolean)
      */
     public Class loadClass(String className) throws ClassNotFoundException {
-        if (m_clazz != null && m_classname.equals(className)) {  // Immutable fields.
+        if (m_useFactoryClassloader && m_clazz != null && m_classname.equals(className)) {  // Immutable fields.
             return defineClass(className, m_clazz, null);
         }
         return m_context.getBundle().loadClass(className);
@@ -543,7 +551,6 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
            * Set to keep component's all super-class class-names.
            */
         private Set m_superClasses = new HashSet();
-
         /*
            * Set to keep component's all interface class-names.
            */
@@ -617,7 +624,6 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
                 * PojoMetadata of target Component.
                 */
             private PojoMetadata m_pojoMetadata;
-
             /*
                 * Bundle exposing target component.
                 */

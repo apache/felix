@@ -112,6 +112,7 @@ public class ProvidedService implements DependencyStateListener {
         // Create the factory
         try {
             m_factory = new ComponentFactory(m_context, clazz, metadata);
+            m_factory.setUseFactoryClassloader(true);
             m_factory.start();
         } catch (ConfigurationException e) {
             // Should not happen.
