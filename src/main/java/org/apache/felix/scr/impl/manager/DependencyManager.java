@@ -1792,6 +1792,7 @@ public class DependencyManager<S, T> implements Reference
         ServiceTracker<T, RefPair<T>> tracker = new ServiceTracker<T, RefPair<T>>( m_componentManager.getActivator().getBundleContext(), m_targetFilter, customizer, initialActive );
         customizer.setTracker( tracker );
         trackerRef.set( tracker );
+        customizerRef.set( customizer );
         registered = true;
         tracker.open( m_componentManager.getTrackingCount() );
         customizer.setTrackerOpened();
@@ -1839,7 +1840,6 @@ public class DependencyManager<S, T> implements Reference
                 customizer = new SingleDynamicCustomizer();
             }
         }
-        customizerRef.set( customizer );
         return customizer;
     }
 
