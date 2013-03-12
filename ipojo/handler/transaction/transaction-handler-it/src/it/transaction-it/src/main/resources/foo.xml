@@ -1,0 +1,5 @@
+<ipojo>
+	<component classname="org.apache.felix.ipojo.handler.transaction.components.FooImpl">
+		<provides/>
+	</component>
+</ipojo>

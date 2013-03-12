@@ -1,0 +1,25 @@
+<ipojo xmlns:tr="org.apache.felix.ipojo.transaction">
+	<component classname="org.apache.felix.ipojo.handler.transaction.components.FooDelegator" name="supported-ok">
+		<provides/>
+		<requires field="foo"/>
+		<tr:transaction field="transaction">
+			<transactional method="doSomethingGood" propagation="supported"/>
+			<transactional method="getCurrentTransaction" propagation="supported"/>
+			<transactional method="doSomethingBad" propagation="supported"/>
+			<transactional method="doSomethingBad2" norollbackfor="java.lang.UnsupportedOperationException" propagation="supported"/>
+			<transactional method="doSomethingLong" propagation="supported"/>
+		</tr:transaction>
+	</component>
+	
+	<component classname="org.apache.felix.ipojo.handler.transaction.components.FooDelegator" name="supported-cb">
+		<provides/>
+		<requires field="foo" />
+		<tr:transaction field="transaction" onCommit="onCommit" onRollback="onRollback">
+			<transactional method="doSomethingGood" propagation="supported"/>
+			<transactional method="getCurrentTransaction" propagation="supported"/>
+			<transactional method="doSomethingBad" propagation="supported"/>
+			<transactional method="doSomethingBad2" norollbackfor="java.lang.UnsupportedOperationException" propagation="supported"/>
+			<transactional method="doSomethingLong" propagation="supported"/>
+		</tr:transaction>
+	</component>
+</ipojo>
