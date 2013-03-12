@@ -26,7 +26,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.handler.jmx-handler-project</artifactId>
     <version>1.5.0-SNAPSHOT</version>
-    <name>Apache Felix iPOJO Event Admin Handler Project</name>
+    <name>Apache Felix iPOJO JMX Handler Project</name>
     <packaging>pom</packaging>
 
     <modules>
