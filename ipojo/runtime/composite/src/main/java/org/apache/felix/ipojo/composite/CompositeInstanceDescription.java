@@ -83,7 +83,8 @@ public class CompositeInstanceDescription extends InstanceDescription {
         ServiceContext internal = ((CompositeManager) m_instance)
                 .getServiceContext();
         try {
-            ServiceReference[] refs = internal.getServiceReferences(null, "(!(objectclass=" + Factory.class.getName() + "))");
+            ServiceReference[] refs = internal.getServiceReferences((String) null, "(!(objectclass=" + Factory.class
+                    .getName() + "))");
             for (int i = 0; refs != null && i < refs.length; i++) {
                 Element svc = new Element("service", "");
                 String[] keys = refs[i].getPropertyKeys();
