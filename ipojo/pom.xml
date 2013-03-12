@@ -17,80 +17,86 @@
  under the License.
 -->
 <project>
- <parent>
-    <groupId>org.apache.felix</groupId>
-    <artifactId>felix-parent</artifactId>
-    <version>1.2.1</version>
-    <relativePath>../pom/pom.xml</relativePath>
-  </parent>
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>felix-parent</artifactId>
+        <version>1.2.1</version>
+        <relativePath>../pom/pom.xml</relativePath>
+    </parent>
 
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>iPOJO</artifactId>
-  <groupId>org.apache.felix</groupId>
-  <name>Apache Felix iPOJO ~ Reactor</name>
-  <version>1.5.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>iPOJO</artifactId>
+    <groupId>org.apache.felix</groupId>
+    <name>Apache Felix iPOJO ~ Reactor</name>
+    <version>1.5.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <modules>
-    <module>metadata</module>
-    <module>manipulator</module>
-    <module>runtime</module>
-    <module>arch</module>
-    <module>handler/extender</module>
-    <module>handler/temporal</module>
-    <module>handler/eventadmin</module>
-    <module>handler/whiteboard</module>
-    <module>handler/jmx</module>
-    <module>handler/transaction</module>
-    <module>api</module>
-	<module>arch-gogo</module>
-    <module>webconsole-plugin</module>
-    <module>junit4osgi</module>
-  </modules>
+        <!-- main modules -->
+        <module>metadata</module>
+        <module>manipulator</module>
+        <module>runtime</module>
 
-  <profiles>
-      <profile>
-        <id>examples</id>
-        <modules>
-          <module>examples</module>
-        </modules>
-      </profile>
-      <profile>
-        <id>tests</id>
-        <modules>
-          <module>tests</module>
-        </modules>
-      </profile>
-  </profiles>
+        <!-- handlers -->
+        <module>handler/extender</module>
+        <module>handler/temporal</module>
+        <module>handler/eventadmin</module>
+        <module>handler/whiteboard</module>
+        <module>handler/jmx</module>
+        <module>handler/transaction</module>
+
+        <!-- tools -->
+        <module>arch</module>
+        <module>arch-gogo</module>
+        <module>webconsole-plugin</module>
+
+        <!-- junit4osgi -->
+        <module>junit4osgi</module>
+    </modules>
+
+    <profiles>
+        <profile>
+            <id>examples</id>
+            <modules>
+                <module>examples</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>tests</id>
+            <modules>
+                <module>tests</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>rat-maven-plugin</artifactId>
-        <version>1.0-alpha-3</version>
-        <configuration>
-          <excludeSubProjects>true</excludeSubProjects>
-          <excludes>
-            <param>**/*</param>
-          </excludes>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>rat-maven-plugin</artifactId>
+                <version>1.0-alpha-3</version>
+                <configuration>
+                    <excludeSubProjects>true</excludeSubProjects>
+                    <excludes>
+                        <param>**/*</param>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <aggregate>true</aggregate>
-          <show>private</show>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <aggregate>true</aggregate>
+                    <show>private</show>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
 
 </project>
