@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.felix.ipojo.handler.eventadmin.test;
 
 import org.apache.felix.ipojo.Factory;

@@ -1043,7 +1043,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
     /**
      * This generator implements the naming strategy when client provides the instance name value.
      */
-    private class UserProvidedNameGenerator implements NameGenerator {
+    private static class UserProvidedNameGenerator implements NameGenerator {
 
         /**
          * @param name The user provided name (not null)

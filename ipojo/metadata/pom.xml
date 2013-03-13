@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>1.2.1</version>
+        <version>2.1</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -36,25 +36,11 @@
     </description>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-            <resource>
-                <directory>.</directory>
-                <targetPath>META-INF</targetPath>
-                <includes>
-                    <include>LICENSE*</include>
-                    <include>NOTICE*</include>
-                    <include>DEPENDENCIES*</include>
-                </includes>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>1.4.3</version>
+                <version>2.3.7</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -63,37 +49,11 @@
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Bundle-Description>iPOJO Metadata</Bundle-Description>
                         <Export-Package>org.apache.felix.ipojo.metadata</Export-Package>
-                        <Include-Resource>
-                            META-INF/LICENSE=LICENSE,
-                            META-INF/NOTICE=NOTICE,
-                            META-INF/DEPENDENCIES=DEPENDENCIES
-                        </Include-Resource>
                     </instructions>
                     <obrRepository>NONE</obrRepository>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>rat-maven-plugin</artifactId>
-                <configuration>
-                    <excludeSubProjects>false</excludeSubProjects>
-                    <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-                    <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-                    <excludes>
-                        <param>doc/*</param>
-                        <param>maven-eclipse.xml</param>
-                        <param>.checkstyle</param>
-                        <param>.externalToolBuilders/*</param>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <configuration>
-                    <configLocation>http://felix.apache.org/ipojo/dev/checkstyle_ipojo.xml</configLocation>
-                </configuration>
-            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

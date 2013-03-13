@@ -317,7 +317,7 @@ public class ServiceCollection implements Collection, List, Set {
      * Iterator on a set of service objects.
      * This iterator iterates on a cached copy of service objects.
      */
-    private final class ServiceIterator implements ListIterator {
+    private static final class ServiceIterator implements ListIterator {
         
         /**
          * Underlying iterator.

@@ -19,11 +19,7 @@
 package org.apache.felix.ipojo.handlers.jmx;
 
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
@@ -390,7 +386,7 @@ public class MBeanHandler extends PrimitiveHandler {
 
             // Register the ManagedService
             BundleContext bundleContext = m_instanceManager.getContext();
-            Properties properties = new Properties();
+            Dictionary<String, String> properties = new Hashtable<String, String>();
             try {
                 m_objectName = new ObjectName(getObjectNameString());
 

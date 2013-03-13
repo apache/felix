@@ -21,14 +21,13 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>1.2.1</version>
+        <version>2.1</version>
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO Arch Command</name>
     <artifactId>org.apache.felix.ipojo.arch</artifactId>
-    <groupId>org.apache.felix</groupId>
     <version>1.7.0-SNAPSHOT</version>
 
     <description>Arch command to collect and print information about iPOJO instances.</description>
@@ -38,7 +37,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>${project.version}</version>
+            <version>1.9.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -51,7 +50,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>1.4.3</version>
+                <version>2.3.7</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -64,11 +63,6 @@
                             http://felix.apache.org/site/ipojo-arch-command.html
                         </Bundle-DocURL>
                         <Private-Package>org.apache.felix.ipojo.arch</Private-Package>
-                        <Include-Resource>
-                            META-INF/LICENSE=LICENSE,
-                            META-INF/NOTICE=NOTICE,
-                            META-INF/DEPENDENCIES=DEPENDENCIES
-                        </Include-Resource>
                     </instructions>
                 </configuration>
             </plugin>
@@ -99,22 +93,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>rat-maven-plugin</artifactId>
-                <configuration>
-                    <excludeSubProjects>false</excludeSubProjects>
-                    <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-                    <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-                    <excludes>
-                        <param>doc/**/*</param>
-                        <param>maven-eclipse.xml</param>
-                        <param>.checkstyle</param>
-                        <param>.externalToolBuilders/*</param>
-                        <param>LICENSE.asm</param>
-                    </excludes>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -1,0 +1,32 @@
+Changes from the 1.6.0 to 1.8.0
+-------------------------------
+** Bug
+    * [FELIX-2718] - EventHandler are invoked one by one when using the @Subscribe handler
+
+** Improvement
+    * [FELIX-2631] - Rename @Publisher and @Subscriber attributes to follow the java naming conventions
+    * [FELIX-2634] - Rename the @Publisher annotation into @Publishes annotation to avoid collision
+    * [FELIX-2711] - The event admin handler should provides a Handler Description
+
+Changes from the 1.4.0 to 1.6.0
+-------------------------------
+** Bug
+    * [FELIX-1938] - Bad error message when an Event Subscriber does not set the data type and data key
+
+Changes from 1.2.0 to 1.4.0
+---------------------------
+** Improvement
+    * Update parent pom
+
+ Changes from 1.0.0 to 1.2.0
+---------------------------
+** Bug
+    * [FELIX-794] - Event Admin handler reject correctly formed topics
+
+** Improvement
+    * [FELIX-795] - Improve metadata and manipulator performance
+    * [FELIX-834] - Provide Annotations for the extender, whiteboard and event admin handlers
+
+Version 1.0.0
+-------------
+    * Initial release

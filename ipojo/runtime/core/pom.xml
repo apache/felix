@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>1.2.1</version>
+        <version>2.1</version>
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -106,7 +106,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>1.4.3</version>
+                <version>2.3.7</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -145,18 +145,18 @@
                             org.apache.felix.ipojo.handlers.lifecycle.callback,
                             org.apache.felix.ipojo.handlers.lifecycle.controller,
                             org.apache.felix.ipojo.extender.internal*,
-                            META-INF.services.*,
                             <!-- ASM (Manipulator dependencies) -->
-                            org.objectweb.asm.commons,
-                            org.objectweb.asm.signature,
-                            org.objectweb.asm,
-                            org.objectweb.asm.tree
+                            org.objectweb.asm.commons;-split-package:=merge-last,
+                            org.objectweb.asm.signature;-split-package:=merge-last,
+                            org.objectweb.asm;-split-package:=merge-last,
+                            org.objectweb.asm.tree;-split-package:=merge-last
                         </Private-Package>
                         <Export-Package>
                             org.apache.felix.ipojo; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.metadata; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.architecture; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.extender; version="${ipojo.package.version}",
+                            org.apache.felix.ipojo.extender;
+                            version="${ipojo.package.version}";-split-package:=merge-first,
                             org.apache.felix.ipojo.extender.builder; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.extender.queue; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.parser; version="${ipojo.package.version}",
@@ -174,11 +174,6 @@
                             org.osgi.service.cm,
                             org.osgi.service.log
                         </Export-Package>
-                        <Include-Resource>
-                            META-INF/LICENSE=LICENSE,
-                            META-INF/NOTICE=NOTICE, META-INF/LICENSE.asm=LICENSE.asm,
-                            META-INF/DEPENDENCIES=DEPENDENCIES
-                        </Include-Resource>
                         <_donotcopy>(CVS|.svn|.+.bak|~.+|metadata.xml)</_donotcopy>
                     </instructions>
                 </configuration>
@@ -199,24 +194,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>rat-maven-plugin</artifactId>
-                <configuration>
-                    <excludeSubProjects>false</excludeSubProjects>
-                    <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
-                    <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
-                    <excludes>
-                        <param>doc/**/*</param>
-                        <param>maven-eclipse.xml</param>
-                        <param>.checkstyle</param>
-                        <param>.externalToolBuilders/*</param>
-                        <param>LICENSE.asm</param>
-                        <param>.fbprefs</param>
-                        <param>DEPENDENCIES</param>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <configuration>
@@ -225,22 +202,28 @@
                     <configLocation>http://felix.apache.org/ipojo/dev/checkstyle_ipojo.xml</configLocation>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- check src only (except remote resources additions) -->
+                    <includes>
+                        <include>src/**</include>
+                    </includes>
+                    <excludes>
+                        <exclude>src/main/appended-resources/**</exclude>
+                        <exclude>**/manipulation/MANIFEST.MF</exclude> <!-- This file is used by tests -->
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
-
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-            <resource>
-                <directory>.</directory>
-                <targetPath>META-INF</targetPath>
-                <includes>
-                    <include>LICENSE*</include>
-                    <include>NOTICE*</include>
-                    <include>DEPENDENCIES*</include>
-                </includes>
-            </resource>
-        </resources>
-
     </build>
 </project>
