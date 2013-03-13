@@ -855,7 +855,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
     /**
      * Classloader for nullable objects.
      */
-    private class NullableClassLoader extends ClassLoader {
+    private static class NullableClassLoader extends ClassLoader {
        /**
         * Component classloader.
         */
