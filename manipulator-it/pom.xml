@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
-        <version>1.2.1</version>
+        <version>2.1</version>
         <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -32,21 +32,6 @@
     <packaging>pom</packaging>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-            <resource>
-                <directory>.</directory>
-                <targetPath>META-INF</targetPath>
-                <includes>
-                    <include>LICENSE*</include>
-                    <include>NOTICE*</include>
-                    <include>DEPENDENCIES*</include>
-                </includes>
-            </resource>
-        </resources>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -70,6 +55,29 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- check src only (except remote resources additions) -->
+                    <includes>
+                        <include>src/**</include>
+                    </includes>
+                    <excludes>
+                        <exclude>src/main/appended-resources/**</exclude>
+                        <exclude>**/*.iml</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
 
@@ -208,66 +216,6 @@
     </dependencies>
 
     <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>make-assembly</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <configuration>
-                                    <descriptorRefs>
-                                        <descriptorRef>project</descriptorRef>
-                                    </descriptorRefs>
-                                    <!-- we don't want to attach all the assemblies, such as bz2 -->
-                                    <attach>false</attach>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <!-- only attach the project and bin assemblies, in tar.gz and zip flavors -->
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-assemblies</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>attach-artifact</goal>
-                                </goals>
-                                <configuration>
-                                    <artifacts>
-                                        <artifact>
-                                            <file>
-                                                ${project.build.directory}/${project.artifactId}-${project.version}-project.tar.gz
-                                            </file>
-                                            <classifier>project</classifier>
-                                            <type>tar.gz</type>
-                                        </artifact>
-                                        <artifact>
-                                            <file>
-                                                ${project.build.directory}/${project.artifactId}-${project.version}-project.zip
-                                            </file>
-                                            <classifier>project</classifier>
-                                            <type>zip</type>
-                                        </artifact>
-                                    </artifacts>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
         <profile>
             <id>knopflerfish</id>
             <activation>
