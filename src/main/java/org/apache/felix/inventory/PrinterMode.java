@@ -62,29 +62,6 @@ public final class PrinterMode
         return this.mode;
     }
 
-    public int hashCode()
-    {
-        return mode.hashCode();
-    }
-
-    public boolean equals(Object obj)
-    {
-        if (this == obj)
-        {
-            return true;
-        }
-        if (obj == null)
-        {
-            return false;
-        }
-        if (getClass() != obj.getClass())
-        {
-            return false;
-        }
-        final PrinterMode other = (PrinterMode) obj;
-        return mode.equals(other.mode);
-    }
-
     public String toString()
     {
         return name();
