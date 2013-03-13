@@ -728,7 +728,7 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
         jw.key( "version" );
         jw.value( Util.getHeaderValue(bundle, Constants.BUNDLE_VERSION) );
         jw.key( "symbolicName" );
-        jw.value( Util.getHeaderValue(bundle, Constants.BUNDLE_SYMBOLICNAME) );
+        jw.value( bundle.getSymbolicName() );
         jw.key( "category" );
         jw.value( Util.getHeaderValue(bundle, Constants.BUNDLE_CATEGORY) );
 
