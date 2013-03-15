@@ -79,8 +79,8 @@ public class Activator implements BundleActivator
         props.put("felix.webconsole.configprinter.modes", "always");
 
         //Registering a ServiceFactory to avoid dependency on Servlet API
-        context.registerService("" +
-                ".Servlet", new PluginServiceFactory(), props);
+        //on startup
+        context.registerService("javax.servlet.Servlet", new PluginServiceFactory(), props);
     }
 
     private class PluginServiceFactory implements ServiceFactory {
