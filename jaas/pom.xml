@@ -94,10 +94,10 @@
                         <Bundle-Activator>
                             org.apache.felix.jaas.internal.Activator
                         </Bundle-Activator>
-                        <Import-Package>
-                          javax.servlet.*;resolution:=optional,
-                          *
-                        </Import-Package>
+                        <DynamicImport-Package>
+                          javax.servlet,
+                          javax.servlet.http
+                        </DynamicImport-Package>
                         <_removeheaders>
                             Embed-Dependency,Private-Package,Include-Resource
                         </_removeheaders>
