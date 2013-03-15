@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -25,17 +26,14 @@ import static org.apache.felix.jaas.internal.ConfigSpiOsgi.Realm;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -46,18 +44,10 @@ public class JaasWebConsolePlugin extends HttpServlet
 
     private final BundleLoginModuleCreator loginModuleCreator;
 
-    public JaasWebConsolePlugin(BundleContext context, ConfigSpiOsgi configSpi, BundleLoginModuleCreator loginModuleCreator)
+    public JaasWebConsolePlugin(ConfigSpiOsgi configSpi, BundleLoginModuleCreator loginModuleCreator)
     {
         this.configSpi = configSpi;
         this.loginModuleCreator = loginModuleCreator;
-
-        Properties props = new Properties();
-        props.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
-        props.put(Constants.SERVICE_DESCRIPTION, "JAAS Web Console Plugin");
-        props.put("felix.webconsole.label", "jaas");
-        props.put("felix.webconsole.title", "JAAS");
-        props.put("felix.webconsole.configprinter.modes", "always");
-        context.registerService(Servlet.class.getName(), this, props);
     }
 
     @Override

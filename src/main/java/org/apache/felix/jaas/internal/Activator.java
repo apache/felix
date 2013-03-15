@@ -19,9 +19,14 @@
 
 package org.apache.felix.jaas.internal;
 
+import java.util.Properties;
+
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.log.LogService;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 
 public class Activator implements BundleActivator
 {
@@ -66,11 +71,27 @@ public class Activator implements BundleActivator
     }
 
     private void registerWebConsolePlugin(BundleContext context){
-        try{
-            webConsolePlugin = new JaasWebConsolePlugin(context, configSpi,loginModuleCreator);
-        }catch(NoClassDefFoundError t){
-            //Servlet API is not present. This is an optional requirement
-            logger.log(LogService.LOG_INFO,"HTTP support not found. JAAS WebConsole Plugin would not be registered");
+        Properties props = new Properties();
+        props.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
+        props.put(Constants.SERVICE_DESCRIPTION, "JAAS Web Console Plugin");
+        props.put("felix.webconsole.label", "jaas");
+        props.put("felix.webconsole.title", "JAAS");
+        props.put("felix.webconsole.configprinter.modes", "always");
+
+        //Registering a ServiceFactory to avoid dependency on Servlet API
+        context.registerService("" +
+                ".Servlet", new PluginServiceFactory(), props);
+    }
+
+    private class PluginServiceFactory implements ServiceFactory {
+
+        @Override
+        public Object getService(Bundle bundle, ServiceRegistration registration) {
+            return new JaasWebConsolePlugin(configSpi,loginModuleCreator);
+        }
+
+        @Override
+        public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
         }
     }
 
