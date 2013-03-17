@@ -50,8 +50,12 @@
                 <version>2.3.7</version>
                 <configuration>
                     <instructions>
-                        <Private-Package>org.apache.felix.ipojo.handlers.jmx
+                        <Private-Package>
+                            org.apache.felix.ipojo.handlers.jmx
                         </Private-Package>
+                        <Import-Package>
+                            org.osgi.framework;version=1.5, *
+                        </Import-Package>
                         <Bundle-Name>${project.name}</Bundle-Name>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
