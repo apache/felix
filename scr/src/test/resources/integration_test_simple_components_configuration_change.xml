@@ -145,6 +145,8 @@
         />
     </scr:component>
 
+<!-- multiple -->
+<!-- reluctant -->
     <scr:component name="test_optional_multiple_dynamic"
         enabled="false"
         configuration-policy="require"
@@ -175,26 +177,10 @@
         />
     </scr:component>
     
-    <scr:component name="test_required_multiple_dynamic_factory"
-        enabled="false"
-        configuration-policy="ignore"
-        factory="factory_test_required_multiple_dynamic_factory">
-        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
-        <reference
-            name="ref"
-            interface="org.apache.felix.scr.integration.components.SimpleService"
-            cardinality="1..n"
-            policy="dynamic"
-            bind="bindSimpleService"
-            unbind="unbindSimpleService"
-        />
-    </scr:component>
-
     <scr:component name="test_optional_multiple_static"
         enabled="false"
         configuration-policy="require"
         modified="modified">
-
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
         <reference
             name="ref"
@@ -210,7 +196,6 @@
         enabled="false"
         configuration-policy="require"
         modified="modified">
-
         <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
         <reference
             name="ref"
@@ -221,5 +206,88 @@
             unbind="unbindSimpleService"
         />
     </scr:component>
+
+<!-- greedy -->
+    <scr:component name="test_optional_multiple_dynamic_greedy"
+        enabled="false"
+        configuration-policy="require"
+        modified="modified">
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <reference
+            name="ref"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            cardinality="0..n"
+            policy="dynamic"
+            policy-option="greedy"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+        />
+    </scr:component>
+
+    <scr:component name="test_required_multiple_dynamic_greedy"
+        enabled="false"
+        configuration-policy="require"
+        modified="modified">
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <reference
+            name="ref"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            cardinality="1..n"
+            policy="dynamic"
+            policy-option="greedy"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+        />
+    </scr:component>
+    
+    <scr:component name="test_optional_multiple_static_greedy"
+        enabled="false"
+        configuration-policy="require"
+        modified="modified">
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <reference
+            name="ref"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            cardinality="0..n"
+            policy="static"
+            policy-option="greedy"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+        />
+    </scr:component>
+
+    <scr:component name="test_required_multiple_static_greedy"
+        enabled="false"
+        configuration-policy="require"
+        modified="modified">
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <reference
+            name="ref"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            cardinality="1..n"
+            policy="static"
+            policy-option="greedy"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+        />
+    </scr:component>
+
+<!-- factory, we'll just try single dynamic -->
+    <scr:component name="test_required_single_dynamic_factory"
+        enabled="false"
+        configuration-policy="require"
+        modified="modified"
+        factory="factory_test_required_single_dynamic_factory">
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <reference
+            name="ref"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            cardinality="1..1"
+            policy="dynamic"
+            bind="setSimpleService"
+            unbind="unsetSimpleService"
+        />
+    </scr:component>
+
 
 </components>
