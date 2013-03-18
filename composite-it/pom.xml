@@ -84,8 +84,8 @@
     </build>
 
     <properties>
-        <!-- switch to snapshot version to improve start level detection -->
-        <exam.version>3.1.0-SNAPSHOT</exam.version>
+        <!-- a new barrier check was pushed in the 3.0.1 -->
+        <exam.version>3.0.1</exam.version>
         <url.version>1.5.1</url.version>
     </properties>
 
