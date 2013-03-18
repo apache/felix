@@ -18,6 +18,8 @@
  */
 package org.apache.felix.scr.integration;
 
+import java.util.Hashtable;
+
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
@@ -26,10 +28,17 @@ import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.component.ComponentFactory;
+import org.osgi.service.component.ComponentInstance;
 
 @RunWith(JUnit4TestRunner.class)
 public class ConfigurationChangeTest extends ComponentTestBase
 {
+    private static final String PROP_NAME_FACTORY = ComponentTestBase.PROP_NAME + ".factory";
+
     static
     {
         // uncomment to enable debugging of this test class
@@ -37,7 +46,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
 
         descriptorFile = "/integration_test_simple_components_configuration_change.xml";
     }
-/*
+
     @Test
     public void test_optional_single_dynamic()
     {
@@ -93,7 +102,7 @@ public class ConfigurationChangeTest extends ComponentTestBase
         String pid = "test_required_single_static_greedy";
         singleTest( pid, false );
     }
-*/
+
     private void singleTest(String pid, boolean dynamic)
     {
         final Component component = findComponentByName( pid );
@@ -153,6 +162,56 @@ public class ConfigurationChangeTest extends ComponentTestBase
         multipleTest( pid, true );
     }
 
+
+    @Test
+    public void test_required_multiple_dynamic()
+    {
+        String pid = "test_required_multiple_dynamic";
+        multipleTest( pid, true );
+    }
+
+    @Test
+    public void test_optional_multiple_static()
+    {
+        String pid = "test_optional_multiple_static";
+        multipleTest( pid, false );
+    }
+
+    @Test
+    public void test_required_multiple_static()
+    {
+        String pid = "test_required_multiple_static";
+        multipleTest( pid, false );
+    }
+
+    @Test
+    public void test_optional_multiple_dynamic_greedy()
+    {
+        String pid = "test_optional_multiple_dynamic_greedy";
+        multipleTest( pid, true );
+    }
+
+    @Test
+    public void test_required_multiple_dynamic_greedy()
+    {
+        String pid = "test_required_multiple_dynamic_greedy";
+        multipleTest( pid, true );
+    }
+
+    @Test
+    public void test_optional_multiple_static_greedy()
+    {
+        String pid = "test_optional_multiple_static_greedy";
+        multipleTest( pid, false );
+    }
+
+    @Test
+    public void test_required_multiple_static_greedy()
+    {
+        String pid = "test_required_multiple_static_greedy";
+        multipleTest( pid, false );
+    }
+
     private void multipleTest(String pid, boolean dynamic)
     {
         final Component component = findComponentByName( pid );
@@ -204,5 +263,79 @@ public class ConfigurationChangeTest extends ComponentTestBase
         TestCase.assertEquals( 1, comp20.m_multiRef.size() );
         TestCase.assertEquals( srv2, comp20.m_multiRef.iterator().next() );
     }
-    
+ 
+    //I'm not sure what should happen in this case, asking on dev list.
+//    @Test
+    public void testSingleDynamicRequiredFactory() throws InvalidSyntaxException
+    {
+        String pid = "test_required_single_dynamic_factory";
+        final String factoryPid = "factory_" + pid;
+        boolean dynamic = true;
+        final Component component = findComponentByName( pid );
+        TestCase.assertNotNull( component );
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+
+        final SimpleServiceImpl srv1 = SimpleServiceImpl.create( bundleContext, "srv1" );
+        final SimpleServiceImpl srv2 = SimpleServiceImpl.create( bundleContext, "srv2" );
+
+        theConfig.put("ref.target", "(value=srv1)");
+        configure( pid );
+        // async enabling
+        component.enable();
+        delay();
+
+        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        
+        // create a component instance
+        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+            + ComponentConstants.COMPONENT_FACTORY + "=" + factoryPid + ")" );
+        TestCase.assertNotNull( refs );
+        TestCase.assertEquals( 1, refs.length );
+        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
+        TestCase.assertNotNull( factory );
+
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
+        final ComponentInstance instance = factory.newInstance( props );
+        TestCase.assertNotNull( instance );
+        TestCase.assertNotNull( instance.getInstance() );
+        TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
+
+        final SimpleComponent comp10 = SimpleComponent.INSTANCE;
+        TestCase.assertNotNull( comp10 );
+        TestCase.assertEquals( srv1, comp10.m_singleRef );
+        TestCase.assertTrue( comp10.m_multiRef.isEmpty() );
+        TestCase.assertEquals( 1, comp10.m_singleRefBind );
+        TestCase.assertEquals( 0, comp10.m_singleRefUnbind);
+
+        // update configuration to target srv2
+        theConfig.put("ref.target", "(value=srv2)");
+        configure( pid );
+
+        delay();
+        // should bind to srv2
+        SimpleComponent comp20;
+        if ( dynamic )
+        {
+            //fails here, config modifications are not propagated to instances from factory.
+            TestCase.assertEquals( 1, comp10.m_modified );
+            comp20 = comp10;
+            TestCase.assertEquals( 2, comp20.m_singleRefBind );
+            TestCase.assertEquals( 1, comp20.m_singleRefUnbind);
+        } 
+        else
+        {
+            TestCase.assertEquals( 0, comp10.m_modified );
+            comp20 = SimpleComponent.INSTANCE;
+            TestCase.assertNotSame( comp10, comp20 );
+            TestCase.assertEquals( 0, comp20.m_modified );
+            TestCase.assertEquals( 1, comp20.m_singleRefBind );
+            TestCase.assertEquals( 0, comp20.m_singleRefUnbind);
+            TestCase.assertEquals( 1, comp10.m_singleRefUnbind);
+        }
+        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+        TestCase.assertEquals( srv2, comp20.m_singleRef );
+        TestCase.assertTrue( comp20.m_multiRef.isEmpty() );
+    }
+
 }
