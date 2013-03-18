@@ -168,26 +168,24 @@ public class DependencyManager<S, T> implements Reference
     {
         private final Map<ServiceReference<T>, RefPair<T>> EMPTY_REF_MAP = Collections.emptyMap();
 
-        private ServiceTracker<T, RefPair<T>> tracker;
-
         private volatile boolean trackerOpened;
 
         private volatile Map<ServiceReference<T>, RefPair<T>> previousRefMap = EMPTY_REF_MAP;
 
         public void setTracker( ServiceTracker<T, RefPair<T>> tracker )
         {
-            this.tracker = tracker;
+            trackerRef.set( tracker );
             trackerOpened = false;
         }
 
         public boolean isSatisfied()
         {
-            return isOptional() || !tracker.isEmpty();
+            return isOptional() || !getTracker().isEmpty();
         }
 
         protected ServiceTracker<T, RefPair<T>> getTracker()
         {
-            return tracker;
+            return trackerRef.get();
         }
 
         /**
@@ -196,7 +194,7 @@ public class DependencyManager<S, T> implements Reference
          */
         protected boolean isActive()
         {
-            return tracker.isActive();
+            return getTracker().isActive();
         }
 
         protected boolean isTrackerOpened()
@@ -1774,7 +1772,6 @@ public class DependencyManager<S, T> implements Reference
         boolean initialActive = oldTracker != null && oldTracker.isActive();
         ServiceTracker<T, RefPair<T>> tracker = new ServiceTracker<T, RefPair<T>>( m_componentManager.getActivator().getBundleContext(), m_targetFilter, customizer, initialActive );
         customizer.setTracker( tracker );
-        trackerRef.set( tracker );
         registered = true;
         tracker.open( m_componentManager.getTrackingCount() );
         customizer.setTrackerOpened();
