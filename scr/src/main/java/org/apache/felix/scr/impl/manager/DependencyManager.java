@@ -68,7 +68,7 @@ public class DependencyManager<S, T> implements Reference
 
     private final AtomicReference<ServiceTracker<T, RefPair<T>>> trackerRef = new AtomicReference<ServiceTracker<T, RefPair<T>>>();
 
-    private final AtomicReference<Customizer<T>> customizerRef = new AtomicReference<Customizer<T>>();
+    private final Customizer customizer;
 
     private BindMethods m_bindMethods;
 
@@ -124,6 +124,7 @@ public class DependencyManager<S, T> implements Reference
     {
         m_componentManager = componentManager;
         m_dependencyMetadata = dependency;
+        customizer = newCustomizer();
 
         // dump the reference information if DEBUG is enabled
         if ( m_componentManager.isLogEnabled( LogService.LOG_DEBUG ) )
@@ -176,6 +177,7 @@ public class DependencyManager<S, T> implements Reference
         public void setTracker( ServiceTracker<T, RefPair<T>> tracker )
         {
             this.tracker = tracker;
+            trackerOpened = false;
         }
 
         public boolean isSatisfied()
@@ -709,7 +711,7 @@ public class DependencyManager<S, T> implements Reference
                                 //TODO error???
                             }
                         }
-                        if ( !refPair.isFailed() )
+                        if ( !nextRefPair.isFailed() )
                         {
                             m_componentManager.invokeBindMethod( DependencyManager.this, nextRefPair, trackingCount );
                         }
@@ -734,6 +736,7 @@ public class DependencyManager<S, T> implements Reference
                 }
                 else
                 {
+                    this.refPair = null;
                     this.trackingCount = trackingCount;
                     tracked( trackingCount );
                 }
@@ -990,7 +993,7 @@ public class DependencyManager<S, T> implements Reference
 
     void deactivate()
     {
-        customizerRef.get().close();
+        customizer.close();
     }
 
 
@@ -1065,7 +1068,6 @@ public class DependencyManager<S, T> implements Reference
      */
     private RefPair<T> getBestRefPair()
     {
-        Customizer customizer = customizerRef.get( );
         if (customizer == null )
         {
             return null;
@@ -1101,11 +1103,6 @@ public class DependencyManager<S, T> implements Reference
      */
     T[] getServices()
     {
-        Customizer customizer = customizerRef.get( );
-        if (customizer == null )
-        {
-            return null;
-        }
         Collection<RefPair<T>> refs = customizer.getRefs(  new AtomicInteger( ) );
         List<T> services = new ArrayList<T>( refs.size() );
         for ( RefPair<T> ref: refs)
@@ -1129,11 +1126,6 @@ public class DependencyManager<S, T> implements Reference
      */
     public ServiceReference<T>[] getServiceReferences()
     {
-        Customizer<T> customizer = customizerRef.get();
-        if (customizer == null)
-        {
-            return null;
-        }
         Collection<RefPair<T>> bound = customizer.getRefs(  new AtomicInteger( ) );
         if ( bound.isEmpty() )
         {
@@ -1250,8 +1242,7 @@ public class DependencyManager<S, T> implements Reference
      */
     public boolean isSatisfied()
     {
-        Customizer<T> customizer = customizerRef.get();
-        return customizer != null && customizer.isSatisfied();
+        return customizer.isSatisfied();
     }
 
 
@@ -1273,7 +1264,7 @@ public class DependencyManager<S, T> implements Reference
 
     boolean prebind()
     {
-        return customizerRef.get().open();
+        return customizer.open();
     }
 
     /**
@@ -1311,7 +1302,7 @@ public class DependencyManager<S, T> implements Reference
         Collection<RefPair<T>> refs;
         synchronized ( trackerRef.get().tracked() )
         {
-            refs = customizerRef.get().getRefs( trackingCount );
+            refs = customizer.getRefs( trackingCount );
             EdgeInfo info = getEdgeInfo( componentInstance );
             info.setOpen( trackingCount.get() );
         }
@@ -1361,7 +1352,7 @@ public class DependencyManager<S, T> implements Reference
         CountDownLatch latch = new CountDownLatch( 1 );
         synchronized ( trackerRef.get().tracked() )
         {
-            refPairs = customizerRef.get().getRefs( trackingCount );
+            refPairs = customizer.getRefs( trackingCount );
             EdgeInfo info = getEdgeInfo( componentInstance );
             info.setClose( trackingCount.get() );
             info.setLatch( latch );
@@ -1400,7 +1391,7 @@ public class DependencyManager<S, T> implements Reference
         }
         if ( !isMultiple() )
         {
-            Collection<RefPair<T>> refs = customizerRef.get().getRefs( new AtomicInteger( ) );
+            Collection<RefPair<T>> refs = customizer.getRefs( new AtomicInteger( ) );
             if (refs.isEmpty())
             {
                 return;
@@ -1728,13 +1719,6 @@ public class DependencyManager<S, T> implements Reference
      */
     private void setTargetFilter( String target) throws InvalidSyntaxException
     {
-        if (!hasGetPermission())
-        {
-            customizerRef.set( new NoPermissionsCustomizer() );
-            m_componentManager.log( LogService.LOG_INFO, "No permission to get services for {0}", new Object[]
-                    {m_dependencyMetadata.getName()}, null );
-            return;
-        }
         // if configuration does not set filter, use the value from metadata
         if (target == null)
         {
@@ -1786,13 +1770,11 @@ public class DependencyManager<S, T> implements Reference
     private void registerServiceListener( SortedMap<ServiceReference<T>, RefPair<T>> refMap ) throws InvalidSyntaxException
     {
         final ServiceTracker<T, RefPair<T>> oldTracker = trackerRef.get();
-        Customizer<T> customizer = newCustomizer();
         customizer.setPreviousRefMap( refMap );
         boolean initialActive = oldTracker != null && oldTracker.isActive();
         ServiceTracker<T, RefPair<T>> tracker = new ServiceTracker<T, RefPair<T>>( m_componentManager.getActivator().getBundleContext(), m_targetFilter, customizer, initialActive );
         customizer.setTracker( tracker );
         trackerRef.set( tracker );
-        customizerRef.set( customizer );
         registered = true;
         tracker.open( m_componentManager.getTrackingCount() );
         customizer.setTrackerOpened();
@@ -1807,7 +1789,13 @@ public class DependencyManager<S, T> implements Reference
     private Customizer<T> newCustomizer()
     {
         Customizer<T> customizer;
-        if (m_componentManager.isFactory())
+        if (!hasGetPermission())
+        {
+            customizer = new NoPermissionsCustomizer();
+            m_componentManager.log( LogService.LOG_INFO, "No permission to get services for {0}", new Object[]
+                    {m_dependencyMetadata.getName()}, null );
+        }
+        else if (m_componentManager.isFactory())
         {
             customizer = new FactoryCustomizer();
         }
