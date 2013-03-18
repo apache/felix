@@ -84,7 +84,8 @@
     </build>
 
     <properties>
-        <exam.version>3.0.0</exam.version>
+        <!-- switch to snapshot version to improve start level detection -->
+        <exam.version>3.1.0-SNAPSHOT</exam.version>
         <url.version>1.5.1</url.version>
     </properties>
 
