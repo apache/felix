@@ -60,6 +60,8 @@ public class SimpleComponent
     public int m_multiRefBind = 0;
 
     public int m_multiRefUnbind = 0;
+    
+    public int m_modified = 0;
 
 
     @SuppressWarnings("unused")
@@ -99,7 +101,13 @@ public class SimpleComponent
         setConfig( context.getProperties() );
     }
 
-
+    @SuppressWarnings("unused")
+    private void modified( ComponentContext context )
+    {
+        setConfig( context.getProperties() );
+        m_modified++;
+    }
+    
     @SuppressWarnings("unused")
     private void deactivate()
     {
