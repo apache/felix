@@ -62,6 +62,11 @@ public class FieldPropertyVisitor extends EmptyVisitor implements AnnotationVisi
      */
     private String m_type;
 
+    /**
+     * Property immutable aspect.
+     */
+    private String m_immutable;
+
 
     /**
      * Constructor without field
@@ -98,6 +103,10 @@ public class FieldPropertyVisitor extends EmptyVisitor implements AnnotationVisi
         }
         if (name.equals("mandatory")) {
             m_mandatory = value.toString();
+            return;
+        }
+        if (name.equals("immutable")) {
+            m_immutable = value.toString();
             return;
         }
         if (name.equals("type")) {
@@ -145,6 +154,9 @@ public class FieldPropertyVisitor extends EmptyVisitor implements AnnotationVisi
         }
         if (m_mandatory != null) {
             prop.addAttribute(new Attribute("mandatory", m_mandatory));
+        }
+        if (m_immutable != null) {
+            prop.addAttribute(new Attribute("immutable", m_immutable));
         }
 
     }
