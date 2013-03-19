@@ -62,6 +62,11 @@ public class MethodPropertyVisitor extends EmptyVisitor implements AnnotationVis
     private String m_mandatory;
 
     /**
+     * Property immutable aspect.
+     */
+    private String m_immutable;
+
+    /**
      * Constructor.
      *
      * @param parent : element element.
@@ -90,6 +95,10 @@ public class MethodPropertyVisitor extends EmptyVisitor implements AnnotationVis
         }
         if (name.equals("mandatory")) {
             m_mandatory = value.toString();
+            return;
+        }
+        if (name.equals("immutable")) {
+            m_immutable = value.toString();
             return;
         }
         if (name.equals("id")) {
@@ -132,6 +141,10 @@ public class MethodPropertyVisitor extends EmptyVisitor implements AnnotationVis
         if (m_mandatory != null) {
             prop.addAttribute(new Attribute("mandatory", m_mandatory));
         }
+        if (m_immutable != null) {
+            prop.addAttribute(new Attribute("immutable", m_immutable));
+        }
+
         return prop;
     }
 
