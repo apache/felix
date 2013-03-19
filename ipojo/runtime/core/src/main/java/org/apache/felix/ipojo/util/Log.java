@@ -43,4 +43,5 @@ public interface Log {
     void log(int level, String msg);
 
     void log(int level, String msg, Throwable exception);
+
 }
