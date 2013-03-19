@@ -422,6 +422,11 @@ public class DependencyManager<S, T> implements Reference
         {
             if ( lastRefPair == null )
             {
+                ServiceTracker<T, RefPair<T>> tracker = getTracker();
+                if (tracker == null) {
+                    trackingCount.set( lastRefPairTrackingCount );
+                    return Collections.emptyList();                    
+                }
                 return getTracker().getTracked( true, trackingCount ).values();
             }
             else
@@ -522,7 +527,11 @@ public class DependencyManager<S, T> implements Reference
 
         public Collection<RefPair<T>> getRefs( AtomicInteger trackingCount )
         {
-            return getTracker().getTracked( null, trackingCount ).values();
+            ServiceTracker<T, RefPair<T>> tracker = getTracker();
+            if (tracker == null) {
+                return Collections.emptyList();                    
+            }            
+            return tracker.getTracked( null, trackingCount ).values();
         }
     }
 
@@ -901,7 +910,7 @@ public class DependencyManager<S, T> implements Reference
 
         public Collection<RefPair<T>> getRefs( AtomicInteger trackingCount )
         {
-            return null;
+            return Collections.emptyList();
         }
 
         public boolean isSatisfied()
