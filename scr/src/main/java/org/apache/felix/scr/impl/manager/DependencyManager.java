@@ -180,7 +180,12 @@ public class DependencyManager<S, T> implements Reference
 
         public boolean isSatisfied()
         {
-            return isOptional() || !getTracker().isEmpty();
+            if (isOptional())
+            {
+                return true;
+            }            
+            ServiceTracker<T, RefPair<T>> tracker = getTracker();
+            return !(tracker == null) && !tracker.isEmpty();
         }
 
         protected ServiceTracker<T, RefPair<T>> getTracker()
