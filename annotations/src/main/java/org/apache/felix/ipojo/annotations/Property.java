@@ -47,4 +47,10 @@ public @interface Property {
      */
     boolean mandatory() default false;
 
+    /**
+     * Is the property immutable?
+     * Default: false
+     */
+    boolean immutable() default false;
+
 }
