@@ -43,7 +43,7 @@ import java.util.List;
 import static org.ops4j.pax.exam.CoreOptions.*;
 import static org.ops4j.pax.exam.MavenUtils.asInProject;
 
-public class SystemLoggerWarningTest extends Common {
+public class TestSystemLoggerWarning extends Common {
 
     private LogReaderService log;
 

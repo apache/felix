@@ -19,6 +19,10 @@
 
 package org.apache.felix.ipojo.runtime.core;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.felix.ipojo.ComponentInstance;
+import org.apache.felix.ipojo.Factory;
+import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.runtime.core.components.MyComponent;
 import org.apache.felix.ipojo.runtime.core.services.MyService;
 import org.junit.Assert;
@@ -29,6 +33,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.LogService;
@@ -77,7 +82,7 @@ public class TestBNDManifestLoggerInfo extends Common {
                 streamBundle(
                         TinyBundles.bundle()
                                 .add(MyComponent.class)
-                                .set(Constants.BUNDLE_SYMBOLICNAME, "MyComponent")
+                                .set(Constants.BUNDLE_SYMBOLICNAME, "MyComponent-WTF")
                                 .set("IPOJO-log-level", "info")
                                 .build(IPOJOStrategy.withiPOJO(new File("src/main/resources/component.xml")))
                 )
@@ -86,6 +91,7 @@ public class TestBNDManifestLoggerInfo extends Common {
 
     @Test
     public void testMessages() throws InterruptedException {
+        osgiHelper.waitForService(Architecture.class, "(architecture.instance=org.apache.felix.ipojo.runtime.core.components.MyComponent-0)", 10000);
         List<String> messages = getMessages(log.getLog());
         Assert.assertTrue(messages.contains("Ready"));
         Assert.assertTrue(messages.contains("[INFO] org.apache.felix.ipojo.runtime.core.components.MyComponent : Instance org.apache.felix.ipojo.runtime.core.components.MyComponent-0 from factory org.apache.felix.ipojo.runtime.core.components.MyComponent created"));
