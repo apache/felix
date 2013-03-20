@@ -47,6 +47,9 @@
       <bundle.file.name>
         ${bundle.build.name}/${project.build.finalName}.jar
       </bundle.file.name>
+      <bundle.boot.file>
+        ${bundle.build.name}/${project.build.finalName}-boot.jar
+      </bundle.boot.file>
     </properties>
     
     <build>
@@ -155,7 +158,7 @@
               <configuration>
                 <systemPropertyVariables>
                   <project.bundle.file>${bundle.file.name}</project.bundle.file>
-                  <felix.ca.version>${felix.ca.version}</felix.ca.version>
+                  <project.boot.file>${bundle.file.name}</project.boot.file>
                 </systemPropertyVariables>
               </configuration>
             </plugin>
@@ -238,6 +241,12 @@
         <dependency>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-simple</artifactId>
+          <version>1.6.0</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.apache.felix.configadmin</artifactId>
           <version>1.6.0</version>
           <scope>test</scope>
         </dependency>

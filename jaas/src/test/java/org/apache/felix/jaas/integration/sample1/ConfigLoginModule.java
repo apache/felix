@@ -74,7 +74,7 @@ public class ConfigLoginModule implements LoginModule
         }
 
         String name = ((NameCallback) callbacks[0]).getName();
-        char[] password = ((PasswordCallback) callbacks[0]).getPassword();
+        char[] password = ((PasswordCallback) callbacks[1]).getPassword();
 
         boolean result = Arrays.equals(name.toCharArray(), password);
         succeeded = result;
