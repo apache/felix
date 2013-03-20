@@ -72,6 +72,8 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
     private final Logger log;
 
+    private static final String DEFAULT_REALM_NAME = "default";
+
     @Property
     private static final String JAAS_DEFAULT_REALM_NAME = "jaas.defaultRealmName";
     private String defaultRealmName;
@@ -260,12 +262,7 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
             return;
         }
         String newDefaultRealmName = Util.toString(
-            properties.get(JAAS_DEFAULT_REALM_NAME), null);
-        if (newDefaultRealmName == null)
-        {
-            throw new IllegalArgumentException(
-                "Default JAAS realm name must be specified");
-        }
+            properties.get(JAAS_DEFAULT_REALM_NAME), DEFAULT_REALM_NAME);
 
         if (!newDefaultRealmName.equals(defaultRealmName))
         {
