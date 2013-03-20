@@ -36,7 +36,12 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.log.LogService;
 
-@Component(label = "%jaas.name", description = "%jaas.description", metatype = true, ds = false, name = JaasConfigFactory.SERVICE_PID, configurationFactory = true)
+@Component(label = "%jaas.name",
+        description = "%jaas.description",
+        metatype = true,
+        ds = false,
+        name = JaasConfigFactory.SERVICE_PID,
+        configurationFactory = true)
 public class JaasConfigFactory implements ManagedServiceFactory
 {
 
