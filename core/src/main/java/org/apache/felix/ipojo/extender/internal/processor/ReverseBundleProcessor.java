@@ -89,7 +89,7 @@ public class ReverseBundleProcessor extends ForwardingBundleProcessor {
     public void stop() {
         // deactivate in reverse order
         while (!m_bundles.isEmpty()) {
-            super.deactivate(m_bundles.pollLast());
+            super.deactivate(m_bundles.removeLast());
         }
         super.stop();
     }
