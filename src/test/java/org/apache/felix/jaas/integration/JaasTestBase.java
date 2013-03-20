@@ -19,20 +19,14 @@
 
 package org.apache.felix.jaas.integration;
 
-import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
-import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.streamBundle;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
-
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import org.apache.felix.jaas.JaasConstants;
 import org.apache.felix.jaas.integration.common.SimpleCallbackHandler;
 import org.apache.felix.jaas.integration.common.SimplePrincipal;
 import org.apache.felix.jaas.integration.sample1.ConfigLoginModule;
@@ -47,20 +41,29 @@ import org.ops4j.pax.exam.util.PathUtils;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.service.cm.ConfigurationAdmin;
+
+import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.streamBundle;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
 
 public abstract class JaasTestBase
 {
     @Inject
     protected BundleContext bundleContext;
 
+    @Inject
+    protected ConfigurationAdmin ca;
+
     // the name of the system property providing the bundle file to be installed and tested
     protected static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
 
     // the default bundle jar file name
     protected static final String BUNDLE_JAR_DEFAULT = "target/jaas.jar";
-
-    // the default boot jar file name
-    protected static final String BOOT_JAR_DEFAULT = "target/jaas-boot.jar";
 
     // the JVM option to set to enable remote debugging
     protected static final String DEBUG_VM_OPTION = "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=31313";
@@ -87,6 +90,7 @@ public abstract class JaasTestBase
             // the current project (the bundle under test)
             CoreOptions.bundle(bundleFile.toURI().toString()),
             mavenBundle("org.ops4j.pax.tinybundles", "tinybundles").versionAsInProject(),
+            mavenBundle( "org.apache.felix", "org.apache.felix.configadmin").versionAsInProject(),
 
             frameworkProperty("osgi.clean").value("true"),
             systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("INFO"),
@@ -112,7 +116,7 @@ public abstract class JaasTestBase
     {
         return TinyBundles.bundle()
                 .add(ConfigLoginModule.class)
-                .set(JaasConstants.MODULE_CLASS,"org.apache.felix.jaas.integration.sample1.ConfigLoginModule")
+                .set("Jaas-ModuleClass","org.apache.felix.jaas.integration.sample1.ConfigLoginModule")
                 .set(Constants.BUNDLE_SYMBOLICNAME, "org.apache.felix.jaas.sample1")
                 .build(withBnd());
     }
@@ -126,8 +130,37 @@ public abstract class JaasTestBase
                 .build(withBnd());
     }
 
+    protected String createConfigSpiConfig() throws IOException {
+        org.osgi.service.cm.Configuration config = ca.getConfiguration("org.apache.felix.jaas.ConfigurationSpi",null);
+        Properties p = new Properties();
+        config.update(p);
+        return config.getPid();
+    }
+
     protected Option addExtraOptions()
     {
         return new DefaultCompositeOption();
+    }
+
+    protected static void delay()
+    {
+        try
+        {
+            TimeUnit.MILLISECONDS.sleep(300);
+        }
+        catch ( InterruptedException ie )
+        {
+            // dont care
+        }
+    }
+
+    protected String createLoginModuleConfig(String realmName) throws IOException {
+        org.osgi.service.cm.Configuration config =
+                ca.createFactoryConfiguration("org.apache.felix.jaas.Configuration.factory",null);
+        Properties p = new Properties();
+        p.setProperty("jaas.classname","org.apache.felix.jaas.integration.sample1.ConfigLoginModule");
+        p.setProperty("jaas.realmName",realmName);
+        config.update(p);
+        return config.getPid();
     }
 }
