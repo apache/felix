@@ -40,6 +40,7 @@
         <module>ipojo-ant-task</module>
         <module>maven-ipojo-plugin</module>
         <module>bnd-ipojo-plugin</module>
+        <module>online-manipulator</module>
     </modules>
 
 </project>
