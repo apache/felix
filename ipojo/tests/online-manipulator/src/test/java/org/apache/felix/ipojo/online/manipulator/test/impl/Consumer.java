@@ -1,4 +1,4 @@
-package org.apache.felix.ipojo.online.manipulator.test.impl;
+package org.apache.felix.ipojo.test.online.components;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Requires;

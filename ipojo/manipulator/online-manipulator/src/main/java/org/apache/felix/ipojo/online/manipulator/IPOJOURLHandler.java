@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.ipojo;
+package org.apache.felix.ipojo.online.manipulator;
 
 import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.osgi.framework.BundleContext;
@@ -33,44 +33,46 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
-* iPOJO URL Handler allowing installation time manipulation.
-* When a bundle is installed with the <code>ipojo:</code> URL
-* prefix, the bundle is downloaded and manipulated by this 
-* handler.
-* The metadata.xml file can either be provided inside the bundle (root,
-* or in META-INF) or given in the URL:
-* ipojo:URL_BUNDLE!URL_METADATA.
-* @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
-*/
-public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandlerService implements URLStreamHandlerService {
-    
+ * iPOJO URL Handler allowing installation time manipulation.
+ * When a bundle is installed with the <code>ipojo:</code> URL
+ * prefix, the bundle is downloaded and manipulated by this
+ * handler.
+ * The metadata.xml file can either be provided inside the bundle (root,
+ * or in META-INF) or given in the URL:
+ * ipojo:URL_BUNDLE!URL_METADATA.
+ *
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
+public class IPOJOURLHandler
+        extends org.osgi.service.url.AbstractURLStreamHandlerService implements URLStreamHandlerService {
+
     /**
      * The bundle context.
      */
     private BundleContext m_context;
-    
     /**
      * The directory storing bundles.
      */
     private File m_temp;
-    
+
     /**
      * Creates a IPOJOURLHandler.
      * Gets the bundle context and create the working
      * directory.
+     *
      * @param bc the bundle context
      */
     public IPOJOURLHandler(BundleContext bc) {
         m_context = bc;
         m_temp = m_context.getDataFile("temp");
-        if (! m_temp.exists()) {
+        if (!m_temp.exists()) {
             m_temp.mkdir();
         }
     }
-    
+
     /**
      * Stops the URL handler:
-     * Deletes the working directory.  
+     * Deletes the working directory.
      */
     public void stop() {
         File[] files = m_temp.listFiles();
@@ -85,16 +87,17 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
     /**
      * Opens a connection using the ipojo url handler.
      * This methods parses the URL and manipulate the given bundle.
+     *
      * @param url the url.
      * @return the URL connection on the manipulated bundle
-     * @throws java.io.IOException  occurs when the bundle cannot be either downloaded, or manipulated or
-     * installed correctly.
+     * @throws java.io.IOException occurs when the bundle cannot be either downloaded, or manipulated or
+     *                             installed correctly.
      * @see org.osgi.service.url.AbstractURLStreamHandlerService#openConnection(java.net.URL)
      */
     public URLConnection openConnection(URL url) throws IOException {
         System.out.println("Processing URL : " + url);
 
-       // Parse the url:
+        // Parse the url:
         String full = url.toExternalForm();
         // Remote ipojo://
         if (full.startsWith("ipojo:")) {
@@ -137,22 +140,22 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
 
         // Pojoization
         Pojoization pojoizator = new Pojoization();
-        File out =  new File(m_temp, bundle.getName() + "-ipojo.jar");
+        File out = new File(m_temp, bundle.getName() + "-ipojo.jar");
         System.out.println("Pojoization " + bundle.exists() + " - " + metadata.exists());
         try {
             pojoizator.pojoization(bundle, out, metadata);
         } catch (Exception e) {
-            if (! pojoizator.getErrors().isEmpty()) {
+            if (!pojoizator.getErrors().isEmpty()) {
                 throw new IOException("Errors occured during the manipulation : " + pojoizator.getErrors());
             }
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
 
-        if (! pojoizator.getErrors().isEmpty()) {
+        if (!pojoizator.getErrors().isEmpty()) {
             throw new IOException("Errors occured during the manipulation : " + pojoizator.getErrors());
         }
-        if (! pojoizator.getWarnings().isEmpty()) {
+        if (!pojoizator.getWarnings().isEmpty()) {
             System.err.println("Warnings occured during the manipulation : " + pojoizator.getWarnings());
         }
 
@@ -173,10 +176,11 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
     /**
      * Downloads the content pointed by the given url to
      * the given file.
-     * @param url   the url
-     * @param file  the file
+     *
+     * @param url  the url
+     * @param file the file
      * @throws java.io.IOException occurs if the content cannot be read
-     * and save inside the file
+     *                             and save inside the file
      */
     private void save(URL url, File file) throws IOException {
         InputStream is = url.openStream();
@@ -185,10 +189,11 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
 
     /**
      * Saves the content of the input stream to the given file.
-     * @param is    the input stream to read
-     * @param file  the file
-     * @throws java.io.IOException  occurs if the content cannot be read
-     * and save inside the file
+     *
+     * @param is   the input stream to read
+     * @param file the file
+     * @throws java.io.IOException occurs if the content cannot be read
+     *                             and save inside the file
      */
     private void save(InputStream is, File file) throws IOException {
         FileOutputStream writer = new FileOutputStream(file);
@@ -213,16 +218,17 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
      * <li>the root of the jar file</li>
      * <li>the META-INF directory</li>
      * </ol>
-     * @param jar   the jar file
-     * @return  the founded file or <code>null</code> if not found.
-     * @throws java.io.IOException  occurs when the Jar file cannot be read.
+     *
+     * @param jar the jar file
+     * @return the founded file or <code>null</code> if not found.
+     * @throws java.io.IOException occurs when the Jar file cannot be read.
      */
     private File findMetadata(JarFile jar) throws IOException {
         JarEntry je = jar.getJarEntry("metadata.xml");
         if (je == null) {
             je = jar.getJarEntry("META-INF/metadata.xml");
         }
-        
+
         if (je == null) {
             System.out.println("Metadata file not found, use annotations only.");
             return null; // Not Found, use annotation only
@@ -233,7 +239,7 @@ public class IPOJOURLHandler extends org.osgi.service.url.AbstractURLStreamHandl
             System.out.println("Metadata file saved to " + metadata.getAbsolutePath());
             return metadata;
         }
-        
+
     }
-    
+
 }

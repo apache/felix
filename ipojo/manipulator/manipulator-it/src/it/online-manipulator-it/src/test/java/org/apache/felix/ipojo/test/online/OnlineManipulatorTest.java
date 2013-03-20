@@ -1,42 +1,58 @@
-package org.apache.felix.ipojo.online.manipulator.test;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 
+package org.apache.felix.ipojo.test.online;
 
-import static org.ops4j.pax.exam.CoreOptions.*;
-import static org.ops4j.pax.exam.MavenUtils.asInProject;
-import static org.ops4j.pax.swissbox.tinybundles.core.TinyBundles.newBundle;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.architecture.InstanceDescription;
 import org.apache.felix.ipojo.test.online.components.Consumer;
 import org.apache.felix.ipojo.test.online.components.MyProvider;
-import org.apache.felix.ipojo.online.manipulator.test.service.Hello;
+import org.apache.felix.ipojo.test.online.services.Hello;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.io.StreamUtils;
-import org.ops4j.pax.exam.Customizer;
-import org.ops4j.pax.exam.Inject;
+import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.ops4j.pax.swissbox.tinybundles.core.TinyBundles;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.ops4j.pax.tinybundles.core.TinyBundles;
+import org.osgi.framework.*;
+import org.ow2.chameleon.testing.helpers.OSGiHelper;
+
+import javax.inject.Inject;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import static org.ops4j.pax.exam.CoreOptions.*;
+import static org.ops4j.pax.exam.MavenUtils.asInProject;
 
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
+@ExamReactorStrategy(PerMethod.class)
 public class OnlineManipulatorTest {
 
 
@@ -48,17 +64,8 @@ public class OnlineManipulatorTest {
     private OSGiHelper helper;
 
 
-    /*
-     * <groupId>org.apache.felix</groupId>
-  <artifactId>org.apache.felix.ipojo.online.manipulator</artifactId>
-  <version>1.3.0-SNAPSHOT</version>
-
-     */
-
     @Configuration
-    public static Option[] configure() throws IOException {
-
-
+    public Option[] configure() throws IOException {
         String providerWithMetadata = providerWithMetadata();
         String providerWithMetadataInMetaInf = providerWithMetadataInMetaInf();
         String providerWithoutMetadata = providerWithoutMetadata();
@@ -66,40 +73,25 @@ public class OnlineManipulatorTest {
         String consumerWithoutMetadata = consumerWithoutMetadata();
 
         return options(
-                frameworks(
-                        felix(),
-                        equinox(),
-                        knopflerfish() //KF does not export an XML parser.
-                ),
-                provision(
-                        mavenBundle()
-                                .groupId("org.apache.felix")
-                                .artifactId("org.apache.felix.ipojo")
-                                .version(asInProject())
-                ),
+                cleanCaches(),
+                mavenBundle("org.apache.felix", "org.apache.felix.ipojo").versionAsInProject(),
+                mavenBundle("org.ow2.chameleon.testing", "osgi-helpers").versionAsInProject(),
+                mavenBundle("org.apache.felix","org.apache.felix.ipojo.manipulator.online").versionAsInProject(),
+                junitBundles(),
 
                 provision(
-                        newBundle()
+                        TinyBundles.bundle()
                                 .add(Hello.class)
                                 .set(Constants.BUNDLE_SYMBOLICNAME, "ServiceInterface")
-                                .set(Constants.EXPORT_PACKAGE, "org.apache.felix.ipojo.online.manipulator.test.service")
+                                .set(Constants.EXPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
                                 .build()
                 ),
+
                 systemProperty("providerWithMetadata").value(providerWithMetadata),
                 systemProperty("providerWithMetadataInMetaInf").value(providerWithMetadataInMetaInf),
                 systemProperty("providerWithoutMetadata").value(providerWithoutMetadata),
                 systemProperty("consumerWithMetadata").value(consumerWithMetadata),
-                systemProperty("consumerWithoutMetadata").value(consumerWithoutMetadata),
-
-                new Customizer() {
-                    @Override
-                    public InputStream customizeTestProbe(InputStream testProbe) {
-                        return TinyBundles.modifyBundle(testProbe).set(Constants.IMPORT_PACKAGE,
-                                "org.apache.felix.ipojo.online.manipulator.test.service")
-                                .build();
-                    }
-
-                }
+                systemProperty("consumerWithoutMetadata").value(consumerWithoutMetadata)
         );
 
     }
@@ -213,14 +205,14 @@ public class OnlineManipulatorTest {
      * Gets a regular bundle containing metadata file
      *
      * @return the url of the bundle
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public static String providerWithMetadata() throws IOException {
-        InputStream is = newBundle()
+        InputStream is = TinyBundles.bundle()
                 .add("metadata.xml", OnlineManipulatorTest.class.getClassLoader().getResource("provider.xml"))
                 .add(MyProvider.class)
                 .set(Constants.BUNDLE_SYMBOLICNAME, "Provider")
-                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.online.manipulator.test.service")
+                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
                 .build();
 
         File out = getTemporaryFile("providerWithMetadata");
@@ -232,14 +224,14 @@ public class OnlineManipulatorTest {
      * Gets a regular bundle containing metadata file in the META-INF directory
      *
      * @return the url of the bundle
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public static String providerWithMetadataInMetaInf() throws IOException {
-        InputStream is = newBundle()
+        InputStream is = TinyBundles.bundle()
                 .add("META-INF/metadata.xml", OnlineManipulatorTest.class.getClassLoader().getResource("provider.xml"))
                 .add(MyProvider.class)
                 .set(Constants.BUNDLE_SYMBOLICNAME, "Provider")
-                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.online.manipulator.test.service")
+                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
                 .build();
 
         File out = getTemporaryFile("providerWithMetadataInMetaInf");
@@ -251,14 +243,14 @@ public class OnlineManipulatorTest {
      * Gets a provider bundle which does not contain the metadata file.
      *
      * @return the url of the bundle + metadata
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public static String providerWithoutMetadata() throws IOException {
-        InputStream is = newBundle()
+        InputStream is = TinyBundles.bundle()
                 //.addResource("metadata.xml", this.getClass().getClassLoader().getResource("provider.xml"))
                 .add(MyProvider.class)
                 .set(Constants.BUNDLE_SYMBOLICNAME, "Provider")
-                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.online.manipulator.test.service")
+                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
                 .build();
 
         File out = getTemporaryFile("providerWithoutMetadata");
@@ -273,14 +265,14 @@ public class OnlineManipulatorTest {
      * declaration in the metadata.
      *
      * @return the url of the bundle
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public static String consumerWithMetadata() throws IOException {
-        InputStream is = newBundle()
+        InputStream is = TinyBundles.bundle()
                 .add("metadata.xml", OnlineManipulatorTest.class.getClassLoader().getResource("consumer.xml"))
                 .add(Consumer.class)
                 .set(Constants.BUNDLE_SYMBOLICNAME, "Consumer")
-                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.online.manipulator.test.service")
+                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
                 .build();
 
         File out = getTemporaryFile("consumerWithMetadata");
@@ -293,13 +285,13 @@ public class OnlineManipulatorTest {
      * metadata
      *
      * @return the url of the bundle + metadata
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public static String consumerWithoutMetadata() throws IOException {
-        InputStream is = newBundle()
+        InputStream is = TinyBundles.bundle()
                 .add(Consumer.class)
                 .set(Constants.BUNDLE_SYMBOLICNAME, "Consumer")
-                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.online.manipulator.test.service")
+                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
                 .build();
 
         File out = getTemporaryFile("consumerWithoutMetadata");
@@ -345,8 +337,8 @@ public class OnlineManipulatorTest {
         try {
             ServiceReference[] refs = context.getServiceReferences(Architecture.class.getName(), null);
             Assert.assertNotNull(refs);
-            for (int i = 0; i < refs.length; i++) {
-                InstanceDescription id = ((Architecture) context.getService(refs[i])).getInstanceDescription();
+            for (ServiceReference ref : refs) {
+                InstanceDescription id = ((Architecture) context.getService(ref)).getInstanceDescription();
                 int state = id.getState();
                 Assert.assertEquals("State of " + id.getName(), ComponentInstance.VALID, state);
             }

@@ -16,7 +16,8 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
@@ -25,28 +26,19 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
-    <name>Apache Felix iPOJO</name>
-    <artifactId>org.apache.felix.ipojo</artifactId>
+    <name>Apache Felix iPOJO - Online Manipulator</name>
+    <artifactId>org.apache.felix.ipojo.manipulator.online</artifactId>
     <version>1.9.0-SNAPSHOT</version>
 
-    <properties>
-        <!--
-           1.8.2:
-           * change in the MethodInterceptor interface (FELIX-3144)
-           * change in the Factory interface (FELIX-3190)
-
-           1.8.4:
-           * change in ComponentTypeDescription (FELIX-3560)
-        -->
-        <ipojo.package.version>1.8.4</ipojo.package.version>
-    </properties>
-
     <description>
-        iPOJO Core bundle
+        iPOJO online manipulator allowing install time manipulation of iPOJO bundle.
     </description>
-    <url>
-        http://ipojo.org
-    </url>
+    <url>http://felix.apache.org/site/apache-felix-ipojo-online-manipulator.html</url>
+
+    <properties>
+        <ipojo.import.packages>[1.8.0,2.0.0)</ipojo.import.packages>
+        <ipojo.manipulator.version>${project.version}</ipojo.manipulator.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -65,6 +57,11 @@
             <version>1.6.0</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>asm</groupId>
             <artifactId>asm-all</artifactId>
             <version>3.3.1</version>
@@ -75,14 +72,20 @@
                 </exclusion>
             </exclusions>
         </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-all</artifactId>
-        <version>1.9.5</version>
-        <scope>test</scope>
-      </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -102,59 +105,33 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-Name>Apache Felix iPOJO</Bundle-Name>
-                        <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                        <Bundle-SymbolicName>org.apache.felix.ipojo;singleton:=true</Bundle-SymbolicName>
-                        <Bundle-Description>iPOJO Core Framework</Bundle-Description>
-                        <Bundle-Activator>org.apache.felix.ipojo.extender.internal.Extender</Bundle-Activator>
+                        <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+                        <Private-Package>org.apache.felix.ipojo.online.manipulator</Private-Package>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/apache-felix-ipojo.html
+                            http://felix.apache.org/site/apache-felix-ipojo-online-manipulator.html
                         </Bundle-DocURL>
-                        <IPOJO-Extension>
-                            component:org.apache.felix.ipojo.ComponentFactory,
-                            handler:org.apache.felix.ipojo.HandlerManagerFactory
-                        </IPOJO-Extension>
-                        <Import-Package>
-                            org.osgi.framework;version=1.3, <!-- To support KF 2 -->
-                            org.osgi.service.cm,
-                            org.osgi.service.log,
-                            org.osgi.util.tracker;version=1.3,
-                            !sun.io,
-                            !net.sourceforge.cobertura.* <!--  To support code coverage -->
-                        </Import-Package>
-                        <Private-Package>
-                            org.apache.felix.ipojo.handlers.architecture,
-                            org.apache.felix.ipojo.handlers.lifecycle.callback,
-                            org.apache.felix.ipojo.handlers.lifecycle.controller,
-                            org.apache.felix.ipojo.extender.internal*,
-                            org.objectweb.asm;-split-package:=merge-last
-                        </Private-Package>
                         <Export-Package>
-                            org.apache.felix.ipojo; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.metadata; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.architecture; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.extender;
-                            version="${ipojo.package.version}";-split-package:=merge-first,
-                            org.apache.felix.ipojo.extender.builder; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.extender.queue; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.parser; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.util; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.handlers.dependency; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.handlers.providedservice.*; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.handlers.configuration; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.context; version="${ipojo.package.version}",
-                            <!-- Compendium packages -->
-                            org.osgi.service.cm,
-                            org.osgi.service.log
+                            org.apache.felix.ipojo.manipulation*; version="${ipojo.manipulator.version}",
+                            org.apache.felix.ipojo.xml.parser; version="${ipojo.manipulator.version}",
+                            org.apache.felix.ipojo.manipulator*; version="${ipojo.manipulator.version}",
+                            org.apache.felix.ipojo.annotations*; version="${ipojo.manipulator.version}",
                         </Export-Package>
-                        <_donotcopy>(CVS|.svn|.+.bak|~.+|metadata.xml)</_donotcopy>
+                        <Private-Package>
+                            org.objectweb.asm,
+                            org.objectweb.asm.commons,
+                            org.objectweb.asm.signature,
+                            org.objectweb.asm.tree,
+                            org.apache.felix.ipojo.online.manipulator
+                        </Private-Package>
+                        <Import-Package>!sun.io, org.osgi.framework;version=1.3, *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-ipojo-plugin</artifactId>
-                <version>1.8.4</version>
+                <version>1.9.0-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <goals>
@@ -193,7 +170,7 @@
                     </includes>
                     <excludes>
                         <exclude>src/main/appended-resources/**</exclude>
-                        <exclude>**/manipulation/MANIFEST.MF</exclude> <!-- This file is used by tests -->
+                        <exclude>src/main/resources/META-INF/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
