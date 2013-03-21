@@ -22,11 +22,6 @@ package org.apache.felix.jaas.internal;
 import javax.security.auth.spi.LoginModule;
 
 
-/**
- * User: chetanm
- * Date: 7/9/12
- * Time: 10:17 PM
- */
 public interface LoginModuleCreator
 {
 

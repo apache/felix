@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.security.auth.spi.LoginModule;
 
 import org.apache.felix.jaas.LoginModuleFactory;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
@@ -41,7 +42,7 @@ final class OsgiLoginModuleProvider implements LoginModuleProvider
     public OsgiLoginModuleProvider(ServiceReference sr, LoginModuleFactory delegate)
     {
         this.delegate = delegate;
-        this.ranking = Util.toInteger(sr.getProperty(Constants.SERVICE_RANKING), 0);
+        this.ranking = PropertiesUtil.toInteger(sr.getProperty(Constants.SERVICE_RANKING), 0);
         this.flag = ControlFlag.from(
             (String) sr.getProperty(LoginModuleFactory.JAAS_CONTROL_FLAG)).flag();
         this.realmName = (String) sr.getProperty(LoginModuleFactory.JAAS_REALM_NAME);
