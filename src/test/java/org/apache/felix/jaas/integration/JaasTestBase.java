@@ -37,7 +37,6 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.options.DefaultCompositeOption;
-import org.ops4j.pax.exam.util.PathUtils;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -66,6 +65,7 @@ public abstract class JaasTestBase
     protected static final String BUNDLE_JAR_DEFAULT = "target/jaas.jar";
 
     // the JVM option to set to enable remote debugging
+    @SuppressWarnings("UnusedDeclaration")
     protected static final String DEBUG_VM_OPTION = "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=31313";
 
     // the actual JVM option set, extensions may implement a static
@@ -76,7 +76,6 @@ public abstract class JaasTestBase
     @Configuration
     public Option[] config()
     {
-        String baseDir = PathUtils.getBaseDir();
         final String bundleFileName = System.getProperty(BUNDLE_JAR_SYS_PROP,
             BUNDLE_JAR_DEFAULT);
         final File bundleFile = new File(bundleFileName);
@@ -128,13 +127,6 @@ public abstract class JaasTestBase
                 .set(Constants.BUNDLE_SYMBOLICNAME,"org.apache.felix.jaas.testcommon")
                 .set(Constants.EXPORT_PACKAGE,"org.apache.felix.jaas.integration.common")
                 .build(withBnd());
-    }
-
-    protected String createConfigSpiConfig() throws IOException {
-        org.osgi.service.cm.Configuration config = ca.getConfiguration("org.apache.felix.jaas.ConfigurationSpi",null);
-        Properties p = new Properties();
-        config.update(p);
-        return config.getPid();
     }
 
     protected Option addExtraOptions()

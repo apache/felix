@@ -20,8 +20,6 @@
 package org.apache.felix.jaas.integration;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Properties;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
@@ -93,7 +91,6 @@ public class ITJaasWithBootClasspath extends JaasTestBase
     public void testJaasWithBoot() throws Exception
     {
         String realmName = name.getMethodName();
-        createConfigSpiConfig();
         createLoginModuleConfig(realmName);
         delay();
 

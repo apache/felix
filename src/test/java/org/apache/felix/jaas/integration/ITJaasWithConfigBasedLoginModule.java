@@ -19,12 +19,6 @@
 
 package org.apache.felix.jaas.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
-import static org.ops4j.pax.exam.CoreOptions.composite;
-import static org.ops4j.pax.exam.CoreOptions.streamBundle;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -50,6 +44,12 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+import static org.ops4j.pax.exam.CoreOptions.composite;
+import static org.ops4j.pax.exam.CoreOptions.streamBundle;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -78,7 +78,6 @@ public class ITJaasWithConfigBasedLoginModule extends JaasTestBase
     @Test
     public void testJaasWithTCCL() throws Exception {
         String realmName = name.getMethodName();
-        createConfigSpiConfig();
         createLoginModuleConfig(realmName);
         delay();
 
@@ -105,7 +104,6 @@ public class ITJaasWithConfigBasedLoginModule extends JaasTestBase
     public void testJaasWithFactory() throws Exception
     {
         String realmName = name.getMethodName();
-        createConfigSpiConfig();
         createLoginModuleConfig(realmName);
         delay();
 
@@ -137,7 +135,6 @@ public class ITJaasWithConfigBasedLoginModule extends JaasTestBase
     @Test
     public void testJaasConfigPassing() throws Exception {
         String realmName = name.getMethodName();
-        createConfigSpiConfig();
 
         //1. Create sample config
         org.osgi.service.cm.Configuration config =
@@ -184,7 +181,6 @@ public class ITJaasWithConfigBasedLoginModule extends JaasTestBase
     @Test
     public void testJaasConfigOrderedViaRanking() throws Exception {
         String realmName = name.getMethodName();
-        createConfigSpiConfig();
         List<Integer> ranks = Arrays.asList(1,2,3,4,5,6);
         Collections.shuffle(ranks);
 
@@ -221,7 +217,6 @@ public class ITJaasWithConfigBasedLoginModule extends JaasTestBase
     @Test
     public void testJaasConfigWithEmptyRealm() throws Exception {
         String realmName = name.getMethodName();
-        createConfigSpiConfig();
 
         //Scenario 1 - Create a config with no realm name set. So its default name would
         //be set to the defaultRealmName setting of ConfigurationSpi. Which defaults to 'other'

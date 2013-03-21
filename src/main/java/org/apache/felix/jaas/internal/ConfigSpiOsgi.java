@@ -23,12 +23,24 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Provider;
 import java.security.Security;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.login.*;
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.Configuration;
+import javax.security.auth.login.ConfigurationSpi;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 
 import org.apache.felix.jaas.LoginContextFactory;
 import org.apache.felix.jaas.LoginModuleFactory;
@@ -115,10 +127,11 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
     private ServiceRegistration spiReg;
 
-    public ConfigSpiOsgi(BundleContext context, Logger log)
-    {
+    public ConfigSpiOsgi(BundleContext context, Logger log) throws ConfigurationException {
         this.context = context;
         this.log = log;
+
+        updated(getDefaultConfig());
         this.tracker = new ServiceTracker(context, LoginModuleFactory.class.getName(),
             this);
 
@@ -329,6 +342,21 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
         {
             Configuration.setConfiguration(originalConfig);
         }
+    }
+
+    private Dictionary<String,String> getDefaultConfig() throws ConfigurationException
+    {
+        //Determine default config. Value can still be overridden by BundleContext properties
+        Dictionary<String,String> dict = new Hashtable<String,String>();
+        put(dict,JAAS_DEFAULT_REALM_NAME,DEFAULT_REALM_NAME);
+        put(dict,JAAS_CONFIG_PROVIDER_NAME,DEFAULT_CONFIG_PROVIDER_NAME);
+        put(dict, JAAS_CONFIG_POLICY, GlobalConfigurationPolicy.DEFAULT.name());
+        return dict;
+    }
+
+    private void put(Dictionary<String,String> dict, String key, String defaultValue)
+    {
+        dict.put(key,PropertiesUtil.toString(context.getProperty(key),defaultValue));
     }
 
     // --------------JAAS/JCA/Security ----------------------------------------
