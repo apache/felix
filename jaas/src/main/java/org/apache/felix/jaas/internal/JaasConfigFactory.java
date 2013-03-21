@@ -29,6 +29,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -96,13 +97,14 @@ public class JaasConfigFactory implements ManagedServiceFactory
     @Override
     public void updated(String pid, Dictionary config) throws ConfigurationException
     {
-        String className = trimToNull(Util.toString(config.get(JAAS_CLASS_NAME), null));
-        String flag = trimToNull(Util.toString(config.get(JAAS_CONTROL_FLAG), "required"));
-        int ranking = Util.toInteger(config.get(JAAS_RANKING), 0);
+        String className = trimToNull(PropertiesUtil.toString(config.get(JAAS_CLASS_NAME), null));
+        String flag = trimToNull(PropertiesUtil.toString(config.get(JAAS_CONTROL_FLAG), "required"));
+        int ranking = PropertiesUtil.toInteger(config.get(JAAS_RANKING), 0);
 
-        String[] props = Util.toStringArray(config.get(JAAS_OPTIONS), new String[0]);
-        Map options = toMap(props);
-        String realmName = trimToNull(Util.toString(config.get(JAAS_REALM_NAME), null));
+        //TODO support system property substitution e.g. ${user.home}
+        //in property values
+        Map options = PropertiesUtil.toMap(config.get(JAAS_OPTIONS), new String[0]);
+        String realmName = trimToNull(PropertiesUtil.toString(config.get(JAAS_REALM_NAME), null));
 
         if (className == null)
         {
@@ -138,28 +140,6 @@ public class JaasConfigFactory implements ManagedServiceFactory
     }
 
     //~----------------------------------- Utility Methods
-
-    private static Map<String, Object> toMap(String[] props)
-    {
-        //TODO support system property substitution e.g. ${user.home}
-        //in property values
-        Map<String, Object> result = new HashMap<String, Object>();
-        for (String kv : props)
-        {
-            int indexOfEqual = kv.indexOf('=');
-            if (indexOfEqual > 0)
-            {
-                String key = trimToNull(kv.substring(0, indexOfEqual));
-                String value = trimToNull(kv.substring(indexOfEqual + 1));
-                if (key != null && value != null)
-                {
-                    result.put(key, value);
-                }
-            }
-        }
-        return result;
-    }
-
     @SuppressWarnings("unchecked")
     private static Map convertToMap(Dictionary config)
     {

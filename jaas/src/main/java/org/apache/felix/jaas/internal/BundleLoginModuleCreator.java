@@ -20,12 +20,14 @@
 package org.apache.felix.jaas.internal;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.security.auth.spi.LoginModule;
 
+import org.apache.sling.commons.osgi.ManifestHeader;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -125,7 +127,7 @@ class BundleLoginModuleCreator extends BundleTracker implements LoginModuleCreat
 
     private Set<String> registerBundle(Bundle bundle)
     {
-        Set<String> classNames = Util.parseHeader((String) bundle.getHeaders().get(
+        Set<String> classNames = parseHeader((String) bundle.getHeaders().get(
             JAAS_MODULE_CLASS));
         for (String className : classNames)
         {
@@ -209,4 +211,16 @@ class BundleLoginModuleCreator extends BundleTracker implements LoginModuleCreat
             return bundle;
         }
     }
+
+    private static Set<String> parseHeader(String header)
+    {
+        Set<String> values = new HashSet<String>();
+        ManifestHeader mh = ManifestHeader.parse(header);
+        for(ManifestHeader.Entry e : mh.getEntries())
+        {
+            values.add(e.getValue());
+        }
+        return values;
+    }
+
 }

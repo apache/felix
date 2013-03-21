@@ -37,6 +37,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -261,8 +262,8 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
         {
             return;
         }
-        String newDefaultRealmName = Util.toString(
-            properties.get(JAAS_DEFAULT_REALM_NAME), DEFAULT_REALM_NAME);
+        String newDefaultRealmName = PropertiesUtil.toString(
+                properties.get(JAAS_DEFAULT_REALM_NAME), DEFAULT_REALM_NAME);
 
         if (!newDefaultRealmName.equals(defaultRealmName))
         {
@@ -270,7 +271,7 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
             recreateConfigs();
         }
 
-        String newProviderName = Util.toString(properties.get(JAAS_CONFIG_PROVIDER_NAME),
+        String newProviderName = PropertiesUtil.toString(properties.get(JAAS_CONFIG_PROVIDER_NAME),
             DEFAULT_CONFIG_PROVIDER_NAME);
 
         deregisterProvider(jaasConfigProviderName);
@@ -282,7 +283,7 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
     private void manageGlobalConfiguration(Dictionary props)
     {
-        String configPolicy = Util.toString(props.get(JAAS_CONFIG_POLICY),
+        String configPolicy = PropertiesUtil.toString(props.get(JAAS_CONFIG_POLICY),
                 GlobalConfigurationPolicy.DEFAULT.name());
         configPolicy = Util.trimToNull(configPolicy);
 
