@@ -73,7 +73,13 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
     private final Logger log;
 
-    private static final String DEFAULT_REALM_NAME = "default";
+    /**
+     * This is the name of application/realm used by LoginContext if no
+     * AppConfigurationEntry is found for the appName which is passed while constructing it.
+     *
+     * In case it does not find any config it looks for config entry for an app named 'other'
+     */
+    private static final String DEFAULT_REALM_NAME = "other";
 
     @Property
     private static final String JAAS_DEFAULT_REALM_NAME = "jaas.defaultRealmName";
@@ -134,11 +140,6 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
     public LoginContext createLoginContext(String realm, Subject subject,
         CallbackHandler handler) throws LoginException
     {
-        if (realm == null)
-        {
-            realm = defaultRealmName;
-        }
-
         final Thread currentThread = Thread.currentThread();
         final ClassLoader cl = currentThread.getContextClassLoader();
         try
