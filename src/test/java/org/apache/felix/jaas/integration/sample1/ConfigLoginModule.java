@@ -77,8 +77,27 @@ public class ConfigLoginModule implements LoginModule
         char[] password = ((PasswordCallback) callbacks[1]).getPassword();
 
         boolean result = Arrays.equals(name.toCharArray(), password);
+        if(result){
+            result = validateConfig();
+        }
         succeeded = result;
         this.name = name;
+        return result;
+    }
+
+    /*
+    org.apache.felix.jaas.integration.ITJaasWithConfigBasedLoginModule.testJaasConfigPassing
+     */
+    private boolean validateConfig() {
+        if(!Boolean.TRUE.equals(options.get("validateConfig"))){
+            return true;
+        }
+        boolean result = true;
+        result &= "val1".equals(options.get("key1"));
+        result &= "val2".equals(options.get("key2"));
+        result &= "val3".equals(options.get("key3"));
+        result &= "val4".equals(options.get("key4"));
+        result &= "valNew".equals(options.get("key0"));
         return result;
     }
 
