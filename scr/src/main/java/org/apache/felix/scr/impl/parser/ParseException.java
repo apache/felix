@@ -20,14 +20,8 @@ package org.apache.felix.scr.impl.parser;
 
 public class ParseException extends Exception
 {
-	Exception m_originalException;
-	
     public ParseException(String msg, Exception originalException) {
-        super(msg);
-        m_originalException = originalException;
+        super(msg, originalException);
     }
     
-    public Exception getException() {
-    	return m_originalException;
-    }
 }
