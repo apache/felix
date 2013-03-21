@@ -348,8 +348,19 @@ final class ThreadComparator implements Comparator
 
     public int compare(Object thread1, Object thread2)
     {
-        if (null == thread1 || null == thread2)
-            return -1;
+        if (thread1 == null && thread2 == null)
+        {
+            return 0;
+        }
+        if (thread1 == null)
+        {
+            return 1; // null is always >, moves nulls at the end
+        }
+        if (thread2 == null)
+        {
+            return -1; // first is always < than null, moves nulls at the end 
+        }
+
         String t1 = ((Thread) thread1).getName();
         String t2 = ((Thread) thread2).getName();
         if (null == t1)
@@ -383,8 +394,19 @@ final class ThreadGroupComparator implements Comparator
 
     public int compare(Object thread1, Object thread2)
     {
-        if (null == thread1 || null == thread2)
-            return -1;
+        if (thread1 == null && thread2 == null)
+        {
+            return 0;
+        }
+        if (thread1 == null)
+        {
+            return 1; // null is always >, moves nulls at the end
+        }
+        if (thread2 == null)
+        {
+            return -1; // first is always < than null, moves nulls at the end 
+        }
+
         String t1 = ((ThreadGroup) thread1).getName();
         String t2 = ((ThreadGroup) thread2).getName();
         if (null == t1)
