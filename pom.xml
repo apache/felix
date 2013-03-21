@@ -171,6 +171,7 @@
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-javadoc-plugin</artifactId>
               <configuration>
+                <!--suppress MavenModelInspection -->
                 <encoding>${project.build.sourceEncoding}</encoding>
                 <excludePackageNames>*.internal</excludePackageNames>
               </configuration>
@@ -260,6 +261,12 @@
           <version>1.6.0</version>
           <scope>test</scope>
         </dependency>
+        <dependency>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.apache.felix.http.bundle</artifactId>
+          <version>2.2.0</version>
+          <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -314,8 +321,8 @@
             <dependencies>
                 <dependency>
                     <groupId>org.eclipse</groupId>
-                    <artifactId>osgi</artifactId>
-                    <version>3.7.1.R37x_v20110808-1106</version>
+                    <artifactId>org.eclipse.osgi</artifactId>
+                    <version>3.8.0.v20120529-1548</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
