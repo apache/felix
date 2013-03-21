@@ -19,11 +19,22 @@
 
 package org.apache.felix.jaas.integration;
 
-import java.io.IOException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+import static org.ops4j.pax.exam.CoreOptions.composite;
+import static org.ops4j.pax.exam.CoreOptions.streamBundle;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
@@ -38,11 +49,6 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
-import static org.ops4j.pax.exam.CoreOptions.composite;
-import static org.ops4j.pax.exam.CoreOptions.streamBundle;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -123,4 +129,92 @@ public class ITJaasWithConfigBasedLoginModule extends JaasTestBase
 
         }
     }
+
+    /**
+     * Validates that OSGi config do gets passed as part of options to the LoginModule
+     */
+    @Test
+    public void testJaasConfigPassing() throws Exception {
+        String realmName = name.getMethodName();
+        createConfigSpiConfig();
+
+        //1. Create sample config
+        org.osgi.service.cm.Configuration config =
+                ca.createFactoryConfiguration("org.apache.felix.jaas.Configuration.factory",null);
+        Dictionary<String,Object> p = new Hashtable<String, Object>();
+        p.put("jaas.classname","org.apache.felix.jaas.integration.sample1.ConfigLoginModule");
+        p.put("jaas.realmName", realmName);
+
+        //Following passed config gets validated in
+        //org.apache.felix.jaas.integration.sample1.ConfigLoginModule.validateConfig()
+        p.put("validateConfig", Boolean.TRUE);
+        p.put("key0", "val0");
+        p.put("key1", "val1");
+        p.put("key2", "val2");
+
+        //Override the value directly passed in config via options value explicitly
+        p.put("jaas.options", new String[]{"key3=val3", "key4=val4", "key0=valNew"});
+        config.update(p);
+
+        delay();
+
+        //2. Validate the login passes with this config. LoginModule would validate
+        //the config also
+        CallbackHandler handler = new SimpleCallbackHandler("foo","foo");
+        Configuration jaasConfig = Configuration.getInstance("JavaLoginConfig",null,"FelixJaasProvider");
+
+        Subject s = new Subject();
+        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        try
+        {
+            Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+            LoginContext lc = new LoginContext(realmName,s,handler,jaasConfig);
+            lc.login();
+        }
+        finally
+        {
+            Thread.currentThread().setContextClassLoader(cl);
+        }
+
+        assertFalse(s.getPrincipals().isEmpty());
+    }
+
+
+    @Test
+    public void testJaasConfigOrderedViaRanking() throws Exception {
+        String realmName = name.getMethodName();
+        createConfigSpiConfig();
+        List<Integer> ranks = Arrays.asList(1,2,3,4,5,6);
+        Collections.shuffle(ranks);
+
+        //1. Create LoginModule config with random rankings
+        for(Integer i : ranks)
+        {
+            org.osgi.service.cm.Configuration config =
+                    ca.createFactoryConfiguration("org.apache.felix.jaas.Configuration.factory",null);
+            Dictionary<String,Object> p = new Hashtable<String, Object>();
+            p.put("jaas.classname","org.apache.felix.jaas.integration.sample1.ConfigLoginModule");
+            p.put("jaas.realmName", realmName);
+            p.put("jaas.ranking", i);
+            p.put("order", i);
+
+            config.update(p);
+        }
+
+        delay();
+
+        Configuration jaasConfig = Configuration.getInstance("JavaLoginConfig",null,"FelixJaasProvider");
+        AppConfigurationEntry[] entries = jaasConfig.getAppConfigurationEntry(realmName);
+
+        assertEquals("No of entries does not match the no of created",ranks.size(),entries.length);
+
+        //Entries would be sorted via ranking. Higher ranking comes first
+        int ranking = 6;
+        for(AppConfigurationEntry e : entries){
+            Integer order = (Integer) e.getOptions().get("order");
+            assertEquals(ranking--,order.intValue());
+        }
+
+    }
+
 }
