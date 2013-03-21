@@ -25,9 +25,31 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 
+/**
+ * A factory for creating {@link LoginContext} instances.
+ *
+ * <p>Instead of directly creating {@link LoginContext} this factory can be used. It takes care of
+ * locating the {@link javax.security.auth.login.Configuration} instance and switching of Thread's context
+ * classloader.
+ */
 public interface LoginContextFactory
 {
-
+    /**
+     * Instantiate a new <code>LoginContext</code> object with a name, a <code>Subject</code> to be authenticated,
+     * and a <code>CallbackHandler</code> object.
+     *
+     * @param realm realm or application name
+     * @param subject the <code>Subject</code> to authenticate.
+     * @param handler  the <code>CallbackHandler</code> object used by
+     *		LoginModules to communicate with the user.
+     *
+     * @return created LoginContext
+     *
+     * @exception LoginException if the caller-specified <code>name</code>  does not appear in
+     *          the <code>Configuration</code>  and there is no <code>Configuration</code> entry
+     *          for "<i>other</i>", or if the caller-specified <code>subject</code> is <code>null</code>,
+     *		    or if the caller-specified <code>callbackHandler</code> is <code>null</code>.
+     */
     LoginContext createLoginContext(String realm, Subject subject, CallbackHandler handler) throws LoginException;
 
 }

@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Properties;
 
 import javax.inject.Inject;
 import javax.security.auth.Subject;
@@ -215,6 +216,48 @@ public class ITJaasWithConfigBasedLoginModule extends JaasTestBase
             assertEquals(ranking--,order.intValue());
         }
 
+    }
+
+    @Test
+    public void testJaasConfigWithEmptyRealm() throws Exception {
+        String realmName = name.getMethodName();
+        createConfigSpiConfig();
+
+        //Scenario 1 - Create a config with no realm name set. So its default name would
+        //be set to the defaultRealmName setting of ConfigurationSpi. Which defaults to 'other'
+        org.osgi.service.cm.Configuration config =
+                ca.createFactoryConfiguration("org.apache.felix.jaas.Configuration.factory",null);
+        Dictionary<String,Object> dict = new Hashtable<String, Object>();
+        dict.put("jaas.classname", "org.apache.felix.jaas.integration.sample1.ConfigLoginModule");
+
+        config.update(dict);
+        delay();
+
+        CallbackHandler handler = new SimpleCallbackHandler("foo","foo");
+
+        Subject s = new Subject();
+        LoginContext lc = loginContextFactory.createLoginContext(realmName, s, handler);
+        lc.login();
+
+        assertFalse(s.getPrincipals().isEmpty());
+
+
+        //Scenario 2 - Now we change the default realm name to 'default' and we do not have any login module which
+        //is bound to 'other' as they get part of 'default'. In this case login should fail
+        org.osgi.service.cm.Configuration config2 = ca.getConfiguration("org.apache.felix.jaas.ConfigurationSpi",null);
+        Properties p2 = new Properties();
+        p2.setProperty("jaas.defaultRealmName","default");
+        config2.update(p2);
+        delay();
+
+        try{
+            Subject s2 = new Subject();
+            LoginContext lc2 = loginContextFactory.createLoginContext(realmName, s2, handler);
+            lc2.login();
+            fail("Should have failed as no LoginModule bound with 'other'");
+        }catch(LoginException e){
+
+        }
     }
 
 }

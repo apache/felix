@@ -22,7 +22,7 @@ package org.apache.felix.jaas;
 import javax.security.auth.spi.LoginModule;
 
 /**
- * 
+ * A factory for creating {@link LoginModule} instances.
  */
 public interface LoginModuleFactory
 {
