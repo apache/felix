@@ -61,6 +61,10 @@ public abstract class JaasTestBase
     // the name of the system property providing the bundle file to be installed and tested
     protected static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
 
+    // the name of the system property which captures the jococo coverage agent command
+    //if specified then agent would be specified otherwise ignored
+    protected static final String COVERAGE_COMMAND = "coverage.command";
+
     // the default bundle jar file name
     protected static final String BUNDLE_JAR_DEFAULT = "target/jaas.jar";
 
@@ -98,9 +102,19 @@ public abstract class JaasTestBase
 
             streamBundle(createCommonTestUtilBundle()),
 
+            addCodeCoverageOption(),
             addExtraOptions());
         final Option vmOption = (paxRunnerVmOption != null) ? CoreOptions.vmOption(paxRunnerVmOption)  : null;
         return OptionUtils.combine(base, vmOption);
+    }
+
+    private Option addCodeCoverageOption()
+    {
+        String coverageCommand = System.getProperty(COVERAGE_COMMAND);
+        if(coverageCommand != null){
+            return CoreOptions.vmOption(coverageCommand);
+        }
+        return null;
     }
 
     @ProbeBuilder
