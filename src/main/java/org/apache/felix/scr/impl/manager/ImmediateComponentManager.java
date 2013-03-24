@@ -168,11 +168,11 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         if ( m_implementationObject != null )
         {
             S implementationObject = m_implementationObject;
-            disposeImplementationObject( implementationObject, m_componentContext, reason );
             m_useCount.set( 0 );
             m_implementationObject = null;
+            disposeImplementationObject( implementationObject, m_componentContext, reason );
             cleanupImplementationObject( implementationObject );
-            log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
+            log( LogService.LOG_DEBUG, "Unset and deconfigured implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
             m_componentContext = null;
             m_properties = null;
             m_serviceProperties = null;
@@ -336,8 +336,6 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             md.close( implementationObject );
         }
 
-        // 3. Release all references
-        // nothing to do, we keep no references on per-Bundle services
     }
 
     protected void cleanupImplementationObject( Object implementationObject )
@@ -788,7 +786,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                     if ( m_useCount.get() == 0 )
                     {
                         state().ungetService( this );
-                        unsetDependencyMap();
+                        unsetDependenciesCollected();
                     }
                 }
                 finally
