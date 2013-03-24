@@ -79,9 +79,10 @@ abstract class RegistrationManager<T>
     private volatile T m_serviceRegistration;
     /**
      * 
-     * @param desired
-     * @param services TODO
-     * @return true if this thread reached the requested state
+     * @param desired desired registration state
+     * @param services services to register this under
+     * @return true if this request results in a state change, false if we are already in the desired state or some other thread 
+     * will deal with the consequences of the state change.
      */
     boolean changeRegistration( RegState desired, String[] services )
     {
@@ -93,19 +94,25 @@ abstract class RegistrationManager<T>
             {
                 if ((desired == RegState.unregistered) == (m_serviceRegistration == null))
                 {
-                    return false; //already in desired state
+                    log( LogService.LOG_DEBUG, "Already in desired state {0}", new Object[]
+                            {desired}, null );
+                    return false; 
                 }
             }
             else if (opqueue.get( opqueue.size() - 1 ).getRegState() == desired)
             {
+                log( LogService.LOG_DEBUG, "Duplicate request on other thread: registration change queue {0}", new Object[]
+                        {opqueue}, null );
                 rsw = opqueue.get( opqueue.size() - 1 );
-                return false; //another thread will do our work.
+                return false; //another thread will do our work and owns the state change
             }
             rsw = new RegStateWrapper( desired );
             opqueue.add( rsw );
             if (opqueue.size() > 1)
             {
-                return false; //some other thread will do it later
+                log( LogService.LOG_DEBUG, "Allowing other thread to process request: registration change queue {0}", new Object[]
+                        {opqueue}, null );
+                return true; //some other thread will do it later but this thread owns the state change.
             }
             //we're next
             do

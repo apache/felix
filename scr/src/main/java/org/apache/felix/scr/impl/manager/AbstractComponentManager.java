@@ -826,7 +826,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     {
         if ( m_dependenciesCollected)
         {
-            log( LogService.LOG_DEBUG, "dependency map already present, do not collect dependencies", null );
+            log( LogService.LOG_DEBUG, "dependencies already collected, do not collect dependencies", null );
             return false;
         }
         initDependencyManagers();
@@ -835,9 +835,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             if ( !dependencyManager.prebind() )
             {
                 //not actually satisfied any longer
-                returnServices();
+                deactivateDependencyManagers();
                 log( LogService.LOG_DEBUG, "Could not get required dependency for dependency manager: {0}",
-                        new Object[] {dependencyManager}, null );
+                        new Object[] {dependencyManager.getName()}, null );
                 throw new IllegalStateException( "Missing dependencies, not satisfied" );
             }
         }
@@ -846,17 +846,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return true;
     }
 
-    protected void unsetDependencyMap()
+    protected void unsetDependenciesCollected()
     {
         m_dependenciesCollected = false;
-    }
-
-    private void returnServices()
-    {
-        for ( DependencyManager<S, ?> dependencyManager : m_dependencyManagers )
-        {
-            dependencyManager.deactivate();
-        }
     }
 
     abstract <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
@@ -1080,7 +1072,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     private void deactivateDependencyManagers()
     {
-        for ( DependencyManager dm: getDependencyManagers() )
+        log( LogService.LOG_DEBUG, "Deactivating dependency managers", null);
+        for ( DependencyManager<S, ?> dm: getDependencyManagers() )
         {
             dm.deactivate();
         }
@@ -1088,7 +1081,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     private void disableDependencyManagers()
     {
-        for ( DependencyManager dm: getDependencyManagers() )
+        log( LogService.LOG_DEBUG, "Disabling dependency managers", null);
+        for ( DependencyManager<S, ?> dm: getDependencyManagers() )
         {
             dm.unregisterServiceListener();
         }
@@ -1311,6 +1305,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             {
                 if ( !acm.unregisterService() )
                 {
+                    acm.log( LogService.LOG_DEBUG, "Component deactivation occuring on another thread", null );
                     //another thread is deactivating.
                     return;
                 }
@@ -1323,7 +1318,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                     {
                         acm.disableDependencyManagers();
                     }
-                    acm.unsetDependencyMap();
+                    acm.unsetDependenciesCollected();
                 }
                 finally
                 {
@@ -1338,9 +1333,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
         void doDisable( AbstractComponentManager acm )
         {
-            // dispose and recreate dependency managers
-//            acm.disableDependencyManagers();
-
             // reset the component id now (a disabled component has none)
             acm.unregisterComponentId();
         }
@@ -1539,7 +1531,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
         void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
-            acm.log( LogService.LOG_DEBUG, "Deactivating component", null );
+            acm.log( LogService.LOG_DEBUG, "Deactivating component in state Unsatisfied for reason {0}: disable: {1}",
+                    new Object[] {reason, disable}, null );
 
             // catch any problems from deleting the component to prevent the
             // component to remain in the deactivating state !
