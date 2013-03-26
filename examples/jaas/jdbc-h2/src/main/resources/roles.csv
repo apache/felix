@@ -1,0 +1,5 @@
+#Default role to user mapping
+ROLE,USERNAME
+ADMIN,foo
+ADMIN,admin
+USER,bob

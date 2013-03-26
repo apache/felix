@@ -52,6 +52,16 @@
       <artifactId>org.apache.felix.example.jaas.lm-config</artifactId>
       <version>${jaas.example.version}</version>
     </bundle>
+    <bundle>
+      <groupId>org.apache.felix.example</groupId>
+      <artifactId>org.apache.felix.example.jaas.lm-jdbc</artifactId>
+      <version>${jaas.example.version}</version>
+    </bundle>
+    <bundle>
+      <groupId>org.apache.felix.example</groupId>
+      <artifactId>org.apache.felix.example.jaas.jdbc-h2</artifactId>
+      <version>${jaas.example.version}</version>
+    </bundle>
 
     <!-- Bundles lrequired for Sling Installer Support -->
     <bundle>
