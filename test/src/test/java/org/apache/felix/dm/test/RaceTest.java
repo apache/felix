@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
@@ -55,29 +57,45 @@ public class RaceTest extends Base implements Runnable {
 
     static volatile CountDownLatch m_bindALatch;
     static volatile CountDownLatch m_unbindALatch;
-    static final Executor m_exec = Executors.newFixedThreadPool(10);
+    volatile ThreadPoolExecutor m_exec;
     static volatile BundleContext m_bctx;
     volatile boolean m_running = true;
+    volatile CountDownLatch m_stopLatch = new CountDownLatch(1);
 
     @Test
     public void testConcurrentInjections(BundleContext ctx) {
-        m_bctx = ctx;
-        DependencyManager m = new DependencyManager(ctx);
-        Component controller = m
-                .createComponent()
-                .setImplementation(Controller.class)
-                .setComposition("getComposition")
-                .add(m.createServiceDependency().setService(A.class).setCallbacks("bindA", "unbindA")
-                        .setRequired(true));
+        m_exec = new ThreadPoolExecutor(10, 10, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        try {
+            m_bctx = ctx;
+            DependencyManager m = new DependencyManager(ctx);
+            Component controller = m
+                    .createComponent()
+                    .setImplementation(Controller.class)
+                    .setComposition("getComposition")
+                    .add(m.createServiceDependency().setService(A.class).setCallbacks("bindA", "unbindA")
+                            .setRequired(true));
 
-        m.add(controller);
-        Thread t = new Thread(this);
-        t.start();
-        super.sleep(10000);
+            m.add(controller);
+            Thread t = new Thread(this);
+            t.start();
+            super.sleep(10000);
 
-        m_running = false;
-        t.interrupt();
-        Assert.assertFalse("Test failed.", super.errorsLogged());
+            m_running = false;
+            t.interrupt();
+            m_stopLatch.await(5000, TimeUnit.MILLISECONDS);
+            Assert.assertFalse("Test failed.", super.errorsLogged());            
+        } 
+        
+        catch (Throwable t) {
+            t.printStackTrace();
+        }
+        finally {
+            m_exec.shutdown();
+            try {
+                m_exec.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+            }
+        }
     }
 
     public void run() {
@@ -100,7 +118,7 @@ public class RaceTest extends Base implements Runnable {
                 }
 
                 aFactory.unregister(N, m_exec);
-                
+
                 if (!m_unbindALatch.await(5000, TimeUnit.MILLISECONDS)) {
                     super.log(LOG_ERROR, "unbind problem.");
                     return;
@@ -115,6 +133,9 @@ public class RaceTest extends Base implements Runnable {
         } catch (Throwable t) {
             super.log(LOG_ERROR, "error", t);
             return;
+        }
+        finally {
+            m_stopLatch.countDown();
         }
     }
 
@@ -148,8 +169,10 @@ public class RaceTest extends Base implements Runnable {
                     public void run() {
                         try {
                             ServiceRegistration sr = m_regs.poll();
-                            sr.unregister();
-                            m_unbindALatch.countDown();
+                            if (sr != null) {
+                                sr.unregister();
+                                m_unbindALatch.countDown();
+                            }
                         } catch (Throwable e) {
                             log(LOG_ERROR, "error", e);
                         }
