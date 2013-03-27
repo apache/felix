@@ -27,7 +27,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import aQute.lib.osgi.Annotation;
+import aQute.bnd.osgi.Annotation;
 
 /**
  * This class encodes a component descriptor entry line, using json.
