@@ -39,42 +39,6 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
 {
 
     /**
-     * The name of the method to look for in non-InventoryPrinter services.
-     *
-     * @see #PRINTER_SIGNATURE
-     */
-    private static final String PRINTER_METHOD = "print";
-
-    /**
-     * The signature of the {@link #PRINTER_METHOD} method to be called.
-     * This is similar to the
-     * {@link InventoryPrinter#print(PrinterMode, PrintWriter, boolean)} method
-     * where the first argument is the string value of the {@link PrinterMode}.
-     *
-     * @see InventoryPrinter#print(PrinterMode, PrintWriter, boolean)
-     */
-    private static final Class[] PRINTER_SIGNATURE = new Class[]
-        { String.class, PrintWriter.class, Boolean.TYPE };
-
-    /**
-     * The name of the method to look for in non-ZipAttachmentProvider services.
-     *
-     * @see #ATTACHMENT_SIGNATURE
-     */
-    private static final String ATTACHMENT_METHOD = "addAttachments";
-
-    /**
-     * The signature of the {@link #ATTACHMENT_METHOD} method to be called.
-     * This is similar to the
-     * {@link ZipAttachmentProvider#addAttachments(String, ZipOutputStream)}
-     * method.
-     *
-     * @see ZipAttachmentProvider#addAttachments(String, ZipOutputStream)
-     */
-    private static final Class[] ATTACHMENT_SIGNATURE = new Class[]
-        { String.class, ZipOutputStream.class };
-
-    /**
      * Formatter pattern to render the current time of inventory generation.
      */
     static final DateFormat DISPLAY_DATE_FORMAT = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG,
@@ -88,28 +52,9 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
      * @return An adapter or <code>null</code> if the method is missing.
      */
     public static InventoryPrinterAdapter createAdapter(final InventoryPrinterDescription description,
-        final Object service)
+        final InventoryPrinter service)
     {
-
-        Method printMethod = null;
-        if (!(service instanceof InventoryPrinter))
-        {
-
-            // print(String, PrintWriter)
-            printMethod = ClassUtils.searchMethod(service.getClass(), PRINTER_METHOD, PRINTER_SIGNATURE);
-            if (printMethod == null)
-            {
-                return null;
-            }
-        }
-        Method attachmentMethod = null;
-        if (!(service instanceof ZipAttachmentProvider))
-        {
-
-            // addAttachments()
-            attachmentMethod = ClassUtils.searchMethod(service.getClass(), ATTACHMENT_METHOD, ATTACHMENT_SIGNATURE);
-        }
-        return new InventoryPrinterAdapter(description, service, printMethod, attachmentMethod);
+        return new InventoryPrinterAdapter(description, service);
     }
 
     /**
@@ -125,15 +70,10 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     };
 
     /** The Inventory printer service. */
-    private final Object printer;
+    private final InventoryPrinter printer;
 
     /** The printer description. */
     private final InventoryPrinterDescription description;
-
-    /** The method to use if printer does not implement the service interface. */
-    private final Method printMethod;
-
-    private final Method attachmentMethod;
 
     /** Service registration for the web console. */
     private ServiceRegistration registration;
@@ -141,13 +81,10 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     /**
      * Constructor.
      */
-    public InventoryPrinterAdapter(final InventoryPrinterDescription description, final Object printer,
-        final Method printMethod, final Method attachmentMethod)
+    public InventoryPrinterAdapter(final InventoryPrinterDescription description, final InventoryPrinter printer)
     {
         this.description = description;
         this.printer = printer;
-        this.printMethod = printMethod;
-        this.attachmentMethod = attachmentMethod;
     }
 
     public void registerConsole(final BundleContext context, final InventoryPrinterManagerImpl manager)
@@ -201,15 +138,9 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
      */
     public void addAttachments(final String namePrefix, final ZipOutputStream zos) throws IOException
     {
-        // check if printer implements ZipAttachmentProvider
         if (printer instanceof ZipAttachmentProvider)
         {
             ((ZipAttachmentProvider) printer).addAttachments(namePrefix, zos);
-        }
-        else if (this.attachmentMethod != null)
-        {
-            ClassUtils.invoke(this.printer, this.attachmentMethod, new Object[]
-                { namePrefix, zos });
         }
     }
 
@@ -236,15 +167,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     {
         if (this.supports(mode))
         {
-            if (this.printer instanceof InventoryPrinter)
-            {
-                ((InventoryPrinter) this.printer).print(mode, printWriter, isZip);
-            }
-            else
-            {
-                ClassUtils.invoke(this.printer, this.printMethod, new Object[]
-                    { mode.toString(), printWriter, Boolean.valueOf(isZip) });
-            }
+            this.printer.print(mode, printWriter, isZip);
         }
     }
 
