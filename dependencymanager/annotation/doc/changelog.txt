@@ -5,6 +5,10 @@ Trunk
 
     * [FELIX-3873] - Make the reference to json.org consistent in DM artifacts
 
+** Improvement
+
+    * [FELIX-3996] - Upgrade to latest bnd version
+
 Release 3.1.0
 -------------
 
