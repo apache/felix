@@ -33,9 +33,9 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Jar;
-import aQute.lib.osgi.Resource;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Resource;
 
 /**
  * The <code>AnnotationMojo</code>

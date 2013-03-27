@@ -48,9 +48,11 @@ import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.annotation.api.Unregistered;
 import org.osgi.framework.Bundle;
 
-import aQute.lib.osgi.Annotation;
-import aQute.lib.osgi.ClassDataCollector;
-import aQute.lib.osgi.Verifier;
+import aQute.bnd.osgi.Annotation;
+import aQute.bnd.osgi.ClassDataCollector;
+import aQute.bnd.osgi.Clazz;
+import aQute.bnd.osgi.Verifier;
+import aQute.bnd.osgi.Descriptors.TypeRef;
 
 /**
  * This is the scanner which does all the annotation parsing on a given class.
@@ -61,26 +63,26 @@ import aQute.lib.osgi.Verifier;
  */
 public class AnnotationCollector extends ClassDataCollector
 {
-    private final static String A_INIT = "L" + Init.class.getName().replace('.', '/') + ";";
-    private final static String A_START = "L" + Start.class.getName().replace('.', '/') + ";";
-    private final static String A_STOP = "L" + Stop.class.getName().replace('.', '/') + ";";
-    private final static String A_DESTROY = "L" + Destroy.class.getName().replace('.', '/') + ";";
-    private final static String A_COMPOSITION = "L" + Composition.class.getName().replace('.', '/') + ";";
-    private final static String A_LIFCLE_CTRL = "L" + LifecycleController.class.getName().replace('.', '/')+ ";";
+    private final static String A_INIT = Init.class.getName();
+    private final static String A_START = Start.class.getName();
+    private final static String A_STOP = Stop.class.getName();
+    private final static String A_DESTROY = Destroy.class.getName();
+    private final static String A_COMPOSITION = Composition.class.getName();
+    private final static String A_LIFCLE_CTRL = LifecycleController.class.getName();
 
-    private final static String A_COMPONENT = "L" + Component.class.getName().replace('.', '/') + ";";
-    private final static String A_SERVICE_DEP = "L" + ServiceDependency.class.getName().replace('.', '/') + ";";
-    private final static String A_CONFIGURATION_DEPENDENCY = "L" + ConfigurationDependency.class.getName().replace('.', '/') + ";";
-    private final static String A_BUNDLE_DEPENDENCY = "L" + BundleDependency.class.getName().replace('.', '/') + ";";
-    private final static String A_RESOURCE_DEPENDENCY = "L" + ResourceDependency.class.getName().replace('.', '/') + ";";
-    private final static String A_ASPECT_SERVICE = "L"+ AspectService.class.getName().replace('.', '/') + ";";
-    private final static String A_ADAPTER_SERVICE = "L" + AdapterService.class.getName().replace('.', '/') + ";";
-    private final static String A_BUNDLE_ADAPTER_SERVICE = "L" + BundleAdapterService.class.getName().replace('.', '/') + ";";
-    private final static String A_RESOURCE_ADAPTER_SERVICE = "L" + ResourceAdapterService.class.getName().replace('.', '/') + ";";
-    private final static String A_FACTORYCONFIG_ADAPTER_SERVICE = "L" + FactoryConfigurationAdapterService.class.getName().replace('.', '/') + ";";
-    private final static String A_INJECT = "L" + Inject.class.getName().replace('.', '/') + ";";
-    private final static String A_REGISTERED = "L" + Registered.class.getName().replace('.', '/') + ";";
-    private final static String A_UNREGISTERED = "L" + Unregistered.class.getName().replace('.', '/') + ";";
+    private final static String A_COMPONENT = Component.class.getName();
+    private final static String A_SERVICE_DEP = ServiceDependency.class.getName();
+    private final static String A_CONFIGURATION_DEPENDENCY = ConfigurationDependency.class.getName();
+    private final static String A_BUNDLE_DEPENDENCY = BundleDependency.class.getName();
+    private final static String A_RESOURCE_DEPENDENCY = ResourceDependency.class.getName();
+    private final static String A_ASPECT_SERVICE = AspectService.class.getName();
+    private final static String A_ADAPTER_SERVICE = AdapterService.class.getName();
+    private final static String A_BUNDLE_ADAPTER_SERVICE = BundleAdapterService.class.getName();
+    private final static String A_RESOURCE_ADAPTER_SERVICE = ResourceAdapterService.class.getName();
+    private final static String A_FACTORYCONFIG_ADAPTER_SERVICE = FactoryConfigurationAdapterService.class.getName();
+    private final static String A_INJECT = Inject.class.getName();
+    private final static String A_REGISTERED = Registered.class.getName();
+    private final static String A_UNREGISTERED = Unregistered.class.getName();
 
     private Logger m_logger;
     private String m_className;
@@ -89,7 +91,6 @@ public class AnnotationCollector extends ClassDataCollector
     private String m_field;
     private String m_method;
     private String m_descriptor;
-    private Set<String> m_methods = new HashSet<String>();
     private Set<String> m_dependencyNames = new HashSet<String>();
     private List<EntryWriter> m_writers = new ArrayList<EntryWriter>(); // Last elem is either Service or AspectService
     private MetaType m_metaType;
@@ -129,9 +130,9 @@ public class AnnotationCollector extends ClassDataCollector
      * @param name the class name (package are "/" separated).
      */
     @Override
-    public void classBegin(int access, String name)
+    public void classBegin(int access, TypeRef name)
     {
-        m_className = name.replace('/', '.');
+        m_className = name.getFQN();
         m_logger.debug("class name: %s", m_className);
     }
 
@@ -139,13 +140,18 @@ public class AnnotationCollector extends ClassDataCollector
      * Parses the implemented interfaces ("/" separated).
      */
     @Override
-    public void implementsInterfaces(String[] interfaces)
+    public void implementsInterfaces(TypeRef[] interfaces)
     {
-        m_interfaces = new String[interfaces.length];
+        List<String> result = new ArrayList<String>();
         for (int i = 0; i < interfaces.length; i++)
         {
-            m_interfaces[i] = interfaces[i].replace('/', '.');
+            if (!interfaces[i].getBinary().equals("scala/ScalaObject"))
+            {
+                result.add(interfaces[i].getFQN());
+            }
         }
+         
+        m_interfaces = result.toArray(new String[result.size()]);
         m_logger.debug("implements: %s", Arrays.toString(m_interfaces));
     }
 
@@ -153,25 +159,24 @@ public class AnnotationCollector extends ClassDataCollector
      * Parses a method. Always invoked BEFORE eventual method annotation.
      */
     @Override
-    public void method(int access, String name, String descriptor)
+    public void method(Clazz.MethodDef method)
     {
-        m_logger.debug("Parsed method %s, descriptor=%s", name, descriptor);
+        m_logger.debug("Parsed method %s, descriptor=%s", method.getName(), method.getDescriptor());
         m_isField = false;
-        m_method = name;
-        m_descriptor = descriptor;
-        m_methods.add(name + descriptor);
+        m_method = method.getName();
+        m_descriptor = method.getDescriptor().toString();
     }
 
     /**
      * Parses a field. Always invoked BEFORE eventual field annotation
      */
     @Override
-    public void field(int access, String name, String descriptor)
+    public void field(Clazz.FieldDef field)
     {
-        m_logger.debug("Parsed field %s, descriptor=%s", name, descriptor);
+        m_logger.debug("Parsed field %s, descriptor=%s", field.getName(), field.getDescriptor());
         m_isField = true;
-        m_field = name;
-        m_descriptor = descriptor;
+        m_field = field.getName();
+        m_descriptor = field.getDescriptor().toString();
     }
 
     /** 
@@ -180,81 +185,81 @@ public class AnnotationCollector extends ClassDataCollector
     @Override
     public void annotation(Annotation annotation)
     {
-        m_logger.debug("Parsed annotation: %s", annotation);
+        m_logger.debug("Parsing annotation: %s", annotation.getName());
 
-        if (annotation.getName().equals(A_COMPONENT))
+        if (annotation.getName().getFQN().equals(A_COMPONENT))
         {
             parseComponentAnnotation(annotation);
         }
-        else if (annotation.getName().equals(A_ASPECT_SERVICE))
+        else if (annotation.getName().getFQN().equals(A_ASPECT_SERVICE))
         {
             parseAspectService(annotation);
         }
-        else if (annotation.getName().equals(A_ADAPTER_SERVICE))
+        else if (annotation.getName().getFQN().equals(A_ADAPTER_SERVICE))
         {
             parseAdapterService(annotation);
         }
-        else if (annotation.getName().equals(A_BUNDLE_ADAPTER_SERVICE))
+        else if (annotation.getName().getFQN().equals(A_BUNDLE_ADAPTER_SERVICE))
         {
             parseBundleAdapterService(annotation);
         }
-        else if (annotation.getName().equals(A_RESOURCE_ADAPTER_SERVICE))
+        else if (annotation.getName().getFQN().equals(A_RESOURCE_ADAPTER_SERVICE))
         {
             parseResourceAdapterService(annotation);
         }
-        else if (annotation.getName().equals(A_FACTORYCONFIG_ADAPTER_SERVICE))
+        else if (annotation.getName().getFQN().equals(A_FACTORYCONFIG_ADAPTER_SERVICE))
         {
             parseFactoryConfigurationAdapterService(annotation);
         }
-        else if (annotation.getName().equals(A_INIT))
+        else if (annotation.getName().getFQN().equals(A_INIT))
         {
             m_initMethod = m_method;
         } 
-        else if (annotation.getName().equals(A_START))
+        else if (annotation.getName().getFQN().equals(A_START))
         {
             m_startMethod = m_method;
         } 
-        else if (annotation.getName().equals(A_REGISTERED))
+        else if (annotation.getName().getFQN().equals(A_REGISTERED))
         {
             m_registeredMethod = m_method;
         }
-        else if (annotation.getName().equals(A_STOP))
+        else if (annotation.getName().getFQN().equals(A_STOP))
         {
             m_stopMethod = m_method;
         }
-        else if (annotation.getName().equals(A_UNREGISTERED))
+        else if (annotation.getName().getFQN().equals(A_UNREGISTERED))
         {
             m_unregisteredMethod = m_method;
         }
-        else if (annotation.getName().equals(A_DESTROY))
+        else if (annotation.getName().getFQN().equals(A_DESTROY))
         {
             m_destroyMethod = m_method;
         }
-        else if (annotation.getName().equals(A_COMPOSITION))
+        else if (annotation.getName().getFQN().equals(A_COMPOSITION))
         {
             Patterns.parseMethod(m_method, m_descriptor, Patterns.COMPOSITION);
             m_compositionMethod = m_method;
-        } else if (annotation.getName().equals(A_LIFCLE_CTRL)) 
+        } else if (annotation.getName().getFQN().equals(A_LIFCLE_CTRL)) 
         {
             parseLifecycleAnnotation(annotation);
         }
-        else if (annotation.getName().equals(A_SERVICE_DEP))
+        else if (annotation.getName().getFQN().equals(A_SERVICE_DEP))
         {
             parseServiceDependencyAnnotation(annotation);
         }
-        else if (annotation.getName().equals(A_CONFIGURATION_DEPENDENCY))
+        else if (annotation.getName().getFQN().equals(A_CONFIGURATION_DEPENDENCY))
         {
             parseConfigurationDependencyAnnotation(annotation);
         }
-        else if (annotation.getName().equals(A_BUNDLE_DEPENDENCY))
+        else if (annotation.getName().getFQN().equals(A_BUNDLE_DEPENDENCY))
         {
             parseBundleDependencyAnnotation(annotation);
         }
-        else if (annotation.getName().equals(A_RESOURCE_DEPENDENCY))
+        else if (annotation.getName().getFQN().equals(A_RESOURCE_DEPENDENCY))
         {
             parseRersourceDependencyAnnotation(annotation);
         } 
-        else if (annotation.getName().equals(A_INJECT))
+        else if (annotation.getName().getFQN().equals(A_INJECT))
         {
             parseInject(annotation);
         }
@@ -268,6 +273,7 @@ public class AnnotationCollector extends ClassDataCollector
     {
         if (m_writers.size() == 0)
         {
+            m_logger.info("No components found for class " + m_className);
             return false;
         }
 
