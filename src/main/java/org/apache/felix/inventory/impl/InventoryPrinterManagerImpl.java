@@ -78,9 +78,7 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
     public InventoryPrinterManagerImpl(final BundleContext btx) throws InvalidSyntaxException
     {
         this.bundleContext = btx;
-        this.cfgPrinterTracker = new ServiceTracker(this.bundleContext, this.bundleContext.createFilter("(&("
-            + InventoryPrinter.CONFIG_PRINTER_MODES + "=*)" + "(" + InventoryPrinter.CONFIG_NAME + "=*)" + "("
-            + InventoryPrinter.CONFIG_TITLE + "=*))"), this);
+        this.cfgPrinterTracker = new ServiceTracker(this.bundleContext, InventoryPrinter.SERVICE, this);
         this.cfgPrinterTracker.open();
 
         final Dictionary props = new Hashtable();
@@ -126,8 +124,9 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
         final Object obj = this.bundleContext.getService(reference);
         if (obj != null)
         {
-            this.addService(reference, obj);
+            this.addService(reference, (InventoryPrinter) obj);
         }
+
         return obj;
     }
 
@@ -138,10 +137,10 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
     public void modifiedService(final ServiceReference reference, final Object service)
     {
         this.removeService(reference);
-        this.addService(reference, service);
+        this.addService(reference, (InventoryPrinter) service);
     }
 
-    private void addService(final ServiceReference reference, final Object obj)
+    private void addService(final ServiceReference reference, final InventoryPrinter obj)
     {
         final InventoryPrinterDescription desc = new InventoryPrinterDescription(reference);
 
