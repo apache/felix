@@ -28,11 +28,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Clazz;
-import aQute.lib.osgi.EmbeddedResource;
-import aQute.lib.osgi.Resource;
-import aQute.lib.osgi.Clazz.QUERY;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Clazz;
+import aQute.bnd.osgi.EmbeddedResource;
+import aQute.bnd.osgi.Resource;
+import aQute.bnd.osgi.Clazz.QUERY;
 
 /**
  * This helper parses all classes which contain DM annotations, and generates the corresponding component descriptors.

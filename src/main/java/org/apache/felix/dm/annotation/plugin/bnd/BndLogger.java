@@ -18,8 +18,8 @@
  */
 package org.apache.felix.dm.annotation.plugin.bnd;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Processor;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Processor;
 
 /**
  * Clas used to log messages into the bnd logger.

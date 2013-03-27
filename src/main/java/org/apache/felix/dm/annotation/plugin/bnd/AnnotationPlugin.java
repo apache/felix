@@ -26,9 +26,9 @@ import java.util.Set;
 
 import aQute.bnd.service.AnalyzerPlugin;
 import aQute.bnd.service.Plugin;
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Resource;
-import aQute.libg.reporter.Reporter;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Resource;
+import aQute.service.reporter.Reporter;
 
 /**
  * This class is a BND plugin. It scans the target bundle and look for DependencyManager annotations.
