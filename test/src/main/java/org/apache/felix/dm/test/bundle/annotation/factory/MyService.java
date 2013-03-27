@@ -33,64 +33,64 @@ import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
 /**
- * This service will be instantiated by our MyServiceFactory class.
+ * This service is instantaited using a "factory set" from the
+ * ServiceFactoryAnnotationTest class.
+ * 
+ * @see org.apache.felix.dm.test.annotation.ServiceFactoryAnnotationTest
  */
-@Component(factorySet = "MyServiceFactory", 
-           factoryConfigure = "configure",
-           properties = { @Property(name = "foo", value = "bar") })
-public class MyService implements MyServiceInterface
-{
+@Component(factorySet = "MyServiceFactory", factoryConfigure = "configure", properties = { @Property(name = "foo", value = "bar") })
+public class MyService implements MyServiceInterface {
     /**
-     *  The configuration provided by MyServiceFactory
+     * The configuration provided by MyServiceFactory
      */
     @SuppressWarnings("unchecked")
     Dictionary m_configuration;
 
     /**
-     *  Our sequencer.
+     * Our sequencer.
      */
     @ServiceDependency
     Sequencer m_sequencer;
-    
+
     /**
-     *  An extra dependency (we'll dynamically configure the filter from our init() method).
+     * An extra dependency (we'll dynamically configure the filter from our
+     * init() method).
      */
-    @ServiceDependency(name="extra")
+    @ServiceDependency(name = "extra")
     Runnable m_extra;
 
     /**
-     * This is the first method called: we are provided with the MyServiceFactory configuration.
+     * This is the first method called: we are provided with the
+     * MyServiceFactory configuration.
      */
-    public void configure(Dictionary<?, ?> configuration)
-    {
-        if (m_configuration == null)
-        {
+    public void configure(Dictionary<?, ?> configuration) {
+        if (m_configuration == null) {
             m_configuration = configuration;
-        }
-        else
-        {
+        } else {
             m_sequencer.step(5);
         }
     }
 
     /**
-     * Initialize our Service: we'll dynamically configure our dependency whose name is "extra".
+     * Initialize our Service: we'll dynamically configure our dependency whose
+     * name is "extra".
      */
     @Init
-    Map init() 
-    {
-        return new HashMap() {{
-            put("extra.filter", "(foo=bar2)");
-            put("extra.required", "true");
-        }};
+    Map init() {
+        return new HashMap() {
+            {
+                put("extra.filter", "(foo=bar2)");
+                put("extra.required", "true");
+            }
+        };
     }
-        
+
     /**
-     * our Service is starting: at this point, all required dependencies have been injected.
+     * our Service is starting: at this point, all required dependencies have
+     * been injected.
      */
     @Start
-    public void start()
-    {
+    public void start() {
         Assert.assertNotNull("Extra dependency not injected", m_extra);
         m_extra.run();
         m_sequencer.step(2);
@@ -100,29 +100,23 @@ public class MyService implements MyServiceInterface
      * Our service is stopping.
      */
     @Stop
-    public void stop()
-    {
+    public void stop() {
         m_sequencer.step(10);
     }
 
-    public void added(String instanceId)
-    {
-        if (instanceId.equals(m_configuration.get("instance.id")))
-        {
+    public void added(String instanceId) {
+        if (instanceId.equals(m_configuration.get("instance.id"))) {
             m_sequencer.step(4);
         }
     }
 
-    public void changed(String modified)
-    {
-        if (modified.equals(m_configuration.get("instance.modified")))
-        {
+    public void changed(String modified) {
+        if (modified.equals(m_configuration.get("instance.modified"))) {
             m_sequencer.step(7);
         }
     }
 
-    public void removed()
-    {
+    public void removed() {
         m_sequencer.step(9);
     }
 }

@@ -18,10 +18,7 @@
  */
 package org.apache.felix.dm.test.bundle.annotation.factory;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Map;
-import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -30,54 +27,30 @@ import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
-@SuppressWarnings("unchecked")
 @Component
-public class MyServiceFactory
-{
-    @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=MyServiceFactory)")
-    Set<Dictionary> m_myServiceFactory;
-    
+public class MyServiceClient {
     @ServiceDependency
-    Sequencer m_sequencer;    
-    
-    Hashtable m_conf;
+    Sequencer m_sequencer;
 
     @Start
-    void start()
-    {
+    void start() {
         m_sequencer.step(1);
-        // create a service instance with this configuration
-        m_conf = new Hashtable();
-        m_conf.put("instance.id", "instance");
-        m_conf.put(".private.param", "private");
-        m_conf.put(Component.FACTORY_INSTANCE, new MyService()); // we explicitly provide the instance
-        Assert.assertTrue(m_myServiceFactory.add(m_conf));
     }
 
     @ServiceDependency(required = false, changed = "update", removed = "removed")
-    void bind(Map serviceProperties, MyServiceInterface service)
-    {
+    void bind(Map serviceProperties, MyServiceInterface service) {
         m_sequencer.step(3);
         Assert.assertEquals("bar", serviceProperties.get("foo"));
         Assert.assertNull(serviceProperties.get(".private.param"));
         service.added((String) serviceProperties.get("instance.id"));
-
-        // update the service instance
-        m_conf.put("instance.modified", "true");
-        Assert.assertFalse(m_myServiceFactory.add(m_conf));
     }
 
-    void update(Map serviceProperties, MyServiceInterface service)
-    {
+    void update(Map serviceProperties, MyServiceInterface service) {
         m_sequencer.step(6);
         service.changed((String) serviceProperties.get("instance.modified"));
-
-        // remove instance
-        Assert.assertTrue(m_myServiceFactory.remove(m_conf));
     }
 
-    void removed(MyServiceInterface service)
-    {
+    void removed(MyServiceInterface service) {
         m_sequencer.step(8);
         service.removed();
     }
