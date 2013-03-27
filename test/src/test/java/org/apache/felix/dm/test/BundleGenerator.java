@@ -25,9 +25,9 @@ import java.io.PrintWriter;
 import java.net.URL;
 import java.util.Properties;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Builder;
-import aQute.lib.osgi.Jar;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Builder;
+import aQute.bnd.osgi.Jar;
 
 /**
  * Helper used to generate a bundle dynamically.
