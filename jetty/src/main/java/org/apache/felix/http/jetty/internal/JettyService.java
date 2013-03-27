@@ -168,7 +168,7 @@ public final class JettyService
                 message.append(" HTTPS:").append(this.config.getHttpsPort());
             }
 
-            ServletContextHandler context = new ServletContextHandler(this.server, "/", ServletContextHandler.SESSIONS);
+            ServletContextHandler context = new ServletContextHandler(this.server, this.config.getContextPath(), ServletContextHandler.SESSIONS);
             
             message.append(" on context path ").append(this.config.getContextPath());
             configureSessionManager(context);
