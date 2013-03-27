@@ -18,9 +18,10 @@
  */
 package org.apache.felix.dm.test.bundle.annotation.factory;
 
-public interface MyServiceInterface
-{
+public interface MyServiceInterface {
     public void added(String instanceId);
+
     public void changed(String modified);
+
     public void removed();
 }

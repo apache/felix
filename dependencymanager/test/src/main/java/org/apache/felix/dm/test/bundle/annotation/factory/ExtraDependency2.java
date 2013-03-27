@@ -21,11 +21,9 @@ package org.apache.felix.dm.test.bundle.annotation.factory;
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Property;
 
-@Component(properties=@Property(name="foo", value="bar2"))
-public class ExtraDependency2 implements Runnable
-{
-    public void run()
-    {
+@Component(properties = @Property(name = "foo", value = "bar2"))
+public class ExtraDependency2 implements Runnable {
+    public void run() {
         System.out.println("ExtraDependency2.run()");
     }
 }
