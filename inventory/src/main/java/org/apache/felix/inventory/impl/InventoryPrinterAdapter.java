@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,6 @@ package org.apache.felix.inventory.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.util.Comparator;
 import java.util.Locale;
@@ -32,7 +31,7 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * Helper class for a inventory printer.
- *
+ * 
  * The adapter simplifies accessing and working with the inventory printer.
  */
 public class InventoryPrinterAdapter implements InventoryPrinterHandler, Comparable
@@ -43,19 +42,6 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
      */
     static final DateFormat DISPLAY_DATE_FORMAT = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG,
         Locale.US);
-
-    /**
-     * Create a new adapter if the provided service is either a printer or
-     * provides
-     * the print method.
-     *
-     * @return An adapter or <code>null</code> if the method is missing.
-     */
-    public static InventoryPrinterAdapter createAdapter(final InventoryPrinterDescription description,
-        final InventoryPrinter service)
-    {
-        return new InventoryPrinterAdapter(description, service);
-    }
 
     /**
      * Comparator for adapters based on the service ranking.
