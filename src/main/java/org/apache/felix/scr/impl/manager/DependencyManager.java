@@ -24,7 +24,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -544,7 +546,7 @@ public class DependencyManager<S, T> implements Reference
 
     private class MultipleStaticReluctantCustomizer extends AbstractCustomizer {
 
-        private final Collection<RefPair<T>> refs = new ArrayList<RefPair<T>>();
+        private final AtomicReference<Collection<RefPair<T>>> refs = new AtomicReference<Collection<RefPair<T>>>();
         private int trackingCount;
 
         public RefPair<T> addingService( ServiceReference<T> serviceReference )
@@ -579,7 +581,8 @@ public class DependencyManager<S, T> implements Reference
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant removed {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
-            if ( isActive() )
+            Collection<RefPair<T>> refs = this.refs.get();
+            if ( isActive() && refs != null )
             {
                 if (refs.contains( refPair ))
                 {
@@ -601,6 +604,19 @@ public class DependencyManager<S, T> implements Reference
         public boolean open()
         {
             boolean success = m_dependencyMetadata.isOptional();
+            Collection<RefPair<T>> refs = this.refs.get();
+            if (refs != null) {
+                //another thread is concurrently opening, and it got done already
+                for (RefPair<T> refPair: refs)
+                {
+                    synchronized (refPair)
+                    {
+                        success |= m_bindMethods.getBind().getServiceObject( refPair, m_componentManager.getActivator().getBundleContext(), m_componentManager );
+                    }
+                }
+                return success;
+            }
+            refs = new ArrayList<RefPair<T>>();
             AtomicInteger trackingCount = new AtomicInteger( );
             SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true, trackingCount );
             for (RefPair<T> refPair: tracked.values())
@@ -611,25 +627,41 @@ public class DependencyManager<S, T> implements Reference
                 }
                 refs.add(refPair) ;
             }
-            this.trackingCount = trackingCount.get();
+            if ( this.refs.compareAndSet( null, refs ) )
+            {
+                this.trackingCount = trackingCount.get();
+            } 
+            else 
+            {
+                //some other thread got done first.  If we have more refPairs, we might need to unget some services.
+                Collection<RefPair<T>> actualRefs = this.refs.get();
+                refs.removeAll( actualRefs );
+                for (RefPair<T> ref: refs) 
+                {
+                    ungetService( ref );
+                }
+            }
             return success;
         }
 
         public void close()
         {
-            AtomicInteger trackingCount = new AtomicInteger( );
-            for ( RefPair<T> ref: getRefs( trackingCount ))
+            Collection<RefPair<T>> refs = this.refs.getAndSet( null );
+            if ( refs != null )
             {
-                ungetService( ref );
+                for ( RefPair<T> ref: refs )
+                {
+                    ungetService( ref );
+                }
             }
-            refs.clear();
             getTracker().deactivate();
         }
 
         public Collection<RefPair<T>> getRefs( AtomicInteger trackingCount )
         {
             trackingCount.set( this.trackingCount );
-            return refs;
+            Collection<RefPair<T>> refs = this.refs.get();
+            return refs == null? Collections.<RefPair<T>>emptyList(): refs;
         }
     }
 
