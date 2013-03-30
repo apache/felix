@@ -877,7 +877,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     }
 
 
-    void clear()
+    synchronized void clear()
     {
         // for some testing, the activator may be null
         if ( m_activator != null )
@@ -885,8 +885,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             m_activator.unregisterComponentId( this );
             m_activator = null;
         }
-
-        m_dependencyManagers.clear();
     }
 
     /**
