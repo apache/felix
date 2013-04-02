@@ -121,11 +121,11 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         if ( m_implementationObject == null )
         {
             final ComponentContextImpl tmpContext = new ComponentContextImpl( this );
+            m_componentContext = tmpContext;
             S tmpComponent = createImplementationObject( tmpContext, new SetImplementationObject<S>()
             {
                 public void setImplementationObject( S implementationObject )
                 {
-                    m_componentContext = tmpContext;
                     m_implementationObject = implementationObject;
                     m_tmpImplementationObject = null;
                 }
@@ -172,7 +172,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             m_tmpImplementationObject = implementationObject;
             m_implementationObject = null;
             disposeImplementationObject( implementationObject, m_componentContext, reason );
-            m_implementationObject = null;
+            m_tmpImplementationObject = null;
             cleanupImplementationObject( implementationObject );
             log( LogService.LOG_DEBUG, "Unset and deconfigured implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
             m_componentContext = null;
@@ -342,12 +342,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     protected void cleanupImplementationObject( Object implementationObject )
     {
-
-        for ( DependencyManager md: getReversedDependencyManagers() )
-        {
-            md.cleanup( implementationObject );
-        }
-
+        m_componentContext.clearEdgeInfos();
     }
 
     State getSatisfiedState()
@@ -359,17 +354,22 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     {
         return Active.getInstance();
     }
-
-    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
+    
+    EdgeInfo getEdgeInfo( S implObject, DependencyManager<S, ?> dependencyManager) 
     {
-        final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
-        dependencyManager.invokeUpdatedMethod( impl, refPair, trackingCount );
+        return m_componentContext.getEdgeInfo( dependencyManager );
     }
 
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
         dependencyManager.invokeBindMethod( impl, refPair, trackingCount );
+    }
+
+    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
+    {
+        final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
+        dependencyManager.invokeUpdatedMethod( impl, refPair, trackingCount );
     }
 
     <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount )

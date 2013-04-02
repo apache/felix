@@ -123,7 +123,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         cm.activateInternal( getTrackingCount().get() );
 
         instance = cm.getComponentInstance();
-        if ( instance == null )
+        if ( instance == null || instance.getInstance() == null )
         {
             // activation failed, clean up component manager
             cm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
@@ -276,6 +276,11 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     protected boolean collectDependencies()
     {
         return true;
+    }
+
+    EdgeInfo getEdgeInfo( S implObject, DependencyManager<S, ?> dependencyManager) 
+    {
+        return null;
     }
 
     <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> ref, int trackingCount )
