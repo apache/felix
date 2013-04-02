@@ -358,7 +358,7 @@ public class DependencyManager<S, T> implements Reference
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic modified {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
             if (isActive())
             {
-                m_componentManager.update( DependencyManager.this, refPair, trackingCount );
+                m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic modified {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
@@ -484,7 +484,7 @@ public class DependencyManager<S, T> implements Reference
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy modified {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
             if (isActive())
             {
-                m_componentManager.update( DependencyManager.this, refPair, trackingCount );
+                m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy modified {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
@@ -571,7 +571,7 @@ public class DependencyManager<S, T> implements Reference
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant modified {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
             if (isActive())
             {
-                m_componentManager.update( DependencyManager.this, refPair, trackingCount );
+                m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
             }
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant modified {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
             tracked( trackingCount );
@@ -730,7 +730,7 @@ public class DependencyManager<S, T> implements Reference
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic modified {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
             if (isActive())
             {
-                m_componentManager.update( DependencyManager.this, refPair, trackingCount );
+                m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
             }
             this.trackingCount = trackingCount;
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic modified {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
@@ -886,7 +886,7 @@ public class DependencyManager<S, T> implements Reference
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
             if ( isActive() )
             {
-                m_componentManager.update( DependencyManager.this, refPair, trackingCount );
+                m_componentManager.invokeUpdatedMethod( DependencyManager.this, refPair, trackingCount );
             }
             this.trackingCount = trackingCount;
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic modified {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );

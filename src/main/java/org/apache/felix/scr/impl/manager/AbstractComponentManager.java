@@ -851,7 +851,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         m_dependenciesCollected = false;
     }
 
-    abstract <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
+    abstract <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
 
     abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
 

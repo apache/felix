@@ -48,12 +48,6 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
     // service instances
     private IdentityHashMap<S, BundleComponentContext> serviceContexts = new IdentityHashMap<S, BundleComponentContext>();
 
-    // pseudo map of implementation objects to be used for service
-    // binding while calling the activate method. The map's keys and values
-    // are just the implementation objects. The objects will only be
-    // contained while the activate method is being called.
-    private IdentityHashMap<S, BundleComponentContext> tmpImplementationObjects = new IdentityHashMap<S, BundleComponentContext>();
-
     /**
      * @param activator BundleComponentActivator for this DS implementation
 	 * @param componentHolder ComponentHolder for configuration management
@@ -148,15 +142,13 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
             public void presetImplementationObject( S implementationObject )
             {
                 serviceContext.setImplementationObject( implementationObject );
-                tmpImplementationObjects.put( implementationObject, serviceContext );
+                serviceContexts.put( implementationObject, serviceContext );
 
             }
 
 
             public void setImplementationObject( S implementationObject )
             {
-                serviceContexts.put( implementationObject, serviceContext );
-                tmpImplementationObjects.remove( implementationObject );
 
                 // if this is the first use of this component, switch to ACTIVE state
                 if ( getState() == STATE_REGISTERED )
@@ -168,7 +160,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
 
             public void resetImplementationObject( S implementationObject )
             {
-                tmpImplementationObjects.remove( implementationObject );
+                serviceContexts.remove( implementationObject );
                 serviceContext.setImplementationObject( null );
             }
 
@@ -209,7 +201,15 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         }
     }
 
-    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
+    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
+    {
+        for ( S implementationObject : serviceContexts.keySet() )
+        {
+            dependencyManager.invokeBindMethod( implementationObject, refPair, trackingCount );
+        }
+    }
+
+    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         for ( S implementationObject : serviceContexts.keySet() )
         {
@@ -217,25 +217,9 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         }
     }
 
-    <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
-    {
-        for ( S implementationObject : serviceContexts.keySet() )
-        {
-            dependencyManager.invokeBindMethod( implementationObject, refPair, trackingCount );
-        }
-        for ( S implementationObject : tmpImplementationObjects.keySet() )
-        {
-            dependencyManager.invokeBindMethod( implementationObject, refPair, trackingCount );
-        }
-    }
-
     <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount )
     {
         for ( S implementationObject : serviceContexts.keySet() )
-        {
-            dependencyManager.invokeUnbindMethod( implementationObject, oldRefPair, trackingCount );
-        }
-        for ( S implementationObject : tmpImplementationObjects.keySet() )
         {
             dependencyManager.invokeUnbindMethod( implementationObject, oldRefPair, trackingCount );
         }
@@ -246,13 +230,6 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         ModifiedMethod modifiedMethod = getComponentMethods().getModifiedMethod();
         MethodResult result = MethodResult.VOID;
         for ( BundleComponentContext componentContext : serviceContexts.values() )
-        {
-            Object instance = componentContext.getInstance();
-            result = modifiedMethod.invoke( instance,
-                    new ActivateMethod.ActivatorParameter( componentContext, -1 ), MethodResult.VOID, this );
-
-        }
-        for ( BundleComponentContext componentContext : tmpImplementationObjects.values() )
         {
             Object instance = componentContext.getInstance();
             result = modifiedMethod.invoke( instance,
