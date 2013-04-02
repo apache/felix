@@ -67,6 +67,8 @@ public class DependencyManager<S, T> implements Reference
 
     // Reference to the metadata
     private final ReferenceMetadata m_dependencyMetadata;
+    
+    private final int m_index;
 
     private final AtomicReference<ServiceTracker<T, RefPair<T>>> trackerRef = new AtomicReference<ServiceTracker<T, RefPair<T>>>();
 
@@ -82,50 +84,16 @@ public class DependencyManager<S, T> implements Reference
 
     private boolean registered;
 
-    private final Map<S, EdgeInfo> edgeInfoMap = new IdentityHashMap<S, EdgeInfo>(  );
-
-    private static class EdgeInfo
-    {
-        private int open = -1;
-        private int close = -1;
-        private CountDownLatch latch;
-
-        public void setClose( int close )
-        {
-            this.close = close;
-        }
-
-        public CountDownLatch getLatch()
-        {
-            return latch;
-        }
-
-        public void setLatch( CountDownLatch latch )
-        {
-            this.latch = latch;
-        }
-
-        public void setOpen( int open )
-        {
-            this.open = open;
-        }
-
-        public boolean outOfRange( int trackingCount )
-        {
-            return (open != -1 && trackingCount < open)
-                || (close != -1 && trackingCount > close);
-        }
-    }
-
     /**
      * Constructor that receives several parameters.
-     *
      * @param dependency An object that contains data about the dependency
+     * @param index TODO
      */
-    DependencyManager( AbstractComponentManager<S> componentManager, ReferenceMetadata dependency )
+    DependencyManager( AbstractComponentManager<S> componentManager, ReferenceMetadata dependency, int index )
     {
         m_componentManager = componentManager;
         m_dependencyMetadata = dependency;
+        m_index = index;
         customizer = newCustomizer();
 
         // dump the reference information if DEBUG is enabled
@@ -140,6 +108,11 @@ public class DependencyManager<S, T> implements Reference
                             dependency.getCardinality(), dependency.getBind(), dependency.getUnbind() }, null );
         }
     }
+    
+    int getIndex() 
+    {
+        return m_index;
+    }   
 
     /**
      * Initialize binding methods.
@@ -1383,14 +1356,9 @@ public class DependencyManager<S, T> implements Reference
 
     private EdgeInfo getEdgeInfo( S componentInstance )
     {
-        EdgeInfo info = edgeInfoMap.get( componentInstance );
-        if ( info == null )
-        {
-            info = new EdgeInfo();
-            edgeInfoMap.put( componentInstance, info );
-        }
-        return info;
+        return m_componentManager.getEdgeInfo( componentInstance, this );
     }
+    
     /**
      * Revoke the given bindings. This method cannot throw an exception since
      * it must try to complete all that it can
@@ -1425,11 +1393,6 @@ public class DependencyManager<S, T> implements Reference
 
         }
         latch.countDown();
-    }
-
-    void cleanup( S componentInstance)
-    {
-        edgeInfoMap.remove( componentInstance );
     }
 
     public void invokeBindMethodLate( final ServiceReference<T> ref, int trackingCount )
@@ -1497,8 +1460,8 @@ public class DependencyManager<S, T> implements Reference
         {
             synchronized ( trackerRef.get().tracked() )
             {
-                EdgeInfo info = edgeInfoMap.get( componentInstance );
-                if (info != null && info.outOfRange( trackingCount ) )
+                EdgeInfo info = getEdgeInfo( componentInstance );
+                if (info.outOfRange( trackingCount ) )
                 {
                     //ignore events before open started or we will have duplicate binds.
                     return true;
@@ -1556,8 +1519,8 @@ public class DependencyManager<S, T> implements Reference
             }
             synchronized ( trackerRef.get().tracked() )
             {
-                EdgeInfo info = edgeInfoMap.get( componentInstance );
-                if (info != null && info.outOfRange( trackingCount ) )
+                EdgeInfo info = getEdgeInfo( componentInstance );
+                if (info.outOfRange( trackingCount ) )
                 {
                     //ignore events after close started or we will have duplicate unbinds.
                     return;
@@ -1608,9 +1571,9 @@ public class DependencyManager<S, T> implements Reference
             EdgeInfo info;
             synchronized ( trackerRef.get().tracked() )
             {
-                info = edgeInfoMap.get( componentInstance );
+                info = getEdgeInfo( componentInstance );
             }
-            if (info != null && info.outOfRange( trackingCount ) )
+            if (info.outOfRange( trackingCount ) )
             {
                 //wait for unbinds to complete
                 if (info.getLatch() != null)

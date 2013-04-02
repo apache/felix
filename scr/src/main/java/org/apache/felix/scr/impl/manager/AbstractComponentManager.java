@@ -851,6 +851,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         m_dependenciesCollected = false;
     }
 
+    abstract EdgeInfo getEdgeInfo( S implObject, DependencyManager<S, ?> dependencyManager);
+    
     abstract <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
 
     abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
@@ -966,9 +968,10 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         // If this component has got dependencies, create dependency managers for each one of them.
         if ( metadata.getDependencies().size() != 0 )
         {
+            int index = 0;
             for ( ReferenceMetadata currentdependency: metadata.getDependencies() )
             {
-                DependencyManager depmanager = new DependencyManager( this, currentdependency );
+                DependencyManager depmanager = new DependencyManager( this, currentdependency, index++ );
 
                 depMgrList.add( depmanager );
             }

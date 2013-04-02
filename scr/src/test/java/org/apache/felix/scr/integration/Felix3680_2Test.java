@@ -63,19 +63,25 @@ public class Felix3680_2Test extends ComponentTestBase
 
 
     @Test
-    public void test_concurrent_injection_with_bundleContext()
+    public void test_concurrent_injection_with_bundleContext() throws Throwable
     {
-        final Component main = findComponentByName( "org.apache.felix.scr.integration.components.felix3680_2.Main" );
-        TestCase.assertNotNull( main );
-        main.enable();
-
-        delay( 30 );
-        main.disable();
-        delay(); //async deactivate
-        for ( Iterator it = log.foundWarnings().iterator(); it.hasNext(); )
+        for ( int i = 0; i < 6; i++ )
         {
-            String message = ( String ) it.next();
-            TestCase.fail( "unexpected warning or error logged: " + message );
+            final Component main = findComponentByName( "org.apache.felix.scr.integration.components.felix3680_2.Main" );
+            TestCase.assertNotNull( main );
+            main.enable();
+            delay( 5 ); //run test for 30 seconds
+            main.disable();
+            delay(); //async deactivate
+            if ( log.getFirstFrameworkThrowable() != null )
+            {
+                throw log.getFirstFrameworkThrowable();
+            }
+            for ( Iterator it = log.foundWarnings().iterator(); it.hasNext(); )
+            {
+                String message = ( String ) it.next();
+                TestCase.fail( "unexpected warning or error logged: " + message );
+            }
         }
     }
 }

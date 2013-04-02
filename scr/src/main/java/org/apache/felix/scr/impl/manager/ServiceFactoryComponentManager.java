@@ -143,7 +143,6 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
             {
                 serviceContext.setImplementationObject( implementationObject );
                 serviceContexts.put( implementationObject, serviceContext );
-
             }
 
 
@@ -199,6 +198,16 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
             changeState( Registered.getInstance() );
             unsetDependenciesCollected();
         }
+    }
+
+    EdgeInfo getEdgeInfo( S implObject, DependencyManager<S, ?> dependencyManager) 
+    {
+        return serviceContexts.get( implObject ).getEdgeInfo( dependencyManager );
+    }
+
+    protected void cleanupImplementationObject( Object implementationObject )
+    {
+        serviceContexts.get( implementationObject ).clearEdgeInfos();
     }
 
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )

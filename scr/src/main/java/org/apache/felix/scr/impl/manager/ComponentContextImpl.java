@@ -19,6 +19,7 @@
 package org.apache.felix.scr.impl.manager;
 
 
+import java.util.Arrays;
 import java.util.Dictionary;
 
 import org.apache.felix.scr.component.ExtComponentContext;
@@ -35,14 +36,31 @@ import org.osgi.service.component.ComponentInstance;
  */
 public class ComponentContextImpl implements ExtComponentContext, ComponentInstance {
 
-    private AbstractComponentManager m_componentManager;
+    private final AbstractComponentManager m_componentManager;
+    
+    private final EdgeInfo[] edgeInfos;
 
 
     ComponentContextImpl( AbstractComponentManager componentManager )
     {
         m_componentManager = componentManager;
+        edgeInfos = new EdgeInfo[componentManager.getComponentMetadata().getDependencies().size()];
+    }
+    
+    EdgeInfo getEdgeInfo(DependencyManager dm)
+    {
+        int index = dm.getIndex();
+        if (edgeInfos[index] == null)
+        {
+            edgeInfos[index] = new EdgeInfo();
+        }
+        return edgeInfos[index];
     }
 
+    void clearEdgeInfos()
+    {
+        Arrays.fill( edgeInfos, null );
+    }
 
     protected AbstractComponentManager getComponentManager()
     {

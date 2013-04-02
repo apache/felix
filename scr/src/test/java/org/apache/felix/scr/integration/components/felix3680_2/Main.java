@@ -202,19 +202,29 @@ public class Main implements Runnable
         new Thread( this ).start();
     }
 
-    void stop()
+    void stop() throws InterruptedException
     {
-        running = false;
+        synchronized ( this )
+        {
+            running = false;
+        }
+        if (m_enabledLatch != null) 
+        {
+            m_enabledLatch.await( 1, TimeUnit.MILLISECONDS );
+        }
+        if (m_disabledLatch != null) 
+        {
+            m_disabledLatch.await( 1, TimeUnit.MILLISECONDS );
+        }
     }
 
 
     public void run()
     {
         int loop = 0;
-        while ( running )
+        while ( iterate() )
         {
-            m_enabledLatch = new CountDownLatch( 11 ); // 10 for registrations of B,C,D,E,F,G,H,I,J,K + 1 for Main.bindA
-            m_disabledLatch = new CountDownLatch( 11 ); // 10 for unregistrations of B,C,D,E,F,G,H,I,J,K + 1 for Main.unbindA
+            
 
             RegistrationHelper registry = new RegistrationHelper();
             registry.registerBCDEFGHIJK( m_exec );
@@ -256,6 +266,17 @@ public class Main implements Runnable
                 m_logService.log( LogService.LOG_INFO, "Performed " + loop + " tests." );
             }
         }
+    }
+
+
+    private synchronized boolean iterate()
+    {
+        if ( running )
+        {
+            m_enabledLatch = new CountDownLatch( 11 ); // 10 for registrations of B,C,D,E,F,G,H,I,J,K + 1 for Main.bindA
+            m_disabledLatch = new CountDownLatch( 11 ); // 10 for unregistrations of B,C,D,E,F,G,H,I,J,K + 1 for Main.unbindA
+        }
+        return running;
     }
 
     private String dumpThreads()
