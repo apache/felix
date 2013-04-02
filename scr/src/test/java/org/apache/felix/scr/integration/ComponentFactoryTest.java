@@ -94,7 +94,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertNotNull( instanceMap );
         TestCase.assertEquals( 1, instanceMap.size() );
 
-        final Object instanceManager = getFieldValue( instance, "m_componentManager" );
+        final Object instanceManager = getComponentManagerFromComponentInstance( instance );
         TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
 
         // check registered components
@@ -169,7 +169,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertNotNull( instanceMap );
         TestCase.assertEquals( 1, instanceMap.size() );
 
-        final Object instanceManager = getFieldValue( instance, "m_componentManager" );
+        final Object instanceManager = getComponentManagerFromComponentInstance( instance );
         TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
 
         // disable the factory
@@ -301,7 +301,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertNotNull( instanceMap );
         TestCase.assertEquals( 1, instanceMap.size() );
 
-        final Object instanceManager = getFieldValue( instance, "m_componentManager" );
+        final Object instanceManager = getComponentManagerFromComponentInstance( instance );
         TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
 
         // delete config, ensure factory is not active anymore and component instance not changed
@@ -377,7 +377,7 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertNotNull( instanceMap );
         TestCase.assertEquals( 1, instanceMap.size() );
 
-        final Object instanceManager = getFieldValue( instance, "m_componentManager" );
+        final Object instanceManager = getComponentManagerFromComponentInstance( instance );
         TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
 
         // check registered components

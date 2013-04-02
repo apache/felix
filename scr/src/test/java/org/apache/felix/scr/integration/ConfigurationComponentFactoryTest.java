@@ -98,7 +98,7 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
         TestCase.assertNotNull( instanceMap );
         TestCase.assertEquals( 1, instanceMap.size() );
 
-        final Object instanceManager = getFieldValue( SimpleComponent.INSTANCE.m_activateContext.getComponentInstance(), "m_componentManager" );
+        final Object instanceManager = getFieldValue( SimpleComponent.INSTANCE.m_activateContext, "m_componentManager" );
         TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
 
 

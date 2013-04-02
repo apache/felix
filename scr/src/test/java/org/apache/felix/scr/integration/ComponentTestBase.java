@@ -370,6 +370,12 @@ public abstract class ComponentTestBase
             return null; // keep the compiler happy
         }
     }
+    
+    protected Object getComponentManagerFromComponentInstance( Object instance )
+    {
+        Object cc = getFieldValue( instance, "m_componentContext");
+        return getFieldValue( cc, "m_componentManager" );
+    }
 
 
     protected static Field getField( Class<?> type, String fieldName ) throws NoSuchFieldException
