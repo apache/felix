@@ -169,8 +169,10 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         {
             S implementationObject = m_implementationObject;
             m_useCount.set( 0 );
+            m_tmpImplementationObject = implementationObject;
             m_implementationObject = null;
             disposeImplementationObject( implementationObject, m_componentContext, reason );
+            m_implementationObject = null;
             cleanupImplementationObject( implementationObject );
             log( LogService.LOG_DEBUG, "Unset and deconfigured implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
             m_componentContext = null;
