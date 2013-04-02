@@ -40,12 +40,25 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     
     private final EdgeInfo[] edgeInfos;
     
-    private volatile ComponentInstance m_componentInstance;
+    private final ComponentInstance m_componentInstance = new ComponentInstanceImpl(this);
+    
+    private final Bundle m_usingBundle;
+    
+    private final S m_implementationObject;
+    
+    private volatile boolean m_implementationAccessible;
 
-    ComponentContextImpl( AbstractComponentManager<S> componentManager )
+    ComponentContextImpl( AbstractComponentManager<S> componentManager, Bundle usingBundle, S implementationObject )
     {
         m_componentManager = componentManager;
+        m_usingBundle = usingBundle;
+        m_implementationObject = implementationObject;
         edgeInfos = new EdgeInfo[componentManager.getComponentMetadata().getDependencies().size()];
+    }
+    
+    void setImplementationAccessible(boolean implementationAccessible)
+    {
+        this.m_implementationAccessible = implementationAccessible;
     }
     
     EdgeInfo getEdgeInfo(DependencyManager<S, ?> dm)
@@ -105,7 +118,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     public Bundle getUsingBundle()
     {
-        return null;
+        return m_usingBundle;
     }
 
 
@@ -142,20 +155,15 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     
     //---------- ComponentInstance interface support ------------------------------
 
-    Object getImplementationObject()
+    S getImplementationObject( boolean requireAccessible )
     {
-        return getComponentManager().getInstance();
+        if ( !requireAccessible || m_implementationAccessible )
+        {
+            return m_implementationObject;
+        }
+        return null;
     }
     
-    void newComponentInstance()
-    {
-        m_componentInstance = new ComponentInstanceImpl(this);
-    }
-    
-    void clearComponentInstance(){
-        m_componentInstance = null;
-    }
-
     private static class ComponentInstanceImpl implements ComponentInstance
     {
         private final ComponentContextImpl m_componentContext;
@@ -168,7 +176,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
         public Object getInstance()
         {
-            return m_componentContext.getImplementationObject();
+            return m_componentContext.getImplementationObject(true);
         }
 
 

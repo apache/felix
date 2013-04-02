@@ -47,19 +47,11 @@ import org.osgi.service.log.LogService;
 public class ImmediateComponentManager<S> extends AbstractComponentManager<S> implements ServiceFactory<S>
 {
 
-    // The object that implements the service and that is bound to other services
-    private volatile S m_implementationObject;
-
-    // The component implementation object temporarily set to allow
-    // for service updates during activation. This field is only set
-    // to a non-null value while calling the activate method
-    private volatile S m_tmpImplementationObject;
-
     // keep the using bundles as reference "counters" for instance deactivation
     private final AtomicInteger m_useCount = new AtomicInteger( );
 
     // The context that will be passed to the implementationObject
-    private final ComponentContextImpl<S> m_componentContext = new ComponentContextImpl<S>(this);
+    private volatile ComponentContextImpl<S> m_componentContext;
 
     // the component holder responsible for managing this component
     private ComponentHolder m_componentHolder;
@@ -118,26 +110,19 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         {
             throw new IllegalStateException( "need write lock (createComponent)" );
         }
-        if ( m_implementationObject == null )
+        if ( m_componentContext == null )
         {
-            S tmpComponent = createImplementationObject( m_componentContext, new SetImplementationObject<S>()
+            S tmpComponent = createImplementationObject( null, new SetImplementationObject<S>()
             {
-                public void setImplementationObject( S implementationObject )
+                public void presetComponentContext( ComponentContextImpl<S> componentContext )
                 {
-                    m_implementationObject = implementationObject;
-                    m_tmpImplementationObject = null;
-                }
-
-
-                public void presetImplementationObject( S implementationObject )
-                {
-                    m_tmpImplementationObject = implementationObject;
+                    m_componentContext = componentContext;
                 }
 
 
                 public void resetImplementationObject( S implementationObject )
                 {
-                    m_tmpImplementationObject = null;
+                    m_componentContext = null;
                 }
             } );
 
@@ -163,15 +148,12 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         {
             throw new IllegalStateException( "need write lock (deleteComponent)" );
         }
-        if ( m_implementationObject != null )
+        if ( m_componentContext != null )
         {
-            S implementationObject = m_implementationObject;
             m_useCount.set( 0 );
-            m_tmpImplementationObject = implementationObject;
-            m_implementationObject = null;
-            disposeImplementationObject( implementationObject, m_componentContext, reason );
-            m_tmpImplementationObject = null;
-            cleanupImplementationObject( implementationObject );
+            m_componentContext.setImplementationAccessible( false );
+            disposeImplementationObject( m_componentContext, reason );
+            m_componentContext = null;
             log( LogService.LOG_DEBUG, "Unset and deconfigured implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
             m_properties = null;
             m_serviceProperties = null;
@@ -181,7 +163,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     public ComponentInstance getComponentInstance()
     {
-        return m_componentContext.getComponentInstance();
+        return m_componentContext == null? null: m_componentContext.getComponentInstance();
     }
 
 
@@ -194,7 +176,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
      */
     Object getInstance()
     {
-        return m_implementationObject;
+        return m_componentContext == null? null: m_componentContext.getImplementationObject( true );
     }
 
     /**
@@ -212,30 +194,21 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
          * temporarily set the implementation object during the activator
          * call.
          */
-        void presetImplementationObject( S implementationObject );
+        void presetComponentContext( ComponentContextImpl<S> componentContext );
 
 
         /**
          * Resets the implementation object. This method is called after
          * the activator method terminates with an error and is intended to
-         * revert any temporary settings done in the {@link #presetImplementationObject(Object)}
+         * revert any temporary settings done in the {@link #presetComponentContext(ComponentContextImpl)}
          * method.
          */
         void resetImplementationObject( S implementationObject );
 
-
-        /**
-         * Sets the implementation object. This method is called after
-         * the activator methid terminates successfully and is intended to
-         * complete setting the implementation object. Temporary presets done
-         * by the {@link #presetImplementationObject(Object)} should be
-         * removed and the implementation object is now accessible.
-         */
-        void setImplementationObject( S implementationObject );
     }
 
 
-    protected S createImplementationObject( ComponentContextImpl componentContext, SetImplementationObject setter )
+    protected S createImplementationObject( Bundle usingBundle, SetImplementationObject setter )
     {
         final Class<S> implementationObjectClass;
         final S implementationObject;
@@ -260,10 +233,10 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             return null;
         }
         
-        componentContext.newComponentInstance();
+        ComponentContextImpl componentContext = new ComponentContextImpl(this, usingBundle, implementationObject);
 
         // 3. set the implementation object prematurely
-        setter.presetImplementationObject( implementationObject );
+        setter.presetComponentContext( componentContext );
 
         // 4. Bind the target services
 
@@ -285,6 +258,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                     md.close( implementationObject );
                 }
 
+                setter.resetImplementationObject( implementationObject );
                 return null;
             }
         }
@@ -294,9 +268,6 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 componentContext, 1 ), null, this );
         if ( result == null )
         {
-            // make sure the implementation object is not available
-            setter.resetImplementationObject( implementationObject );
-
             // 112.5.8 If the activate method throws an exception, SCR must log an error message
             // containing the exception with the Log Service and activation fails
             for ( DependencyManager md: getReversedDependencyManagers() )
@@ -304,11 +275,14 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 md.close( implementationObject );
             }
 
-            return null;
+            // make sure the implementation object is not available
+            setter.resetImplementationObject( implementationObject );
+
+           return null;
         }
         else
         {
-            setter.setImplementationObject( implementationObject );
+            componentContext.setImplementationAccessible( true );
             setServiceProperties( result );
         }
 
@@ -316,9 +290,10 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     }
 
 
-    protected void disposeImplementationObject( Object implementationObject, ComponentContext componentContext,
+    protected void disposeImplementationObject( ComponentContextImpl<S> componentContext,
             int reason )
     {
+        S implementationObject = componentContext.getImplementationObject( false );
 
         // 1. Call the deactivate method, if present
         // don't care for the result, the error (acccording to 112.5.12 If the deactivate
@@ -339,12 +314,6 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     }
 
-    protected void cleanupImplementationObject( Object implementationObject )
-    {
-        m_componentContext.clearEdgeInfos();
-        m_componentContext.clearComponentInstance();
-    }
-
     State getSatisfiedState()
     {
         return Registered.getInstance();
@@ -362,20 +331,32 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
-        final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
-        dependencyManager.invokeBindMethod( impl, refPair, trackingCount );
+        ComponentContextImpl<S> componentContext = m_componentContext;
+        if ( componentContext != null )
+        {
+            final S impl = componentContext.getImplementationObject( false );
+            dependencyManager.invokeBindMethod( impl, refPair, trackingCount );
+        }
     }
 
     <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
-        final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
-        dependencyManager.invokeUpdatedMethod( impl, refPair, trackingCount );
+        ComponentContextImpl<S> componentContext = m_componentContext;
+        if ( componentContext != null )
+        {
+            final S impl = componentContext.getImplementationObject( false );
+            dependencyManager.invokeUpdatedMethod( impl, refPair, trackingCount );
+        }
     }
 
     <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount )
     {
-        final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
-        dependencyManager.invokeUnbindMethod( impl, oldRefPair, trackingCount );
+        ComponentContextImpl<S> componentContext = m_componentContext;
+        if ( componentContext != null )
+        {
+            final S impl = componentContext.getImplementationObject( false );
+            dependencyManager.invokeUnbindMethod( impl, oldRefPair, trackingCount );
+        }
     }
 
     protected void setFactoryProperties( Dictionary<String, Object> dictionary )
@@ -678,12 +659,6 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             return modifiedMethod.invoke( getInstance(), new ActivatorParameter( m_componentContext, -1 ),
                     MethodResult.VOID, this );
         }
-        else if ( m_tmpImplementationObject != null)
-        {
-            return modifiedMethod.invoke( m_tmpImplementationObject, new ActivatorParameter( m_componentContext, -1 ),
-                    MethodResult.VOID, this );
-            
-        }
         return MethodResult.VOID;
     }
 
@@ -715,8 +690,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
-            Object implementationObject = m_implementationObject;
-            if ( implementationObject == null )
+            ComponentContextImpl<S> componentContext = m_componentContext;
+            if ( componentContext == null )
             {
                 try
                 {
@@ -748,7 +723,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 obtainWriteLock( "ImmediateComponentManager.getService.1" );
                 try
                 {
-                    if ( m_implementationObject == null )
+                    if ( m_componentContext == null )
                     {
                         //state should be "Registered"
                         S result = (S) state().getService( this );
@@ -758,7 +733,6 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                         }
                         return result;
                     }
-                    implementationObject = m_implementationObject;
                 }
                 finally
                 {
@@ -766,7 +740,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 }
             }
             m_useCount.incrementAndGet();
-            return (S) implementationObject;
+            return m_componentContext.getImplementationObject( true );
     }
 
     public void ungetService( Bundle bundle, ServiceRegistration<S> serviceRegistration, S o )
