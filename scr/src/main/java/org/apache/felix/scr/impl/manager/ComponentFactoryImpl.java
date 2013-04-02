@@ -278,7 +278,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         return true;
     }
 
-    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> ref, int trackingCount )
+    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> ref, int trackingCount )
     {
     }
 

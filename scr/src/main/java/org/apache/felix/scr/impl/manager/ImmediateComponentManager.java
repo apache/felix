@@ -360,7 +360,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         return Active.getInstance();
     }
 
-    <T> void update( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
+    <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         final S impl = ( m_tmpImplementationObject != null ) ? m_tmpImplementationObject : m_implementationObject;
         dependencyManager.invokeUpdatedMethod( impl, refPair, trackingCount );
