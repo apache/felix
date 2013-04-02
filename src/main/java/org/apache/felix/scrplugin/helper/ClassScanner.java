@@ -215,6 +215,8 @@ public class ClassScanner {
                 log.debug("Found descriptions " + desc + " in " + annotatedClass.getName());
                 return desc;
             }
+        } catch (final IllegalArgumentException ioe) {
+            throw new SCRDescriptorException("Unable to scan class files: " + annotatedClass.getName() + " (Class file format probably not supported by ASM ?)", location, ioe);
         } catch (final IOException ioe) {
             throw new SCRDescriptorException("Unable to scan class files: " + annotatedClass.getName(), location, ioe);
         }
