@@ -35,28 +35,28 @@ import org.osgi.framework.ServiceReference;
  * a <code>Map</code> whose modificaiton methods (like {@link #put(Object, Object)},
  * {@link #remove(Object)}, etc.) have no effect.
  */
-public class ReadOnlyDictionary extends Dictionary implements Map
+public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S, T>
 {
 
-    private final Hashtable m_delegatee;
+    private final Hashtable<S, T> m_delegatee;
 
 
     /**
      * Creates a wrapper for the given delegatee dictionary providing read
      * only access to the data.
      */
-    public ReadOnlyDictionary( final Dictionary delegatee )
+    public ReadOnlyDictionary( final Dictionary<S, T> delegatee )
     {
         if ( delegatee instanceof Hashtable )
         {
-            this.m_delegatee = ( Hashtable ) delegatee;
+            this.m_delegatee = ( Hashtable<S, T> ) delegatee;
         }
         else
         {
-            this.m_delegatee = new Hashtable();
-            for ( Enumeration ke = delegatee.elements(); ke.hasMoreElements(); )
+            this.m_delegatee = new Hashtable<S, T>();
+            for ( Enumeration<S> ke = delegatee.keys(); ke.hasMoreElements(); )
             {
-                Object key = ke.nextElement();
+                S key = ke.nextElement();
                 this.m_delegatee.put( key, delegatee.get( key ) );
             }
         }
@@ -85,13 +85,12 @@ public class ReadOnlyDictionary extends Dictionary implements Map
 
     //---------- Dictionary API
 
-    public Enumeration elements()
+    public Enumeration<T> elements()
     {
         return m_delegatee.elements();
     }
 
-
-    public Object get( final Object key )
+    public T get( final Object key )
     {
         return m_delegatee.get( key );
     }
@@ -103,7 +102,7 @@ public class ReadOnlyDictionary extends Dictionary implements Map
     }
 
 
-    public Enumeration keys()
+    public Enumeration<S> keys()
     {
         return m_delegatee.keys();
     }
@@ -113,7 +112,7 @@ public class ReadOnlyDictionary extends Dictionary implements Map
      * This method has no effect and always returns <code>null</code> as this
      * instance is read-only and cannot modify and properties.
      */
-    public Object put( final Object key, final Object value )
+    public T put( final S key, final T value )
     {
         return null;
     }
@@ -123,7 +122,7 @@ public class ReadOnlyDictionary extends Dictionary implements Map
      * This method has no effect and always returns <code>null</code> as this
      * instance is read-only and cannot modify and properties.
      */
-    public Object remove( final Object key )
+    public T remove( final Object key )
     {
         return null;
     }

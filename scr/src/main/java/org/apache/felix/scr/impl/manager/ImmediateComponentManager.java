@@ -59,7 +59,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     private final AtomicInteger m_useCount = new AtomicInteger( );
 
     // The context that will be passed to the implementationObject
-    private final ComponentContextImpl m_componentContext = new ComponentContextImpl(this);
+    private final ComponentContextImpl<S> m_componentContext = new ComponentContextImpl<S>(this);
 
     // the component holder responsible for managing this component
     private ComponentHolder m_componentHolder;

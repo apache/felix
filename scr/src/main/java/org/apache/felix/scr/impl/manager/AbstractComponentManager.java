@@ -87,7 +87,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     private final ComponentMethods m_componentMethods;
 
     // The dependency managers that manage every dependency
-    private final List<DependencyManager> m_dependencyManagers;
+    private final List<DependencyManager<S, ?>> m_dependencyManagers;
 
     private volatile boolean m_dependencyManagersInitialized;
 
@@ -669,9 +669,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     }
 
 
-    final ServiceReference getServiceReference()
+    final ServiceReference<S> getServiceReference()
     {
-        ServiceRegistration reg = getServiceRegistration();
+        ServiceRegistration<S> reg = getServiceRegistration();
         if (reg != null)
         {
             return reg.getReference();
@@ -961,9 +961,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     }
 
 
-    private List<DependencyManager> loadDependencyManagers( ComponentMetadata metadata )
+    private List<DependencyManager<S, ?>> loadDependencyManagers( ComponentMetadata metadata )
     {
-        List<DependencyManager> depMgrList = new ArrayList<DependencyManager>(metadata.getDependencies().size());
+        List<DependencyManager<S, ?>> depMgrList = new ArrayList<DependencyManager<S, ?>>(metadata.getDependencies().size());
 
         // If this component has got dependencies, create dependency managers for each one of them.
         if ( metadata.getDependencies().size() != 0 )
@@ -971,7 +971,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             int index = 0;
             for ( ReferenceMetadata currentdependency: metadata.getDependencies() )
             {
-                DependencyManager depmanager = new DependencyManager( this, currentdependency, index++ );
+                DependencyManager<S, ?> depmanager = new DependencyManager( this, currentdependency, index++ );
 
                 depMgrList.add( depmanager );
             }
@@ -1040,7 +1040,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      * Returns an iterator over the {@link DependencyManager} objects
      * representing the declared references in declaration order
      */
-    List<DependencyManager> getDependencyManagers()
+    List<DependencyManager<S, ?>> getDependencyManagers()
     {
         return m_dependencyManagers;
     }
@@ -1049,17 +1049,17 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      * Returns an iterator over the {@link DependencyManager} objects
      * representing the declared references in reversed declaration order
      */
-    List<DependencyManager> getReversedDependencyManagers()
+    List<DependencyManager<S, ?>> getReversedDependencyManagers()
     {
-        List list = new ArrayList( m_dependencyManagers );
+        List<DependencyManager<S, ?>> list = new ArrayList<DependencyManager<S, ?>>( m_dependencyManagers );
         Collections.reverse( list );
         return list;
     }
 
 
-    DependencyManager getDependencyManager(String name)
+    DependencyManager<S, ?> getDependencyManager(String name)
     {
-        for ( DependencyManager dm: getDependencyManagers() )
+        for ( DependencyManager<S, ?> dm: getDependencyManagers() )
         {
             if ( name.equals(dm.getName()) )
             {

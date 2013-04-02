@@ -34,21 +34,21 @@ import org.osgi.service.component.ComponentInstance;
  * Implementation for the ComponentContext interface
  *
  */
-public class ComponentContextImpl implements ExtComponentContext {
+public class ComponentContextImpl<S> implements ExtComponentContext {
 
-    private final AbstractComponentManager m_componentManager;
+    private final AbstractComponentManager<S> m_componentManager;
     
     private final EdgeInfo[] edgeInfos;
     
     private volatile ComponentInstance m_componentInstance;
 
-    ComponentContextImpl( AbstractComponentManager componentManager )
+    ComponentContextImpl( AbstractComponentManager<S> componentManager )
     {
         m_componentManager = componentManager;
         edgeInfos = new EdgeInfo[componentManager.getComponentMetadata().getDependencies().size()];
     }
     
-    EdgeInfo getEdgeInfo(DependencyManager dm)
+    EdgeInfo getEdgeInfo(DependencyManager<S, ?> dm)
     {
         int index = dm.getIndex();
         if (edgeInfos[index] == null)
@@ -63,29 +63,29 @@ public class ComponentContextImpl implements ExtComponentContext {
         Arrays.fill( edgeInfos, null );
     }
 
-    protected AbstractComponentManager getComponentManager()
+    protected AbstractComponentManager<S> getComponentManager()
     {
         return m_componentManager;
     }
 
-    public final Dictionary getProperties()
+    public final Dictionary<String, Object> getProperties()
     {
         // 112.12.3.5 The Dictionary is read-only and cannot be modified
-        Dictionary ctxProperties = m_componentManager.getProperties();
-        return new ReadOnlyDictionary( ctxProperties );
+        Dictionary<String, Object> ctxProperties = m_componentManager.getProperties();
+        return new ReadOnlyDictionary<String, Object>( ctxProperties );
     }
 
 
     public Object locateService( String name )
     {
-        DependencyManager dm = m_componentManager.getDependencyManager( name );
+        DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
         return ( dm != null ) ? dm.getService() : null;
     }
 
 
     public Object locateService( String name, ServiceReference ref )
     {
-        DependencyManager dm = m_componentManager.getDependencyManager( name );
+        DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
         return ( dm != null ) ? dm.getService( ref ) : null;
     }
 
@@ -127,7 +127,7 @@ public class ComponentContextImpl implements ExtComponentContext {
     }
 
 
-    public ServiceReference getServiceReference()
+    public ServiceReference<S> getServiceReference()
     {
         return m_componentManager.getServiceReference();
     }
