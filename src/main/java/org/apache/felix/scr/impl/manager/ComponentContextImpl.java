@@ -34,12 +34,13 @@ import org.osgi.service.component.ComponentInstance;
  * Implementation for the ComponentContext interface
  *
  */
-public class ComponentContextImpl implements ExtComponentContext, ComponentInstance {
+public class ComponentContextImpl implements ExtComponentContext {
 
     private final AbstractComponentManager m_componentManager;
     
     private final EdgeInfo[] edgeInfos;
-
+    
+    private volatile ComponentInstance m_componentInstance;
 
     ComponentContextImpl( AbstractComponentManager componentManager )
     {
@@ -110,7 +111,7 @@ public class ComponentContextImpl implements ExtComponentContext, ComponentInsta
 
     public ComponentInstance getComponentInstance()
     {
-        return this;
+        return m_componentInstance;
     }
 
 
@@ -132,24 +133,49 @@ public class ComponentContextImpl implements ExtComponentContext, ComponentInsta
     }
 
 
-    //---------- ComponentInstance interface ------------------------------
-
-    public Object getInstance()
-    {
-        return getComponentManager().getInstance();
-    }
-
-
-    public void dispose()
-    {
-        getComponentManager().dispose();
-    }
-
     //---------- Speculative MutableProperties interface ------------------------------
 
     public void setServiceProperties(Dictionary properties)
     {
         getComponentManager().setServiceProperties(properties );
     }
+    
+    //---------- ComponentInstance interface support ------------------------------
 
+    Object getImplementationObject()
+    {
+        return getComponentManager().getInstance();
+    }
+    
+    void newComponentInstance()
+    {
+        m_componentInstance = new ComponentInstanceImpl(this);
+    }
+    
+    void clearComponentInstance(){
+        m_componentInstance = null;
+    }
+
+    private static class ComponentInstanceImpl implements ComponentInstance
+    {
+        private final ComponentContextImpl m_componentContext;
+
+        private ComponentInstanceImpl(ComponentContextImpl m_componentContext)
+        {
+            this.m_componentContext = m_componentContext;
+        }
+
+
+        public Object getInstance()
+        {
+            return m_componentContext.getImplementationObject();
+        }
+
+
+        public void dispose()
+        {
+            m_componentContext.getComponentManager().dispose();
+        }
+
+    }
 }

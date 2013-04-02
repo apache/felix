@@ -59,7 +59,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     private final AtomicInteger m_useCount = new AtomicInteger( );
 
     // The context that will be passed to the implementationObject
-    private ComponentContextImpl m_componentContext;
+    private final ComponentContextImpl m_componentContext = new ComponentContextImpl(this);
 
     // the component holder responsible for managing this component
     private ComponentHolder m_componentHolder;
@@ -120,9 +120,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         }
         if ( m_implementationObject == null )
         {
-            final ComponentContextImpl tmpContext = new ComponentContextImpl( this );
-            m_componentContext = tmpContext;
-            S tmpComponent = createImplementationObject( tmpContext, new SetImplementationObject<S>()
+            S tmpComponent = createImplementationObject( m_componentContext, new SetImplementationObject<S>()
             {
                 public void setImplementationObject( S implementationObject )
                 {
@@ -175,7 +173,6 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             m_tmpImplementationObject = null;
             cleanupImplementationObject( implementationObject );
             log( LogService.LOG_DEBUG, "Unset and deconfigured implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
-            m_componentContext = null;
             m_properties = null;
             m_serviceProperties = null;
         }
@@ -184,7 +181,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     public ComponentInstance getComponentInstance()
     {
-        return m_componentContext;
+        return m_componentContext.getComponentInstance();
     }
 
 
@@ -238,7 +235,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     }
 
 
-    protected S createImplementationObject( ComponentContext componentContext, SetImplementationObject setter )
+    protected S createImplementationObject( ComponentContextImpl componentContext, SetImplementationObject setter )
     {
         final Class<S> implementationObjectClass;
         final S implementationObject;
@@ -262,6 +259,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             log( LogService.LOG_ERROR, "Error during instantiation of the implementation object", t );
             return null;
         }
+        
+        componentContext.newComponentInstance();
 
         // 3. set the implementation object prematurely
         setter.presetImplementationObject( implementationObject );
@@ -343,6 +342,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     protected void cleanupImplementationObject( Object implementationObject )
     {
         m_componentContext.clearEdgeInfos();
+        m_componentContext.clearComponentInstance();
     }
 
     State getSatisfiedState()
