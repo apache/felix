@@ -540,7 +540,13 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
     {
         UPnPDevice device = (UPnPDevice) bc.getService(ref);
 
-        UPnPIcon[] _icons = device == null ? null : device.getIcons(null);
+        UPnPIcon[] _icons = null;
+        try // Fix for FELIX-4012
+        {
+            _icons = device == null ? null : device.getIcons(null);
+        } catch(IllegalStateException e) { // since OSGi r4.3
+            device = null; // don't track that device, it has been removed
+        }
         if (_icons != null && _icons.length > 0)
         {
             icons.put(ref.getProperty(UPnPDevice.UDN), _icons[0]);
