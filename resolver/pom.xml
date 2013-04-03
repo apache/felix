@@ -49,22 +49,6 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>buildnumber-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>create</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <doCheck>false</doCheck>
-          <doUpdate>true</doUpdate>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <version>2.3.7</version>
@@ -73,7 +57,6 @@
           <instructions>
             <_sources>true</_sources>
             <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
-            <Bundle-Version>0.1.0.r${buildNumber}</Bundle-Version>
             <Bundle-Activator>
               org.apache.felix.resolver.Activator
             </Bundle-Activator>
@@ -104,6 +87,7 @@
           </includes>
           <excludes>
             <exclude>src/**/packageinfo</exclude>
+            <exclude>src/main/appended-resources/**</exclude>
           </excludes>
         </configuration>
       </plugin>
