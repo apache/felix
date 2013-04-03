@@ -106,7 +106,7 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
                 controller.removedService(reference, service);
         }
 
-        if (tracker.size() <= 1 && plugin != null)
+        if (tracker.size() == 0 && plugin != null)
         {
             plugin.unregister();
             this.plugin = null;
