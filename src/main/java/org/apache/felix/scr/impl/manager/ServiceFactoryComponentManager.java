@@ -184,7 +184,6 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
 
         disposeImplementationObject( serviceContext, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
         serviceContexts.remove( service );
-        cleanupImplementationObject( service );
         // if this was the last use of the component, go back to REGISTERED state
         if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
         {
@@ -196,11 +195,6 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
     EdgeInfo getEdgeInfo( S implObject, DependencyManager<S, ?> dependencyManager) 
     {
         return serviceContexts.get( implObject ).getEdgeInfo( dependencyManager );
-    }
-
-    protected void cleanupImplementationObject( Object implementationObject )
-    {
-        serviceContexts.get( implementationObject ).clearEdgeInfos();
     }
 
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
