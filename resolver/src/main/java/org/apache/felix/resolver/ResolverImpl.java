@@ -2007,8 +2007,20 @@ public class ResolverImpl implements Resolver
                         allCandidates,
                         blame.m_reqs.get(i));
                     sb.append(export.getNamespace());
-                    sb.append("=");
-                    sb.append(export.getAttributes().get(export.getNamespace()).toString());
+                    sb.append(": ");
+                    Object namespaceVal = export.getAttributes().get(export.getNamespace());
+                    if (namespaceVal != null)
+                    {
+                        sb.append(namespaceVal.toString());
+                    }
+                    else
+                    {
+                        for (Entry<String, Object> attrEntry : export.getAttributes().entrySet())
+                        {
+                            sb.append(attrEntry.getKey()).append('=')
+                                .append(attrEntry.getValue()).append(';');
+                        }
+                    }
                     if (export.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE)
                         && !export.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE)
                         .equals(blame.m_cap.getAttributes().get(
