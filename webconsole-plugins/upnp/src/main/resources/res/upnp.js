@@ -219,8 +219,24 @@ function actionSelected(udn, urn, action) {
 			var _tr = actionsTableRow.clone().appendTo(actionsTableBody);
 			_tr.find('td:eq(0)').text(_arg.name);
 			_tr.find('td:eq(1)').text(_arg.type);
-			var _el = _tr.find('input').attr('id', 'arg'+i);
-			_arg['element'] = _el;
+			var _el = false;
+			if (_arg.allowed) {
+				var selectData = '<select class="ui-state-default">';
+				for(var s in _arg.allowed) selectData += '<option>' + _arg.allowed[s] + '</option>';
+				_el = $(selectData + '</select>').appendTo( _tr.find('td:eq(2)').empty() );
+			} else {
+				_el = _tr.find('input');
+			}
+			_arg['element'] = _el.attr('id', 'arg'+i);
+			var infoData = false;
+			if (_arg.min || _arg.max || _arg.step) {
+				infoData = '<div class="info">';
+				if (_arg.min || _arg.max) infoData += '[' + _arg.min + ', ' + _arg.max + ']';
+				if (_arg.step) infoData += '/' + _arg.step;
+				infoData += '</div>';
+			}
+			if (infoData) _el.after(infoData);
+			if (_arg['default']) _el.val(_arg['default']);
 		}
 		actionsTable.removeClass('ui-helper-hidden');
 	} else {
