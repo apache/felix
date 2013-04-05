@@ -37,3 +37,6 @@ img.icon { /* force image size */
 	margin: 0;
 	padding: 0;
 }
+div.info {
+	font-size: 75%;
+}

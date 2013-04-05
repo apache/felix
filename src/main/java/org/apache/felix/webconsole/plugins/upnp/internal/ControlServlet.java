@@ -321,16 +321,8 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
             if (value == null)
                 value = "---"; //$NON-NLS-1$
 
-            json.append("variables", new JSONObject() // //$NON-NLS-1$
-            .put("name", vars[i].getName()) // //$NON-NLS-1$
-            .put("value", value) // //$NON-NLS-1$
-            .put("defalt", vars[i].getDefaultValue()) // //$NON-NLS-1$
-            .put("min", vars[i].getMinimum()) // //$NON-NLS-1$
-            .put("max", vars[i].getMaximum()) // //$NON-NLS-1$
-            .put("step", vars[i].getStep()) // //$NON-NLS-1$
-            .put("allowed", vars[i].getAllowedValues()) // //$NON-NLS-1$
-            .put("sendsEvents", vars[i].sendsEvents()) // //$NON-NLS-1$
-            );
+            json.append("variables", variableToJSON(vars[i], vars[i].getName()) //$NON-NLS-1$
+                .put("value", value));// //$NON-NLS-1$
         }
 
         // add actions
@@ -342,6 +334,20 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
 
         return json;
     }
+    
+    private static final JSONObject variableToJSON(final UPnPStateVariable var, final String name)
+        throws JSONException
+    {
+        return new JSONObject()//
+        .put("name", name) // //$NON-NLS-1$
+        .put("default", var.getDefaultValue()) // //$NON-NLS-1$
+        .put("min", var.getMinimum()) //$NON-NLS-1$
+        .put("max", var.getMaximum()) //$NON-NLS-1$
+        .put("step", var.getStep()) //$NON-NLS-1$
+        .put("allowed", var.getAllowedValues()) //$NON-NLS-1$
+        .put("sendsEvents", var.sendsEvents()) //$NON-NLS-1$
+        .put("type", var.getUPnPDataType()); //$NON-NLS-1$
+    }
 
     private static final JSONObject actionToJSON(UPnPAction action) throws JSONException
     {
@@ -351,9 +357,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         for (int i = 0; names != null && i < names.length; i++)
         {
             UPnPStateVariable variable = action.getStateVariable(names[i]);
-            json.append("inVars", new JSONObject()// //$NON-NLS-1$
-            .put("name", names[i])// //$NON-NLS-1$
-            .put("type", variable.getUPnPDataType())); //$NON-NLS-1$
+            json.append("inVars", variableToJSON(variable, names[i]));  //$NON-NLS-1$
         }
 
         return json;
