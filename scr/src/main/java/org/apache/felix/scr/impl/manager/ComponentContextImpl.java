@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Dictionary;
 
 import org.apache.felix.scr.component.ExtComponentContext;
+import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -112,7 +113,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     public BundleContext getBundleContext()
     {
-        return m_componentManager.getActivator().getBundleContext();
+        return m_componentManager.getBundleContext();
     }
 
 
@@ -130,13 +131,21 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     public void enableComponent( String name )
     {
-        m_componentManager.getActivator().enableComponent( name );
+        BundleComponentActivator activator = m_componentManager.getActivator();
+        if ( activator != null )
+        {
+            activator.enableComponent( name );
+        }
     }
 
 
     public void disableComponent( String name )
     {
-        m_componentManager.getActivator().disableComponent( name );
+        BundleComponentActivator activator = m_componentManager.getActivator();
+        if ( activator != null )
+        {
+            activator.disableComponent( name );
+        }
     }
 
 

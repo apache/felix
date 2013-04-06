@@ -136,7 +136,11 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             log( LogService.LOG_DEBUG, "Set implementation object for component {0}", new Object[] { getName() },  null );
 
             //notify that component was successfully created so any optional circular dependencies can be retried
-            getActivator().missingServicePresent( getServiceReference() );
+            BundleComponentActivator activator = getActivator();
+            if ( activator != null )
+            {
+                activator.missingServicePresent( getServiceReference() );
+            }
         }
         return true;
     }
@@ -216,10 +220,16 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         // 1. Load the component implementation class
         // 2. Create the component instance and component context
         // If the component is not immediate, this is not done at this moment
+        Bundle bundle = getBundle();
+        if (bundle == null)
+        {
+            log( LogService.LOG_WARNING, "Bundle shut down during instantiation of the implementation object", null);
+            return null;
+        }
         try
         {
             // 112.4.4 The class is retrieved with the loadClass method of the component's bundle
-            implementationObjectClass = (Class<S>) getActivator().getBundleContext().getBundle().loadClass(
+            implementationObjectClass = (Class<S>) bundle.loadClass(
                     getComponentMetadata().getImplementationClassName() )  ;
 
             // 112.4.4 The class must be public and have a public constructor without arguments so component instances
@@ -754,7 +764,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             // unget the service instance if no bundle is using it
             // any longer unless delayed component instances have to
             // be kept (FELIX-3039)
-            if ( useCount == 0 && !isImmediate() && !getActivator().getConfiguration().keepInstances() )
+            if ( useCount == 0 && !isImmediate() && !keepInstances() )
             {
                 obtainWriteLock( "ImmediateComponentManager.ungetService.1" );
                 try
@@ -771,6 +781,11 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 }
             }
         }
+    }
+
+    private boolean keepInstances()
+    {
+        return getActivator() != null && getActivator().getConfiguration().keepInstances();
     }
 
     public long getChangeCount()
