@@ -66,6 +66,8 @@ public class ScrConfiguration
     
     public static final String PROP_LOCK_TIMEOUT = "ds.lock.timeout.milliseconds";
     
+    public static final long DEFAULT_LOCK_TIMEOUT_MILLISECONDS = 5000;
+    
     public static final String PROP_LOGLEVEL = "ds.loglevel";
 
     private static final String LOG_LEVEL_DEBUG = "debug";
@@ -88,7 +90,7 @@ public class ScrConfiguration
     
     private boolean infoAsService;
     
-    private long lockTimeout = 5000;//milliseconds
+    private long lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
 
     private BundleContext bundleContext;
 
@@ -143,7 +145,7 @@ public class ScrConfiguration
                 factoryEnabled = false;
                 keepInstances = false;
                 infoAsService = false;
-                lockTimeout = 5000;
+                lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
             }
             else
             {
@@ -161,7 +163,7 @@ public class ScrConfiguration
             keepInstances = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_DELAYED_KEEP_INSTANCES ) ) );
             infoAsService = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_INFO_SERVICE) ) );
             Long timeout = ( Long ) config.get( PROP_LOCK_TIMEOUT );
-            lockTimeout = timeout == null? 5000: timeout;
+            lockTimeout = timeout == null? DEFAULT_LOCK_TIMEOUT_MILLISECONDS: timeout;
         }
         if ( scrCommand != null )
         {
@@ -227,7 +229,7 @@ public class ScrConfiguration
         String val = bundleContext.getProperty( PROP_LOCK_TIMEOUT);
         if ( val == null)
         {
-            return 5000;
+            return DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
         }
         return Long.parseLong( val );
     }
