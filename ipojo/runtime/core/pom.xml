@@ -127,7 +127,11 @@
                             org.apache.felix.ipojo.handlers.lifecycle.callback,
                             org.apache.felix.ipojo.handlers.lifecycle.controller,
                             org.apache.felix.ipojo.extender.internal*,
-                            org.objectweb.asm;-split-package:=merge-last
+                            org.objectweb.asm;-split-package:=merge-last,
+                            org.apache.felix.ipojo.metadata,
+                            <!-- Compendium packages -->
+                            org.osgi.service.cm,
+                            org.osgi.service.log
                         </Private-Package>
                         <Export-Package>
                             org.apache.felix.ipojo; version="${ipojo.package.version}",
