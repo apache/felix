@@ -21,7 +21,7 @@
 	xmlns="org.apache.felix.ipojo.composite"
 	xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ipojo="org.apache.felix.ipojo">
 
-	<xs:import namespace="org.apache.felix.ipojo" schemaLocation="http://people.apache.org/~clement/ipojo/schemas/core.xsd"></xs:import>
+	<xs:import namespace="org.apache.felix.ipojo" schemaLocation="http://felix.apache.org/ipojo/schemas/SNAPSHOT/core.xsd"></xs:import>
 	<xs:complexType name="CompositeType">
 		<xs:choice minOccurs="0" maxOccurs="unbounded">
 			<xs:element ref="subservice" minOccurs="0"
