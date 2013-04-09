@@ -17,8 +17,8 @@
   under the License.
 -->
 <ipojo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="org.apache.felix.ipojo http://people.apache.org/~clement/ipojo/schemas/core.xsd 
-      org.apache.felix.ipojo.extender http://people.apache.org/~clement/ipojo/schemas/extender-pattern.xsd"
+  xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/CURRENT/core.xsd
+      org.apache.felix.ipojo.extender http://felix.apache.org/ipojo/schemas/CURRENT/extender-pattern.xsd"
   xmlns="org.apache.felix.ipojo"
   xmlns:extender="org.apache.felix.ipojo.extender">
   <component

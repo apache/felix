@@ -18,7 +18,7 @@
   -->
 
 <ipojo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="org.apache.felix.ipojo http://people.apache.org/~clement/ipojo/SCHEMA-DEV/core.xsd"
+	xsi:schemaLocation="org.apache.felix.ipojo http://felix.apache.org/ipojo/schemas/SNAPSHOT/"
 	xmlns="org.apache.felix.ipojo">
 	<component classname="org.apache.felix.ipojo.core.tests.components.MyComponent" version="1.1">
 		<provides/>
