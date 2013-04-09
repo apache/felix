@@ -396,7 +396,7 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
                                 newValues[i] = Array.get(value, i).toString();
                             }
                             prop.setMultiValue(newValues);
-                            prop.setType(PropertyType.from(Array.get(value, 0).getClass()));
+                            prop.setType(PropertyType.from(fieldAnnotation.getAnnotatedField().getType().getComponentType()));
                         } else {
                             prop.setType(PropertyType.from(value.getClass()));
                             prop.setValue(value.toString());
