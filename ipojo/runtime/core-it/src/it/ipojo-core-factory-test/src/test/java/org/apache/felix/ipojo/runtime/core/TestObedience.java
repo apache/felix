@@ -95,7 +95,7 @@ public class TestObedience extends Common {
         assertNotNull("Check factory availability -2", cf);
         assertEquals("Check factory state -2", Factory.INVALID, cf.getState());
 
-        // Check the instance disparition
+        // Check the instance disappearance
         ref_arch = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "SimpleInstance");
         assertNull("Check Architecture availability -1", ref_arch);
 
