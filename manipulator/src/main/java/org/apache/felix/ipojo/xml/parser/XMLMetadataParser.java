@@ -229,7 +229,7 @@ public class XMLMetadataParser implements ContentHandler, ErrorHandler {
      * @return : the removed element.
      */
     private Element removeLastElement() {
-        int idx = -1;
+        int idx;
         idx = m_elements.length - 1;
         Element last = m_elements[idx];
         if (idx >= 0) {
@@ -256,7 +256,7 @@ public class XMLMetadataParser implements ContentHandler, ErrorHandler {
      * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
      */
     public void error(SAXParseException saxparseexception) throws SAXException {
-        if (saxparseexception.getMessage().indexOf("cvc-elt.1") != -1) {
+        if (saxparseexception.getMessage().contains("cvc-elt.1")) {
             return; // Do not throw an exception when no schema defined.
         }
         throw saxparseexception;
@@ -273,6 +273,7 @@ public class XMLMetadataParser implements ContentHandler, ErrorHandler {
     public void fatalError(SAXParseException saxparseexception)
         throws SAXException {
         //TODO use reporter
+
         System.err.println("Fatal error during XML-Schema parsing : " + saxparseexception);
         throw saxparseexception;
     }
