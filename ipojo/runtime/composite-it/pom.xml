@@ -76,6 +76,9 @@
                     <excludes>
                         <exclude>src/main/appended-resources/**</exclude>
                         <exclude>**/*.iml</exclude> <!-- Exclude iml files -->
+                        <!-- Exclude target folders that may have been created during
+                         the integration-tests -->
+                        <exclude>src/it/**/target/**/*</exclude> 
                     </excludes>
                 </configuration>
             </plugin>

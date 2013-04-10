@@ -80,9 +80,9 @@
                             org.apache.felix.ipojo.metadata,
                             org.apache.felix.ipojo.parser,
                             org.apache.felix.ipojo.util,
-                            org.apache.felix.ipojo.manipulation,
                             org.osgi.framework;version=1.3,
                             !org.objectweb.asm.tree,
+                            *
                         </Import-Package>
                         <Private-Package>
                             org.apache.felix.ipojo.composite.architecture,
@@ -92,7 +92,8 @@
                             <!-- ASM (Manipulator dependencies) -->
                             org.objectweb.asm.commons,
                             org.objectweb.asm.signature,
-                            org.objectweb.asm
+                            org.objectweb.asm,
+                            org.apache.felix.ipojo.manipulation*
                         </Private-Package>
                         <Export-Package>
                             org.apache.felix.ipojo.composite; version="${ipojo.package.version}"
