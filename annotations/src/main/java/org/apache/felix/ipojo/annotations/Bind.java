@@ -77,4 +77,11 @@ public @interface Bind {
      */
     String from() default "";
 
+    /**
+     * Set to true if the service dependency is injected
+     * as a proxy.
+     * Default: true
+     */
+    boolean proxy() default true;
+
 }
