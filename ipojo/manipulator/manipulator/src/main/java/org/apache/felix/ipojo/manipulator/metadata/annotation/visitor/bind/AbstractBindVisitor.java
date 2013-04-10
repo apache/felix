@@ -73,6 +73,11 @@ public abstract class AbstractBindVisitor extends EmptyVisitor implements Annota
     protected String m_from;
 
     /**
+     * proxy attribute.
+     */
+    protected String m_proxy;
+
+    /**
      * Visit annotation's attributes.
      *
      * @param name : annotation name
@@ -111,6 +116,9 @@ public abstract class AbstractBindVisitor extends EmptyVisitor implements Annota
         }
         if (name.equals("from")) {
             m_from = value.toString();
+        }
+        if (name.equals("proxy")) {
+            m_proxy = value.toString();
         }
 
     }
@@ -154,6 +162,9 @@ public abstract class AbstractBindVisitor extends EmptyVisitor implements Annota
             return false;
 
         if (!completeAttribute(requires, "from", m_from))
+            return false;
+
+        if(!completeAttribute(requires, "proxy", m_proxy))
             return false;
 
         return true;
@@ -202,6 +213,9 @@ public abstract class AbstractBindVisitor extends EmptyVisitor implements Annota
         }
         if (m_from != null) {
             requires.addAttribute(new Attribute("from", m_from));
+        }
+        if (m_proxy != null) {
+            requires.addAttribute(new Attribute("proxy", m_proxy));
         }
         return requires;
     }
