@@ -20,6 +20,8 @@
 package org.apache.felix.ipojo.test.online;
 
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.architecture.InstanceDescription;
@@ -36,10 +38,13 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.*;
+import org.osgi.service.url.URLStreamHandlerService;
 import org.ow2.chameleon.testing.helpers.OSGiHelper;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -52,7 +57,7 @@ import static org.ops4j.pax.exam.MavenUtils.asInProject;
 
 
 @RunWith(PaxExam.class)
-@ExamReactorStrategy(PerMethod.class)
+@ExamReactorStrategy(PerClass.class)
 public class OnlineManipulatorTest {
 
 
@@ -66,6 +71,9 @@ public class OnlineManipulatorTest {
 
     @Configuration
     public Option[] configure() throws IOException {
+        Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.INFO);
+
         String providerWithMetadata = providerWithMetadata();
         String providerWithMetadataInMetaInf = providerWithMetadataInMetaInf();
         String providerWithoutMetadata = providerWithoutMetadata();
@@ -91,7 +99,9 @@ public class OnlineManipulatorTest {
                 systemProperty("providerWithMetadataInMetaInf").value(providerWithMetadataInMetaInf),
                 systemProperty("providerWithoutMetadata").value(providerWithoutMetadata),
                 systemProperty("consumerWithMetadata").value(consumerWithMetadata),
-                systemProperty("consumerWithoutMetadata").value(consumerWithoutMetadata)
+                systemProperty("consumerWithoutMetadata").value(consumerWithoutMetadata),
+
+                systemProperty("org.knopflerfish.osgi.registerserviceurlhandler").value("true")
         );
 
     }
@@ -99,6 +109,14 @@ public class OnlineManipulatorTest {
     @Before
     public void before() {
         helper = new OSGiHelper(context);
+
+        Assert.assertEquals("Check online manipulator bundle state",
+                helper.getBundle("org.apache.felix.ipojo.manipulator.online").getState(),
+                Bundle.ACTIVE);
+
+        URLStreamHandlerService svc = helper.getServiceObject(URLStreamHandlerService.class, null);
+        Assert.assertNotNull("URL Stream handler exported", svc);
+        System.out.println(svc);
     }
 
     @After
@@ -121,7 +139,7 @@ public class OnlineManipulatorTest {
     }
 
     @Test
-    public void installProviderWithMetadata1() throws BundleException, InvalidSyntaxException, Exception {
+    public void installProviderWithMetadata1() throws Exception {
         String url = context.getProperty("providerWithMetadata");
         Assert.assertNotNull(url);
         Bundle bundle = context.installBundle("ipojo:" + url);
@@ -132,6 +150,8 @@ public class OnlineManipulatorTest {
         helper.waitForService(Hello.class.getName(), null, 5000);
         assertValidity();
         Assert.assertNotNull(context.getServiceReference(Hello.class.getName()));
+
+        bundle.uninstall();
     }
 
 
@@ -139,34 +159,45 @@ public class OnlineManipulatorTest {
     public void installProviderWithMetadata2() throws BundleException, InvalidSyntaxException, IOException {
         String url = context.getProperty("providerWithMetadataInMetaInf");
         Assert.assertNotNull(url);
-        context.installBundle("ipojo:" + url).start();
+        System.out.println("prefixed url : " + "ipojo:" + url);
+        Bundle bundle = context.installBundle("ipojo:" + url);
+        bundle.start();
         assertBundle("Provider");
         helper.waitForService(Hello.class.getName(), null, 5000);
         assertValidity();
         Assert.assertNotNull(context.getServiceReference(Hello.class.getName()));
+
+        bundle.uninstall();
     }
 
     @Test
     public void installProviderWithoutMetadata() throws BundleException, InvalidSyntaxException, IOException {
         String url = context.getProperty("providerWithoutMetadata");
         Assert.assertNotNull(url);
-        context.installBundle("ipojo:" + url).start();
+        Bundle bundle = context.installBundle("ipojo:" + url);
+        bundle.start();
+
         assertBundle("Provider");
         helper.waitForService(Hello.class.getName(), null, 5000);
         assertValidity();
         Assert.assertNotNull(context.getServiceReference(Hello.class.getName()));
+
+        bundle.uninstall();
     }
 
     @Test
     public void installConsumerWithMetadata() throws BundleException, InvalidSyntaxException, IOException {
         String url = context.getProperty("providerWithoutMetadata");
         Assert.assertNotNull(url);
-        context.installBundle("ipojo:" + url).start();
+        Bundle bundle = context.installBundle("ipojo:" + url);
+        bundle.start();
         assertBundle("Provider");
 
         String url2 = context.getProperty("consumerWithMetadata");
         Assert.assertNotNull(url);
-        context.installBundle("ipojo:" + url2).start();
+        Bundle bundle2 = context.installBundle("ipojo:" + url2);
+        bundle2.start();
+
         assertBundle("Consumer");
         helper.waitForService(Hello.class.getName(), null, 5000);
         // Wait for activation.
@@ -177,19 +208,23 @@ public class OnlineManipulatorTest {
         }
         assertValidity();
         Assert.assertNotNull(context.getServiceReference(Hello.class.getName()));
+        bundle.uninstall();
+        bundle2.uninstall();
     }
 
     @Test
     public void installConsumerWithoutMetadata() throws BundleException, InvalidSyntaxException, IOException {
         String url = context.getProperty("providerWithMetadataInMetaInf");
         Assert.assertNotNull(url);
-        context.installBundle("ipojo:" + url).start();
+        Bundle bundle = context.installBundle("ipojo:" + url);
+        bundle.start();
         assertBundle("Provider");
         helper.waitForService(Hello.class.getName(), null, 5000);
 
         String url2 = context.getProperty("consumerWithoutMetadata");
         Assert.assertNotNull(url);
-        context.installBundle("ipojo:" + url2).start();
+        Bundle bundle2 = context.installBundle("ipojo:" + url2);
+        bundle2.start();
         assertBundle("Consumer");
         // Wait for activation.
         try {
@@ -199,6 +234,9 @@ public class OnlineManipulatorTest {
         }
         assertValidity();
         Assert.assertNotNull(context.getServiceReference(Hello.class.getName()));
+
+        bundle.uninstall();
+        bundle2.uninstall();
     }
 
     /**
