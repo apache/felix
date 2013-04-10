@@ -43,7 +43,7 @@ import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.or;
 public abstract class AbsBindingModule implements Module {
 
     /**
-     * Build dindings.
+     * Build bindings.
      */
     private List<Binding> bindings = new ArrayList<Binding>();
 

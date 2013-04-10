@@ -83,7 +83,7 @@ public class HandlerVisitor extends EmptyVisitor implements AnnotationVisitor {
             workbench.setRoot(handler);
         } else {
             // Error case: 2 component type's annotations (@Component and @Handler for example) on the same class
-            reporter.error("Multiple 'component type' annotations on the class '{}'.", classname);
+            reporter.error("Multiple 'component type' annotations on the class '{%s}'.", classname);
             reporter.warn("@Handler will be ignored.");
         }
     }
