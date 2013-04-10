@@ -157,7 +157,8 @@ public class ClassMetadataCollector extends EmptyVisitor {
                 // There are other annotation's contribution on this type (additional handler declaration/configuration)
                 // That means that there is a missing 'component type' annotation
 
-                reporter.warn("Class %s has not been marked as a component type (no @Component, @Handler, ...). It will be ignored in manipulation.",
+                reporter.warn("Class %s has not been marked as a component type (no @Component, @Handler, " +
+                        "...). It will be ignored by the iPOJO manipulator.",
                         workbench.getType().getClassName());
                 return;
             } // else: no root and no elements
