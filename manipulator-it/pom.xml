@@ -76,6 +76,7 @@
                     <excludes>
                         <exclude>src/main/appended-resources/**</exclude>
                         <exclude>**/*.iml</exclude>
+                        <exclude>src/it/**/target/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
