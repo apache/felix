@@ -191,7 +191,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
-    private long getLockTimeout()
+    long getLockTimeout()
     {
         BundleComponentActivator activator = getActivator();
         if ( activator != null )
