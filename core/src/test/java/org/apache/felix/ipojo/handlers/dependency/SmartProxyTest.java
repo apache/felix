@@ -18,12 +18,8 @@
  */
 package org.apache.felix.ipojo.handlers.dependency;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import junit.framework.Assert;
 import junit.framework.TestCase;
-
 import org.apache.felix.ipojo.ComponentFactory;
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.test.MockBundle;
@@ -31,6 +27,9 @@ import org.apache.felix.ipojo.util.Logger;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SmartProxyTest extends TestCase {
 
@@ -122,12 +121,12 @@ public class SmartProxyTest extends TestCase {
         dependency.stop();
 
         // Try with javax.sql.CommonDataSource
-        dependency = new Dependency(handler, "a_field", javax.sql.CommonDataSource.class, null, false, false, false,
+        dependency = new Dependency(handler, "a_field", javax.sql.DataSource.class, null, false, false, false,
                 true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null);
         dependency.start();
         // OK
         Assert.assertNotNull(dependency.onGet(new Object(), "a_field", null));
-        Assert.assertTrue(dependency.onGet(new Object(), "a_field", null) instanceof javax.sql.CommonDataSource);
+        Assert.assertTrue(dependency.onGet(new Object(), "a_field", null) instanceof javax.sql.DataSource);
     }
 
 }
