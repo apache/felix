@@ -700,8 +700,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
-            ComponentContextImpl<S> componentContext = m_componentContext;
-            if ( componentContext == null )
+            if ( m_componentContext == null )
             {
                 try
                 {

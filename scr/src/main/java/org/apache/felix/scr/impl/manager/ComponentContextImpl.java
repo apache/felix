@@ -21,6 +21,8 @@ package org.apache.felix.scr.impl.manager;
 
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.component.ExtComponentContext;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -48,6 +50,8 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     private final S m_implementationObject;
     
     private volatile boolean m_implementationAccessible;
+    
+    private final CountDownLatch accessibleLatch = new CountDownLatch(1);
 
     ComponentContextImpl( AbstractComponentManager<S> componentManager, Bundle usingBundle, S implementationObject )
     {
@@ -60,6 +64,10 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     void setImplementationAccessible(boolean implementationAccessible)
     {
         this.m_implementationAccessible = implementationAccessible;
+        if (implementationAccessible)
+        {
+            accessibleLatch.countDown();
+        }
     }
     
     EdgeInfo getEdgeInfo(DependencyManager<S, ?> dm)
@@ -169,6 +177,17 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         if ( !requireAccessible || m_implementationAccessible )
         {
             return m_implementationObject;
+        }
+        try
+        {
+            if (accessibleLatch.await( m_componentManager.getLockTimeout(), TimeUnit.MILLISECONDS ) && m_implementationAccessible)
+            {
+                return m_implementationObject;
+            }
+        }
+        catch ( InterruptedException e )
+        {
+            return null;
         }
         return null;
     }
