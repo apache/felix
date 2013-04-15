@@ -25,8 +25,10 @@
         </goals>
       </pluginExecutionFilter>
       <action>
-        <execute/>
-      </action>
-    </pluginExecution>
+        <execute>
+          <runOnIncremental>true</runOnIncremental>
+        </execute>
+       </action>
+     </pluginExecution>
   </pluginExecutions>
 </lifecycleMappingMetadata>
