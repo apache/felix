@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.ZipAttachmentProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -112,9 +112,9 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer
                 cpa.label = cpa.title;
             }
             final Dictionary props = new Hashtable();
-            props.put(InventoryPrinter.CONFIG_NAME, cpa.label);
-            props.put(InventoryPrinter.CONFIG_TITLE, cpa.title);
-            props.put(InventoryPrinter.CONFIG_PRINTER_MODES, cpa.getPrinterModes());
+            props.put(InventoryPrinter.NAME, cpa.label);
+            props.put(InventoryPrinter.TITLE, cpa.title);
+            props.put(InventoryPrinter.FORMAT, cpa.getPrinterModes());
 
             final ServiceRegistration reg = this.bundleContext.registerService(InventoryPrinter.class.getName(),
                 new WebConsolePrinter(cpa), props);
@@ -182,21 +182,21 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer
         }
 
         /**
-         * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode,
+         * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.Format,
          *      java.io.PrintWriter)
          */
-        public void print(final PrinterMode mode, final PrintWriter printWriter, final boolean isZip)
+        public void print(final PrintWriter printWriter, final Format format, final boolean isZip)
         {
             final String m;
-            if (!isZip && mode == PrinterMode.HTML_FRAGMENT)
+            if (!isZip && format == Format.HTML)
             {
                 m = ConsoleConstants.MODE_WEB;
             }
-            else if (!isZip && mode == PrinterMode.TEXT)
+            else if (!isZip && format == Format.TEXT)
             {
                 m = ConsoleConstants.MODE_TXT;
             }
-            else if (isZip && (mode == PrinterMode.TEXT || mode == PrinterMode.HTML_FRAGMENT))
+            else if (isZip && (format == Format.TEXT || format == Format.HTML))
             {
                 m = ConsoleConstants.MODE_ZIP;
             }

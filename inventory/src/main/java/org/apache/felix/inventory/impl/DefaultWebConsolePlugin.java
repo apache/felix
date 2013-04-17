@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
 
 /**
@@ -63,27 +63,27 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
     }
 
     /**
-     * @see org.apache.felix.inventory..implInventoryPrinterHandler#getModes()
+     * @see org.apache.felix.inventory..implInventoryPrinterHandler#getformats()
      */
-    public PrinterMode[] getModes()
+    public Format[] getFormats()
     {
-        return new PrinterMode[]
-            { PrinterMode.TEXT };
+        return new Format[]
+            { Format.TEXT };
     }
 
     /**
-     * @see org.apache.felix.inventory.impl.InventoryPrinterHandler#supports(org.apache.felix.inventory.PrinterMode)
+     * @see org.apache.felix.inventory.impl.InventoryPrinterHandler#supports(org.apache.felix.inventory.Format)
      */
-    public boolean supports(final PrinterMode mode)
+    public boolean supports(final Format format)
     {
-        return mode == PrinterMode.TEXT;
+        return format == Format.TEXT;
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode,
-     *      java.io.PrintWriter, boolean)
+     * @see org.apache.felix.inventory.InventoryPrinter#print(java.io.PrintWriter,
+     *      org.apache.felix.inventory.Format, boolean)
      */
-    public void print(final PrinterMode mode, final PrintWriter printWriter, final boolean isZip)
+    public void print(final PrintWriter printWriter, final Format format, final boolean isZip)
     {
         final InventoryPrinterHandler[] handlers = this.inventoryPrinterManager.getAllHandlers();
         printWriter.print("Currently registered ");
