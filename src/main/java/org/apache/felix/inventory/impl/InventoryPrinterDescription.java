@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,10 +16,11 @@
  */
 package org.apache.felix.inventory.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-
 import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.Format;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -30,7 +31,7 @@ public class InventoryPrinterDescription implements Comparable
 
     private final ServiceReference reference;
 
-    private final PrinterMode[] modes;
+    private final Format[] formats;
 
     private final String name;
 
@@ -42,76 +43,79 @@ public class InventoryPrinterDescription implements Comparable
     {
         this.reference = ref;
 
-        // check modes
-        final Object modesCfg = ref.getProperty(InventoryPrinter.CONFIG_PRINTER_MODES);
-        if (modesCfg instanceof String)
+        // check formats
+        Format[] formats = null;
+        final Object formatsCfg = ref.getProperty(InventoryPrinter.FORMAT);
+        if (formatsCfg instanceof String)
         {
-            final PrinterMode mode = PrinterMode.valueOf((String) modesCfg);
-            if (mode != null)
+            final Format format = Format.valueOf((String) formatsCfg);
+            if (format != null)
             {
-                this.modes = new PrinterMode[]
-                    { mode };
-            }
-            else
-            {
-                this.modes = null;
+                formats = new Format[]
+                    { format };
             }
         }
-        else if (modesCfg instanceof String[])
+        else if (formatsCfg instanceof String[])
         {
-            final String[] modesCfgArray = (String[]) modesCfg;
-            final PrinterMode[] pModes = new PrinterMode[modesCfgArray.length];
-            boolean invalid = false;
-            for (int i = 0; i < modesCfgArray.length; i++)
+            final String[] formatsCfgArray = (String[]) formatsCfg;
+            final ArrayList formatList = new ArrayList();
+            for (int i = 0; i < formatsCfgArray.length; i++)
             {
-                pModes[i] = PrinterMode.valueOf(modesCfgArray[i]);
-                if (pModes[i] == null)
+                final Format format = Format.valueOf(formatsCfgArray[i]);
+                if (format != null)
                 {
-                    invalid = true;
+                    formatList.add(format);
                 }
             }
-            if (invalid)
+            if (!formatList.isEmpty())
             {
-                this.modes = null;
+                formats = (Format[]) formatList.toArray(new Format[formatList.size()]);
             }
-            else
-            {
-                this.modes = pModes;
-            }
-        }
-        else
-        {
-            this.modes = null;
         }
 
         // check name
-        if (ref.getProperty(InventoryPrinter.CONFIG_NAME) != null)
+        final String name;
+        if (ref.getProperty(InventoryPrinter.NAME) != null)
         {
-            this.name = ref.getProperty(InventoryPrinter.CONFIG_NAME).toString();
+            name = ref.getProperty(InventoryPrinter.NAME).toString();
         }
         else
         {
-            this.name = null;
+            name = "InventoryPrinter." + ref.getProperty(Constants.SERVICE_ID);
         }
 
         // check title
-        if (ref.getProperty(InventoryPrinter.CONFIG_TITLE) != null)
+        final String title;
+        String sortKey = null;
+        if (ref.getProperty(InventoryPrinter.TITLE) != null)
         {
-            this.title = ref.getProperty(InventoryPrinter.CONFIG_TITLE).toString();
-            if (this.title.startsWith("%"))
+            title = ref.getProperty(InventoryPrinter.TITLE).toString();
+            if (title.startsWith("%"))
             {
-                this.sortKey = this.title.substring(1);
-            }
-            else
-            {
-                this.sortKey = this.title;
+                sortKey = title.substring(1);
             }
         }
         else
         {
-            this.title = null;
-            this.sortKey = null;
+            title = name;
         }
+
+        // cleanup
+        if (formats == null)
+        {
+            formats = new Format[]
+                { Format.TEXT };
+        }
+        if (sortKey == null)
+        {
+            sortKey = title;
+        }
+
+        // set fields
+        this.formats = formats;
+        this.name = name;
+        this.title = title;
+        this.sortKey = sortKey;
     }
 
     public String getTitle()
@@ -129,9 +133,9 @@ public class InventoryPrinterDescription implements Comparable
         return this.name;
     }
 
-    public PrinterMode[] getModes()
+    public Format[] getFormats()
     {
-        return this.modes;
+        return this.formats;
     }
 
     public ServiceReference getServiceReference()
@@ -159,7 +163,7 @@ public class InventoryPrinterDescription implements Comparable
 
     public String toString()
     {
-        return "InventoryPrinterDescription [title=" + title + ", name=" + name + ", modes=" + Arrays.toString(modes)
+        return "InventoryPrinterDescription [title=" + title + ", name=" + name + ", formats=" + Arrays.toString(formats)
             + ", sortKey=" + sortKey + "]";
     }
 }

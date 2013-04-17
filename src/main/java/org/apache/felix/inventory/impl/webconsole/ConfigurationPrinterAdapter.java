@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.Format;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -213,17 +213,17 @@ public class ConfigurationPrinterAdapter
         final Set list = new HashSet();
         if (this.match(ConsoleConstants.MODE_TXT) || this.match(ConsoleConstants.MODE_ZIP))
         {
-            list.add(PrinterMode.TEXT.name());
+            list.add(Format.TEXT.toString());
         }
         if (this.match(ConsoleConstants.MODE_WEB))
         {
             if (!escapeHtml)
             {
-                list.add(PrinterMode.HTML_FRAGMENT.name());
+                list.add(Format.HTML.toString());
             }
             else
             {
-                list.add(PrinterMode.TEXT.name());
+                list.add(Format.TEXT.toString());
             }
         }
         return (String[]) list.toArray(new String[list.size()]);

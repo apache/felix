@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,14 +24,14 @@ import java.util.Locale;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.felix.inventory.InventoryPrinter;
-import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.ZipAttachmentProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 /**
  * Helper class for a inventory printer.
- * 
+ *
  * The adapter simplifies accessing and working with the inventory printer.
  */
 public class InventoryPrinterAdapter implements InventoryPrinterHandler, Comparable
@@ -77,7 +77,7 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     {
         if (this.registration == null)
         {
-            final Object value = this.description.getServiceReference().getProperty(InventoryPrinter.CONFIG_WEBCONSOLE);
+            final Object value = this.description.getServiceReference().getProperty(InventoryPrinter.WEBCONSOLE);
             if (value == null || !"false".equalsIgnoreCase(value.toString()))
             {
                 this.registration = WebConsolePlugin.register(context, manager, this.description);
@@ -111,11 +111,11 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     }
 
     /**
-     * All supported modes.
+     * All supported formats.
      */
-    public PrinterMode[] getModes()
+    public Format[] getFormats()
     {
-        return this.description.getModes();
+        return this.description.getFormats();
     }
 
     /**
@@ -131,13 +131,13 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     }
 
     /**
-     * Whether the printer supports this mode.
+     * Whether the printer supports this format.
      */
-    public boolean supports(final PrinterMode mode)
+    public boolean supports(final Format format)
     {
-        for (int i = 0; i < this.description.getModes().length; i++)
+        for (int i = 0; i < this.description.getFormats().length; i++)
         {
-            if (this.description.getModes()[i] == mode)
+            if (this.description.getFormats()[i] == format)
             {
                 return true;
             }
@@ -146,14 +146,14 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     }
 
     /**
-     * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.PrinterMode,
+     * @see org.apache.felix.inventory.InventoryPrinter#print(org.apache.felix.inventory.Format,
      *      java.io.PrintWriter)
      */
-    public void print(final PrinterMode mode, final PrintWriter printWriter, final boolean isZip)
+    public void print(final PrintWriter printWriter, final Format format, final boolean isZip)
     {
-        if (this.supports(mode))
+        if (this.supports(format))
         {
-            this.printer.print(mode, printWriter, isZip);
+            this.printer.print(printWriter, format, isZip);
         }
     }
 

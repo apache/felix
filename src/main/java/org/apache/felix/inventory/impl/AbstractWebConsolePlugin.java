@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.inventory.PrinterMode;
+import org.apache.felix.inventory.Format;
 
 /**
  * The web console plugin for a inventory printer.
@@ -46,7 +46,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
     /**
      * Constructor
-     * 
+     *
      * @param inventoryPrinterManager The manager
      */
     AbstractWebConsolePlugin(final InventoryPrinterManagerImpl inventoryPrinterManager)
@@ -56,22 +56,22 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
     protected abstract InventoryPrinterHandler getInventoryPrinterHandler();
 
-    private void printConfigurationInventory(final ConfigurationWriter pw, final PrinterMode mode,
+    private void printConfigurationInventory(final ConfigurationWriter pw, final Format format,
         final InventoryPrinterHandler handler) throws IOException
     {
         if (handler == null)
         {
-            final InventoryPrinterHandler[] adapters = this.inventoryPrinterManager.getHandlers(mode);
+            final InventoryPrinterHandler[] adapters = this.inventoryPrinterManager.getHandlers(format);
             for (int i = 0; i < adapters.length; i++)
             {
-                pw.printInventory(mode, adapters[i]);
+                pw.printInventory(format, adapters[i]);
             }
         }
         else
         {
-            if (handler.supports(mode))
+            if (handler.supports(format))
             {
-                pw.printInventory(mode, handler);
+                pw.printInventory(format, handler);
             }
         }
     }
@@ -83,7 +83,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
      * <p>
      * This method sets the <code>Cache-Control</code>, <code>Expires</code>,
      * and <code>Pragma</code> headers.
-     * 
+     *
      * @param response The response for which to set the cache prevention
      */
     private final void setNoCache(final HttpServletResponse response)
@@ -120,7 +120,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         if (request.getPathInfo().endsWith(".txt")) { //$NON-NLS-2$
             response.setContentType("text/plain; charset=utf-8"); //$NON-NLS-2$
             final ConfigurationWriter pw = new PlainTextConfigurationWriter(response.getWriter());
-            printConfigurationInventory(pw, PrinterMode.TEXT, handler);
+            printConfigurationInventory(pw, Format.TEXT, handler);
             pw.flush();
         }
         else if (request.getPathInfo().endsWith(".zip")) { //$NON-NLS-2$
@@ -140,7 +140,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             final ZipEntry entry = new ZipEntry("timestamp.txt"); //$NON-NLS-2$
             entry.setTime(now.getTime());
             zip.putNextEntry(entry);
-            final StringBuilder sb = new StringBuilder();
+            final StringBuffer sb = new StringBuffer();
             sb.append("Date: ");
             synchronized (InventoryPrinterAdapter.DISPLAY_DATE_FORMAT)
             {
@@ -154,8 +154,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             zip.closeEntry();
 
             final ZipConfigurationWriter pw = new ZipConfigurationWriter(zip);
-            printConfigurationInventory(pw, PrinterMode.TEXT, handler);
-            printConfigurationInventory(pw, PrinterMode.JSON, handler);
+            printConfigurationInventory(pw, Format.TEXT, handler);
+            printConfigurationInventory(pw, Format.JSON, handler);
 
             zip.finish();
         }
@@ -174,20 +174,20 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             pw.println("<html xmlns=\"http://www.w3.org/1999/xhtml\">");
             pw.println("<head><title>dummy</title></head><body><div>");
 
-            if (handler.supports(PrinterMode.HTML_FRAGMENT))
+            if (handler.supports(Format.HTML))
             {
-                handler.print(PrinterMode.HTML_FRAGMENT, pw, false);
+                handler.print(pw, Format.HTML, false);
             }
-            else if (handler.supports(PrinterMode.TEXT))
+            else if (handler.supports(Format.TEXT))
             {
                 pw.enableFilter(true);
-                handler.print(PrinterMode.TEXT, pw, false);
+                handler.print(pw, Format.TEXT, false);
                 pw.enableFilter(false);
             }
             else
             {
                 pw.enableFilter(true);
-                handler.print(PrinterMode.JSON, pw, false);
+                handler.print(pw, Format.JSON, false);
                 pw.enableFilter(false);
             }
             pw.println("</div></body></html>");
@@ -204,17 +204,17 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             response.setCharacterEncoding("UTF-8"); //$NON-NLS-1$
 
             final JSONConfigurationWriter jcw = new JSONConfigurationWriter(response.getWriter());
-            final PrinterMode mode;
-            if (handler.supports(PrinterMode.JSON))
+            final Format format;
+            if (handler.supports(Format.JSON))
             {
-                mode = PrinterMode.JSON;
+                format = Format.JSON;
             }
             else
             {
-                mode = PrinterMode.TEXT;
+                format = Format.TEXT;
                 jcw.startJSONWrapper();
             }
-            printConfigurationInventory(jcw, mode, handler);
+            printConfigurationInventory(jcw, format, handler);
             jcw.endJSONWrapper();
             jcw.flush();
         }
@@ -260,26 +260,26 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             pw.print("<button type=\"button\" class=\"downloadFullZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Full Zip</button>");
             pw.print("<button type=\"button\" class=\"downloadFullTxt\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Full Text</button>");
 
-            if (handler.supports(PrinterMode.JSON))
+            if (handler.supports(Format.JSON))
             {
                 pw.print("<button type=\"button\" class=\"downloadJson\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As JSON</button>");
             }
             pw.print("<button type=\"button\" class=\"downloadZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As Zip</button>");
-            if (handler.supports(PrinterMode.TEXT))
+            if (handler.supports(Format.TEXT))
             {
                 pw.print("<button type=\"button\" class=\"downloadTxt\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download As Text</button>");
             }
 
             pw.println("<br/>&nbsp;</p>"); // status line
             pw.print("<div>");
-            if (handler.supports(PrinterMode.HTML_FRAGMENT))
+            if (handler.supports(Format.HTML))
             {
-                handler.print(PrinterMode.HTML_FRAGMENT, pw, false);
+                handler.print(pw, Format.HTML, false);
             }
             else
             {
                 pw.enableFilter(true);
-                handler.print(PrinterMode.TEXT, pw, false);
+                handler.print(pw, Format.TEXT, false);
                 pw.enableFilter(false);
             }
             pw.print("</div>");
@@ -307,10 +307,10 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             // dummy implementation
         }
 
-        public void printInventory(final PrinterMode mode, final InventoryPrinterHandler handler) throws IOException
+        public void printInventory(final Format format, final InventoryPrinterHandler handler) throws IOException
         {
             this.title(handler.getTitle());
-            handler.print(mode, this, false);
+            handler.print(this, format, false);
             this.end();
         }
     }
@@ -555,14 +555,14 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
         /**
          * Escapes HTML special chars like: <>&\r\n and space
-         * 
-         * 
+         *
+         *
          * @param text the text to escape
          * @return the escaped text
          */
         private String escapeHtml(final String text)
         {
-            final StringBuilder sb = new StringBuilder(text.length() * 4 / 3);
+            final StringBuffer sb = new StringBuffer(text.length() * 4 / 3);
             char ch, oldch = '_';
             for (int i = 0; i < text.length(); i++)
             {
@@ -637,29 +637,29 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             this.zip = zip;
         }
 
-        public void printInventory(final PrinterMode mode, final InventoryPrinterHandler handler) throws IOException
+        public void printInventory(final Format format, final InventoryPrinterHandler handler) throws IOException
         {
-            if (mode == PrinterMode.TEXT)
+            if (format == Format.TEXT)
             {
                 final ZipEntry entry = new ZipEntry(handler.getName().concat(".txt"));
                 zip.putNextEntry(entry);
-                handler.print(mode, this, false);
+                handler.print(this, format, false);
                 flush();
                 zip.closeEntry();
 
                 handler.addAttachments(handler.getName().concat("/"), this.zip);
             }
-            else if (mode == PrinterMode.JSON)
+            else if (format == Format.JSON)
             {
                 final String name = "json/".concat(handler.getName()).concat(".json");
 
                 final ZipEntry entry = new ZipEntry(name);
                 zip.putNextEntry(entry);
-                handler.print(PrinterMode.JSON, this, true);
+                handler.print(this, Format.JSON, true);
                 flush();
 
                 zip.closeEntry();
-                if (!handler.supports(PrinterMode.TEXT))
+                if (!handler.supports(Format.TEXT))
                 {
                     handler.addAttachments(handler.getName().concat("/"), this.zip);
                 }
