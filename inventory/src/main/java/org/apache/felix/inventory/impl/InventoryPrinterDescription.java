@@ -163,7 +163,7 @@ public class InventoryPrinterDescription implements Comparable
 
     public String toString()
     {
-        return "InventoryPrinterDescription [title=" + title + ", name=" + name + ", formats=" + Arrays.toString(formats)
+        return "InventoryPrinterDescription [title=" + title + ", name=" + name + ", formats=" + Arrays.asList(formats)
             + ", sortKey=" + sortKey + "]";
     }
 }

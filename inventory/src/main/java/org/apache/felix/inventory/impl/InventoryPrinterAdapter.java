@@ -157,24 +157,28 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
         }
     }
 
-    /**
-     * @see java.lang.Object#toString()
-     */
-    public String toString()
+    public InventoryPrinterDescription getDescription()
     {
-        return printer.getClass() + "(" + super.toString() + ")";
+        return this.description;
     }
 
-    /**
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
     public int compareTo(final Object spa)
     {
         return this.description.getSortKey().compareTo(((InventoryPrinterAdapter) spa).description.getSortKey());
     }
 
-    public InventoryPrinterDescription getDescription()
+    public int hashCode()
     {
-        return this.description;
+        return this.description.getSortKey().hashCode();
+    }
+
+    public boolean equals(final Object spa)
+    {
+        return this.description.getSortKey().equals(((InventoryPrinterAdapter) spa).description.getSortKey());
+    }
+
+    public String toString()
+    {
+        return printer.getClass() + "(" + super.toString() + ")";
     }
 }

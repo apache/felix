@@ -96,16 +96,22 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer
         {
             if (cpa.title.startsWith("%"))
             {
-                final String key = cpa.title.substring(1);
+                String title = cpa.title.substring(1);
+
                 final ResourceBundle rb = this.rbManager.getResourceBundle(reference.getBundle());
-                if (rb == null || !rb.containsKey(key))
+                if (rb != null)
                 {
-                    cpa.title = key;
+                    try
+                    {
+                        title = rb.getString(title);
+                    }
+                    catch (Exception e)
+                    {
+                        // ClassCastException, MissingResourceException
+                        // ignore
+                    }
                 }
-                else
-                {
-                    cpa.title = rb.getString(key);
-                }
+                cpa.title = title;
             }
             if (cpa.label == null)
             {

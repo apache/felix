@@ -27,8 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
-
+import java.util.TreeSet;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.impl.webconsole.ConsoleConstants;
@@ -62,7 +61,7 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
     private final Map allAdapters = new HashMap();
 
     /** Used adapters. Type of the set: InventoryPrinterAdapter */
-    private final Set usedAdapters = new ConcurrentSkipListSet();
+    private final Set usedAdapters = new TreeSet();
 
     /** Registration for the web console. */
     private final ServiceRegistration pluginRegistration;
@@ -112,7 +111,10 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
         {
             this.allAdapters.clear();
         }
-        this.usedAdapters.clear();
+        synchronized (this.usedAdapters)
+        {
+            this.usedAdapters.clear();
+        }
     }
 
     /**
@@ -191,20 +193,18 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
         }
         if (removeAdapter != null)
         {
-            final Iterator i = this.usedAdapters.iterator();
-            while (i.hasNext())
-            {
-                if (i.next() == removeAdapter)
-                {
-                    i.remove();
-                    break;
-                }
-            }
             removeAdapter.unregisterConsole();
+            synchronized (this.usedAdapters)
+            {
+                this.usedAdapters.remove(removeAdapter);
+            }
         }
         if (addAdapter != null)
         {
-            this.usedAdapters.add(addAdapter);
+            synchronized (this.usedAdapters)
+            {
+                this.usedAdapters.add(addAdapter);
+            }
             addAdapter.registerConsole(this.bundleContext, this);
         }
     }
@@ -222,7 +222,7 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
                 while (iter.hasNext())
                 {
                     final InventoryPrinterAdapter adapter = (InventoryPrinterAdapter) iter.next();
-                    if (adapter.getDescription().getServiceReference().compareTo(reference) == 0)
+                    if (adapter.getDescription().getServiceReference().equals(reference))
                     {
                         iter.remove();
                         removed = true;
@@ -239,16 +239,25 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
                 }
             }
         }
-        final Iterator iter = this.usedAdapters.iterator();
-        while (iter.hasNext())
+
+        InventoryPrinterAdapter adapterToUnregister = null;
+        synchronized (this.usedAdapters)
         {
-            final InventoryPrinterAdapter adapter = (InventoryPrinterAdapter) iter.next();
-            if (adapter.getDescription().getServiceReference().compareTo(reference) == 0)
+            final Iterator iter = this.usedAdapters.iterator();
+            while (iter.hasNext())
             {
-                iter.remove();
-                adapter.unregisterConsole();
-                break;
+                final InventoryPrinterAdapter adapter = (InventoryPrinterAdapter) iter.next();
+                if (adapter.getDescription().getServiceReference().equals(reference))
+                {
+                    iter.remove();
+                    adapterToUnregister = adapter;
+                    break;
+                }
             }
+        }
+        if (adapterToUnregister != null)
+        {
+            adapterToUnregister.unregisterConsole();
         }
     }
 
@@ -259,8 +268,11 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
      */
     public InventoryPrinterHandler[] getAllHandlers()
     {
-        return (InventoryPrinterHandler[]) this.usedAdapters.toArray(new InventoryPrinterHandler[this.usedAdapters
-            .size()]);
+        synchronized (this.usedAdapters)
+        {
+            return (InventoryPrinterHandler[]) this.usedAdapters.toArray(new InventoryPrinterHandler[this.usedAdapters
+                .size()]);
+        }
     }
 
     /**
@@ -271,13 +283,16 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
     public InventoryPrinterHandler[] getHandlers(final Format format)
     {
         final List result = new ArrayList();
-        final Iterator i = this.usedAdapters.iterator();
-        while (i.hasNext())
+        synchronized (this.usedAdapters)
         {
-            final InventoryPrinterAdapter printer = (InventoryPrinterAdapter) i.next();
-            if (printer.supports(format))
+            final Iterator i = this.usedAdapters.iterator();
+            while (i.hasNext())
             {
-                result.add(printer);
+                final InventoryPrinterAdapter printer = (InventoryPrinterAdapter) i.next();
+                if (printer.supports(format))
+                {
+                    result.add(printer);
+                }
             }
         }
         return (InventoryPrinterHandler[]) result.toArray(new InventoryPrinterHandler[result.size()]);
@@ -290,13 +305,16 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
      */
     public InventoryPrinterHandler getHandler(final String name)
     {
-        final Iterator i = this.usedAdapters.iterator();
-        while (i.hasNext())
+        synchronized (this.usedAdapters)
         {
-            final InventoryPrinterAdapter printer = (InventoryPrinterAdapter) i.next();
-            if (name.equals(printer.getName()))
+            final Iterator i = this.usedAdapters.iterator();
+            while (i.hasNext())
             {
-                return printer;
+                final InventoryPrinterAdapter printer = (InventoryPrinterAdapter) i.next();
+                if (name.equals(printer.getName()))
+                {
+                    return printer;
+                }
             }
         }
         return null;
