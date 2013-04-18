@@ -1,0 +1,19 @@
+Initial Release 1.0.0
+---------------------
+
+** Bug
+    * [FELIX-3916] - Full ZIP file has wrong file indices
+    * [FELIX-3947] - ClassDefNotFoundError in Inventory bundle setup if Servlet API cannot be wired
+    * [FELIX-3963] - Properly handle method resolution through reflection
+    * [FELIX-3964] - Wrong signature for non-service InventoryPrinter services
+    * [FELIX-4026] - InventoryPrinter must run on Java 1.4 plattforms (for embedded use)
+
+** Improvement
+    * [FELIX-3945] - Don't use SLF4j Logging
+    * [FELIX-3958] - Allow JSON output for InventoryPrinters not natively supporting JSON
+    * [FELIX-3959] - PrinterMode.valueOf should be case-insensitive
+    * [FELIX-4025] - Cleanup InventoryPrinter API
+
+** Task
+    * [FELIX-3874] - Create new status printer module
+    * [FELIX-3970] - Remove unneeded hashCode and equals methods from PrinterMode
