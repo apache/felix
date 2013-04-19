@@ -97,10 +97,10 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
     }
 
     /**
-     * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.lang.String,
-     *      java.util.zip.ZipOutputStream)
+     * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.util.zip.ZipOutputStream,
+     *      java.lang.String)
      */
-    public void addAttachments(String namePrefix, ZipOutputStream zos) throws IOException
+    public void addAttachments(ZipOutputStream zos, String namePrefix) throws IOException
     {
         // no attachments support
     }

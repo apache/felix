@@ -217,10 +217,10 @@ public class WebConsoleAdapter implements ServiceTrackerCustomizer
         }
 
         /**
-         * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.lang.String,
-         *      java.util.zip.ZipOutputStream)
+         * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.util.zip.ZipOutputStream,
+         *      java.lang.String)
          */
-        public void addAttachments(final String namePrefix, final ZipOutputStream zos) throws IOException
+        public void addAttachments(final ZipOutputStream zos, final String namePrefix) throws IOException
         {
             final URL[] attachments = cpa.getAttachments();
             if (attachments != null)

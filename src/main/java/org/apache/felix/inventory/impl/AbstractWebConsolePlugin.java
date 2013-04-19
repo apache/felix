@@ -647,7 +647,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
                 flush();
                 zip.closeEntry();
 
-                handler.addAttachments(handler.getName().concat("/"), this.zip);
+                handler.addAttachments(this.zip, handler.getName().concat("/"));
             }
             else if (format == Format.JSON)
             {
@@ -661,7 +661,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
                 zip.closeEntry();
                 if (!handler.supports(Format.TEXT))
                 {
-                    handler.addAttachments(handler.getName().concat("/"), this.zip);
+                    handler.addAttachments(this.zip, handler.getName().concat("/"));
                 }
             }
         }

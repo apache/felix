@@ -119,14 +119,14 @@ public class InventoryPrinterAdapter implements InventoryPrinterHandler, Compara
     }
 
     /**
-     * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.lang.String,
-     *      java.util.zip.ZipOutputStream)
+     * @see org.apache.felix.inventory.ZipAttachmentProvider#addAttachments(java.util.zip.ZipOutputStream,
+     *      java.lang.String)
      */
-    public void addAttachments(final String namePrefix, final ZipOutputStream zos) throws IOException
+    public void addAttachments(final ZipOutputStream zos, final String namePrefix) throws IOException
     {
         if (printer instanceof ZipAttachmentProvider)
         {
-            ((ZipAttachmentProvider) printer).addAttachments(namePrefix, zos);
+            ((ZipAttachmentProvider) printer).addAttachments(zos, namePrefix);
         }
     }
 
