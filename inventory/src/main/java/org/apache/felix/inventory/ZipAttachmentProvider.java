@@ -50,12 +50,12 @@ public interface ZipAttachmentProvider
      * file to the ZIP file {@code zos}.</li>
      * <li>Close the ZipEntry.</li>
      * </ol>
-     *
-     * @param namePrefix Name prefix to use for zip entries. Ends with a slash.
      * @param zos The zip output stream.
+     * @param namePrefix Name prefix to use for zip entries. Ends with a slash.
+     *
      * @throws IOException If an error occurrs writing the ZIP entry. This may
      *             also be caused by reading some file system file to be added
      *             to the ZIP file.
      */
-    void addAttachments(final String namePrefix, final ZipOutputStream zos) throws IOException;
+    void addAttachments(final ZipOutputStream zos, final String namePrefix) throws IOException;
 }
