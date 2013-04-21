@@ -37,20 +37,6 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.main.distribution</artifactId>
-            <type>zip</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.arch.gogo</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.log</artifactId>
             <version>1.0.1</version>
         </dependency>
@@ -107,7 +93,8 @@
                                 org.apache.felix.log,org.apache.felix.ipojo,
                                 org.apache.felix.ipojo.arch.gogo
                             </includeArtifactIds>
-                            <outputDirectory>${project.build.directory}/felix-framework-${felix.version}/bundle</outputDirectory>
+                            <outputDirectory>${project.build.directory}/felix-framework-${felix.version}/bundle
+                            </outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -116,5 +103,5 @@
         </plugins>
     </build>
 
-    
+
 </project>

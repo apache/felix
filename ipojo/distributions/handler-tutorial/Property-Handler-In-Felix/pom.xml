@@ -29,33 +29,12 @@
         <version>1.9.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.apache.felix</groupId>
     <artifactId>Property-Handler-In-Felix</artifactId>
     <version>1.9.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.main.distribution</artifactId>
-            <type>zip</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.arch.gogo</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.log</artifactId>
-            <version>1.0.1</version>
-        </dependency>
-
         <!-- our project  -->
         <dependency>
             <groupId>${project.groupId}</groupId>
