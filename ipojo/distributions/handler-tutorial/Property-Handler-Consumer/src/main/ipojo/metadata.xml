@@ -1,0 +1,9 @@
+<ipojo>
+	<!-- Declare an instance illustrating instance configuration -->
+	<instance component="PropertiesTester"
+		name="instance-using-properties-i1">
+		<property name="props.file"
+			value="props\properties-i1.properties" />
+	</instance>
+
+</ipojo>
