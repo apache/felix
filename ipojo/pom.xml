@@ -50,8 +50,8 @@
         <module>arch-gogo</module>
         <module>webconsole-plugin</module>
 
-        <!-- junit4osgi -->
-        <module>junit4osgi</module>
+        <!-- distribution and tutorials -->
+        <module>distributions</module>
     </modules>
 
     <profiles>

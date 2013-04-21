@@ -26,25 +26,4 @@
   <modules>
 	<module>tutorial-maven</module>
   </modules>
-  
-  <profiles>
-	<profile>
-		<id>java5</id>
-		<activation>
-			<jdk>1.5</jdk>
-		</activation>
-		<modules>
-			<module>property-handler</module>
-		</modules>
-	</profile>
-	<profile>
-		<id>java6</id>
-		<activation>
-			<jdk>1.6</jdk>
-		</activation>
-		<modules>
-			<module>property-handler</module>
-		</modules>
-	</profile>
-  </profiles>
 </project>
