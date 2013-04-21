@@ -88,6 +88,8 @@ public class Common {
     public static Option junitAndMockitoBundles() {
         return new DefaultCompositeOption(
                 // Repository required to load harmcrest (OSGi-fied version).
+                repository("http://repo1.maven.org/maven2").id(
+                        "central"),
                 repository("http://repository.springsource.com/maven/bundles/external").id(
                         "com.springsource.repository.bundles.external"),
 
