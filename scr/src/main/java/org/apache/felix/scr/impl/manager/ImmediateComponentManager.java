@@ -72,7 +72,9 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     
     private volatile long m_changeCount = -1;
 
-    /**
+    private final ThreadLocal<Boolean> m_circularReferences = new ThreadLocal<Boolean>();
+    
+   /**
      * The constructor receives both the activator and the metadata
      *
      * @param activator
@@ -710,58 +712,71 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         }
     }
 
+    
     @Override
     boolean getServiceInternal()
     {
-        boolean success = true;
-        if ( m_componentContext == null )
+        if (m_circularReferences.get() != null)
         {
-            try
+            return false;             
+        }
+        m_circularReferences.set( Boolean.TRUE );
+        try
+        {
+            boolean success = true;
+            if ( m_componentContext == null )
             {
-                if ( !collectDependencies() )
+                try
                 {
-                    log(
-                            LogService.LOG_DEBUG,
-                            "getService did not win collecting dependencies, try creating object anyway.",
-                            null );
-
-                }
-                else
-                {
-                    log(
-                            LogService.LOG_DEBUG,
-                            "getService won collecting dependencies, proceed to creating object.",
-                            null );
-
-                }
-            }
-            catch ( IllegalStateException e )
-            {
-                log(
-                        LogService.LOG_INFO,
-                        "Could not obtain all required dependencies, getService returning null",
-                        null );
-                success = false;
-            }
-            obtainWriteLock( "ImmediateComponentManager.getService.1" );
-            try
-            {
-                if ( m_componentContext == null )
-                {
-                    //state should be "Registered"
-                    S result = (S) state().getService( this );
-                    if ( result == null )
+                    if ( !collectDependencies() )
                     {
-                        success = false;;
+                        log(
+                                LogService.LOG_DEBUG,
+                                "getService did not win collecting dependencies, try creating object anyway.",
+                                null );
+
+                    }
+                    else
+                    {
+                        log(
+                                LogService.LOG_DEBUG,
+                                "getService won collecting dependencies, proceed to creating object.",
+                                null );
+
                     }
                 }
+                catch ( IllegalStateException e )
+                {
+                    log(
+                            LogService.LOG_INFO,
+                            "Could not obtain all required dependencies, getService returning null",
+                            null );
+                    success = false;
+                }
+                obtainWriteLock( "ImmediateComponentManager.getService.1" );
+                try
+                {
+                    if ( m_componentContext == null )
+                    {
+                        //state should be "Registered"
+                        S result = (S) state().getService( this );
+                        if ( result == null )
+                        {
+                            success = false;;
+                        }
+                    }
+                }
+                finally
+                {
+                    releaseWriteLock( "ImmediateComponentManager.getService.1" );
+                }
             }
-            finally
-            {
-                releaseWriteLock( "ImmediateComponentManager.getService.1" );
-            }
+            return success;
         }
-        return success;
+        finally
+        {
+            m_circularReferences.remove();
+        }
     }
 
     public void ungetService( Bundle bundle, ServiceRegistration<S> serviceRegistration, S o )
