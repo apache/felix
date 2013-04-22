@@ -187,6 +187,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
         catch ( InterruptedException e )
         {
+            Thread.currentThread().interrupt();
             return null;
         }
         return null;

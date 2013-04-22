@@ -186,6 +186,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
         catch ( InterruptedException e )
         {
+            Thread.currentThread().interrupt();
             //TODO this is so wrong
             throw new IllegalStateException( "Could not obtain lock (Reason: " + e + ")" );
         }
@@ -211,7 +212,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return m_stateLock.getHoldCount() > 0;
     }
     
-    private void dumpThreads()
+    void dumpThreads()
     {
         try
         {
@@ -270,6 +271,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                     {
                         log( LogService.LOG_ERROR, "waitForTracked timed out: {0} ceiling: {1} missing: {2},  Expect further errors",
                                 new Object[] {trackingCount, ceiling, missing}, null );
+                        dumpThreads();
                         missing.clear();
                         return;
                         
@@ -277,7 +279,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 }
                 catch ( InterruptedException e )
                 {
-                    //??
+                    Thread.currentThread().interrupt();
                 }
             }
         }
@@ -356,7 +358,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
         catch ( InterruptedException e )
         {
-            //??
+            Thread.currentThread().interrupt();
         }
         finally
         {
@@ -430,7 +432,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
         catch ( InterruptedException e )
         {
-            //??
+            Thread.currentThread().interrupt();
         }
         finally
         {
@@ -775,6 +777,12 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         long getTimeout()
         {
             return getLockTimeout();
+        }
+
+        @Override
+        void reportTimeout()
+        {
+            dumpThreads();
         }
         
     };

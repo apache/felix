@@ -133,6 +133,13 @@ public class RegistrationManagerTest
             // TODO Auto-generated method stub
             return 10;
         }
+
+        @Override
+        void reportTimeout()
+        {
+            // TODO Auto-generated method stub
+            
+        }
         
     }
 }

@@ -173,10 +173,12 @@ abstract class RegistrationManager<T>
                     {
                         log( LogService.LOG_ERROR, "Timeout waiting for reg change to complete {0}", new Object[]
                                 {rsw.getRegState()}, null);
+                        reportTimeout();
                     }
                 }
                 catch ( InterruptedException e )
                 {
+                    Thread.currentThread().interrupt();
                     log( LogService.LOG_ERROR, "Interrupted exception waiting for reg change to complete {0}", new Object[]
                             {rsw.getRegState()}, null);
                 }
@@ -192,6 +194,8 @@ abstract class RegistrationManager<T>
     abstract void log( int level, String message, Object[] arguments, Throwable ex );
     
     abstract long getTimeout();
+    
+    abstract void reportTimeout();
     
     T getServiceRegistration()
     {
