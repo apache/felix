@@ -192,32 +192,27 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         }
     }
 
-    EdgeInfo getEdgeInfo( S implObject, DependencyManager<S, ?> dependencyManager) 
-    {
-        return serviceContexts.get( implObject ).getEdgeInfo( dependencyManager );
-    }
-
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
-        for ( S implementationObject : serviceContexts.keySet() )
+        for ( ComponentContextImpl<S> cc : serviceContexts.values() )
         {
-            dependencyManager.invokeBindMethod( implementationObject, refPair, trackingCount );
+            dependencyManager.invokeBindMethod( cc.getImplementationObject( false ), refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
         }
     }
 
     <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
-        for ( S implementationObject : serviceContexts.keySet() )
+        for ( ComponentContextImpl<S> cc : serviceContexts.values() )
         {
-            dependencyManager.invokeUpdatedMethod( implementationObject, refPair, trackingCount );
+            dependencyManager.invokeUpdatedMethod( cc.getImplementationObject( false ), refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
         }
     }
 
     <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount )
     {
-        for ( S implementationObject : serviceContexts.keySet() )
+        for ( ComponentContextImpl<S> cc : serviceContexts.values() )
         {
-            dependencyManager.invokeUnbindMethod( implementationObject, oldRefPair, trackingCount );
+            dependencyManager.invokeUnbindMethod( cc.getImplementationObject( false ), oldRefPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
         }
     }
 

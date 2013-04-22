@@ -882,8 +882,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         m_dependenciesCollected = false;
     }
 
-    abstract EdgeInfo getEdgeInfo( S implObject, DependencyManager<S, ?> dependencyManager);
-    
     abstract <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
 
     abstract <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount );
