@@ -181,6 +181,7 @@ abstract class RegistrationManager<T>
                     Thread.currentThread().interrupt();
                     log( LogService.LOG_ERROR, "Interrupted exception waiting for reg change to complete {0}", new Object[]
                             {rsw.getRegState()}, null);
+                    reportTimeout();
                 }
             }
         }

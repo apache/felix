@@ -1638,7 +1638,7 @@ public class DependencyManager<S, T> implements Reference
             {
                 if (!info.getOpenLatch().await( getLockTimeout(), TimeUnit.MILLISECONDS ))
                 {
-                    m_componentManager.log( LogService.LOG_WARNING,
+                    m_componentManager.log( LogService.LOG_ERROR,
                             "DependencyManager : invokeUpdatedMethod : timeout on open latch {0}",  new Object[] {getName()}, null );
                     m_componentManager.dumpThreads();
                 }
@@ -1646,6 +1646,8 @@ public class DependencyManager<S, T> implements Reference
             catch ( InterruptedException e )
             {
                 Thread.currentThread().interrupt();
+                m_componentManager.dumpThreads();
+                //ignore
             }
             if ( !getServiceObject( m_bindMethods.getUpdated(), refPair ))
             {
@@ -1699,7 +1701,7 @@ public class DependencyManager<S, T> implements Reference
                     {
                         if (!info.getCloseLatch().await( getLockTimeout(), TimeUnit.MILLISECONDS ) )
                         {
-                            m_componentManager.log( LogService.LOG_WARNING,
+                            m_componentManager.log( LogService.LOG_ERROR,
                                     "DependencyManager : invokeUnbindMethod : timeout on close latch {0}",  new Object[] {getName()}, null );
                             m_componentManager.dumpThreads();
                         }
@@ -1707,6 +1709,7 @@ public class DependencyManager<S, T> implements Reference
                     catch ( InterruptedException e )
                     {
                         Thread.currentThread().interrupt();
+                        m_componentManager.dumpThreads();
                         //ignore
                     }
                 }
@@ -1724,7 +1727,9 @@ public class DependencyManager<S, T> implements Reference
             }
             catch ( InterruptedException e )
             {
-                // TODO Auto-generated catch block
+                Thread.currentThread().interrupt();
+                m_componentManager.dumpThreads();
+                //ignore
             }
 
             if (refPair == null)
