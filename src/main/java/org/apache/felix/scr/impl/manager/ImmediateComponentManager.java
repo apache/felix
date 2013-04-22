@@ -255,7 +255,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             // if a dependency turned unresolved since the validation check,
             // creating the instance fails here, so we deactivate and return
             // null.
-            boolean open = dm.open( implementationObject );
+            boolean open = dm.open( implementationObject, componentContext.getEdgeInfo( dm ) );
             if ( !open )
             {
                 log( LogService.LOG_ERROR, "Cannot create component instance due to failure to bind reference {0}",
@@ -265,7 +265,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 // make sure, we keep no bindings
                 for ( DependencyManager md: getReversedDependencyManagers() )
                 {
-                    md.close( implementationObject );
+                    md.close( implementationObject, componentContext.getEdgeInfo( md ) );
                 }
 
                 setter.resetImplementationObject( implementationObject );
@@ -282,7 +282,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             // containing the exception with the Log Service and activation fails
             for ( DependencyManager md: getReversedDependencyManagers() )
             {
-                md.close( implementationObject );
+                md.close( implementationObject, null );
             }
 
             // make sure the implementation object is not available
@@ -319,7 +319,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         // 2. Unbind any bound services
         for ( DependencyManager md: getReversedDependencyManagers() )
         {
-            md.close( implementationObject );
+            md.close( implementationObject, componentContext.getEdgeInfo( md ) );
         }
 
     }
@@ -334,18 +334,14 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         return Active.getInstance();
     }
     
-    EdgeInfo getEdgeInfo( S implObject, DependencyManager<S, ?> dependencyManager) 
-    {
-        return m_componentContext.getEdgeInfo( dependencyManager );
-    }
-
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         ComponentContextImpl<S> componentContext = m_componentContext;
         if ( componentContext != null )
         {
             final S impl = componentContext.getImplementationObject( false );
-            dependencyManager.invokeBindMethod( impl, refPair, trackingCount );
+            EdgeInfo info = componentContext.getEdgeInfo( dependencyManager );
+            dependencyManager.invokeBindMethod( impl, refPair, trackingCount, info );
         }
     }
 
@@ -355,7 +351,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         if ( componentContext != null )
         {
             final S impl = componentContext.getImplementationObject( false );
-            dependencyManager.invokeUpdatedMethod( impl, refPair, trackingCount );
+            EdgeInfo info = componentContext.getEdgeInfo( dependencyManager );
+            dependencyManager.invokeUpdatedMethod( impl, refPair, trackingCount, info );
         }
     }
 
@@ -365,7 +362,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         if ( componentContext != null )
         {
             final S impl = componentContext.getImplementationObject( false );
-            dependencyManager.invokeUnbindMethod( impl, oldRefPair, trackingCount );
+            EdgeInfo info = componentContext.getEdgeInfo( dependencyManager );
+            dependencyManager.invokeUnbindMethod( impl, oldRefPair, trackingCount, info );
         }
     }
 

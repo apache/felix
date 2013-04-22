@@ -278,11 +278,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         return true;
     }
 
-    EdgeInfo getEdgeInfo( S implObject, DependencyManager<S, ?> dependencyManager) 
-    {
-        return null;
-    }
-
     <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> ref, int trackingCount )
     {
     }
