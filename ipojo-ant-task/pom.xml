@@ -16,7 +16,8 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
@@ -32,9 +33,10 @@
     <description>
         Ant task to package iPOJO-powered bundles.
     </description>
-    <url>
-        http://felix.apache.org/site/ipojo-ant-task.html
-    </url>
+
+    <properties>
+        <ipojo.import.packages>[1.8.0,2.0.0)</ipojo.import.packages>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -59,6 +61,12 @@
         </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -72,21 +80,21 @@
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Bundle-Description>iPOJO Ant Task</Bundle-Description>
                         <Bundle-DocURL>http://felix.apache.org/site/ipojo-ant-task.html</Bundle-DocURL>
-                        <Private-Package>org.apache.felix.ipojo.metadata,
+                        <Private-Package>
+                            org.apache.felix.ipojo.metadata,
                             org.apache.felix.ipojo.manipulator*,
                             org.apache.felix.ipojo.xml.parser,
                             org.apache.felix.ipojo.manipulation*,
+                            org.apache.felix.ipojo.annotations*,
                             org.objectweb.asm.util;-split-package:=merge-first,
                             org.objectweb.asm;-split-package:=merge-first,
                             org.objectweb.asm.commons;-split-package:=merge-first,
+                            org.objectweb.asm.tree;-split-package:=merge-first,
                             org.apache.xerces.parsers, org.apache.xerces.xni*,
                             org.apache.xerces.impl*, org.apache.xerces.util.*,
                             org.apache.xerces.dom.*, org.apache.xerces.dom3.*
                         </Private-Package>
                         <Export-Package>org.apache.felix.ipojo.task</Export-Package>
-                        <Import-Package>!org.objectweb.asm.signature, !org.objectweb.asm.tree,
-                            !org.objectweb.asm.tree.analysis, *
-                        </Import-Package>
                     </instructions>
                     <obrRepository>NONE</obrRepository>
                 </configuration>
@@ -106,6 +114,30 @@
                 <configuration>
                     <source>1.5</source>
                     <target>1.5</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- check src only (except remote resources additions) -->
+                    <includes>
+                        <include>src/**</include>
+                    </includes>
+                    <excludes>
+                        <exclude>src/main/appended-resources/**</exclude>
+                        <exclude>src/main/resources/META-INF/services/org.apache.felix.ipojo.manipulator.spi.Module
+                        </exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
