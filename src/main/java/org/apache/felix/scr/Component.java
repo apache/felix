@@ -73,8 +73,8 @@ public interface Component
     /**
      * The Component has successfully been activated and is fully functional
      * (value is 16). This is the state of immediate components after
-     * successfull activation. Delayed and Service Factory Components enter
-     * this state when the service instance has actually be instantiated because
+     * successful activation. Delayed and Service Factory Components enter
+     * this state when the service instance has actually been instantiated because
      * the service has been acquired.
      */
     static final int STATE_ACTIVE = 16;

@@ -380,7 +380,7 @@
                         <exclude>**/components/**</exclude>
                     </excludes>
                     <includes>
-                        <include>**/integration/*</include>
+                        <include>**/integration/**</include>
                     </includes>
                 </configuration>
             </plugin>

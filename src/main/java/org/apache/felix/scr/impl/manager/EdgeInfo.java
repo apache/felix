@@ -24,21 +24,31 @@ class EdgeInfo
 {
     private int open = -1;
     private int close = -1;
-    private CountDownLatch latch;
+    private CountDownLatch openLatch;
+    private CountDownLatch closeLatch;
 
     public void setClose( int close )
     {
         this.close = close;
     }
 
-    public CountDownLatch getLatch()
+    public CountDownLatch getOpenLatch()
     {
-        return latch;
+        return openLatch;
     }
 
-    public void setLatch( CountDownLatch latch )
+    public void setOpenLatch( CountDownLatch latch )
     {
-        this.latch = latch;
+        this.openLatch = latch;
+    }
+    public CountDownLatch getCloseLatch()
+    {
+        return closeLatch;
+    }
+
+    public void setCloseLatch( CountDownLatch latch )
+    {
+        this.closeLatch = latch;
     }
 
     public void setOpen( int open )
