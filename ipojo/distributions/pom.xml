@@ -35,6 +35,10 @@
 
     <modules>
         <module>ipojo-felix-quicktart</module>
+        <module>ipojo-webconsole-quicktart</module>
+        <module>ten-minutes-tutorial</module>
+        <module>maven-tutorial</module>
+        <module>handler-tutorial</module>
     </modules>
 
     <properties>
