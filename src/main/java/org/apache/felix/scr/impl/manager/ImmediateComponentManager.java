@@ -284,7 +284,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             // containing the exception with the Log Service and activation fails
             for ( DependencyManager md: getReversedDependencyManagers() )
             {
-                md.close( implementationObject, null );
+                md.close( implementationObject, componentContext.getEdgeInfo( md ) );
             }
 
             // make sure the implementation object is not available
@@ -295,6 +295,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         else
         {
             componentContext.setImplementationAccessible( true );
+            m_circularReferences.remove();
+            //this may cause a getService as properties now match a filter.
             setServiceProperties( result );
         }
 
@@ -718,6 +720,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     {
         if (m_circularReferences.get() != null)
         {
+            log( LogService.LOG_ERROR,  "Circular reference detected, getService returning null", null );
+            dumpThreads();
             return false;             
         }
         m_circularReferences.set( Boolean.TRUE );
@@ -775,6 +779,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         }
         finally
         {
+            //normally this will have been done after object becomes accessible.  This is double-checking.
             m_circularReferences.remove();
         }
     }

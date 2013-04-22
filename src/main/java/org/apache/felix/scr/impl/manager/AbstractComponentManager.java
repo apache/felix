@@ -187,6 +187,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         catch ( InterruptedException e )
         {
             Thread.currentThread().interrupt();
+            dumpThreads();
             //TODO this is so wrong
             throw new IllegalStateException( "Could not obtain lock (Reason: " + e + ")" );
         }
@@ -217,11 +218,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         try
         {
             String dump = new ThreadDump().call();
-            log( LogService.LOG_ERROR, dump, null );
+            log( LogService.LOG_DEBUG, dump, null );
         }
         catch ( Throwable t )
         {
-            log( LogService.LOG_ERROR, "Could not dump threads", t );
+            log( LogService.LOG_DEBUG, "Could not dump threads", t );
         }
     }
 
@@ -280,6 +281,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 catch ( InterruptedException e )
                 {
                     Thread.currentThread().interrupt();
+                    dumpThreads();
                 }
             }
         }
