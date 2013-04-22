@@ -698,56 +698,70 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     public S getService( Bundle bundle, ServiceRegistration<S> serviceRegistration )
     {
-            if ( m_componentContext == null )
-            {
-                try
-                {
-                    if ( !collectDependencies() )
-                    {
-                        log(
-                                LogService.LOG_DEBUG,
-                                "getService did not win collecting dependencies, try creating object anyway.",
-                                null );
-
-                    }
-                    else
-                    {
-                        log(
-                                LogService.LOG_DEBUG,
-                                "getService won collecting dependencies, proceed to creating object.",
-                                null );
-
-                    }
-                }
-                catch ( IllegalStateException e )
-                {
-                    log(
-                            LogService.LOG_INFO,
-                            "Could not obtain all required dependencies, getService returning null",
-                            null );
-                    return null;
-                }
-                obtainWriteLock( "ImmediateComponentManager.getService.1" );
-                try
-                {
-                    if ( m_componentContext == null )
-                    {
-                        //state should be "Registered"
-                        S result = (S) state().getService( this );
-                        if ( result != null )
-                        {
-                            m_useCount.incrementAndGet();
-                        }
-                        return result;
-                    }
-                }
-                finally
-                {
-                    releaseWriteLock( "ImmediateComponentManager.getService.1" );
-                }
-            }
+        boolean success = getServiceInternal();
+        if ( success )
+        {
             m_useCount.incrementAndGet();
             return m_componentContext.getImplementationObject( true );
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @Override
+    boolean getServiceInternal()
+    {
+        boolean success = true;
+        if ( m_componentContext == null )
+        {
+            try
+            {
+                if ( !collectDependencies() )
+                {
+                    log(
+                            LogService.LOG_DEBUG,
+                            "getService did not win collecting dependencies, try creating object anyway.",
+                            null );
+
+                }
+                else
+                {
+                    log(
+                            LogService.LOG_DEBUG,
+                            "getService won collecting dependencies, proceed to creating object.",
+                            null );
+
+                }
+            }
+            catch ( IllegalStateException e )
+            {
+                log(
+                        LogService.LOG_INFO,
+                        "Could not obtain all required dependencies, getService returning null",
+                        null );
+                success = false;
+            }
+            obtainWriteLock( "ImmediateComponentManager.getService.1" );
+            try
+            {
+                if ( m_componentContext == null )
+                {
+                    //state should be "Registered"
+                    S result = (S) state().getService( this );
+                    if ( result == null )
+                    {
+                        success = false;;
+                    }
+                }
+            }
+            finally
+            {
+                releaseWriteLock( "ImmediateComponentManager.getService.1" );
+            }
+        }
+        return success;
     }
 
     public void ungetService( Bundle bundle, ServiceRegistration<S> serviceRegistration, S o )

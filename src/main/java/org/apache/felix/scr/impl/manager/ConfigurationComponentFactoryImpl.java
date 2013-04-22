@@ -56,7 +56,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
      * {@link org.apache.felix.scr.impl.manager.ImmediateComponentManager} for configuration updating this map is
      * lazily created.
      */
-    private Map<String, ImmediateComponentManager> m_configuredServices;
+    private Map<String, ImmediateComponentManager<S>> m_configuredServices;
 
     public ConfigurationComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
@@ -71,9 +71,9 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
      * configuration instances are to enabled as a consequence of activating
      * the component factory.
      */
-    protected boolean createComponent()
+    boolean getServiceInternal()
     {
-        List cms = new ArrayList( );
+        List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>( );
         getComponentManagers( m_configuredServices, cms );
         for ( Iterator i = cms.iterator(); i.hasNext(); )
         {
@@ -140,15 +140,15 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
         }
         else   //non-spec backwards compatible
         {
-            ImmediateComponentManager cm;
-            Map<String, ImmediateComponentManager> configuredServices = m_configuredServices;
+            ImmediateComponentManager<S> cm;
+            Map<String, ImmediateComponentManager<S>> configuredServices = m_configuredServices;
             if ( configuredServices != null )
             {
-                cm = ( ImmediateComponentManager ) configuredServices.get( pid );
+                cm = configuredServices.get( pid );
             }
             else
             {
-                m_configuredServices = new HashMap<String, ImmediateComponentManager>();
+                m_configuredServices = new HashMap<String, ImmediateComponentManager<S>>();
                 configuredServices = m_configuredServices;
                 cm = null;
             }
@@ -183,9 +183,9 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
 
     public Component[] getComponents()
     {
-        List cms = getComponentList();
+        List<AbstractComponentManager<S>> cms = getComponentList();
         getComponentManagers( m_configuredServices, cms );
-        return (Component[]) cms.toArray( new Component[ cms.size() ] );
+        return cms.toArray( new Component[ cms.size() ] );
     }
 
 
@@ -199,7 +199,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
     {
         super.disposeComponents( reason );
 
-        List<AbstractComponentManager> cms = new ArrayList<AbstractComponentManager>( );
+        List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>( );
         getComponentManagers( m_configuredServices, cms );
         for ( AbstractComponentManager acm: cms )
         {
@@ -237,12 +237,12 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
      * instance. The component manager is kept in the internal set of created
      * components. The component is neither configured nor enabled.
      */
-    private ImmediateComponentManager createConfigurationComponentManager()
+    private ImmediateComponentManager<S> createConfigurationComponentManager()
     {
-        return new ComponentFactoryConfiguredInstance( getActivator(), this, getComponentMetadata(), getComponentMethods() );
+        return new ComponentFactoryConfiguredInstance<S>( getActivator(), this, getComponentMetadata(), getComponentMethods() );
     }
 
-    static class ComponentFactoryConfiguredInstance extends ImmediateComponentManager {
+    static class ComponentFactoryConfiguredInstance<S> extends ImmediateComponentManager<S> {
 
         public ComponentFactoryConfiguredInstance( BundleComponentActivator activator, ComponentHolder componentHolder,
                 ComponentMetadata metadata, ComponentMethods componentMethods )
