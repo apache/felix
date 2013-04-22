@@ -714,6 +714,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     protected abstract void deleteComponent( int reason );
 
+    boolean getServiceInternal()
+    {
+        return false;
+    }
+
     /**
      * All ComponentManagers are ServiceFactory instances
      *
@@ -1516,53 +1521,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 return;
             }
 
-            // 1. Load the component implementation class
-            // 2. Create the component instance and component context
-            // 3. Bind the target services
-            // 4. Call the activate method, if present
             if ( ( acm.isImmediate() || acm.getComponentMetadata().isFactory() ) )
             {
-                //don't collect dependencies for a factory component.
-                try
-                {
-                    if ( !acm.collectDependencies() )
-                    {
-                        acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object (1)", null );
-                        return;
-                    }
-                    else
-                    {
-                        acm.log( LogService.LOG_DEBUG,
-                                "activate won collecting dependencies, proceed to creating object.", null );
-
-                    }
-                }
-                catch ( IllegalStateException e )
-                {
-                    acm.log( LogService.LOG_DEBUG, "Not all dependencies collected, cannot create object (2)", null );
-                    return;
-                }
-                catch ( Throwable t )
-                {
-                    acm.log( LogService.LOG_ERROR, "Unexpected throwable from attempt to collect dependencies", t );
-                    return;
-                }
-                acm.obtainWriteLock( "AbstractComponentManager.Unsatisfied.activate.1" );
-                try
-                {
-                    acm.changeState( acm.getActiveState() );
-                    if ( !acm.createComponent() )
-                    {
-                        // component creation failed, not active now
-                        acm.log( LogService.LOG_ERROR, "Component instance could not be created, activation failed", null );
-                        acm.changeState( Unsatisfied.getInstance() );
-                    }
-                }
-                finally
-                {
-                    acm.releaseWriteLock( "AbstractComponentManager.Unsatisfied.activate.1" );
-                }
-
+                acm.getServiceInternal();
             }
  
         }
@@ -1722,7 +1683,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             if ( dcm.createComponent() )
             {
-                dcm.changeState( Active.getInstance() );
+                dcm.changeState( dcm.getActiveState() );
                 return dcm.getInstance();
             }
 
