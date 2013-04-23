@@ -168,7 +168,7 @@ public class MetaTypeIO {
             contentHandler.startElement(namespace, METADATA_ELEMENT, METADATA_ELEMENT_QNAME, ai);
             IOUtils.newline(contentHandler);
 
-            for(final ComponentContainer comp : metaData.getComponents()) {
+            for(final ComponentContainer comp : components) {
                 if ( comp.getMetatypeContainer() != null ) {
                     generateOCDXML(comp.getMetatypeContainer(), contentHandler);
                     generateDesignateXML(comp.getMetatypeContainer(), contentHandler);
