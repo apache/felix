@@ -178,10 +178,21 @@ abstract class RegistrationManager<T>
                 }
                 catch ( InterruptedException e )
                 {
+                    try
+                    {
+                        if ( !rsw.getLatch().await( getTimeout(), TimeUnit.MILLISECONDS ))
+                        {
+                            log( LogService.LOG_ERROR, "Timeout waiting for reg change to complete {0}", new Object[]
+                                    {rsw.getRegState()}, null);
+                            reportTimeout();
+                        }
+                    }
+                    catch ( InterruptedException e1 )
+                    {
+                        log( LogService.LOG_ERROR, "Interrupted twice waiting for reg change to complete {0}", new Object[]
+                                {rsw.getRegState()}, null);
+                    }
                     Thread.currentThread().interrupt();
-                    log( LogService.LOG_ERROR, "Interrupted exception waiting for reg change to complete {0}", new Object[]
-                            {rsw.getRegState()}, null);
-                    reportTimeout();
                 }
             }
         }

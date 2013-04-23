@@ -77,6 +77,7 @@ class ComponentActorThread implements Runnable
                     }
                     catch ( InterruptedException ie )
                     {
+                        Thread.currentThread().interrupt();
                         // don't care
                     }
                 }
