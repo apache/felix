@@ -59,7 +59,7 @@ public class MetatypeAttributeDefinition {
         }
     }
 
-    public Object getDefaultValue() {
+    public String getDefaultValue() {
         return this.defaultValue;
     }
 

@@ -212,6 +212,21 @@ public class MetaTypeIO {
         IOUtils.newline(contentHandler);
     }
 
+    /**
+     * Escape the value according to 105.13.3.21 (validate method)
+     */
+    private static String escapeDefaultValue(final String value) {
+        if ( value == null ) {
+            return value;
+        }
+
+        String result = value.trim();
+        result = result.replace(" ", "\\ ");
+        result = result.replace(",", "\\,");
+        result = result.replace("\\", "\\\\");
+        return result;
+    }
+
     private static void generateAttributeXML(final MetatypeAttributeDefinition ad, final ContentHandler contentHandler)
             throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
@@ -223,11 +238,11 @@ public class MetaTypeIO {
                 if ( i > 0 ) {
                     buf.append(',');
                 }
-                buf.append(ad.getDefaultMultiValue()[i]);
+                buf.append(escapeDefaultValue(ad.getDefaultMultiValue()[i]));
             }
             IOUtils.addAttribute(ai, "default", buf);
         } else {
-            IOUtils.addAttribute(ai, "default", ad.getDefaultValue());
+            IOUtils.addAttribute(ai, "default", escapeDefaultValue(ad.getDefaultValue()));
         }
         IOUtils.addAttribute(ai, "name", ad.getName());
         IOUtils.addAttribute(ai, "description", ad.getDescription());
