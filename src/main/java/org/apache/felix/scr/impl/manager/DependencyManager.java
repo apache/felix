@@ -1645,9 +1645,22 @@ public class DependencyManager<S, T> implements Reference
             }
             catch ( InterruptedException e )
             {
+                try
+                {
+                    if (!info.getOpenLatch().await( getLockTimeout(), TimeUnit.MILLISECONDS ))
+                    {
+                        m_componentManager.log( LogService.LOG_ERROR,
+                                "DependencyManager : invokeUpdatedMethod : timeout on open latch {0}",  new Object[] {getName()}, null );
+                        m_componentManager.dumpThreads();
+                    }
+                }
+                catch ( InterruptedException e1 )
+                {
+                    m_componentManager.log( LogService.LOG_ERROR,
+                            "DependencyManager : invokeUpdatedMethod : Interrupted twice on open latch {0}",  new Object[] {getName()}, null );
+                    Thread.currentThread().interrupt();
+                }
                 Thread.currentThread().interrupt();
-                m_componentManager.dumpThreads();
-                //ignore
             }
             if ( !getServiceObject( m_bindMethods.getUpdated(), refPair ))
             {
@@ -1708,9 +1721,21 @@ public class DependencyManager<S, T> implements Reference
                     }
                     catch ( InterruptedException e )
                     {
+                        try
+                        {
+                            if (!info.getCloseLatch().await( getLockTimeout(), TimeUnit.MILLISECONDS ) )
+                            {
+                                m_componentManager.log( LogService.LOG_ERROR,
+                                        "DependencyManager : invokeUnbindMethod : timeout on close latch {0}",  new Object[] {getName()}, null );
+                                m_componentManager.dumpThreads();
+                            }
+                        }
+                        catch ( InterruptedException e1 )
+                        {
+                            m_componentManager.log( LogService.LOG_ERROR,
+                                    "DependencyManager : invokeUnbindMethod : Interrupted twice on close latch {0}",  new Object[] {getName()}, null );
+                        }
                         Thread.currentThread().interrupt();
-                        m_componentManager.dumpThreads();
-                        //ignore
                     }
                 }
                 //ignore events after close started or we will have duplicate unbinds.

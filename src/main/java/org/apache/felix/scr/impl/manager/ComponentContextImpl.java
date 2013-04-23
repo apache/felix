@@ -31,6 +31,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentInstance;
+import org.osgi.service.log.LogService;
 
 
 /**
@@ -187,8 +188,18 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
         catch ( InterruptedException e )
         {
+            try
+            {
+                if (accessibleLatch.await( m_componentManager.getLockTimeout(), TimeUnit.MILLISECONDS ) && m_implementationAccessible)
+                {
+                    return m_implementationObject;
+                }
+            }
+            catch ( InterruptedException e1 )
+            {
+                m_componentManager.log( LogService.LOG_INFO, "Interrupted twice waiting for implementation object to become accessible", e1 );
+            }
             Thread.currentThread().interrupt();
-            getComponentManager().dumpThreads();
             return null;
         }
         return null;

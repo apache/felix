@@ -186,10 +186,21 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
         catch ( InterruptedException e )
         {
+            try
+            {
+                if (!m_stateLock.tryLock( getLockTimeout(), TimeUnit.MILLISECONDS ) )
+                {
+                    dumpThreads();
+                    throw new IllegalStateException( "Could not obtain lock" );
+                }
+            }
+            catch ( InterruptedException e1 )
+            {
+                Thread.currentThread().interrupt();
+                //TODO is there a better exception to throw?
+                throw new IllegalStateException( "Interrupted twice: Could not obtain lock" );
+            }
             Thread.currentThread().interrupt();
-            dumpThreads();
-            //TODO this is so wrong
-            throw new IllegalStateException( "Could not obtain lock (Reason: " + e + ")" );
         }
     }
 
@@ -268,20 +279,26 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                         new Object[] {trackingCount, ceiling, missing}, null );
                 try
                 {
-                    if ( !missingCondition.await( getLockTimeout(), TimeUnit.MILLISECONDS ))
+                    if ( !doMissingWait())
                     {
-                        log( LogService.LOG_ERROR, "waitForTracked timed out: {0} ceiling: {1} missing: {2},  Expect further errors",
-                                new Object[] {trackingCount, ceiling, missing}, null );
-                        dumpThreads();
-                        missing.clear();
-                        return;
-                        
+                        return;                        
                     }
                 }
                 catch ( InterruptedException e )
                 {
+                    try
+                    {
+                        if ( !doMissingWait())
+                        {
+                            return;                        
+                        }
+                    }
+                    catch ( InterruptedException e1 )
+                    {
+                        log( LogService.LOG_ERROR, "waitForTracked interrupted twice: {0} ceiling: {1} missing: {2},  Expect further errors",
+                                new Object[] {trackingCount, ceiling, missing}, e1 );
+                    }
                     Thread.currentThread().interrupt();
-                    dumpThreads();
                 }
             }
         }
@@ -289,6 +306,19 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             missingLock.unlock();
         }
+    }
+    
+    private boolean doMissingWait() throws InterruptedException
+    {
+        if ( !missingCondition.await( getLockTimeout(), TimeUnit.MILLISECONDS ))
+        {
+            log( LogService.LOG_ERROR, "waitForTracked timed out: {0} ceiling: {1} missing: {2},  Expect further errors",
+                    new Object[] {trackingCount, ceiling, missing}, null );
+            dumpThreads();
+            missing.clear();
+            return false;
+        }
+        return true;
     }
 
 //---------- Component ID management
