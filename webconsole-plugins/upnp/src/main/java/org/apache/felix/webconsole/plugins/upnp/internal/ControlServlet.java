@@ -41,18 +41,16 @@ import org.osgi.service.log.LogService;
 import org.osgi.service.upnp.UPnPAction;
 import org.osgi.service.upnp.UPnPDevice;
 import org.osgi.service.upnp.UPnPIcon;
-import org.osgi.service.upnp.UPnPLocalStateVariable;
 import org.osgi.service.upnp.UPnPService;
 import org.osgi.service.upnp.UPnPStateVariable;
 import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * This class handles requests from the Web Interface. It is separated from
  * the WebConsolePlugin just to improve readability. This servlet actually
  * is not registered in HTTP service.
  */
-public class ControlServlet extends HttpServlet implements ServiceTrackerCustomizer
+public final class ControlServlet extends HttpServlet 
 {
 
     private static final long serialVersionUID = -5789642544511401813L;
@@ -60,10 +58,11 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
     private static final SimpleDateFormat DATA_FORMAT = new SimpleDateFormat(
         "EEE, d MMM yyyy HH:mm:ss Z"); //$NON-NLS-1$
 
-    final HashMap icons = new HashMap(10);
-    final HashMap sessions = new HashMap(10);
+    private final HashMap/*<String,UPnPDevice>*/ devices = new HashMap(10);
+    private final HashMap/*<String,UPnPIcon>*/ icons = new HashMap(10);
+    private final HashMap/*<String,SessionObject>*/ sessions = new HashMap(10);
 
-    private ServiceTracker tracker;
+    private final ServiceTracker tracker;
     private final BundleContext bc;
 
     private static final long LAST_MODIFIED = System.currentTimeMillis();
@@ -72,7 +71,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
      * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected final void doGet(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
     {
 
@@ -80,7 +79,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
 
         if (udn != null)
         {
-            UPnPIcon icon = (UPnPIcon) icons.get(udn);
+            UPnPIcon icon = getIcon(udn);
             if (icon == null)
             {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -126,7 +125,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected final void doPost(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
     {
         try
@@ -160,7 +159,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                 SessionObject session = getSession(request)//
                 .subscribe(require("udn", request), service.getId()); //$NON-NLS-1$
 
-                json = serviceToJSON(service, session);
+                json = Serializer.serviceToJSON(service, session);
             }
             else if ("invokeAction".equals(method)) //$NON-NLS-1$
             {
@@ -198,7 +197,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
 
     private final SessionObject getSession(HttpServletRequest request)
     {
-        String sessionID = request.getSession().getId();
+        final String sessionID = request.getSession().getId();
         SessionObject ret = (SessionObject) sessions.get(sessionID);
         if (ret == null)
         {
@@ -211,7 +210,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
     private static final String require(String name, HttpServletRequest request)
         throws ServletException
     {
-        String value = request.getParameter(name);
+        final String value = request.getParameter(name);
         if (value == null)
             throw new ServletException("missing parameter: " + name);
         return value;
@@ -220,10 +219,10 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
     private final UPnPService requireService(HttpServletRequest request)
         throws ServletException
     {
-        String deviceUdn = require("udn", request); //$NON-NLS-1$
-        String serviceUrn = require("urn", request); //$NON-NLS-1$
+        final String deviceUdn = require("udn", request); //$NON-NLS-1$
+        final String serviceUrn = require("urn", request); //$NON-NLS-1$
 
-        UPnPDevice device = getDevice(deviceUdn);
+        final UPnPDevice device = getDevice(deviceUdn);
         return getService(device, serviceUrn);
     }
 
@@ -235,7 +234,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
             return null; // the device is dynamically removed
         }
 
-        Object parentUdn = ref.getProperty(UPnPDevice.UDN);
+        final Object parentUdn = ref.getProperty(UPnPDevice.UDN);
         if (parentUdn == null)
         {
             plugin.log(LogService.LOG_ERROR,
@@ -243,7 +242,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
             return null;
         }
 
-        JSONObject json = deviceToJSON(ref, device);
+        final JSONObject json = Serializer.deviceToJSON(ref, device);
 
         // add child devices
         final Object[] refs = tracker.getServiceReferences();
@@ -251,8 +250,8 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         {
             ref = (ServiceReference) refs[i];
 
-            Object parent = ref.getProperty(UPnPDevice.PARENT_UDN);
-            Object currentUDN = ref.getProperty(UPnPDevice.UDN);
+            final Object parent = ref.getProperty(UPnPDevice.PARENT_UDN);
+            final Object currentUDN = ref.getProperty(UPnPDevice.UDN);
             if (parent == null)
             { // no parent
                 continue;
@@ -273,101 +272,10 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         return json;
     }
 
-    private static final JSONObject deviceToJSON(ServiceReference ref, UPnPDevice device)
-        throws JSONException
-    {
-        JSONObject json = new JSONObject();
-        json.put("icon", device.getIcons(null) != null); //$NON-NLS-1$
-
-        // add properties
-        String[] props = ref.getPropertyKeys();
-        JSONObject _props = new JSONObject();
-        for (int i = 0; props != null && i < props.length; i++)
-        {
-            _props.put(props[i], ref.getProperty(props[i]));
-        }
-        json.put("props", _props); //$NON-NLS-1$
-
-        UPnPService[] services = device.getServices();
-        for (int i = 0; services != null && i < services.length; i++)
-        {
-            json.append("services", services[i].getType()); //$NON-NLS-1$
-        }
-
-        return json;
-    }
-
-    private static final JSONObject serviceToJSON(UPnPService service,
-        SessionObject session) throws JSONException
-    {
-        JSONObject json = new JSONObject();
-
-        // add service properties
-        json.put("type", service.getType()); //$NON-NLS-1$
-        json.put("id", service.getId()); //$NON-NLS-1$
-
-        // add state variables
-        UPnPStateVariable[] vars = service.getStateVariables();
-        for (int i = 0; vars != null && i < vars.length; i++)
-        {
-            Object value = null;
-            if (vars[i] instanceof UPnPLocalStateVariable)
-            {
-                value = ((UPnPLocalStateVariable) vars[i]).getCurrentValue();
-            }
-
-            if (value == null)
-                value = session.getValue(vars[i].getName());
-            if (value == null)
-                value = "---"; //$NON-NLS-1$
-
-            json.append("variables", variableToJSON(vars[i], vars[i].getName()) //$NON-NLS-1$
-                .put("value", value));// //$NON-NLS-1$
-        }
-
-        // add actions
-        UPnPAction[] actions = service.getActions();
-        for (int i = 0; actions != null && i < actions.length; i++)
-        {
-            json.append("actions", actionToJSON(actions[i])); //$NON-NLS-1$
-        }
-
-        return json;
-    }
-    
-    private static final JSONObject variableToJSON(final UPnPStateVariable var, final String name)
-        throws JSONException
-    {
-        return new JSONObject()//
-        .put("name", name) // //$NON-NLS-1$
-        .put("default", var.getDefaultValue()) // //$NON-NLS-1$
-        .put("min", var.getMinimum()) //$NON-NLS-1$
-        .put("max", var.getMaximum()) //$NON-NLS-1$
-        .put("step", var.getStep()) //$NON-NLS-1$
-        .put("allowed", var.getAllowedValues()) //$NON-NLS-1$
-        .put("sendsEvents", var.sendsEvents()) //$NON-NLS-1$
-        .put("type", var.getUPnPDataType()); //$NON-NLS-1$
-    }
-
-    private static final JSONObject actionToJSON(UPnPAction action) throws JSONException
-    {
-        JSONObject json = new JSONObject();
-        json.put("name", action.getName()); //$NON-NLS-1$
-        String[] names = action.getInputArgumentNames();
-        for (int i = 0; names != null && i < names.length; i++)
-        {
-            UPnPStateVariable variable = action.getStateVariable(names[i]);
-            json.append("inVars", variableToJSON(variable, names[i]));  //$NON-NLS-1$
-        }
-
-        return json;
-
-    }
-
     private static final JSONObject invoke(UPnPAction action, String[] names,
         String[] vals) throws Exception
     {
-        JSONObject json = new JSONObject();
+        final JSONObject json = new JSONObject();
 
         // check input arguments
         Hashtable inputArgs = null;
@@ -408,15 +316,15 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         }
 
         // invoke
-        Dictionary out = action.invoke(inputArgs);
+        final Dictionary out = action.invoke(inputArgs);
 
         // prepare output arguments
         if (out != null && out.size() > 0)
         {
             for (Enumeration e = out.keys(); e.hasMoreElements();)
             {
-                String key = (String) e.nextElement();
-                UPnPStateVariable var = action.getStateVariable(key);
+                final String key = (String) e.nextElement();
+                final UPnPStateVariable var = action.getStateVariable(key);
 
                 Object value = out.get(key);
                 if (value instanceof Date)
@@ -428,7 +336,7 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
                 }
                 else if (value instanceof byte[])
                 {
-                    value = hex((byte[]) value);
+                    value = Hex.encode((byte[]) value);
                 }
 
                 json.append("output", new JSONObject() // //$NON-NLS-1$
@@ -440,41 +348,48 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
         return json;
     }
 
-    private static final String hex(byte[] data)
+    private final void fillCache()
     {
-        if (data == null)
-            return "null"; //$NON-NLS-1$
-        StringBuffer sb = new StringBuffer(data.length * 3);
-        synchronized (sb)
+        final ServiceReference[] refs = tracker.getServiceReferences();
+        for (int i = 0; i < refs.length; i++)
         {
-            for (int i = 0; i < data.length; i++)
+            final ServiceReference ref = refs[i];
+            final Object udn = ref.getProperty(UPnPDevice.UDN);
+            if (icons.containsKey(udn))
             {
-                sb.append(Integer.toHexString(data[i] & 0xff)).append('-');
+                continue;
             }
-            sb.deleteCharAt(sb.length() - 1);
+
+            final UPnPDevice device = (UPnPDevice) bc.getService(ref);
+            UPnPIcon icon = null;
+            try
+            { // Fix for FELIX-4012
+                UPnPIcon[] _icons = device == null ? null : device.getIcons(null);
+                icon = _icons != null && _icons.length > 0 ? _icons[0] : null;
+            }
+            catch (IllegalStateException e)
+            { // since OSGi r4.3 ignore it
+            }
+            icons.put(udn, icon);
+            devices.put(udn, device);
         }
-        return sb.toString();
+    }
+
+    private final UPnPIcon getIcon(final String udn)
+    {
+        fillCache();
+        return (UPnPIcon) icons.get(udn);
     }
 
     private final UPnPDevice getDevice(String udn)
     {
-        ServiceReference[] refs = tracker.getServiceReferences();
-        String _udn;
-        for (int i = 0; refs != null && i < refs.length; i++)
+        fillCache();
+        final UPnPDevice device = (UPnPDevice) devices.get(udn);
+        if (null == device)
         {
-            _udn = (String) refs[i].getProperty(UPnPDevice.UDN);
-            if (_udn != null && _udn.equals(udn))
-            {
-                UPnPDevice upnpDevice = (UPnPDevice) tracker.getService(refs[i]);
-                if (null == upnpDevice)
-                {
-                    break; // device not found
-                }
-                return upnpDevice;
-            }
+            throw new IllegalArgumentException("Device '" + udn + "' not found!");
         }
-
-        throw new IllegalArgumentException("Device '" + udn + "' not found!");
+        return device;
     }
 
     private static final UPnPService getService(UPnPDevice device, String urn)
@@ -521,42 +436,14 @@ public class ControlServlet extends HttpServlet implements ServiceTrackerCustomi
 
     /* ---------- BEGIN SERVICE TRACKER */
     /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference,
-     *      java.lang.Object)
-     */
-    public final void modifiedService(ServiceReference ref, Object serv)
-    {/* unused */
-    }
-
-    /**
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference,
      *      java.lang.Object)
      */
-    public final void removedService(ServiceReference ref, Object serv)
+    final void removedService(ServiceReference ref)
     {
-        icons.remove(ref.getProperty(UPnPDevice.UDN));
-    }
-
-    /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
-     */
-    public final Object addingService(ServiceReference ref)
-    {
-        UPnPDevice device = (UPnPDevice) bc.getService(ref);
-
-        UPnPIcon[] _icons = null;
-        try // Fix for FELIX-4012
-        {
-            _icons = device == null ? null : device.getIcons(null);
-        } catch(IllegalStateException e) { // since OSGi r4.3
-            device = null; // don't track that device, it has been removed
-        }
-        if (_icons != null && _icons.length > 0)
-        {
-            icons.put(ref.getProperty(UPnPDevice.UDN), _icons[0]);
-        }
-
-        return device;
+        final Object udn = ref.getProperty(UPnPDevice.UDN);
+        icons.remove(udn);
+        devices.remove(udn);
     }
 
 }

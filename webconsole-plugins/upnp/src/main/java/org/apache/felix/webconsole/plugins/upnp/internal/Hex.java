@@ -23,6 +23,31 @@ class Hex
     {
         // prevent instantiation
     }
+    
+    /**
+     * Encodes HEX form a <code>String</code>. The new line (\n) and carriage
+     * return (\r) symbols in the string are ignored.
+     * 
+     * @param data the bytes to encode
+     * @return the encoded data
+     */
+    public static final String encode(byte[] data)
+    {
+        if (data == null)
+        {
+            return "null"; //$NON-NLS-1$
+        }
+        final StringBuffer sb = new StringBuffer(data.length * 3);
+        synchronized (sb)
+        {
+            for (int i = 0; i < data.length; i++)
+            {
+                sb.append(Integer.toHexString(data[i] & 0xff)).append('-');
+            }
+            sb.deleteCharAt(sb.length() - 1);
+            return sb.toString();
+        }
+    }
 
     /**
      * Decodes HEX form a <code>String</code>. The new line (\n) and carriage

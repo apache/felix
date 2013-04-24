@@ -82,11 +82,6 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
                 new ConfigurationPrinterImpl(tracker), null);
         }
 
-        // delegate event
-        ControlServlet controller = ((WebConsolePlugin) plugin).controller;
-        if (controller != null)
-            controller.addingService(reference);
-
         return context.getService(reference);
     }
 
@@ -103,7 +98,9 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer
         {
             ControlServlet controller = ((WebConsolePlugin) plugin).controller;
             if (controller != null)
-                controller.removedService(reference, service);
+            {
+                controller.removedService(reference);
+            }
         }
 
         if (tracker.size() == 0 && plugin != null)
