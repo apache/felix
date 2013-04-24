@@ -116,11 +116,14 @@
                         </IPOJO-Extension>
                         <Import-Package>
                             org.osgi.framework;version=1.3, <!-- To support KF 2 -->
+                            org.osgi.framework.wiring;resolution:=optional,
                             org.osgi.service.cm,
                             org.osgi.service.log,
                             org.osgi.util.tracker;version=1.3,
                             !sun.io,
-                            !net.sourceforge.cobertura.* <!--  To support code coverage -->
+                            !net.sourceforge.cobertura.*, <!--  To support code coverage -->
+                            !org.objectweb.asm.signature,
+                            !org.objectweb.asm.tree
                         </Import-Package>
                         <Private-Package>
                             org.apache.felix.ipojo.handlers.architecture,
@@ -128,6 +131,7 @@
                             org.apache.felix.ipojo.handlers.lifecycle.controller,
                             org.apache.felix.ipojo.extender.internal*,
                             org.objectweb.asm;-split-package:=merge-last,
+                            org.objectweb.asm.commons;-split-package:=merge-last,
                             org.apache.felix.ipojo.metadata,
                             <!-- Compendium packages -->
                             org.osgi.service.cm,
@@ -135,6 +139,7 @@
                         </Private-Package>
                         <Export-Package>
                             org.apache.felix.ipojo; version="${ipojo.package.version}",
+                            org.apache.felix.ipojo.configuration; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.metadata; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.architecture; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.extender;

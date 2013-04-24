@@ -21,10 +21,7 @@ package org.apache.felix.ipojo.extender.internal;
 
 import org.apache.felix.ipojo.EventDispatcher;
 import org.apache.felix.ipojo.extender.internal.linker.DeclarationLinker;
-import org.apache.felix.ipojo.extender.internal.processor.ChainedBundleProcessor;
-import org.apache.felix.ipojo.extender.internal.processor.ComponentsBundleProcessor;
-import org.apache.felix.ipojo.extender.internal.processor.ExtensionBundleProcessor;
-import org.apache.felix.ipojo.extender.internal.processor.QueuingActivationProcessor;
+import org.apache.felix.ipojo.extender.internal.processor.*;
 import org.apache.felix.ipojo.extender.internal.queue.ExecutorQueueService;
 import org.apache.felix.ipojo.extender.internal.queue.PrefixedThreadFactory;
 import org.apache.felix.ipojo.extender.internal.queue.SynchronousQueueService;
@@ -120,6 +117,7 @@ public class Extender implements BundleActivator, SynchronousBundleListener {
 
         BundleProcessor extensionBundleProcessor = new ExtensionBundleProcessor(m_logger);
         BundleProcessor componentsProcessor = new ComponentsBundleProcessor(m_logger);
+        BundleProcessor configurationProcessor = new ConfigurationProcessor(m_logger);
         if (SYNCHRONOUS_PROCESSING_ENABLED) {
             m_queueService = new EnforcedQueueService(
                     new HeaderPreferenceSelection(),
@@ -133,6 +131,7 @@ public class Extender implements BundleActivator, SynchronousBundleListener {
 
             extensionBundleProcessor = new QueuingActivationProcessor(extensionBundleProcessor, m_queueService);
             componentsProcessor = new QueuingActivationProcessor(componentsProcessor, m_queueService);
+            configurationProcessor = new QueuingActivationProcessor(configurationProcessor, m_queueService);
         }
         m_queueService.start();
 
@@ -140,7 +139,7 @@ public class Extender implements BundleActivator, SynchronousBundleListener {
         m_linker = new DeclarationLinker(context, m_queueService);
         m_linker.start();
 
-        m_processor = ChainedBundleProcessor.create(extensionBundleProcessor, componentsProcessor);
+        m_processor = ChainedBundleProcessor.create(extensionBundleProcessor, componentsProcessor, configurationProcessor);
 
         m_processor.start();
 
