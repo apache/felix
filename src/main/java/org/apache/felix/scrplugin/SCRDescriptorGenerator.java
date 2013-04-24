@@ -328,6 +328,17 @@ public class SCRDescriptorGenerator {
         } else {
             ocd = null;
         }
+        // metatype checks if metatype is not generated (FELIX-4033)
+        if ( !componentDesc.isAbstract() && !componentDesc.isCreateMetatype() ) {
+            if ( componentDesc.getLabel() != null && componentDesc.getLabel().trim().length() > 0 ) {
+                iLog.addWarning(" Component " + componentDesc.getName() + " has set a label. However metatype is set to false. This label is ignored.",
+                        desc.getSource());
+            }
+            if ( componentDesc.getDescription() != null && componentDesc.getDescription().trim().length() > 0 ) {
+                iLog.addWarning(" Component " + componentDesc.getName() + " has set a description. However metatype is set to false. This description is ignored.",
+                        desc.getSource());
+            }
+        }
 
         ClassDescription current = desc;
         boolean inherit;
@@ -451,6 +462,22 @@ public class SCRDescriptorGenerator {
         }
     }
 
+    private boolean isPrivateProperty(final String name) {
+        final boolean isPrivate;
+        if (org.osgi.framework.Constants.SERVICE_RANKING.equals(name)
+                || org.osgi.framework.Constants.SERVICE_PID.equals(name)
+                || org.osgi.framework.Constants.SERVICE_DESCRIPTION.equals(name)
+                || org.osgi.framework.Constants.SERVICE_ID.equals(name)
+                || org.osgi.framework.Constants.SERVICE_VENDOR.equals(name)
+                || ConfigurationAdmin.SERVICE_BUNDLELOCATION.equals(name)
+                || ConfigurationAdmin.SERVICE_FACTORYPID.equals(name) ) {
+                isPrivate = true;
+            } else {
+                isPrivate = false;
+            }
+        return isPrivate;
+    }
+
     /**
      * Process property directives
      */
@@ -460,70 +487,78 @@ public class SCRDescriptorGenerator {
                     final MetatypeContainer ocd) {
         for(final PropertyDescription pd : current.getDescriptions(PropertyDescription.class)) {
 
-            if ( this.testProperty(current, component.getProperties(), pd, current == component.getClassDescription()) && ocd != null) {
+            if ( this.testProperty(current, component.getProperties(), pd, current == component.getClassDescription()) ) {
+                if ( ocd != null) {
 
-                // metatype - is this property private?
-                final boolean isPrivate;
-                if ( pd.isPrivate() != null ) {
-                    isPrivate = pd.isPrivate();
-                } else {
-                    final String name = pd.getName();
-                    if (org.osgi.framework.Constants.SERVICE_RANKING.equals(name)
-                        || org.osgi.framework.Constants.SERVICE_PID.equals(name)
-                        || org.osgi.framework.Constants.SERVICE_DESCRIPTION.equals(name)
-                        || org.osgi.framework.Constants.SERVICE_ID.equals(name)
-                        || org.osgi.framework.Constants.SERVICE_VENDOR.equals(name)
-                        || ConfigurationAdmin.SERVICE_BUNDLELOCATION.equals(name)
-                        || ConfigurationAdmin.SERVICE_FACTORYPID.equals(name) ) {
-                        isPrivate = true;
-                    } else {
-                        isPrivate = false;
-                    }
-                }
-                if ( !isPrivate ) {
-                    final MetatypeAttributeDefinition ad = new MetatypeAttributeDefinition();
-                    ocd.getProperties().add(ad);
-                    ad.setId(pd.getName());
-                    ad.setType(pd.getType().name());
-
-                    if (pd.getLabel() != null ) {
-                        ad.setName(pd.getLabel());
-                    } else {
-                        ad.setName("%" + pd.getName() + ".name");
-                    }
-                    if (pd.getDescription() != null ) {
-                        ad.setDescription(pd.getDescription());
-                    } else {
-                        ad.setDescription("%" + pd.getName() + ".description");
-                    }
-
-                    if ( pd.getUnbounded() == PropertyUnbounded.DEFAULT ) {
-                        if ( pd.getCardinality() != 0 ) {
-                            ad.setCardinality(pd.getCardinality());
+                    // metatype - is this property private?
+                    final boolean isPrivate;
+                    if ( pd.isPrivate() != null ) {
+                        isPrivate = pd.isPrivate();
+                        if ( isPrivate && this.isPrivateProperty(pd.getName()) ) { // additional check (FELIX-4033)
+                            iLog.addWarning("Property " + pd.getName() + " in class "
+                                    + current.getDescribedClass().getName() + " has redundant setting" +
+                                    " for private (true). This property is private by default.", current.getSource() );
                         }
-                    } else if ( pd.getUnbounded() == PropertyUnbounded.ARRAY ) {
-                        // unlimited array
-                        ad.setCardinality(new Integer(Integer.MAX_VALUE));
                     } else {
-                        // unlimited vector
-                        ad.setCardinality(new Integer(Integer.MIN_VALUE));
+                        final String name = pd.getName();
+                        if (isPrivateProperty(name) ) {
+                            isPrivate = true;
+                        } else {
+                            isPrivate = false;
+                        }
                     }
+                    if ( !isPrivate ) {
+                        final MetatypeAttributeDefinition ad = new MetatypeAttributeDefinition();
+                        ocd.getProperties().add(ad);
+                        ad.setId(pd.getName());
+                        ad.setType(pd.getType().name());
 
-                    ad.setDefaultValue(pd.getValue());
-                    ad.setDefaultMultiValue(pd.getMultiValue());
+                        if (pd.getLabel() != null ) {
+                            ad.setName(pd.getLabel());
+                        } else {
+                            ad.setName("%" + pd.getName() + ".name");
+                        }
+                        if (pd.getDescription() != null ) {
+                            ad.setDescription(pd.getDescription());
+                        } else {
+                            ad.setDescription("%" + pd.getName() + ".description");
+                        }
 
-                    // check options
-                    final String[] parameters = pd.getOptions();
-                    if ( parameters != null && parameters.length > 0 ) {
-                        final Map<String, String> options = new LinkedHashMap<String, String>();
-                        for (int j=0; j < parameters.length; j=j+2) {
-                            final String optionLabel = parameters[j];
-                            final String optionValue = (j < parameters.length-1) ? parameters[j+1] : null;
-                            if (optionValue != null) {
-                                options.put(optionLabel, optionValue);
+                        if ( pd.getUnbounded() == PropertyUnbounded.DEFAULT ) {
+                            if ( pd.getCardinality() != 0 ) {
+                                ad.setCardinality(pd.getCardinality());
                             }
+                        } else if ( pd.getUnbounded() == PropertyUnbounded.ARRAY ) {
+                            // unlimited array
+                            ad.setCardinality(new Integer(Integer.MAX_VALUE));
+                        } else {
+                            // unlimited vector
+                            ad.setCardinality(new Integer(Integer.MIN_VALUE));
                         }
-                        ad.setOptions(options);
+
+                        ad.setDefaultValue(pd.getValue());
+                        ad.setDefaultMultiValue(pd.getMultiValue());
+
+                        // check options
+                        final String[] parameters = pd.getOptions();
+                        if ( parameters != null && parameters.length > 0 ) {
+                            final Map<String, String> options = new LinkedHashMap<String, String>();
+                            for (int j=0; j < parameters.length; j=j+2) {
+                                final String optionLabel = parameters[j];
+                                final String optionValue = (j < parameters.length-1) ? parameters[j+1] : null;
+                                if (optionValue != null) {
+                                    options.put(optionLabel, optionValue);
+                                }
+                            }
+                            ad.setOptions(options);
+                        }
+                    }
+                } else {
+                    // additional metatype checks (FELIX-4033)
+                    if ( pd.isPrivate() != null && pd.isPrivate() ) {
+                        iLog.addWarning("Property " + pd.getName() + " in class "
+                                + current.getDescribedClass().getName() + " is set as private. " +
+                                "This is redundant as no metatype will be generated.", current.getSource() );
                     }
                 }
             }
