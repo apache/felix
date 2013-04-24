@@ -1,5 +1,7 @@
 Changes from 1.12.0 to 1.11.0
 -----------------------------
+** Improvement
+    * [FELIX-4033] - Issue warning messages for redundant SCR annotation combinations
 ** Bug
     * [FELIX-4030] - Generated metatype file contains all metatype infos
     * [FELIX-4023] - SCR-Plugin not working reliably in m2e 1.3.1 
