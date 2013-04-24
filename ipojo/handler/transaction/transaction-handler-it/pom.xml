@@ -35,6 +35,13 @@
         <url.version>1.5.1</url.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>ow2.snapshots</id>
+            <url>http://repository.ow2.org/nexus/content/repositories/snapshots/</url>
+        </repository>    
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.ow2.chameleon.transaction</groupId>
