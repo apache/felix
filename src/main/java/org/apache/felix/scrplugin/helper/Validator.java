@@ -185,7 +185,7 @@ public class Validator {
 
             // additional check for metatype (FELIX-4035)
             if ( this.container.getMetatypeContainer() != null ) {
-                if ( this.container.getProperties().size() == 0.) {
+                if ( this.container.getMetatypeContainer().getProperties().size() == 0 ) {
                     this.logWarn(component, "Component is defined to generate metatype information, however no properties have been " +
                         "defined; in case no properties are wanted, consider to use 'metatype=false'");
                 }
