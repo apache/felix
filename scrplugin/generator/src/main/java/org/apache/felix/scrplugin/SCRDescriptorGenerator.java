@@ -490,7 +490,7 @@ public class SCRDescriptorGenerator {
                 final String name = pd.getName();
                 if ( org.osgi.framework.Constants.SERVICE_ID.equals(name) ) {
                     iLog.addError("Class " + current.getDescribedClass().getName() + " is declaring " +
-                                  " the protected property 'service.id'.", current.getSource() );
+                                  "the protected property 'service.id'.", current.getSource() );
                     continue;
 
                 }
