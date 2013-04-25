@@ -467,7 +467,6 @@ public class SCRDescriptorGenerator {
         if (org.osgi.framework.Constants.SERVICE_RANKING.equals(name)
                 || org.osgi.framework.Constants.SERVICE_PID.equals(name)
                 || org.osgi.framework.Constants.SERVICE_DESCRIPTION.equals(name)
-                || org.osgi.framework.Constants.SERVICE_ID.equals(name)
                 || org.osgi.framework.Constants.SERVICE_VENDOR.equals(name)
                 || ConfigurationAdmin.SERVICE_BUNDLELOCATION.equals(name)
                 || ConfigurationAdmin.SERVICE_FACTORYPID.equals(name) ) {
@@ -488,19 +487,20 @@ public class SCRDescriptorGenerator {
         for(final PropertyDescription pd : current.getDescriptions(PropertyDescription.class)) {
 
             if ( this.testProperty(current, component.getProperties(), pd, current == component.getClassDescription()) ) {
+                final String name = pd.getName();
+                if ( org.osgi.framework.Constants.SERVICE_ID.equals(name) ) {
+                    iLog.addError("Class " + current.getDescribedClass().getName() + " is declaring " +
+                                  " the protected property 'service.id'.", current.getSource() );
+                    continue;
+
+                }
                 if ( ocd != null) {
 
                     // metatype - is this property private?
                     final boolean isPrivate;
                     if ( pd.isPrivate() != null ) {
                         isPrivate = pd.isPrivate();
-                        if ( isPrivate && this.isPrivateProperty(pd.getName()) ) { // additional check (FELIX-4033)
-                            iLog.addWarning("Property " + pd.getName() + " in class "
-                                    + current.getDescribedClass().getName() + " has redundant setting" +
-                                    " for private (true). This property is private by default.", current.getSource() );
-                        }
                     } else {
-                        final String name = pd.getName();
                         if (isPrivateProperty(name) ) {
                             isPrivate = true;
                         } else {
