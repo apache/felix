@@ -18,6 +18,8 @@
  */
 package org.apache.felix.ipojo.arch.gogo;
 
+import static java.lang.String.format;
+
 import java.io.PrintStream;
 import java.util.Dictionary;
 
@@ -35,6 +37,7 @@ import org.apache.felix.ipojo.extender.ExtensionDeclaration;
 import org.apache.felix.ipojo.extender.InstanceDeclaration;
 import org.apache.felix.ipojo.extender.TypeDeclaration;
 import org.apache.felix.service.command.Descriptor;
+
 /**
  * iPOJO Arch command giving information about the current
  * system architecture. This is a Gogo command.
@@ -96,25 +99,27 @@ public class Arch {
      */
     @Descriptor("Display iPOJO instances")
     public void instances() {
-        StringBuffer buffer = new StringBuffer();
-        for (int i = 0; i < m_archs.length; i++) {
-            InstanceDescription instance = m_archs[i].getInstanceDescription();
+        StringBuilder buffer = new StringBuilder();
+        for (Architecture m_arch : m_archs) {
+            InstanceDescription instance = m_arch.getInstanceDescription();
             if (instance.getState() == ComponentInstance.VALID) {
-                buffer.append("Instance " + instance.getName() + " -> valid \n");
+                buffer.append(format("Instance %s -> valid%n", instance.getName()));
             }
             if (instance.getState() == ComponentInstance.INVALID) {
-                buffer.append("Instance " + instance.getName() + " -> invalid \n");
+                buffer.append(format("Instance %s -> invalid%n", instance.getName()));
             }
             if (instance.getState() == ComponentInstance.STOPPED) {
-                buffer.append("Instance " + instance.getName() + " -> stopped \n");
+                buffer.append(format("Instance %s -> stopped%n", instance.getName()));
             }
         }
 
         for (InstanceDeclaration instance : m_instances) {
             // Only print unbound instances (others already printed above)
             if (!instance.getStatus().isBound()) {
-                buffer.append("Instance " + name(instance.getConfiguration()) + " of type " + instance.getConfiguration().get("component") + " is not bound.\n");
-                buffer.append("  Reason: " + instance.getStatus().getMessage());
+                buffer.append(format("Instance %s of type %s is not bound.%n",
+                        name(instance.getConfiguration()),
+                        instance.getConfiguration().get("component")));
+                buffer.append(format("  Reason: %s", instance.getStatus().getMessage()));
                 buffer.append("\n");
             }
         }
@@ -140,8 +145,8 @@ public class Arch {
      */
     @Descriptor("Display the architecture of a specific instance")
     public void instance(@Descriptor("target instance name") String instance) {
-        for (int i = 0; i < m_archs.length; i++) {
-            InstanceDescription id = m_archs[i].getInstanceDescription();
+        for (Architecture m_arch : m_archs) {
+            InstanceDescription id = m_arch.getInstanceDescription();
             if (id.getName().equalsIgnoreCase(instance)) {
                 System.out.println(id.getDescription());
                 return;
@@ -151,8 +156,8 @@ public class Arch {
         for (InstanceDeclaration instanceDeclaration : m_instances) {
             if (!instanceDeclaration.getStatus().isBound()) {
                 if (instance.equals(name(instanceDeclaration.getConfiguration()))) {
-                    System.out.println("Instance " + instance + " not bound to its factory");
-                    System.out.println(" -> " + instanceDeclaration.getStatus().getMessage());
+                    System.out.println(format("Instance %s not bound to its factory%n", instance));
+                    System.out.println(format(" -> %s%n", instanceDeclaration.getStatus().getMessage()));
                     return;
                 }
             }
@@ -171,14 +176,14 @@ public class Arch {
     public void factory(@Descriptor("target factory") String factory) {
         boolean found = false;
         PrintStream out = System.out;
-        
-        for (int i = 0; i < m_factories.length; i++) {
-            if (m_factories[i].getName().equalsIgnoreCase(factory)) {
+
+        for (Factory m_factory : m_factories) {
+            if (m_factory.getName().equalsIgnoreCase(factory)) {
                 // Skip a line if already found (factory name not necessary unique)
                 if (found) {
                     out.println();
                 }
-                out.println(m_factories[i].getDescription());
+                out.println(m_factory.getDescription());
                 found = true;
             }
         }
@@ -203,19 +208,21 @@ public class Arch {
      */
     @Descriptor("Display iPOJO factories")
     public void factories() {
-        StringBuffer buffer = new StringBuffer();
-        for (int i = 0; i < m_factories.length; i++) {
-            if (m_factories[i].getMissingHandlers().size() == 0) {
-                buffer.append("Factory " + m_factories[i].getName() + " (VALID) \n");
+        StringBuilder buffer = new StringBuilder();
+        for (Factory m_factory : m_factories) {
+            if (m_factory.getMissingHandlers().size() == 0) {
+                buffer.append(format("Factory %s (VALID)%n", m_factory.getName()));
             } else {
-                buffer.append("Factory " + m_factories[i].getName() + " (INVALID : " + m_factories[i].getMissingHandlers() + ") \n");
+                buffer.append(format("Factory %s (INVALID: %s)%n",
+                        m_factory.getName(),
+                        m_factory.getMissingHandlers()));
             }
         }
 
         for (TypeDeclaration type : m_types) {
             if (!type.getStatus().isBound()) {
-                buffer.append("Factory " + type.getComponentName() + " is not bound\n");
-                buffer.append("  Reason: " + type.getStatus().getMessage());
+                buffer.append(format("Factory %s is not bound%n", type.getComponentName()));
+                buffer.append(format("  Reason: %s", type.getStatus().getMessage()));
                 buffer.append("\n");
             }
         }
@@ -233,15 +240,15 @@ public class Arch {
     @Descriptor("Display iPOJO handlers")
     public void handlers() {
         PrintStream out = System.out;
-        for (int i = 0; i < m_handlers.length; i++) {
-            String name = m_handlers[i].getHandlerName();
-            if ("composite".equals(m_handlers[i].getType())) {
+        for (HandlerFactory m_handler : m_handlers) {
+            String name = m_handler.getHandlerName();
+            if ("composite".equals(m_handler.getType())) {
                 name = name + " [composite]";
             }
-            if (m_handlers[i].getMissingHandlers().size() == 0) {
+            if (m_handler.getMissingHandlers().size() == 0) {
                 out.println("Handler " + name + " (VALID)");
             } else {
-                out.println("Handler " + name + " (INVALID : " + m_handlers[i].getMissingHandlers() + ")");
+                out.println("Handler " + name + " (INVALID : " + m_handler.getMissingHandlers() + ")");
             }
         }
 
