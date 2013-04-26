@@ -96,6 +96,11 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         response.setHeader("Pragma", "no-cache"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
+    protected InventoryPrinterHandler getInventoryPrinterHandler(final String label)
+    {
+        return null; // all by default
+    }
+
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException,
         IOException
     {
@@ -103,9 +108,13 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
         // full request?
         final InventoryPrinterHandler handler;
-        if (request.getPathInfo().lastIndexOf('/') > 0)
+        final String pathInfo = request.getPathInfo();
+        final int lastSlash = pathInfo.lastIndexOf('/');
+        if (lastSlash > 0)
         {
-            handler = null; // all;
+            final int lastDot = pathInfo.lastIndexOf('.');
+            final String label = (lastDot < lastSlash ? pathInfo.substring(lastSlash + 1) : pathInfo.substring(lastSlash + 1, lastDot));
+            handler = this.getInventoryPrinterHandler(label); // usually all;
         }
         else
         {
