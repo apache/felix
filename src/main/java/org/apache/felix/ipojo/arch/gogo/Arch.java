@@ -159,7 +159,12 @@ public class Arch {
             if (!instanceDeclaration.getStatus().isBound()) {
                 if (instance.equals(name(instanceDeclaration.getConfiguration()))) {
                     System.out.println(format("Instance %s not bound to its factory%n", instance));
+                    System.out.println(format(" type: %s%n", instanceDeclaration.getComponentName()));
                     System.out.println(format(" -> %s%n", instanceDeclaration.getStatus().getMessage()));
+                    Throwable throwable = instanceDeclaration.getStatus().getThrowable();
+                    if (throwable != null) {
+                        throwable.printStackTrace(System.out);
+                    }
                     return;
                 }
             }
@@ -211,6 +216,10 @@ public class Arch {
                 // Unbound: maybe private or public type
                 System.out.printf("Factory %s is not bound%n", type.getComponentName());
                 System.out.printf("  -> %s%n", type.getStatus().getMessage());
+                Throwable throwable = type.getStatus().getThrowable();
+                if (throwable != null) {
+                    throwable.printStackTrace(System.out);
+                }
             } else {
                 // Bound, this is only a private factory
                 System.out.printf("Factory %s is bound - Private%n", type.getComponentName());
