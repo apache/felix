@@ -23,9 +23,10 @@ import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedServiceFactory;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
+import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Properties;
 
@@ -42,9 +43,9 @@ public class TestStaticPropsReconfiguration extends Common {
 
         Properties p2 = new Properties();
         p2.put("instance.name", "FooProvider-2");
-        p2.put("int", new Integer(4));
-        p2.put("long", new Long(42));
-        p2.put("string", new String("bar"));
+        p2.put("int", 4);
+        p2.put("long", (long) 42);
+        p2.put("string", "bar");
         p2.put("strAProp", new String[]{"bar", "foo"});
         p2.put("intAProp", new int[]{1, 2, 3});
         ipojoHelper.createComponentInstance(type, p2);
@@ -124,8 +125,6 @@ public class TestStaticPropsReconfiguration extends Common {
             }
         }
 
-        fact = null;
-
     }
 
     @Test
@@ -142,7 +141,7 @@ public class TestStaticPropsReconfiguration extends Common {
 
         assertEquals("Check intProp equality", intProp, new Integer(4));
         assertEquals("Check longProp equality", longProp, new Long(42));
-        assertEquals("Check strProp equality", strProp, new String("bar"));
+        assertEquals("Check strProp equality", strProp, "bar");
 
         assertNotNull("Check strAProp not nullity", strAProp);
         String[] v = new String[]{"bar", "foo"};
@@ -161,11 +160,11 @@ public class TestStaticPropsReconfiguration extends Common {
 
         // Reconfiguration
         ServiceReference fact_ref = ipojoHelper.getServiceReferenceByName(Factory.class.getName(), "PS-FooProviderType-2");
-        Dictionary reconf = new Properties();
+        Properties reconf = new Properties();
         reconf.put("instance.name", "FooProvider-2");
-        reconf.put("int", new Integer(5));
-        reconf.put("long", new Long(43));
-        reconf.put("string", new String("toto"));
+        reconf.put("int", 5);
+        reconf.put("long", (long) 43);
+        reconf.put("string", "toto");
         reconf.put("strAProp", new String[]{"foo", "baz"});
         reconf.put("intAProp", new int[]{3, 2, 1});
         Factory fact = (Factory) osgiHelper.getServiceObject(fact_ref);
@@ -184,7 +183,7 @@ public class TestStaticPropsReconfiguration extends Common {
 
         assertEquals("Check intProp equality after reconfiguration", intProp, new Integer(5));
         assertEquals("Check longProp equality after reconfiguration", longProp, new Long(43));
-        assertEquals("Check strProp equality after reconfiguration", strProp, new String("toto"));
+        assertEquals("Check strProp equality after reconfiguration", strProp, "toto");
         assertNotNull("Check strAProp not nullity after reconfiguration", strAProp);
         v = new String[]{"foo", "baz"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -199,11 +198,10 @@ public class TestStaticPropsReconfiguration extends Common {
                 fail("Check the intAProp Equality");
             }
         }
-        fact = null;
     }
 
     @Test
-    public void testMSFFactory1() {
+    public void testMSFFactory1() throws IOException, InterruptedException {
         ServiceReference sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-1");
         assertNotNull("Check the availability of the FS service", sr);
 
@@ -216,7 +214,7 @@ public class TestStaticPropsReconfiguration extends Common {
 
         assertEquals("Check intProp equality", intProp, new Integer(2));
         assertEquals("Check longProp equality", longProp, new Long(40));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         String[] v = new String[]{"foo", "bar"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -233,19 +231,18 @@ public class TestStaticPropsReconfiguration extends Common {
         }
 
         // Reconfiguration
-        ServiceReference fact_ref = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), "PS-FooProviderType-2");
-        Dictionary reconf = new Properties();
-        reconf.put("int", new Integer(5));
-        reconf.put("long", new Long(43));
-        reconf.put("string", new String("toto"));
+        ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+        Configuration configuration = admin.getConfiguration("FooProvider-1", "?");
+
+        Properties reconf = new Properties();
+        reconf.put("int", 5);
+        reconf.put("long", (long) 43);
+        reconf.put("string", "toto");
         reconf.put("strAProp", new String[]{"foo", "baz"});
         reconf.put("intAProp", new int[]{3, 2, 1});
-        ManagedServiceFactory fact = (ManagedServiceFactory) osgiHelper.getServiceObject(fact_ref);
-        try {
-            fact.updated("FooProvider-1", reconf);
-        } catch (ConfigurationException e) {
-            fail("Configuration non acceptable : " + reconf);
-        }
+
+        configuration.update(reconf);
+        Thread.sleep(200);
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-1");
         assertNotNull("Check the availability of the FS service", sr);
@@ -259,7 +256,7 @@ public class TestStaticPropsReconfiguration extends Common {
 
         assertEquals("Check intProp equality after reconfiguration", intProp, new Integer(5));
         assertEquals("Check longProp equality after reconfiguration", longProp, new Long(43));
-        assertEquals("Check strProp equality after reconfiguration", strProp, new String("toto"));
+        assertEquals("Check strProp equality after reconfiguration", strProp, "toto");
         assertNotNull("Check strAProp not nullity after reconfiguration", strAProp);
         v = new String[]{"foo", "baz"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -274,13 +271,10 @@ public class TestStaticPropsReconfiguration extends Common {
                 fail("Check the intAProp Equality");
             }
         }
-
-        fact = null;
-
     }
 
     @Test
-    public void testReconfMSF2() {
+    public void testReconfMSF2() throws IOException, InterruptedException {
         ServiceReference sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-2");
         assertNotNull("Check the availability of the FS service", sr);
 
@@ -293,7 +287,7 @@ public class TestStaticPropsReconfiguration extends Common {
 
         assertEquals("Check intProp equality", intProp, new Integer(4));
         assertEquals("Check longProp equality", longProp, new Long(42));
-        assertEquals("Check strProp equality", strProp, new String("bar"));
+        assertEquals("Check strProp equality", strProp, "bar");
 
         assertNotNull("Check strAProp not nullity", strAProp);
         String[] v = new String[]{"bar", "foo"};
@@ -310,20 +304,19 @@ public class TestStaticPropsReconfiguration extends Common {
             }
         }
 
+        ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+        Configuration configuration = admin.getConfiguration("FooProvider-2", "?");
+
         // Reconfiguration
-        ServiceReference fact_ref = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), "PS-FooProviderType-2");
-        Dictionary reconf = new Properties();
-        reconf.put("int", new Integer(5));
-        reconf.put("long", new Long(43));
-        reconf.put("string", new String("toto"));
+        Properties reconf = new Properties();
+        reconf.put("int", 5);
+        reconf.put("long", (long) 43);
+        reconf.put("string", "toto");
         reconf.put("strAProp", new String[]{"foo", "baz"});
         reconf.put("intAProp", new int[]{3, 2, 1});
-        ManagedServiceFactory fact = (ManagedServiceFactory) osgiHelper.getServiceObject(fact_ref);
-        try {
-            fact.updated("FooProvider-2", reconf);
-        } catch (ConfigurationException e) {
-            fail("Configuration non acceptable : " + reconf);
-        }
+
+        configuration.update(reconf);
+        Thread.sleep(200);
 
         // Check service properties after the reconfiguration
         intProp = (Integer) sr.getProperty("int");
@@ -334,7 +327,7 @@ public class TestStaticPropsReconfiguration extends Common {
 
         assertEquals("Check intProp equality after reconfiguration", intProp, new Integer(5));
         assertEquals("Check longProp equality after reconfiguration", longProp, new Long(43));
-        assertEquals("Check strProp equality after reconfiguration", strProp, new String("toto"));
+        assertEquals("Check strProp equality after reconfiguration", strProp, "toto");
         assertNotNull("Check strAProp not nullity after reconfiguration", strAProp);
         v = new String[]{"foo", "baz"};
         for (int i = 0; i < strAProp.length; i++) {

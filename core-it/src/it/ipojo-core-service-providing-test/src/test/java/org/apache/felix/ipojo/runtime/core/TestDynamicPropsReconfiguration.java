@@ -24,9 +24,10 @@ import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedServiceFactory;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
@@ -41,9 +42,9 @@ public class TestDynamicPropsReconfiguration extends Common {
         String type2 = "PS-FooProviderType-Dyn2";
         Properties p3 = new Properties();
         p3.put("instance.name", "FooProvider-3");
-        p3.put("int", new Integer(0));
-        p3.put("boolean", new Boolean(true));
-        p3.put("string", new String(""));
+        p3.put("int", 0);
+        p3.put("boolean", true);
+        p3.put("string", "");
         p3.put("strAProp", new String[0]);
         p3.put("intAProp", new int[0]);
         fooProvider3 = ipojoHelper.createComponentInstance(type2, p3);
@@ -86,9 +87,9 @@ public class TestDynamicPropsReconfiguration extends Common {
         Factory fact = (Factory) osgiHelper.getServiceObject(fact_ref);
         Properties p3 = new Properties();
         p3.put("instance.name", "FooProvider-3");
-        p3.put("int", new Integer(1));
-        p3.put("boolean", new Boolean(true));
-        p3.put("string", new String("foo"));
+        p3.put("int", 1);
+        p3.put("boolean", true);
+        p3.put("string", "foo");
         p3.put("strAProp", new String[]{"foo", "bar", "baz"});
         p3.put("intAProp", new int[]{1, 2, 3});
         try {
@@ -108,8 +109,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(1));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar", "baz"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -137,8 +138,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(2));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -153,9 +154,9 @@ public class TestDynamicPropsReconfiguration extends Common {
         fact = (Factory) osgiHelper.getServiceObject(fact_ref);
         p3 = new Properties();
         p3.put("instance.name", "FooProvider-3");
-        p3.put("int", new Integer(1));
-        p3.put("boolean", new Boolean(true));
-        p3.put("string", new String("foo"));
+        p3.put("int", 1);
+        p3.put("boolean", true);
+        p3.put("string", "foo");
         p3.put("strAProp", new String[]{"foo", "bar", "baz"});
         p3.put("intAProp", new int[]{1, 2, 3});
         try {
@@ -175,8 +176,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(1));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar", "baz"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -191,9 +192,6 @@ public class TestDynamicPropsReconfiguration extends Common {
                 fail("Check the intAProp Equality");
             }
         }
-
-        fact = null;
-        fs = null;
     }
 
     @Test
@@ -209,8 +207,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         int[] intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(0));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String(""));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "");
         assertNotNull("Check strAProp not nullity", strAProp);
         String[] v = new String[0];
         for (int i = 0; i < strAProp.length; i++) {
@@ -282,8 +280,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(2));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -291,7 +289,7 @@ public class TestDynamicPropsReconfiguration extends Common {
                 fail("Check the strAProp Equality");
             }
         }
-        assertNull("Check intAProp hidding (no value)", intAProp);
+        assertNull("Check intAProp hiding (no value)", intAProp);
 
         //	Reconfiguration
         fact_ref = ipojoHelper.getServiceReferenceByName(Factory.class.getName(), "PS-FooProviderType-Dyn2");
@@ -320,8 +318,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(1));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar", "baz"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -336,13 +334,10 @@ public class TestDynamicPropsReconfiguration extends Common {
                 fail("Check the intAProp Equality");
             }
         }
-
-        fact = null;
-        fs = null;
     }
 
     @Test
-    public void testMSFReconf() {
+    public void testReconfigurationUsingManagedService() throws IOException, InterruptedException {
         ServiceReference sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);
 
@@ -354,8 +349,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         int[] intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(0));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String(""));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "");
         assertNotNull("Check strAProp not nullity", strAProp);
         String[] v = new String[0];
         for (int i = 0; i < strAProp.length; i++) {
@@ -372,19 +367,18 @@ public class TestDynamicPropsReconfiguration extends Common {
         }
 
         // Reconfiguration
-        ServiceReference fact_ref = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), "PS-FooProviderType-Dyn2");
-        ManagedServiceFactory fact = (ManagedServiceFactory) osgiHelper.getServiceObject(fact_ref);
+        ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+        Configuration configuration = admin.getConfiguration("FooProvider-3", "?");
+
         Properties p3 = new Properties();
-        p3.put("int", new Integer(1));
-        p3.put("boolean", new Boolean(true));
-        p3.put("string", new String("foo"));
+        p3.put("int", 1);
+        p3.put("boolean", true);
+        p3.put("string", "foo");
         p3.put("strAProp", new String[]{"foo", "bar", "baz"});
         p3.put("intAProp", new int[]{1, 2, 3});
-        try {
-            fact.updated("FooProvider-3", p3);
-        } catch (ConfigurationException e) {
-            fail("Unable to reconfigure the instance with : " + p3);
-        }
+
+        configuration.update(p3);
+        Thread.sleep(200);
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);
@@ -397,8 +391,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(1));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar", "baz"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -426,8 +420,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(2));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -435,22 +429,19 @@ public class TestDynamicPropsReconfiguration extends Common {
                 fail("Check the strAProp Equality");
             }
         }
-        assertNull("Check intAProp hidding (no value)", intAProp);
+        assertNull("Check intAProp hiding (no value)", intAProp);
 
         //	Reconfiguration
-        fact_ref = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), "PS-FooProviderType-Dyn2");
-        fact = (ManagedServiceFactory) osgiHelper.getServiceObject(fact_ref);
+
         p3 = new Properties();
-        p3.put("int", new Integer(1));
-        p3.put("boolean", new Boolean(true));
-        p3.put("string", new String("foo"));
+        p3.put("int", 1);
+        p3.put("boolean", true);
+        p3.put("string", "foo");
         p3.put("strAProp", new String[]{"foo", "bar", "baz"});
         p3.put("intAProp", new int[]{1, 2, 3});
-        try {
-            fact.updated("FooProvider-3", p3);
-        } catch (ConfigurationException e) {
-            fail("Unable to reconfigure the instance with : " + p3);
-        }
+
+        configuration.update(p3);
+        Thread.sleep(200);
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);
@@ -463,8 +454,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(1));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar", "baz"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -479,13 +470,10 @@ public class TestDynamicPropsReconfiguration extends Common {
                 fail("Check the intAProp Equality");
             }
         }
-
-        fact = null;
-        fs = null;
     }
 
     @Test
-    public void testMSFReconfString() {
+    public void testReconfiguraitonUsingManagedServiceWithStrings() throws IOException, InterruptedException {
         ServiceReference sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);
 
@@ -497,8 +485,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         int[] intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(0));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String(""));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "");
         assertNotNull("Check strAProp not nullity", strAProp);
         String[] v = new String[0];
         for (int i = 0; i < strAProp.length; i++) {
@@ -515,19 +503,19 @@ public class TestDynamicPropsReconfiguration extends Common {
         }
 
         // Reconfiguration
-        ServiceReference fact_ref = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), "PS-FooProviderType-Dyn2");
-        ManagedServiceFactory fact = (ManagedServiceFactory) osgiHelper.getServiceObject(fact_ref);
+        ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+        Configuration configuration = admin.getConfiguration("FooProvider-3", "?");
+
+
         Properties p3 = new Properties();
         p3.put("int", "1");
         p3.put("boolean", "true");
         p3.put("string", "foo");
         p3.put("strAProp", "{foo, bar, baz}");
         p3.put("intAProp", "{ 1, 2, 3}");
-        try {
-            fact.updated("FooProvider-3", p3);
-        } catch (ConfigurationException e) {
-            fail("Unable to reconfigure the instance with : " + p3);
-        }
+
+        configuration.update(p3);
+        Thread.sleep(200);
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);
@@ -540,8 +528,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(1));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar", "baz"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -569,8 +557,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(2));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -581,19 +569,16 @@ public class TestDynamicPropsReconfiguration extends Common {
         assertNull("Check intAProp hidding (no value)", intAProp);
 
         //	Reconfiguration
-        fact_ref = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), "PS-FooProviderType-Dyn2");
-        fact = (ManagedServiceFactory) osgiHelper.getServiceObject(fact_ref);
+
         p3 = new Properties();
         p3.put("int", "1");
         p3.put("boolean", "true");
         p3.put("string", "foo");
         p3.put("strAProp", "{foo, bar, baz}");
         p3.put("intAProp", "{ 1, 2, 3}");
-        try {
-            fact.updated("FooProvider-3", p3);
-        } catch (ConfigurationException e) {
-            fail("Unable to reconfigure the instance with : " + p3);
-        }
+
+        configuration.update(p3);
+        Thread.sleep(200);
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);
@@ -606,8 +591,8 @@ public class TestDynamicPropsReconfiguration extends Common {
         intAProp = (int[]) sr.getProperty("intAProp");
 
         assertEquals("Check intProp equality", intProp, new Integer(1));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("foo"));
+        assertEquals("Check longProp equality", boolProp, Boolean.TRUE);
+        assertEquals("Check strProp equality", strProp, "foo");
         assertNotNull("Check strAProp not nullity", strAProp);
         v = new String[]{"foo", "bar", "baz"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -622,9 +607,6 @@ public class TestDynamicPropsReconfiguration extends Common {
                 fail("Check the intAProp Equality");
             }
         }
-
-        fact = null;
-        fs = null;
     }
 
     @Test

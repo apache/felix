@@ -111,7 +111,8 @@ public class TestReconfiguration extends Common {
     @Test public void testRevalidationOnReconfigurationUsingConfigAdmin() throws InvalidSyntaxException {
         Configuration configuration = null;
         try {
-            configuration = admin.createFactoryConfiguration("org.apache.felix.ipojo.runtime.core.components.ReconfigurableSimpleType", null);
+            configuration = admin.createFactoryConfiguration("org.apache.felix.ipojo.runtime.core.components" +
+                    ".ReconfigurableSimpleType", "?");
         } catch (IOException e) {
             fail(e.getMessage());
         }
@@ -201,7 +202,7 @@ public class TestReconfiguration extends Common {
         Configuration configuration = null;
         try {
             configuration = admin.createFactoryConfiguration("org.apache.felix.ipojo.runtime.core.components.ReconfigurableSimpleType2",
-                    null);
+                    "?");
         } catch (IOException e) {
             fail(e.getMessage());
         }
@@ -293,7 +294,7 @@ public class TestReconfiguration extends Common {
         Configuration configuration = null;
         try {
             configuration = admin.createFactoryConfiguration("org.apache.felix.ipojo.runtime.core.components.ReconfigurableSimpleType3",
-                    null);
+                    "?");
         } catch (IOException e) {
             fail(e.getMessage());
         }

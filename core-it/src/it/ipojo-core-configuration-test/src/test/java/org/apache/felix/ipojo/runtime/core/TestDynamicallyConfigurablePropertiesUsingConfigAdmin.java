@@ -24,13 +24,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedServiceFactory;
 
 import java.io.IOException;
 import java.util.Hashtable;
@@ -38,7 +35,7 @@ import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNull;
 
 /**
  * iPOJO does not expose the ManagedServiceFactory anymore, we must use the configuration admin.
@@ -330,6 +327,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         conf.put("bar", new Integer(2));
         conf.put("propagated1", "propagated");
         conf.put("propagated2", new Integer(1));
+        conf.put(".notpropagated", "xxx");
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
@@ -340,10 +338,11 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         fooP = (String) fooRef.getProperty("foo");
         barP = (Integer) fooRef.getProperty("bar");
         bazP = (String) fooRef.getProperty("baz");
-        assertNotNull("Check the propagated1 existency", fooRef.getProperty("propagated1"));
+        assertNotNull("Check the propagated1 existence", fooRef.getProperty("propagated1"));
         String prop1 = (String) fooRef.getProperty("propagated1");
-        assertNotNull("Check the propagated2 existency", fooRef.getProperty("propagated2"));
+        assertNotNull("Check the propagated2 existence", fooRef.getProperty("propagated2"));
         Integer prop2 = (Integer) fooRef.getProperty("propagated2");
+        assertNull("Check the not propagated non-existence", fooRef.getProperty(".notpropagated"));
 
         assertEquals("Check foo equality", fooP, "foo");
         assertEquals("Check bar equality", barP, new Integer(2));
