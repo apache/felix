@@ -289,15 +289,26 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
 
                             return instance;
                         } catch (UnacceptableConfiguration c) {
-                            m_declaration.unbind(String.format("Instance configuration is invalid (component:%s/%s, bundle:%d)",
+                            instanceDeclaration.unbind(String.format("Instance configuration is invalid (component:%s/%s, bundle:%d)",
                                     m_declaration.getComponentName(),
                                     m_declaration.getComponentVersion(),
                                     reference.getBundle().getBundleId()),
                                     c);
                         } catch (MissingHandlerException e) {
-                            m_declaration.unbind(String.format("Component '%s/%s' is missing some handlers", m_declaration.getComponentName(), m_declaration.getComponentVersion()), e);
+                            instanceDeclaration.unbind(
+                                    String.format(
+                                            "Component '%s/%s' (required for instance creation) is missing some handlers",
+                                            m_declaration.getComponentName(),
+                                            m_declaration.getComponentVersion()
+                                    ),
+                                    e);
                         } catch (ConfigurationException e) {
-                            m_declaration.unbind(String.format("Component '%s/%s' is incorrect", m_declaration.getComponentName(), m_declaration.getComponentVersion()), e);
+                            instanceDeclaration.unbind(
+                                    String.format(
+                                            "Instance configuration is incorrect for component '%s/%s'",
+                                            m_declaration.getComponentName(),
+                                            m_declaration.getComponentVersion()),
+                                    e);
                         }
 
                         return null;
