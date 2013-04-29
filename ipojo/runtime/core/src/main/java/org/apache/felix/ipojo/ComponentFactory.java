@@ -290,7 +290,7 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      *
      * @return the required handler list.
      */
-    public List getRequiredHandlerList() {
+    public List<RequiredHandler> getRequiredHandlerList() {
         List<RequiredHandler> list = new ArrayList<RequiredHandler>();
         Element[] elems = m_componentMetadata.getElements();
         for (Element current : elems) {

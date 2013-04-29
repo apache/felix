@@ -76,19 +76,20 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
         }
     }
     
-    public String getClassName() { return "composite"; }
+    public String getClassName() { return null; }
 
     /**
      * Compute required handlers.
      * @return the list of required handler.
      */
-    public List getRequiredHandlerList() {
-        List list = new ArrayList();
+    public List<RequiredHandler> getRequiredHandlerList() {
+        List<RequiredHandler> list = new ArrayList<RequiredHandler>();
         Element[] elems = m_componentMetadata.getElements();
-        for (int i = 0; i < elems.length; i++) {
-            Element current = elems[i]; 
+        for (Element current : elems) {
             RequiredHandler req = new RequiredHandler(current.getName(), current.getNameSpace());
-            if (! list.contains(req)) { list.add(req); }
+            if (!list.contains(req)) {
+                list.add(req);
+            }
         }
         
         // Add architecture if architecture != 'false'
@@ -126,7 +127,6 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
             } catch (InvalidSyntaxException e) {
                 m_logger.log(Logger.ERROR, "A factory filter is not valid: " + e.getMessage());
                 stop();
-                return;
             }
         }
     }
@@ -165,7 +165,7 @@ public class CompositeFactory extends ComponentFactory implements TrackerCustomi
             name = (String) properties.get("name");
         }
 
-        ComponentInstance instance = (ComponentInstance) m_componentInstances.get(name);
+        ComponentInstance instance = m_componentInstances.get(name);
         if (instance == null) { // The instance does not exists.
             return;
         }
