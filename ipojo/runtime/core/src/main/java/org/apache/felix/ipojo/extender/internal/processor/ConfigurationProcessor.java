@@ -30,6 +30,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.wiring.BundleWiring;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -39,6 +40,7 @@ import java.util.*;
 
 import static org.apache.felix.ipojo.util.Reflection.fields;
 import static org.apache.felix.ipojo.util.Reflection.methods;
+import static org.apache.felix.ipojo.util.StreamUtils.closeQuietly;
 
 /**
  * Processor looking for classes annotated with @Configuration and creating the corresponding instance declaration.
@@ -49,11 +51,17 @@ public class ConfigurationProcessor implements BundleProcessor {
      * The logger.
      */
     private final Log m_logger;
+
     /**
      * Registry storing the bundle to components and instances declared within this bundle.
      * Only instances are expected.
      */
     private final Map<Bundle, ComponentsAndInstances> m_registry = new HashMap<Bundle, ComponentsAndInstances>();
+
+    /**
+     * Set to false to disable this processor.
+     * When an OSGi framework does not provide the wiring API, this processor is disabled.
+     */
     private final boolean m_enabled;
 
     /**
@@ -234,7 +242,13 @@ public class ConfigurationProcessor implements BundleProcessor {
 
     private boolean hasConfigurationAnnotation(Bundle bundle, URL url, ClassLoader classLoader) throws IOException {
         InputStream is = url.openStream();
+
         try {
+            // Exclude inner classes and classes containing $
+            if (url.toExternalForm().contains("$")) {
+                return false;
+            }
+
             ClassReader reader = new ClassReader(is);
             ConfigurationAnnotationScanner scanner = new ConfigurationAnnotationScanner();
             reader.accept(scanner, 0);
@@ -258,7 +272,7 @@ public class ConfigurationProcessor implements BundleProcessor {
 //                return hasConfigurationAnnotation(bundle, parentUrl, classLoader);
 //            }
         } finally {
-            is.close();
+            closeQuietly(is);
         }
     }
 
