@@ -66,7 +66,7 @@ public class ArchitectureHandler extends PrimitiveHandler implements Architectur
     /**
      * Get the instance description.
      * @return the instance description
-     * @see org.apache.felix.ipojo.architecture.Architecture#getDescription()
+     * @see org.apache.felix.ipojo.architecture.Architecture#getInstanceDescription()
      */
     public InstanceDescription getInstanceDescription() {
         return getInstanceManager().getInstanceDescription();
