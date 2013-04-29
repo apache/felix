@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -65,6 +65,8 @@ import static org.ops4j.pax.exam.CoreOptions.*;
 @ExamReactorStrategy(PerClass.class)
 public class Common {
 
+    public static long UPDATE_WAIT_TIME = 2000;
+
     @Inject
     BundleContext bc;
 
@@ -100,6 +102,10 @@ public class Common {
         waitForStability(bc);
     }
 
+    public Bundle getTestBundle() {
+        return osgiHelper.getBundle("test.bundle");
+    }
+
     @After
     public void commonTearDown() {
         ipojoHelper.dispose();
@@ -111,10 +117,6 @@ public class Common {
                 mavenBundle("org.apache.felix", "org.apache.felix.ipojo").versionAsInProject(),
                 mavenBundle("org.ow2.chameleon.testing", "osgi-helpers").versionAsInProject(),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject());
-    }
-
-    public Bundle getTestBundle() {
-        return osgiHelper.getBundle("test.bundle");
     }
 
     public Option testedBundle() throws MalformedURLException {
@@ -174,6 +176,7 @@ public class Common {
      * </ul>
      * If the stability can't be reached after a specified time,
      * the method throws a {@link IllegalStateException}.
+     *
      * @param context the bundle context
      * @throws IllegalStateException when the stability can't be reach after a several attempts.
      */
@@ -192,9 +195,6 @@ public class Common {
         }
 
         if (count == 500) {
-            for (Bundle bundle : bc.getBundles()) {
-                System.out.println("Bundle " + bundle.getSymbolicName() + " - " + bundle.getState());
-            }
             System.err.println("Bundle stability isn't reached after 500 tries");
             throw new IllegalStateException("Cannot reach the bundle stability");
         }
@@ -203,7 +203,7 @@ public class Common {
         count = 0;
         int count1 = 0;
         int count2 = 0;
-        while (! serviceStability && count < 500) {
+        while (!serviceStability && count < 500) {
             try {
                 ServiceReference[] refs = context.getServiceReferences((String) null, null);
                 count1 = refs.length;
@@ -227,16 +227,21 @@ public class Common {
 
     /**
      * Are bundle stables.
+     *
      * @param bc the bundle context
      * @return <code>true</code> if every bundles are activated.
      */
     private boolean getBundleStability(BundleContext bc) {
         boolean stability = true;
         Bundle[] bundles = bc.getBundles();
-        for (int i = 0; i < bundles.length; i++) {
-            stability = stability && (bundles[i].getState() == Bundle.ACTIVE);
+        for (Bundle bundle : bundles) {
+            stability = stability && (bundle.getState() == Bundle.ACTIVE);
         }
         return stability;
+    }
+
+    public boolean isKF() {
+        return bc.getClass().toString().contains("knopflerfish");
     }
 
 

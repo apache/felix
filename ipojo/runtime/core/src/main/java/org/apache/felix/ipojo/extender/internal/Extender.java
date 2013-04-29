@@ -19,6 +19,7 @@
 
 package org.apache.felix.ipojo.extender.internal;
 
+import org.apache.felix.ipojo.ConfigurationTracker;
 import org.apache.felix.ipojo.EventDispatcher;
 import org.apache.felix.ipojo.extender.internal.linker.DeclarationLinker;
 import org.apache.felix.ipojo.extender.internal.processor.*;
@@ -115,6 +116,9 @@ public class Extender implements BundleActivator, SynchronousBundleListener {
             EventDispatcher.create(context);
         }
 
+        // Initialize ConfigurationTracker
+        ConfigurationTracker.initialize();
+
         BundleProcessor extensionBundleProcessor = new ExtensionBundleProcessor(m_logger);
         BundleProcessor componentsProcessor = new ComponentsBundleProcessor(m_logger);
         BundleProcessor configurationProcessor = new ConfigurationProcessor(m_logger);
@@ -168,6 +172,9 @@ public class Extender implements BundleActivator, SynchronousBundleListener {
      */
     public void stop(BundleContext context) throws Exception {
         context.removeBundleListener(this);
+
+        //Shutdown ConfigurationTracker
+        ConfigurationTracker.shutdown();
 
         m_processor.stop();
 
