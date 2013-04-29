@@ -181,7 +181,7 @@ public class CompositeManager implements ComponentInstance, InstanceStateListene
     public CompositeHandler getCompositeHandler(String name) {
         for (int i = 0; i < m_handlers.length; i++) {
             HandlerFactory fact = (HandlerFactory) m_handlers[i].getFactory();
-            if (fact.getHandlerName().equals(name) || fact.getComponentDescription().getClassName().equals(name)) {
+            if (fact.getHandlerName().equals(name) || name.equals(fact.getComponentDescription().getClassName())) {
                 return (CompositeHandler) m_handlers[i].getHandler();
             }
         }
