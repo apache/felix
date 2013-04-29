@@ -32,15 +32,13 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
-import java.net.URL;
 import java.security.ProtectionDomain;
 import java.util.*;
 
 /**
  * The component factory manages component instance objects. This management
  * consists to create and manage component instances build with the current
- * component factory. This class could export Factory and ManagedServiceFactory
- * services.
+ * component factory. If the factory is public a {@see Factory} service is exposed.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  * @see IPojoFactory
@@ -182,16 +180,10 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
         } catch (ConfigurationException e) {
             // An exception occurs while executing the configure or start
             // methods.
-            if (instance != null) {
-                instance.dispose();
-                instance = null;
-            }
+            instance.dispose();
             throw e;
         } catch (Throwable e) { // All others exception are handled here.
-            if (instance != null) {
-                instance.dispose();
-                instance = null;
-            }
+            instance.dispose();
             m_logger.log(Logger.ERROR, e.getMessage(), e);
             throw new ConfigurationException(e.getMessage());
         }
@@ -202,7 +194,7 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      * Defines a class.
      * This method needs to be synchronized to avoid that the classloader
      * is created twice.
-     * This method delegate the <code>define</code> method invocation to the
+     * This method delegates the <code>define</code> method invocation to the
      * factory classloader.
      *
      * @param name   the qualified name of the class
@@ -210,29 +202,15 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      * @param domain the protection domain of the class
      * @return the defined class object
      */
-    public synchronized Class defineClass(String name, byte[] clazz, ProtectionDomain domain) {
+    public synchronized Class<? extends Object> defineClass(String name, byte[] clazz, ProtectionDomain domain) {
         if (!m_useFactoryClassloader) {
             m_logger.log(Log.WARNING, "A class definition was required even without the factory classloader enabled");
         }
 
         if (m_classLoader == null) {
-            m_classLoader = new FactoryClassloader();
+            m_classLoader = new FactoryClassloader(this);
         }
         return m_classLoader.defineClass(name, clazz, domain);
-    }
-
-    /**
-     * Returns the URL of a resource.
-     * This methods delegates the invocation to the
-     * {@link Bundle#getResource(String)} method.
-     *
-     * @param resName the resource name
-     * @return the URL of the resource
-     */
-    public URL getResource(String resName) {
-        //No synchronization needed, the context is immutable and
-        //the call is managed by the underlying framework.
-        return m_context.getBundle().getResource(resName);
     }
 
     /**
@@ -260,9 +238,7 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      * This method is not called when holding the monitor lock.
      */
     public void starting() {
-        if (m_tracker != null) {
-            return; // Already started
-        } else {
+        if (m_tracker == null) {
             if (m_requiredHandlers.size() != 0) {
                 try {
                     String filter = "(&(" + Handler.HANDLER_TYPE_PROPERTY + "=" + PrimitiveHandler.HANDLER_TYPE + ")" + "(factory.state=1)" + ")";
@@ -274,6 +250,7 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
                 }
             }
         }
+        // Else, the tracking has already started.
     }
 
     /**
@@ -314,10 +291,9 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      * @return the required handler list.
      */
     public List getRequiredHandlerList() {
-        List list = new ArrayList();
+        List<RequiredHandler> list = new ArrayList<RequiredHandler>();
         Element[] elems = m_componentMetadata.getElements();
-        for (int i = 0; i < elems.length; i++) {
-            Element current = elems[i];
+        for (Element current : elems) {
             if (!"manipulation".equals(current.getName())) { // Remove the manipulation element
                 RequiredHandler req = new RequiredHandler(current.getName(), current.getNameSpace());
                 if (!list.contains(req)) {
@@ -359,8 +335,8 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
         String v = System.getProperty(HANDLER_AUTO_PRIMITIVE);
         if (v != null && v.length() != 0) {
             String[] hs = ParseUtils.split(v, ",");
-            for (int i = 0; i < hs.length; i++) {
-                String h = hs[i].trim();
+            for (String h1 : hs) {
+                String h = h1.trim();
                 String[] segments = ParseUtils.split(h, ":");
                 RequiredHandler rq = null;
                 if (segments.length == 2) { // External handler
@@ -377,7 +353,6 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
                 }
             }
         }
-
 
         return list;
     }
@@ -434,8 +409,8 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
      */
     public synchronized void removedService(ServiceReference reference, Object service) {
         // Look for the implied reference and invalid the handler identifier
-        for (int i = 0; i < m_requiredHandlers.size(); i++) {
-            RequiredHandler req = (RequiredHandler) m_requiredHandlers.get(i);
+        for (Object m_requiredHandler : m_requiredHandlers) {
+            RequiredHandler req = (RequiredHandler) m_requiredHandler;
             if (reference.equals(req.getReference())) {
                 req.unRef(); // This method will unget the service.
                 computeFactoryState();
@@ -480,251 +455,4 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
         return m_classLoader;
     }
 
-    /**
-     * this class defines the classloader attached to a factory.
-     * This class loader is used to load the implementation (e.g. manipulated)
-     * class.
-     *
-     * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
-     * @see ClassLoader
-     */
-    private class FactoryClassloader extends ClassLoader {
-
-        /**
-         * The map of defined classes [Name, Class Object].
-         */
-        private final Map m_definedClasses = new HashMap();
-
-        /**
-         * The defineClass method.
-         *
-         * @param name   name of the class
-         * @param clazz  the byte array of the class
-         * @param domain the protection domain
-         * @return the defined class.
-         */
-        public Class defineClass(String name, byte[] clazz, ProtectionDomain domain) {
-            if (m_definedClasses.containsKey(name)) {
-                return (Class) m_definedClasses.get(name);
-            }
-            Class clas = super.defineClass(name, clazz, 0, clazz.length, domain);
-            m_definedClasses.put(name, clas);
-            return clas;
-        }
-
-        /**
-         * Returns the URL of the required resource.
-         *
-         * @param arg the name of the resource to find.
-         * @return the URL of the resource.
-         * @see java.lang.ClassLoader#getResource(java.lang.String)
-         */
-        public URL getResource(String arg) {
-            return m_context.getBundle().getResource(arg);
-        }
-
-        /**
-         * Loads the given class.
-         *
-         * @param name    the name of the class
-         * @param resolve should be the class resolve now ?
-         * @return the loaded class object
-         * @throws ClassNotFoundException if the class to load is not found
-         * @see java.lang.ClassLoader#loadClass(java.lang.String, boolean)
-         * @see java.lang.ClassLoader#loadClass(String, boolean)
-         */
-        protected synchronized Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
-            return m_context.getBundle().loadClass(name);
-        }
-    }
-
-    /**
-     * This class defines the description of primitive (non-composite) component
-     * types. An instance of this class will be returned when invoking the
-     * {@link ComponentFactory#getComponentDescription()} method.
-     *
-     * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
-     */
-    private final class PrimitiveTypeDescription extends ComponentTypeDescription {
-
-        /*
-           * Set to keep component's all super-class class-names.
-           */
-        private Set m_superClasses = new HashSet();
-        /*
-           * Set to keep component's all interface class-names.
-           */
-        private Set m_interfaces = new HashSet();
-
-        /**
-         * Creates a PrimitiveTypeDescription object.
-         *
-         * @param factory the factory attached to this component type description.
-         */
-        public PrimitiveTypeDescription(IPojoFactory factory) {
-            super(factory);
-
-            try {
-                // The inspection can be done only for primitive components
-                if (m_classname != null) {
-                    // Read inherited classes and interfaces into given Sets.
-                    new InheritanceInspector(getPojoMetadata(), getBundleContext().getBundle()).
-                            computeInterfacesAndSuperClasses(m_interfaces, m_superClasses);
-                }
-            } catch (ClassNotFoundException e) {
-                m_interfaces.clear();
-                m_superClasses.clear();
-            }
-
-        }
-
-        /**
-         * Computes the properties to publish.
-         * The <code>component.class</code> property contains the implementation class name.
-         *
-         * @return the dictionary of properties to publish
-         * @see org.apache.felix.ipojo.architecture.ComponentTypeDescription#getPropertiesToPublish()
-         */
-        public Dictionary getPropertiesToPublish() {
-            Dictionary dict = super.getPropertiesToPublish();
-            if (m_classname != null) {
-                dict.put("component.class", m_classname);
-            }
-            return dict;
-        }
-
-        /**
-         * Adds the "implementation-class" attribute to the type description.
-         *
-         * @return the component type description.
-         * @see org.apache.felix.ipojo.architecture.ComponentTypeDescription#getDescription()
-         */
-        public Element getDescription() {
-            Element elem = super.getDescription();
-            elem.addAttribute(new Attribute("Implementation-Class", m_classname));
-
-            /* Adding interfaces and super-classes of component into description */
-            Element inheritance = new Element("Inherited", "");
-
-            inheritance.addAttribute(new Attribute("Interfaces", m_interfaces.toString()));
-            inheritance.addAttribute(new Attribute("SuperClasses", m_superClasses.toString()));
-
-            elem.addElement(inheritance);
-
-            return elem;
-        }
-
-        /**
-         * This class is used to collect interfaces and super-classes of given component in specified Sets.
-         *
-         * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
-         */
-        private final class InheritanceInspector {
-            /*
-                * PojoMetadata of target Component.
-                */
-            private PojoMetadata m_pojoMetadata;
-            /*
-                * Bundle exposing target component.
-                */
-            private Bundle m_bundle;
-
-
-            /**
-             * Creates a TypeCollector object
-             *
-             * @param pojoMetadata PojoMetadata describing Component.
-             * @param bundle       Bundle which has been exposed the intended Component.
-             */
-            public InheritanceInspector(PojoMetadata pojoMetadata, Bundle bundle) {
-                m_pojoMetadata = pojoMetadata;
-                m_bundle = bundle;
-            }
-
-            /**
-             * Collect interfaces implemented by the POJO into given Sets.
-             *
-             * @param interfaces : the set of implemented interfaces
-             * @param classes    : the set of extended classes
-             * @throws ClassNotFoundException : occurs when an interface cannot be loaded.
-             */
-            public void computeInterfacesAndSuperClasses(Set interfaces, Set classes) throws ClassNotFoundException {
-                String[] immediateInterfaces = m_pojoMetadata.getInterfaces();
-                String parentClass = m_pojoMetadata.getSuperClass();
-
-                // First iterate on found specification in manipulation metadata
-                for (int i = 0; i < immediateInterfaces.length; i++) {
-                    interfaces.add(immediateInterfaces[i]);
-                    // Iterate on interfaces implemented by the current interface
-                    Class clazz = m_bundle.loadClass(immediateInterfaces[i]);
-                    collectInterfaces(clazz, interfaces, m_bundle);
-                }
-
-                // Look for parent class.
-                if (parentClass != null) {
-                    Class clazz = m_bundle.loadClass(parentClass);
-                    collectInterfacesFromClass(clazz, interfaces, m_bundle);
-                    classes.add(parentClass);
-                    collectParentClassesFromClass(clazz, classes, m_bundle);
-                }
-
-                // Removing Object Class from the inherited classes list.
-                classes.remove(Object.class.getName());
-            }
-
-            /**
-             * Look for inherited interfaces.
-             *
-             * @param clazz  : interface name to explore (class object)
-             * @param acc    : set (accumulator)
-             * @param bundle : bundle
-             * @throws ClassNotFoundException : occurs when an interface cannot be loaded.
-             */
-            private void collectInterfaces(Class clazz, Set acc, Bundle bundle) throws ClassNotFoundException {
-                Class[] clazzes = clazz.getInterfaces();
-                for (int i = 0; i < clazzes.length; i++) {
-                    acc.add(clazzes[i].getName());
-                    collectInterfaces(clazzes[i], acc, bundle);
-                }
-            }
-
-            /**
-             * Collect interfaces for the given class.
-             * This method explores super class to.
-             *
-             * @param clazz  : class object.
-             * @param acc    : set of implemented interface (accumulator)
-             * @param bundle : bundle.
-             * @throws ClassNotFoundException : occurs if an interface cannot be load.
-             */
-            private void collectInterfacesFromClass(Class clazz, Set acc, Bundle bundle) throws ClassNotFoundException {
-                Class[] clazzes = clazz.getInterfaces();
-                for (int i = 0; i < clazzes.length; i++) {
-                    acc.add(clazzes[i].getName());
-                    collectInterfaces(clazzes[i], acc, bundle);
-                }
-                // Iterate on parent classes
-                Class sup = clazz.getSuperclass();
-                if (sup != null) {
-                    collectInterfacesFromClass(sup, acc, bundle);
-                }
-            }
-
-            /**
-             * Collect parent classes for the given class.
-             *
-             * @param clazz  : class object.
-             * @param acc    : set of extended classes (accumulator)
-             * @param bundle : bundle.
-             * @throws ClassNotFoundException : occurs if an interface cannot be load.
-             */
-            private void collectParentClassesFromClass(Class clazz, Set acc, Bundle bundle) throws ClassNotFoundException {
-                Class parent = clazz.getSuperclass();
-                if (parent != null) {
-                    acc.add(parent.getName());
-                    collectParentClassesFromClass(parent, acc, bundle);
-                }
-            }
-        }
-    }
 }

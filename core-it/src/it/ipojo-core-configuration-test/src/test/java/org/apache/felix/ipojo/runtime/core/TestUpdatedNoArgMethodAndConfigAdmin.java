@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.felix.ipojo.runtime.core;
 
 import org.apache.felix.ipojo.ComponentInstance;
@@ -23,24 +24,36 @@ import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedServiceFactory;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.ow2.chameleon.testing.helpers.IPOJOHelper;
+import org.ow2.chameleon.testing.helpers.OSGiHelper;
 
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Properties;
 
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
 
-public class TestDynamicallyConfigurableProperties extends Common {
+
+@ExamReactorStrategy(PerMethod.class)
+public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
+
+
 
     ComponentInstance instance, instance2;
 
+
+
     @Before
     public void setUp() {
-        String type = "CONFIG-FooProviderType-3";
+        osgiHelper = new OSGiHelper(bc);
+        ipojoHelper = new IPOJOHelper(bc);
+        String type = "CONFIG-FooProviderType-3Updated2";
 
         Hashtable<String, String> p1 = new Hashtable<String, String>();
         p1.put("instance.name", "instance");
@@ -64,7 +77,8 @@ public class TestDynamicallyConfigurableProperties extends Common {
     }
 
     @Test
-    public void testStatic() {
+    public void testStatic() throws IOException, InterruptedException {
+
         ServiceReference fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
         assertNotNull("Check FS availability", fooRef);
         String fooP = (String) fooRef.getProperty("foo");
@@ -74,21 +88,21 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check bar equality -1", barP, new Integer(2));
         assertEquals("Check baz equality -1", bazP, "baz");
 
-        ServiceReference msRef = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), instance.getFactory().getName());
-        assertNotNull("Check ManagedServiceFactory availability", msRef);
+        ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+        assertNotNull("Check Configuration Admin availability", admin);
 
+        Configuration configuration = admin.getConfiguration(instance.getInstanceName(),
+                getTestBundle().getLocation());
 
         // Configuration of baz
         Properties conf = new Properties();
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
-        ManagedServiceFactory ms = (ManagedServiceFactory) osgiHelper.getContext().getService(msRef);
-        try {
-            ms.updated(instance.getInstanceName(), conf);
-        } catch (ConfigurationException e) {
-            fail("Configuration Exception : " + e);
-        }
+
+        // Asynchronous dispatching of the configuration
+        configuration.update(conf);
+        Thread.sleep(200);
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
@@ -98,12 +112,17 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check foo equality -2", fooP, "foo");
         assertEquals("Check bar equality -2", barP, new Integer(2));
         assertEquals("Check baz equality -2", bazP, "zab");
-        osgiHelper.getContext().ungetService(msRef);
+
+        // Get Service
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        Integer updated = (Integer) fs.fooProps().get("updated");
+
+        assertEquals("Check updated", 1, updated.intValue());
+
     }
 
-
     @Test
-    public void testStaticNoValue() {
+    public void testStaticNoValue() throws InterruptedException, IOException {
         ServiceReference fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
         assertNotNull("Check FS availability", fooRef);
         Object fooP = fooRef.getProperty("foo");
@@ -113,21 +132,21 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check bar equality -1", barP, null);
         assertEquals("Check baz equality -1", bazP, null);
 
-        ServiceReference msRef = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), instance2.getFactory().getName());
-        assertNotNull("Check ManagedServiceFactory availability", msRef);
+        ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+        assertNotNull("Check Configuration Admin availability", admin);
 
+        Configuration configuration = admin.getConfiguration(instance2.getInstanceName(),
+                getTestBundle().getLocation());
 
         // Configuration of baz
         Properties conf = new Properties();
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
-        ManagedServiceFactory ms = (ManagedServiceFactory) osgiHelper.getContext().getService(msRef);
-        try {
-            ms.updated(instance2.getInstanceName(), conf);
-        } catch (ConfigurationException e) {
-            fail("Configuration Exception : " + e);
-        }
+
+        // Asynchronous dispatching of the configuration
+        configuration.update(conf);
+        Thread.sleep(200);
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
@@ -137,11 +156,16 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check foo equality -2", fooP, "foo");
         assertEquals("Check bar equality -2", barP, new Integer(2));
         assertEquals("Check baz equality -2", bazP, "zab");
-        osgiHelper.getContext().ungetService(msRef);
+
+        // Get Service
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        Integer updated = (Integer) fs.fooProps().get("updated");
+
+        assertEquals("Check updated", 1, updated.intValue());
     }
 
     @Test
-    public void testDynamic() {
+    public void testDynamic() throws InterruptedException, IOException {
         ServiceReference fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
         assertNotNull("Check FS availability", fooRef);
 
@@ -153,20 +177,21 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check bar equality", barP, new Integer(2));
         assertEquals("Check baz equality", bazP, "baz");
 
-        ServiceReference msRef = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), instance.getFactory().getName());
-        assertNotNull("Check ManagedServiceFactory availability", msRef);
+        ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+        assertNotNull("Check Configuration Admin availability", admin);
+
+        Configuration configuration = admin.getConfiguration(instance.getInstanceName(),
+                getTestBundle().getLocation());
 
         // Configuration of baz
         Properties conf = new Properties();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
-        ManagedServiceFactory ms = (ManagedServiceFactory) osgiHelper.getContext().getService(msRef);
-        try {
-            ms.updated(instance.getInstanceName(), conf);
-        } catch (ConfigurationException e) {
-            fail("Configuration Exception : " + e);
-        }
+
+        // Asynchronous dispatching of the configuration
+        configuration.update(conf);
+        Thread.sleep(200);
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
@@ -179,7 +204,7 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
-        FooService fs = (FooService) osgiHelper.getContext().getService(fooRef);
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -187,12 +212,13 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check foo field equality", fooP, "oof");
         assertEquals("Check bar field equality", barP, new Integer(0));
 
-        osgiHelper.getContext().ungetService(fooRef);
-        osgiHelper.getContext().ungetService(msRef);
+        Integer updated = (Integer) fs.fooProps().get("updated");
+
+        assertEquals("Check updated", 1, updated.intValue());
     }
 
     @Test
-    public void testDynamicNoValue() {
+    public void testDynamicNoValue() throws IOException, InterruptedException {
         ServiceReference fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
         assertNotNull("Check FS availability", fooRef);
 
@@ -203,20 +229,21 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check bar equality -1", barP, null);
         assertEquals("Check baz equality -1", bazP, null);
 
-        ServiceReference msRef = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), instance2.getFactory().getName());
-        assertNotNull("Check ManagedServiceFactory availability", msRef);
+        ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+        assertNotNull("Check Configuration Admin availability", admin);
+
+        Configuration configuration = admin.getConfiguration(instance2.getInstanceName(),
+                getTestBundle().getLocation());
 
         // Configuration of baz
         Properties conf = new Properties();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
-        ManagedServiceFactory ms = (ManagedServiceFactory) osgiHelper.getContext().getService(msRef);
-        try {
-            ms.updated(instance2.getInstanceName(), conf);
-        } catch (ConfigurationException e) {
-            fail("Configuration Exception : " + e);
-        }
+
+        // Asynchronous dispatching of the configuration
+        configuration.update(conf);
+        Thread.sleep(200);
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
@@ -229,7 +256,7 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
-        FooService fs = (FooService) osgiHelper.getContext().getService(fooRef);
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -237,12 +264,14 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check foo field equality", fooP, "oof");
         assertEquals("Check bar field equality", barP, new Integer(0));
 
-        osgiHelper.getContext().ungetService(fooRef);
-        osgiHelper.getContext().ungetService(msRef);
+        Integer updated = (Integer) fs.fooProps().get("updated");
+
+        assertEquals("Check updated", 1, updated.intValue());
     }
 
+
     @Test
-    public void testDynamicString() {
+    public void testDynamicString() throws InterruptedException, IOException {
         ServiceReference fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
         assertNotNull("Check FS availability", fooRef);
 
@@ -254,20 +283,21 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check bar equality", barP, new Integer(2));
         assertEquals("Check baz equality", bazP, "baz");
 
-        ServiceReference msRef = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), instance.getFactory().getName());
-        assertNotNull("Check ManagedServiceFactory availability", msRef);
+        ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
+        assertNotNull("Check Configuration Admin availability", admin);
+
+        Configuration configuration = admin.getConfiguration(instance.getInstanceName(),
+                getTestBundle().getLocation());
 
         // Configuration of baz
         Properties conf = new Properties();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", "0");
-        ManagedServiceFactory ms = (ManagedServiceFactory) osgiHelper.getContext().getService(msRef);
-        try {
-            ms.updated(instance.getInstanceName(), conf);
-        } catch (ConfigurationException e) {
-            fail("Configuration Exception : " + e);
-        }
+
+        // Asynchronous dispatching of the configuration
+        configuration.update(conf);
+        Thread.sleep(200);
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
@@ -280,7 +310,7 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
-        FooService fs = (FooService) osgiHelper.getContext().getService(fooRef);
+        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -288,105 +318,9 @@ public class TestDynamicallyConfigurableProperties extends Common {
         assertEquals("Check foo field equality", fooP, "oof");
         assertEquals("Check bar field equality", barP, new Integer(0));
 
-        osgiHelper.getContext().ungetService(fooRef);
-        osgiHelper.getContext().ungetService(msRef);
-    }
+        Integer updated = (Integer) fs.fooProps().get("updated");
 
-    @Test
-    public void testPropagation() {
-        ServiceReference fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
-        assertNotNull("Check FS availability", fooRef);
-
-        String fooP = (String) fooRef.getProperty("foo");
-        Integer barP = (Integer) fooRef.getProperty("bar");
-        String bazP = (String) fooRef.getProperty("baz");
-
-        assertEquals("Check foo equality", fooP, "foo");
-        assertEquals("Check bar equality", barP, new Integer(2));
-        assertEquals("Check baz equality", bazP, "baz");
-
-        ServiceReference msRef = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), instance.getFactory().getName());
-        assertNotNull("Check ManagedServiceFactory availability", msRef);
-
-        // Configuration of baz
-        Properties conf = new Properties();
-        conf.put("baz", "zab");
-        conf.put("foo", "foo");
-        conf.put("bar", new Integer(2));
-        conf.put("propagated1", "propagated");
-        conf.put("propagated2", new Integer(1));
-        ManagedServiceFactory ms = (ManagedServiceFactory) osgiHelper.getContext().getService(msRef);
-        try {
-            ms.updated(instance.getInstanceName(), conf);
-        } catch (ConfigurationException e) {
-            fail("Configuration Exception : " + e);
-        }
-
-        // Recheck props
-        fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
-        fooP = (String) fooRef.getProperty("foo");
-        barP = (Integer) fooRef.getProperty("bar");
-        bazP = (String) fooRef.getProperty("baz");
-        assertNotNull("Check the propagated1 existency", fooRef.getProperty("propagated1"));
-        String prop1 = (String) fooRef.getProperty("propagated1");
-        assertNotNull("Check the propagated2 existency", fooRef.getProperty("propagated2"));
-        Integer prop2 = (Integer) fooRef.getProperty("propagated2");
-
-        assertEquals("Check foo equality", fooP, "foo");
-        assertEquals("Check bar equality", barP, new Integer(2));
-        assertEquals("Check baz equality", bazP, "zab");
-        assertEquals("Check propagated1 equality", prop1, "propagated");
-        assertEquals("Check propagated2 equality", prop2, new Integer(1));
-
-        osgiHelper.getContext().ungetService(msRef);
-    }
-
-    @Test
-    public void testPropagationNoValue() {
-        ServiceReference fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
-        assertNotNull("Check FS availability", fooRef);
-
-        Object fooP = fooRef.getProperty("foo");
-        Object barP = fooRef.getProperty("bar");
-        Object bazP = fooRef.getProperty("baz");
-        assertEquals("Check foo equality -1", fooP, null);
-        assertEquals("Check bar equality -1", barP, null);
-        assertEquals("Check baz equality -1", bazP, null);
-
-        ServiceReference msRef = ipojoHelper.getServiceReferenceByName(ManagedServiceFactory.class.getName(), instance2.getFactory().getName());
-        assertNotNull("Check ManagedServiceFactory availability", msRef);
-
-        // Configuration of baz
-        Properties conf = new Properties();
-        conf.put("baz", "zab");
-        conf.put("foo", "foo");
-        conf.put("bar", new Integer(2));
-        conf.put("propagated1", "propagated");
-        conf.put("propagated2", new Integer(1));
-        ManagedServiceFactory ms = (ManagedServiceFactory) osgiHelper.getContext().getService(msRef);
-        try {
-            ms.updated(instance2.getInstanceName(), conf);
-        } catch (ConfigurationException e) {
-            fail("Configuration Exception : " + e);
-        }
-
-        // Recheck props
-        fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
-        fooP = (String) fooRef.getProperty("foo");
-        barP = (Integer) fooRef.getProperty("bar");
-        bazP = (String) fooRef.getProperty("baz");
-        assertNotNull("Check the propagated1 existency", fooRef.getProperty("propagated1"));
-        String prop1 = (String) fooRef.getProperty("propagated1");
-        assertNotNull("Check the propagated2 existency", fooRef.getProperty("propagated2"));
-        Integer prop2 = (Integer) fooRef.getProperty("propagated2");
-
-        assertEquals("Check foo equality", fooP, "foo");
-        assertEquals("Check bar equality", barP, new Integer(2));
-        assertEquals("Check baz equality", bazP, "zab");
-        assertEquals("Check propagated1 equality", prop1, "propagated");
-        assertEquals("Check propagated2 equality", prop2, new Integer(1));
-
-        osgiHelper.getContext().ungetService(msRef);
+        assertEquals("Check updated", 1, updated.intValue());
     }
 
 }

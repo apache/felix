@@ -19,7 +19,6 @@
 
 package org.apache.felix.ipojo.configuration;
 
-import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.Factory;
 
 import java.util.*;
@@ -46,6 +45,10 @@ public class Instance {
     }
 
     public static <K, T> Pair<K, T> pair(K k, T v) {
+        return new Pair<K, T>(k, v);
+    }
+
+    public static <K, T> Pair<K, T> entry(K k, T v) {
         return new Pair<K, T>(k, v);
     }
 
