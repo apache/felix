@@ -240,8 +240,8 @@ public class Common {
     private boolean getBundleStability(BundleContext bc) {
         boolean stability = true;
         Bundle[] bundles = bc.getBundles();
-        for (int i = 0; i < bundles.length; i++) {
-            stability = stability && (bundles[i].getState() == Bundle.ACTIVE);
+        for (Bundle bundle : bundles) {
+            stability = stability && (bundle.getState() == Bundle.ACTIVE);
         }
         return stability;
     }

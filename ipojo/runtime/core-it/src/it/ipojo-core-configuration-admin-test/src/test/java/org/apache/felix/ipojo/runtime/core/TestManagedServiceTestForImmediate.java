@@ -116,8 +116,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             prc.put("message", "message2");
             configuration.update(prc);
             System.err.println("updated ? ");
-            //Thread.sleep(UPDATE_WAIT_TIME);
-            listener.waitForEvent(configuration.getPid(), "1");
+            Thread.sleep(UPDATE_WAIT_TIME);
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -187,8 +186,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             }
             prc.put("message", "message2");
             configuration.update(prc);
-            //Thread.sleep(UPDATE_WAIT_TIME);
-            listener.waitForEvent(configuration.getPid(), "1");
+            Thread.sleep(UPDATE_WAIT_TIME);
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -274,7 +272,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             }
             prc.put("message", "message3");
             configuration.update(prc);
-            listener.waitForEvent(msp, "1");
+            Thread.sleep(UPDATE_WAIT_TIME);
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -321,7 +319,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             }
             prc.put("message", "message2");
             configuration.update(prc);
-            listener.waitForEvent(msp, "1");
+            Thread.sleep(UPDATE_WAIT_TIME);
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -359,7 +357,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             prc.put("message", "message3");
             configuration.update(prc);
             //Thread.sleep(UPDATE_WAIT_TIME);
-            listener.waitForEvent(msp, "1");
+            Thread.sleep(UPDATE_WAIT_TIME);
         } catch (Exception e) {
             fail(e.getMessage());
         }
