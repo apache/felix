@@ -21,7 +21,9 @@ package org.apache.felix.ipojo.arch.gogo;
 import static java.lang.String.format;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.List;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.Factory;
@@ -170,37 +172,51 @@ public class Arch {
      * Displays the information about a specific factory.
      * Note that factory name are not unique, so all matching
      * factories are displayed.
-     * @param factory the factory name
+     * @param name the factory name
      */
     @Descriptor("Display the information about a specific factory")
-    public void factory(@Descriptor("target factory") String factory) {
-        boolean found = false;
-        PrintStream out = System.out;
+    public void factory(@Descriptor("target factory name") String name) {
 
-        for (Factory m_factory : m_factories) {
-            if (m_factory.getName().equalsIgnoreCase(factory)) {
-                // Skip a line if already found (factory name not necessary unique)
-                if (found) {
-                    out.println();
-                }
-                out.println(m_factory.getDescription());
-                found = true;
+        List<Factory> factories = new ArrayList<Factory>();
+        List<TypeDeclaration> types = new ArrayList<TypeDeclaration>();
+
+        // Looking for public factories
+        for (Factory factory : m_factories) {
+            if (factory.getName().equalsIgnoreCase(name)) {
+                factories.add(factory);
             }
         }
 
-
+        // Looking for all unbound or private bound types
         for (TypeDeclaration type : m_types) {
-            if (!type.getStatus().isBound()) {
-                if (factory.equals(type.getComponentName())) {
-                    System.out.println("Factory " + factory + " not bound");
-                    System.out.println(" -> " + type.getStatus().getMessage());
-                    found = true;
+            if (name.equalsIgnoreCase(type.getComponentName())) {
+                // (Public + Unbound) or private types have no exported factories
+                if (!type.isPublic() || (!type.getStatus().isBound() && type.isPublic())) {
+                    types.add(type);
                 }
             }
         }
-        if (! found) {
-            System.err.println("Factory " + factory + " not found");
+
+        if (factories.isEmpty() && types.isEmpty()) {
+            System.err.println("Factory " + name + " not found");
+            return;
         }
+
+        // Display found factories and types
+        for (Factory factory : factories) {
+            System.out.println(factory.getComponentDescription());
+        }
+        for (TypeDeclaration type : types) {
+            if (!type.getStatus().isBound()) {
+                // Unbound: maybe private or public type
+                System.out.printf("Factory %s is not bound%n", type.getComponentName());
+                System.out.printf("  -> %s%n", type.getStatus().getMessage());
+            } else {
+                // Bound, this is only a private factory
+                System.out.printf("Factory %s is bound - Private%n", type.getComponentName());
+            }
+        }
+
     }
     
     /**
@@ -220,10 +236,23 @@ public class Arch {
         }
 
         for (TypeDeclaration type : m_types) {
-            if (!type.getStatus().isBound()) {
-                buffer.append(format("Factory %s is not bound%n", type.getComponentName()));
-                buffer.append(format("  Reason: %s", type.getStatus().getMessage()));
-                buffer.append("\n");
+            if (!type.isPublic()) {
+                // Private factories: always display them
+                // Cannot display much more than presence/absence since the TypeDeclaration API does not
+                // give access to the underlying Factory or description (if valid)
+                if (type.getStatus().isBound()) {
+                    buffer.append(format("Factory %s (UNKNOWN) - Private%n", type.getComponentName()));
+                } else {
+                    // Unbound type means that required extension is not available
+                    // We'll say that the factory is INVALID even if in reality it's not even instantiated
+                    buffer.append(format("Factory %s (INVALID) - Private%n", type.getComponentName()));
+                    buffer.append(format("  -> %s", type.getStatus().getMessage()));
+                }
+            } else {
+                if (!type.getStatus().isBound()) {
+                    buffer.append(format("Factory %s is not bound%n", type.getComponentName()));
+                    buffer.append(format("  -> %s%n", type.getStatus().getMessage()));
+                }
             }
         }
         
@@ -255,7 +284,7 @@ public class Arch {
         for (TypeDeclaration type : m_types) {
             if (!type.getStatus().isBound()) {
                 out.println("HandlerFactory " + type.getComponentName() + " is not bound");
-                out.println("  Reason: " + type.getStatus().getMessage());
+                out.println("  -> " + type.getStatus().getMessage());
             }
         }
     }
