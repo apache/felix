@@ -45,7 +45,7 @@ public class ConfigurationTracker implements ConfigurationListener {
      * The tracker instance.
      */
     private static ConfigurationTracker m_singleton;
-    private final ServiceRegistration<ConfigurationListener> m_registration;
+    private final ServiceRegistration m_registration;
     private final BundleContext m_context;
     private final Logger m_logger;
     private Map<String, IPojoFactory> m_factories = new HashMap<String, IPojoFactory>();
@@ -57,7 +57,7 @@ public class ConfigurationTracker implements ConfigurationListener {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION, "iPOJO Configuration Admin Listener");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        m_registration = m_context.registerService(ConfigurationListener.class, this, props);
+        m_registration = m_context.registerService(ConfigurationListener.class.getName(), this, props);
     }
 
     public static void initialize() {
