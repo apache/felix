@@ -29,7 +29,7 @@ public class ServiceLocator<T> {
     private final BundleContext m_context;
     private final Class<T> m_clazz;
 
-    private ServiceReference<T> m_reference;
+    private ServiceReference m_reference;
     private T m_service;
 
     public ServiceLocator(Class<T> clazz, BundleContext context) {
@@ -42,11 +42,13 @@ public class ServiceLocator<T> {
                 return m_service;
          }
 
-        m_reference = m_context.getServiceReference(m_clazz);
+        // We can't use the generic version, as KF does not support it yet.
+        m_reference = m_context.getServiceReference(m_clazz.getName());
         if (m_reference == null) {
             return null;
         }
-        m_service = m_context.getService(m_reference);
+
+        m_service = (T) m_context.getService(m_reference);
 
         return m_service;
     }
