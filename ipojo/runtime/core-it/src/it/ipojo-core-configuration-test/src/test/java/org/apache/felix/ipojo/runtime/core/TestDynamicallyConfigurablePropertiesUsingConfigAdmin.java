@@ -24,7 +24,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -41,17 +42,19 @@ import static org.junit.Assert.assertNull;
  * iPOJO does not expose the ManagedServiceFactory anymore, we must use the configuration admin.
  * To avoid conflicts with persisted configuration, we run one framework per tests
  */
-@ExamReactorStrategy(PerMethod.class)
+@ExamReactorStrategy(PerClass.class)
 public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Common {
 
     ComponentInstance instance, instance2;
 
     @Before
     public void setUp() {
+        cleanupConfigurationAdmin();
+
         String type = "CONFIG-FooProviderType-3";
 
         Hashtable<String, String> p1 = new Hashtable<String, String>();
-        p1.put("instance.name", "instance");
+        p1.put("instance.name", "instance-r");
         p1.put("foo", "foo");
         p1.put("bar", "2");
         p1.put("baz", "baz");
@@ -61,6 +64,31 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         p2.put("instance.name", "instance2");
 
         instance2 = ipojoHelper.createComponentInstance(type, p2);
+    }
+
+    private void cleanupConfigurationAdmin() {
+        ConfigurationAdmin admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName
+                (), null);
+        assertNotNull("Check configuration admin availability", admin);
+        try {
+            int found = 0;
+            Configuration[] configurations = admin.listConfigurations(null);
+            for (int i = 0; configurations != null && i < configurations.length; i++) {
+                System.out.println("Deleting configuration " + configurations[i].getPid());
+                configurations[i].delete();
+                found++;
+            }
+
+            // Wait the dispatching.
+            Thread.sleep(found * 500);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InvalidSyntaxException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @After
@@ -91,14 +119,14 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         // Configuration of baz
         Properties conf = new Properties();
         conf.put("baz", "zab");
-        conf.put("bar", new Integer(2));
+        conf.put("bar", 2);
         conf.put("foo", "foo");
         conf.put("instance.name", instance.getInstanceName());
 
         configuration.update(conf);
 
         // Asynchronous dispatching of the configuration
-        Thread.sleep(200);
+        Thread.sleep(1000);
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
@@ -131,7 +159,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         // Configuration of baz
         Properties conf = new Properties();
         conf.put("baz", "zab");
-        conf.put("bar", new Integer(2));
+        conf.put("bar", 2);
         conf.put("foo", "foo");
 
         // Asynchronous dispatching of the configuration
@@ -144,7 +172,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         barP = (Integer) fooRef.getProperty("bar");
         bazP = (String) fooRef.getProperty("baz");
         assertEquals("Check foo equality -2", fooP, "foo");
-        assertEquals("Check bar equality -2", barP, new Integer(2));
+        assertEquals("Check bar equality -2", barP, 2);
         assertEquals("Check baz equality -2", bazP, "zab");
     }
 
@@ -171,7 +199,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         Properties conf = new Properties();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
-        conf.put("bar", new Integer(0));
+        conf.put("bar", 0);
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
@@ -221,11 +249,11 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         Properties conf = new Properties();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
-        conf.put("bar", new Integer(0));
+        conf.put("bar", 0);
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        Thread.sleep(1000);
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
@@ -234,7 +262,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         bazP = (String) fooRef.getProperty("baz");
 
         assertEquals("Check foo equality", fooP, "oof");
-        assertEquals("Check bar equality", barP, new Integer(0));
+        assertEquals("Check bar equality", barP, 0);
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
@@ -244,7 +272,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         barP = (Integer) p.get("bar");
 
         assertEquals("Check foo field equality", fooP, "oof");
-        assertEquals("Check bar field equality", barP, new Integer(0));
+        assertEquals("Check bar field equality", barP, 0);
 
         osgiHelper.getContext().ungetService(fooRef);
     }
@@ -324,14 +352,16 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         Properties conf = new Properties();
         conf.put("baz", "zab");
         conf.put("foo", "foo");
-        conf.put("bar", new Integer(2));
+        conf.put("bar", 2);
         conf.put("propagated1", "propagated");
-        conf.put("propagated2", new Integer(1));
+        conf.put("propagated2", 1);
         conf.put(".notpropagated", "xxx");
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        Thread.sleep(1000);
+
+        System.out.println(instance.getInstanceDescription().getDescription());
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
@@ -379,7 +409,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        Thread.sleep(1000);
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
