@@ -126,6 +126,7 @@ public class Common {
 
     @Before
     public void commonSetUp() {
+        grace(500);
         osgiHelper = new OSGiHelper(bc);
         ipojoHelper = new IPOJOHelper(bc);
 
@@ -146,6 +147,7 @@ public class Common {
     public void commonTearDown() {
         ipojoHelper.dispose();
         osgiHelper.dispose();
+        grace(500);
     }
 
     public CompositeOption ipojoBundles() {
@@ -155,6 +157,14 @@ public class Common {
                 // configuration admin
                 mavenBundle("org.apache.felix",  "org.apache.felix.configadmin").versionAsInProject()
         );
+    }
+
+    public static void grace(int time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            // Ignore it.
+        }
     }
 
     public Option testedBundle() throws MalformedURLException {
