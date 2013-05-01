@@ -24,21 +24,24 @@ import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.ow2.chameleon.testing.helpers.IPOJOHelper;
 import org.ow2.chameleon.testing.helpers.OSGiHelper;
 
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Properties;
 
 import static junit.framework.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 
 public class TestUpdatedNoArgMethodAndManagedService extends Common {
-
-
 
     /**
      * Instance where the ManagedServicePID is provided by the component type.
@@ -60,9 +63,12 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
     public void setUp() {
         osgiHelper = new OSGiHelper(bc);
         ipojoHelper = new IPOJOHelper(bc);
+
+        cleanupConfigurationAdmin();
+
         String type = "CONFIG-FooProviderType-4Updated2";
         Hashtable<String, String> p = new Hashtable<String, String>();
-        p.put("instance.name", "instance");
+        p.put("instance.name", "any-instance");
         p.put("foo", "foo");
         p.put("bar", "2");
         p.put("baz", "baz");
@@ -75,7 +81,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         p1.put("foo", "foo");
         p1.put("bar", "2");
         p1.put("baz", "baz");
-        p1.put("managed.service.pid", "instance");
+        p1.put("managed.service.pid", "instanceMSP");
         instance2 = ipojoHelper.createComponentInstance(type, p1);
 
         type = "CONFIG-FooProviderType-3Updated2";
@@ -95,9 +101,27 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         instance3 = null;
     }
 
+    private void cleanupConfigurationAdmin() {
+        ConfigurationAdmin admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName
+                (), null);
+        assertNotNull("Check configuration admin availability", admin);
+        try {
+            Configuration[] configurations = admin.listConfigurations(null);
+            for (int i = 0; configurations != null && i < configurations.length; i++) {
+                configurations[i].delete();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InvalidSyntaxException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Test
     public void testStaticInstance1() {
-        ServiceReference fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance1.getInstanceName());
+        ServiceReference fooRef = osgiHelper.waitForService(FooService.class.getName(),
+                "(instance.name=" + instance1.getInstanceName() + ")",
+                5000);
         assertNotNull("Check FS availability", fooRef);
         String fooP = (String) fooRef.getProperty("foo");
         Integer barP = (Integer) fooRef.getProperty("bar");
@@ -147,7 +171,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         assertEquals("Check bar equality -1", barP, new Integer(2));
         assertEquals("Check baz equality -1", bazP, "baz");
 
-        ServiceReference msRef = osgiHelper.getServiceReferenceByPID(ManagedService.class.getName(), "instance");
+        ServiceReference msRef = osgiHelper.getServiceReferenceByPID(ManagedService.class.getName(), "instanceMSP");
         assertNotNull("Check ManagedService availability", msRef);
 
 
@@ -273,7 +297,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         assertEquals("Check bar equality", barP, new Integer(2));
         assertEquals("Check baz equality", bazP, "baz");
 
-        ServiceReference msRef = osgiHelper.getServiceReferenceByPID(ManagedService.class.getName(), "instance");
+        ServiceReference msRef = osgiHelper.getServiceReferenceByPID(ManagedService.class.getName(), "instanceMSP");
         assertNotNull("Check ManagedServiceFactory availability", msRef);
 
         // Configuration of baz

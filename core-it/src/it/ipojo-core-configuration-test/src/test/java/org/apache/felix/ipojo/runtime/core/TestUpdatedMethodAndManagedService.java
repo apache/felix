@@ -20,23 +20,41 @@
 package org.apache.felix.ipojo.runtime.core;
 
 import org.apache.felix.ipojo.ComponentInstance;
+import org.apache.felix.ipojo.HandlerFactory;
+import org.apache.felix.ipojo.architecture.Architecture;
+import org.apache.felix.ipojo.extender.InstanceDeclaration;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.ow2.chameleon.testing.helpers.IPOJOHelper;
 import org.ow2.chameleon.testing.helpers.OSGiHelper;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Properties;
 
 import static junit.framework.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 
+@ExamReactorStrategy(PerMethod.class)
 public class TestUpdatedMethodAndManagedService extends Common {
 
 
@@ -55,12 +73,43 @@ public class TestUpdatedMethodAndManagedService extends Common {
      */
     ComponentInstance instance3;
 
+    private void cleanupConfigurationAdmin() {
+        ConfigurationAdmin admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName
+                (), null);
+        assertNotNull("Check configuration admin availability", admin);
+        try {
+            int found = 0;
+            Configuration[] configurations = admin.listConfigurations(null);
+            for (int i = 0; configurations != null && i < configurations.length; i++) {
+                System.out.println("Deleting configuration " + configurations[i].getPid());
+                configurations[i].delete();
+                found++;
+            }
 
+            // Wait the dispatching.
+            Thread.sleep(found * 500);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InvalidSyntaxException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         osgiHelper = new OSGiHelper(bc);
         ipojoHelper = new IPOJOHelper(bc);
+
+        for (HandlerFactory handler : osgiHelper.getServiceObjects(HandlerFactory.class)) {
+            System.out.println("handler : " + handler.getHandlerName() + " - " + handler.getState() + " - " + handler
+                    .getMissingHandlers());
+        }
+
+        cleanupConfigurationAdmin();
+
         String type = "CONFIG-FooProviderType-4Updated";
         Hashtable<String, String> p = new Hashtable<String, String>();
         p.put("instance.name", "instance");
@@ -68,7 +117,11 @@ public class TestUpdatedMethodAndManagedService extends Common {
         p.put("bar", "2");
         p.put("baz", "baz");
         instance1 = ipojoHelper.createComponentInstance(type, p);
+        System.out.println(instance1.getInstanceDescription().getDescription());
+
         assertEquals("instance1 created", ComponentInstance.VALID, instance1.getState());
+
+        System.out.println(instance1.getInstanceDescription().getDescription());
 
         type = "CONFIG-FooProviderType-3Updated";
         Hashtable<String, String> p1 = new Hashtable<String, String>();
@@ -89,7 +142,6 @@ public class TestUpdatedMethodAndManagedService extends Common {
 
     @After
     public void tearDown() {
-
         instance1.dispose();
         instance2.dispose();
         instance3.dispose();
@@ -98,8 +150,14 @@ public class TestUpdatedMethodAndManagedService extends Common {
         instance3 = null;
     }
 
+
+
     @Test
-    public void testStaticInstance1() {
+    public void testStaticInstance1() throws IOException {
+        for (Architecture architecture : osgiHelper.getServiceObjects(Architecture.class)) {
+            System.out.println(architecture.getInstanceDescription().getName() + " " + architecture
+                    .getInstanceDescription().getState());
+        }
         ServiceReference fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance1.getInstanceName());
         assertNotNull("Check FS availability", fooRef);
         String fooP = (String) fooRef.getProperty("foo");
@@ -346,5 +404,39 @@ public class TestUpdatedMethodAndManagedService extends Common {
         assertEquals("Check updated -2", 2, updated.intValue());
         assertEquals("Check last updated", 3, dict.size());
 
+    }
+
+    public static void dump(BundleContext bc, File output) throws IOException {
+        if (!output.exists()) {
+            output.mkdirs();
+        }
+
+        for (Bundle bundle : bc.getBundles()) {
+            if (bundle.getBundleId() == 0) {
+                continue;
+            }
+            System.out.println("Location : " + bundle.getLocation());
+            if ("local".equals(bundle.getLocation())) {
+                continue; // Pax Exam, when you hug me, I feel so...
+            }
+            URL location = new URL(bundle.getLocation());
+            FileOutputStream outputStream = null;
+            if (bundle.getVersion() != null) {
+                outputStream = new FileOutputStream(new File(output,
+                        bundle.getSymbolicName() + "-" + bundle.getVersion().toString() + ".jar"));
+            } else {
+                outputStream = new FileOutputStream(new File(output, bundle.getSymbolicName() + ".jar"));
+            }
+
+            int read = 0;
+            byte[] bytes = new byte[1024];
+
+            InputStream inputStream = location.openStream();
+            while ((read = inputStream.read(bytes)) != -1) {
+                outputStream.write(bytes, 0, read);
+            }
+            inputStream.close();
+            outputStream.close();
+        }
     }
 }

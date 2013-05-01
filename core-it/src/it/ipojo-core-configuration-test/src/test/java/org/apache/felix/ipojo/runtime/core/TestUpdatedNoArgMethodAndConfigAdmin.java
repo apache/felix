@@ -22,10 +22,12 @@ package org.apache.felix.ipojo.runtime.core;
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -53,6 +55,7 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
     public void setUp() {
         osgiHelper = new OSGiHelper(bc);
         ipojoHelper = new IPOJOHelper(bc);
+        cleanupConfigurationAdmin();
         String type = "CONFIG-FooProviderType-3Updated2";
 
         Hashtable<String, String> p1 = new Hashtable<String, String>();
@@ -74,6 +77,22 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
         instance2.dispose();
         instance2 = null;
         instance = null;
+    }
+
+    private void cleanupConfigurationAdmin() {
+        ConfigurationAdmin admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName
+                (), null);
+        Assert.assertNotNull("Check configuration admin availability", admin);
+        try {
+            Configuration[] configurations = admin.listConfigurations(null);
+            for (int i = 0; configurations != null && i < configurations.length; i++) {
+                configurations[i].delete();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InvalidSyntaxException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test

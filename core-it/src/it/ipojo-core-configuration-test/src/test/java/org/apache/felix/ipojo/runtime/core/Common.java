@@ -181,9 +181,9 @@ public class Common {
         // Wait for bundle initialization.
         boolean bundleStability = getBundleStability(context);
         int count = 0;
-        while (!bundleStability && count < 500) {
+        while (!bundleStability && count < 1000) {
             try {
-                Thread.sleep(5);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 // Interrupted
             }
@@ -191,11 +191,11 @@ public class Common {
             bundleStability = getBundleStability(context);
         }
 
-        if (count == 500) {
+        if (count == 1000) {
             for (Bundle bundle : bc.getBundles()) {
                 System.out.println("Bundle " + bundle.getSymbolicName() + " - " + bundle.getState());
             }
-            System.err.println("Bundle stability isn't reached after 500 tries");
+            System.err.println("Bundle stability isn't reached after 1000 tries");
             throw new IllegalStateException("Cannot reach the bundle stability");
         }
 
@@ -203,11 +203,11 @@ public class Common {
         count = 0;
         int count1 = 0;
         int count2 = 0;
-        while (! serviceStability && count < 500) {
+        while (! serviceStability && count < 1000) {
             try {
                 ServiceReference[] refs = context.getServiceReferences((String) null, null);
                 count1 = refs.length;
-                Thread.sleep(500);
+                Thread.sleep(1000);
                 refs = context.getServiceReferences((String) null, null);
                 count2 = refs.length;
                 serviceStability = count1 == count2;
@@ -219,8 +219,8 @@ public class Common {
             count++;
         }
 
-        if (count == 500) {
-            System.err.println("Service stability isn't reached after 500 tries (" + count1 + " != " + count2);
+        if (count == 1000) {
+            System.err.println("Service stability isn't reached after 1000 tries (" + count1 + " != " + count2);
             throw new IllegalStateException("Cannot reach the service stability");
         }
     }
