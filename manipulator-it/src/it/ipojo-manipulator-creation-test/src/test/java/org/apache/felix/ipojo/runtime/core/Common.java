@@ -125,6 +125,7 @@ public class Common {
 
     @Before
     public void commonSetUp() {
+        grace(500);
         osgiHelper = new OSGiHelper(bc);
         ipojoHelper = new IPOJOHelper(bc);
 
@@ -143,6 +144,15 @@ public class Common {
     public void commonTearDown() {
         ipojoHelper.dispose();
         osgiHelper.dispose();
+        grace(500);
+    }
+
+    public static void grace(int time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            // Ignore it.
+        }
     }
 
     public CompositeOption ipojoBundles() {

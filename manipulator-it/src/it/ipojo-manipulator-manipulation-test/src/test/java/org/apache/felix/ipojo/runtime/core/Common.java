@@ -143,6 +143,15 @@ public class Common {
     public void commonTearDown() {
         ipojoHelper.dispose();
         osgiHelper.dispose();
+        grace(500);
+    }
+
+    public static void grace(int time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            // Ignore it.
+        }
     }
 
     public CompositeOption ipojoBundles() {
