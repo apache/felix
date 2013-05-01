@@ -405,7 +405,7 @@ public class OnlineManipulatorTest {
         int count = 0;
         while (!bundleStability && count < 500) {
             try {
-                Thread.sleep(5);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 // Interrupted
             }
@@ -426,7 +426,7 @@ public class OnlineManipulatorTest {
             try {
                 ServiceReference[] refs = context.getServiceReferences((String) null, null);
                 count1 = refs.length;
-                Thread.sleep(500);
+                Thread.sleep(1000);
                 refs = context.getServiceReferences((String) null, null);
                 count2 = refs.length;
                 serviceStability = count1 == count2;
