@@ -39,24 +39,32 @@ public class ConfigurationException extends Exception {
     
     /**
      * Creates a new configuration exception.
-     * @param mes the error message
-     * @param typ the component type
+     * @param message the error message
      * @see Exception#Exception(String)
      */
-    ConfigurationException(String mes, String typ) {
-        super(mes);
-        m_type = typ;
+    public ConfigurationException(String message) {
+        this(message, (String) null);
     }
-    
+
     /**
      * Creates a new configuration exception.
      * @param mes the error message
+     * @param type the component type
      * @see Exception#Exception(String)
      */
-    public ConfigurationException(String mes) {
-        super(mes);
+    public ConfigurationException(String mes, String type) {
+        this(mes, null, type);
     }
-    
+
+    public ConfigurationException(String message, Throwable cause) {
+        this(message, cause, null);
+    }
+
+    public ConfigurationException(String message, Throwable cause, String type) {
+        super(message, cause);
+        m_type = type;
+    }
+
     /**
      * Gets the error message.
      * @return the error message.

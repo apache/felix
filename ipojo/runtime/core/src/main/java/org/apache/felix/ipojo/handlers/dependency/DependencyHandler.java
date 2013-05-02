@@ -38,6 +38,7 @@ import org.apache.felix.ipojo.parser.MethodMetadata;
 import org.apache.felix.ipojo.parser.PojoMetadata;
 import org.apache.felix.ipojo.util.DependencyModel;
 import org.apache.felix.ipojo.util.DependencyStateListener;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
@@ -388,10 +389,12 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                     }
                 }
 
+                Bundle bundle = getInstanceManager().getContext().getBundle();
                 try {
-                    dep.setSpecification(getInstanceManager().getContext().getBundle().loadClass(className));
+                    dep.setSpecification(bundle.loadClass(className));
                 } catch (ClassNotFoundException e) {
-                    throw new ConfigurationException("The required service interface cannot be loaded : " + e.getMessage());
+                    throw new ConfigurationException("The required service interface (" + className
+                            + ") cannot be loaded from bundle " + bundle.getBundleId(), e);
                 }
             }
         }
@@ -515,7 +518,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                 try {
                     fil = getInstanceManager().getContext().createFilter(filter);
                 } catch (InvalidSyntaxException e) {
-                    throw new ConfigurationException("A requirement filter is invalid : " + filter + " - " + e.getMessage());
+                    throw new ConfigurationException("A requirement filter is invalid : " + filter, e);
                 }
             }
 

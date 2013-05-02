@@ -32,10 +32,13 @@ public class CompositionException extends Exception {
 
     /**
      * Constructor.
-     * @param message : a message.
+     * @param message a message.
      */
     public CompositionException(String message) {
-        super(message);
+        this(message, null);
     }
 
+    public CompositionException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

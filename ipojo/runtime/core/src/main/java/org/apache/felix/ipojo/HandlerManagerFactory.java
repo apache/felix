@@ -63,7 +63,7 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
 
         // Get the name
         m_factoryName = metadata.getAttribute("name");
-        if (m_factoryName == null) { throw new ConfigurationException("An Handler needs a name"); }
+        if (m_factoryName == null) { throw new ConfigurationException("A Handler needs a name"); }
 
         // Get the type
         String type = metadata.getAttribute("type");

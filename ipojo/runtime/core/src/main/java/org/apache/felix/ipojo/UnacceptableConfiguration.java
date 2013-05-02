@@ -35,10 +35,13 @@ public class UnacceptableConfiguration extends Exception {
 
     /**
      * Creates an UnacceptableConfiguration.
-     * @param message : message about the error.
+     * @param message message about the error.
      */
     public UnacceptableConfiguration(String message) {
-        super(message);
+        this(message, null);
     }
 
+    public UnacceptableConfiguration(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

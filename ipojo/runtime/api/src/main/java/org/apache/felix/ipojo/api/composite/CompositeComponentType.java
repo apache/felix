@@ -318,7 +318,7 @@ public class CompositeComponentType extends ComponentType {
             m_factory = new CompositeFactory(m_context, m_metadata);
             m_factory.start();
         } catch (ConfigurationException e) {
-            throw new IllegalStateException("An exception occurs during factory initialization : " + e.getMessage());
+            throw new IllegalStateException("An exception occurs during factory initialization", e);
         }
 
     }

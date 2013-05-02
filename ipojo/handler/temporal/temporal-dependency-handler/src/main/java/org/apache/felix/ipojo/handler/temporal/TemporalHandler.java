@@ -195,7 +195,7 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
                 try {
                     filter = getInstanceManager().getContext().createFilter(fil);
                 } catch (InvalidSyntaxException e) {
-                    throw new ConfigurationException("A requirement filter is invalid : " + filter + " - " + e.getMessage());
+                    throw new ConfigurationException("A requirement filter is invalid : " + filter, e);
                 }
             }
 

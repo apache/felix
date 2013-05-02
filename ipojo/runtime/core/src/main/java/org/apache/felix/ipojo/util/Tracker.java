@@ -114,7 +114,7 @@ public class Tracker implements TrackerCustomizer {
         try {
             this.m_filter = context.createFilter(m_listenerFilter);
         } catch (InvalidSyntaxException e) { // we could only get this exception if the ServiceReference was invalid
-            throw new IllegalArgumentException("unexpected InvalidSyntaxException: " + e.getMessage()); //$NON-NLS-1$
+            throw new IllegalArgumentException("unexpected InvalidSyntaxException", e); //$NON-NLS-1$
         }
     }
 
@@ -147,7 +147,7 @@ public class Tracker implements TrackerCustomizer {
         } catch (InvalidSyntaxException e) { // we could only get this exception
             // if the clazz argument was
             // malformed
-            throw new IllegalArgumentException("unexpected InvalidSyntaxException: " + e.getMessage());
+            throw new IllegalArgumentException("unexpected InvalidSyntaxException", e);
         }
     }
 
@@ -203,7 +203,7 @@ public class Tracker implements TrackerCustomizer {
                 // the initial
                 // references
             } catch (InvalidSyntaxException e) {
-                throw new IllegalStateException("unexpected InvalidSyntaxException: " + e.getMessage()); //$NON-NLS-1$
+                throw new IllegalStateException("unexpected InvalidSyntaxException", e); //$NON-NLS-1$
             }
         }
         /* Call tracked outside of synchronized region */
