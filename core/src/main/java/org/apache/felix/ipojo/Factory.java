@@ -107,7 +107,8 @@ public interface Factory {
     /**
      * Reconfigures an instance already created. This configuration needs to
      * have the name property to identify the instance.
-     * @param conf the configuration to reconfigure the instance.
+     * @param conf the configuration to reconfigure the instance. The instance.name property must be set to identify
+     *             the instance to reconfigure.
      * @throws UnacceptableConfiguration  if the given configuration is not consistent for the targeted instance.
      * @throws MissingHandlerException if an handler is missing.
      */
