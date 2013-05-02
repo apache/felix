@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Manipulates inner class allowing outer class access. The manipulated class
@@ -60,13 +61,17 @@ public class InnerClassManipulator {
      * @return manipulated class
      * @throws IOException the class cannot be read correctly
      */
-    public byte[] manipulate(byte[] in) throws IOException {
+    public byte[] manipulate(byte[] in, int version) throws IOException {
         InputStream is1 = new ByteArrayInputStream(in);
 
         ClassReader cr = new ClassReader(is1);
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         InnerClassAdapter adapter = new InnerClassAdapter(cw, m_outer, m_fields);
-        cr.accept(adapter, ClassReader.SKIP_FRAMES);
+        if (version >= Opcodes.V1_6) {
+            cr.accept(adapter, ClassReader.EXPAND_FRAMES);
+        } else {
+            cr.accept(adapter, 0);
+        }
         is1.close();
 
         return cw.toByteArray();
