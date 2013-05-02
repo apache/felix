@@ -396,11 +396,9 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         } catch (NoClassDefFoundError e) {
             // A NoClassDefFoundError is thrown if the specification uses a class not accessible by the actual instance.
             // It generally comes from a missing import.
-            throw new IllegalStateException("Cannot create the Nullable object, a referenced class cannot be loaded: " + e.getMessage());
+            throw new IllegalStateException("Cannot create the Nullable object, a referenced class cannot be loaded", e);
         } catch (Throwable e) { // Catch any other exception that can occurs
-            throw new IllegalStateException(
-                    "Cannot create the Nullable object, an unexpected error occurs: "
-                            + e.getMessage());
+            throw new IllegalStateException("Cannot create the Nullable object, an unexpected error occurs", e);
         }
 
         return m_nullable;
@@ -423,13 +421,13 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                     Class clazz = getHandler().getInstanceManager().getContext().getBundle().loadClass(m_di);
                     m_nullable = clazz.newInstance();
                 } catch (IllegalAccessException e) {
-                    throw new IllegalStateException("Cannot load the default-implementation " + m_di + " : " + e.getMessage());
+                    throw new IllegalStateException("Cannot load the default-implementation " + m_di, e);
                 } catch (InstantiationException e) {
-                    throw new IllegalStateException("Cannot load the default-implementation " + m_di + " : " + e.getMessage());
+                    throw new IllegalStateException("Cannot load the default-implementation " + m_di, e);
                 } catch (ClassNotFoundException e) {
-                    throw new IllegalStateException("Cannot load the default-implementation " + m_di + " : " + e.getMessage());
+                    throw new IllegalStateException("Cannot load the default-implementation " + m_di, e);
                 } catch (Throwable e) { // Catch any other exception
-                    throw new IllegalStateException("Cannot load the default-implementation (unexpected exception) " + m_di + " : " + e.getMessage());
+                    throw new IllegalStateException("Cannot load the default-implementation (unexpected exception) " + m_di, e);
                 }
             }
         }
@@ -707,7 +705,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                     }
                 } catch (ArrayStoreException e) {
                     m_handler.error("Cannot create the array - Check that the bundle can access the service interface", e);
-                    throw new RuntimeException("Cannot create the array - Check that the bundle can access the service interface : " + e.getMessage());
+                    throw new RuntimeException("Cannot create the array - Check that the bundle can access the service interface", e);
                 }
             } else if (m_type == DependencyHandler.LIST) {
                 if (refs == null) {

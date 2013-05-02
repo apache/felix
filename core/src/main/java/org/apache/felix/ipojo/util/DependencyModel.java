@@ -969,11 +969,11 @@ public abstract class DependencyModel implements TrackerCustomizer {
                     Class cla = context.getBundle().loadClass(comp);
                     cmp = (Comparator) cla.newInstance();
                 } catch (ClassNotFoundException e) {
-                    throw new ConfigurationException("Cannot load a customized comparator : " + e.getMessage());
+                    throw new ConfigurationException("Cannot load a customized comparator", e);
                 } catch (IllegalAccessException e) {
-                    throw new ConfigurationException("Cannot create a customized comparator : " + e.getMessage());
+                    throw new ConfigurationException("Cannot create a customized comparator", e);
                 } catch (InstantiationException e) {
-                    throw new ConfigurationException("Cannot create a customized comparator : " + e.getMessage());
+                    throw new ConfigurationException("Cannot create a customized comparator", e);
                 }
             }
         }
@@ -992,7 +992,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
         try {
             spec = context.getBundle().loadClass(specification);
         } catch (ClassNotFoundException e) {
-            throw new ConfigurationException("A required specification cannot be loaded : " + specification);
+            throw new ConfigurationException("A required specification cannot be loaded : " + specification, e);
         }
         return spec;
     }

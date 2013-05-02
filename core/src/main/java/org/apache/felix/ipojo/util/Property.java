@@ -225,11 +225,11 @@ public class Property implements FieldInterceptor, ConstructorInjector {
                 try {
                     return context.getBundle().loadClass(type);
                 } catch (ClassNotFoundException e) {
-                    throw new ConfigurationException("Class not found exception in setValue on " + type + " : " + e.getMessage());
+                    throw new ConfigurationException("Class not found exception in setValue on " + type, e);
                 } catch (SecurityException e) {
-                    throw new ConfigurationException("Security execption in setValue on " + type + " : " + e.getMessage());
+                    throw new ConfigurationException("Security exception in setValue on " + type, e);
                 } catch (IllegalArgumentException e) {
-                    throw new ConfigurationException("Argument issue when calling the constructor of the type " + type);
+                    throw new ConfigurationException("Argument issue when calling the constructor of the type " + type, e);
                 }
             }
         }
@@ -280,11 +280,11 @@ public class Property implements FieldInterceptor, ConstructorInjector {
             Object[] object = (Object[]) Array.newInstance(clazz, 0);
             return object.getClass();
         } catch (ClassNotFoundException e) {
-            throw new ConfigurationException("Class not found exception in setValue on " + internalType);
+            throw new ConfigurationException("Class not found exception in setValue on " + internalType, e);
         } catch (SecurityException e) {
-            throw new ConfigurationException("Security Exception in setValue on " + internalType);
+            throw new ConfigurationException("Security Exception in setValue on " + internalType, e);
         } catch (IllegalArgumentException e) {
-            throw new ConfigurationException("Argument issue when calling the constructor of the type " + internalType);
+            throw new ConfigurationException("Argument issue when calling the constructor of the type " + internalType, e);
         }
     }
 
@@ -456,10 +456,10 @@ public class Property implements FieldInterceptor, ConstructorInjector {
                 return valueOf.invoke(null, new String[] {strValue});
             } catch (InvocationTargetException e) {
                 throw new ConfigurationException("Cannot create an enumerated value for " + type
-                        + " with " + strValue + " : " + e.getTargetException());
+                        + " with " + strValue, e.getTargetException());
             } catch (Exception e) {
                 throw new ConfigurationException("Cannot create an enumerated value for " + type
-                        + " with " + strValue + " : " + e.getMessage());
+                        + " with " + strValue, e);
             }
         }
 
@@ -469,17 +469,17 @@ public class Property implements FieldInterceptor, ConstructorInjector {
             Constructor cst = type.getConstructor(new Class[] { String.class });
             return cst.newInstance(new Object[] { strValue });
         } catch (SecurityException e) {
-            throw new ConfigurationException("Security exception during the creation of " + type + " : " + e.getMessage());
+            throw new ConfigurationException("Security exception during the creation of " + type, e);
         } catch (NoSuchMethodException e) {
-            throw new ConfigurationException("Constructor not found exception during the creation of " + type + " : " + e.getMessage());
+            throw new ConfigurationException("Constructor not found exception during the creation of " + type, e);
         } catch (IllegalArgumentException e) {
-            throw new ConfigurationException("Argument issue when calling the constructor of the type " + type);
+            throw new ConfigurationException("Argument issue when calling the constructor of the type " + type, e);
         } catch (InstantiationException e) {
-            throw new ConfigurationException("Instantiation problem  " + type);
+            throw new ConfigurationException("Instantiation problem  " + type, e);
         } catch (IllegalAccessException e) {
-            throw new ConfigurationException("Illegal Access " + type);
+            throw new ConfigurationException("Illegal Access " + type, e);
         } catch (InvocationTargetException e) {
-            throw new ConfigurationException("Invocation problem during the creation of " + type + " : " + e.getTargetException().getMessage());
+            throw new ConfigurationException("Invocation problem during the creation of " + type, e.getTargetException());
         }
 
     }
@@ -560,15 +560,15 @@ public class Property implements FieldInterceptor, ConstructorInjector {
             }
             return object;
         } catch (NoSuchMethodException e) {
-            throw new ConfigurationException("Constructor not found exception in setValue on " + interntype.getName());
+            throw new ConfigurationException("Constructor not found exception in setValue on " + interntype.getName(), e);
         } catch (IllegalArgumentException e) {
-            throw new ConfigurationException("Argument issue when calling the constructor of the type " + interntype.getName());
+            throw new ConfigurationException("Argument issue when calling the constructor of the type " + interntype.getName(), e);
         } catch (InstantiationException e) {
-            throw new ConfigurationException("Instantiation problem  " + interntype.getName());
+            throw new ConfigurationException("Instantiation problem  " + interntype.getName(), e);
         } catch (IllegalAccessException e) {
-            throw new ConfigurationException("Illegal Access Exception in  " + interntype.getName());
+            throw new ConfigurationException("Illegal Access Exception in  " + interntype.getName(), e);
         } catch (InvocationTargetException e) {
-            throw new ConfigurationException("Invocation problem " + interntype.getName() + " : " + e.getTargetException().getMessage());
+            throw new ConfigurationException("Invocation problem " + interntype.getName(), e.getTargetException());
         }
     }
 

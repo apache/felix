@@ -141,7 +141,7 @@ public class SourceManager implements ContextListener {
             try {
                 m_dependency.setFilter(m_context.createFilter(filter));
             } catch (InvalidSyntaxException e) {
-                throw new IllegalStateException("A context filter is invalid : " + filter);
+                throw new IllegalStateException("A context filter is invalid : " + filter, e);
             }
         }
     }
@@ -312,7 +312,7 @@ public class SourceManager implements ContextListener {
                 Filter filter = countext.createFilter(fil);
                 m_tracker = new Tracker(countext, filter, this);
             } catch (InvalidSyntaxException e) {
-                throw new ConfigurationException("A Context source filter is invalid " + fil + " : " + e.getMessage());
+                throw new ConfigurationException("A Context source filter is invalid " + fil, e);
             }
         }
 

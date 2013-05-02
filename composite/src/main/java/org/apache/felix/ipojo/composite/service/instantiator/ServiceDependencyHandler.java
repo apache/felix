@@ -107,7 +107,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
         try {
             fil = getCompositeManager().getGlobalContext().createFilter(filter);
         } catch (InvalidSyntaxException e) {
-            throw new ConfigurationException("Malformed filter " + filter + " : " + e.getMessage());
+            throw new ConfigurationException("Malformed filter " + filter, e);
         }
 
         Properties prop = new Properties();
@@ -116,7 +116,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
             try {
                 InstanceHandler.parseProperty(props[k], prop);
             } catch (ParseException e) {
-                throw new ConfigurationException("An instance configuration is invalid : " + e.getMessage());
+                throw new ConfigurationException("An instance configuration is invalid", e);
             }
         }
 
@@ -201,7 +201,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
                 try {
                     fil = getCompositeManager().getGlobalContext().createFilter(filter);
                 } catch (InvalidSyntaxException e) {
-                    throw new ConfigurationException("A required filter " + filter + " is malformed : " + e.getMessage());
+                    throw new ConfigurationException("A required filter " + filter + " is malformed", e);
                 }
             }
 

@@ -448,7 +448,7 @@ public class PrimitiveComponentType extends ComponentType {
             }
             m_factory.start();
         } catch (ConfigurationException e) {
-            throw new IllegalStateException("An exception occurs during factory initialization : " + e.getMessage());
+            throw new IllegalStateException("An exception occurs during factory initialization", e);
         }
 
     }
@@ -466,7 +466,7 @@ public class PrimitiveComponentType extends ComponentType {
             m_alreadyManipulated = newclazz.length == array.length;
             return newclazz;
         } catch (IOException e) {
-            throw new IllegalStateException("An exception occurs during implementation class manipulation : " + e.getMessage());
+            throw new IllegalStateException("An exception occurs during implementation class manipulation", e);
         }
     }
 

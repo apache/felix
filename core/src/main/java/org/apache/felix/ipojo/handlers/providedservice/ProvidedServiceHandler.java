@@ -133,7 +133,7 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
                             throw new ConfigurationException("The custom creation policy class " + custom.getName() + " does not implement " + CreationStrategy.class.getName());
                         }
                     } catch (ClassNotFoundException e) {
-                        throw new ConfigurationException("The custom creation policy class " + strategy + " cannot be loaded " + e.getMessage());
+                        throw new ConfigurationException("The custom creation policy class " + strategy + " cannot be loaded ", e);
 
                     }
 
@@ -335,13 +335,13 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             } catch (NoSuchFieldException e) {
                 return true; // No specification field
             } catch (ClassNotFoundException e) {
-                throw new ConfigurationException("Service Providing: The service specification " + svc.getServiceSpecifications()[i] + " cannot be load");
+                throw new ConfigurationException("Service Providing: The service specification " + svc.getServiceSpecifications()[i] + " cannot be loaded", e);
             } catch (IllegalArgumentException e) {
-                throw new ConfigurationException("Service Providing: The field 'specification' of the service specification " + svc.getServiceSpecifications()[i] + " is not accessible : " + e.getMessage());
+                throw new ConfigurationException("Service Providing: The field 'specification' of the service specification " + svc.getServiceSpecifications()[i] + " is not accessible", e);
             } catch (IllegalAccessException e) {
-                throw new ConfigurationException("Service Providing: The field 'specification' of the service specification " + svc.getServiceSpecifications()[i] + " is not accessible : " + e.getMessage());
+                throw new ConfigurationException("Service Providing: The field 'specification' of the service specification " + svc.getServiceSpecifications()[i] + " is not accessible", e);
             } catch (ParseException e) {
-                throw new ConfigurationException("Service Providing: The field 'specification' of the service specification " + svc.getServiceSpecifications()[i] + " does not contain a valid String : " + e.getMessage());
+                throw new ConfigurationException("Service Providing: The field 'specification' of the service specification " + svc.getServiceSpecifications()[i] + " does not contain a valid String", e);
             }
         }
 
@@ -589,7 +589,7 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
                 getLogger().log(Logger.INFO, "Collected interfaces from " + metadata.getAttribute("classname") + " : " + interfaces);
                 getLogger().log(Logger.INFO, "Collected super classes from " + metadata.getAttribute("classname") + " : " + parentClasses);
             } catch (ClassNotFoundException e) {
-                throw new ConfigurationException("An interface or parent class cannot be loaded : " + e.getMessage());
+                throw new ConfigurationException("An interface or parent class cannot be loaded", e);
             }
 
             String serviceSpecificationStr = provides[i].getAttribute("specifications");

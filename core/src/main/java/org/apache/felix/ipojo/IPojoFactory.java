@@ -266,7 +266,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
             m_logger.log(Logger.ERROR, "The configuration is not acceptable : " + e.getMessage());
             throw new UnacceptableConfiguration("The configuration "
                     + configuration + " is not acceptable for " + m_factoryName
-                    + ": " + e.getMessage());
+                    , e);
         }
 
         // Find name in the configuration
@@ -307,7 +307,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         } catch (ConfigurationException e) {
             INSTANCE_NAME.remove(name);
             m_logger.log(Logger.ERROR, e.getMessage());
-            throw new ConfigurationException(e.getMessage(), m_factoryName);
+            throw new ConfigurationException(e.getMessage(), e, m_factoryName);
         }
 
 
@@ -673,13 +673,13 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
                 createComponentInstance(properties);
             } catch (UnacceptableConfiguration e) {
                 m_logger.log(Logger.ERROR, "The configuration is not acceptable : " + e.getMessage());
-                throw new org.osgi.service.cm.ConfigurationException(properties.toString(), e.getMessage());
+                throw new org.osgi.service.cm.ConfigurationException(properties.toString(), e.getMessage(), e);
             } catch (MissingHandlerException e) {
                 m_logger.log(Logger.ERROR, "Handler not available : " + e.getMessage());
-                throw new org.osgi.service.cm.ConfigurationException(properties.toString(), e.getMessage());
+                throw new org.osgi.service.cm.ConfigurationException(properties.toString(), e.getMessage(), e);
             } catch (ConfigurationException e) {
                 m_logger.log(Logger.ERROR, "The Component Type metadata are not correct : " + e.getMessage());
-                throw new org.osgi.service.cm.ConfigurationException(properties.toString(), e.getMessage());
+                throw new org.osgi.service.cm.ConfigurationException(properties.toString(), e.getMessage(), e);
             }
         } else {
             try {
@@ -687,10 +687,10 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
                 reconfigure(properties); // re-configure the component
             } catch (UnacceptableConfiguration e) {
                 m_logger.log(Logger.ERROR, "The configuration is not acceptable : " + e.getMessage());
-                throw new org.osgi.service.cm.ConfigurationException(properties.toString(), e.getMessage());
+                throw new org.osgi.service.cm.ConfigurationException(properties.toString(), e.getMessage(), e);
             } catch (MissingHandlerException e) {
                 m_logger.log(Logger.ERROR, "The factory is not valid, at least one handler is missing : " + e.getMessage());
-                throw new org.osgi.service.cm.ConfigurationException(properties.toString(), e.getMessage());
+                throw new org.osgi.service.cm.ConfigurationException(properties.toString(), e.getMessage(), e);
             }
         }
     }
@@ -745,7 +745,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
                     ((Pojo) handler).getComponentInstance().dispose();
                     m_logger.log(Logger.ERROR, e.getMessage());
                     stop();
-                    throw new IllegalStateException(e.getMessage());
+                    throw new IllegalStateException(e);
                 }
             }
         }

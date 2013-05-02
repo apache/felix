@@ -162,13 +162,13 @@ public class LifecycleCallbackHandler extends PrimitiveHandler {
                     m_callbacks[i].call();
                 } catch (NoSuchMethodException e) {
                     error("[" + getInstanceManager().getInstanceName() + "] The callback method " + m_callbacks[i].getMethod() + " is not found");
-                    throw new IllegalStateException(e.getMessage());
+                    throw new IllegalStateException(e);
                 } catch (IllegalAccessException e) {
                     error("[" + getInstanceManager().getInstanceName() + "] The callback method " + m_callbacks[i].getMethod() + " is not accessible");
-                    throw new IllegalStateException(e.getMessage());
+                    throw new IllegalStateException(e);
                 } catch (InvocationTargetException e) {
                     error("[" + getInstanceManager().getInstanceName() + "] The callback method " + m_callbacks[i].getMethod() + " has thrown an exception : " + e.getTargetException().getMessage(), e.getTargetException());
-                    throw new IllegalStateException(e.getTargetException().getMessage());
+                    throw new IllegalStateException(e.getTargetException());
                 }
             }
         }

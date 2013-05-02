@@ -254,7 +254,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
                 conf = parseInstance(instances[i]);
             } catch (ParseException e) {
                 error("An instance cannot be parsed correctly", e);
-                throw new ConfigurationException("An instance cannot be parsed correctly : " + e.getMessage());
+                throw new ConfigurationException("An instance cannot be parsed correctly", e);
             }
 
             Properties instanceConfiguration = new Properties();
