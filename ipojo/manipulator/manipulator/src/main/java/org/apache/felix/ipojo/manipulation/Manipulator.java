@@ -64,6 +64,11 @@ public class Manipulator {
     private List<String> m_inners;
 
     /**
+     * Java byte code version.
+     */
+    private int m_version;
+
+    /**
      * Manipulate the given byte array.
      * @param origin : original class.
      * @return the manipulated class, if the class is already manipulated, the original class.
@@ -88,6 +93,8 @@ public class Manipulator {
         m_methods = ck.getMethods();
 
         m_inners = ck.getInnerClasses();
+
+        m_version = ck.getClassVersion();
 
         ClassWriter finalWriter = null;
         if (!ck.isalreadyManipulated()) {
@@ -160,4 +167,7 @@ public class Manipulator {
         return m_inners;
     }
 
+    public int getClassVersion() {
+        return m_version;
+    }
 }

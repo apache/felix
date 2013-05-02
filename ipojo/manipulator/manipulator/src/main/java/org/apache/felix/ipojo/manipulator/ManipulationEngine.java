@@ -133,9 +133,12 @@ public class ManipulationEngine {
                     }
 
                     // Manipulate inner class
+                    // Notice that (for performance reason) re-use the class version information
+                    // discovered in the main class instead of re-parsing the inner class to find
+                    // its own class version
                     try {
                         InnerClassManipulator innerManipulator = new InnerClassManipulator(outerClassInternalName, manipulator.getFields().keySet());
-                        byte[] manipulated = innerManipulator.manipulate(innerClassBytecode);
+                        byte[] manipulated = innerManipulator.manipulate(innerClassBytecode, manipulator.getClassVersion());
                         // Propagate manipulated resource
                         result.visitManipulatedResource(resourcePath, manipulated);
                     } catch (IOException e) {
