@@ -26,6 +26,7 @@ import org.apache.felix.ipojo.parser.ParseUtils;
 import org.apache.felix.ipojo.runtime.core.services.BarService;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.Test;
+import org.ow2.chameleon.testing.helpers.BaseTest;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.*;
@@ -33,11 +34,11 @@ import static org.junit.Assert.*;
 /**
  * Check manipulation metadata written in the manifest.
  */
-public class TestManipulationMetadata extends Common {
+public class TestManipulationMetadata extends BaseTest {
 
     @Test
     public void testGetMetadata() {
-        String header = (String) testedBundle.getHeaders().get("iPOJO-Components");
+        String header = (String) getTestBundle().getHeaders().get("iPOJO-Components");
         Element elem = null;
         try {
             elem = ManifestMetadataParser.parseHeaderMetadata(header);
@@ -212,7 +213,7 @@ public class TestManipulationMetadata extends Common {
     }
 
     private Element getManipulationForComponent(String comp_name) {
-        String header = (String) testedBundle.getHeaders().get("iPOJO-Components");
+        String header = (String) getTestBundle().getHeaders().get("iPOJO-Components");
         Element elem = null;
         try {
             elem = ManifestMetadataParser.parseHeaderMetadata(header);

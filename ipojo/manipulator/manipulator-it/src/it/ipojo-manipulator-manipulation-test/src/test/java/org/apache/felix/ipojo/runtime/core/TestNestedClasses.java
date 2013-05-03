@@ -26,14 +26,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.BaseTest;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class TestNestedClasses extends Common {
+public class TestNestedClasses extends BaseTest {
 
     private ComponentInstance instance;
     private CheckService service;
@@ -210,6 +213,11 @@ public class TestNestedClasses extends Common {
         assertEquals("Check non-managed object", "not-managed", data.get("nonObject"));
         assertEquals("Check non-managed int", new Integer(5), data.get("nonInt"));
 
+    }
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
     }
 
 }

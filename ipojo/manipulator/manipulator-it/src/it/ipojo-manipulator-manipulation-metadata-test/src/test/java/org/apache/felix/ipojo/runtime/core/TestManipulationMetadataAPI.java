@@ -26,11 +26,12 @@ import org.apache.felix.ipojo.runtime.core.services.BarService;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.Before;
 import org.junit.Test;
+import org.ow2.chameleon.testing.helpers.BaseTest;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.*;
 
-public class TestManipulationMetadataAPI extends Common {
+public class TestManipulationMetadataAPI extends BaseTest {
 
     PojoMetadata FooProviderType1, FooBarProviderType1, FooProviderTypeDyn, PrimitiveManipulationTester, SimpleMultipleCheckServiceProvider;
 
@@ -54,7 +55,7 @@ public class TestManipulationMetadataAPI extends Common {
 
     @Test
     public void testGetMetadata() {
-        String header = (String) testedBundle.getHeaders().get("iPOJO-Components");
+        String header = (String) getTestBundle().getHeaders().get("iPOJO-Components");
         Element elem = null;
         try {
             elem = ManifestMetadataParser.parseHeaderMetadata(header);
@@ -276,7 +277,7 @@ public class TestManipulationMetadataAPI extends Common {
 
 
     private PojoMetadata getManipulationMetadataForComponent(String comp_name) {
-        String header = (String) testedBundle.getHeaders().get("iPOJO-Components");
+        String header = (String) getTestBundle().getHeaders().get("iPOJO-Components");
         Element elem = null;
         try {
             elem = ManifestMetadataParser.parseHeaderMetadata(header);

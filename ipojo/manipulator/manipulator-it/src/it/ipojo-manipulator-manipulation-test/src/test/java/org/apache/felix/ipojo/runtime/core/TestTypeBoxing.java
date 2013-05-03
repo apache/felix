@@ -25,14 +25,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.BaseTest;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestTypeBoxing extends Common {
+public class TestTypeBoxing extends BaseTest {
 
     ComponentInstance instance; // Instance under test
 
@@ -71,6 +74,11 @@ public class TestTypeBoxing extends Common {
         Long l = new Long(2);
         prim.setLong(l, "ss");
         assertEquals("Check - 2", prim.getLong(), 2);
+    }
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
     }
 
 }

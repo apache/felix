@@ -27,7 +27,10 @@ import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.BaseTest;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
@@ -36,7 +39,7 @@ import static org.junit.Assert.*;
 /**
  * Check the different method to create POJO object.
  */
-public class TestPOJOCreation extends Common {
+public class TestPOJOCreation extends BaseTest {
 
     private ComponentInstance ci_lazzy;
     private ComponentInstance ci_immediate;
@@ -57,6 +60,11 @@ public class TestPOJOCreation extends Common {
 
     private Architecture lazzyArchSingM;
     private Architecture lazzyArchSevM;
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
+    }
 
     @Before
     public void setUp() {

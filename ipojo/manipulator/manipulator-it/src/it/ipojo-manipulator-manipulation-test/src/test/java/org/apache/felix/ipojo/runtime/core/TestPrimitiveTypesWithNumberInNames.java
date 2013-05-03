@@ -25,6 +25,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.BaseTest;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.*;
@@ -33,7 +37,7 @@ import static org.junit.Assert.*;
  * Check the manipulation of primitive type (boxed and unboxed).
  * The targeted implementation contains numbers in the package and class name.
  */
-public class TestPrimitiveTypesWithNumberInNames extends Common {
+public class TestPrimitiveTypesWithNumberInNames extends BaseTest {
 
     PrimitiveManipulationTestService prim;
 
@@ -107,6 +111,11 @@ public class TestPrimitiveTypesWithNumberInNames extends Common {
         assertEquals("Check - 1", prim.getChar(), 'a');
         prim.setChar('b');
         assertEquals("Check - 2", prim.getChar(), 'b');
+    }
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
     }
 
 }

@@ -23,16 +23,18 @@ import org.apache.felix.ipojo.runtime.core.components.Marker;
 import org.apache.felix.ipojo.runtime.core.components.SubMarker;
 import org.junit.Before;
 import org.junit.Test;
+import org.ow2.chameleon.testing.helpers.BaseTest;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-public class TestAnnotationProcessing extends Common {
+public class TestAnnotationProcessing extends BaseTest {
 
     private Class clazz;
 
@@ -46,6 +48,10 @@ public class TestAnnotationProcessing extends Common {
         }
     }
 
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
+    }
 
     @Test
     public void testAnnotationOnMethod() {

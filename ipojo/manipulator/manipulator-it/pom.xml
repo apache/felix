@@ -205,7 +205,7 @@
         <dependency>
             <groupId>org.ow2.chameleon.testing</groupId>
             <artifactId>osgi-helpers</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
@@ -396,4 +396,13 @@
             </build>
         </profile>
     </profiles>
+
+    <repositories>
+        <!-- Temporal addition of this repository until the osgi-helper are released -->
+        <!-- TODO remove this before the release -->
+        <repository>
+            <id>ow2.snapshots</id>
+            <url>http://repository.ow2.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
 </project>

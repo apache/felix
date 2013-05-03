@@ -26,6 +26,10 @@ import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.BaseTest;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -33,7 +37,7 @@ import static org.junit.Assert.fail;
 /**
  * Test exception handling. POJO exception must be propagated.
  */
-public class TestExceptionHandling extends Common {
+public class TestExceptionHandling extends BaseTest {
 
     private ComponentInstance ci_lazzy;
 
@@ -86,6 +90,11 @@ public class TestExceptionHandling extends Common {
         } catch (Exception e) {
             fail("The method has returned an exception");
         }
+    }
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
     }
 
 }

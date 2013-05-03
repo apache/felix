@@ -26,7 +26,10 @@ import org.apache.felix.ipojo.PrimitiveInstanceDescription;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.BaseTest;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
@@ -35,7 +38,7 @@ import static org.junit.Assert.*;
 /**
  * Check the getComponentInstance method on a POJO
  */
-public class TestGetComponentInstance extends Common {
+public class TestGetComponentInstance extends BaseTest {
 
     /**
      * Check if a pojo can correctly be cast in POJO.
@@ -88,6 +91,11 @@ public class TestGetComponentInstance extends Common {
         // Check that there is no more FooService
         ref = osgiHelper.getServiceReference(FooService.class.getName());
         assertNull("FS available, but component instance stopped", ref);
+    }
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
     }
 
 }
