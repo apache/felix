@@ -28,13 +28,16 @@ import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.BaseTest;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class TestSwitches extends Common {
+public class TestSwitches extends BaseTest {
 
     private ComponentInstance instance;
     private CheckService service;
@@ -73,6 +76,11 @@ public class TestSwitches extends Common {
 
 
         assertEquals(properties.get("switchOnEnumRed"), "RED");
+    }
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
     }
 
 

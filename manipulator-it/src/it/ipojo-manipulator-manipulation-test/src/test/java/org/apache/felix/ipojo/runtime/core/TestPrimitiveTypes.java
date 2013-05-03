@@ -24,6 +24,10 @@ import org.apache.felix.ipojo.runtime.core.services.PrimitiveManipulationTestSer
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.ow2.chameleon.testing.helpers.BaseTest;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.*;
@@ -31,7 +35,7 @@ import static org.junit.Assert.*;
 /**
  * Check the manipulation of primitive type (boxed and unboxed).
  */
-public class TestPrimitiveTypes extends Common {
+public class TestPrimitiveTypes extends BaseTest {
 
     PrimitiveManipulationTestService prim;
 
@@ -102,6 +106,11 @@ public class TestPrimitiveTypes extends Common {
         assertEquals("Check - 1", prim.getChar(), 'a');
         prim.setChar('b');
         assertEquals("Check - 2", prim.getChar(), 'b');
+    }
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
     }
 
 

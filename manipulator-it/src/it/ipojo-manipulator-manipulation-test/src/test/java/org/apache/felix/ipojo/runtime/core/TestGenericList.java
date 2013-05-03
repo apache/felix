@@ -25,14 +25,16 @@ import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.BaseTest;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.*;
 
-public class TestGenericList extends Common {
+public class TestGenericList extends BaseTest {
 
     ComponentInstance foo1, foo2;
     ComponentInstance checker;
@@ -74,6 +76,11 @@ public class TestGenericList extends Common {
         props = check.getProps();
         list = (List<FooService>) props.get("list");
         assertEquals("Check size - 3", 1, list.size());
+    }
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
     }
 
 }

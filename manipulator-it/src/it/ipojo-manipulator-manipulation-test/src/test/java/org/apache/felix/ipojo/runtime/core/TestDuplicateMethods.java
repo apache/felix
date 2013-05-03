@@ -22,11 +22,15 @@ package org.apache.felix.ipojo.runtime.core;
 import org.apache.felix.ipojo.runtime.core.services.Plop;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.BaseTest;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class TestDuplicateMethods extends Common {
+public class TestDuplicateMethods extends BaseTest {
 
 
     @Test
@@ -38,5 +42,10 @@ public class TestDuplicateMethods extends Common {
         Object o = plop.getPlop();
         assertEquals("Check result", "plop", o);
         ipojoHelper.dispose();
+    }
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList("org.apache.felix.ipojo.runtime.core.components");
     }
 }

@@ -24,12 +24,13 @@ import org.apache.felix.ipojo.runtime.core.services.CheckService;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.BaseTest;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class TestSeveralConstructor extends Common {
+public class TestSeveralConstructor extends BaseTest {
 
     private ComponentInstance ci, ci2, ci3;
 
@@ -38,7 +39,6 @@ public class TestSeveralConstructor extends Common {
         ci = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.components.SeveralConstructors");
         ci2 = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.components.NoEmptyConstructor");
         ci3 = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.components.NoEmptyConstructorWithParentClass");
-
     }
 
     @Test
