@@ -46,8 +46,6 @@ public class TestMethodProperties extends Common {
 
     @Before
     public void setUp() {
-        osgiHelper = new OSGiHelper(bc);
-        ipojoHelper = new IPOJOHelper(bc);
         Factory fact = ipojoHelper.getFactory("CONFIG-MethodConfigurableCheckService");
         Properties props = new Properties();
         props.put("instance.name", "under-test");
@@ -116,8 +114,6 @@ public class TestMethodProperties extends Common {
 
     @After
     public void tearDown() {
-        ipojoHelper.dispose();
-        osgiHelper.dispose();
         instance.dispose();
         instance2.dispose();
         instance3.dispose();

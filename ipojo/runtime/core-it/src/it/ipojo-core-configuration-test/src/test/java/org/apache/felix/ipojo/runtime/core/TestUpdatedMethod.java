@@ -37,18 +37,12 @@ import static org.junit.Assert.*;
 
 public class TestUpdatedMethod extends Common {
 
-
-
     ComponentInstance fooProvider1;
     ComponentInstance fooProvider2;
     ComponentInstance fooProvider3;
 
-
-
     @Before
     public void setUp() {
-        osgiHelper = new OSGiHelper(bc);
-        ipojoHelper = new IPOJOHelper(bc);
         String type = "CONFIG-FooProviderType-ConfUpdated";
 
         Hashtable<String, String> p1 = new Hashtable<String, String>();
@@ -57,12 +51,12 @@ public class TestUpdatedMethod extends Common {
 
         Properties p2 = new Properties();
         p2.put("instance.name", "FooProvider-2");
-        p2.put("int", new Integer(4));
-        p2.put("boolean", new Boolean(false));
-        p2.put("string", new String("bar"));
+        p2.put("int", 4);
+        p2.put("boolean", false);
+        p2.put("string", "bar");
         p2.put("strAProp", new String[]{"bar", "foo"});
         p2.put("intAProp", new int[]{1, 2, 3});
-        fooProvider2 = ipojoHelper.createComponentInstance(bc.getBundle(), type, p2);
+        fooProvider2 = ipojoHelper.createComponentInstance(type, p2);
 
         Hashtable<String, String> p3 = new Hashtable<String, String>();
         p3.put("instance.name", "FooProvider-3");
@@ -71,7 +65,6 @@ public class TestUpdatedMethod extends Common {
 
     @After
     public void tearDown() {
-
         fooProvider1.dispose();
         fooProvider2.dispose();
         fooProvider3.dispose();
@@ -98,8 +91,8 @@ public class TestUpdatedMethod extends Common {
         Dictionary dict = (Dictionary) toCheck.get("lastupdated");
 
         assertEquals("Check intProp equality (1)", intProp, new Integer(2));
-        assertEquals("Check longProp equality (1)", boolProp, new Boolean(false));
-        assertEquals("Check strProp equality (1)", strProp, new String("foo"));
+        assertEquals("Check longProp equality (1)", boolProp, false);
+        assertEquals("Check strProp equality (1)", strProp, "foo");
         assertNotNull("Check strAProp not nullity (1)", strAProp);
         String[] v = new String[]{"foo", "bar"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -135,8 +128,8 @@ public class TestUpdatedMethod extends Common {
         dict = (Dictionary) toCheck.get("lastupdated");
 
         assertEquals("Check intProp equality (2) (" + intProp + ")", intProp, new Integer(3));
-        assertEquals("Check longProp equality (2)", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality (2)", strProp, new String("bar"));
+        assertEquals("Check longProp equality (2)", boolProp, true);
+        assertEquals("Check strProp equality (2)", strProp, "bar");
         assertNotNull("Check strAProp not nullity (2)", strAProp);
         v = new String[]{"foo", "bar", "baz"};
         for (int i = 0; i < strAProp.length; i++) {
@@ -179,7 +172,7 @@ public class TestUpdatedMethod extends Common {
         Dictionary dict = (Dictionary) toCheck.get("lastupdated");
 
         assertEquals("Check intProp equality", intProp, new Integer(0));
-        assertEquals("Check longProp equality", boolProp, new Boolean(false));
+        assertEquals("Check longProp equality", boolProp, false);
         assertEquals("Check strProp equality", strProp, null);
         assertNull("Check strAProp nullity", strAProp);
         assertNull("Check intAProp  nullity", intAProp);
@@ -201,8 +194,8 @@ public class TestUpdatedMethod extends Common {
         dict = (Dictionary) toCheck.get("lastupdated");
 
         assertEquals("Check intProp equality", intProp, new Integer(3));
-        assertEquals("Check longProp equality", boolProp, new Boolean(true));
-        assertEquals("Check strProp equality", strProp, new String("bar"));
+        assertEquals("Check longProp equality", boolProp, true);
+        assertEquals("Check strProp equality", strProp, "bar");
         assertNotNull("Check strAProp not nullity", strAProp);
         String[] v = new String[]{"foo", "bar", "baz"};
         for (int i = 0; i < strAProp.length; i++) {

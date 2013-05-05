@@ -45,17 +45,10 @@ import static org.junit.Assert.assertEquals;
 @ExamReactorStrategy(PerMethod.class)
 public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
 
-
-
     ComponentInstance instance, instance2;
-
-
 
     @Before
     public void setUp() {
-        osgiHelper = new OSGiHelper(bc);
-        ipojoHelper = new IPOJOHelper(bc);
-        cleanupConfigurationAdmin();
         String type = "CONFIG-FooProviderType-3Updated2";
 
         Hashtable<String, String> p1 = new Hashtable<String, String>();
@@ -77,22 +70,6 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
         instance2.dispose();
         instance2 = null;
         instance = null;
-    }
-
-    private void cleanupConfigurationAdmin() {
-        ConfigurationAdmin admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName
-                (), null);
-        Assert.assertNotNull("Check configuration admin availability", admin);
-        try {
-            Configuration[] configurations = admin.listConfigurations(null);
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                configurations[i].delete();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
     }
 
     @Test

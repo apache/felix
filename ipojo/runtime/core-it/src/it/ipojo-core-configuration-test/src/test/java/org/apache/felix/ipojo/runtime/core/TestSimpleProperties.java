@@ -41,12 +41,8 @@ public class TestSimpleProperties extends Common {
     ComponentInstance fooProvider2;
     ComponentInstance fooProvider3;
 
-
-
     @Before
     public void setUp() {
-        osgiHelper = new OSGiHelper(bc);
-        ipojoHelper = new IPOJOHelper(bc);
         String type = "CONFIG-FooProviderType-Conf";
 
         Hashtable<String, String> p1 = new Hashtable<String, String>();
@@ -60,7 +56,7 @@ public class TestSimpleProperties extends Common {
         p2.put("string", new String("bar"));
         p2.put("strAProp", new String[]{"bar", "foo"});
         p2.put("intAProp", new int[]{1, 2, 3});
-        fooProvider2 = ipojoHelper.createComponentInstance(bc.getBundle(), type, p2);
+        fooProvider2 = ipojoHelper.createComponentInstance(type, p2);
 
         Hashtable<String, String> p3 = new Hashtable<String, String>();
         p3.put("instance.name", "FooProvider-3");
