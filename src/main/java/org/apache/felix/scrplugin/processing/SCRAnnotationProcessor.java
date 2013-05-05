@@ -438,6 +438,13 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
                 prop.setCardinality(0);
             }
 
+            if ( prop.getValue() != null ) {
+                if ( prop.getUnbounded() == PropertyUnbounded.ARRAY || prop.getUnbounded() == PropertyUnbounded.VECTOR ) {
+                    prop.setMultiValue(new String[] {prop.getValue()});
+                } else if ( prop.getCardinality() < -1 || prop.getCardinality() > 1 ) {
+                    prop.setMultiValue(new String[] {prop.getValue()});
+                }
+            }
             // options
             final ScannedAnnotation[] options = (ScannedAnnotation[])ad.getValue("options");
             if (options != null) {
