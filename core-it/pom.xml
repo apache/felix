@@ -467,4 +467,13 @@
             </build>
         </profile>
     </profiles>
+
+    <repositories>
+        <!-- Temporal addition of this repository until the osgi-helper are released -->
+        <!-- TODO remove this before the release -->
+        <repository>
+            <id>ow2.snapshots</id>
+            <url>http://repository.ow2.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
 </project>
