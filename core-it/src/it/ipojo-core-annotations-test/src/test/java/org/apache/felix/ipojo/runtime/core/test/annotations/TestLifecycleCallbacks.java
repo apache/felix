@@ -31,7 +31,7 @@ public class TestLifecycleCallbacks extends Common {
 
     @Test
     public void testCallbacks() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.Lifecycle");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.Lifecycle");
         Element[] cbs = meta.getElements("callback");
         assertNotNull("Callbacks exists ", cbs);
         assertEquals("Callbacks count ", 2, cbs.length);
@@ -47,14 +47,14 @@ public class TestLifecycleCallbacks extends Common {
 
     @Test
     public void testImmediate() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.Immediate");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.Immediate");
         assertNotNull("Immediate attribute", meta.getAttribute("immediate"));
         assertEquals("Immediate attribute value", "true", meta.getAttribute("immediate"));
     }
 
     @Test
     public void testNoImmediate() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.NoImmediate");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.NoImmediate");
         assertNotNull("Immediate attribute", meta.getAttribute("immediate"));
         assertEquals("Immediate attribute value", "false", meta.getAttribute("immediate"));
     }

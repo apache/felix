@@ -24,10 +24,8 @@ import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.PrimitiveInstanceDescription;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -44,40 +42,11 @@ public class TestManagedServiceTestForService extends Common {
 
     private String factNameSvc = "CA-ConfigurableProvider";
     private String msp = "foo";
-
     private ComponentFactory factSvc;
-
-    private ConfigurationAdmin admin;
-
-    ConfigurationMonitor listener;
 
     @Before
     public void setUp() {
         factSvc = (ComponentFactory) ipojoHelper.getFactory(factNameSvc);
-        admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName(), null);
-        assertNotNull("Check configuration admin availability", admin);
-        cleanConfigurationAdmin();
-        listener = new ConfigurationMonitor(bc);
-    }
-
-    @After
-    public void tearDown() {
-        listener.stop();
-        cleanConfigurationAdmin();
-        admin = null;
-    }
-
-    private void cleanConfigurationAdmin() {
-        try {
-            Configuration[] configurations = admin.listConfigurations("(service.pid=" + msp + ")");
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                configurations[i].delete();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
     }
 
     @Test
@@ -114,7 +83,7 @@ public class TestManagedServiceTestForService extends Common {
             }
             prc.put("message", "message2");
             configuration.update(prc);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -152,7 +121,7 @@ public class TestManagedServiceTestForService extends Common {
             props.put("managed.service.pid", msp);
             props.put("message", "message");
             conf.update(props);
-            Thread.sleep(UPDATE_WAIT_TIME); // Wait for the creation.
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -182,7 +151,7 @@ public class TestManagedServiceTestForService extends Common {
             }
             prc.put("message", "message2");
             configuration.update(prc);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -229,7 +198,7 @@ public class TestManagedServiceTestForService extends Common {
             prc.put("message", "message2");
             configuration.update(prc);
             //listener.waitForEvent(msp, "1");
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -240,7 +209,7 @@ public class TestManagedServiceTestForService extends Common {
         ComponentInstance instance = null;
         try {
             instance = factSvc.createComponentInstance(props);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -268,7 +237,7 @@ public class TestManagedServiceTestForService extends Common {
             }
             prc.put("message", "message3");
             configuration.update(prc);
-            listener.waitForEvent(msp, "2");
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -280,7 +249,7 @@ public class TestManagedServiceTestForService extends Common {
         instance = null;
         try {
             instance = factSvc.createComponentInstance(props);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -316,7 +285,7 @@ public class TestManagedServiceTestForService extends Common {
             }
             prc.put("message", "message2");
             configuration.update(prc);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -327,7 +296,7 @@ public class TestManagedServiceTestForService extends Common {
         ComponentInstance instance = null;
         try {
             instance = factSvc.createComponentInstance(props);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -353,7 +322,7 @@ public class TestManagedServiceTestForService extends Common {
             }
             prc.put("message", "message3");
             configuration.update(prc);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -367,7 +336,7 @@ public class TestManagedServiceTestForService extends Common {
         instance = null;
         try {
             instance = factSvc.createComponentInstance(props);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }

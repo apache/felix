@@ -122,7 +122,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
@@ -168,7 +168,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
@@ -215,7 +215,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
@@ -269,7 +269,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
@@ -326,7 +326,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());

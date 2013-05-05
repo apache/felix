@@ -31,7 +31,7 @@ public class TestFactory extends Common {
 
     @Test
     public void testArchDeprecated() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.FactoryDeprecated");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.FactoryDeprecated");
         String fact = meta.getAttribute("public");
         String name = meta.getAttribute("name");
         assertNotNull("Factory exists ", fact);
@@ -42,7 +42,7 @@ public class TestFactory extends Common {
 
     @Test
     public void testArch() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.Factory");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.Factory");
         String fact = meta.getAttribute("public");
         String name = meta.getAttribute("name");
         assertNotNull("Factory exists ", fact);
@@ -53,7 +53,7 @@ public class TestFactory extends Common {
 
     @Test
     public void testNoArch() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.NoFactory");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.NoFactory");
         String fact = meta.getAttribute("public");
         String name = meta.getAttribute("name");
         assertNotNull("Factory exists ", fact);
@@ -64,7 +64,7 @@ public class TestFactory extends Common {
 
     @Test
     public void testFactoryMethod() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.FactoryMethod");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.FactoryMethod");
         String method = meta.getAttribute("factory-method");
         assertNotNull("Method exists ", method);
         assertEquals("Method value", "create", method);
@@ -72,7 +72,7 @@ public class TestFactory extends Common {
 
     @Test
     public void testFactoryMethodDeprecated() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.FactoryMethodDeprecated");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.FactoryMethodDeprecated");
         String method = meta.getAttribute("factory-method");
         assertNotNull("Method exists ", method);
         assertEquals("Method value", "create", method);
@@ -80,7 +80,7 @@ public class TestFactory extends Common {
 
     @Test
     public void testVersion() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.ComponentTypeVersion");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ComponentTypeVersion");
         String version = meta.getAttribute("version");
         assertNotNull("Version exist", version);
         assertEquals("Version value", "1.0.0", version);
@@ -88,7 +88,7 @@ public class TestFactory extends Common {
 
     @Test
     public void testNoVersion() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.FactoryMethod");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.FactoryMethod");
         String version = meta.getAttribute("version");
         assertNull("No Version", version);
     }

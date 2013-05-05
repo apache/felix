@@ -33,7 +33,7 @@ public class TestExtender extends Common {
 
     @Test
     public void testMetadata() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  type);
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  type);
         assertNotNull("Check meta", meta);
         Element[] ext = meta.getElements("extender", namespace);
         assertEquals("Check size", 1, ext.length);

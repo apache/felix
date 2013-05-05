@@ -29,6 +29,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.Constants;
+import org.ow2.chameleon.testing.helpers.TimeUtils;
 import org.ow2.chameleon.testing.tinybundles.ipojo.IPOJOStrategy;
 
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class TestEmptyConfiguration extends Common {
 
     @Configuration
     public Option[] config() throws IOException {
-        deployTestedBundle = false;
+
         Option[] options = super.config();
 
         // Build a service bundle
@@ -67,7 +68,7 @@ public class TestEmptyConfiguration extends Common {
 
     @Test
     public void testConfiguration() throws InterruptedException {
-        Thread.sleep(200);
+        TimeUtils.grace(1000);
         // Check configuration
         Assert.assertNull(osgiHelper.getServiceReference(FooService.class));
     }

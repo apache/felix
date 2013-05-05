@@ -33,14 +33,14 @@ public class TestCustomAnnotations extends Common {
 
     @Test
     public void testThatCustomAnnotationAreCorrectlyAdded() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.CustomAnnotationWithEnum");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.CustomAnnotationWithEnum");
         Element[] ann = meta.getElements("IPOJOFoo", "foo.ipojo");
         assertNotNull("Annotation exists ", ann);
     }
 
     @Test
     public void testThatCustomAnnotationAreSupportingEnums() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.CustomAnnotationWithEnum");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.CustomAnnotationWithEnum");
         Element[] ann = meta.getElements("IPOJOFoo", "foo.ipojo");
         assertNotNull("Annotation exists ", ann);
         Element element = ann[0];

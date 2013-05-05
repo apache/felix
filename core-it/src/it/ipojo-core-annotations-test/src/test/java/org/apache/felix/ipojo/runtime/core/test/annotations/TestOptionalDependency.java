@@ -34,7 +34,7 @@ public class TestOptionalDependency extends Common {
 
     @Before
     public void setUp() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.OptionalDependency");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.OptionalDependency");
         deps = meta.getElements("requires");
     }
 
@@ -89,7 +89,7 @@ public class TestOptionalDependency extends Common {
 
     @Test
     public void testNullable() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.NullableDependency");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.NullableDependency");
         Element[] deps = meta.getElements("requires");
         Element fs = getDependencyById(deps, "fs");
         String nullable = fs.getAttribute("nullable");
@@ -99,7 +99,7 @@ public class TestOptionalDependency extends Common {
 
     @Test
     public void testNoNullable() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.NullableDependency");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.NullableDependency");
         Element[] deps = meta.getElements("requires");
         Element fs = getDependencyById(deps, "fs2");
         String nullable = fs.getAttribute("nullable");
@@ -109,7 +109,7 @@ public class TestOptionalDependency extends Common {
 
     @Test
     public void testDefaultImplementation() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.DefaultImplementationDependency");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.DefaultImplementationDependency");
         Element[] deps = meta.getElements("requires");
         Element fs = getDependencyById(deps, "fs");
         String di = fs.getAttribute("default-implementation");

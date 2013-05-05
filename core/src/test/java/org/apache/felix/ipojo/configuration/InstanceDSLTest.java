@@ -43,8 +43,9 @@ public class InstanceDSLTest extends TestCase {
                 .with("list2").setto(list().with(1).with(2).with(3))
 
                 .with("map").setto(map().with(pair("entry", "value")))
-                .with("map").setto(map()
-                .with(pair("entry2", list("aaa", "bbb"))));
+                .with("map").setto(map().with(pair("entry2", list("aaa", "bbb"))))
+                .with("map").setto(map().with(pair("key", 1), pair("key2", 2)))
+                .with("map").setto(map().with(entry("key", 1), entry("key2", 2)));
     }
 
     public void testClassnameExtraction() {

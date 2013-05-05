@@ -43,7 +43,7 @@ public class TestConfigurationOfMyComponent extends Common {
 
     @Configuration
     public Option[] config() throws IOException {
-        deployTestedBundle = false;
+
         Option[] options = super.config();
 
         // Build a service bundle
@@ -67,7 +67,7 @@ public class TestConfigurationOfMyComponent extends Common {
 
     @Test
     public void testConfiguration() throws IOException {
-        if (isKF()) {
+        if (isKnopflerfish()) {
             return; // Test disabled on KF
         }
 

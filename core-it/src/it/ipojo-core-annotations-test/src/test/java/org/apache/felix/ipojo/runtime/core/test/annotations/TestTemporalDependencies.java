@@ -31,7 +31,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testSimple() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalSimple");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalSimple");
         Element[] provs = meta.getElements("requires", "org.apache.felix.ipojo.handler.temporal");
         assertNotNull("Temporal exists ", provs);
         String field = provs[0].getAttribute("field");
@@ -45,7 +45,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testTemporal() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.Temporal");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.Temporal");
         Element[] provs = meta.getElements("temporal", "org.apache.felix.ipojo.handler.temporal");
         assertNotNull("Temporal exists ", provs);
         String field = provs[0].getAttribute("field");
@@ -59,7 +59,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testDI() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithDI");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithDI");
         Element[] provs = meta.getElements("requires", "org.apache.felix.ipojo.handler.temporal");
         assertNotNull("Temporal exists ", provs);
         String field = provs[0].getAttribute("field");
@@ -73,7 +73,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testEmptyArray() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithEmptyArray");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithEmptyArray");
         Element[] provs = meta.getElements("requires", "org.apache.felix.ipojo.handler.temporal");
         assertNotNull("Temporal exists ", provs);
         String field = provs[0].getAttribute("field");
@@ -87,7 +87,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testNull() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithNull");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithNull");
         Element[] provs = meta.getElements("requires", "org.apache.felix.ipojo.handler.temporal");
         assertNotNull("Temporal exists ", provs);
         String field = provs[0].getAttribute("field");
@@ -101,7 +101,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testNullable() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithNullable");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithNullable");
         Element[] provs = meta.getElements("requires", "org.apache.felix.ipojo.handler.temporal");
         assertNotNull("Temporal exists ", provs);
         String field = provs[0].getAttribute("field");
@@ -115,7 +115,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testFilter() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithFilter");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithFilter");
         Element[] provs = meta.getElements("requires", "org.apache.felix.ipojo.handler.temporal");
         assertNotNull("Temporal exists ", provs);
         String field = provs[0].getAttribute("field");
@@ -129,7 +129,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testTimeout() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithTimeout");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalWithTimeout");
         Element[] provs = meta.getElements("requires", "org.apache.felix.ipojo.handler.temporal");
         assertNotNull("Temporal exists ", provs);
         String field = provs[0].getAttribute("field");
@@ -143,7 +143,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testSimpleCollection() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalCollection");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalCollection");
         Element dep = getElementPerField(meta, "fs1");
         String spec = dep.getAttribute("specification");
         assertNotNull("Specification not null", spec);
@@ -152,7 +152,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testCollectionWithTimeout() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalCollection");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalCollection");
         Element dep = getElementPerField(meta, "fs2");
         String spec = dep.getAttribute("specification");
         assertNotNull("Specification not null", spec);
@@ -163,7 +163,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testCollectionWithPolicy() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalCollection");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalCollection");
         Element dep = getElementPerField(meta, "fs3");
         String spec = dep.getAttribute("specification");
         assertNotNull("Specification not null", spec);
@@ -174,7 +174,7 @@ public class TestTemporalDependencies extends Common {
 
     @Test
     public void testCollectionWithProxy() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalCollection");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.temporal.TemporalCollection");
         Element dep = getElementPerField(meta, "fs4");
         String spec = dep.getAttribute("specification");
         assertNotNull("Specification not null", spec);

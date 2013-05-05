@@ -33,7 +33,7 @@ public class TestRankedDependency extends Common {
 
     @Before
     public void setUp() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.RankedDependency");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.RankedDependency");
         deps = meta.getElements("requires");
     }
 

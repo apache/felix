@@ -23,13 +23,10 @@ import org.apache.felix.ipojo.ComponentFactory;
 import org.apache.felix.ipojo.PrimitiveInstanceDescription;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 
 import java.io.IOException;
 import java.util.Dictionary;
@@ -41,40 +38,10 @@ import static org.junit.Assert.*;
 public class TestManagedServiceFactoryTestForServices extends Common {
 
     private ComponentFactory factory;
-    private ConfigurationAdmin admin;
 
     @Before
     public void setUp() {
         factory = (ComponentFactory) ipojoHelper.getFactory("CA-ConfigurableProvider");
-        admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName(), null);
-        assertNotNull("Check configuration admin availability", admin);
-        try {
-            Configuration[] configurations = admin.listConfigurations("(service.factoryPid=CA-ConfigurableProvider)");
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                configurations[i].delete();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @After
-    public void tearDown() {
-        try {
-            Configuration[] configurations = admin.listConfigurations("(service.factoryPid=CA-ConfigurableProvider)");
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                configurations[i].delete();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
-        admin = null;
-
-
     }
 
     @Test
@@ -124,12 +91,7 @@ public class TestManagedServiceFactoryTestForServices extends Common {
 
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
-
+        grace();
 
         Dictionary p2 = configuration.getProperties();
         p2.put("message", "message2");
@@ -138,7 +100,7 @@ public class TestManagedServiceFactoryTestForServices extends Common {
 
             configuration.update(p2);
             // Update the configuration ...
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -157,7 +119,7 @@ public class TestManagedServiceFactoryTestForServices extends Common {
 
         try {
             configuration.delete();
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -196,17 +158,13 @@ public class TestManagedServiceFactoryTestForServices extends Common {
         assertEquals("Check no object", 0, ((PrimitiveInstanceDescription) architecture.getInstanceDescription()).getCreatedObjects().length);
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
         props.put("message", "message2");
         try {
             configuration.update(props);
             // Update the configuration ...
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -228,7 +186,7 @@ public class TestManagedServiceFactoryTestForServices extends Common {
 
         try {
             configuration.delete();
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -284,11 +242,7 @@ public class TestManagedServiceFactoryTestForServices extends Common {
         assertEquals("Check 1 object", 1, ((PrimitiveInstanceDescription) architecture.getInstanceDescription()).getCreatedObjects().length);
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
         System.out.println("===");
 
@@ -296,7 +250,7 @@ public class TestManagedServiceFactoryTestForServices extends Common {
         try {
             configuration.update(props);
             // Update the configuration ...
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -315,7 +269,7 @@ public class TestManagedServiceFactoryTestForServices extends Common {
 
         try {
             configuration.delete();
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -361,17 +315,13 @@ public class TestManagedServiceFactoryTestForServices extends Common {
         assertEquals("Check no object", 0, ((PrimitiveInstanceDescription) architecture.getInstanceDescription()).getCreatedObjects().length);
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
         props.put("message", "message2");
         try {
             configuration.update(props);
             // Update the configuration ...
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -393,7 +343,7 @@ public class TestManagedServiceFactoryTestForServices extends Common {
 
         try {
             configuration.delete();
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }

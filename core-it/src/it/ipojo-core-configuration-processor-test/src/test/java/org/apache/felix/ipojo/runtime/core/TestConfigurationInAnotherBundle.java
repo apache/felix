@@ -44,7 +44,7 @@ public class TestConfigurationInAnotherBundle extends Common {
 
     @Configuration
     public Option[] config() throws IOException {
-        deployTestedBundle = false;
+
         Option[] options = super.config();
 
         // Build a service bundle
@@ -82,7 +82,7 @@ public class TestConfigurationInAnotherBundle extends Common {
      */
     @Test
     public void testDynamism() throws BundleException {
-        if (isKF()) {
+        if (isKnopflerfish()) {
             return; // Test disabled on KF
         }
         //1)

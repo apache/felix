@@ -50,7 +50,7 @@ public class TestConfigAdmin extends Common {
         p.put("intAProp", new int[]{1, 2});
 
         conf.update(p);
-        Thread.sleep(200);
+        grace();
 
         String pid = conf.getPid();
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
@@ -58,7 +58,7 @@ public class TestConfigAdmin extends Common {
 
         // Deletion of the configuration
         conf.delete();
-        Thread.sleep(200);
+        grace();
 
         ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
         assertNull("Check instance deletion", ref);
@@ -80,7 +80,7 @@ public class TestConfigAdmin extends Common {
         p.put("intAProp", "{1,2}");
 
         conf.update(p);
-        Thread.sleep(200);
+        grace();
 
         String pid = conf.getPid();
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
@@ -88,7 +88,7 @@ public class TestConfigAdmin extends Common {
         assertNotNull("Check instance creation", ref);
 
         conf.delete();
-        Thread.sleep(200);
+        grace();
 
         ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
         assertNull("Check instance deletion", ref);
@@ -110,7 +110,7 @@ public class TestConfigAdmin extends Common {
         p.put("intAProp", new int[]{1, 2});
 
         conf.update(p);
-        Thread.sleep(200);
+        grace();
 
         String pid = conf.getPid();
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
@@ -119,14 +119,14 @@ public class TestConfigAdmin extends Common {
 
         p.put("int", 4);
         conf.update(p);
-        Thread.sleep(200);
+        grace();
 
         ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
         Integer test = (Integer) ref.getProperty("int");
         assertEquals("Check instance modification", 4, test.intValue());
 
         conf.delete();
-        Thread.sleep(200);
+        grace();
 
         ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
         assertNull("Check instance deletion", ref);
@@ -149,7 +149,7 @@ public class TestConfigAdmin extends Common {
         p.put("intAProp", "{1,2}");
 
         conf.update(p);
-        Thread.sleep(200);
+        grace();
 
         String pid = conf.getPid();
 
@@ -157,12 +157,14 @@ public class TestConfigAdmin extends Common {
         assertNotNull("Check instance creation", ref);
         p.put("int", new Integer("4"));
         conf.update(p);
-        Thread.sleep(200);
+        grace();
+
         ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
         Integer test = (Integer) ref.getProperty("int");
         assertEquals("Check instance modification", 4, test.intValue());
         conf.delete();
-        Thread.sleep(200);
+        grace();
+
         ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
         assertNull("Check instance deletion", ref);
     }

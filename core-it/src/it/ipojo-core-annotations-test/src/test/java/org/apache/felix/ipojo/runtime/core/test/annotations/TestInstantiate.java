@@ -39,7 +39,7 @@ public class TestInstantiate extends Common {
 
     @Test
     public void testInstantiateSimple() {
-        Element[] meta = getInstanceMetadata(testedBundle,
+        Element[] meta = getInstanceMetadata(getTestBundle(),
                 "org.apache.felix.ipojo.runtime.core.test" +
                         ".components" +
                         ".InstantiateSimple");
@@ -52,7 +52,7 @@ public class TestInstantiate extends Common {
     @Test
     public void testInstantiateWithName() {
         // Check instance tag
-        Element[] meta = getInstanceMetadata(testedBundle, "org.apache.felix.ipojo.runtime.core.test.components" +
+        Element[] meta = getInstanceMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components" +
                 ".InstantiateWithName");
         assertNotNull(meta);
         assertEquals(1, meta.length);

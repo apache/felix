@@ -222,369 +222,11 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   </component>
 
   <!-- Simple & Optional Dependencies -->
+  <!-- used for architecture test -->
   <component
     classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
     name="SimpleOptionalCheckServiceProvider" architecture="true">
     <requires field="fs" optional="true" id="FooService" proxy="false"/>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="SimpleOptionalNoNullableCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" nullable="false" />
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="VoidOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" proxy="false">
-      <callback type="bind" method="voidBind" />
-      <callback type="unbind" method="voidUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="VoidOptionalNoNullableCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" nullable="false">
-      <callback type="bind" method="voidBind" />
-      <callback type="unbind" method="voidUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="ObjectOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" proxy="false">
-      <callback type="bind" method="objectBind" />
-      <callback type="unbind" method="objectUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="ObjectOptionalNoNullableCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" nullable="false">
-      <callback type="bind" method="objectBind" />
-      <callback type="unbind" method="objectUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="RefOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" proxy="false">
-      <callback type="bind" method="refBind" />
-      <callback type="unbind" method="refUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="RefOptionalNoNullableCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" nullable="false">
-      <callback type="bind" method="refBind" />
-      <callback type="unbind" method="refUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="BothOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" proxy="false">
-      <callback type="bind" method="bothBind" />
-      <callback type="unbind" method="bothUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="MapOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" proxy="false">
-      <callback type="bind" method="propertiesMapBind" />
-      <callback type="unbind" method="propertiesMapUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="DictOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" proxy="false">
-      <callback type="bind" method="propertiesDictionaryBind" />
-      <callback type="unbind" method="propertiesDictionaryUnbind" />
-    </requires>
-    <provides />
-  </component>
-
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="ProxiedSimpleOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" id="FooService"/>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="ProxiedVoidOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true">
-      <callback type="bind" method="voidBind" />
-      <callback type="unbind" method="voidUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="ProxiedObjectOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true">
-      <callback type="bind" method="objectBind" />
-      <callback type="unbind" method="objectUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="ProxiedRefOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true">
-      <callback type="bind" method="refBind" />
-      <callback type="unbind" method="refUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="ProxiedBothOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true">
-      <callback type="bind" method="bothBind" />
-      <callback type="unbind" method="bothUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="ProxiedMapOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true">
-      <callback type="bind" method="propertiesMapBind" />
-      <callback type="unbind" method="propertiesMapUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="ProxiedDictOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true">
-      <callback type="bind" method="propertiesDictionaryBind" />
-      <callback type="unbind" method="propertiesDictionaryUnbind" />
-    </requires>
-    <provides />
-  </component>
-
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="BothOptionalNoNullableCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" nullable="false">
-      <callback type="bind" method="bothBind" />
-      <callback type="unbind" method="bothUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="MapOptionalNoNullableCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" nullable="false">
-      <callback type="bind" method="propertiesMapBind" />
-      <callback type="unbind" method="propertiesMapUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="DictOptionalNoNullableCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true" nullable="false">
-      <callback type="bind" method="propertiesDictionaryBind" />
-      <callback type="unbind" method="propertiesDictionaryUnbind" />
-    </requires>
-    <provides />
-  </component>
-
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodCheckServiceProvider"
-    name="MObjectOptionalCheckServiceProvider" architecture="true">
-    <requires optional="true">
-      <callback type="bind" method="objectBind" />
-      <callback type="unbind" method="objectUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodCheckServiceProvider"
-    name="MRefOptionalCheckServiceProvider" architecture="true">
-    <requires
-      specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"
-      optional="true">
-      <callback type="bind" method="refBind" />
-      <callback type="unbind" method="refUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodCheckServiceProvider"
-    name="MBothOptionalCheckServiceProvider" architecture="true">
-    <requires
-      specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"
-      optional="true">
-      <callback type="bind" method="bothBind" />
-      <callback type="unbind" method="bothUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodCheckServiceProvider"
-    name="MMapOptionalCheckServiceProvider" architecture="true">
-    <requires
-      specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"
-      optional="true">
-      <callback type="bind" method="propertiesMapBind" />
-      <callback type="unbind" method="propertiesMapUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodCheckServiceProvider"
-    name="MDictOptionalCheckServiceProvider" architecture="true">
-    <requires
-      specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"
-      optional="true">
-      <callback type="bind" method="propertiesDictionaryBind" />
-      <callback type="unbind" method="propertiesDictionaryUnbind" />
-    </requires>
-    <provides />
-  </component>
-
-
-  <!-- Simple & Optional Dependencies with default-implementation -->
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="DISimpleOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl" />
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="DIVoidOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="voidBind" />
-      <callback type="unbind" method="voidUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="DIObjectOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="objectBind" />
-      <callback type="unbind" method="objectUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="DIRefOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="refBind" />
-      <callback type="unbind" method="refUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="DIBothOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="bothBind" />
-      <callback type="unbind" method="bothUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="DIMapOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="propertiesMapBind" />
-      <callback type="unbind" method="propertiesMapUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CheckServiceProvider"
-    name="DIDictOptionalCheckServiceProvider" architecture="true">
-    <requires field="fs" optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="propertiesDictionaryBind" />
-      <callback type="unbind" method="propertiesDictionaryUnbind" />
-    </requires>
-    <provides />
-  </component>
-
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodCheckServiceProvider"
-    name="DIMObjectOptionalCheckServiceProvider" architecture="true">
-    <requires optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="objectBind" />
-      <callback type="unbind" method="objectUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodCheckServiceProvider"
-    name="DIMRefOptionalCheckServiceProvider" architecture="true">
-    <requires
-      specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"
-      optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="refBind" />
-      <callback type="unbind" method="refUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodCheckServiceProvider"
-    name="DIMBothOptionalCheckServiceProvider" architecture="true">
-    <requires
-      specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"
-      optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="bothBind" />
-      <callback type="unbind" method="bothUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodCheckServiceProvider"
-    name="DIMMapOptionalCheckServiceProvider" architecture="true">
-    <requires
-      specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"
-      optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="propertiesMapBind" />
-      <callback type="unbind" method="propertiesMapUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodCheckServiceProvider"
-    name="DIMDictOptionalCheckServiceProvider" architecture="true">
-    <requires
-      specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"
-      optional="true"
-      default-implementation="org.apache.felix.ipojo.runtime.core.test.components.FooServiceDefaultImpl">
-      <callback type="bind" method="propertiesDictionaryBind" />
-      <callback type="unbind" method="propertiesDictionaryUnbind" />
-    </requires>
     <provides />
   </component>
 
@@ -597,24 +239,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   </component>
   <component
     classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedSimpleMultipleCheckServiceProvider" architecture="true">
-    <requires field="fs" />
-    <provides />
-  </component>
-
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
     name="VoidMultipleCheckServiceProvider" architecture="true">
     <requires field="fs" proxy="false">
-      <callback type="bind" method="voidBind" />
-      <callback type="unbind" method="voidUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedVoidMultipleCheckServiceProvider" architecture="true">
-    <requires field="fs">
       <callback type="bind" method="voidBind" />
       <callback type="unbind" method="voidUnbind" />
     </requires>
@@ -631,15 +257,6 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   </component>
   <component
     classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedObjectMultipleCheckServiceProvider" architecture="true">
-    <requires field="fs">
-      <callback type="bind" method="objectBind" />
-      <callback type="unbind" method="objectUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
     name="RefMultipleCheckServiceProvider" architecture="true">
     <requires field="fs" proxy="false">
       <callback type="bind" method="refBind" />
@@ -647,29 +264,12 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedRefMultipleCheckServiceProvider" architecture="true">
-    <requires field="fs">
-      <callback type="bind" method="refBind" />
-      <callback type="unbind" method="refUnbind" />
-    </requires>
-    <provides />
-  </component>
+
 
   <component
     classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
     name="BothMultipleCheckServiceProvider" architecture="true">
     <requires field="fs" proxy="false">
-      <callback type="bind" method="bothBind" />
-      <callback type="unbind" method="bothUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedBothMultipleCheckServiceProvider" architecture="true">
-    <requires field="fs">
       <callback type="bind" method="bothBind" />
       <callback type="unbind" method="bothUnbind" />
     </requires>
@@ -684,29 +284,12 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     </requires>
     <provides />
   </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedMapMultipleCheckServiceProvider" architecture="true">
-    <requires field="fs">
-      <callback type="bind" method="propertiesMapBind" />
-      <callback type="unbind" method="propertiesMapUnbind" />
-    </requires>
-    <provides />
-  </component>
+
 
   <component
     classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
     name="DictMultipleCheckServiceProvider" architecture="true" >
     <requires field="fs" proxy="false">
-      <callback type="bind" method="propertiesDictionaryBind" />
-      <callback type="unbind" method="propertiesDictionaryUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedDictMultipleCheckServiceProvider" architecture="true">
-    <requires field="fs">
       <callback type="bind" method="propertiesDictionaryBind" />
       <callback type="unbind" method="propertiesDictionaryUnbind" />
     </requires>
@@ -762,102 +345,12 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   </component>
 
   <!-- Multiple & Optional Dependencies -->
+  <!-- Used in architecture tests -->
   <component
     classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
     name="SimpleOptionalMultipleCheckServiceProvider"
     architecture="true">
     <requires field="fs" optional="true" proxy="false"/>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="VoidOptionalMultipleCheckServiceProvider"
-    architecture="true">
-    <requires field="fs" optional="true" proxy="false">
-      <callback type="bind" method="voidBind" />
-      <callback type="unbind" method="voidUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ObjectOptionalMultipleCheckServiceProvider"
-    architecture="true">
-    <requires field="fs" optional="true" proxy="false">
-      <callback type="bind" method="objectBind" />
-      <callback type="unbind" method="objectUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="RefOptionalMultipleCheckServiceProvider"
-    architecture="true">
-    <requires field="fs" optional="true" proxy="false">
-      <callback type="bind" method="refBind" />
-      <callback type="unbind" method="refUnbind" />
-    </requires>
-    <provides />
-  </component>
-
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedSimpleOptionalMultipleCheckServiceProvider"
-    architecture="true">
-    <requires field="fs" optional="true" />
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedVoidOptionalMultipleCheckServiceProvider"
-    architecture="true">
-    <requires field="fs" optional="true">
-      <callback type="bind" method="voidBind" />
-      <callback type="unbind" method="voidUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedObjectOptionalMultipleCheckServiceProvider"
-    architecture="true">
-    <requires field="fs" optional="true">
-      <callback type="bind" method="objectBind" />
-      <callback type="unbind" method="objectUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MultipleCheckService"
-    name="ProxiedRefOptionalMultipleCheckServiceProvider"
-    architecture="true">
-    <requires field="fs" optional="true">
-      <callback type="bind" method="refBind" />
-      <callback type="unbind" method="refUnbind" />
-    </requires>
-    <provides />
-  </component>
-
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodMultipleCheckService"
-    name="MObjectOptionalMultipleCheckServiceProvider"
-    architecture="true">
-    <requires aggregate="true" optional="true">
-      <callback type="bind" method="objectBind" />
-      <callback type="unbind" method="objectUnbind" />
-    </requires>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.MethodMultipleCheckService"
-    name="MRefOptionalMultipleCheckServiceProvider"
-    architecture="true">
-    <requires
-      specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"
-      aggregate="true" optional="true">
-      <callback type="bind" method="refBind" />
-      <callback type="unbind" method="refUnbind" />
-    </requires>
     <provides />
   </component>
 
@@ -875,19 +368,6 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     architecture="true">
     <requires proxy="false"
       specification="org.apache.felix.ipojo.runtime.core.test.services.FooService" field="fs" optional="true" />
-    <provides />
-  </component>
-   <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.ListCheckService"
-    name="ProxiedSimpleListCheckServiceProvider" architecture="true">
-    <requires field="fs" specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"/>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.ListCheckService"
-    name="ProxiedOptionalListCheckServiceProvider"
-    architecture="true">
-    <requires specification="org.apache.felix.ipojo.runtime.core.test.services.FooService" field="fs" optional="true" />
     <provides />
   </component>
 
@@ -923,19 +403,6 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     <requires proxy="false" specification="org.apache.felix.ipojo.runtime.core.test.services.FooService" field="fs" optional="true" />
     <provides />
   </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.SetCheckService"
-    name="ProxiedSimpleSetCheckServiceProvider" architecture="true">
-    <requires field="fs" specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"/>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.SetCheckService"
-    name="ProxiedOptionalSetCheckServiceProvider"
-    architecture="true">
-    <requires specification="org.apache.felix.ipojo.runtime.core.test.services.FooService" field="fs" optional="true" />
-    <provides />
-  </component>
 
   <!-- Aggregate dependency as Collection -->
   <component
@@ -946,22 +413,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   </component>
   <component
     classname="org.apache.felix.ipojo.runtime.core.test.components.CollectionCheckService"
-    name="ProxiedSimpleCollectionCheckServiceProvider" architecture="true">
-    <requires field="fs" specification="org.apache.felix.ipojo.runtime.core.test.services.FooService"/>
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CollectionCheckService"
     name="OptionalCollectionCheckServiceProvider"
-    architecture="true">
-    <requires specification="org.apache.felix.ipojo.runtime.core.test.services.FooService" field="fs" optional="true"
-      proxy="false"
-    />
-    <provides />
-  </component>
-  <component
-    classname="org.apache.felix.ipojo.runtime.core.test.components.CollectionCheckService"
-    name="ProxiedOptionalCollectionCheckServiceProvider"
     architecture="true">
     <requires specification="org.apache.felix.ipojo.runtime.core.test.services.FooService" field="fs" optional="true"
       proxy="false"
@@ -1038,22 +490,6 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       <callback type="modified" method="propertiesDictionaryModify" />
     </requires>
     <provides />
-  </component>
-
-  <!--  Proxy Tests -->
-  <component classname="org.apache.felix.ipojo.runtime.core.test.components.proxy.CheckServiceDelegator">
-    <provides/>
-    <requires field="fs" optional="true"/>
-  </component>
-  <component classname="org.apache.felix.ipojo.runtime.core.test.components.proxy.CheckServiceGetAndDelegate">
-    <provides/>
-    <requires field="fs" optional="true"/>
-  </component>
-  <component classname="org.apache.felix.ipojo.runtime.core.test.components.proxy.CheckServiceNoDelegate">
-      <provides/>
-      <requires field="fs" optional="true"/>
-      <callback transition="validate" method="start"/>
-    <callback transition="invalidate" method="stop"/>
   </component>
 
   <component

@@ -47,7 +47,7 @@ public class TestConfigurationOfThreeInstancesUsingMethods extends Common {
 
     @Configuration
     public Option[] config() throws IOException {
-        deployTestedBundle = false;
+
         Option[] options = super.config();
 
         // Build a service bundle
@@ -71,7 +71,7 @@ public class TestConfigurationOfThreeInstancesUsingMethods extends Common {
 
     @Test
     public void testConfiguration() {
-        if (isKF()) {
+        if (isKnopflerfish()) {
             return; // Test disabled on KF
         }
 

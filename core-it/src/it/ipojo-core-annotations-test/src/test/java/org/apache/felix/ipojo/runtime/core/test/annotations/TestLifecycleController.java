@@ -29,7 +29,7 @@ public class TestLifecycleController extends Common {
 
     @Test
     public void testLFC() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.Lifecycle");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.Lifecycle");
         Element[] ctrls = meta.getElements("controller");
         assertNotNull("Controller exists ", ctrls);
         Element ctrl = ctrls[0];

@@ -30,7 +30,7 @@ public class TestDependency extends Common {
 
     @Test
     public void testDependencyDeclaration() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.Dependency");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.Dependency");
         Element[] deps = meta.getElements("requires");
 
         // Check fs

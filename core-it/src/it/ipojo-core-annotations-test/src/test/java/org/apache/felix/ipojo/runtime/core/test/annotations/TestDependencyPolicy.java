@@ -32,7 +32,7 @@ public class TestDependencyPolicy extends Common {
 
     @Before
     public void setUp() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.PolicyDependency");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.PolicyDependency");
         deps = meta.getElements("requires");
     }
 

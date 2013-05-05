@@ -50,9 +50,13 @@ import static org.ops4j.pax.tinybundles.core.TinyBundles.withBnd;
  */
 public class InheritanceTest extends Common {
 
+    @Override
+    public boolean deployTestBundle() {
+        return false;
+    }
+
     @Configuration
     public Option[] config() throws IOException {
-        deployTestedBundle = false;
         Option[] options = super.config();
 
         return OptionUtils.combine(
@@ -102,20 +106,16 @@ public class InheritanceTest extends Common {
         );
     }
 
-    public boolean isKF() {
-        return bc.getClass().toString().contains("knopflerfish");
-    }
-
     @Test
     public void testDeploy() {
-        if (isKF()) {
+        if (isKnopflerfish()) {
             System.out.println("Test disabled on knopflerfish");
             return;
         }
 
         Bundle[] bundles = bc.getBundles();
-        for (int i = 0; i < bundles.length; i++) {
-            Assert.assertEquals(bundles[i].getSymbolicName() + " is not active", Bundle.ACTIVE, bundles[i].getState());
+        for (Bundle bundle : bundles) {
+            Assert.assertEquals(bundle.getSymbolicName() + " is not active", Bundle.ACTIVE, bundle.getState());
         }
 
         osgiHelper.waitForService(Architecture.class.getName(), "(architecture.instance=c)", 10000);
@@ -132,7 +132,7 @@ public class InheritanceTest extends Common {
 
     @Test
     public void testArchitecture() {
-        if (isKF()) {
+        if (isKnopflerfish()) {
             System.out.println("Test disabled on knopflerfish");
             return;
         }

@@ -35,10 +35,10 @@ public class TestFilteredDependency extends Common {
 
     @Before
     public void setUp() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.FilteredDependency");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.FilteredDependency");
         deps = meta.getElements("requires");
 
-        Element meta2 = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.FromDependency");
+        Element meta2 = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.FromDependency");
         froms = meta2.getElements("requires");
     }
 
