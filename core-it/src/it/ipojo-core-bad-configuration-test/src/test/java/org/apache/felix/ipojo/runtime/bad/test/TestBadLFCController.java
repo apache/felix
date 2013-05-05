@@ -53,7 +53,7 @@ public class TestBadLFCController extends Common {
     }
 
     private Element getManipulationForComponent(String comp_name) {
-        String header = testedBundle.getHeaders().get("iPOJO-Components");
+        String header = getTestBundle().getHeaders().get("iPOJO-Components");
         Element elem = null;
         try {
             elem = ManifestMetadataParser.parseHeaderMetadata(header);

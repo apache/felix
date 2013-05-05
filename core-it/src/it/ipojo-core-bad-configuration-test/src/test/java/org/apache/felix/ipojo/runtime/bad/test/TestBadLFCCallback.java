@@ -115,7 +115,7 @@ public class TestBadLFCCallback extends Common {
     }
 
     private Element getManipulationForComponent() {
-        String header = testedBundle.getHeaders().get("iPOJO-Components");
+        String header = getTestBundle().getHeaders().get("iPOJO-Components");
         Element elem = null;
         try {
             elem = ManifestMetadataParser.parseHeaderMetadata(header);
@@ -200,7 +200,7 @@ public class TestBadLFCCallback extends Common {
     @Test
     public void testBadMethod() {
         try {
-            ComponentFactory cf = new ComponentFactory(testedBundle.getBundleContext(), getBadMethod());
+            ComponentFactory cf = new ComponentFactory(getTestBundle().getBundleContext(), getBadMethod());
             cf.start();
             ComponentInstance ci = cf.createComponentInstance(props);
             if (ci.isStarted()) {
@@ -221,7 +221,7 @@ public class TestBadLFCCallback extends Common {
     @Test
     public void testBadMethod2() {
         try {
-            ComponentFactory cf = new ComponentFactory(testedBundle.getBundleContext(), getBadMethod2());
+            ComponentFactory cf = new ComponentFactory(getTestBundle().getBundleContext(), getBadMethod2());
             cf.start();
             ComponentInstance ci = cf.createComponentInstance(props);
             ci.stop();
