@@ -57,8 +57,6 @@ import static org.junit.Assert.assertNotNull;
 @ExamReactorStrategy(PerMethod.class)
 public class TestUpdatedMethodAndManagedService extends Common {
 
-
-
     /**
      * Instance where the ManagedServicePID is provided by the component type.
      */
@@ -100,7 +98,7 @@ public class TestUpdatedMethodAndManagedService extends Common {
         p1.put("foo", "foo");
         p1.put("bar", "2");
         p1.put("baz", "baz");
-        p1.put("managed.service.pid", "instance");
+        p1.put("managed.service.pid", "instance-managed-service");
         instance2 = ipojoHelper.createComponentInstance(type, p1);
 
         type = "CONFIG-FooProviderType-3Updated";
@@ -185,7 +183,7 @@ public class TestUpdatedMethodAndManagedService extends Common {
         assertEquals("Check baz equality -1", bazP, "baz");
 
         ServiceReference msRef = osgiHelper.getServiceReferenceByPID(ManagedService.class.getName(),
-                "instance");
+                "instance-managed-service");
         assertNotNull("Check ManagedService availability", msRef);
 
 
@@ -319,7 +317,8 @@ public class TestUpdatedMethodAndManagedService extends Common {
         assertEquals("Check bar equality", barP, new Integer(2));
         assertEquals("Check baz equality", bazP, "baz");
 
-        ServiceReference msRef = osgiHelper.getServiceReferenceByPID(ManagedService.class.getName(), "instance");
+        ServiceReference msRef = osgiHelper.getServiceReferenceByPID(ManagedService.class.getName(),
+                "instance-managed-service");
         assertNotNull("Check ManagedServiceFactory availability", msRef);
 
         // Configuration of baz

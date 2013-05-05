@@ -35,16 +35,10 @@ import static org.junit.Assert.*;
 
 public class TestSuperMethodProperties extends Common {
 
-
-
     ComponentInstance instance;
-
-
 
     @Before
     public void setUp() {
-        osgiHelper = new OSGiHelper(bc);
-        ipojoHelper = new IPOJOHelper(bc);
         Factory fact = ipojoHelper.getFactory("CONFIG-ParentMethodConfigurableCheckService");
         Properties props = new Properties();
         props.put("instance.name", "under-test");
@@ -78,7 +72,6 @@ public class TestSuperMethodProperties extends Common {
 
     @After
     public void tearDown() {
-
         instance.dispose();
         instance = null;
     }

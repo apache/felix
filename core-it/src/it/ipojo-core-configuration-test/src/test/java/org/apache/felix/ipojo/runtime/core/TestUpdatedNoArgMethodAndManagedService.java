@@ -57,15 +57,8 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
      */
     ComponentInstance instance3;
 
-
-
     @Before
     public void setUp() {
-        osgiHelper = new OSGiHelper(bc);
-        ipojoHelper = new IPOJOHelper(bc);
-
-        cleanupConfigurationAdmin();
-
         String type = "CONFIG-FooProviderType-4Updated2";
         Hashtable<String, String> p = new Hashtable<String, String>();
         p.put("instance.name", "any-instance");
@@ -99,22 +92,6 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         instance1 = null;
         instance2 = null;
         instance3 = null;
-    }
-
-    private void cleanupConfigurationAdmin() {
-        ConfigurationAdmin admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName
-                (), null);
-        assertNotNull("Check configuration admin availability", admin);
-        try {
-            Configuration[] configurations = admin.listConfigurations(null);
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                configurations[i].delete();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
     }
 
     @Test
