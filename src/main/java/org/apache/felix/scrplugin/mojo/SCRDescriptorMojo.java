@@ -246,7 +246,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
             }
 
             final Result result = generator.execute();
-            this.setServiceComponentHeader(result.getScrFiles());
+            this.setServiceComponentHeader();
 
             this.updateProjectResources();
             // don't try to delete per-class descriptors if only one descriptor is generated
@@ -398,10 +398,11 @@ public class SCRDescriptorMojo extends AbstractMojo {
     }
 
     /**
-     * Set the service component header based on the scr files.
+     * Set the service component header based on the files in the output directory
      */
-    private void setServiceComponentHeader(final List<String> files) {
-        if ( files != null && files.size() > 0 ) {
+    private void setServiceComponentHeader() {
+        final File osgiInfDir = new File(this.outputDirectory, "OSGI-INF");
+        if ( osgiInfDir.exists() ) {
             final String svcHeader = project.getProperties().getProperty("Service-Component");
             final Set<String> xmlFiles = new HashSet<String>();
             if ( svcHeader != null ) {
@@ -412,8 +413,10 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 }
             }
 
-            for(final String path : files) {
-                xmlFiles.add(path);
+            for(final File f : osgiInfDir.listFiles()) {
+                if ( f.isFile() && f.getName().endsWith(".xml") ) {
+                    xmlFiles.add("OSGI-INF/" + f.getName());
+                }
             }
             final StringBuilder sb = new StringBuilder();
             boolean first = true;
