@@ -32,7 +32,8 @@ public class TestAggregateDependency extends Common {
 
     @Before
     public void setUp() {
-        Element meta = ipojoHelper.getMetadata(testedBundle, "org.apache.felix.ipojo.runtime.core.test.components.AggregateDependency");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components" +
+                ".AggregateDependency");
         deps = meta.getElements("requires");
     }
 

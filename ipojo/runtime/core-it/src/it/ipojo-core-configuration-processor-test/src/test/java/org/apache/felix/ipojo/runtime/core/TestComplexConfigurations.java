@@ -50,7 +50,6 @@ public class TestComplexConfigurations extends Common {
 
     @Configuration
     public Option[] config() throws IOException {
-        deployTestedBundle = false;
         Option[] options = super.config();
 
         // Build a service bundle
@@ -90,7 +89,7 @@ public class TestComplexConfigurations extends Common {
      */
     @Test
     public void testDynamism() throws BundleException {
-        if (isKF()) {
+        if (isKnopflerfish()) {
             return; // Test disabled on KF
         }
         //1)
@@ -118,7 +117,7 @@ public class TestComplexConfigurations extends Common {
 
     @Test
     public void testConfiguration() {
-        if (isKF()) {
+        if (isKnopflerfish()) {
             return; // Test disabled on KF
         }
         osgiHelper.waitForService(FooService.class, null, 10000);

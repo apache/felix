@@ -73,42 +73,13 @@ public class TestUpdatedMethodAndManagedService extends Common {
      */
     ComponentInstance instance3;
 
-    private void cleanupConfigurationAdmin() {
-        ConfigurationAdmin admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName
-                (), null);
-        assertNotNull("Check configuration admin availability", admin);
-        try {
-            int found = 0;
-            Configuration[] configurations = admin.listConfigurations(null);
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                System.out.println("Deleting configuration " + configurations[i].getPid());
-                configurations[i].delete();
-                found++;
-            }
-
-            // Wait the dispatching.
-            Thread.sleep(found * 500);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Before
     public void setUp() throws IOException {
-        osgiHelper = new OSGiHelper(bc);
-        ipojoHelper = new IPOJOHelper(bc);
 
         for (HandlerFactory handler : osgiHelper.getServiceObjects(HandlerFactory.class)) {
             System.out.println("handler : " + handler.getHandlerName() + " - " + handler.getState() + " - " + handler
                     .getMissingHandlers());
         }
-
-        cleanupConfigurationAdmin();
 
         String type = "CONFIG-FooProviderType-4Updated";
         Hashtable<String, String> p = new Hashtable<String, String>();

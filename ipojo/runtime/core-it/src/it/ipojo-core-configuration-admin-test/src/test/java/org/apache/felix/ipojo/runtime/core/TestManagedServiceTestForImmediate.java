@@ -24,10 +24,8 @@ import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.PrimitiveInstanceDescription;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -47,37 +45,9 @@ public class TestManagedServiceTestForImmediate extends Common {
 
     private ComponentFactory factImm;
 
-    private ConfigurationAdmin admin;
-
-    ConfigurationMonitor listener;
-
     @Before
     public void setUp() throws InterruptedException {
         factImm = (ComponentFactory) ipojoHelper.getFactory(factNameImm);
-        admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName(), null);
-        assertNotNull("Check configuration admin availability", admin);
-        cleanConfigurationAdmin();
-        listener = new ConfigurationMonitor(bc);
-    }
-
-    @After
-    public void tearDown() {
-        listener.stop();
-        cleanConfigurationAdmin();
-        admin = null;
-    }
-
-    private void cleanConfigurationAdmin() {
-        try {
-            Configuration[] configurations = admin.listConfigurations("(service.pid=" + msp + ")");
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                configurations[i].delete();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
     }
 
     @Test
@@ -116,7 +86,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             prc.put("message", "message2");
             configuration.update(prc);
             System.err.println("updated ? ");
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -134,7 +104,6 @@ public class TestManagedServiceTestForImmediate extends Common {
         assertEquals("Check count", 2, count);
 
         instance.dispose();
-        cleanConfigurationAdmin();
     }
 
     /**
@@ -146,7 +115,6 @@ public class TestManagedServiceTestForImmediate extends Common {
     public void testCreationUsingFactoryConfigurationSettingTheManagedServicePid() {
         Configuration conf = null;
         try {
-            //TODO test multi-location:?
             conf = admin.createFactoryConfiguration(factNameImm, getTestBundle().getLocation());
             Dictionary props = conf.getProperties();
             if (props == null) {
@@ -155,7 +123,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             props.put("managed.service.pid", msp);
             props.put("message", "message");
             conf.update(props);
-            Thread.sleep(UPDATE_WAIT_TIME); // Wait for the creation.
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -186,7 +154,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             }
             prc.put("message", "message2");
             configuration.update(prc);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -212,6 +180,7 @@ public class TestManagedServiceTestForImmediate extends Common {
 
         try {
             conf.delete();
+            grace();
         } catch (IOException e) {
             fail(e.getMessage());
         }
@@ -232,7 +201,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             }
             prc.put("message", "message2");
             configuration.update(prc);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -243,7 +212,7 @@ public class TestManagedServiceTestForImmediate extends Common {
         ComponentInstance instance = null;
         try {
             instance = factImm.createComponentInstance(props);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -272,7 +241,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             }
             prc.put("message", "message3");
             configuration.update(prc);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -284,7 +253,7 @@ public class TestManagedServiceTestForImmediate extends Common {
         instance = null;
         try {
             instance = factImm.createComponentInstance(props);
-            Thread.sleep(UPDATE_WAIT_TIME * 2);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -319,8 +288,9 @@ public class TestManagedServiceTestForImmediate extends Common {
             }
             prc.put("message", "message2");
             configuration.update(prc);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
+            e.printStackTrace();
             fail(e.getMessage());
         }
 
@@ -330,7 +300,7 @@ public class TestManagedServiceTestForImmediate extends Common {
         ComponentInstance instance = null;
         try {
             instance = factImm.createComponentInstance(props);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -356,8 +326,7 @@ public class TestManagedServiceTestForImmediate extends Common {
             }
             prc.put("message", "message3");
             configuration.update(prc);
-            //Thread.sleep(UPDATE_WAIT_TIME);
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }

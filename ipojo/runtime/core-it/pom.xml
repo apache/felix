@@ -87,6 +87,9 @@
     <properties>
         <exam.version>3.0.1</exam.version>
         <url.version>1.5.1</url.version>
+
+
+
     </properties>
 
     <dependencies>
@@ -194,7 +197,7 @@
         <dependency>
             <groupId>org.ow2.chameleon.testing</groupId>
             <artifactId>osgi-helpers</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
@@ -373,6 +376,10 @@
                                 <goal>test</goal>
                             </goals>
                             <cloneClean>true</cloneClean>
+                            <environmentVariables>
+                                <!-- TIME_FACTOR can be set from the command line with -DTIME_FACTOR=9-->
+                                <TIME_FACTOR>${TIME_FACTOR}</TIME_FACTOR>
+                            </environmentVariables>
                         </configuration>
                         <executions>
                             <execution>
@@ -411,6 +418,10 @@
                                 <goal>test</goal>
                             </goals>
                             <cloneClean>true</cloneClean>
+                            <environmentVariables>
+                                <!-- TIME_FACTOR can be set from the command line with -DTIME_FACTOR=9-->
+                                <TIME_FACTOR>${TIME_FACTOR}</TIME_FACTOR>
+                            </environmentVariables>
                         </configuration>
                         <executions>
                             <execution>

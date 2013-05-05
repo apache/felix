@@ -39,6 +39,7 @@ import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.*;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
+import org.ow2.chameleon.testing.helpers.Stability;
 import org.ow2.chameleon.testing.tinybundles.ipojo.IPOJOStrategy;
 
 import javax.inject.Inject;
@@ -179,7 +180,7 @@ public class VersionConflictTest extends Common {
         Bundle b5 = context.installBundle(context.getProperty("cons"));
         b5.start();
 
-        waitForStability(bc);
+        Stability.waitForStability(bc);
 
         Bundle[] bundles = context.getBundles();
         for (Bundle bundle : bundles) {

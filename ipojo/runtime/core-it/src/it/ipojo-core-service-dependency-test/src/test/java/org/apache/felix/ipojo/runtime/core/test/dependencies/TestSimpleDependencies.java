@@ -26,6 +26,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.Stability;
 
 import java.util.Properties;
 
@@ -38,6 +39,8 @@ public class TestSimpleDependencies extends Common {
 
     @Before
     public void setUp() {
+        Stability.waitForStability(getContext());
+        System.gc();
         try {
             Properties prov = new Properties();
             prov.put("instance.name", "FooProvider");

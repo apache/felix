@@ -49,8 +49,6 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
 
     @Before
     public void setUp() {
-        cleanupConfigurationAdmin();
-
         String type = "CONFIG-FooProviderType-3";
 
         Hashtable<String, String> p1 = new Hashtable<String, String>();
@@ -64,31 +62,6 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         p2.put("instance.name", "instance2");
 
         instance2 = ipojoHelper.createComponentInstance(type, p2);
-    }
-
-    private void cleanupConfigurationAdmin() {
-        ConfigurationAdmin admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName
-                (), null);
-        assertNotNull("Check configuration admin availability", admin);
-        try {
-            int found = 0;
-            Configuration[] configurations = admin.listConfigurations(null);
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                System.out.println("Deleting configuration " + configurations[i].getPid());
-                configurations[i].delete();
-                found++;
-            }
-
-            // Wait the dispatching.
-            Thread.sleep(found * 500);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     @After
@@ -126,7 +99,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         configuration.update(conf);
 
         // Asynchronous dispatching of the configuration
-        Thread.sleep(1000);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
@@ -164,7 +137,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
@@ -203,7 +176,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
@@ -253,7 +226,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(1000);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
@@ -305,7 +278,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(200);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
@@ -359,7 +332,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(1000);
+        grace();
 
         System.out.println(instance.getInstanceDescription().getDescription());
 
@@ -409,7 +382,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
 
         // Asynchronous dispatching of the configuration
         configuration.update(conf);
-        Thread.sleep(1000);
+        grace();
 
         // Recheck props
         fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());

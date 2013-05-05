@@ -33,21 +33,21 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testProvidesSimple() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesSimple");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesSimple");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
     }
 
     @Test
     public void testProvidesDouble() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesDouble");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesDouble");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
     }
 
     @Test
     public void testProvidesTriple() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesTriple");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesTriple");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         Element prov = provs[0];
@@ -58,7 +58,7 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testProvidesQuatro() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesQuatro");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesQuatro");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         Element prov = provs[0];
@@ -70,7 +70,7 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testProperties() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesProperties");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesProperties");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         Element prov = provs[0];
@@ -101,7 +101,7 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testStaticProperties() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesStaticProperties");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesStaticProperties");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         Element prov = provs[0];
@@ -149,7 +149,7 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testServiceController() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.PSServiceController");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.PSServiceController");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         System.out.println(provs[0].toString());
@@ -160,7 +160,7 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testServiceControllerWithSpecification() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.PSServiceControllerSpec");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.PSServiceControllerSpec");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         System.out.println(provs[0].toString());

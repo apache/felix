@@ -23,60 +23,26 @@ import org.apache.felix.ipojo.ComponentFactory;
 import org.apache.felix.ipojo.PrimitiveInstanceDescription;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 public class TestManagedServiceFactoryTestForImmediate extends Common {
 
     private ComponentFactory factory;
-    private ConfigurationAdmin admin;
 
     @Before
     public void setUp() {
         factory = (ComponentFactory) ipojoHelper.getFactory("CA-ImmConfigurableProvider");
-        admin = (ConfigurationAdmin) osgiHelper.getServiceObject(ConfigurationAdmin.class.getName(), null);
-        assertNotNull("Check configuration admin availability", admin);
-        try {
-            Configuration[] configurations = admin.listConfigurations("(service.factoryPid=CA-ImmConfigurableProvider)");
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                configurations[i].delete();
-            }
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (InvalidSyntaxException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    @After
-    public void tearDown() {
-        try {
-            Configuration[] configurations = admin.listConfigurations("(service.factoryPid=CA-ImmConfigurableProvider)");
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                configurations[i].delete();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
-        admin = null;
-
-
     }
 
     @Test
@@ -102,11 +68,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
         String pid = configuration.getPid();
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
         //  The instance should be created, wait for the architecture service
         osgiHelper.waitForService(Architecture.class.getName(), "(architecture.instance=" + pid + ")", 1000);
@@ -128,7 +90,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
         try {
             configuration.update(props);
             // Update the configuration ...
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -145,7 +107,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
 
         try {
             configuration.delete();
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -179,11 +141,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
         System.out.println("PID : " + pid);
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
         //  The instance should be created, wait for the architecture service
         osgiHelper.waitForService(Architecture.class.getName(), "(architecture.instance=" + pid + ")", 1000);
@@ -195,7 +153,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
         try {
             configuration.update(props);
             // Update the configuration ...
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -217,7 +175,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
 
         try {
             configuration.delete();
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -250,11 +208,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
         String pid = configuration.getPid();
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
         assertNull("check no instance", osgiHelper.getServiceObject(Architecture.class.getName(), "(architecture.instance=" + pid + ")"));
 
@@ -262,11 +216,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
 
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
 
         //  The instance should be created, wait for the architecture service
@@ -289,7 +239,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
         try {
             configuration.update(props);
             // Update the configuration ...
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -307,7 +257,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
 
         try {
             configuration.delete();
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -341,22 +291,14 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
         String pid = configuration.getPid();
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
         assertNull("check no instance", osgiHelper.getServiceObject(Architecture.class.getName(), "(architecture.instance=" + pid + ")"));
 
         factory.start();
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
 
         //  The instance should be created, wait for the architecture service
@@ -369,7 +311,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
         try {
             configuration.update(props);
             // Update the configuration ...
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -391,7 +333,7 @@ public class TestManagedServiceFactoryTestForImmediate extends Common {
 
         try {
             configuration.delete();
-            Thread.sleep(UPDATE_WAIT_TIME);
+            grace();
         } catch (Exception e) {
             fail(e.getMessage());
         }

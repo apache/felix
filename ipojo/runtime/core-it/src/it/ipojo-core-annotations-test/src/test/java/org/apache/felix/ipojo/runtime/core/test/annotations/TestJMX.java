@@ -30,7 +30,7 @@ public class TestJMX extends Common {
 
     @Test
     public void testDeprecated() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.jmx.JMXDeprecated");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.jmx.JMXDeprecated");
         /*
          * org.apache.felix.ipojo.handlers.jmx:config domain="my-domain" usesmosgi="false"
         org.apache.felix.ipojo.handlers.jmx:property field="m_foo" name="prop" rights="w" notification="true"
@@ -57,7 +57,7 @@ public class TestJMX extends Common {
 
     @Test
     public void test() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.jmx.JMXSimple");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.jmx.JMXSimple");
         /*
          * org.apache.felix.ipojo.handlers.jmx:config domain="my-domain" usesmosgi="false"
         org.apache.felix.ipojo.handlers.jmx:property field="m_foo" name="prop" rights="w" notification="true"

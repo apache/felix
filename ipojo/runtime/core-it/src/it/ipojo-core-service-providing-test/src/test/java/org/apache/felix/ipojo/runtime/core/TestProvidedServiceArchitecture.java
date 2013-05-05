@@ -174,7 +174,6 @@ public class TestProvidedServiceArchitecture extends Common {
         assertEquals("Check ProvidedService number", ps.length, 1);
         assertEquals("Check Provided Service Specs - 1", ps[0].getServiceSpecifications().length, 2);
         assertContains("Check provided service specs - 2", ps[0].getServiceSpecifications(), FooService.class.getName());
-        ;
         assertContains("Check provided service specs - 2", ps[0].getServiceSpecifications(), BarService.class.getName());
         assertEquals("Check Provided Service availability", ps[0].getState(), ProvidedServiceDescription.REGISTERED);
 

@@ -36,7 +36,7 @@ public class TestWhiteBoard extends Common {
 
     @Test
     public void testMetadataWithOnModification() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  typeWI);
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  typeWI);
         assertNotNull("Check meta", meta);
         Element[] ext = meta.getElements("wbp", namespace);
         assertEquals("Check size", 1, ext.length);
@@ -55,7 +55,7 @@ public class TestWhiteBoard extends Common {
 
     @Test
     public void testMetadataWithoutOnModification() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  typeWO);
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  typeWO);
         assertNotNull("Check meta", meta);
         Element[] ext = meta.getElements("wbp", namespace);
         assertEquals("Check size", 1, ext.length);
@@ -74,7 +74,7 @@ public class TestWhiteBoard extends Common {
 
     @Test
     public void testWhiteboards() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  typeWhiteboards);
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  typeWhiteboards);
         assertNotNull("Check meta", meta);
         Element[] ext = meta.getElements("whiteboards", namespace);
         assertEquals("Check size", 1, ext.length);

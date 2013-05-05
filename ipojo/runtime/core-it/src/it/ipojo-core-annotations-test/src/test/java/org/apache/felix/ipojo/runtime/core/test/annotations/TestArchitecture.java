@@ -29,7 +29,7 @@ public class TestArchitecture extends Common {
 
     @Test
     public void testArch() {
-        Element meta = ipojoHelper.getMetadata(testedBundle, "org.apache.felix.ipojo.runtime.core.test.components" +
+        Element meta = ipojoHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components" +
                 ".Arch");
         String arch = meta.getAttribute("architecture");
         assertNotNull("Architecture exists ", arch);
@@ -38,7 +38,7 @@ public class TestArchitecture extends Common {
 
     @Test
     public void testNoArch() {
-        Element meta = ipojoHelper.getMetadata(testedBundle, "org.apache.felix.ipojo.runtime.core.test.components" +
+        Element meta = ipojoHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components" +
                 ".NoArch");
         String arch = meta.getAttribute("architecture");
         assertNotNull("Architecture exists ", arch);

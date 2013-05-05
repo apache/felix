@@ -41,9 +41,9 @@ public class TestEventAdmin extends Common {
 
     @Before
     public void setUp() {
-        component = ipojoHelper.getMetadata(testedBundle,  type);
-        componentDeprecated = ipojoHelper.getMetadata(testedBundle,  deprecated);
-        componentWithPublishes = ipojoHelper.getMetadata(testedBundle,  publishes);
+        component = ipojoHelper.getMetadata(getTestBundle(),  type);
+        componentDeprecated = ipojoHelper.getMetadata(getTestBundle(),  deprecated);
+        componentWithPublishes = ipojoHelper.getMetadata(getTestBundle(),  publishes);
         assertNotNull("Check component", component);
         assertNotNull("Check deprecated", componentDeprecated);
         assertNotNull("Check publishes", componentWithPublishes);

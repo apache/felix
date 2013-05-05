@@ -28,7 +28,7 @@ public class TestProperties extends Common {
 
     @Test
     public void testProperties() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.Properties");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.Properties");
         Element[] provs = meta.getElements("properties");
         assertNotNull("Properties exists ", provs);
         Element prov = provs[0];
@@ -62,7 +62,7 @@ public class TestProperties extends Common {
 
     @Test
     public void testAbsentPropagation() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.Properties");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.Properties");
         Element[] provs = meta.getElements("properties");
         assertNotNull("Properties exists ", provs);
         Element prov = provs[0];
@@ -72,7 +72,7 @@ public class TestProperties extends Common {
 
     @Test
     public void testPropagation() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.Propagation");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.Propagation");
         Element[] provs = meta.getElements("properties");
         assertNotNull("Properties exists ", provs);
         Element prov = provs[0];
@@ -83,7 +83,7 @@ public class TestProperties extends Common {
 
     @Test
     public void testNoPropagation() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.NoPropagation");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.NoPropagation");
         Element[] provs = meta.getElements("properties");
         assertNotNull("Properties exists ", provs);
         Element prov = provs[0];
@@ -94,7 +94,7 @@ public class TestProperties extends Common {
 
     @Test
     public void testPID() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.ManagedServicePID");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ManagedServicePID");
         Element[] provs = meta.getElements("properties");
         assertNotNull("Properties exists ", provs);
         Element prov = provs[0];
@@ -105,7 +105,7 @@ public class TestProperties extends Common {
 
     @Test
     public void testAbsentPID() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.Properties");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.Properties");
         Element[] provs = meta.getElements("properties");
         assertNotNull("Properties exists ", provs);
         Element prov = provs[0];
@@ -115,7 +115,7 @@ public class TestProperties extends Common {
 
     @Test
     public void testPropagationAndPID() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.PropagationandPID");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.PropagationandPID");
         Element[] provs = meta.getElements("properties");
         assertNotNull("Properties exists ", provs);
         Element prov = provs[0];
@@ -129,7 +129,7 @@ public class TestProperties extends Common {
 
     @Test
     public void testPIDAndPropagation() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.PIDandPropagation");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.PIDandPropagation");
         Element[] provs = meta.getElements("properties");
         assertNotNull("Properties exists ", provs);
         Element prov = provs[0];
@@ -143,7 +143,7 @@ public class TestProperties extends Common {
 
     @Test
     public void testUpdatedAndPID() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.UpdatedWithManagedService");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.UpdatedWithManagedService");
         Element[] provs = meta.getElements("properties");
         assertNotNull("Properties exists ", provs);
         Element prov = provs[0];
@@ -158,7 +158,7 @@ public class TestProperties extends Common {
 
     @Test
     public void testUpdatedAndProperties() {
-        Element meta = ipojoHelper.getMetadata(testedBundle,  "org.apache.felix.ipojo.runtime.core.test.components.UpdatedWithProperties");
+        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.UpdatedWithProperties");
         Element[] provs = meta.getElements("properties");
         assertNotNull("Properties exists ", provs);
         Element prov = provs[0];

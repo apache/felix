@@ -64,7 +64,7 @@ public class HandlerTest extends Common {
 		ServiceReference sr = null;
 		ServiceReference[] refs = null;
         String filter = "("+"instance.name"+"="+name+")";
-        refs =osgiHelper.getServiceReferences(CheckService.class.getName(), filter);
+        refs = osgiHelper.getServiceReferences(CheckService.class.getName(), filter);
         if(refs != null) { sr = refs[0]; }
         
 		assertNotNull("Check the check service availability", sr);

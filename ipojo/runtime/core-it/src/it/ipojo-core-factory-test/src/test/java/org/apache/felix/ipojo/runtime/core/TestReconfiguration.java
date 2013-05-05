@@ -39,41 +39,6 @@ import static org.junit.Assert.fail;
 
 public class TestReconfiguration extends Common {
 
-    private ConfigurationAdmin admin;
-
-    @Before
-    public void setUp() {
-        admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
-        assertNotNull("Check configuration admin availability", admin);
-        try {
-            Configuration[] configurations = admin.listConfigurations(
-                    "(service.factoryPid=org.apache.felix.ipojo.runtime.core.components.ReconfigurableSimpleType)");
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                configurations[i].delete();
-            }
-        } catch (IOException e) {
-            fail(e.getMessage());
-        } catch (InvalidSyntaxException e) {
-            fail(e.getMessage());
-        }
-    }
-
-    @After
-    public void tearDown() {
-        try {
-            Configuration[] configurations = admin.listConfigurations(
-                    "(service.factoryPid=org.apache.felix.ipojo.runtime.core.components.ReconfigurableSimpleType)");
-            for (int i = 0; configurations != null && i < configurations.length; i++) {
-                configurations[i].delete();
-            }
-        } catch (IOException e) {
-            fail(e.getMessage());
-        } catch (InvalidSyntaxException e) {
-            fail(e.getMessage());
-        }
-        admin = null;
-    }
-
     @Test
     public void testRevalidationOnReconfiguration() {
         ComponentFactory factory = (ComponentFactory) ipojoHelper.getFactory(
@@ -106,8 +71,6 @@ public class TestReconfiguration extends Common {
         assertEquals("instance valid", ComponentInstance.VALID, ci.getState());
     }
 
-    public static long UPDATE_WAIT_TIME = 2000;
-
     @Test public void testRevalidationOnReconfigurationUsingConfigAdmin() throws InvalidSyntaxException {
         Configuration configuration = null;
         try {
@@ -132,11 +95,7 @@ public class TestReconfiguration extends Common {
         String pid = configuration.getPid();
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
         Assert.assertNull("No architecture", osgiHelper.getServiceReference(Architecture.class.getName(),
                 "(architecture.instance=" + pid + ")"));
@@ -155,11 +114,7 @@ public class TestReconfiguration extends Common {
         pid = configuration.getPid();
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
         Assert.assertNotNull("architecture", osgiHelper.getServiceReference(Architecture.class.getName(), "(architecture.instance=" + pid + ")"));
         Architecture arch = (Architecture) osgiHelper.getServiceObject( Architecture.class.getName(), "(architecture.instance=" + pid + ")");
@@ -222,11 +177,7 @@ public class TestReconfiguration extends Common {
         String pid = configuration.getPid();
 
         // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
+        grace();
 
         // Invalid ... controller effect
         Assert.assertNotNull("architecture", osgiHelper.getServiceReference(Architecture.class.getName(), "(architecture.instance=" + pid + ")"));
@@ -240,18 +191,13 @@ public class TestReconfiguration extends Common {
 
         try {
             configuration.update(props);
+            grace();
         } catch (IOException e) {
             fail(e.getMessage());
         }
 
         pid = configuration.getPid();
 
-        // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
 
         Assert.assertNotNull("architecture", osgiHelper.getServiceReference(Architecture.class.getName(), "(architecture.instance=" + pid + ")"));
         arch = (Architecture) osgiHelper.getServiceObject( Architecture.class.getName(), "(architecture.instance=" + pid + ")");
@@ -307,18 +253,12 @@ public class TestReconfiguration extends Common {
 
         try {
             configuration.update(props);
+            grace();
         } catch (IOException e) {
             fail(e.getMessage());
         }
 
         String pid = configuration.getPid();
-
-        // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
 
         // Invalid ... controller effect
         Assert.assertNotNull("architecture", osgiHelper.getServiceReference(Architecture.class.getName(), "(architecture.instance=" + pid + ")"));
@@ -332,18 +272,12 @@ public class TestReconfiguration extends Common {
 
         try {
             configuration.update(props);
+            grace();
         } catch (IOException e) {
             fail(e.getMessage());
         }
 
         pid = configuration.getPid();
-
-        // Wait for the processing of the first configuration.
-        try {
-            Thread.sleep(UPDATE_WAIT_TIME);
-        } catch (InterruptedException e1) {
-            fail(e1.getMessage());
-        }
 
         Assert.assertNotNull("architecture", osgiHelper.getServiceReference(Architecture.class.getName(), "(architecture.instance=" + pid + ")"));
         arch = (Architecture) osgiHelper.getServiceObject( Architecture.class.getName(), "(architecture.instance=" + pid + ")");
