@@ -19,42 +19,12 @@
 
 package org.apache.felix.ipojo.runtime.core.test.annotations;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.CompositeOption;
 import org.ops4j.pax.exam.options.DefaultCompositeOption;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerClass;
-import org.ops4j.pax.tinybundles.core.TinyBundle;
-import org.ops4j.pax.tinybundles.core.TinyBundles;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 import org.ow2.chameleon.testing.helpers.BaseTest;
-import org.ow2.chameleon.testing.helpers.IPOJOHelper;
-import org.ow2.chameleon.testing.helpers.OSGiHelper;
-import org.ow2.chameleon.testing.tinybundles.ipojo.IPOJOStrategy;
-import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import static org.ops4j.pax.exam.CoreOptions.*;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 /**
  * Bootstrap the test from this project
@@ -71,8 +41,7 @@ public class Common extends BaseTest {
     public CompositeOption eventadmin() {
         return new DefaultCompositeOption(
                 mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.2.10"),
-                mavenBundle("org.apache.felix", "org.apache.felix.ipojo.handler.eventadmin",
-                        "1.8.0").versionAsInProject());
+                mavenBundle("org.apache.felix", "org.apache.felix.ipojo.handler.eventadmin").versionAsInProject());
     }
 
 }

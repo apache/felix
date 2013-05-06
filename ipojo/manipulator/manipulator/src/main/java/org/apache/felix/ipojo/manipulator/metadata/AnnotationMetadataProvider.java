@@ -108,7 +108,7 @@ public class AnnotationMetadataProvider implements MetadataProvider {
             // Instantiate ?
             Element instance = collector.getInstanceMetadata();
             if (instance != null) {
-                m_reporter.trace("Declaring an empty instance of %s", instance.getAttribute("component"));
+                m_reporter.trace("Declaring an instance of %s", instance.getAttribute("component"));
                 metadata.add(instance);
             }
         }
