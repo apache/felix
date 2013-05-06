@@ -50,7 +50,8 @@ public class Common extends BaseTest {
 
     public CompositeOption eventadmin() {
         return new DefaultCompositeOption(
-                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.0"),
+                // Use an old version of the event admin to avoid import package issues on KF
+                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.2.10"),
                 mavenBundle("org.apache.felix", "org.apache.felix.ipojo.handler.eventadmin",
                         "1.8.0").versionAsInProject());
     }
