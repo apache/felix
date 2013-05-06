@@ -183,6 +183,12 @@
 
         <dependency>
             <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo.annotations</artifactId>
+            <version>1.9.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
             <version>1.6.0</version>
             <scope>test</scope>
@@ -356,6 +362,35 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
+        </profile>
+
+        <profile>
+            <!--
+                avoid using the invoker and use a regular reactor instead.
+                it must be coupled with another profile to select the right OSGi framework implementation
+             -->
+            <id>reactor</id>
+
+            <modules>
+                <module>src/it/ipojo-core-annotations-test</module>
+                <module>src/it/ipojo-core-bad-configuration-test</module>
+                <module>src/it/ipojo-core-configuration-admin-test</module>
+                <module>src/it/ipojo-core-configuration-processor-test</module>
+                <module>src/it/ipojo-core-configuration-test</module>
+                <module>src/it/ipojo-core-external-handlers-test</module>
+                <module>src/it/ipojo-core-factory-test</module>
+                <module>src/it/ipojo-core-factory-version-test</module>
+                <module>src/it/ipojo-core-handler-test</module>
+                <module>src/it/ipojo-core-lifecycle-callback-test</module>
+                <module>src/it/ipojo-core-lifecycle-controller-test</module>
+                <module>src/it/ipojo-core-logger-test</module>
+                <module>src/it/ipojo-core-service-dependency-optional-test</module>
+                <module>src/it/ipojo-core-service-dependency-policies</module>
+                <module>src/it/ipojo-core-service-dependency-proxies</module>
+                <module>src/it/ipojo-core-service-dependency-test</module>
+                <module>src/it/ipojo-core-service-providing-test</module>
+            </modules>
+
         </profile>
 
         <profile>

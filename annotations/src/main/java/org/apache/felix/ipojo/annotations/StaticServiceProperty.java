@@ -19,10 +19,13 @@
 package org.apache.felix.ipojo.annotations;
 
 
+import java.lang.annotation.Target;
+
 /**
  * This annotation declares a static service property.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@Target({})
 public @interface StaticServiceProperty {
 
     /**

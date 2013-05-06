@@ -19,35 +19,38 @@
 
 package org.apache.felix.ipojo.runtime.core.test.annotations;
 
+import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.ParseUtils;
 import org.apache.felix.ipojo.runtime.core.test.services.CheckService;
 import org.apache.felix.ipojo.runtime.core.test.services.FooService;
 import org.junit.Test;
+import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.IPOJOHelper;
 
 import java.util.List;
 
 import static junit.framework.Assert.*;
 
-public class TestServiceProdiving extends Common {
+public class TestServiceProviding extends Common {
 
     @Test
     public void testProvidesSimple() {
-        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesSimple");
+        Element meta = IPOJOHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components.ProvidesSimple");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
     }
 
     @Test
     public void testProvidesDouble() {
-        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesDouble");
+        Element meta = IPOJOHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components.ProvidesDouble");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
     }
 
     @Test
     public void testProvidesTriple() {
-        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesTriple");
+        Element meta = IPOJOHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components.ProvidesTriple");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         Element prov = provs[0];
@@ -58,7 +61,7 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testProvidesQuatro() {
-        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesQuatro");
+        Element meta = IPOJOHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components.ProvidesQuatro");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         Element prov = provs[0];
@@ -70,7 +73,7 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testProperties() {
-        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesProperties");
+        Element meta = IPOJOHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components.ProvidesProperties");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         Element prov = provs[0];
@@ -101,7 +104,7 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testStaticProperties() {
-        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.ProvidesStaticProperties");
+        Element meta = IPOJOHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components.ProvidesStaticProperties");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         Element prov = provs[0];
@@ -149,7 +152,7 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testServiceController() {
-        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.PSServiceController");
+        Element meta = IPOJOHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components.PSServiceController");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         System.out.println(provs[0].toString());
@@ -160,7 +163,7 @@ public class TestServiceProdiving extends Common {
 
     @Test
     public void testServiceControllerWithSpecification() {
-        Element meta = ipojoHelper.getMetadata(getTestBundle(),  "org.apache.felix.ipojo.runtime.core.test.components.PSServiceControllerSpec");
+        Element meta = IPOJOHelper.getMetadata(getTestBundle(), "org.apache.felix.ipojo.runtime.core.test.components.PSServiceControllerSpec");
         Element[] provs = meta.getElements("provides");
         assertNotNull("Provides exists ", provs);
         System.out.println(provs[0].toString());
@@ -170,15 +173,27 @@ public class TestServiceProdiving extends Common {
         assertEquals(FooService.class.getName(), provs[0].getElements("controller")[0].getAttribute("specification"));
     }
 
+    /**
+     * Checks that declared static properties.
+     * It used 'org.apache.felix.ipojo.runtime.core.test.components.components.ComponentWithProperties'
+     * This test is related to : https://issues.apache.org/jira/browse/FELIX-4053
+     */
+    @Test
+    public void testPublishedStaticProperties() {
+        ServiceReference reference = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(),
+                "instanceWithProperties");
+        assertNotNull(reference);
+    }
+
     private Element getPropertyByName(Element[] props, String name) {
-        for (int i = 0; i < props.length; i++) {
-            String na = props[i].getAttribute("name");
-            String field = props[i].getAttribute("field");
+        for (Element prop : props) {
+            String na = prop.getAttribute("name");
+            String field = prop.getAttribute("field");
             if (na != null && na.equalsIgnoreCase(name)) {
-                return props[i];
+                return prop;
             }
             if (field != null && field.equalsIgnoreCase(name)) {
-                return props[i];
+                return prop;
             }
         }
         fail("Property  " + name + " not found");
