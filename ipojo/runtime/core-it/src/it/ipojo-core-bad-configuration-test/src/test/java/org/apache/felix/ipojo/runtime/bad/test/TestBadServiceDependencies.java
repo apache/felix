@@ -115,6 +115,22 @@ public class TestBadServiceDependencies extends Common {
         return elem;
     }
 
+    private Element getMissingSpecification() {
+        Element elem = new Element("component", "");
+        elem.addAttribute(new Attribute("classname", clazz));
+
+        // iPOJO cannot determine the specification of this type of dependency.
+        Element dependency = new Element("requires", "");
+        Element callback = new Element("callback", "");
+        callback.addAttribute(new Attribute("type", "bind"));
+        callback.addAttribute(new Attribute("method", "refBind"));
+        dependency.addElement(callback);
+        elem.addElement(dependency);
+
+        elem.addElement(manipulation);
+        return elem;
+    }
+
     private Element getManipulationForComponent() {
         String header = getTestBundle().getHeaders().get("iPOJO-Components");
         Element elem = null;
@@ -238,6 +254,27 @@ public class TestBadServiceDependencies extends Common {
     public void testBadType() {
         try {
             ComponentFactory cf = new ComponentFactory(osgiHelper.getContext(), getBadType());
+            cf.start();
+            ComponentInstance ci = cf.createComponentInstance(props);
+            ci.dispose();
+            cf.stop();
+            fail("A service requirement with a bad type must be rejected " + cf);
+        } catch (ConfigurationException e) {
+            // OK
+        } catch (UnacceptableConfiguration e) {
+            fail("Unexpected exception when creating an instance : " + e.getMessage());
+        } catch (MissingHandlerException e) {
+            fail("Unexpected exception when creating an instance : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Check that a component using a service dependency without service specification is rejected.
+     */
+    @Test
+    public void testDependencyWithoutSpecification() {
+        try {
+            ComponentFactory cf = new ComponentFactory(osgiHelper.getContext(), getMissingSpecification());
             cf.start();
             ComponentInstance ci = cf.createComponentInstance(props);
             ci.dispose();
