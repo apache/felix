@@ -288,6 +288,11 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         // We extract the version from the configuration because it may help to compute a unique name by appending
         // the version to the given name.
         String version = (String) configuration.get(Factory.FACTORY_VERSION_PROPERTY);
+
+        // If the extracted version is null, we use the current factory version (as we were called)
+        if (version == null) {
+            version = m_version;
+        }
         name = m_generator.generate(name, version);
         configuration.put(Factory.INSTANCE_NAME_PROPERTY, name);
 
