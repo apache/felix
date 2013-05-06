@@ -18,14 +18,7 @@
  */
 package org.apache.felix.ipojo.handlers.dependency;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.IPojoContext;
@@ -101,7 +94,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
     /**
      * List of dependencies of the component.
      */
-    private Dependency[] m_dependencies = new Dependency[0];
+    private final List<Dependency> m_dependencies = new ArrayList<Dependency>();
 
     /**
      * Is the handler started.
@@ -114,31 +107,11 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
     private DependencyHandlerDescription m_description;
 
     /**
-     * Add a dependency.
-     * @param dep : the dependency to add
-     */
-    private void addDependency(Dependency dep) {
-        for (int i = 0; m_dependencies != null && i < m_dependencies.length; i++) {
-            if (m_dependencies[i] == dep) {
-                return;
-            }
-        }
-        if (m_dependencies == null) {
-            m_dependencies = new Dependency[] { dep };
-        } else {
-            Dependency[] newDep = new Dependency[m_dependencies.length + 1];
-            System.arraycopy(m_dependencies, 0, newDep, 0, m_dependencies.length);
-            newDep[m_dependencies.length] = dep;
-            m_dependencies = newDep;
-        }
-    }
-
-    /**
      * Get the list of managed dependency.
      * @return the dependency list
      */
     public Dependency[] getDependencies() {
-        return m_dependencies;
+        return m_dependencies.toArray(new Dependency[m_dependencies.size()]);
     }
 
     /**
@@ -171,8 +144,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             boolean initialState = getValidity();
 
             boolean valid = true;
-            for (int i = 0; i < m_dependencies.length; i++) {
-                Dependency dep = m_dependencies[i];
+            for (Dependency dep : m_dependencies) {
                 if (dep.getState() != Dependency.RESOLVED) {
                     valid = false;
                     break;
@@ -324,10 +296,23 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
         	}
         }
 
+        // At this point we must have discovered the specification, it it's null, throw a ConfiguraitonException
+        if (dep.getSpecification() == null) {
+            String id = dep.getId();
+            if (id == null) {
+                dep.getField();
+            }
+            if (id == null  && dep.getCallbacks() != null  && dep.getCallbacks().length > 0) {
+                id = dep.getCallbacks()[0].getMethodName();
+            }
+            throw new ConfigurationException("Cannot determine the targeted service specification for the dependency '" +
+                    id + "'");
+        }
+
         // Disable proxy on scalar dependency targeting non-interface specification
         if (! dep.isAggregate()  && dep.isProxy()) {
         	if (! dep.getSpecification().isInterface()) {
-        		warn("Proxies cannot be used on service dependency targetting non interface " +
+        		warn("Proxies cannot be used on service dependency targeting non interface " +
         				"service specification " + dep.getSpecification().getName());
         		dep.setProxy(false);
         	}
@@ -420,143 +405,44 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
         for (int i = 0; deps != null && i < deps.length; i++) {
             // Create the dependency metadata
-            String field = deps[i].getAttribute("field");
+            final Element dependencyElement = deps[i];
 
-            String serviceSpecification = deps[i].getAttribute("interface");
-            // the 'interface' attribute is deprecated
-            if (serviceSpecification != null) {
-                warn("The 'interface' attribute is deprecated, use the 'specification' attribute instead");
-            } else {
-                serviceSpecification = deps[i].getAttribute("specification");
-            }
-
-            String filter = deps[i].getAttribute("filter");
-            String opt = deps[i].getAttribute("optional");
+            String field = dependencyElement.getAttribute("field");
+            String serviceSpecification = getServiceSpecificationAttribute(dependencyElement);
+            String opt = dependencyElement.getAttribute("optional");
             boolean optional = opt != null && opt.equalsIgnoreCase("true");
-            String defaultImplem = deps[i].getAttribute("default-implementation");
+            String defaultImpl = dependencyElement.getAttribute("default-implementation");
 
-            String agg = deps[i].getAttribute("aggregate");
+            String agg = dependencyElement.getAttribute("aggregate");
             boolean aggregate = agg != null && agg.equalsIgnoreCase("true");
-            String identitity = deps[i].getAttribute("id");
 
-            String nul = deps[i].getAttribute("nullable");
+            String identity = dependencyElement.getAttribute("id");
+
+            String nul = dependencyElement.getAttribute("nullable");
             boolean nullable = nul == null || nul.equalsIgnoreCase("true");
 
-            boolean isProxy = true;
-            // Detect proxy default value.
-            String setting = getInstanceManager().getContext().getProperty(PROXY_SETTINGS_PROPERTY);
+            boolean isProxy = isProxy(dependencyElement);
 
-            // Felix also includes system properties in the bundle context property, however it is not the case of the
-            // other frameworks, so if it's null we should call System.getProperty.
+            BundleContext context = getFacetedBundleContext(dependencyElement);
 
-            if (setting == null) {
-                setting = System.getProperty(PROXY_SETTINGS_PROPERTY);
-            }
-
-            if (setting == null || PROXY_ENABLED.equals(setting)) { // If not set => Enabled
-                isProxy = true;
-            } else if (setting != null  && PROXY_DISABLED.equals(setting)) {
-                isProxy = false;
-            }
-
-            String proxy = deps[i].getAttribute("proxy");
-            // If proxy == null, use default value
-            if (proxy != null) {
-                if (proxy.equals("false")) {
-                    isProxy = false;
-                } else if (proxy.equals("true")) {
-                    if (! isProxy) { // The configuration overrides the system setting
-                        warn("The configuration of a service dependency overrides the proxy mode");
-                    }
-                    isProxy = true;
-                }
-            }
-
-            String scope = deps[i].getAttribute("scope");
-            BundleContext context = getInstanceManager().getContext(); // Get the default bundle context.
-            if (scope != null) {
-                // If we are not in a composite, the policy is set to global.
-                if (scope.equalsIgnoreCase("global") || ((((IPojoContext) getInstanceManager().getContext()).getServiceContext()) == null)) {
-                    context =
-                            new PolicyServiceContext(getInstanceManager().getGlobalContext(), getInstanceManager().getLocalServiceContext(),
-                                    PolicyServiceContext.GLOBAL);
-                } else if (scope.equalsIgnoreCase("composite")) {
-                    context =
-                            new PolicyServiceContext(getInstanceManager().getGlobalContext(), getInstanceManager().getLocalServiceContext(),
-                                    PolicyServiceContext.LOCAL);
-                } else if (scope.equalsIgnoreCase("composite+global")) {
-                    context =
-                            new PolicyServiceContext(getInstanceManager().getGlobalContext(), getInstanceManager().getLocalServiceContext(),
-                                    PolicyServiceContext.LOCAL_AND_GLOBAL);
-                }
-            }
-
-            // Get instance filter if available
-            if (filtersConfiguration != null && identitity != null && filtersConfiguration.get(identitity) != null) {
-                filter = (String) filtersConfiguration.get(identitity);
-            }
-
-            // Compute the 'from' attribute
-            String from = deps[i].getAttribute("from");
-            if (fromConfiguration != null && identitity != null && fromConfiguration.get(identitity) != null) {
-                from = (String) fromConfiguration.get(identitity);
-            }
-            if (from != null) {
-                String fromFilter = "(|(instance.name=" + from + ")(service.pid=" + from + "))";
-                if (aggregate) {
-                    warn("The 'from' attribute is incompatible with aggregate requirements: only one provider will match : " + fromFilter);
-                }
-                if (filter != null) {
-                    filter = "(&" + fromFilter + filter + ")"; // Append the two filters
-                } else {
-                    filter = fromFilter;
-                }
-            }
-
-            Filter fil = null;
-            if (filter != null) {
-                try {
-                    fil = getInstanceManager().getContext().createFilter(filter);
-                } catch (InvalidSyntaxException e) {
-                    throw new ConfigurationException("A requirement filter is invalid : " + filter, e);
-                }
-            }
-
+            String filter = computeFilter(dependencyElement, filtersConfiguration, fromConfiguration, aggregate, identity);
+            Filter fil = createAndCheckFilter(filter);
 
             Class spec = null;
             if (serviceSpecification != null) {
                 spec = DependencyModel.loadSpecification(serviceSpecification, getInstanceManager().getContext());
             }
 
-            int policy = DependencyModel.getPolicy(deps[i]);
-            Comparator cmp = DependencyModel.getComparator(deps[i], getInstanceManager().getGlobalContext());
+            int policy = DependencyModel.getPolicy(dependencyElement);
+            Comparator cmp = DependencyModel.getComparator(dependencyElement, getInstanceManager().getGlobalContext());
 
-
-            Dependency dep = new Dependency(this, field, spec, fil, optional, aggregate, nullable, isProxy, identitity, context, policy, cmp, defaultImplem);
+            Dependency dep = new Dependency(this, field, spec, fil, optional, aggregate, nullable, isProxy, identity, context, policy, cmp, defaultImpl);
 
             // Look for dependency callback :
-            Element[] cbs = deps[i].getElements("Callback");
-            for (int j = 0; cbs != null && j < cbs.length; j++) {
-                if (!cbs[j].containsAttribute("method") && cbs[j].containsAttribute("type")) {
-                    throw new ConfigurationException("Requirement Callback : a dependency callback must contain a method and a type (bind or unbind) attribute");
-                }
-                String method = cbs[j].getAttribute("method");
-                String type = cbs[j].getAttribute("type");
-                int methodType = 0;
-                if ("bind".equalsIgnoreCase(type)) {
-                    methodType = DependencyCallback.BIND;
-                } else if ("modified".equalsIgnoreCase(type)) {
-                    methodType = DependencyCallback.MODIFIED;
-                } else {
-                    methodType = DependencyCallback.UNBIND;
-                }
-
-                DependencyCallback callback = new DependencyCallback(dep, method, methodType);
-                dep.addDependencyCallback(callback);
-            }
+            addCallbacksToDependency(dependencyElement, dep);
 
             // Add the constructor parameter if needed
-            String paramIndex = deps[i].getAttribute("constructor-parameter");
+            String paramIndex = dependencyElement.getAttribute("constructor-parameter");
             if (paramIndex != null) {
             	int index = Integer.parseInt(paramIndex);
             	dep.addConstructorInjection(index);
@@ -564,7 +450,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
             // Check the dependency :
             if (checkDependency(dep, manipulation)) {
-                addDependency(dep);
+                m_dependencies.add(dep);
                 if (dep.getField() != null) {
                     getInstanceManager().register(manipulation.getField(dep.getField()), dep);
                     atLeastOneField = true;
@@ -574,17 +460,153 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
         if (atLeastOneField) { // Does register only if we have fields
             MethodMetadata[] methods = manipulation.getMethods();
-            for (int i = 0; i < methods.length; i++) {
-                for (int j = 0; j < m_dependencies.length; j++) {
-                    getInstanceManager().register(methods[i], m_dependencies[j]);
+            for (MethodMetadata method : methods) {
+                for (Dependency dep : m_dependencies) {
+                    getInstanceManager().register(method, dep);
                 }
             }
         }
 
-        m_description = new DependencyHandlerDescription(this, m_dependencies); // Initialize the description.
+        m_description = new DependencyHandlerDescription(this, getDependencies()); // Initialize the description.
     }
 
-	/**
+    private String computeFilter(Element dependencyElement, Dictionary filtersConfiguration, Dictionary fromConfiguration, boolean aggregate, String identity) {
+        String filter = dependencyElement.getAttribute("filter");
+        // Get instance filter if available
+        if (filtersConfiguration != null && identity != null && filtersConfiguration.get(identity) != null) {
+            filter = (String) filtersConfiguration.get(identity);
+        }
+
+        // Compute the 'from' attribute
+        filter = updateFilterIfFromIsEnabled(fromConfiguration, dependencyElement, filter, aggregate, identity);
+        return filter;
+    }
+
+    private String updateFilterIfFromIsEnabled(Dictionary fromConfiguration, Element dependencyElement, String filter, boolean aggregate, String identity) {
+        String from = dependencyElement.getAttribute("from");
+        if (fromConfiguration != null && identity != null && fromConfiguration.get(identity) != null) {
+            from = (String) fromConfiguration.get(identity);
+        }
+        if (from != null) {
+            String fromFilter = "(|(instance.name=" + from + ")(service.pid=" + from + "))";
+            if (aggregate) {
+                warn("The 'from' attribute is incompatible with aggregate requirements: only one provider will match : " + fromFilter);
+            }
+            if (filter != null) {
+                filter = "(&" + fromFilter + filter + ")"; // Append the two filters
+            } else {
+                filter = fromFilter;
+            }
+        }
+        return filter;
+    }
+
+    private boolean isProxy(Element dependencyElement) {
+        boolean isProxy = true;
+        String setting = getProxySetting();
+
+        if (setting == null || PROXY_ENABLED.equals(setting)) { // If not set => Enabled
+            isProxy = true;
+        } else if (PROXY_DISABLED.equals(setting)) {
+            isProxy = false;
+        }
+
+        String proxy = dependencyElement.getAttribute("proxy");
+        // If proxy == null, use default value
+        if (proxy != null) {
+            if (proxy.equals("false")) {
+                isProxy = false;
+            } else if (proxy.equals("true")) {
+                if (! isProxy) { // The configuration overrides the system setting
+                    warn("The configuration of a service dependency overrides the proxy mode");
+                }
+                isProxy = true;
+            }
+        }
+        return isProxy;
+    }
+
+    private String getProxySetting() {
+        // Detect proxy default value.
+        String setting = getInstanceManager().getContext().getProperty(PROXY_SETTINGS_PROPERTY);
+
+        // Felix also includes system properties in the bundle context property, however it is not the case of the
+        // other frameworks, so if it's null we should call System.getProperty.
+
+        if (setting == null) {
+            setting = System.getProperty(PROXY_SETTINGS_PROPERTY);
+        }
+        return setting;
+    }
+
+    private void addCallbacksToDependency(Element dependencyElement, Dependency dep) throws ConfigurationException {
+        Element[] cbs = dependencyElement.getElements("Callback");
+        for (int j = 0; cbs != null && j < cbs.length; j++) {
+            if (!cbs[j].containsAttribute("method") && cbs[j].containsAttribute("type")) {
+                throw new ConfigurationException("Requirement Callback : a dependency callback must contain a method " +
+                        "and a type (bind or unbind) attribute");
+            }
+            String method = cbs[j].getAttribute("method");
+            String type = cbs[j].getAttribute("type");
+
+            int methodType = DependencyCallback.UNBIND;
+            if ("bind".equalsIgnoreCase(type)) {
+                methodType = DependencyCallback.BIND;
+            } else if ("modified".equalsIgnoreCase(type)) {
+                methodType = DependencyCallback.MODIFIED;
+            }
+
+            DependencyCallback callback = new DependencyCallback(dep, method, methodType);
+            dep.addDependencyCallback(callback);
+        }
+    }
+
+    private Filter createAndCheckFilter(String filter) throws ConfigurationException {
+        Filter fil = null;
+        if (filter != null) {
+            try {
+                fil = getInstanceManager().getContext().createFilter(filter);
+            } catch (InvalidSyntaxException e) {
+                throw new ConfigurationException("A requirement filter is invalid : " + filter, e);
+            }
+        }
+        return fil;
+    }
+
+    private BundleContext getFacetedBundleContext(Element dep) {
+        String scope = dep.getAttribute("scope");
+        BundleContext context = getInstanceManager().getContext(); // Get the default bundle context.
+        if (scope != null) {
+            // If we are not in a composite, the policy is set to global.
+            if (scope.equalsIgnoreCase("global") || ((((IPojoContext) getInstanceManager().getContext()).getServiceContext()) == null)) {
+                context =
+                        new PolicyServiceContext(getInstanceManager().getGlobalContext(), getInstanceManager().getLocalServiceContext(),
+                                PolicyServiceContext.GLOBAL);
+            } else if (scope.equalsIgnoreCase("composite")) {
+                context =
+                        new PolicyServiceContext(getInstanceManager().getGlobalContext(), getInstanceManager().getLocalServiceContext(),
+                                PolicyServiceContext.LOCAL);
+            } else if (scope.equalsIgnoreCase("composite+global")) {
+                context =
+                        new PolicyServiceContext(getInstanceManager().getGlobalContext(), getInstanceManager().getLocalServiceContext(),
+                                PolicyServiceContext.LOCAL_AND_GLOBAL);
+            }
+        }
+        return context;
+    }
+
+    private String getServiceSpecificationAttribute(Element dep) {
+        String serviceSpecification = dep.getAttribute("interface");
+        // the 'interface' attribute is deprecated
+        if (serviceSpecification != null) {
+            warn("The 'interface' attribute is deprecated, use the 'specification' attribute instead");
+        } else {
+            serviceSpecification = dep.getAttribute("specification");
+        }
+        return serviceSpecification;
+    }
+
+    /**
 	 * Gets the requires filter configuration from the given object.
 	 * The given object must come from the instance configuration.
 	 * This method was made to fix FELIX-2688. It supports filter configuration using
@@ -606,7 +628,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 						"A requirement filter is invalid : "
 								+ requiresFiltersValue);
 			}
-			Dictionary requiresFilters = new Hashtable();
+			Dictionary<String, Object> requiresFilters = new Hashtable<String, Object>();
 			for (int i = 0; i < filtersArray.length; i += 2) {
 				requiresFilters.put(filtersArray[i], filtersArray[i + 1]);
 			}
@@ -622,9 +644,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      */
     public void start() {
         // Start the dependencies
-        for (int i = 0; i < m_dependencies.length; i++) {
-            Dependency dep = m_dependencies[i];
-
+        for (Dependency dep : m_dependencies) {
             dep.start();
         }
         // Check the state
@@ -639,8 +659,8 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      */
     public void stop() {
         m_started = false;
-        for (int i = 0; i < m_dependencies.length; i++) {
-            m_dependencies[i].stop();
+        for (Dependency dep : m_dependencies) {
+            dep.stop();
         }
     }
 
@@ -650,8 +670,8 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      * @see org.apache.felix.ipojo.PrimitiveHandler#onCreation(Object)
      */
     public void onCreation(Object instance) {
-        for (int i = 0; i < m_dependencies.length; i++) {
-            m_dependencies[i].onObjectCreation(instance);
+        for (Dependency dep : m_dependencies) {
+            dep.onObjectCreation(instance);
         }
     }
 

@@ -23,9 +23,12 @@ import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.Before;
 import org.junit.Test;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.ow2.chameleon.testing.helpers.TimeUtils;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -33,6 +36,7 @@ import java.util.Properties;
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.*;
 
+@ExamReactorStrategy(PerMethod.class)
 public class TestDynamicPropsReconfiguration extends Common {
     ComponentInstance fooProvider3, fooProvider4;
 
@@ -378,7 +382,7 @@ public class TestDynamicPropsReconfiguration extends Common {
         p3.put("intAProp", new int[]{1, 2, 3});
 
         configuration.update(p3);
-        Thread.sleep(200);
+        TimeUtils.grace(200);
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);
@@ -441,7 +445,7 @@ public class TestDynamicPropsReconfiguration extends Common {
         p3.put("intAProp", new int[]{1, 2, 3});
 
         configuration.update(p3);
-        Thread.sleep(200);
+        TimeUtils.grace(200);
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);
@@ -515,7 +519,7 @@ public class TestDynamicPropsReconfiguration extends Common {
         p3.put("intAProp", "{ 1, 2, 3}");
 
         configuration.update(p3);
-        Thread.sleep(200);
+        TimeUtils.grace(200);
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);
@@ -578,7 +582,7 @@ public class TestDynamicPropsReconfiguration extends Common {
         p3.put("intAProp", "{ 1, 2, 3}");
 
         configuration.update(p3);
-        Thread.sleep(200);
+        TimeUtils.grace(200);
 
         sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);

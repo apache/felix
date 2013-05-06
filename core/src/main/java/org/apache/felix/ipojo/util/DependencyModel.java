@@ -116,7 +116,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
 
     /**
      * Bundle context used by the dependency.
-     * (may be a {@link ServiceContext}).
+     * (may be a {@link org.apache.felix.ipojo.ServiceContext}).
      */
     private BundleContext m_context;
 
@@ -416,26 +416,26 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * A service provider goes away. The depart needs to be managed only if the
      * reference was used.
      * @param ref the leaving service reference
-     * @param arg1 the service object if the service was already get
+     * @param svc the service object if the service was already get
      * @see org.apache.felix.ipojo.util.TrackerCustomizer#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
      */
-    public void removedService(ServiceReference ref, Object arg1) {
+    public void removedService(ServiceReference ref, Object svc) {
         if (m_matchingRefs.contains(ref)) {
-            manageDeparture(ref, arg1);
+            manageDeparture(ref, svc);
         }
     }
 
     /**
      * Manages the departure of a used service.
      * @param ref the leaving service reference
-     * @param obj the service object if the service was get
+     * @param svc the service object if the service was get
      */
-    private void manageDeparture(ServiceReference ref, Object obj) {
+    private void manageDeparture(ServiceReference ref, Object svc) {
         // Unget the service reference
         ungetService(ref);
 
         // If we already get this service and the binding policy is static, the dependency becomes broken
-        if (isFrozen() && obj != null) {
+        if (isFrozen() && svc != null) {
             if (m_state != BROKEN) {
                 m_state = BROKEN;
                 invalidate();  // This will invalidate the instance.
@@ -452,13 +452,13 @@ public abstract class DependencyModel implements TrackerCustomizer {
             synchronized (this) {
                 m_matchingRefs.remove(ref);
             }
-            if (obj == null) {
+            if (svc == null) {
                 computeDependencyState(); // check if the dependency stills valid.
             } else {
                 // A used service disappears, we have to sort the available providers to choose the best one.
                 // However, the sort has to be done only for scalar dependencies following the dynamic binding
                 // policy. Static dependencies will be broken, DP dependencies are always sorted.
-                // Aggregate dependencies does not need to be sort, as it will change the array
+                // Aggregate dependencies does not need to be sorted, as it will change the array
                 // order.
                 if (m_comparator != null && m_policy == DYNAMIC_BINDING_POLICY && ! m_aggregate) {
                     Collections.sort(m_matchingRefs, m_comparator);
