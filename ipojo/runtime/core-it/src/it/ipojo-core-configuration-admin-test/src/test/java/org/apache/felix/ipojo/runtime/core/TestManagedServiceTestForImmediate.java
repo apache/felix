@@ -344,6 +344,9 @@ public class TestManagedServiceTestForImmediate extends Common {
             fail(e.getMessage());
         }
 
+        // Wait until the configuration is delivered.
+        grace();
+
         ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance.getInstanceName());
         assertEquals("Check 1 object", 1, ((PrimitiveInstanceDescription) instance.getInstanceDescription()).getCreatedObjects().length);
         assertNotNull("FS availability", ref);
