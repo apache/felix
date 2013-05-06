@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation;
 
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.BindingRegistry;
+import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -74,7 +75,7 @@ public class ClassMetadataCollector extends EmptyVisitor {
     }
 
     /**
-     * Build metadata. May be {@literal null} if no "component type" was found.
+     * Build instance metadata. May be {@literal null} if no "component type" was found.
      * @return Build metadata. May be {@literal null} if no "component type" was found.
      */
     public Element getInstanceMetadata() {
@@ -167,6 +168,13 @@ public class ClassMetadataCollector extends EmptyVisitor {
 
         componentMetadata = workbench.build();
         instanceMetadata = workbench.getInstance();
+
+        // If we have an instance declared and the component metadata has a name, we update the component's attribute
+        // of the instance (https://issues.apache.org/jira/browse/FELIX-4052).
+        if (componentMetadata != null  && componentMetadata.containsAttribute("name")  && instanceMetadata != null) {
+            // Update the component attribute
+            instanceMetadata.addAttribute(new Attribute("component", componentMetadata.getAttribute("name")));
+        }
     }
 
 }

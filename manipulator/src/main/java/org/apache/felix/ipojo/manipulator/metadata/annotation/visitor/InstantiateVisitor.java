@@ -57,7 +57,8 @@ public class InstantiateVisitor extends EmptyVisitor implements AnnotationVisito
      * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
      */
     public void visitEnd() {
-        // TODO Is this really the classname that we need here ? Or the component's name ?
+        // We set the instance's component attribute to the class name, if the component type has a custom name,
+        // we will update it.
         instance.addAttribute(new Attribute("component", workbench.getType().getClassName()));
 
         workbench.setInstance(instance);
