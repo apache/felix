@@ -23,9 +23,6 @@ import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerClass;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -40,9 +37,7 @@ import static org.junit.Assert.assertNull;
 
 /**
  * iPOJO does not expose the ManagedServiceFactory anymore, we must use the configuration admin.
- * To avoid conflicts with persisted configuration, we run one framework per tests
  */
-@ExamReactorStrategy(PerClass.class)
 public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Common {
 
     ComponentInstance instance, instance2;
