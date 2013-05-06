@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -23,7 +23,9 @@ import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.PrimitiveHandler;
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
 import org.apache.felix.ipojo.metadata.Element;
-import org.osgi.service.useradmin.User;
+import org.apache.felix.ipojo.runtime.core.services.User;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 
 import java.util.Dictionary;
 
@@ -48,14 +50,18 @@ public class DummyHandler extends PrimitiveHandler {
     }
 
 
-    private void bindUser(User user) {
+    public void bindUser(User user) {
         // in order to test
         user.getName();
     }
 
-    private void unBindUser(User user) {
+    public void unBindUser(User user) {
         // in order to test
         user.getType();
+    }
+
+    public void validate() {
+        // do nothing
     }
 
     @Override

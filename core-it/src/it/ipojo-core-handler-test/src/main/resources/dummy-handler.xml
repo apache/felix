@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-  <!--
+<!--
   ~ Licensed to the Apache Software Foundation (ASF) under one
   ~ or more contributor license agreements.  See the NOTICE file
   ~ distributed with this work for additional information
@@ -8,7 +8,7 @@
   ~ "License"); you may not use this file except in compliance
   ~ with the License.  You may obtain a copy of the License at
   ~
-  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~ http://www.apache.org/licenses/LICENSE-2.0
   ~
   ~ Unless required by applicable law or agreed to in writing,
   ~ software distributed under the License is distributed on an
@@ -18,19 +18,19 @@
   ~ under the License.
   -->
 
-  <!--
-    <iPOJO xmlns:wbp="org.apache.felix.ipojo.whiteboard"
-    xmlns:jmx="org.apache.felix.ipojo.handlers.jmx">
-  -->
+<!--
+  <iPOJO xmlns:wbp="org.apache.felix.ipojo.whiteboard"
+  xmlns:jmx="org.apache.felix.ipojo.handlers.jmx">
+-->
 <iPOJO>
-  <!-- Declare the handler -->
-  <handler classname="org.apache.felix.ipojo.runtime.core.handlers.DummyHandler" name="dummy"
-    namespace="org.apache.felix.ipojo.test.dummy.handler.dummyhandler">
+    <!-- Declare the handler -->
+    <handler classname="org.apache.felix.ipojo.runtime.core.handlers.DummyHandler" name="dummy"
+             namespace="org.apache.felix.ipojo.test.dummy.handler.dummyhandler" architecture="true">
 
-
-    <requires optional="true" aggregate="true">
-      <callback type="bind" method="bindUser" />
-      <callback type="unbind" method="unBindUser" />
-    </requires>
-  </handler>
+        <requires optional="true" aggregate="true">
+            <callback type="bind" method="bindUser"/>
+            <callback type="unbind" method="unBindUser"/>
+        </requires>
+        <callback transition="validate" method="validate"/>
+    </handler>
 </iPOJO>

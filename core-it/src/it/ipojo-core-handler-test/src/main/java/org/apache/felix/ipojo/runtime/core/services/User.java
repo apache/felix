@@ -17,19 +17,14 @@
  * under the License.
  */
 
-package org.apache.felix.ipojo.runtime.core.components;
-
-import org.apache.felix.ipojo.runtime.core.services.Dummy;
-
+package org.apache.felix.ipojo.runtime.core.services;
 
 /**
- * Just a Dummy test 
+ * Simple users.
  */
-public class DummyImpl implements Dummy {
+public interface User {
 
-    private void start() {
-    }
+    public String getName();
 
-    private void stop() {
-    }    
+    public int getType();
 }
