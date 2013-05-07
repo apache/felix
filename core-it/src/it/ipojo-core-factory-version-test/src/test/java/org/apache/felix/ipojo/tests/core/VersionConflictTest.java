@@ -186,7 +186,7 @@ public class VersionConflictTest extends Common {
             //Assert.assertEquals(bundles[i].getSymbolicName() + " is not active", Bundle.ACTIVE, bundles[i].getState());
         }
 
-        Bundle consBundle = osgiHelper.getBundle("MyCons");
+//        Bundle consBundle = osgiHelper.getBundle("MyCons");
 //        BundleWiring wiring = consBundle.adapt(BundleWiring.class);
 //        System.out.println("Bundle Wiring req: ");
 //        for (BundleWire wire : wiring.getRequiredWires(null)) {

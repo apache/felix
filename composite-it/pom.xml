@@ -75,10 +75,11 @@
                     </includes>
                     <excludes>
                         <exclude>src/main/appended-resources/**</exclude>
-                        <exclude>**/*.iml</exclude> <!-- Exclude iml files -->
+                        <exclude>**/*.iml</exclude>
+                        <!-- Exclude iml files -->
                         <!-- Exclude target folders that may have been created during
                          the integration-tests -->
-                        <exclude>src/it/**/target/**/*</exclude> 
+                        <exclude>src/it/**/target/**/*</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -123,13 +124,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.2.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>0.9.6</version>
@@ -167,12 +161,24 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
             <version>1.9.0-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
-        
+
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.composite</artifactId>
             <version>1.9.0-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -197,7 +203,7 @@
         <dependency>
             <groupId>org.ow2.chameleon.testing</groupId>
             <artifactId>osgi-helpers</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
@@ -215,6 +221,12 @@
             test.
             -->
             <version>1.8.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -256,6 +268,12 @@
                     <version>5.2.0</version>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                    <version>4.3.1</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
         </profile>
 
@@ -278,13 +296,19 @@
                     <version>3.8.1.v20120830-144521</version>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                    <version>4.3.1</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
         </profile>
 
         <profile>
             <id>felix</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
                 <property>
                     <name>pax.exam.framework</name>
                     <value>felix</value>
@@ -300,7 +324,51 @@
                     <version>4.2.0</version>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                    <version>4.3.1</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
+        </profile>
+
+        <profile>
+            <!--
+                avoid using the invoker and use a regular reactor instead.
+                it must be coupled with another profile to select the right OSGi framework implementation
+
+                * mvn clean install -Preactor,felix
+                * mvn clean install -Preactor,equinox
+                * mvn clean install -Preactor,knopflerfish
+             -->
+            <id>reactor</id>
+
+            <modules>
+                <module>src/it/ipojo-composite-runtime-test</module>
+                <module>src/it/ipojo-composite-import-export-test</module>
+                <module>src/it/ipojo-composite-instance-test</module>
+                <module>src/it/ipojo-composite-service-providing-test</module>
+            </modules>
+
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <version>2.14.1</version>
+                            <configuration>
+                                <systemPropertyVariables>
+                                    <!-- TIME_FACTOR can be set from the command line with -DTIME_FACTOR=9-->
+                                    <TIME_FACTOR>${TIME_FACTOR}</TIME_FACTOR>
+                                </systemPropertyVariables>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+
         </profile>
 
         <profile>
