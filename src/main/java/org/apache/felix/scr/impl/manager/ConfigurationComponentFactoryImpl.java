@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -132,11 +133,11 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
     }
 
 
-    public void configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount )
+    public void configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPid )
     {
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            super.configurationUpdated( pid, configuration, changeCount );
+            super.configurationUpdated( pid, configuration, changeCount, targetedPid );
         }
         else   //non-spec backwards compatible
         {

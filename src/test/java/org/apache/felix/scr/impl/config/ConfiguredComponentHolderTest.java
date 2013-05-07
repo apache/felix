@@ -27,6 +27,7 @@ import java.util.Hashtable;
 import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -71,7 +72,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         // configure with the singleton configuration
         final Dictionary config = new Hashtable();
         config.put( "value", name );
-        holder.configurationUpdated( name, config, 0 );
+        holder.configurationUpdated( name, config, 0, new TargetedPID(name) );
 
         // assert single component and no map
         final ImmediateComponentManager cmgrAfterConfig = getSingleManager( holder );
@@ -115,7 +116,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         final String pid1 = "test.factory.0001";
         final Dictionary config1 = new Hashtable();
         config1.put( "value", pid1 );
-        holder.configurationUpdated( pid1, config1, 0 );
+        holder.configurationUpdated( pid1, config1, 0, new TargetedPID(name) );
 
         // assert single component and single-entry map
         final ImmediateComponentManager cmgrAfterConfig = getSingleManager( holder );
@@ -128,7 +129,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         final String pid2 = "test.factory.0002";
         final Dictionary config2 = new Hashtable();
         config1.put( "value", pid2 );
-        holder.configurationUpdated( pid2, config2, 1 );
+        holder.configurationUpdated( pid2, config2, 1, new TargetedPID(name) );
 
         // assert single component and single-entry map
         final ImmediateComponentManager cmgrAfterConfig2 = getSingleManager( holder );
@@ -148,7 +149,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         assertEquals( "Expect one component manager in list", 1, cmgrsAfterUnConfig2.length );
 
         // add second config again and remove first config -> replace singleton component
-        holder.configurationUpdated( pid2, config2, 2 );
+        holder.configurationUpdated( pid2, config2, 2, new TargetedPID(name) );
         holder.configurationDeleted( pid1 );
 
         // assert single component and single-entry map

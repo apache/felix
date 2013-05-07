@@ -23,6 +23,7 @@ import java.util.Dictionary;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 
@@ -69,14 +70,21 @@ public interface ComponentHolder
      * @param pid The PID of the configuration used to configure the component.
      * @param props the property dictionary from the configuration.
      * @param changeCount change count of the configuration, or R4 imitation.
+     * @param targetedPid TODO
      */
-    void configurationUpdated( String pid, Dictionary<String, Object> props, long changeCount );
+    void configurationUpdated( String pid, Dictionary<String, Object> props, long changeCount, TargetedPID targetedPid );
     
     /**
      * Change count (or fake R4 imitation)
      * @return the last change count from a configurationUpdated call for the given pid.
      */
     long getChangeCount( String pid );
+    
+    /**
+     * Returns the targeted PID used to configure this component
+     * @return
+     */
+    TargetedPID getConfigurationTargetedPID();
 
     /**
      * Returns all <code>Component</code> instances held by this holder.
