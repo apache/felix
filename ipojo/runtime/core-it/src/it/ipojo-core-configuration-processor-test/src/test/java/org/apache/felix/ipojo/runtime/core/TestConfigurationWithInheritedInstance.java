@@ -32,6 +32,7 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.TimeUtils;
 import org.ow2.chameleon.testing.tinybundles.ipojo.IPOJOStrategy;
 
 import java.io.IOException;
@@ -76,6 +77,7 @@ public class TestConfigurationWithInheritedInstance extends Common {
             return; // Test disabled on KF
         }
 
+        TimeUtils.grace(500);
         osgiHelper.waitForService(FooService.class, null, 10000);
 
         // Check we have two instances
