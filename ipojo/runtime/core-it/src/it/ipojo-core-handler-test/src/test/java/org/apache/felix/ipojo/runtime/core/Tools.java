@@ -28,18 +28,24 @@ public class Tools {
 
     /**
      * Get the Factory linked to the given pid
-     * @param osgi
-     * @param name
-     * @return The factory
+     *
+     * @param osgi the osgi test helper
+     * @param name the factory name
+     * @return The factory or {@literal null} if not found.
      */
     public static Factory getValidFactory(final OSGiHelper osgi, final String name) {
-        // Get The Factory ServiceReference
-        ServiceReference facref = osgi.getServiceReference(Factory.class.getName(),
-                "(&(factory.state=1)(factory.name=" + name + "))");
-        // Get the factory
-        Factory factory = (Factory) osgi.getServiceObject(facref);
+        // Wait for service first.
+        ServiceReference ref = osgi.waitForService(
+                Factory.class.getName(),
+                "(&(factory.state=1)(factory.name=" + name + "))",
+                1000, false);
 
-        return factory;
+        if (ref != null) {
+            // Get the factory
+            return (Factory) osgi.getServiceObject(ref);
+        } else {
+            return null;
+        }
     }
 
 }
