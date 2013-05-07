@@ -763,7 +763,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                     if ( m_componentContext == null )
                     {
                         //state should be "Registered"
-                        S result = (S) state().getService( this );
+                        S result = (S) Registered.getInstance().getService( this );
                         if ( result == null )
                         {
                             success = false;;
@@ -802,7 +802,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 {
                     if ( m_useCount.get() == 0 )
                     {
-                        state().ungetService( this );
+                        Active.getInstance().ungetService( this );
                         unsetDependenciesCollected();
                     }
                 }
