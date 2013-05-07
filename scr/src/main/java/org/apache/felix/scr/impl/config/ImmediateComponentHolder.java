@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.DelayedComponentManager;
@@ -100,11 +101,13 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
      * Whether components have already been enabled by calling the
      * {@link #enableComponents(boolean)} method. If this field is <code>true</code>
      * component instances created per configuration by the
-     * {@link #configurationUpdated(String, Dictionary, long)} method are also
+     * {@link #configurationUpdated(String, Dictionary, long, TargetedPID)} method are also
      * enabled. Otherwise they are not enabled immediately.
      */
     private volatile boolean m_enabled;
     private final ComponentMethods m_componentMethods;
+    
+    private TargetedPID m_targetedPID;
     
 
     public ImmediateComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
@@ -188,6 +191,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration deleted for pid {0}",
                 new Object[] {pid}, null);
 
+        m_targetedPID = null;
         // component to deconfigure or dispose of
         final ImmediateComponentManager icm;
         boolean deconfigure = false;
@@ -268,11 +272,18 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
      * this case a new component is created, configured and stored in the map</li>
      * </ul>
      */
-    public void configurationUpdated( final String pid, final Dictionary<String, Object> props, long changeCount )
+    public void configurationUpdated( final String pid, final Dictionary<String, Object> props, long changeCount, TargetedPID targetedPid )
     {
         log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration updated for pid {0} with properties {1}",
                 new Object[] {pid, props}, null);
 
+        if ( m_targetedPID != null && !m_targetedPID.equals( targetedPid ))
+        {
+            log( LogService.LOG_ERROR, "ImmediateComponentHolder unexpected change in targetedPID from {0} to {1}",
+                    new Object[] {m_targetedPID, targetedPid}, null);
+            throw new IllegalStateException("Unexpected targetedPID change");
+        }
+        m_targetedPID = targetedPid;
         // component to update or create
         final ImmediateComponentManager icm;
         final String message;
@@ -558,6 +569,11 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
         {
             activator.log( level, message, arguments, getComponentMetadata(), null, ex );
         }
+    }
+
+    public TargetedPID getConfigurationTargetedPID()
+    {
+        return m_targetedPID;
     }
 
 }

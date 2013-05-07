@@ -127,9 +127,12 @@ public class ConfigurationSupport implements ConfigurationListener
                             {
                                 for (Configuration config: factory)
                                 {
-                                    config = getConfiguration( ca, config.getPid(), bundleContext.getBundle() );
-                                    long changeCount = changeCounter.getChangeCount( config, false, -1 );
-                                    holder.configurationUpdated(config.getPid(), config.getProperties(), changeCount);
+                                    config = getConfiguration( ca, config.getPid() );
+                                    if ( checkBundleLocation( config, bundleContext.getBundle() ))
+                                    {
+                                        long changeCount = changeCounter.getChangeCount( config, false, -1 );
+                                        holder.configurationUpdated(config.getPid(), config.getProperties(), changeCount, new TargetedPID(config.getFactoryPid()));
+                                    }
                                 }
                             }
                             else
@@ -138,9 +141,12 @@ public class ConfigurationSupport implements ConfigurationListener
                                 Configuration singleton = findSingletonConfiguration(ca, confPid, bundleContext.getBundle());
                                 if (singleton != null)
                                 {
-                                    singleton = getConfiguration( ca, singleton.getPid(), bundleContext.getBundle() );
+                                    singleton = getConfiguration( ca, singleton.getPid() );
+                                    if ( singleton != null && checkBundleLocation( singleton, bundleContext.getBundle() ))
+                                    {
                                     long changeCount = changeCounter.getChangeCount( singleton, false, -1 );
-                                    holder.configurationUpdated(confPid, singleton.getProperties(), changeCount);
+                                    holder.configurationUpdated(confPid, singleton.getProperties(), changeCount, new TargetedPID(singleton.getPid()));
+                                    }
                                 }
                             }
                         }
@@ -237,10 +243,14 @@ public class ConfigurationSupport implements ConfigurationListener
             {
                 switch (event.getType()) {
                 case ConfigurationEvent.CM_DELETED:
+                    //TODO fall back to less-strong pid match
                     componentHolder.configurationDeleted(pid.getServicePid());
                     break;
 
                 case ConfigurationEvent.CM_UPDATED:
+                {
+                    //TODO what if this is a new config with a stronger (or weaker) binding than 
+                    // an existing matching config?
                     final BundleComponentActivator activator = componentHolder.getActivator();
                     if (activator == null)
                     {
@@ -253,57 +263,71 @@ public class ConfigurationSupport implements ConfigurationListener
                         break;
                     }
 
-                    final ServiceReference caRef = bundleContext
-                        .getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
-                    if (caRef != null)
+                    final Configuration config = getConfiguration( pid, componentHolder, bundleContext );
+                    if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                     {
-                        try
+                        long changeCount = changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid.getServicePid() ) );
+                        componentHolder.configurationUpdated( pid.getServicePid(), config.getProperties(), changeCount, pid );
+                    }
+                    
+                    break;
+                }
+                case ConfigurationEvent.CM_LOCATION_CHANGED:
+                {
+                    //TODO is this logic correct for factory pids????
+                    final BundleComponentActivator activator = componentHolder.getActivator();
+                    if (activator == null)
+                    {
+                        break;
+                    }
+
+                    final BundleContext bundleContext = activator.getBundleContext();
+                    if (bundleContext == null)
+                    {
+                        break;
+                    }
+
+                    TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID();
+                    if ( pid.equals(oldTargetedPID))
+                    {
+                        //this sets the location to this component's bundle if not already set.  OK here
+                        //since it used to be set to this bundle, ok to reset it
+                        final Configuration config = getConfiguration( pid, componentHolder, bundleContext );
+                        //this config was used on this component.  Does it still match?
+                        if (!checkBundleLocation( config, bundleContext.getBundle() ))
                         {
-                            final Object cao = bundleContext.getService(caRef);
-                            if (cao != null)
-                            {
-                                try
-                                {
-                                    if ( cao instanceof ConfigurationAdmin )
-                                    {
-                                        final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
-                                        final Configuration config = getConfiguration( ca, pid.getRawPid(), bundleContext.getBundle() );
-                                        if ( config != null )
-                                        {
-                                            long changeCount = changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid.getServicePid() ) );
-                                            componentHolder.configurationUpdated( pid.getServicePid(), config.getProperties(), changeCount );
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Activator.log( LogService.LOG_WARNING, null, "Cannot reconfigure component "
-                                            + componentHolder.getComponentMetadata().getName(), null );
-                                        Activator.log( LogService.LOG_WARNING, null,
-                                            "Component Bundle's Configuration Admin is not compatible with " +
-                                            "ours. This happens if multiple Configuration Admin API versions " +
-                                            "are deployed and different bundles wire to different versions",
-                                            null );
-                                    }
-                                }
-                                finally
-                                {
-                                    bundleContext.ungetService( caRef );
-                                }
-                            }
+                            //no, delete it
+                            componentHolder.configurationDeleted( pid.getServicePid() );
+                            //maybe there's another match
+                            configureComponentHolder(componentHolder);
+                            
                         }
-                        catch (IllegalStateException ise)
+                        //else still matches
+                        break;
+                    }
+                    boolean better = pid.bindsStronger( oldTargetedPID );
+                    if ( better )
+                    {
+                        //this sets the location to this component's bundle if not already set.  OK here
+                        //because if it is set to this bundle we will use it.
+                        final Configuration config = getConfiguration( pid, componentHolder, bundleContext );
+                        //this component was not configured with this config.  Should it be now?
+                        if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                         {
-                            // If the bundle has been stopped concurrently
-                            Activator.log(LogService.LOG_WARNING, null, "Unknown ConfigurationEvent type " + event.getType(),
-                                ise);
+                            if ( oldTargetedPID != null )
+                            {
+                                //this is a better match, delete old before setting new
+                                componentHolder.configurationDeleted( pid.getServicePid() );
+                            }
+                            long changeCount = changeCounter.getChangeCount( config, true,
+                                    componentHolder.getChangeCount( pid.getServicePid() ) );
+                            componentHolder.configurationUpdated( pid.getServicePid(), config.getProperties(),
+                                    changeCount, pid );
                         }
                     }
+                    //else worse match, do nothing
                     break;
-
-                case ConfigurationEvent.CM_LOCATION_CHANGED:
-                        // FELIX-3584: Implement event support
-                    break;
-
+                }
                 default:
                     Activator.log(LogService.LOG_WARNING, null, "Unknown ConfigurationEvent type " + event.getType(),
                         null);
@@ -312,19 +336,58 @@ public class ConfigurationSupport implements ConfigurationListener
         }
     }
 
-    private Configuration getConfiguration(final ConfigurationAdmin ca, final String pid, final Bundle bundle)
+    private Configuration getConfiguration(final TargetedPID pid, ComponentHolder componentHolder,
+            final BundleContext bundleContext)
+    {
+        final ServiceReference caRef = bundleContext
+            .getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
+        if (caRef != null)
+        {
+            try
+            {
+                final Object cao = bundleContext.getService(caRef);
+                if (cao != null)
+                {
+                    try
+                    {
+                        if ( cao instanceof ConfigurationAdmin )
+                        {
+                            final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
+                            final Configuration config = getConfiguration( ca, pid.getRawPid() );
+                            return config;
+                        }
+                        else
+                        {
+                            Activator.log( LogService.LOG_WARNING, null, "Cannot reconfigure component "
+                                + componentHolder.getComponentMetadata().getName(), null );
+                            Activator.log( LogService.LOG_WARNING, null,
+                                "Component Bundle's Configuration Admin is not compatible with " +
+                                "ours. This happens if multiple Configuration Admin API versions " +
+                                "are deployed and different bundles wire to different versions",
+                                null );
+                        }
+                    }
+                    finally
+                    {
+                        bundleContext.ungetService( caRef );
+                    }
+                }
+            }
+            catch (IllegalStateException ise)
+            {
+                // If the bundle has been stopped concurrently
+                Activator.log(LogService.LOG_WARNING, null, "Bundle in unexpected state",
+                    ise);
+            }
+        }
+        return null;
+    }
+
+    private Configuration getConfiguration(final ConfigurationAdmin ca, final String pid)
     {
         try
         {
-            final Configuration cfg = ca.getConfiguration(pid);
-            if (checkBundleLocation( cfg, bundle ))
-            {
-                return cfg;
-            }
-
-            // configuration belongs to another bundle, cannot be used here
-            Activator.log(LogService.LOG_INFO, null, "Cannot use configuration pid=" + pid + " for bundle "
-                + bundle.getLocation() + " because it belongs to bundle " + cfg.getBundleLocation(), null);
+            return ca.getConfiguration(pid);
         }
         catch (IOException ioe)
         {
@@ -412,6 +475,10 @@ public class ConfigurationSupport implements ConfigurationListener
     
     private boolean checkBundleLocation(Configuration config, Bundle bundle)
     {
+        if (config == null)
+        {
+            return false;
+        }
         String configBundleLocation = config.getBundleLocation();
         if ( configBundleLocation == null)
         {

@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -89,6 +90,8 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      * Configuration change count (R5) or imitation (R4)
      */
     protected volatile long m_changeCount = -1;
+    
+    private TargetedPID m_targetedPID;
 
     public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
@@ -305,6 +308,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
     public void configurationDeleted( String pid )
     {
+        m_targetedPID = null;
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
             log( LogService.LOG_DEBUG, "Handling configuration removal", null );
@@ -338,8 +342,15 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public void configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount )
+    public void configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPid )
     {
+        if ( m_targetedPID != null && !m_targetedPID.equals( targetedPid ))
+        {
+            log( LogService.LOG_ERROR, "ImmediateComponentHolder unexpected change in targetedPID from {0} to {1}",
+                    new Object[] {m_targetedPID, targetedPid}, null);
+            throw new IllegalStateException("Unexpected targetedPID change");
+        }
+        m_targetedPID = targetedPid;
         if ( configuration != null )
         {
             if ( changeCount <= m_changeCount )
@@ -525,5 +536,11 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         }
 
     }
+
+    public TargetedPID getConfigurationTargetedPID()
+    {
+        return m_targetedPID;
+    }
+
 
 }
