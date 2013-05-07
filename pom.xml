@@ -472,7 +472,7 @@
             <!--  remember you need to specify all profiles using this, e.g. -PcaR5,felix -->
             <id>caR5</id>
             <properties>
-                <felix.ca.version>1.6.0</felix.ca.version>
+                <felix.ca.version>1.6.1-SNAPSHOT</felix.ca.version>
             </properties>
         </profile>
     </profiles>
