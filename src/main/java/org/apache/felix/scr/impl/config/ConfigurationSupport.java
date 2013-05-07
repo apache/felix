@@ -266,16 +266,32 @@ public class ConfigurationSupport implements ConfigurationListener
                     TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID();
                     if ( targetedPid.equals(oldTargetedPID) || targetedPid.bindsStronger( oldTargetedPID ))
                     {
-                        final Configuration config = getConfiguration( pid, componentHolder, bundleContext );
-                        if ( checkBundleLocation( config, bundleContext.getBundle() ) )
+                        final ConfigurationInfo configInfo = getConfiguration( pid, componentHolder, bundleContext );
+                        if ( configInfo != null )
                         {
-                            //If this is replacing a weaker targetedPID delete the old one.
-                            if ( !targetedPid.equals(oldTargetedPID) && oldTargetedPID != null)
+                            Dictionary<String, Object> props = null;
+                            long changeCount = -1;
+                            try
                             {
-                                componentHolder.configurationDeleted( pid.getServicePid() );
+                                Configuration config = configInfo.getConfiguration();
+                                if ( checkBundleLocation( config, bundleContext.getBundle() ) )
+                                {
+                                    //If this is replacing a weaker targetedPID delete the old one.
+                                    if ( !targetedPid.equals( oldTargetedPID ) && oldTargetedPID != null )
+                                    {
+                                        componentHolder.configurationDeleted( pid.getServicePid() );
+                                    }
+                                    changeCount = changeCounter.getChangeCount( config, true,
+                                            componentHolder.getChangeCount( pid.getServicePid() ) );
+                                    props = config.getProperties();
+                                }
                             }
-                            long changeCount = changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid.getServicePid() ) );
-                            componentHolder.configurationUpdated( pid.getServicePid(), config.getProperties(), changeCount, targetedPid );
+                            finally 
+                            {
+                                bundleContext.ungetService( configInfo.getRef() );
+                            }
+                            componentHolder.configurationUpdated( pid.getServicePid(), props,
+                                    changeCount, targetedPid );
                         }
                     }
 
@@ -302,15 +318,28 @@ public class ConfigurationSupport implements ConfigurationListener
                     {
                         //this sets the location to this component's bundle if not already set.  OK here
                         //since it used to be set to this bundle, ok to reset it
-                        final Configuration config = getConfiguration( pid, componentHolder, bundleContext );
-                        //this config was used on this component.  Does it still match?
-                        if (!checkBundleLocation( config, bundleContext.getBundle() ))
+                        final ConfigurationInfo configInfo = getConfiguration( pid, componentHolder, bundleContext );
+                        if ( configInfo != null )
                         {
-                            //no, delete it
-                            componentHolder.configurationDeleted( pid.getServicePid() );
-                            //maybe there's another match
-                            configureComponentHolder(componentHolder);
-                            
+                            boolean reconfigure = false;
+                            try
+                            {
+                                Configuration config = configInfo.getConfiguration();
+                                //this config was used on this component.  Does it still match?
+                                reconfigure = !checkBundleLocation( config, bundleContext.getBundle() );
+                            }
+                            finally
+                            {
+                                bundleContext.ungetService( configInfo.getRef() );
+                            }
+                            if ( reconfigure )
+                            {
+                                //no, delete it
+                                componentHolder.configurationDeleted( pid.getServicePid() );
+                                //maybe there's another match
+                                configureComponentHolder( componentHolder );
+
+                            }
                         }
                         //else still matches
                         break;
@@ -320,18 +349,32 @@ public class ConfigurationSupport implements ConfigurationListener
                     {
                         //this sets the location to this component's bundle if not already set.  OK here
                         //because if it is set to this bundle we will use it.
-                        final Configuration config = getConfiguration( pid, componentHolder, bundleContext );
-                        //this component was not configured with this config.  Should it be now?
-                        if ( checkBundleLocation( config, bundleContext.getBundle() ) )
+                        final ConfigurationInfo configInfo = getConfiguration( pid, componentHolder, bundleContext );
+                        if ( configInfo != null )
                         {
-                            if ( oldTargetedPID != null )
+                            Dictionary<String, Object> props = null;
+                            long changeCount = -1;
+                            try
                             {
-                                //this is a better match, delete old before setting new
-                                componentHolder.configurationDeleted( pid.getServicePid() );
+                                Configuration config = configInfo.getConfiguration();
+                                //this component was not configured with this config.  Should it be now?
+                                if ( checkBundleLocation( config, bundleContext.getBundle() ) )
+                                {
+                                    if ( oldTargetedPID != null )
+                                    {
+                                        //this is a better match, delete old before setting new
+                                        componentHolder.configurationDeleted( pid.getServicePid() );
+                                    }
+                                    changeCount = changeCounter.getChangeCount( config, true,
+                                            componentHolder.getChangeCount( pid.getServicePid() ) );
+                                    props = config.getProperties();
+                                }
                             }
-                            long changeCount = changeCounter.getChangeCount( config, true,
-                                    componentHolder.getChangeCount( pid.getServicePid() ) );
-                            componentHolder.configurationUpdated( pid.getServicePid(), config.getProperties(),
+                            finally
+                            {
+                                bundleContext.ungetService( configInfo.getRef() );
+                            }
+                            componentHolder.configurationUpdated( pid.getServicePid(), props,
                                     changeCount, pid );
                         }
                     }
@@ -345,10 +388,32 @@ public class ConfigurationSupport implements ConfigurationListener
             }
         }
     }
+    
+    private static class ConfigurationInfo
+    {
+        private final Configuration configuration;
+        private final ServiceReference<?> ref;
+        public ConfigurationInfo(Configuration configuration, ServiceReference<?> ref)
+        {
+            super();
+            this.configuration = configuration;
+            this.ref = ref;
+        }
+        public Configuration getConfiguration()
+        {
+            return configuration;
+        }
+        
+        public ServiceReference<?> getRef()
+        {
+            return ref;
+        }
+    }
 
-    private Configuration getConfiguration(final TargetedPID pid, ComponentHolder componentHolder,
+    private ConfigurationInfo getConfiguration(final TargetedPID pid, ComponentHolder componentHolder,
             final BundleContext bundleContext)
     {
+        ConfigurationInfo confInfo = null;
         final ServiceReference caRef = bundleContext
             .getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
         if (caRef != null)
@@ -364,7 +429,10 @@ public class ConfigurationSupport implements ConfigurationListener
                         {
                             final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
                             final Configuration config = getConfiguration( ca, pid.getRawPid() );
-                            return config;
+                            if (config != null)
+                            {
+                                confInfo = new ConfigurationInfo(config, caRef);
+                            }
                         }
                         else
                         {
@@ -379,7 +447,10 @@ public class ConfigurationSupport implements ConfigurationListener
                     }
                     finally
                     {
-                        bundleContext.ungetService( caRef );
+                        if ( confInfo == null )
+                        {
+                            bundleContext.ungetService( caRef );
+                        }
                     }
                 }
             }
@@ -390,7 +461,50 @@ public class ConfigurationSupport implements ConfigurationListener
                     ise);
             }
         }
-        return null;
+        return confInfo;
+    }
+    
+    private ConfigurationAdmin getConfigurationAdmin(BundleContext bundleContext)
+    {
+        final ServiceReference caRef = bundleContext
+                .getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
+            if (caRef != null)
+            {
+                try
+                {
+                    final Object cao = bundleContext.getService(caRef);
+                    if (cao != null)
+                    {
+                        try
+                        {
+                            if ( cao instanceof ConfigurationAdmin )
+                            {
+                                return ( ConfigurationAdmin ) cao;
+                            }
+                            else
+                            {
+                                Activator.log( LogService.LOG_WARNING, null,
+                                    "Component Bundle's Configuration Admin is not compatible with " +
+                                    "ours. This happens if multiple Configuration Admin API versions " +
+                                    "are deployed and different bundles wire to different versions",
+                                    null );
+                            }
+                        }
+                        finally
+                        {
+                            bundleContext.ungetService( caRef );
+                        }
+                    }
+                }
+                catch (IllegalStateException ise)
+                {
+                    // If the bundle has been stopped concurrently
+                    Activator.log(LogService.LOG_WARNING, null, "Bundle in unexpected state",
+                        ise);
+                }
+            }
+            return null;
+       
     }
 
     private Configuration getConfiguration(final ConfigurationAdmin ca, final String pid)
