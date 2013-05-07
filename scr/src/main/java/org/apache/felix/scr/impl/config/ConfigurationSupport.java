@@ -22,13 +22,20 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.ComponentRegistry;
+import org.apache.felix.scr.impl.TargetedPID;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -38,6 +45,7 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
+import org.osgi.service.cm.ConfigurationPermission;
 import org.osgi.service.log.LogService;
 
 public class ConfigurationSupport implements ConfigurationListener
@@ -69,7 +77,7 @@ public class ConfigurationSupport implements ConfigurationListener
 
     // the service m_registration of the ConfigurationListener service
     private ServiceRegistration m_registration;
-
+    
     public ConfigurationSupport(final BundleContext bundleContext, final ComponentRegistry registry)
     {
         this.m_registry = registry;
@@ -114,26 +122,25 @@ public class ConfigurationSupport implements ConfigurationListener
                         if ( cao instanceof ConfigurationAdmin )
                         {
                             final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
-                            final Configuration[] factory = findFactoryConfigurations(ca, confPid);
-                            if (factory != null)
+                            final Collection<Configuration> factory = findFactoryConfigurations(ca, confPid, bundleContext.getBundle());
+                            if (!factory.isEmpty())
                             {
-                                for (int i = 0; i < factory.length; i++)
+                                for (Configuration config: factory)
                                 {
-                                    final String pid = factory[i].getPid();
-                                    final Configuration config = getConfiguration(ca, pid, bundleLocation);
+                                    config = getConfiguration( ca, config.getPid(), bundleContext.getBundle() );
                                     long changeCount = changeCounter.getChangeCount( config, false, -1 );
-                                    holder.configurationUpdated(pid, config.getProperties(), changeCount);
+                                    holder.configurationUpdated(config.getPid(), config.getProperties(), changeCount);
                                 }
                             }
                             else
                             {
                                 // check for configuration and configure the holder
-                                final Configuration singleton = findSingletonConfiguration(ca, confPid);
+                                Configuration singleton = findSingletonConfiguration(ca, confPid, bundleContext.getBundle());
                                 if (singleton != null)
                                 {
-                                    final Configuration config = getConfiguration(ca, confPid, bundleLocation);
-                                    long changeCount = changeCounter.getChangeCount( config, false, -1 );
-                                    holder.configurationUpdated(confPid, config.getProperties(), changeCount);
+                                    singleton = getConfiguration( ca, singleton.getPid(), bundleContext.getBundle() );
+                                    long changeCount = changeCounter.getChangeCount( singleton, false, -1 );
+                                    holder.configurationUpdated(confPid, singleton.getProperties(), changeCount);
                                 }
                             }
                         }
@@ -203,8 +210,9 @@ public class ConfigurationSupport implements ConfigurationListener
      */
     public void configurationEvent(ConfigurationEvent event)
     {
-        final String pid = event.getPid();
-        final String factoryPid = event.getFactoryPid();
+        final TargetedPID pid = new TargetedPID( event.getPid());
+        String rawFactoryPid = event.getFactoryPid();
+        final TargetedPID factoryPid = rawFactoryPid == null? null: new TargetedPID( rawFactoryPid);
 
         // iterate over all components which must be configured with this pid
         // (since DS 1.2, components may specify a specific configuration PID (112.4.4 configuration-pid)
@@ -229,7 +237,7 @@ public class ConfigurationSupport implements ConfigurationListener
             {
                 switch (event.getType()) {
                 case ConfigurationEvent.CM_DELETED:
-                    componentHolder.configurationDeleted(pid);
+                    componentHolder.configurationDeleted(pid.getServicePid());
                     break;
 
                 case ConfigurationEvent.CM_UPDATED:
@@ -259,12 +267,11 @@ public class ConfigurationSupport implements ConfigurationListener
                                     if ( cao instanceof ConfigurationAdmin )
                                     {
                                         final ConfigurationAdmin ca = ( ConfigurationAdmin ) cao;
-                                        final Configuration config = getConfiguration( ca, pid, bundleContext
-                                            .getBundle().getLocation() );
+                                        final Configuration config = getConfiguration( ca, pid.getRawPid(), bundleContext.getBundle() );
                                         if ( config != null )
                                         {
-                                            long changeCount = changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid ) );
-                                            componentHolder.configurationUpdated( pid, config.getProperties(), changeCount );
+                                            long changeCount = changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid.getServicePid() ) );
+                                            componentHolder.configurationUpdated( pid.getServicePid(), config.getProperties(), changeCount );
                                         }
                                     }
                                     else
@@ -294,8 +301,7 @@ public class ConfigurationSupport implements ConfigurationListener
                     break;
 
                 case ConfigurationEvent.CM_LOCATION_CHANGED:
-                    // FELIX-3650: Don't log WARNING message
-                    // FELIX-3584: Implement event support
+                        // FELIX-3584: Implement event support
                     break;
 
                 default:
@@ -306,19 +312,19 @@ public class ConfigurationSupport implements ConfigurationListener
         }
     }
 
-    private Configuration getConfiguration(final ConfigurationAdmin ca, final String pid, final String bundleLocation)
+    private Configuration getConfiguration(final ConfigurationAdmin ca, final String pid, final Bundle bundle)
     {
         try
         {
             final Configuration cfg = ca.getConfiguration(pid);
-            if (bundleLocation.equals(cfg.getBundleLocation()))
+            if (checkBundleLocation( cfg, bundle ))
             {
                 return cfg;
             }
 
             // configuration belongs to another bundle, cannot be used here
-            Activator.log(LogService.LOG_ERROR, null, "Cannot use configuration pid=" + pid + " for bundle "
-                + bundleLocation + " because it belongs to bundle " + cfg.getBundleLocation(), null);
+            Activator.log(LogService.LOG_INFO, null, "Cannot use configuration pid=" + pid + " for bundle "
+                + bundle.getLocation() + " because it belongs to bundle " + cfg.getBundleLocation(), null);
         }
         catch (IOException ioe)
         {
@@ -334,13 +340,33 @@ public class ConfigurationSupport implements ConfigurationListener
      *
      * @param ca Configuration Admin service
      * @param pid Pid for desired configuration
+     * @param bundle TODO
      * @return configuration with the specified Pid
      */
-    public Configuration findSingletonConfiguration(final ConfigurationAdmin ca, final String pid)
+    public Configuration findSingletonConfiguration(final ConfigurationAdmin ca, final String pid, Bundle bundle)
     {
-        final String filter = "(service.pid=" + pid + ")";
+        final String filter = getTargetedPidFilter( pid, bundle, Constants.SERVICE_PID );
         final Configuration[] cfg = findConfigurations(ca, filter);
-        return (cfg == null || cfg.length == 0) ? null : cfg[0];
+        if (cfg == null)
+        {
+            return null;
+        }
+        String longest = null;
+        Configuration best = null;
+        for (Configuration config: cfg)
+        {
+            if ( checkBundleLocation( config, bundle ) )
+            {
+                String testPid = config.getPid();
+                if ( longest == null || testPid.length() > longest.length())
+                {
+                    longest = testPid;
+                    best = config;
+                }
+            }
+            
+        }
+        return best;
     }
 
     /**
@@ -349,12 +375,54 @@ public class ConfigurationSupport implements ConfigurationListener
      *
      * @param ca ConfigurationAdmin service
      * @param factoryPid factory Pid we want the configurations for
+     * @param bundle bundle we're working for (for location and location permission)
      * @return the configurations specifying the supplied factory Pid.
      */
-    public Configuration[] findFactoryConfigurations(final ConfigurationAdmin ca, final String factoryPid)
+    private Collection<Configuration> findFactoryConfigurations(final ConfigurationAdmin ca, final String factoryPid, Bundle bundle)
     {
-        final String filter = "(service.factoryPid=" + factoryPid + ")";
-        return findConfigurations(ca, filter);
+        final String filter = getTargetedPidFilter( factoryPid, bundle, ConfigurationAdmin.SERVICE_FACTORYPID );
+        Configuration[] configs = findConfigurations(ca, filter);
+        if (configs == null)
+        {
+            return Collections.emptyList();
+        }
+        Map<String, Configuration> configsByPid = new HashMap<String, Configuration>();
+        for (Configuration config: configs)
+        {
+            if ( checkBundleLocation( config, bundle ) )
+            {
+                Configuration oldConfig = configsByPid.get( config.getPid() );
+                if ( oldConfig == null )
+                {
+                    configsByPid.put( config.getPid(), config );
+                }
+                else
+                {
+                    String newPid = config.getFactoryPid();
+                    String oldPid = oldConfig.getFactoryPid();
+                    if ( newPid.length() > oldPid.length() )
+                    {
+                        configsByPid.put( config.getPid(), config );
+                    }
+                }
+            }
+        }
+        return configsByPid.values();
+    }
+    
+    private boolean checkBundleLocation(Configuration config, Bundle bundle)
+    {
+        String configBundleLocation = config.getBundleLocation();
+        if ( configBundleLocation == null)
+        {
+            return true;
+        }
+        if (configBundleLocation.startsWith( "?" ))
+        {
+            //multilocation
+            return bundle.hasPermission(new ConfigurationPermission(configBundleLocation, ConfigurationPermission.TARGET));
+        }
+        return configBundleLocation.equals(bundle.getLocation());
     }
 
     private Configuration[] findConfigurations(final ConfigurationAdmin ca, final String filter)
@@ -374,6 +442,17 @@ public class ConfigurationSupport implements ConfigurationListener
 
         // no factories in case of problems
         return null;
+    }
+    
+    private String getTargetedPidFilter(String pid, Bundle bundle, String key)
+    {
+        String bsn = bundle.getSymbolicName();
+        String version = bundle.getVersion().toString();
+        String location = bundle.getLocation();
+        String f = String.format(
+                "(|(%1$s=%2$s)(%1$s=%2$s|%3$s)(%1$s=%2$s|%3$s|%4$s)(%1$s=%2$s|%3$s|%4$s|%5$s))", 
+                key, pid, bsn, version, location );
+        return f;
     }
     
     
