@@ -267,7 +267,7 @@ public class ConfigurationSupport implements ConfigurationListener
                     if ( checkBundleLocation( config, bundleContext.getBundle() ) )
                     {
                         long changeCount = changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid.getServicePid() ) );
-                        componentHolder.configurationUpdated( pid.getServicePid(), config.getProperties(), changeCount, pid );
+                        componentHolder.configurationUpdated( pid.getServicePid(), config.getProperties(), changeCount, factoryPid == null? pid: factoryPid );
                     }
                     
                     break;
