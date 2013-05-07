@@ -452,8 +452,9 @@ public class ComponentRegistry implements ScrService, ServiceListener
      * @param pid the pid candidate
      * @return the set of ComponentHolders matching the singleton pid supplied
      */
-    public final Collection<ComponentHolder> getComponentHoldersByPid(String pid)
+    public final Collection<ComponentHolder> getComponentHoldersByPid(TargetedPID targetedPid)
     {
+        String pid = targetedPid.getServicePid();
         Set<ComponentHolder> componentHoldersUsingPid = new HashSet<ComponentHolder>();
         synchronized (m_componentHoldersByPid)
         {
@@ -461,7 +462,13 @@ public class ComponentRegistry implements ScrService, ServiceListener
             // only return the entry if non-null and not a reservation
             if (set != null)
             {
-                componentHoldersUsingPid.addAll(set);
+                for (ComponentHolder holder: set)
+                {
+                    if (targetedPid.matchesTarget(holder))
+                    {
+                        componentHoldersUsingPid.add( holder );
+                    }
+                }
             }
         }
         return componentHoldersUsingPid;
