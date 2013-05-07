@@ -28,7 +28,7 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 /**
  * The <code>DelayedComponentManager</code> marker class.  Needed?
  */
-public class DelayedComponentManager extends ImmediateComponentManager
+public class DelayedComponentManager<S> extends ImmediateComponentManager<S>
 {
 
     /**
