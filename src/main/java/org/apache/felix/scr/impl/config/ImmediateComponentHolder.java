@@ -58,7 +58,7 @@ import org.osgi.service.log.LogService;
  * <code>service.factoryPid</code> equals the component name.</li>
  * </ul>
  */
-public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
+public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogger
 {
 
     /**
@@ -74,10 +74,10 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
     /**
      * A map of components configured with factory configuration. The indices
      * are the PIDs (<code>service.pid</code>) of the configuration objects.
-     * The values are the {@link ImmediateComponentManager component instances}
+     * The values are the {@link ImmediateComponentManager<S> component instances}
      * created on behalf of the configurations.
      */
-    private final Map<String, ImmediateComponentManager> m_components;
+    private final Map<String, ImmediateComponentManager<S>> m_components;
 
     /**
      * The special component used if there is no configuration or a singleton
@@ -95,7 +95,7 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
      * by this field is also contained in the map</li>
      * <ul>
      */
-    private ImmediateComponentManager m_singleComponent;
+    private ImmediateComponentManager<S> m_singleComponent;
 
     /**
      * Whether components have already been enabled by calling the
@@ -114,33 +114,33 @@ public class ImmediateComponentHolder implements ComponentHolder, SimpleLogger
     {
         this.m_activator = activator;
         this.m_componentMetadata = metadata;
-        this.m_components = new HashMap<String, ImmediateComponentManager>();
+        this.m_components = new HashMap<String, ImmediateComponentManager<S>>();
         this.m_componentMethods = new ComponentMethods();
         this.m_singleComponent = createComponentManager();
         this.m_enabled = false;
     }
 
-    protected ImmediateComponentManager createComponentManager()
+    protected ImmediateComponentManager<S> createComponentManager()
     {
 
-        ImmediateComponentManager manager;
+        ImmediateComponentManager<S> manager;
         if ( m_componentMetadata.isFactory() )
         {
             throw new IllegalArgumentException( "Cannot create component factory for " + m_componentMetadata.getName() );
         }
         else if ( m_componentMetadata.isImmediate() )
         {
-            manager = new ImmediateComponentManager( m_activator, this, m_componentMetadata, m_componentMethods );
+            manager = new ImmediateComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
         }
         else if ( m_componentMetadata.getServiceMetadata() != null )
         {
             if ( m_componentMetadata.getServiceMetadata().isServiceFactory() )
             {
-                manager = new ServiceFactoryComponentManager( m_activator, this, m_componentMetadata, m_componentMethods );
+                manager = new ServiceFactoryComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
             }
             else
             {
-                manager = new DelayedComponentManager( m_activator, this, m_componentMetadata, m_componentMethods );
+                manager = new DelayedComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
             }
         }
         else
