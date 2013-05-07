@@ -115,7 +115,8 @@ public class TestBadLFCCallback extends Common {
     }
 
     private Element getManipulationForComponent() {
-        String header = getTestBundle().getHeaders().get("iPOJO-Components");
+        // On KF we must cast the result.
+        String header = (String) getTestBundle().getHeaders().get("iPOJO-Components");
         Element elem = null;
         try {
             elem = ManifestMetadataParser.parseHeaderMetadata(header);
