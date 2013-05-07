@@ -546,7 +546,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
         // unsatisfied component and non-ignored configuration may change targets
         // to satisfy references
-        if ( getState() == STATE_UNSATISFIED && configuration != null
+        if ( getState() == STATE_UNSATISFIED
                 && !getComponentMetadata().isConfigurationIgnored() )
         {
             log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );

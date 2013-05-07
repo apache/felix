@@ -243,14 +243,13 @@ public class ConfigurationSupport implements ConfigurationListener
             {
                 switch (event.getType()) {
                 case ConfigurationEvent.CM_DELETED:
-                    //TODO fall back to less-strong pid match
                     componentHolder.configurationDeleted(pid.getServicePid());
+                    //fall back to less-strong pid match
+                    configureComponentHolder( componentHolder );
                     break;
 
                 case ConfigurationEvent.CM_UPDATED:
                 {
-                    //TODO what if this is a new config with a stronger (or weaker) binding than 
-                    // an existing matching config?
                     final BundleComponentActivator activator = componentHolder.getActivator();
                     if (activator == null)
                     {
@@ -263,13 +262,23 @@ public class ConfigurationSupport implements ConfigurationListener
                         break;
                     }
 
-                    final Configuration config = getConfiguration( pid, componentHolder, bundleContext );
-                    if ( checkBundleLocation( config, bundleContext.getBundle() ) )
+                    TargetedPID targetedPid = factoryPid == null? pid: factoryPid;
+                    TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID();
+                    if ( targetedPid.equals(oldTargetedPID) || targetedPid.bindsStronger( oldTargetedPID ))
                     {
-                        long changeCount = changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid.getServicePid() ) );
-                        componentHolder.configurationUpdated( pid.getServicePid(), config.getProperties(), changeCount, factoryPid == null? pid: factoryPid );
+                        final Configuration config = getConfiguration( pid, componentHolder, bundleContext );
+                        if ( checkBundleLocation( config, bundleContext.getBundle() ) )
+                        {
+                            //If this is replacing a weaker targetedPID delete the old one.
+                            if ( !targetedPid.equals(oldTargetedPID) && oldTargetedPID != null)
+                            {
+                                componentHolder.configurationDeleted( pid.getServicePid() );
+                            }
+                            long changeCount = changeCounter.getChangeCount( config, true, componentHolder.getChangeCount( pid.getServicePid() ) );
+                            componentHolder.configurationUpdated( pid.getServicePid(), config.getProperties(), changeCount, targetedPid );
+                        }
                     }
-                    
+
                     break;
                 }
                 case ConfigurationEvent.CM_LOCATION_CHANGED:
@@ -287,8 +296,9 @@ public class ConfigurationSupport implements ConfigurationListener
                         break;
                     }
 
+                    TargetedPID targetedPid = factoryPid == null? pid: factoryPid;
                     TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID();
-                    if ( pid.equals(oldTargetedPID))
+                    if ( targetedPid.equals(oldTargetedPID))
                     {
                         //this sets the location to this component's bundle if not already set.  OK here
                         //since it used to be set to this bundle, ok to reset it
@@ -305,7 +315,7 @@ public class ConfigurationSupport implements ConfigurationListener
                         //else still matches
                         break;
                     }
-                    boolean better = pid.bindsStronger( oldTargetedPID );
+                    boolean better = targetedPid.bindsStronger( oldTargetedPID );
                     if ( better )
                     {
                         //this sets the location to this component's bundle if not already set.  OK here
