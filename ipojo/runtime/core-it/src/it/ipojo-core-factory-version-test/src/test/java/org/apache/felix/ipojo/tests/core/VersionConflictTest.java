@@ -37,8 +37,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.*;
-import org.osgi.framework.wiring.BundleWire;
-import org.osgi.framework.wiring.BundleWiring;
 import org.ow2.chameleon.testing.helpers.Stability;
 import org.ow2.chameleon.testing.tinybundles.ipojo.IPOJOStrategy;
 
@@ -189,11 +187,11 @@ public class VersionConflictTest extends Common {
         }
 
         Bundle consBundle = osgiHelper.getBundle("MyCons");
-        BundleWiring wiring = consBundle.adapt(BundleWiring.class);
-        System.out.println("Bundle Wiring req: ");
-        for (BundleWire wire : wiring.getRequiredWires(null)) {
-            System.out.println(wire.getCapability().getAttributes() + " - " + wire.getCapability().getDirectives());
-        }
+//        BundleWiring wiring = consBundle.adapt(BundleWiring.class);
+//        System.out.println("Bundle Wiring req: ");
+//        for (BundleWire wire : wiring.getRequiredWires(null)) {
+//            System.out.println(wire.getCapability().getAttributes() + " - " + wire.getCapability().getDirectives());
+//        }
 
         osgiHelper.waitForService(Architecture.class.getName(), "(architecture.instance=mycons)", 2000);
 
