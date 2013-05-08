@@ -30,7 +30,7 @@ public enum PropertyType {
     Character,
     Boolean,
     Short,
-    Passwort;
+    Password;
 
     public static PropertyType from(final Class<?> javaClass) {
         if ( javaClass.getName().equals(Long.class.getName())) {
