@@ -338,7 +338,7 @@ public class ComponentDescriptorIO {
     protected static void generatePropertyXML(PropertyDescription property, ContentHandler contentHandler) throws SAXException {
         final AttributesImpl ai = new AttributesImpl();
         IOUtils.addAttribute(ai, ATTR_NAME, property.getName());
-        if ( property.getType() != PropertyType.String && property.getType() != PropertyType.Passwort) {
+        if ( property.getType() != PropertyType.String && property.getType() != PropertyType.Password) {
             IOUtils.addAttribute(ai, PROPERTY_ATTR_TYPE, property.getType());
         }
         String value = property.getValue();
