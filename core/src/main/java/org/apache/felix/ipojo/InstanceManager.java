@@ -468,7 +468,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      */
     public void dispose() {
         List listeners = null;
-        int state = -2; // Temporary state
+        int state; // Will be confined in stack.
         synchronized (this) {
             state = m_state; // Stack confinement
             if (m_listeners != null) {

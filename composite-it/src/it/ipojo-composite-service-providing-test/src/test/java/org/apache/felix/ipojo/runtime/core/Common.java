@@ -26,6 +26,9 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.ow2.chameleon.testing.helpers.BaseTest;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Bootstrap the test from this project
  */
@@ -43,5 +46,12 @@ public class Common extends BaseTest {
     @Override
     public boolean deployiPOJOComposite() {
         return true;
+    }
+
+    @Override
+    protected List<String> getExtraExports() {
+        return Arrays.asList(
+                "org.apache.felix.ipojo.runtime.core.components"
+        );
     }
 }

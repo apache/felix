@@ -50,7 +50,7 @@ public class CompositeInstanceDescription extends InstanceDescription {
 
 
     /**
-     * Gets the list of contained instance in the describe instance.
+     * Gets the list of contained instance in the described instance.
      * This list contains only instances who exposed their architecture.
      * @return the list of contained instances.
      */
@@ -58,15 +58,15 @@ public class CompositeInstanceDescription extends InstanceDescription {
         // Get instances description of internal instance
         ServiceContext internal = ((CompositeManager) m_instance).getServiceContext();
         try {
-            ServiceReference[]refs = internal.getServiceReferences(Architecture.class.getName(), null);
+            ServiceReference[] refs = internal.getServiceReferences(Architecture.class.getName(), null);
             if (refs != null) {
-                InstanceDescription[] descs = new InstanceDescription[refs.length];
+                InstanceDescription[] desc = new InstanceDescription[refs.length];
                 for (int i = 0; i < refs.length; i++) {
                     Architecture arch = (Architecture) internal.getService(refs[i]);
-                    descs[i] = arch.getInstanceDescription();
+                    desc[i] = arch.getInstanceDescription();
                     internal.ungetService(refs[i]);
                 }
-                return descs;
+                return desc;
             }
         } catch (InvalidSyntaxException e) {
             // Cannot happen

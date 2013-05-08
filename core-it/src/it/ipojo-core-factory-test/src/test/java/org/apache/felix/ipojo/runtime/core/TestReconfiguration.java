@@ -97,9 +97,9 @@ public class TestReconfiguration extends Common {
         // Wait for the processing of the first configuration.
         grace();
 
-        Assert.assertNull("No architecture", osgiHelper.getServiceReference(Architecture.class.getName(),
-                "(architecture.instance=" + pid + ")"));
-
+        // Due to change in Architecture, the architecture service is still exposed but the instance state is STOPPED.
+        // This was made to ease debugging to dead instances.
+        Assert.assertTrue(ipojoHelper.isInstanceStopped(pid));
 
         // Reconfigure
         props = new Properties();

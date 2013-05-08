@@ -205,6 +205,12 @@
             <artifactId>osgi-helpers</artifactId>
             <version>0.6.1-SNAPSHOT</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -388,7 +394,7 @@
                     <groupId>org.osgi</groupId>
                     <artifactId>org.osgi.core</artifactId>
                     <version>4.3.1</version>
-                    <scope>provided</scope>
+                    <scope>compile</scope>
                 </dependency>
             </dependencies>
         </profile>

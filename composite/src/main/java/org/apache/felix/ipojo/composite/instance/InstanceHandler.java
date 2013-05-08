@@ -197,7 +197,8 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
     public void unbindFactory(Factory factory) {
         boolean implicated = false;
         for (int i = 0; i < m_configurations.length; i++) {
-            if (m_configurations[i].getInstance() != null && m_configurations[i].getFactory().equals(factory.getName())) {
+            if (m_configurations[i].getInstance() != null
+                    && m_configurations[i].getFactory().equals(factory.getName())) {
                 m_configurations[i].setInstance(null);
                 m_configurations[i].setFactory(null);
                 implicated = true;
@@ -340,7 +341,7 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
 
     /**
      * Check handler validity.
-     * The method update the validaity of the handler.
+     * The method updates the validity of the handler.
      */
     private void checkValidity() {
         for (int i = 0; i < m_configurations.length; i++) {
@@ -362,8 +363,9 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
     public void stateChanged(ComponentInstance instance, int newState) {
         switch (newState) {
             case ComponentInstance.DISPOSED:
+                break;  // Should not happen
             case ComponentInstance.STOPPED:
-                break; // Should not happen
+                break;  // Should not happen
             case ComponentInstance.VALID:
                 if (!getValidity()) {
                     checkValidity();
@@ -392,7 +394,8 @@ public class InstanceHandler extends CompositeHandler implements InstanceStateLi
                 if (m_configurations[i].getInstance().getState() == ComponentInstance.VALID) {
                     return ((InstanceManager) m_configurations[i].getInstance()).getPojoObject();
                 } else {
-                    error("An object cannot be get from the instance of the type " + type + ": invalid instance" + m_configurations[i].getInstance().getInstanceDescription().getDescription());
+                    error("An object cannot be get from the instance of the type " + type + ": invalid instance" +
+                            m_configurations[i].getInstance().getInstanceDescription().getDescription());
                     return null;
                 }
             }

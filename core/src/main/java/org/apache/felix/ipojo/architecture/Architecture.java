@@ -27,6 +27,11 @@ package org.apache.felix.ipojo.architecture;
 public interface Architecture {
 
     /**
+     * Architecture service must published this property telling which instance they are representing.
+     */
+    public static final String ARCHITECTURE_INSTANCE = "architecture.instance";
+
+    /**
      * Returns the description of the instance.
      * @return the component instance description
      */

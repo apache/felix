@@ -88,7 +88,8 @@ public class EmptyCompositeTest extends Common {
         CompositeManager cm = (CompositeManager) ci;
         ServiceContext sc = cm.getServiceContext();
         try {
-            assertEquals("Check number of factories imported", sc.getServiceReferences(Factory.class.getName(), null).length, getContext().getServiceReferences(Factory.class.getName(), null).length);
+            assertEquals("Check number of factories imported", sc.getServiceReferences(Factory.class.getName(),
+                    null).length, getContext().getServiceReferences(Factory.class.getName(), null).length);
         } catch (InvalidSyntaxException e) {
             fail("Invalid filter : " + e.getMessage());
         }

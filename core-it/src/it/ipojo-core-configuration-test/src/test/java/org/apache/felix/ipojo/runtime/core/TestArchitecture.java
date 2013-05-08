@@ -29,8 +29,7 @@ import org.junit.Test;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.*;
 import static org.junit.Assert.assertNotNull;
 
 public class TestArchitecture extends Common {
@@ -43,11 +42,6 @@ public class TestArchitecture extends Common {
      * Instance where the ManagedServicePID is provided by the instance.
      */
     ComponentInstance instance2;
-
-    /**
-     * Instance without configuration.
-     */
-    ComponentInstance instance3;
 
     @Before
     public void setUp() {
@@ -116,6 +110,36 @@ public class TestArchitecture extends Common {
         assertEquals(2, hd.getProperties().length);
         assertEquals("instance", hd.getManagedServicePid());
 
+    }
+
+    /**
+     * Test checking the availability of the architecture instance according to the instance state.
+     * The architecture instance is available even in the STOPPED state.
+     */
+    @Test
+    public void testArchitectureServiceAvailability() {
+        String instanceName = instance1.getInstanceName();
+        // Check architecture of instance1
+        Architecture arch = ipojoHelper.getArchitectureByName(instanceName);
+        assertNotNull(arch);
+        assertEquals(ComponentInstance.VALID, arch.getInstanceDescription().getState());
+
+        // We stop the instance
+        instance1.stop();
+        arch = ipojoHelper.getArchitectureByName(instanceName);
+        assertNotNull(arch);
+        assertEquals(ComponentInstance.STOPPED, arch.getInstanceDescription().getState());
+
+        // Restart.
+        instance1.start();
+        arch = ipojoHelper.getArchitectureByName(instanceName);
+        assertNotNull(arch);
+        assertEquals(ComponentInstance.VALID, arch.getInstanceDescription().getState());
+
+        // Disposal
+        instance1.dispose();
+        arch = ipojoHelper.getArchitectureByName(instanceName);
+        assertNull(arch);
     }
 
 

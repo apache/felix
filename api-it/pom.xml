@@ -195,6 +195,12 @@
             <artifactId>org.apache.felix.ipojo.handler.whiteboard</artifactId>
             <version>1.4.0</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

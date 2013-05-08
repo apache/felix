@@ -38,8 +38,6 @@
 	<handler
 		classname="org.apache.felix.ipojo.composite.architecture.ArchitectureHandler"
 		name="architecture" type="composite" architecture="false">
-		<provides>
-			<property field="m_name" name="architecture.instance"/>
-		</provides>
+		<!-- the architecture service is published by the handler manually -->
 	</handler>
 </ipojo>
