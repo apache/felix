@@ -20,6 +20,7 @@ package org.apache.felix.ipojo.arch.gogo;
 
 import static java.lang.String.format;
 
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -87,12 +88,21 @@ public class Arch {
     @Requires(optional = true)
     private HandlerFactory[] m_handlers;
 
+    /**
+     * The instance declaration services.
+     */
     @Requires(optional = true)
     private InstanceDeclaration[] m_instances;
 
+    /**
+     * The type declaration services.
+     */
     @Requires(optional = true)
     private TypeDeclaration[] m_types;
 
+    /**
+     * The extension declaration services.
+     */
     @Requires(optional = true)
     private ExtensionDeclaration[] m_extensions;
 
@@ -147,30 +157,40 @@ public class Arch {
      */
     @Descriptor("Display the architecture of a specific instance")
     public void instance(@Descriptor("target instance name") String instance) {
+
+        StringBuilder sb = new StringBuilder();
+
         for (Architecture m_arch : m_archs) {
             InstanceDescription id = m_arch.getInstanceDescription();
             if (id.getName().equalsIgnoreCase(instance)) {
-                System.out.println(id.getDescription());
-                return;
+                sb.append(id.getDescription());
+                sb.append('\n');
             }
         }
 
         for (InstanceDeclaration instanceDeclaration : m_instances) {
             if (!instanceDeclaration.getStatus().isBound()) {
                 if (instance.equals(name(instanceDeclaration.getConfiguration()))) {
-                    System.out.println(format("Instance %s not bound to its factory%n", instance));
-                    System.out.println(format(" type: %s%n", instanceDeclaration.getComponentName()));
-                    System.out.println(format(" -> %s%n", instanceDeclaration.getStatus().getMessage()));
+                    sb.append(format("InstanceDeclaration %s not bound to its factory%n", instance));
+                    sb.append(format(" type: %s%n", instanceDeclaration.getComponentName()));
+                    sb.append(format(" reason: %s%n", instanceDeclaration.getStatus().getMessage()));
                     Throwable throwable = instanceDeclaration.getStatus().getThrowable();
                     if (throwable != null) {
-                        throwable.printStackTrace(System.out);
+                        ByteArrayOutputStream os = new ByteArrayOutputStream();
+                        throwable.printStackTrace(new PrintStream(os));
+                        sb.append(" throwable: ");
+                        sb.append(os.toString());
                     }
-                    return;
                 }
             }
         }
 
-        System.err.println("Instance " + instance + " not found");
+        if (sb.length() == 0) {
+            System.err.printf("Instance named '%s' not found", instance);
+        } else {
+            System.out.print(sb);
+        }
+
     }
     
     /**
@@ -215,9 +235,10 @@ public class Arch {
             if (!type.getStatus().isBound()) {
                 // Unbound: maybe private or public type
                 System.out.printf("Factory %s is not bound%n", type.getComponentName());
-                System.out.printf("  -> %s%n", type.getStatus().getMessage());
+                System.out.printf("  reason: %s%n", type.getStatus().getMessage());
                 Throwable throwable = type.getStatus().getThrowable();
                 if (throwable != null) {
+                    System.out.print("  throwable: ");
                     throwable.printStackTrace(System.out);
                 }
             } else {
