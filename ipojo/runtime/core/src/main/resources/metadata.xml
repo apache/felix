@@ -40,8 +40,6 @@
     <handler
             classname="org.apache.felix.ipojo.handlers.architecture.ArchitectureHandler"
             name="architecture" architecture="false">
-        <provides specifications="org.apache.felix.ipojo.architecture.Architecture">
-            <property field="m_name" name="architecture.instance"/>
-        </provides>
+            <!-- The architecture service is published by the handler manually -->
     </handler>
 </ipojo>

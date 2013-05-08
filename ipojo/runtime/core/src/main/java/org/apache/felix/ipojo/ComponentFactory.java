@@ -179,11 +179,13 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
             return instance;
         } catch (ConfigurationException e) {
             // An exception occurs while executing the configure or start
-            // methods.
-            instance.dispose();
+            // methods, the instance is stopped so the architecture service is still published and so we can debug
+            // the issue.
+            instance.stop();
             throw e;
         } catch (Throwable e) { // All others exception are handled here.
-            instance.dispose();
+            // As for the previous case, the instance is stopped.
+            instance.stop();
             m_logger.log(Logger.ERROR, e.getMessage(), e);
             throw new ConfigurationException(e.getMessage(), e);
         }

@@ -189,7 +189,7 @@ public class InstanceDescription implements InstanceStateListener {
      * @see org.apache.felix.ipojo.InstanceStateListener#stateChanged(org.apache.felix.ipojo.ComponentInstance, int)
      */
     public synchronized void stateChanged(ComponentInstance instance, int newState) {
-        notifyAll(); // if we was in a transition, the transition is now done.
+        notifyAll(); // if we were in a transition, the transition has completed.
     }
 
 }
