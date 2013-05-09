@@ -52,7 +52,7 @@ public class IPojoTask extends Task {
 
     /**
      * Flag describing if we need or not use local XSD files
-     * (i.e. use the {@link SchemaResolver} or not).
+     * (i.e. use the {@link org.apache.felix.ipojo.xml.parser.SchemaResolver} or not).
      * If <code>true</code> the local XSD are not used.
      */
     private boolean m_ignoreLocalXSD = false;
