@@ -115,7 +115,7 @@ public class ScrConfiguration
         props.put(Constants.SERVICE_PID, PID);
         props.put(Constants.SERVICE_DESCRIPTION, "SCR Configurator");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
+        managedService = bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
             props);
     }
 

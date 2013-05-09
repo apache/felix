@@ -22,6 +22,8 @@ package org.apache.felix.scr.impl.helper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -109,7 +111,7 @@ abstract class BaseMethod
     }
 
 
-    synchronized void setMethod( Method method, SimpleLogger logger )
+    void setMethod( Method method, SimpleLogger logger )
     {
         this.m_method = method;
 
@@ -162,8 +164,9 @@ abstract class BaseMethod
         final Class targetClass = getComponentClass();
         final ClassLoader targetClasslLoader = targetClass.getClassLoader();
         final String targetPackage = getPackageName( targetClass );
+        Class theClass = targetClass;
 
-        for ( Class theClass = targetClass; theClass != null; )
+        while (true) 
         {
 
             if ( logger.isLogEnabled( LogService.LOG_DEBUG ) )
@@ -402,7 +405,7 @@ abstract class BaseMethod
      * @param allowReturnValue whether the method can return a value (to update service registration properties)
      * @return whether the method is acceptable
      */
-    static boolean accept( Method method, boolean acceptPrivate, boolean acceptPackage, boolean allowReturnValue )
+    static boolean accept( final Method method, boolean acceptPrivate, boolean acceptPackage, boolean allowReturnValue )
     {
         if (!(Void.TYPE == method.getReturnType() || (MAP_CLASS == method.getReturnType() && allowReturnValue)))
         {
@@ -421,7 +424,7 @@ abstract class BaseMethod
         // accept public and protected methods
         if ( Modifier.isPublic( mod ) || Modifier.isProtected( mod ) )
         {
-            method.setAccessible( true );
+            setAccessible( method );
             return true;
         }
 
@@ -430,7 +433,7 @@ abstract class BaseMethod
         {
             if ( acceptPrivate )
             {
-                method.setAccessible( acceptPrivate );
+                setAccessible( method );
                 return true;
             }
 
@@ -440,12 +443,25 @@ abstract class BaseMethod
         // accept default (package)
         if ( acceptPackage )
         {
-            method.setAccessible( true );
+            setAccessible( method );
             return true;
         }
 
         // else don't accept
         return false;
+    }
+
+
+    private static void setAccessible(final Method method)
+    {
+        AccessController.doPrivileged( new PrivilegedAction<Object>()
+        {
+            public Object run()
+            {
+                method.setAccessible( true );
+                return null;
+            }
+        } );
     }
 
 
@@ -539,20 +555,19 @@ abstract class BaseMethod
         private static final State INSTANCE = new NotResolved();
 
 
-        private void resolve( final BaseMethod baseMethod, SimpleLogger logger )
+        private synchronized void resolve( final BaseMethod baseMethod, SimpleLogger logger )
         {
             logger.log( LogService.LOG_DEBUG, "getting {0}: {1}", new Object[]
                     {baseMethod.getMethodNamePrefix(), baseMethod.getMethodName()}, null );
 
             // resolve the method
-            Method method;
+            Method method = null;
             try
             {
                 method = baseMethod.findMethod( logger );
             }
             catch ( InvocationTargetException ex )
             {
-                method = null;
                 logger.log( LogService.LOG_WARNING, "{0} cannot be found", new Object[]
                         {baseMethod.getMethodName()}, ex.getTargetException() );
             }

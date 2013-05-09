@@ -325,7 +325,7 @@ public class BundleComponentActivator implements Logger
         m_active = false;
 
         log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] will destroy {1} instances", new Object[]
-            { new Long( m_context.getBundle().getBundleId() ), new Integer( m_managers.size() ) }, null, null, null );
+            { m_context.getBundle().getBundleId(), m_managers.size() }, null, null, null );
 
         while ( m_managers.size() != 0 )
         {
