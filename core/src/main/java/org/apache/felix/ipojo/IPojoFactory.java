@@ -41,7 +41,7 @@ import java.util.*;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
+public abstract class IPojoFactory implements Factory {
     /*
      * TODO there is potentially an issue when calling FactoryStateListener callbacks with the lock
      * It should be called by a separate thread dispatching events to listeners.
@@ -155,6 +155,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         // Compute the component type version.
         String version = metadata.getAttribute("version");
         if ("bundle".equalsIgnoreCase(version)) { // Handle the "bundle" constant: use the bundle version.
+            // The cast is necessary in KF.
             m_version = (String) m_context.getBundle().getHeaders().get(Constants.BUNDLE_VERSION);
         } else {
             m_version = version;
@@ -253,7 +254,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
             configuration = new Properties();
         }
 
-        IPojoContext context = null;
+        IPojoContext context;
         if (serviceContext == null) {
             context = new IPojoContext(m_context);
         } else {
@@ -307,7 +308,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
             m_componentInstances.put(name, instance);
             m_logger.log(Logger.INFO, "Instance " + name + " from factory " + m_factoryName + " created");
             // Register the instance on the ConfigurationTracker to be updated if needed.
-            ConfigurationTracker.get().instanceCreated(this, instance);
+            ConfigurationTracker.get().instanceCreated(instance);
             return instance;
         } catch (ConfigurationException e) {
             INSTANCE_NAME.remove(name);
@@ -552,7 +553,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         instances = new ComponentInstance[col.size()]; // Stack confinement
         int index = 0;
         while (it.hasNext()) {
-            instances[index] = (ComponentInstance) (m_componentInstances.get(it.next()));
+            instances[index] = m_componentInstances.get(it.next());
             index++;
         }
 
@@ -631,9 +632,6 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
             m_sr =
                     bc.registerService(m_componentDesc.getFactoryInterfacesToPublish(), this, m_componentDesc
                             .getPropertiesToPublish());
-
-            // Register the factory on the ConfigurationTracker
-            ConfigurationTracker.get().registerFactory(this);
         }
 
         m_logger.log(Logger.INFO, "Factory " + m_factoryName + " started");
@@ -659,13 +657,12 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
 
     /**
      * Creates or updates an instance.
+     * This method is used from the configuration tracker.
      * @param name the name of the instance
      * @param properties the new configuration of the instance
-     * @throws org.osgi.service.cm.ConfigurationException if the configuration is not consistent for this component type
-     * @see org.osgi.service.cm.ManagedServiceFactory#updated(java.lang.String, java.util.Dictionary)
-     * TODO this method should disappear.
      */
-    public void updated(String name, Dictionary properties) throws org.osgi.service.cm.ConfigurationException {
+    public void updated(String name, Dictionary properties) throws org.osgi.service.cm
+            .ConfigurationException {
         ComponentInstance instance;
         synchronized (this) {
             instance = m_componentInstances.get(name);
@@ -703,12 +700,10 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
     /**
      * Deletes an instance.
      * @param name the name of the instance to delete
-     * @see org.osgi.service.cm.ManagedServiceFactory#deleted(java.lang.String)
-     * todo this method should disappear.
      */
     public synchronized void deleted(String name) {
         INSTANCE_NAME.remove(name);
-        ComponentInstance instance = (ComponentInstance) m_componentInstances.remove(name);
+        ComponentInstance instance = m_componentInstances.remove(name);
         if (instance != null) {
             instance.dispose();
         }
@@ -737,7 +732,6 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
     protected void computeDescription() {
         for (RequiredHandler req : m_requiredHandlers) {
             if (getHandler(req, null) == null) {
-                // TODO this does not really looks good.
                 m_logger.log(Logger.ERROR, "Cannot extract handler object from " + m_factoryName + " " + req
                         .getFullName());
             } else {
@@ -785,6 +779,10 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
                 if (m_sr != null) {
                     m_sr.setProperties(m_componentDesc.getPropertiesToPublish());
                 }
+
+                // Register the factory on the ConfigurationTracker
+                ConfigurationTracker.get().registerFactory(this);
+
                 for (FactoryStateListener listener : m_listeners) {
                     listener.stateChanged(this, VALID);
                 }
@@ -792,6 +790,9 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         } else {
             if (m_state == VALID) {
                 m_state = INVALID;
+
+                // Un-register the factory on the ConfigurationTracker
+                ConfigurationTracker.get().unregisterFactory(this);
 
                 // Notify listeners.
                 for (FactoryStateListener listener : m_listeners) {
@@ -825,7 +826,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
      * @param ref the service reference.
      * @return <code>true</code> if the service reference can fulfill the handler requirement
      */
-    protected boolean match(RequiredHandler req, ServiceReference<? extends Object> ref) {
+    protected boolean match(RequiredHandler req, ServiceReference<?> ref) {
         String name = (String) ref.getProperty(Handler.HANDLER_NAME_PROPERTY);
         String namespace = (String) ref.getProperty(Handler.HANDLER_NAMESPACE_PROPERTY);
         if (HandlerFactory.IPOJO_NAMESPACE.equals(namespace)) {
@@ -895,7 +896,7 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
         /**
          * The Service Reference of the handler factory.
          */
-        private ServiceReference m_reference;
+        private ServiceReference<? extends HandlerFactory> m_reference;
 
         /**
          * Crates a Required Handler.
@@ -998,11 +999,11 @@ public abstract class IPojoFactory implements Factory, ManagedServiceFactory {
          * This method is called with the lock on the current factory.
          * @param ref the new service reference.
          */
-        public void setReference(ServiceReference ref) {
+        public void setReference(ServiceReference<? extends HandlerFactory> ref) {
             m_reference = ref;
             Integer level = (Integer) m_reference.getProperty(Handler.HANDLER_LEVEL_PROPERTY);
             if (level != null) {
-                m_level = level.intValue();
+                m_level = level;
             }
         }
 
