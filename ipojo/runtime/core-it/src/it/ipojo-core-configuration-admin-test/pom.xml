@@ -34,12 +34,4 @@
     <artifactId>ipojo-core-configuration-admin-test</artifactId>
     <name>${project.artifactId}</name>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>1.2.8</version>
-        </dependency>
-    </dependencies>
-
 </project>
