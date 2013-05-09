@@ -108,7 +108,6 @@ public class ConfigurationSupport implements ConfigurationListener
         if (!holder.getComponentMetadata().isConfigurationIgnored())
         {
             final BundleContext bundleContext = holder.getActivator().getBundleContext();
-            final String bundleLocation = bundleContext.getBundle().getLocation();
             final String confPid = holder.getComponentMetadata().getConfigurationPid();
 
             final ServiceReference caRef = bundleContext.getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
@@ -159,7 +158,6 @@ public class ConfigurationSupport implements ConfigurationListener
                                     + "ours. This happens if multiple Configuration Admin API versions "
                                     + "are deployed and different bundles wire to different versions", null );
 
-                            Class<?> caoc = cao.getClass();
                         }
                     }
                     finally
@@ -462,50 +460,7 @@ public class ConfigurationSupport implements ConfigurationListener
             }
         }
         return confInfo;
-    }
-    
-    private ConfigurationAdmin getConfigurationAdmin(BundleContext bundleContext)
-    {
-        final ServiceReference caRef = bundleContext
-                .getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
-            if (caRef != null)
-            {
-                try
-                {
-                    final Object cao = bundleContext.getService(caRef);
-                    if (cao != null)
-                    {
-                        try
-                        {
-                            if ( cao instanceof ConfigurationAdmin )
-                            {
-                                return ( ConfigurationAdmin ) cao;
-                            }
-                            else
-                            {
-                                Activator.log( LogService.LOG_WARNING, null,
-                                    "Component Bundle's Configuration Admin is not compatible with " +
-                                    "ours. This happens if multiple Configuration Admin API versions " +
-                                    "are deployed and different bundles wire to different versions",
-                                    null );
-                            }
-                        }
-                        finally
-                        {
-                            bundleContext.ungetService( caRef );
-                        }
-                    }
-                }
-                catch (IllegalStateException ise)
-                {
-                    // If the bundle has been stopped concurrently
-                    Activator.log(LogService.LOG_WARNING, null, "Bundle in unexpected state",
-                        ise);
-                }
-            }
-            return null;
-       
-    }
+    }    
 
     private Configuration getConfiguration(final ConfigurationAdmin ca, final String pid)
     {

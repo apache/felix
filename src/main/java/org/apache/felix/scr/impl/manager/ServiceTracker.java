@@ -203,7 +203,7 @@ public class ServiceTracker<S, T> {
 		this.trackClass = clazz;
 		this.customizer = customizer;
 		// we call clazz.toString to verify clazz is non-null!
-		this.listenerFilter = "(" + Constants.OBJECTCLASS + "=" + clazz.toString() + ")";
+		this.listenerFilter = "(" + Constants.OBJECTCLASS + "=" + clazz + ")";
 		try {
 			this.filter = context.createFilter(listenerFilter);
 		} catch (InvalidSyntaxException e) {
@@ -243,11 +243,11 @@ public class ServiceTracker<S, T> {
 		this.filter = filter;
 		this.customizer = customizer;
 		this.active = initialActive;
-		if ((context == null) || (filter == null)) {
+		if ((context == null)) {
 			/*
 			 * we throw a NPE here to be consistent with the other constructors
 			 */
-			throw new NullPointerException();
+			throw new NullPointerException( "BundleContext");
 		}
 	}
 
@@ -1440,6 +1440,9 @@ public class ServiceTracker<S, T> {
 					 * safe to let it propagate
 					 */
 					break;
+				default :
+	                System.out.println("Unrecognized event type: ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: " + reference);
+				    
 			}
 		}
 

@@ -55,10 +55,10 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     private static BundleContext m_context;
 
     // the log service to log messages to
-    private static ServiceTracker m_logService;
+    private static volatile ServiceTracker m_logService;
 
     // the package admin service (see BindMethod.getParameterClass)
-    private static ServiceTracker m_packageAdmin;
+    private static volatile ServiceTracker m_packageAdmin;
 
     // map of BundleComponentActivator instances per Bundle indexed by Bundle id
     private Map<Long, BundleComponentActivator> m_componentBundles;

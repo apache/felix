@@ -119,7 +119,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
      * {@link #registerComponentId(AbstractComponentManager)} method. This
      * counter is only incremented.
      */
-    private volatile long m_componentCounter;
+    private long m_componentCounter = -1;
 
     /**
      * The OSGi service registration for the ScrService provided by this
@@ -139,7 +139,6 @@ public class ComponentRegistry implements ScrService, ServiceListener
         m_componentHoldersByName = new HashMap<ComponentRegistryKey, ComponentHolder>();
         m_componentHoldersByPid = new HashMap<String, Set<ComponentHolder>>();
         m_componentsById = new HashMap<Long, AbstractComponentManager<?>>();
-        m_componentCounter = -1;
 
         // keep me informed on ConfigurationAdmin state changes
         try
@@ -193,7 +192,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
         ArrayList<Component> list = new ArrayList<Component>();
         for ( ComponentHolder holder: holders )
         {
-            if ( holders != null )
+            if ( holder != null )
             {
                 Component[] components = holder.getComponents();
                 for ( Component component: components )
@@ -247,7 +246,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
     {
         synchronized ( m_componentsById )
         {
-            return m_componentsById.get( new Long( componentId ) );
+            return m_componentsById.get( componentId );
         }
     }
 
@@ -286,10 +285,9 @@ public class ComponentRegistry implements ScrService, ServiceListener
         long componentId;
         synchronized ( m_componentsById )
         {
-            m_componentCounter++;
-            componentId = m_componentCounter;
+            componentId = ++m_componentCounter;
 
-            m_componentsById.put( new Long( componentId ), componentManager );
+            m_componentsById.put( componentId, componentManager );
         }
 
         return componentId;
@@ -431,19 +429,10 @@ public class ComponentRegistry implements ScrService, ServiceListener
      */
     public final ComponentHolder getComponentHolder( final Bundle bundle, final String name )
     {
-        ComponentHolder entry;
         synchronized ( m_componentHoldersByName )
         {
-            entry = m_componentHoldersByName.get( new ComponentRegistryKey( bundle, name ) );
+            return m_componentHoldersByName.get( new ComponentRegistryKey( bundle, name ) );
         }
-
-        // only return the entry if non-null and not a reservation
-        if ( entry instanceof ComponentHolder )
-        {
-            return ( ComponentHolder ) entry;
-        }
-
-        return null;
     }
 
     /**

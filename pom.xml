@@ -412,6 +412,20 @@
         </plugins>
     </build>
 
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>2.5.2</version>
+				<configuration>
+					<effort>Max</effort>
+					<threshold>Low</threshold>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
+
     <profiles>
         <!--
             copy the package such that IDEs may easily use it without

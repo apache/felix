@@ -108,16 +108,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     private final Object enabledLatchLock = new Object();
 
     protected volatile boolean m_internalEnabled;
-    /**
-     * synchronizing while creating the service registration is safe as long as the bundle is not stopped
-     * during some service registrations.  So, avoid synchronizing during unregister service if the component is being
-     * disposed.
-     */
-    private volatile boolean disposed;
-
 
     //service event tracking
-    private volatile int floor;
+    private int floor;
 
     private volatile int ceiling;
 
@@ -153,9 +146,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 LogService.LOG_DEBUG,
                 "Component {0} created: DS={1}, implementation={2}, immediate={3}, default-enabled={4}, factory={5}, configuration-policy={6}, activate={7}, deactivate={8}, modified={9} configuration-pid={10}",
                 new Object[]
-                    { metadata.getName(), new Integer( metadata.getNamespaceCode() ),
-                        metadata.getImplementationClassName(), Boolean.valueOf( metadata.isImmediate() ),
-                        Boolean.valueOf( metadata.isEnabled() ), metadata.getFactoryIdentifier(),
+                    { metadata.getName(), metadata.getNamespaceCode(),
+                        metadata.getImplementationClassName(), metadata.isImmediate(),
+                        metadata.isEnabled(), metadata.getFactoryIdentifier(),
                         metadata.getConfigurationPolicy(), metadata.getActivate(), metadata.getDeactivate(),
                         metadata.getModified(), metadata.getConfigurationPid() }, null );
 
@@ -527,7 +520,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     public void dispose( int reason )
     {
-        disposed = true;
         disposeInternal( reason );
     }
     
@@ -1054,19 +1046,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return depMgrList;
     }
 
-    private void enableDependencyManagers() throws InvalidSyntaxException
-    {
-        if ( !m_componentMetadata.isConfigurationRequired() || hasConfiguration() )
-        {
-            updateTargets( getProperties() );
-        }
-    }
-
-    protected void updateTargets(Dictionary properties)
+    protected void updateTargets(Dictionary<String, Object> properties)
     {
         if ( m_internalEnabled )
         {
-            for ( DependencyManager dm: getDependencyManagers() )
+            for ( DependencyManager<S, ?> dm: getDependencyManagers() )
             {
                 dm.setTargetFilter( properties );
             }
@@ -1078,7 +1062,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         // indicates whether all dependencies are satisfied
         boolean satisfied = true;
 
-        for ( DependencyManager dm: getDependencyManagers() )
+        for ( DependencyManager<S, ?> dm: getDependencyManagers() )
         {
 
             if ( !dm.hasGetPermission() )

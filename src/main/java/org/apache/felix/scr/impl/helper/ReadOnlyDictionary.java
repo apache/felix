@@ -38,26 +38,26 @@ import org.osgi.framework.ServiceReference;
 public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S, T>
 {
 
-    private final Hashtable<S, T> m_delegatee;
+    private final Hashtable<S, T> m_delegate;
 
 
     /**
-     * Creates a wrapper for the given delegatee dictionary providing read
+     * Creates a wrapper for the given delegate dictionary providing read
      * only access to the data.
      */
-    public ReadOnlyDictionary( final Dictionary<S, T> delegatee )
+    public ReadOnlyDictionary( final Dictionary<S, T> delegate )
     {
-        if ( delegatee instanceof Hashtable )
+        if ( delegate instanceof Hashtable )
         {
-            this.m_delegatee = ( Hashtable<S, T> ) delegatee;
+            this.m_delegate = ( Hashtable<S, T> ) delegate;
         }
         else
         {
-            this.m_delegatee = new Hashtable<S, T>();
-            for ( Enumeration<S> ke = delegatee.keys(); ke.hasMoreElements(); )
+            this.m_delegate = new Hashtable<S, T>();
+            for ( Enumeration<S> ke = delegate.keys(); ke.hasMoreElements(); )
             {
                 S key = ke.nextElement();
-                this.m_delegatee.put( key, delegatee.get( key ) );
+                this.m_delegate.put( key, delegate.get( key ) );
             }
         }
     }
@@ -79,7 +79,7 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S,
                 properties.put( key, serviceReference.getProperty( key ) );
             }
         }
-        m_delegatee = properties;
+        m_delegate = properties;
     }
 
 
@@ -87,24 +87,24 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S,
 
     public Enumeration<T> elements()
     {
-        return m_delegatee.elements();
+        return m_delegate.elements();
     }
 
     public T get( final Object key )
     {
-        return m_delegatee.get( key );
+        return m_delegate.get( key );
     }
 
 
     public boolean isEmpty()
     {
-        return m_delegatee.isEmpty();
+        return m_delegate.isEmpty();
     }
 
 
     public Enumeration<S> keys()
     {
-        return m_delegatee.keys();
+        return m_delegate.keys();
     }
 
 
@@ -130,13 +130,13 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S,
 
     public int size()
     {
-        return m_delegatee.size();
+        return m_delegate.size();
     }
 
 
     public String toString()
     {
-        return m_delegatee.toString();
+        return m_delegate.toString();
     }
 
 
@@ -150,25 +150,25 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S,
 
     public boolean containsKey( Object key )
     {
-        return m_delegatee.containsKey( key );
+        return m_delegate.containsKey( key );
     }
 
 
     public boolean containsValue( Object value )
     {
-        return m_delegatee.containsValue( value );
+        return m_delegate.containsValue( value );
     }
 
 
     public Set entrySet()
     {
-        return Collections.unmodifiableSet( m_delegatee.entrySet() );
+        return Collections.unmodifiableSet( m_delegate.entrySet() );
     }
 
 
     public Set keySet()
     {
-        return Collections.unmodifiableSet( m_delegatee.keySet() );
+        return Collections.unmodifiableSet( m_delegate.keySet() );
     }
 
 
@@ -180,6 +180,6 @@ public class ReadOnlyDictionary<S, T> extends Dictionary<S, T> implements Map<S,
 
     public Collection values()
     {
-        return Collections.unmodifiableCollection( m_delegatee.values() );
+        return Collections.unmodifiableCollection( m_delegate.values() );
     }
 }

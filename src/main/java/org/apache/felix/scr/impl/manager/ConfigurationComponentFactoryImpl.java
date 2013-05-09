@@ -49,7 +49,7 @@ import org.osgi.service.log.LogService;
  * with earlier releases of the Apache Felix Declarative Services implementation.
  * But keep in mind, that this is non-standard behaviour.
  */
-public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S> implements ComponentHolder
+public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S>
 {
 
     /**
@@ -57,7 +57,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
      * {@link org.apache.felix.scr.impl.manager.ImmediateComponentManager} for configuration updating this map is
      * lazily created.
      */
-    private Map<String, ImmediateComponentManager<S>> m_configuredServices;
+    private final Map<String, ImmediateComponentManager<S>> m_configuredServices = new HashMap<String, ImmediateComponentManager<S>>();
 
     public ConfigurationComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
@@ -92,13 +92,14 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
      * configuration instances are to disabled as a consequence of deactivating
      * the component factory.
      */
+    @Override
     protected void deleteComponent( int reason )
     {
-        List cms = new ArrayList( );
+        List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>( );
         getComponentManagers( m_configuredServices, cms );
-        for ( Iterator i = cms.iterator(); i.hasNext(); )
+        for ( AbstractComponentManager<S> cm: cms )
         {
-            ((AbstractComponentManager)i.next()).disable();
+            cm.disable();
         }
     }
 
@@ -113,21 +114,17 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
         }
         else
         {
-            Map configuredServices = m_configuredServices;
-            if ( configuredServices != null )
+            ImmediateComponentManager<S> cm;
+            synchronized ( m_configuredServices )
             {
-                ImmediateComponentManager cm;
-                synchronized ( configuredServices )
-                {
-                    cm = ( ImmediateComponentManager ) configuredServices.remove( pid );
-                }
+                cm = m_configuredServices.remove( pid );
+            }
 
-                if ( cm != null )
-                {
-                    log( LogService.LOG_DEBUG, "Disposing component after configuration deletion", null );
+            if ( cm != null )
+            {
+                log( LogService.LOG_DEBUG, "Disposing component after configuration deletion", null );
 
-                    cm.dispose();
-                }
+                cm.dispose();
             }
         }
     }
@@ -142,16 +139,9 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
         else   //non-spec backwards compatible
         {
             ImmediateComponentManager<S> cm;
-            Map<String, ImmediateComponentManager<S>> configuredServices = m_configuredServices;
-            if ( configuredServices != null )
+            synchronized ( m_configuredServices )
             {
-                cm = configuredServices.get( pid );
-            }
-            else
-            {
-                m_configuredServices = new HashMap<String, ImmediateComponentManager<S>>();
-                configuredServices = m_configuredServices;
-                cm = null;
+                cm = m_configuredServices.get( pid );
             }
 
             if ( cm == null )
@@ -169,8 +159,11 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
                     cm.enable( false );
                 }
 
-                // keep a reference for future updates
-                configuredServices.put( pid, cm );
+                synchronized ( m_configuredServices )
+                {
+                    // keep a reference for future updates
+                    m_configuredServices.put( pid, cm );
+                }
 
             }
             else
@@ -207,7 +200,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
             acm.dispose( reason );
         }
 
-        m_configuredServices = null;
+        m_configuredServices.clear();
 
         // finally dispose the component factory itself
         dispose( reason );
@@ -220,12 +213,11 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
         {
             return m_changeCount;
         }
-        if (m_configuredServices == null)
+        synchronized ( m_configuredServices )
         {
-            return -1;
+            ImmediateComponentManager icm = m_configuredServices.get( pid );
+            return icm == null? -1: icm.getChangeCount();
         }
-        ImmediateComponentManager icm =  m_configuredServices.get( pid );
-        return icm == null? -1: icm.getChangeCount();
     }
 
 

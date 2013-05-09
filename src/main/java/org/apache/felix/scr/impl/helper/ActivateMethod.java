@@ -129,7 +129,7 @@ public class ActivateMethod extends BaseMethod
             }
             else if ( parameterTypes[i] == INTEGER_CLASS || parameterTypes[i] == Integer.TYPE )
             {
-                param[i] = new Integer( ap.getReason() );
+                param[i] = ap.getReason();
             }
         }
 

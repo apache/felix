@@ -225,7 +225,7 @@ public class PropertyMetadata {
             // For Character types, the conversion is handled by Integer.valueOf method.
             // (since valueOf is defined in terms of parseInt we directly call
             // parseInt to prevent unneeded Object creation)
-            return new Character( ( char ) Integer.parseInt( value ) );
+            return Character.valueOf( ( char ) Integer.parseInt( value ) );
         }
         else if ( m_type.equals( "Boolean" ) )
         {
