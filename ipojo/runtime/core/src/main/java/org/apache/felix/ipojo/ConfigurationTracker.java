@@ -23,10 +23,7 @@ import org.apache.felix.ipojo.extender.internal.Extender;
 import org.apache.felix.ipojo.util.Log;
 import org.apache.felix.ipojo.util.Logger;
 import org.apache.felix.ipojo.util.ServiceLocator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.*;
 import org.osgi.service.cm.*;
 import org.osgi.service.cm.ConfigurationException;
 
@@ -108,7 +105,7 @@ public class ConfigurationTracker implements ConfigurationListener {
         }
     }
 
-    public synchronized void instanceCreated(IPojoFactory factory, ComponentInstance instance) {
+    public synchronized void instanceCreated(ComponentInstance instance) {
         ServiceLocator<ConfigurationAdmin> locator = new ServiceLocator<ConfigurationAdmin>(ConfigurationAdmin
                 .class, m_context);
         final ConfigurationAdmin admin = locator.get();
@@ -171,7 +168,7 @@ public class ConfigurationTracker implements ConfigurationListener {
                     break;
                 }
                 final Configuration config = getConfiguration(admin, event.getPid(),
-                        factory.getBundleContext().getBundle().getLocation());
+                        factory.getBundleContext().getBundle());
                 if (config != null) {
                     try {
                         factory.updated(event.getPid(), config.getProperties());
@@ -202,7 +199,7 @@ public class ConfigurationTracker implements ConfigurationListener {
                     break;
                 }
                 final Configuration config = getConfiguration(admin, event.getPid(),
-                        instance.getFactory().getBundleContext().getBundle().getLocation());
+                        instance.getFactory().getBundleContext().getBundle());
                 if (config != null) {
                     Hashtable<String, Object> conf = copyConfiguration(config);
                     if (!conf.containsKey(Factory.INSTANCE_NAME_PROPERTY)) {
@@ -257,7 +254,7 @@ public class ConfigurationTracker implements ConfigurationListener {
     }
 
     private Configuration getConfiguration(final ConfigurationAdmin admin, final String pid,
-                                           final String bundleLocation) {
+                                           final Bundle bundle) {
         if (admin == null) {
             return null;
         }
@@ -266,20 +263,14 @@ public class ConfigurationTracker implements ConfigurationListener {
             // Even if it is possible, we don't build the filter with bundle.location to detect the case where the
             // configuration exists but can't be managed by iPOJO.
             final Configuration cfg = admin.getConfiguration(pid);
-
-            if (bundleLocation.equals(cfg.getBundleLocation())) {
+            final String bundleLocation = bundle.getLocation();
+            if (cfg.getBundleLocation() == null || bundleLocation.equals(cfg.getBundleLocation())) {
                 return cfg;
             }
 
-            // Multi-location with only ?
-            if (cfg.getBundleLocation().equals("?")) {
-                return cfg;
-            }
-
-            // Multi-location specifying the pid
+            // Multi-location
             if (cfg.getBundleLocation().startsWith("?")) {
-                String sn = cfg.getBundleLocation().substring(1); // Remove ?
-                if (sn.equals(pid)) {
+                if (bundle.hasPermission(new ConfigurationPermission(cfg.getBundleLocation(), "target"))) {
                     return cfg;
                 }
             }
@@ -329,4 +320,5 @@ public class ConfigurationTracker implements ConfigurationListener {
         }
         return configurations;
     }
+
 }
