@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.task;
 
 import org.apache.commons.cli.*;
 import org.apache.felix.ipojo.manipulator.Pojoization;
+import org.apache.felix.ipojo.manipulator.util.Constants;
 
 import java.io.File;
 import java.util.List;
@@ -169,7 +170,7 @@ public class IPojoc {
      */
     private static void printHelp() {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("ipojoc", options);
+        formatter.printHelp("java -jar org.apache.felix.ipojo.ant-" + Constants.getVersion() + ".jar", options);
     }
 
     /**
@@ -191,7 +192,7 @@ public class IPojoc {
                         .withLongOpt("output")
                         .withArgName("output file")
                         .hasArg()
-                        .withDescription("the output jar file, if not set the manipulation replace the input file")
+                        .withDescription("the output jar file, if not set the manipulation replaces the input file")
                         .isRequired(false)
                         .withType(File.class)
                         .create('o');
