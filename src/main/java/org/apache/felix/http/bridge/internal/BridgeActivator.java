@@ -18,16 +18,25 @@
  */
 package org.apache.felix.http.bridge.internal;
 
-import javax.servlet.http.HttpServlet;
-
 import java.util.EventListener;
 import java.util.Hashtable;
+
+import javax.servlet.http.HttpServlet;
+
 import org.apache.felix.http.base.internal.AbstractHttpActivator;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.Constants;
 
 public final class BridgeActivator extends AbstractHttpActivator
 {
+    /** Endpoint service registration property from RFC 189 */
+    private static final String REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
+
+    /** Framework property containing the endpoint registration information (optional). */
+    private static final String FELIX_HTTP_SERVICE_ENDPOINTS = "org.apache.felix.http.service.endpoints";
+
+    private static final String VENDOR = "The Apache Software Foundation";
+
     @Override
     protected void doStart() throws Exception
     {
@@ -37,15 +46,23 @@ public final class BridgeActivator extends AbstractHttpActivator
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put("http.felix.dispatcher", getDispatcherServlet().getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION, "Dispatcher for bridged request handling");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        props.put(Constants.SERVICE_VENDOR, VENDOR);
         getBundleContext().registerService(HttpServlet.class.getName(), getDispatcherServlet(), props);
 
         // Http Session event dispatcher
         props = new Hashtable<String, Object>();
         props.put("http.felix.dispatcher", getEventDispatcher().getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION, "Dispatcher for bridged HttpSession events");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        props.put(Constants.SERVICE_VENDOR, VENDOR);
         getBundleContext().registerService(EventListener.class.getName(), getEventDispatcher(), props);
+
+        // check for endpoint registration property
+        if ( getBundleContext().getProperty(FELIX_HTTP_SERVICE_ENDPOINTS) != null )
+        {
+            final Hashtable<String, Object> serviceRegProps = new Hashtable<String, Object>();
+            serviceRegProps.put(REG_PROPERTY_ENDPOINTS, getBundleContext().getProperty(FELIX_HTTP_SERVICE_ENDPOINTS));
+            this.getHttpServiceController().setProperties(serviceRegProps);
+        }
 
         SystemLogger.info("Started bridged http service");
     }
