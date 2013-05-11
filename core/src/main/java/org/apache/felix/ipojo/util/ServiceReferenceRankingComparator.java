@@ -29,7 +29,7 @@ import org.osgi.framework.ServiceReference;
  * This comparator follows OSGi Ranking policy.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceReferenceRankingComparator implements Comparator, Serializable {
+public class ServiceReferenceRankingComparator implements Comparator<ServiceReference>, Serializable {
 
     /**
      * Id.
@@ -45,29 +45,29 @@ public class ServiceReferenceRankingComparator implements Comparator, Serializab
      * (higher is term of ranking means a lower index)
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
-    public int compare(Object ref1, Object ref2) {
+    public int compare(ServiceReference ref1, ServiceReference ref2) {
         if (ref1.equals(ref2)) { return 0; }
 
-        if (ref1 instanceof ServiceReference && ref2 instanceof ServiceReference) {
-            Object property1 = ((ServiceReference) ref1).getProperty(Constants.SERVICE_RANKING);
-            Object property2 = ((ServiceReference) ref2).getProperty(Constants.SERVICE_RANKING);
+        if (ref2 != null) {
+            Object property1 = ref1.getProperty(Constants.SERVICE_RANKING);
+            Object property2 = ref2.getProperty(Constants.SERVICE_RANKING);
 
             int rank1 = 0;
             int rank2 = 0;
             if (property1 instanceof Integer) {
-                rank1 = ((Integer) property1).intValue();
+                rank1 = (Integer) property1;
             }
             if (property2 instanceof Integer) {
-                rank2 = ((Integer) property2).intValue();
+                rank2 = (Integer) property2;
             }
 
             if (rank1 == rank2) {
                 // Check service.id
-                Object sid1 = ((ServiceReference) ref1).getProperty(Constants.SERVICE_ID);
-                Object sid2 = ((ServiceReference) ref2).getProperty(Constants.SERVICE_ID);
+                Object sid1 = ref1.getProperty(Constants.SERVICE_ID);
+                Object sid2 = ref2.getProperty(Constants.SERVICE_ID);
 
-                long rankId1 = ((Long) sid1).longValue();
-                long rankId2 = ((Long) sid2).longValue();
+                long rankId1 = (Long) sid1;
+                long rankId2 = (Long) sid2;
 
                 if (rankId1 == rankId2) {
                     return 0;
