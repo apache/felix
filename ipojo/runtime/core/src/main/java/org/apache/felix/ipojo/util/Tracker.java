@@ -239,8 +239,8 @@ public class Tracker implements TrackerCustomizer {
             /* In case the context was stopped. */
         }
         if (references != null) {
-            for (int i = 0; i < references.length; i++) {
-                outgoing.untrack(references[i]);
+            for (ServiceReference reference : references) {
+                outgoing.untrack(reference);
             }
         }
         m_tracked = null;
@@ -350,7 +350,7 @@ public class Tracker implements TrackerCustomizer {
      * Gets the list of stored service reference.
      * @return the list containing used service reference
      */
-    public List/*<ServiceReference>*/getServiceReferencesList() {
+    public List<ServiceReference> getServiceReferencesList() {
         Tracked tracked = this.m_tracked; // use local var since we are not synchronized
         if (tracked == null) { // if Tracker is not open
             return null;
@@ -358,11 +358,8 @@ public class Tracker implements TrackerCustomizer {
         synchronized (tracked) {
             int length = tracked.size();
             if (length == 0) { return null; }
-            List references = new ArrayList(length);
-            Iterator keys = tracked.keySet().iterator();
-            for (int i = 0; i < length; i++) {
-                references.add(keys.next());
-            }
+            List<ServiceReference> references = new ArrayList<ServiceReference>(length);
+            references.addAll(tracked.keySet());
             // The resulting array is sorted by ranking.
             return references;
         }
@@ -374,20 +371,16 @@ public class Tracker implements TrackerCustomizer {
      * called getService on this reference.
      * @return the list of used references.
      */
-    public List/*<ServiceReference>*/getUsedServiceReferences() {
+    public List<ServiceReference> getUsedServiceReferences() {
         Tracked tracked = this.m_tracked; // use local var since we are not synchronized
         if (tracked == null || tracked.size() == 0) { // if Tracker is not open or empty
             return null;
         }
         synchronized (tracked) {
-            int length = tracked.size();
-            List references = new ArrayList();
-            Iterator keys = tracked.entrySet().iterator();
-            for (int i = 0; i < length; i++) {
-                Map.Entry entry = (Map.Entry) keys.next();
-                Object key = entry.getKey();
+            List<ServiceReference> references = new ArrayList<ServiceReference>();
+            for (Map.Entry<ServiceReference, Object> entry : tracked.entrySet()) {
                 if (entry.getValue() != null) {
-                    references.add(key);
+                    references.add(entry.getKey());
                 }
             }
             return references;
@@ -433,9 +426,8 @@ public class Tracker implements TrackerCustomizer {
         if (tracked == null) { /* if Tracker is not open */
             return null;
         }
-        Object object = null;
         synchronized (tracked) {
-            object = tracked.get(reference);
+            Object object = tracked.get(reference);
             if (object == null) {
                 if (tracked.containsKey(reference)) { // Not already get but already tracked.
                     object = m_context.getService(reference);
@@ -479,7 +471,7 @@ public class Tracker implements TrackerCustomizer {
         }
         synchronized (tracked) {
             ServiceReference[] references = getServiceReferences();
-            int length = 0;
+            int length;
             if (references == null) {
                 return null;
             } else {
@@ -537,18 +529,14 @@ public class Tracker implements TrackerCustomizer {
      * class is the ServiceListener object for the tracker. This class is used to synchronize access to the tracked services. This is not a public class. It is only for use by the implementation of the Tracker
      * class.
      */
-    class Tracked extends HashMap implements ServiceListener {
-        /**
-         * UID.
-         */
-        static final long serialVersionUID = -7420065199791006079L;
+    class Tracked extends HashMap<ServiceReference, Object> implements ServiceListener {
 
         /**
          * The list of ServiceReferences in the process of being added. This is used to deal with nesting of ServiceEvents. Since ServiceEvents are synchronously delivered, ServiceEvents can be nested. For example, when processing the adding of a service
          * and the customizer causes the service to be unregistered, notification to the nested call to untrack that the service was unregistered can be made to the track method. Since the ArrayList implementation is not synchronized, all access to
          * this list must be protected by the same synchronized object for thread safety.
          */
-        private List m_adding;
+        private List<ServiceReference> m_adding;
 
         /**
          * <code>true</code> if the tracked object is closed. This field is volatile because it is set by one thread and read by another.
@@ -560,7 +548,7 @@ public class Tracker implements TrackerCustomizer {
          * "announced" by ServiceEvents and therefore the ServiceEvent for unregistration could be delivered before we track the service. A service must not be in both the initial and adding lists at the same time. A service must be moved from the
          * initial list to the adding list "atomically" before we begin tracking it. Since the LinkedList implementation is not synchronized, all access to this list must be protected by the same synchronized object for thread safety.
          */
-        private List m_initial;
+        private List<ServiceReference> m_initial;
 
         /**
          * Tracked constructor.
@@ -568,8 +556,8 @@ public class Tracker implements TrackerCustomizer {
         protected Tracked() {
             super();
             m_closed = false;
-            m_adding = new ArrayList(6);
-            m_initial = new LinkedList();
+            m_adding = new ArrayList<ServiceReference>(6);
+            m_initial = new LinkedList<ServiceReference>();
         }
 
         /**
@@ -579,9 +567,7 @@ public class Tracker implements TrackerCustomizer {
         protected void setInitialServices(ServiceReference[] references) {
             if (references == null) { return; }
             int size = references.length;
-            for (int i = 0; i < size; i++) {
-                m_initial.add(references[i]);
-            }
+            m_initial.addAll(Arrays.asList(references).subList(0, size));
         }
 
         /**
@@ -591,7 +577,7 @@ public class Tracker implements TrackerCustomizer {
             while (true) {
                 ServiceReference reference;
                 synchronized (this) {
-                    if (m_initial.isEmpty()) { //  if there are no more inital services
+                    if (m_initial.isEmpty()) { //  if there are no more initial services
                         return; // we are done
                     }
 

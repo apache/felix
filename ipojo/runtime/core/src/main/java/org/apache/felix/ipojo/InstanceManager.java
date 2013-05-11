@@ -295,7 +295,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * This method does not need a synchronized block as the handler set is constant.
      * @return the handler array of plugged handlers.
      */
-    public Handler[] getRegistredHandlers() {
+    public Handler[] getRegisteredHandlers() {
         Handler[] handler = new Handler[m_handlers.length];
         for (int i = 0; i < m_handlers.length; i++) {
             handler[i] = m_handlers[i].getHandler();
@@ -388,7 +388,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         }
 
         // Plug handler descriptions
-        Handler[] handlers = getRegistredHandlers();
+        Handler[] handlers = getRegisteredHandlers();
         for (int i = 0; i < handlers.length; i++) {
             m_description.addHandler(handlers[i].getDescription());
         }

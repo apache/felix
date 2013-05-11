@@ -34,6 +34,7 @@ import org.apache.felix.ipojo.context.ServiceReferenceImpl;
 import org.apache.felix.ipojo.metadata.Element;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -88,6 +89,11 @@ public abstract class DependencyModel implements TrackerCustomizer {
     public static final int DYNAMIC_PRIORITY_BINDING_POLICY = 2;
 
     /**
+     * The manager handling context sources.
+     */
+    private final ContextSourceManager m_contextSourceManager;
+
+    /**
      * Does the dependency bind several providers ?
      */
     private boolean m_aggregate;
@@ -106,7 +112,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
     /**
      * The comparator to sort service references.
      */
-    private Comparator m_comparator;
+    private Comparator<ServiceReference> m_comparator;
 
     /**
      * The LDAP filter object selecting service references
@@ -147,7 +153,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * subset of tracked references. This set is computed according
      * to the filter and the {@link DependencyModel#match(ServiceReference)} method.
      */
-    private final List m_matchingRefs = new ArrayList();
+    private final List<ServiceReference> m_matchingRefs = new ArrayList<ServiceReference>();
 
     /**
      * The instance requiring the service.
@@ -159,7 +165,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * This map stores service object, and so is able to handle
      * iPOJO custom policies.
      */
-    private Map/*<ServiceReference, Object>*/ m_serviceObjects = new HashMap();
+    private Map<ServiceReference, Object> m_serviceObjects = new HashMap<ServiceReference, Object>();
 
     /**
      * Creates a DependencyModel.
@@ -177,7 +183,8 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * @param ci instance managing the dependency
      * state changes.
      */
-    public DependencyModel(Class specification, boolean aggregate, boolean optional, Filter filter, Comparator comparator, int policy,
+    public DependencyModel(Class specification, boolean aggregate, boolean optional, Filter filter,
+                           Comparator<ServiceReference> comparator, int policy,
             BundleContext context, DependencyStateListener listener, ComponentInstance ci) {
         m_specification = specification;
         m_aggregate = aggregate;
@@ -193,6 +200,16 @@ public abstract class DependencyModel implements TrackerCustomizer {
         m_state = UNRESOLVED;
         m_listener = listener;
         m_instance = ci;
+
+        if (m_filter != null) {
+            try {
+                m_contextSourceManager = new ContextSourceManager(this);
+            } catch (InvalidSyntaxException e) {
+                throw new IllegalArgumentException(e);
+            }
+        } else {
+            m_contextSourceManager = null;
+        }
     }
 
     /**
@@ -204,6 +221,11 @@ public abstract class DependencyModel implements TrackerCustomizer {
         m_state = UNRESOLVED;
         m_tracker = new Tracker(m_context, m_specification.getName(), this);
         m_tracker.open();
+
+        if (m_contextSourceManager != null) {
+            m_contextSourceManager.start();
+        }
+
         computeDependencyState();
     }
 
@@ -220,6 +242,9 @@ public abstract class DependencyModel implements TrackerCustomizer {
         m_matchingRefs.clear();
         ungetAllServices();
         m_state = UNRESOLVED;
+        if (m_contextSourceManager != null) {
+            m_contextSourceManager.stop();
+        }
     }
 
     /**
@@ -227,11 +252,8 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * This also clears the service object map.
      */
     private void ungetAllServices() {
-        Set entries = m_serviceObjects.entrySet();
-        Iterator it = entries.iterator();
-        while (it.hasNext()) {
-            Map.Entry entry = (Map.Entry) it.next();
-            ServiceReference ref = (ServiceReference) entry.getKey();
+        for (Map.Entry<ServiceReference, Object> entry : m_serviceObjects.entrySet()) {
+            ServiceReference ref = entry.getKey();
             Object svc = entry.getValue();
             if (m_tracker != null) {
                 m_tracker.ungetService(ref);
@@ -403,7 +425,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
                     // We are sure that we have at least two references, so if the highest ranked references (first one) is the new received
                     // references,
                     // we have to unbind the used one and to bind the the new one.
-                    onServiceDeparture((ServiceReference) m_matchingRefs.get(1));
+                    onServiceDeparture(m_matchingRefs.get(1));
                     onServiceArrival(ref);
                 }
             }
@@ -440,7 +462,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
                 m_state = BROKEN;
                 invalidate();  // This will invalidate the instance.
                 // Reinitialize the dependency tracking
-                ComponentInstance instance = null;
+                ComponentInstance instance;
                 synchronized (this) {
                     instance = m_instance;
                 }
@@ -515,7 +537,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
             if (m_matchingRefs.isEmpty()) {
                 return null;
             } else {
-                return (ServiceReference) m_matchingRefs.get(0);
+                return m_matchingRefs.get(0);
             }
         }
     }
@@ -538,21 +560,21 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * If no service references, returns <code>null</code>
      * @return the list of used reference (according to the service tracker).
      */
-    public List getUsedServiceReferences() {
+    public List<ServiceReference> getUsedServiceReferences() {
         synchronized (this) {
             // The list must confront actual matching services with already get services from the tracker.
 
             int size = m_matchingRefs.size();
-            List usedByTracker = null;
+            List<ServiceReference> usedByTracker = null;
             if (m_tracker != null) {
                 usedByTracker = m_tracker.getUsedServiceReferences();
             }
             if (size == 0 || usedByTracker == null) { return null; }
 
-            List list = new ArrayList(1);
-            for (int i = 0; i < size; i++) {
-                if (usedByTracker.contains(m_matchingRefs.get(i))) {
-                    list.add(m_matchingRefs.get(i)); // Add the service in the list.
+            List<ServiceReference> list = new ArrayList<ServiceReference>(1);
+            for (ServiceReference ref : m_matchingRefs) {
+                if (usedByTracker.contains(ref)) {
+                    list.add(ref); // Add the service in the list.
                     if (!isAggregate()) { // IF we are not multiple, return the list when the first element is found.
                         return list;
                     }
@@ -561,6 +583,13 @@ public abstract class DependencyModel implements TrackerCustomizer {
 
             return list;
         }
+    }
+
+    /**
+     * @return the component instance on which this dependency is plugged.
+     */
+    public ComponentInstance getComponentInstance() {
+        return m_instance;
     }
 
     /**
@@ -606,7 +635,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
             Collections.sort(m_matchingRefs, m_comparator);
             if (indexBefore != m_matchingRefs.indexOf(ref) && ! m_aggregate) {
                 // The order has changed during the sort.
-                onServiceDeparture((ServiceReference) m_matchingRefs.get(1));
+                onServiceDeparture(m_matchingRefs.get(1));
                 onServiceArrival(ref);
             }
 
@@ -679,37 +708,34 @@ public abstract class DependencyModel implements TrackerCustomizer {
     public void setFilter(Filter filter) { //NOPMD
         m_filter = filter;
         if (m_tracker != null) { // Tracking started ...
-            List toRemove = new ArrayList();
-            List toAdd = new ArrayList();
+            List<ServiceReference> toRemove = new ArrayList<ServiceReference>();
+            List<ServiceReference> toAdd = new ArrayList<ServiceReference>();
             ServiceReference usedRef = null;
             synchronized (this) {
 
                 // Store the used service references.
                 if (!m_aggregate && !m_matchingRefs.isEmpty()) {
-                    usedRef = (ServiceReference) m_matchingRefs.get(0);
+                    usedRef = m_matchingRefs.get(0);
                 }
 
                 // Get actually all tracked references.
                 ServiceReference[] refs = m_tracker.getServiceReferences();
 
                 if (refs == null) {
-                    for (int j = 0; j < m_matchingRefs.size(); j++) {
-                        // All references need to be removed.
-                        toRemove.add(m_matchingRefs.get(j));
-                    }
+                    // All references need to be removed.
+                    toRemove.addAll(m_matchingRefs);
                     // No more matching dependency. Clear the matching reference set.
                     m_matchingRefs.clear();
                 } else {
                     // Compute matching services.
-                    List matching = new ArrayList();
-                    for (int i = 0; i < refs.length; i++) {
-                        if (matchAgainstFilter(refs[i]) && match(refs[i])) {
-                            matching.add(refs[i]);
+                    List<ServiceReference> matching = new ArrayList<ServiceReference>();
+                    for (ServiceReference ref : refs) {
+                        if (matchAgainstFilter(ref) && match(ref)) {
+                            matching.add(ref);
                         }
                     }
                     // Now compare with used services.
-                    for (int j = 0; j < m_matchingRefs.size(); j++) {
-                        ServiceReference ref = (ServiceReference) m_matchingRefs.get(j);
+                    for (ServiceReference ref : m_matchingRefs) {
                         // Check if the reference is inside the matching list:
                         if (!matching.contains(ref)) {
                             // The reference should be removed
@@ -722,10 +748,10 @@ public abstract class DependencyModel implements TrackerCustomizer {
 
                     // Then, add new matching services.
 
-                    for (int k = 0; k < matching.size(); k++) {
-                        if (!m_matchingRefs.contains(matching.get(k))) {
-                            m_matchingRefs.add(matching.get(k));
-                            toAdd.add(matching.get(k));
+                    for (ServiceReference ref : matching) {
+                        if (!m_matchingRefs.contains(ref)) {
+                            m_matchingRefs.add(ref);
+                            toAdd.add(ref);
                         }
                     }
 
@@ -744,10 +770,10 @@ public abstract class DependencyModel implements TrackerCustomizer {
                 ServiceReference[] rem = null;
                 ServiceReference[] add = null;
                 if (!toAdd.isEmpty()) {
-                    add = (ServiceReference[]) toAdd.toArray(new ServiceReference[toAdd.size()]);
+                    add = toAdd.toArray(new ServiceReference[toAdd.size()]);
                 }
                 if (!toRemove.isEmpty()) {
-                    rem = (ServiceReference[]) toRemove.toArray(new ServiceReference[toRemove.size()]);
+                    rem = toRemove.toArray(new ServiceReference[toRemove.size()]);
                 }
                 if (rem != null || add != null) { // Notify the change only when a change is made on the matching reference list.
                     onDependencyReconfiguration(rem, add);
@@ -759,7 +785,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
                 synchronized (m_matchingRefs) {
                     size = m_matchingRefs.size();
                     if (size > 0) {
-                        newRef = (ServiceReference) m_matchingRefs.get(0);
+                        newRef = m_matchingRefs.get(0);
                     }
                 }
                 // Non aggregate case.
@@ -818,7 +844,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
                 if (m_state == RESOLVED) {
 
                     for (int i = 1; i < m_matchingRefs.size(); i++) { // The loop begin at 1, as the 0 is already injected.
-                        onServiceArrival((ServiceReference) m_matchingRefs.get(i));
+                        onServiceArrival(m_matchingRefs.get(i));
                     }
                 }
             } else if (m_aggregate && !isAggregate) {
@@ -826,7 +852,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
                 // We become non-aggregate.
                 if (m_state == RESOLVED) {
                     for (int i = 1; i < m_matchingRefs.size(); i++) { // The loop begin at 1, as the 0 stills injected.
-                        onServiceDeparture((ServiceReference) m_matchingRefs.get(i));
+                        onServiceDeparture(m_matchingRefs.get(i));
                     }
                 }
             }
@@ -871,9 +897,9 @@ public abstract class DependencyModel implements TrackerCustomizer {
         // TODO supporting dynamic policy change.
     }
 
-    public void setComparator(Comparator cmp) {
+    public void setComparator(Comparator<ServiceReference> cmp) {
         m_comparator = cmp;
-        // NOTE: the array will be sorted at the next get.
+        // NOTE: the array will be sorted on the next 'get'.
     }
 
     /**
@@ -988,7 +1014,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * @throws ConfigurationException if the class cannot be loaded correctly.
      */
     public static Class loadSpecification(String specification, BundleContext context) throws ConfigurationException {
-        Class spec = null;
+        Class spec;
         try {
             spec = context.getBundle().loadClass(specification);
         } catch (ClassNotFoundException e) {
@@ -1019,4 +1045,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
         }
     }
 
+    public ContextSourceManager getContextSourceManager() {
+        return m_contextSourceManager;
+    }
 }

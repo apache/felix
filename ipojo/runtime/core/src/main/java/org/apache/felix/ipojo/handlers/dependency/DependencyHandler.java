@@ -20,10 +20,7 @@ package org.apache.felix.ipojo.handlers.dependency;
 
 import java.util.*;
 
-import org.apache.felix.ipojo.ConfigurationException;
-import org.apache.felix.ipojo.IPojoContext;
-import org.apache.felix.ipojo.PolicyServiceContext;
-import org.apache.felix.ipojo.PrimitiveHandler;
+import org.apache.felix.ipojo.*;
 import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.FieldMetadata;
@@ -31,6 +28,8 @@ import org.apache.felix.ipojo.parser.MethodMetadata;
 import org.apache.felix.ipojo.parser.PojoMetadata;
 import org.apache.felix.ipojo.util.DependencyModel;
 import org.apache.felix.ipojo.util.DependencyStateListener;
+import org.apache.felix.ipojo.util.InstanceConfigurationSource;
+import org.apache.felix.ipojo.util.SystemPropertiesSource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -105,6 +104,11 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      * The handler description.
      */
     private DependencyHandlerDescription m_description;
+
+    /**
+     * The instance configuration context source, updated once reconfiguration.
+     */
+    private InstanceConfigurationSource m_instanceConfigurationSource;
 
     /**
      * Get the list of managed dependency.
@@ -468,6 +472,30 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
         }
 
         m_description = new DependencyHandlerDescription(this, getDependencies()); // Initialize the description.
+
+        manageContextSources(configuration);
+    }
+
+    /**
+     * Add internal context source to all dependencies.
+     * @param configuration the instance configuration to creates the instance configuration source
+     */
+    private void manageContextSources(Dictionary<String, Object> configuration) {
+        m_instanceConfigurationSource = new InstanceConfigurationSource(configuration);
+        SystemPropertiesSource systemPropertiesSource = new SystemPropertiesSource();
+
+        for (Dependency dependency : m_dependencies) {
+            if (dependency.getFilter() != null) {
+                dependency.getContextSourceManager().addContextSource(m_instanceConfigurationSource);
+                dependency.getContextSourceManager().addContextSource(systemPropertiesSource);
+
+                for (Handler handler : getInstanceManager().getRegisteredHandlers()) {
+                    if (handler instanceof ContextSource) {
+                        dependency.getContextSourceManager().addContextSource((ContextSource) handler);
+                    }
+                }
+            }
+        }
     }
 
     private String computeFilter(Element dependencyElement, Dictionary filtersConfiguration, Dictionary fromConfiguration, boolean aggregate, String identity) {
@@ -684,4 +712,12 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
         return m_description;
     }
 
+    /**
+     * The instance is reconfigured.
+     * @param configuration the new instance configuration.
+     */
+    @Override
+    public void reconfigure(Dictionary configuration) {
+        m_instanceConfigurationSource.reconfigure(configuration);
+    }
 }
