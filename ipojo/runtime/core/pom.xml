@@ -162,6 +162,12 @@
                             org.osgi.service.cm,
                             org.osgi.service.log
                         </Export-Package>
+
+                        <!-- OSGi Extender Namespace -->
+                        <Provide-Capability>osgi.extender;
+                            osgi.extender="org.apache.felix.ipojo";
+                            version:Version="${project.version}"
+                        </Provide-Capability>
                         <_donotcopy>(CVS|.svn|.+.bak|~.+|metadata.xml)</_donotcopy>
                     </instructions>
                 </configuration>
