@@ -39,6 +39,8 @@
            * change in ComponentTypeDescription (FELIX-3560)
         -->
         <ipojo.package.version>1.8.4</ipojo.package.version>
+        <ipojo.extender.version>1.9.0</ipojo.extender.version>
+        <!-- TODO - these two properties must be changed before releasing -->
     </properties>
 
     <description>
@@ -166,7 +168,7 @@
                         <!-- OSGi Extender Namespace -->
                         <Provide-Capability>osgi.extender;
                             osgi.extender="org.apache.felix.ipojo";
-                            version:Version="${project.version}"
+                            version:Version="${ipojo.extender.version}"
                         </Provide-Capability>
                         <_donotcopy>(CVS|.svn|.+.bak|~.+|metadata.xml)</_donotcopy>
                     </instructions>
