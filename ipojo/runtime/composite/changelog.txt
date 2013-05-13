@@ -1,3 +1,40 @@
+Changes from 1.8.6 to 1.8.10
+----------------------------
+
+** Bug
+    * [FELIX-3451] - "instance.name" attribute not recognized
+    * [FELIX-3843] - ClassCastException when listing service properties of a non-ComponentFactory Factory service
+    * [FELIX-3895] - iPOJO instance is not shown (with the "arch" commands) if constructor is failing
+    * [FELIX-3896] - Null reference are injected with @Bind(optional=false) method on iPOJO components
+    * [FELIX-3918] - iPOJO Logger cannot be dynamically configured on Equinox and KF
+    * [FELIX-3919] - iPOJO Proxies strategy cannot be configured dynamically on Equinox and KF
+    * [FELIX-3920] - Creation Strategy does not work on KF3
+    * [FELIX-3974] - Properties cannot be set as immutable using annotations
+    * [FELIX-3995] - Missing options in Bind annotation
+    * [FELIX-4041] - Properties starting with . should not be propagated
+    * [FELIX-4048] - @Requires handler does not fail when no specification can be found
+    * [FELIX-4053] - Avoid @StaticServiceProperty to be used on classes
+    * [FELIX-4054] - Use current factory version to generate instance name if required
+
+** Improvement
+    * [FELIX-3860] - factories and instances iPOJO gogo commands should show the "public=false" instances/factories
+    * [FELIX-3932] - Allow dependency filter's to get context-source variables
+    * [FELIX-4040] - Implement config admin support to handle binding location properly
+    * [FELIX-4045] - Chain Exceptions when possible
+
+** New Feature
+    * [FELIX-4034] - Instance configuration DSL
+
+** Task
+    * [FELIX-3892] - Upgrade runtime codebase to Java 5
+    * [FELIX-3903] - Migrate tests to pax exam 3
+    * [FELIX-3921] - Update pom to latest Felix's parent
+    * [FELIX-3948] - Define a new extender model
+    * [FELIX-3978] - Check that we don't use java 6+ API
+
+** Wish
+    * [FELIX-3926] - Provide metadata for the Extender namespace
+
 Changes from the 1.8.4 to 1.8.6
 -------------------------------
 

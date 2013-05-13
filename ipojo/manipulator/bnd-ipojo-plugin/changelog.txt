@@ -1,3 +1,33 @@
+Changes from the 1.8.6 to 1.8.10
+--------------------------------
+
+** Bug
+    * [FELIX-3827] - Error in bbd-ipojo-plugin of manipulating jar with embedded dependencies with maven bundle plugin + bnd-ipojo-plugin
+    * [FELIX-3900] - @HandlerDeclaration do not convert DOM Attributes to iPOJO Attributes correctly
+    * [FELIX-3938] - maven-ipojo-plugin does not behave as bnd-ipojo-plugin
+    * [FELIX-3974] - Properties cannot be set as immutable using annotations
+    * [FELIX-3995] - Missing options in Bind annotation
+    * [FELIX-4027] - The iPOJO Ant task requires org.objectweb.asm.tree
+    * [FELIX-4046] - Inner class manipulation fails with expanded frames
+    * [FELIX-4052] - Instance declaration not created correctly when using @Instantiate if the @Component specifies a name
+
+** Improvement
+    * [FELIX-3286] - Update POM to use the new parent
+    * [FELIX-3452] - Extending maven-ipojo-plugin with directoryManipulation support.
+    * [FELIX-3749] - Refactor the manipulator for better (and extensible) annotation support
+    * [FELIX-3837] - PojoizationPlugin should be more extensible
+    * [FELIX-3901] - Avoid converting Xml namespace declaration with @HandlerDeclaration
+    * [FELIX-3927] - Exclude iPOJO 2.0 packages during manipulation
+
+** New Feature
+    * [FELIX-3699] - Allow annotations to handle custom component definitions.
+    * [FELIX-4059] - Provide a CLI tool to manipulate iPOJO bundles
+
+** Task
+    * [FELIX-3903] - Migrate tests to pax exam 3
+    * [FELIX-3921] - Update pom to latest Felix's parent
+    * [FELIX-3976] - Move the online manipulator out of the core bundle
+
 Changes from the 1.8.4 to 1.8.6
 -------------------------------
 
