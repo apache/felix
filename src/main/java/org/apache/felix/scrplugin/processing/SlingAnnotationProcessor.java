@@ -83,6 +83,8 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
     private void processSlingServlet(final ClassAnnotation cad, final ClassDescription classDescription) {
         // generate ComponentDescription if required
         final boolean generateComponent = cad.getBooleanValue("generateComponent", true);
+        final boolean metatype = cad.getBooleanValue("metatype", !generateComponent);
+
         if (generateComponent) {
             final ComponentDescription cd = new ComponentDescription(cad);
             cd.setName(cad.getStringValue("name", classDescription.getDescribedClass().getName()));
@@ -91,7 +93,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
             cd.setLabel(cad.getStringValue("label", null));
             cd.setDescription(cad.getStringValue("description", null));
 
-            cd.setCreateMetatype(cad.getBooleanValue("metatype", false));
+            cd.setCreateMetatype(metatype);
 
             classDescription.add(cd);
         }
@@ -112,7 +114,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
             pd.setName("sling.servlet.paths");
             pd.setMultiValue(paths);
             pd.setType(PropertyType.String);
-            pd.setPrivate(true);
+            pd.setPrivate(metatype);
             classDescription.add(pd);
         }
 
@@ -123,7 +125,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
             pd.setName("sling.servlet.resourceTypes");
             pd.setMultiValue(resourceTypes);
             pd.setType(PropertyType.String);
-            pd.setPrivate(true);
+            pd.setPrivate(metatype);
             classDescription.add(pd);
         }
 
@@ -134,7 +136,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
             pd.setName("sling.servlet.selectors");
             pd.setMultiValue(selectors);
             pd.setType(PropertyType.String);
-            pd.setPrivate(true);
+            pd.setPrivate(metatype);
             classDescription.add(pd);
         }
 
@@ -145,7 +147,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
             pd.setName("sling.servlet.extensions");
             pd.setMultiValue(extensions);
             pd.setType(PropertyType.String);
-            pd.setPrivate(true);
+            pd.setPrivate(metatype);
             classDescription.add(pd);
         }
 
@@ -156,7 +158,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
             pd.setName("sling.servlet.methods");
             pd.setMultiValue(methods);
             pd.setType(PropertyType.String);
-            pd.setPrivate(true);
+            pd.setPrivate(metatype);
             classDescription.add(pd);
         }
     }
@@ -167,6 +169,8 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
     private void processSlingFilter(final ClassAnnotation cad, final ClassDescription classDescription) {
         // generate ComponentDescription if required
         final boolean generateComponent = cad.getBooleanValue("generateComponent", true);
+        final boolean metatype = cad.getBooleanValue("metatype", !generateComponent);
+
         if (generateComponent) {
             final ComponentDescription cd = new ComponentDescription(cad);
             cd.setName(cad.getStringValue("name", classDescription.getDescribedClass().getName()));
@@ -175,7 +179,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
             cd.setLabel(cad.getStringValue("label", null));
             cd.setDescription(cad.getStringValue("description", null));
 
-            cd.setCreateMetatype(cad.getBooleanValue("metatype", false));
+            cd.setCreateMetatype(metatype);
 
             classDescription.add(cd);
         }
@@ -195,7 +199,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
         pd.setName("service.ranking");
         pd.setValue(String.valueOf(order));
         pd.setType(PropertyType.Integer);
-        pd.setPrivate(true);
+        pd.setPrivate(metatype);
         classDescription.add(pd);
 
         // property scope
@@ -204,7 +208,7 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
         pd2.setName("sling.filter.scope");
         pd2.setValue(scope);
         pd2.setType(PropertyType.String);
-        pd2.setPrivate(true);
+        pd2.setPrivate(metatype);
         classDescription.add(pd2);
     }
 }
