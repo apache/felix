@@ -16,8 +16,16 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.felix.http.base.internal.DispatcherServlet;
@@ -31,6 +39,7 @@ import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.bio.SocketConnector;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ssl.SslConnector;
 import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -44,6 +53,9 @@ public final class JettyService
 {
     /** PID for configuration of the HTTP service. */
     private static final String PID = "org.apache.felix.http";
+
+    /** Endpoint service registration property from RFC 189 */
+    private static final String REG_PROPERTY_ENDPOINTS = "osgi.http.service.endpoints";
 
     private final JettyConfig config;
     private final BundleContext context;
@@ -99,6 +111,7 @@ public final class JettyService
     {
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         this.config.setServiceProperties(props);
+        this.addEndpointProperties(props, null);
         this.controller.setProperties(props);
     }
 
@@ -169,7 +182,7 @@ public final class JettyService
             }
 
             ServletContextHandler context = new ServletContextHandler(this.server, this.config.getContextPath(), ServletContextHandler.SESSIONS);
-            
+
             message.append(" on context path ").append(this.config.getContextPath());
             configureSessionManager(context);
             context.addEventListener(eventDispatcher);
@@ -347,5 +360,106 @@ public final class JettyService
 
             stopJetty();
         }
+    }
+
+    private String getEndpoint(final Connector listener, final InetAddress ia)
+    {
+        if (ia.isLoopbackAddress())
+        {
+            return null;
+        }
+
+        String address = ia.getHostAddress().trim().toLowerCase();
+        if ( ia instanceof Inet6Address )
+        {
+            // skip link-local
+            if ( address.startsWith("fe80:0:0:0:") )
+            {
+                return null;
+            }
+            address = "[" + address + "]";
+        }
+        else if ( ! ( ia instanceof Inet4Address ) )
+        {
+            return null;
+        }
+
+        return getEndpoint(listener, address);
+    }
+
+    private String getEndpoint(final Connector listener, final String hostname)
+    {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("http");
+        int defaultPort = 80;
+        if ( listener instanceof SslConnector )
+        {
+            sb.append('s');
+            defaultPort = 443;
+        }
+        sb.append("://");
+        sb.append(hostname);
+        if ( listener.getPort() != defaultPort )
+        {
+            sb.append(':');
+            sb.append(String.valueOf(listener.getPort()));
+        }
+        sb.append(config.getContextPath());
+
+        return sb.toString();
+    }
+
+    private void addEndpointProperties(final Hashtable<String, Object> props, Object container)
+    {
+        final List<String> endpoints = new ArrayList<String>();
+
+        final Connector[] connectors = this.server.getConnectors();
+        if ( connectors != null )
+        {
+            for(int i=0 ; i < connectors.length; i++)
+            {
+                final Connector connector = connectors[i];
+
+                if ( connector.getHost() == null )
+                {
+                    try
+                    {
+                        final Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
+                        while ( nis.hasMoreElements() )
+                        {
+                            final NetworkInterface ni = nis.nextElement();
+                            if ( ni.isLoopback() )
+                            {
+                                continue;
+                            }
+
+                            final Enumeration<InetAddress> ias = ni.getInetAddresses();
+                            while (ias.hasMoreElements())
+                            {
+                                final InetAddress ia = ias.nextElement();
+                                final String endpoint = this.getEndpoint(connector, ia);
+                                if ( endpoint != null )
+                                {
+                                    endpoints.add(endpoint);
+                                }
+                            }
+                        }
+                    }
+                    catch (final SocketException se)
+                    {
+                        // we ignore this
+                    }
+                }
+                else
+                {
+                    final String endpoint = this.getEndpoint(connector, connector.getHost());
+                    if ( endpoint != null )
+                    {
+                        endpoints.add(endpoint);
+                    }
+                }
+            }
+        }
+        props.put(REG_PROPERTY_ENDPOINTS, endpoints.toArray(new String[endpoints.size()]));
     }
 }
