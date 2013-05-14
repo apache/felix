@@ -1,7 +1,7 @@
  Changes from 1.9.4 to 1.9.2
 ----------------------------
 ** Bug
-    * [FELIX-4047] - Unable to single valued (String) array property
+    * [FELIX-4047] - Unable to create single valued (String) array property
 
 ** Improvement
     * [FELIX-4063] - Avoid warnings when using @SlingServlet and @SlingFilter annotations 
