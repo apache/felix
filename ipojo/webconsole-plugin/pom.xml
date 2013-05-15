@@ -25,7 +25,7 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
     <artifactId>org.apache.felix.ipojo.webconsole</artifactId>
-    <version>1.7.0</version>
+    <version>1.7.1-SNAPSHOT</version>
     <name>Apache Felix iPOJO WebConsole Plugins</name>
 
     <description>
@@ -123,8 +123,8 @@
     </dependencies>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.webconsole-1.7.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.webconsole-1.7.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.ipojo.webconsole-1.7.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/ipojo/webconsole-plugin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/ipojo/webconsole-plugin</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/ipojo/webconsole-plugin</url>
     </scm>
 </project>
