@@ -43,4 +43,10 @@
         <module>api-it</module>
     </modules>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/ipojo/runtime</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/ipojo/runtime</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/ipojo/runtime</url>
+    </scm>
+
 </project>
