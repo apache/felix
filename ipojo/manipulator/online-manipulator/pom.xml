@@ -16,8 +16,7 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
@@ -28,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO - Online Manipulator</name>
     <artifactId>org.apache.felix.ipojo.manipulator.online</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.10.0</version>
 
     <description>
         iPOJO online manipulator allowing install time manipulation of iPOJO bundle.
@@ -131,7 +130,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-ipojo-plugin</artifactId>
-                <version>1.9.0-SNAPSHOT</version>
+                <version>1.10.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -176,4 +175,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.10.0/org.apache.felix.ipojo.manipulator.online</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.10.0/org.apache.felix.ipojo.manipulator.online</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.manipulator-project-1.10.0/org.apache.felix.ipojo.manipulator.online</url>
+  </scm>
 </project>
