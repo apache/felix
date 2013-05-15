@@ -43,4 +43,10 @@
         <module>online-manipulator</module>
     </modules>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/ipojo/manipulator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/ipojo/manipulator</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/ipojo/manipulator</url>
+    </scm>
+
 </project>
