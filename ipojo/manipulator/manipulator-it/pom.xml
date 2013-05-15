@@ -25,7 +25,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.manipulator.manipulator-it</artifactId>
-    <version>1.10.0</version>
+    <version>1.10.1-SNAPSHOT</version>
     <name>Apache Felix iPOJO Manipulator ~ Integration Tests</name>
     <packaging>pom</packaging>
 
@@ -171,7 +171,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-            <version>1.10.0</version>
+            <version>1.10.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -183,7 +183,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator.online</artifactId>
-            <version>1.10.0</version>
+            <version>1.10.1-SNAPSHOT</version>
         </dependency>
 
         <!-- End of tested version -->
@@ -438,10 +438,4 @@
             <url>http://repository.ow2.org/nexus/content/repositories/snapshots/</url>
         </repository>
     </repositories>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.10.0/org.apache.felix.ipojo.manipulator.manipulator-it</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.10.0/org.apache.felix.ipojo.manipulator.manipulator-it</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.manipulator-project-1.10.0/org.apache.felix.ipojo.manipulator.manipulator-it</url>
-  </scm>
 </project>
