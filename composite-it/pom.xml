@@ -16,7 +16,9 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
@@ -25,7 +27,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.runtime.composite-it</artifactId>
-    <version>1.10.1-SNAPSHOT</version>
+    <version>1.9.0-SNAPSHOT</version>
     <name>Apache Felix iPOJO Runtime Project ~ Composite Integration Tests</name>
     <packaging>pom</packaging>
 
@@ -158,7 +160,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>1.10.1-SNAPSHOT</version>
+            <version>1.9.0-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.osgi</groupId>
@@ -170,7 +172,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.composite</artifactId>
-            <version>1.10.1-SNAPSHOT</version>
+            <version>1.9.0-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.osgi</groupId>
@@ -201,7 +203,7 @@
         <dependency>
             <groupId>org.ow2.chameleon.testing</groupId>
             <artifactId>osgi-helpers</artifactId>
-            <version>0.6.1</version>
+            <version>0.6.1-SNAPSHOT</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
