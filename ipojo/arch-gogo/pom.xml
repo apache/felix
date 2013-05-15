@@ -40,12 +40,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>1.9.0-SNAPSHOT</version>
+            <version>1.10.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>1.8.6</version>
+            <version>1.10.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -99,7 +99,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-ipojo-plugin</artifactId>
-                <version>1.6.0</version>
+                <version>1.10.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -119,4 +119,10 @@
             </plugin>
         </plugins>
     </build>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/ipojo/arch-gogo</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/ipojo/arch-gogo</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/ipojo/arch-gogo</url>
+    </scm>
 </project>
