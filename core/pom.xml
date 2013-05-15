@@ -37,10 +37,12 @@
 
            1.8.4:
            * change in ComponentTypeDescription (FELIX-3560)
+
+           1.1.0:
+           * next minor version
         -->
-        <ipojo.package.version>1.8.4</ipojo.package.version>
-        <ipojo.extender.version>1.9.0</ipojo.extender.version>
-        <!-- TODO - these two properties must be changed before releasing -->
+        <ipojo.package.version>1.10.0</ipojo.package.version>
+        <ipojo.extender.version>1.10.0</ipojo.extender.version>
     </properties>
 
     <description>
@@ -177,7 +179,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-ipojo-plugin</artifactId>
-                <version>1.8.4</version>
+                <version>1.10.0</version>
                 <executions>
                     <execution>
                         <goals>
