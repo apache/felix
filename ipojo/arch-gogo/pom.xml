@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO Arch Gogo Command</name>
     <artifactId>org.apache.felix.ipojo.arch.gogo</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1-SNAPSHOT</version>
 
     <description>
         Arch command to collect and print information about iPOJO instances.
@@ -120,8 +120,8 @@
     </build>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.arch.gogo-1.1.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.arch.gogo-1.1.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.ipojo.arch.gogo-1.1.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/ipojo/arch-gogo</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/ipojo/arch-gogo</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/ipojo/arch-gogo</url>
     </scm>
 </project>
