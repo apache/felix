@@ -25,7 +25,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.manipulator-project</artifactId>
-    <version>1.10.0</version>
+    <version>1.10.1-SNAPSHOT</version>
     <name>Apache Felix iPOJO Manipulator Project</name>
     <packaging>pom</packaging>
 
@@ -42,11 +42,4 @@
         <module>bnd-ipojo-plugin</module>
         <module>online-manipulator</module>
     </modules>
-
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/1.10.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/1.10.0</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/1.10.0</url>
-  </scm>
 </project>
