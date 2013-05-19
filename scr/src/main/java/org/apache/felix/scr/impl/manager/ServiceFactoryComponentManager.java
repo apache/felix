@@ -19,6 +19,8 @@
 package org.apache.felix.scr.impl.manager;
 
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 
@@ -80,13 +82,12 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         {
             throw new IllegalStateException( "need write lock (deleteComponent)" );
         }
-        for (Iterator<ComponentContextImpl> i = serviceContexts.values().iterator(); i.hasNext(); )
+        for (ComponentContextImpl componentContext: getComponentContexts() )
         {
-            ComponentContextImpl componentContext = i.next();
             disposeImplementationObject( componentContext, reason );
-            i.remove();
             log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
         }
+        serviceContexts.clear();
     }
 
 
@@ -139,12 +140,18 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         {
             public void presetComponentContext( ComponentContextImpl<S> componentContext )
             {
-                serviceContexts.put( componentContext.getImplementationObject( false ), componentContext );
+                synchronized ( serviceContexts )
+                {
+                    serviceContexts.put( componentContext.getImplementationObject( false ), componentContext );
+                }
             }
 
             public void resetImplementationObject( S implementationObject )
             {
-                serviceContexts.remove( implementationObject );
+                synchronized ( serviceContexts )
+                {
+                    serviceContexts.remove( implementationObject );
+                }
             }
 
         } );
@@ -180,21 +187,34 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         // When the ungetServiceMethod is called, the implementation object must be deactivated
         // private ComponentContext and implementation instances
         final ComponentContextImpl<S> serviceContext;
-        serviceContext = serviceContexts.get( service );
-
-        disposeImplementationObject( serviceContext, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
-        serviceContexts.remove( service );
-        // if this was the last use of the component, go back to REGISTERED state
-        if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
+        synchronized ( serviceContexts )
         {
-            changeState( Registered.getInstance() );
-            unsetDependenciesCollected();
+            serviceContext = serviceContexts.get( service );
+        }
+        disposeImplementationObject( serviceContext, ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+        synchronized ( serviceContexts )
+        {
+            serviceContexts.remove( service );
+            // if this was the last use of the component, go back to REGISTERED state
+            if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
+            {
+                changeState( Registered.getInstance() );
+                unsetDependenciesCollected();
+            }
+        }
+    }
+
+    private Collection<ComponentContextImpl> getComponentContexts()
+    {
+        synchronized ( serviceContexts )
+        {
+            return new ArrayList<ComponentContextImpl>( serviceContexts.values() );
         }
     }
 
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
-        for ( ComponentContextImpl<S> cc : serviceContexts.values() )
+        for ( ComponentContextImpl<S> cc : getComponentContexts() )
         {
             dependencyManager.invokeBindMethod( cc.getImplementationObject( false ), refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
         }
@@ -202,7 +222,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
 
     <T> void invokeUpdatedMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
-        for ( ComponentContextImpl<S> cc : serviceContexts.values() )
+        for ( ComponentContextImpl<S> cc : getComponentContexts() )
         {
             dependencyManager.invokeUpdatedMethod( cc.getImplementationObject( false ), refPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
         }
@@ -210,7 +230,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
 
     <T> void invokeUnbindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> oldRefPair, int trackingCount )
     {
-        for ( ComponentContextImpl<S> cc : serviceContexts.values() )
+        for ( ComponentContextImpl<S> cc : getComponentContexts() )
         {
             dependencyManager.invokeUnbindMethod( cc.getImplementationObject( false ), oldRefPair, trackingCount, cc.getEdgeInfo( dependencyManager ) );
         }
@@ -220,7 +240,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
     {
         ModifiedMethod modifiedMethod = getComponentMethods().getModifiedMethod();
         MethodResult result = MethodResult.VOID;
-        for ( ComponentContextImpl componentContext : serviceContexts.values() )
+        for ( ComponentContextImpl componentContext : getComponentContexts() )
         {
             Object instance = componentContext.getImplementationObject(true);
             result = modifiedMethod.invoke( instance,
