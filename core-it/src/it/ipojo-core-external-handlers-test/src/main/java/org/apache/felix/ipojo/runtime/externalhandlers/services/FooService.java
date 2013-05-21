@@ -22,6 +22,9 @@ import java.util.Properties;
 
 public interface FooService {
 
+    public static final String VALUE = "my foo is better than yours";
+    public static final String VALUE_2 = "No";
+
 	boolean foo();
 	
 	Properties fooProps();
