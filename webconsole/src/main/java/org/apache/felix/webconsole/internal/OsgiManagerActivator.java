@@ -35,7 +35,7 @@ public class OsgiManagerActivator implements BundleActivator
 
     private BundleActivator statusActivator;
 
-    private static final String STATUS_ACTIVATOR = "org.apache.felix.status.impl.Activator";
+    private static final String STATUS_ACTIVATOR = "org.apache.felix.inventory.impl.Activator";
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
