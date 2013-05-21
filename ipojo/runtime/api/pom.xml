@@ -51,6 +51,8 @@
                         <Import-Package>
                             org.apache.felix.ipojo.composite;resolution:=optional,
                             org.osgi.framework;version=1.3,
+                            !org.apache.felix.ipojo.xml.parser,
+                            !org.apache.felix.ipojo.annotations,
                             *
                         </Import-Package>
                         <Export-Package>
@@ -65,7 +67,8 @@
                             org.objectweb.asm.signature,
                             org.objectweb.asm,
                             org.objectweb.asm.tree,
-                            org.apache.felix.ipojo.manipulation*
+                            org.apache.felix.ipojo.manipulation*,
+                            org.apache.felix.ipojo.manipulator*
                         </Private-Package>
                     </instructions>
                 </configuration>
