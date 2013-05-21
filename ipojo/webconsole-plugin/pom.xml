@@ -33,7 +33,7 @@
         Felix
         Web Console.
     </description>
-    <url>http://felix.apache.org/site/ipojo-webconsole-plugin.html</url>
+    <url>http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/ipojo-webconsole-plugin.html</url>
 
     <build>
         <plugins>
@@ -55,7 +55,7 @@
                         <Bundle-SymbolicName>${project.artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/ipojo-webconsole-plugin.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/ipojo-webconsole-plugin.html
                         </Bundle-DocURL>
                         <Private-Package>
                             org.apache.felix.ipojo.webconsole
