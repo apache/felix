@@ -5,11 +5,9 @@ Changes from 4.0.0 to 4.2.0
     * [FELIX-3318] - NPE in WebConsole when trying to uninstall a bundle
     * [FELIX-3570] - Commons IO dependency issue
     * [FELIX-3605] - Configuration Status plugin has an error in IE/Compatibility View
-    * [FELIX-3614] - In latest webconsole no property descriptors are available
     * [FELIX-3663] - Java Runtime in the System Information tab appears as 'null(build null)' in Skelmir CEE-J VM
     * [FELIX-3666] - NPE when uninstalling a bundle
     * [FELIX-3694] - In some cases web console cannot edit configs without metatype
-    * [FELIX-3760] - Clean webconsole startup and disposal
     * [FELIX-3783] - ConfigurationAdminConfigurationPrinter failing if Configuration Admin API not bound
     * [FELIX-3784] - Configuration Admin tab not working when Metatype Service API is missing
     * [FELIX-3795] - JS Error in Configuration Status printing
@@ -27,12 +25,8 @@ Changes from 4.0.0 to 4.2.0
     * [FELIX-3594] - Service should be sorted by ID in service configuration printer
     * [FELIX-3798] - Make default category configurable
     * [FELIX-3799] - Sort plugin plugin links by title
-    * [FELIX-3800] - Support Category Translation
-    * [FELIX-3848] - Differentiate between unbound and new configuration
     * [FELIX-3851] - Allow for refresh after bundle update/install
     * [FELIX-3861] - Set felix.webconsole.category on Web Console plugins
-    * [FELIX-3879] - [PATCH] overridable client scripts for the webconsole
-    * [FELIX-3880] - [PATCH] placeholders for help links in the webconsole
     * [FELIX-3951] - Let users able to specify the directory used to temporarily store uploaded files
 
 ** New Feature
