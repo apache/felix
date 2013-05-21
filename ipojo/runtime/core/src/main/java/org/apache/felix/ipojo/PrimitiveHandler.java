@@ -60,10 +60,11 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
 
     /**
      * Attaches the current handler to the given instance.
+     * This method must be called only once, and should not be overridden.
      * @param manager the instance on which the current handler will be attached.
      * @see org.apache.felix.ipojo.Handler#attach(org.apache.felix.ipojo.ComponentInstance)
      */
-    protected final void attach(ComponentInstance manager) {
+    protected void attach(ComponentInstance manager) {
         m_manager = (InstanceManager) manager;
         m_instanceLogger = m_manager.getLogger();
     }

@@ -48,11 +48,11 @@ public abstract class CompositeHandler extends Handler {
     private CompositeFactory m_factory;
     
     /**
-     * Set the manager.
-     * This method me be called only once time.
+     * Sets the manager.
+     * This method must be called only once, and should not be overridden.
      * @param instance : the composite manager.
      */
-    protected final void attach(ComponentInstance instance) {
+    protected void attach(ComponentInstance instance) {
         m_manager = (CompositeManager) instance;
     }
     
