@@ -29,23 +29,7 @@ public class FooProviderType1 implements FooService {
 	private String m_foo;
     
     private BundleContext m_context;
-    
-    private static FooProviderType1 singleton;
-    private static int count = 0;
-    
-    private static FooProviderType1 singleton(BundleContext bc) {
-        if (singleton == null) {
-            count++;
-            singleton = new FooProviderType1(bc);
-        }
-        return singleton;
-    }
-    
-    public static FooProviderType1 several(BundleContext bc) {
-        count++;
-        return new FooProviderType1(bc);
-    }
-        
+
     public FooProviderType1(BundleContext bc) {
         if (bc ==null) {
             throw new RuntimeException("Injected bundle context null");
@@ -54,43 +38,28 @@ public class FooProviderType1 implements FooService {
     }
 
 	public boolean foo() {
+        // Update m_foo
+        if (m_foo.equals(VALUE)) {
+            m_foo = VALUE_2;
+        }
+
 		return true;
 	}
 
 	public Properties fooProps() {
 		Properties p = new Properties();
-		p.put("bar", new Integer(m_bar));
+		p.put("bar", m_bar);
         if(m_foo != null) {
             p.put("foo", m_foo);
         }
         p.put("context", m_context);
-        
-        p.put("count", new Integer(count));
+
+        int count = 0;
+        p.put("count", count);
 		return p;
 	}
     
-	public void testException() throws Exception {
-        String a = "foobarbaz";
-	    throw new Exception("foo"+a);
-    }
-    
-    public void testTry() {
-            String a = "foo";
-            a.charAt(0);
-    }
-    
-    public void testTry2(String s) {
-            String a = "foo";
-            a.charAt(0);
-    }
-    
-    private void nexttry(String  s) {
-        try {
-            s += "foo";
-        } catch(RuntimeException e) {
-            
-        }
-    }
+
     
 	public boolean getBoolean() { return true; }
 
@@ -100,18 +69,6 @@ public class FooProviderType1 implements FooService {
 
 	public long getLong() { return 1; }
 
-	public Boolean getObject() { return new Boolean(true); }
-	
-	/**
-	 * Custom constructor.
-	 * @param bar
-	 * @param foo
-	 * @param bc
-	 */
-	public FooProviderType1(int bar, String foo, BundleContext bc) {
-	    m_bar = bar;
-	    m_foo = foo;
-	    m_context = bc;
-	}
+	public Boolean getObject() { return true; }
 
 }

@@ -997,7 +997,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * @param fields the field metadata list
      * @param methods the method metadata list
      * @deprecated use {@link InstanceManager#register(FieldMetadata, FieldInterceptor)}
-     * and {@link InstanceManager#register(FieldMetadata, MethodInterceptor)} instead.
+     * and {@link InstanceManager#register(MethodMetadata, MethodInterceptor)} instead.
      */
     public void register(PrimitiveHandler handler, FieldMetadata[] fields, MethodMetadata[] methods) {
         for (int i = 0; fields != null && i < fields.length; i++) {
@@ -1111,7 +1111,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         FieldInterceptor[] list = (FieldInterceptor[]) m_fieldRegistration.get(fieldName); // Immutable list.
         for (int i = 0; list != null && i < list.length; i++) {
             // Call onGet outside of a synchronized block.
-            Object handlerResult = list[i].onGet(null, fieldName, initialValue);
+            Object handlerResult = list[i].onGet(pojo, fieldName, initialValue);
             if (handlerResult == initialValue) {
                 continue; // Non-binding case (default implementation).
             } else {
@@ -1136,7 +1136,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
             }
             // Call onset outside of a synchronized block.
             for (int i = 0; list != null && i < list.length; i++) {
-                list[i].onSet(null, fieldName, result);
+                list[i].onSet(pojo, fieldName, result);
             }
         }
         return result;
@@ -1144,7 +1144,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
     /**
      * Dispatches entry method events on registered method interceptors.
-     * This method calls the {@link PrimitiveHandler#onEntry(Object, Method, Object[])}
+     * This method calls the {@link MethodInterceptor#onEntry(Object, java.lang.reflect.Member, Object[])}
      * methods on method interceptors monitoring the method.
      * @param pojo the pojo object on which method is invoked.
      * @param methodId the method id used to compute the {@link Method} object.
@@ -1167,8 +1167,9 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * The given returned object is an instance of {@link Exception} if the method thrown an
      * exception. If the given object is <code>null</code>, either the method returns <code>void</code>,
      * or the method has returned <code>null</code>
-     * This method calls the {@link PrimitiveHandler#onExit(Object, Method, Object[])} and the
-     * {@link PrimitiveHandler#onFinally(Object, Method)} methods on method interceptors monitoring the method.
+     * This method calls the {@link MethodInterceptor#onExit(Object, java.lang.reflect.Member, Object)} and the
+     * {@link MethodInterceptor#onFinally(Object, java.lang.reflect.Member)} methods on method interceptors
+     * monitoring the method.
      * @param pojo the pojo object on which method was invoked.
      * @param methodId the method id used to compute the {@link Method} object.
      * @param result the returned object.
@@ -1190,8 +1191,8 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     /**
      * Dispatches error method events on registered method interceptors.
      * or the method has returned <code>null</code>
-     * This method calls the {@link PrimitiveHandler#onExit(Object, Method, Object[])} and the
-     * {@link PrimitiveHandler#onFinally(Object, Method)} methods on method interceptors monitoring
+     * This method calls the {@link MethodInterceptor#onError(Object, java.lang.reflect.Member, Throwable)} and the
+     * {@link MethodInterceptor#onFinally(Object, java.lang.reflect.Member)} methods on method interceptors monitoring
      * the method.
      * @param pojo the pojo object on which the method was invoked
      * @param methodId the method id used to compute the {@link Method} object.
@@ -1276,7 +1277,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 .get(fieldName);
         for (int i = 0; list != null && i < list.length; i++) {
              // The callback must be call outside the synchronization block.
-            list[i].onSet(null, fieldName, objectValue);
+            list[i].onSet(pojo, fieldName, objectValue);
         }
     }
 
