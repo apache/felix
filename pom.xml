@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.felix.inventory</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
 
     <name>Apache Felix Inventory</name>
     <description>Apache Felix Inventory provides some mechanisms to get the current state of the system and therefore provides an inventory of the system.</description>
