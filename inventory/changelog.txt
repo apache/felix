@@ -7,6 +7,7 @@ Initial Release 1.0.0
     * [FELIX-3963] - Properly handle method resolution through reflection
     * [FELIX-3964] - Wrong signature for non-service InventoryPrinter services
     * [FELIX-4026] - InventoryPrinter must run on Java 1.4 plattforms (for embedded use)
+    * [FELIX-4037] - URL parsing is not compatible with ConfigurationRender plugin
 
 ** Improvement
     * [FELIX-3945] - Don't use SLF4j Logging
