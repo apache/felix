@@ -238,7 +238,7 @@
                                             org.apache.commons.io.filefilter,
                                             org.apache.commons.io.output,
                                             org.json;version=${org.json.version.osgi},
-                                            org.apache.felix.inventory;version=1.0.0;provide:=true,
+                                            org.apache.felix.inventory;version=1.0.0,
                                             ${webconsole.exports}
                                        </Export-Package>
                                        <Embed-Dependency>
@@ -249,7 +249,7 @@
                                            <!-- ServiceTracker -->
                                            org.osgi.compendium;
                                               inline=org/osgi/util/tracker/*,
-                                           org.apache.felix.inventory
+                                           org.apache.felix.inventory;inline=true
                                        </Embed-Dependency>
                                        
                                        <_removeheaders>
@@ -280,6 +280,14 @@
                   -->
                </plugins>
             </build>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.inventory</artifactId>
+                    <version>1.0.0</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
         </profile>
         
        <!--
@@ -425,13 +433,6 @@
             <version>1.6.0</version>
             <scope>provided</scope>
             <optional>true</optional>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.inventory</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
