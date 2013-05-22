@@ -350,10 +350,14 @@ public final class JettyService
         while (this.running) {
             startJetty();
 
-            synchronized (this) {
-                try {
+            synchronized (this)
+            {
+                try
+                {
                     wait();
-                } catch (InterruptedException e) {
+                }
+                catch (InterruptedException e)
+                {
                     // we will definitely be interrupted
                 }
             }
@@ -361,6 +365,7 @@ public final class JettyService
             stopJetty();
         }
     }
+
 
     private String getEndpoint(final Connector listener, final InetAddress ia)
     {
@@ -409,6 +414,25 @@ public final class JettyService
         return sb.toString();
     }
 
+    private List<String> getEndpoints(final Connector connector, final List<NetworkInterface> interfaces)
+    {
+        final List<String> endpoints = new ArrayList<String>();
+        for (final NetworkInterface ni : interfaces)
+        {
+            final Enumeration<InetAddress> ias = ni.getInetAddresses();
+            while (ias.hasMoreElements())
+            {
+                final InetAddress ia = ias.nextElement();
+                final String endpoint = this.getEndpoint(connector, ia);
+                if (endpoint != null)
+                {
+                    endpoints.add(endpoint);
+                }
+            }
+        }
+        return endpoints;
+    }
+
     private void addEndpointProperties(final Hashtable<String, Object> props, Object container)
     {
         final List<String> endpoints = new ArrayList<String>();
@@ -424,25 +448,30 @@ public final class JettyService
                 {
                     try
                     {
+                        final List<NetworkInterface> interfaces = new ArrayList<NetworkInterface>();
+                        final List<NetworkInterface> loopBackInterfaces = new ArrayList<NetworkInterface>();
                         final Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
                         while ( nis.hasMoreElements() )
                         {
                             final NetworkInterface ni = nis.nextElement();
                             if ( ni.isLoopback() )
                             {
-                                continue;
+                                loopBackInterfaces.add(ni);
                             }
-
-                            final Enumeration<InetAddress> ias = ni.getInetAddresses();
-                            while (ias.hasMoreElements())
+                            else
                             {
-                                final InetAddress ia = ias.nextElement();
-                                final String endpoint = this.getEndpoint(connector, ia);
-                                if ( endpoint != null )
-                                {
-                                    endpoints.add(endpoint);
-                                }
+                                interfaces.add(ni);
                             }
+                        }
+
+                        // only add loop back endpoints to the endpoint property if no other endpoint is available.
+                        if (!interfaces.isEmpty())
+                        {
+                            endpoints.addAll(getEndpoints(connector, interfaces));
+                        }
+                        else
+                        {
+                            endpoints.addAll(getEndpoints(connector, loopBackInterfaces));
                         }
                     }
                     catch (final SocketException se)
