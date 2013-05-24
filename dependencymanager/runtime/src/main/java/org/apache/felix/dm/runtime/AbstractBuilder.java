@@ -115,7 +115,7 @@ public abstract class AbstractBuilder
             String name = dependency.getString(Params.name, null);
             if (name == null) {
                 DependencyBuilder depBuilder = new DependencyBuilder(dependency);
-                Log.instance().info("ServiceLifecycleHandler.init: adding dependency %s into service %s",
+                Log.instance().info("adding dependency %s into service %s",
                                    dependency, srvMeta);
                 Dependency d = depBuilder.build(b, dm, false);
                 s.add(d);

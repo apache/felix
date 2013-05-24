@@ -90,15 +90,15 @@ import org.osgi.framework.Bundle;
  */
 public class ServiceLifecycleHandler
 {
-    private String m_init;
-    private String m_start;
-    private String m_stop;
-    private String m_destroy;
-    private MetaData m_srvMeta;
-    private List<MetaData> m_depsMeta;
-    private List<Dependency> m_namedDeps = new ArrayList<Dependency>();
-    private Bundle m_bundle;
-    private ToggleServiceDependency m_toggle;
+    private final String m_init;
+    private final String m_start;
+    private final String m_stop;
+    private final String m_destroy;
+    private final MetaData m_srvMeta;
+    private final List<MetaData> m_depsMeta;
+    private final List<Dependency> m_namedDeps = new ArrayList<Dependency>();
+    private final Bundle m_bundle;
+    private volatile ToggleServiceDependency m_toggle;
     private final static Object SYNC = new Object();
 
     /**
@@ -128,14 +128,17 @@ public class ServiceLifecycleHandler
      * the actual Service' init method, to see if a dependency customization map is returned.
      * We also check if a Lifecycle Controller is used. In this case, we add a hidden custom dependency,
      * allowing to take control of when the component is actually started/stopped.
-     * @param service The Annotated Service
+     * We also handle an edge case described in FELIX-4050, where component state calculation 
+     * may mess up if some dependencies are added using the API from the init method.
+     * 
+     * @param c The Annotated Component
      */
-    @SuppressWarnings("unchecked")
-    public void init(Component service)
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void init(Component c)
         throws Exception
     {
-        Object serviceInstance = service.getService();
-        DependencyManager dm = service.getDependencyManager();
+        Object serviceInstance = c.getService();
+        DependencyManager dm = c.getDependencyManager();
 
         // Check if a lifecycle controller is defined for this service. If true, then 
         // We'll use the ToggleServiceDependency in order to manually activate/deactivate 
@@ -154,7 +157,7 @@ public class ServiceLifecycleHandler
             m_toggle = new ToggleServiceDependency();
             AtomicBoolean startFlag = new AtomicBoolean(false);
             // Add the toggle to the service (we'll remove it from our destroy emthod).
-            service.add(m_toggle);
+            c.add(m_toggle);
             // Inject the runnable that will start our service, when invoked.
             setField(serviceInstance, starter, Runnable.class, new ComponentStarter(componentName, m_toggle, startFlag));
             if (stopper != null) {
@@ -163,15 +166,27 @@ public class ServiceLifecycleHandler
             }
         }
 
-        // Invoke all composites' init methods, and for each one, check if a dependency
+        // Before invoking an optional init method, we have to handle an edge case (FELIX-4050), where
+        // init may add dependencies using the API and also return a map for configuring some
+        // named dependencies. We have to add a hidden toggle dependency in the component, which we'll 
+        // active *after* the init method is called, and possibly *after* named dependencies are configured.
+        
+        ToggleServiceDependency initToggle = null;
+        if (m_init != null) 
+        {
+            initToggle = new ToggleServiceDependency();
+            c.add(initToggle); 
+        }
+        
+        // Invoke component and all composites init methods, and for each one, check if a dependency
         // customization map is returned by the method. This map will be used to configure 
         // some dependency filters (or required flag).
 
         Map<String, String> customization = new HashMap<String, String>();
-        Object[] composites = service.getCompositionInstances();
+        Object[] composites = c.getCompositionInstances();
         for (Object composite: composites)
         {
-            Object o = invokeMethod(composite, m_init, dm, service);
+            Object o = invokeMethod(composite, m_init, dm, c);
             if (o != null && Map.class.isAssignableFrom(o.getClass()))
             {
                 customization.putAll((Map) o);
@@ -180,7 +195,9 @@ public class ServiceLifecycleHandler
 
         Log.instance().debug("ServiceLifecycleHandler.init: invoked init method from service %s " +
                              ", returned map: %s", serviceInstance, customization);
-
+        
+        // Apply name dependency filters possibly returned by the init() method.
+        
         for (MetaData dependency: m_depsMeta)
         {
             // Check if this dependency has a name, and if we find the name from the 
@@ -214,10 +231,19 @@ public class ServiceLifecycleHandler
         }
         
         // Add all extra dependencies in one shot, in order to calculate state changes for all dependencies at a time.
-        if (m_namedDeps.size() > 0) {
+        if (m_namedDeps.size() > 0) 
+        {
             Log.instance().info("ServiceLifecycleHandler.init: adding extra/named dependencies %s",
                                 m_namedDeps);
-            service.add(m_namedDeps);
+            c.add(m_namedDeps);
+        }
+        
+        // init method fully handled, and all possible named dependencies have been configured. Now, activate the 
+        // hidden toggle, and then remove it from the component, because we don't need it anymore.
+        if (initToggle != null) 
+        {
+            initToggle.setAvailable(true);
+            c.remove(initToggle);
         }
     }
 
@@ -228,7 +254,7 @@ public class ServiceLifecycleHandler
      * some additional properties which must be appended to existing service properties.
      * Such extra properties takes precedence over existing service properties.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void start(Component service)
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
