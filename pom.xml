@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.felix.webconsole</artifactId>
     <packaging>bundle</packaging>
-    <version>4.2.1-SNAPSHOT</version>
+    <version>4.0.1-SNAPSHOT</version>
 
     <name>Apache Felix Web Management Console</name>
     <description>
@@ -284,7 +284,7 @@
                 <dependency>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>org.apache.felix.inventory</artifactId>
-                    <version>1.0.1-SNAPSHOT</version>
+                    <version>0.0.1-SNAPSHOT</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
