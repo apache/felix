@@ -19,7 +19,8 @@ Changes from 4.0.0 to 4.2.0
     * [FELIX-3965] - threads configuration status generates invalid results
     * [FELIX-3969] - web console shows invalid bundle symbolic name
     * [FELIX-3986] - ThreadDumper comparators are not correctly implemented
-
+    * [FELIX-4074] - Plugin class name changed for config manager plugin, might be disabled on update
+ 
 ** Improvement
     * [FELIX-2234] - Reduce status information from bundle plugin
     * [FELIX-3594] - Service should be sorted by ID in service configuration printer
