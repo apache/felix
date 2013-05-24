@@ -33,7 +33,7 @@ import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
 /**
- * This service is instantaited using a "factory set" from the
+ * This service is instantiated using a "factory set" from the
  * ServiceFactoryAnnotationTest class.
  * 
  * @see org.apache.felix.dm.test.annotation.ServiceFactoryAnnotationTest
