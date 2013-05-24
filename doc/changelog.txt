@@ -2,6 +2,7 @@ Trunk
 ------
 
 ** Bug
+    * [FELIX-4050] Named dependencies are not injected if new dependencies are added at init phase.
 
 ** Improvement
     * [FELIX-3869] - Fragment support for DependencyManager-Component
