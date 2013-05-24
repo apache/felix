@@ -171,6 +171,9 @@ public class OsgiManager extends GenericServlet
      */
     static final String DEFAULT_MANAGER_ROOT = "/system/console"; //$NON-NLS-1$
 
+    private static final String OLD_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.compendium.ConfigManager"; //$NON-NLS-1$
+    private static final String NEW_CONFIG_MANAGER_CLASS = "org.apache.felix.webconsole.internal.configuration.ConfigManager"; //$NON-NLS-1$
+
     static final String[] PLUGIN_CLASSES = {
             "org.apache.felix.webconsole.internal.configuration.ConfigurationAdminConfigurationPrinter", //$NON-NLS-1$
             "org.apache.felix.webconsole.internal.compendium.PreferencesConfigurationPrinter", //$NON-NLS-1$
@@ -182,7 +185,7 @@ public class OsgiManager extends GenericServlet
             "org.apache.felix.webconsole.internal.misc.ThreadPrinter", }; //$NON-NLS-1$
 
     static final String[] PLUGIN_MAP = {
-            "org.apache.felix.webconsole.internal.configuration.ConfigManager", "configMgr", //$NON-NLS-1$ //$NON-NLS-2$
+            NEW_CONFIG_MANAGER_CLASS, "configMgr", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.compendium.LogServlet", "logs", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.core.BundlesServlet", "bundles", //$NON-NLS-1$ //$NON-NLS-2$
             "org.apache.felix.webconsole.internal.core.ServicesServlet", "services", //$NON-NLS-1$ //$NON-NLS-2$
@@ -963,6 +966,14 @@ public class OsgiManager extends GenericServlet
         // get enabled plugins
         String[] plugins = ConfigurationUtil.getStringArrayProperty(config, PROP_ENABLED_PLUGINS);
         enabledPlugins = null == plugins ? null : new HashSet(Arrays.asList(plugins));
+        // check for moved config manager class (see FELIX-4074)
+        if ( enabledPlugins != null )
+        {
+            if ( enabledPlugins.remove(OLD_CONFIG_MANAGER_CLASS) )
+            {
+                enabledPlugins.add(NEW_CONFIG_MANAGER_CLASS);
+            }
+        }
         initInternalPlugins();
 
         // might update HTTP service registration
