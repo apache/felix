@@ -78,7 +78,7 @@ public class RaceTest extends Base implements Runnable {
             m.add(controller);
             Thread t = new Thread(this);
             t.start();
-            super.sleep(10000);
+            super.sleep(30*1000);
 
             m_running = false;
             t.interrupt();
@@ -110,7 +110,7 @@ public class RaceTest extends Base implements Runnable {
                 aFactory.register(N, m_exec);
 
                 try {
-                    if (!m_bindALatch.await(5000, TimeUnit.MILLISECONDS)) {
+                    if (!m_bindALatch.await(10000, TimeUnit.MILLISECONDS)) {
                         super.log(LOG_ERROR, "bind problem.");
                         return;
                     }
@@ -119,7 +119,7 @@ public class RaceTest extends Base implements Runnable {
 
                 aFactory.unregister(N, m_exec);
 
-                if (!m_unbindALatch.await(5000, TimeUnit.MILLISECONDS)) {
+                if (!m_unbindALatch.await(10000, TimeUnit.MILLISECONDS)) {
                     super.log(LOG_ERROR, "unbind problem.");
                     return;
                 }
