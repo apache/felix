@@ -90,7 +90,7 @@ public class DefaultWebConsolePlugin extends AbstractWebConsolePlugin implements
      */
     public void print(final PrintWriter printWriter, final Format format, final boolean isZip)
     {
-        final InventoryPrinterHandler[] handlers = this.inventoryPrinterManager.getAllHandlers();
+        final InventoryPrinterHandler[] handlers = this.inventoryPrinterManager.getHandlers(null);
         printWriter.print("Currently registered ");
         printWriter.print(String.valueOf(handlers.length));
         printWriter.println(" printer(s).");

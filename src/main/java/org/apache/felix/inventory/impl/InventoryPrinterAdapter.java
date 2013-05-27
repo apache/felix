@@ -18,9 +18,7 @@ package org.apache.felix.inventory.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.DateFormat;
 import java.util.Comparator;
-import java.util.Locale;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.felix.inventory.InventoryPrinter;
@@ -36,12 +34,6 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class InventoryPrinterAdapter implements InventoryPrinterHandler, Comparable
 {
-
-    /**
-     * Formatter pattern to render the current time of inventory generation.
-     */
-    static final DateFormat DISPLAY_DATE_FORMAT = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG,
-        Locale.US);
 
     /**
      * Comparator for adapters based on the service ranking.

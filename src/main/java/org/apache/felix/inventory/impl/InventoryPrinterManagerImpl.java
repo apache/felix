@@ -262,21 +262,13 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
     }
 
     /**
-     * Get all inventory printer handlers.
+     * Get all handlers supporting the format or all handlers if {@code format}
+     * is {@code null}.
      *
-     * @return A list of handlers - might be empty.
-     */
-    public InventoryPrinterHandler[] getAllHandlers()
-    {
-        synchronized (this.usedAdapters)
-        {
-            return (InventoryPrinterHandler[]) this.usedAdapters.toArray(new InventoryPrinterHandler[this.usedAdapters
-                .size()]);
-        }
-    }
-
-    /**
-     * Get all handlers supporting the format.
+     * @param format The {@link Format} the returned handlers are expected to
+     *            support. If this parameter is {@code null} all handlers are
+     *            returned regardless of {@link Format} supported by the
+     *            handlers.
      *
      * @return A list of handlers - might be empty.
      */
@@ -289,7 +281,7 @@ public class InventoryPrinterManagerImpl implements ServiceTrackerCustomizer
             while (i.hasNext())
             {
                 final InventoryPrinterAdapter printer = (InventoryPrinterAdapter) i.next();
-                if (printer.supports(format))
+                if (format == null || printer.supports(format))
                 {
                     result.add(printer);
                 }
