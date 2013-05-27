@@ -17,21 +17,20 @@
 package org.apache.felix.inventory.impl;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Writer;
+import java.text.DateFormat;
 import java.util.Date;
-import java.util.StringTokenizer;
-import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.util.Locale;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.inventory.Format;
+import org.apache.felix.inventory.impl.helper.ConfigurationWriter;
+import org.apache.felix.inventory.impl.helper.HtmlConfigurationWriter;
+import org.apache.felix.inventory.impl.helper.JSONConfigurationWriter;
+import org.apache.felix.inventory.impl.helper.PlainTextConfigurationWriter;
+import org.apache.felix.inventory.impl.helper.ZipConfigurationWriter;
 
 /**
  * The web console plugin for a inventory printer.
@@ -69,7 +68,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         }
         else
         {
-            if (handler.supports(format))
+            if (format == null || handler.supports(format))
             {
                 pw.printInventory(format, handler);
             }
@@ -101,8 +100,7 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
         return null; // all by default
     }
 
-    protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException,
-        IOException
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException
     {
         this.setNoCache(response);
 
@@ -140,33 +138,9 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             }
             response.setContentType(type);
 
-            final ZipOutputStream zip = new ZipOutputStream(response.getOutputStream());
-            zip.setLevel(Deflater.BEST_SPEED);
-            zip.setMethod(ZipOutputStream.DEFLATED);
-
-            final Date now = new Date();
-            // create time stamp entry
-            final ZipEntry entry = new ZipEntry("timestamp.txt"); //$NON-NLS-2$
-            entry.setTime(now.getTime());
-            zip.putNextEntry(entry);
-            final StringBuffer sb = new StringBuffer();
-            sb.append("Date: ");
-            synchronized (InventoryPrinterAdapter.DISPLAY_DATE_FORMAT)
-            {
-                sb.append(InventoryPrinterAdapter.DISPLAY_DATE_FORMAT.format(now));
-            }
-            sb.append(" (");
-            sb.append(String.valueOf(now.getTime()));
-            sb.append(")\n");
-
-            zip.write(sb.toString().getBytes("UTF-8"));
-            zip.closeEntry();
-
-            final ZipConfigurationWriter pw = new ZipConfigurationWriter(zip);
-            printConfigurationInventory(pw, Format.TEXT, handler);
-            printConfigurationInventory(pw, Format.JSON, handler);
-
-            zip.finish();
+            final ZipConfigurationWriter pw = ZipConfigurationWriter.create(response.getOutputStream());
+            printConfigurationInventory(pw, null, handler);
+            pw.finish();
         }
         else if (request.getPathInfo().endsWith(".nfo"))
         {
@@ -259,12 +233,8 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
             pw.println("</script>");
             pw.println("<br/><p class=\"statline\">");
 
-            final Date currentTime = new Date();
-            synchronized (InventoryPrinterAdapter.DISPLAY_DATE_FORMAT)
-            {
-                pw.print("Date: ");
-                pw.println(InventoryPrinterAdapter.DISPLAY_DATE_FORMAT.format(currentTime));
-            }
+            pw.print("Date: ");
+            pw.println(DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.US).format(new Date()));
 
             pw.print("<button type=\"button\" class=\"downloadFullZip\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Full Zip</button>");
             pw.print("<button type=\"button\" class=\"downloadFullTxt\" style=\"float: right; margin-right: 30px; margin-top: 5px;\">Download Full Text</button>");
@@ -281,398 +251,38 @@ public abstract class AbstractWebConsolePlugin extends HttpServlet
 
             pw.println("<br/>&nbsp;</p>"); // status line
             pw.print("<div>");
+
+            final boolean filter;
+            final Format format;
             if (handler.supports(Format.HTML))
             {
-                handler.print(pw, Format.HTML, false);
+                filter = false;
+                format = Format.HTML;
+            }
+            else if (handler.supports(Format.TEXT))
+            {
+                // prefer TEXT of JSON if available
+                filter = true;
+                format = Format.TEXT;
+            }
+            else if (handler.supports(Format.JSON))
+            {
+                filter = true;
+                format = Format.JSON;
             }
             else
             {
-                pw.enableFilter(true);
-                handler.print(pw, Format.TEXT, false);
-                pw.enableFilter(false);
+                // fallback to TEXT (if unknown format)
+                filter = true;
+                format = Format.TEXT;
             }
+
+            pw.enableFilter(filter);
+            handler.print(pw, format, false);
+            pw.enableFilter(false);
+
             pw.print("</div>");
         }
     }
 
-    /**
-     * Base class for all configuration writers.
-     */
-    private abstract static class ConfigurationWriter extends PrintWriter
-    {
-
-        ConfigurationWriter(final Writer delegatee)
-        {
-            super(delegatee);
-        }
-
-        protected void title(final String title) throws IOException
-        {
-            // dummy implementation
-        }
-
-        protected void end() throws IOException
-        {
-            // dummy implementation
-        }
-
-        public void printInventory(final Format format, final InventoryPrinterHandler handler) throws IOException
-        {
-            this.title(handler.getTitle());
-            handler.print(this, format, false);
-            this.end();
-        }
-    }
-
-    /**
-     * The JSON configuration writer
-     */
-    private static class JSONConfigurationWriter extends ConfigurationWriter
-    {
-
-        private boolean wrapJSON;
-
-        private boolean startLine;
-
-        private boolean needComma;
-
-        JSONConfigurationWriter(final Writer delegatee)
-        {
-            super(delegatee);
-            this.wrapJSON = false;
-        }
-
-        public void startJSONWrapper()
-        {
-            println("{");
-            println("  \"value\": [");
-
-            this.wrapJSON = true;
-            this.startLine = true;
-            this.needComma = false;
-        }
-
-        public void endJSONWrapper()
-        {
-            if (this.wrapJSON)
-            {
-                // properly terminate the current line
-                this.println();
-
-                this.wrapJSON = false;
-                this.startLine = false;
-
-                super.println();
-                super.println("  ]");
-                super.println("}");
-            }
-        }
-
-        // IE has an issue with white-space:pre in our case so, we write
-        // <br/> instead of [CR]LF to get the line break. This also works
-        // in other browsers.
-        public void println()
-        {
-            if (wrapJSON)
-            {
-                if (!this.startLine)
-                {
-                    super.write('"');
-                    this.startLine = true;
-                    this.needComma = true;
-                }
-            }
-            else
-            {
-                super.println();
-            }
-        }
-
-        // some VM implementation directly write in underlying stream, instead
-        // of
-        // delegation to the write() method. So we need to override this, to
-        // make
-        // sure, that everything is escaped correctly
-        public void print(final String str)
-        {
-            final char[] chars = str.toCharArray();
-            write(chars, 0, chars.length);
-        }
-
-        private final char[] oneChar = new char[1];
-
-        // always delegate to write(char[], int, int) otherwise in some VM
-        // it cause endless cycle and StackOverflowError
-        public void write(final int character)
-        {
-            synchronized (oneChar)
-            {
-                oneChar[0] = (char) character;
-                write(oneChar, 0, 1);
-            }
-        }
-
-        // write the characters unmodified unless filtering is enabled in
-        // which case the writeFiltered(String) method is called for filtering
-        public void write(char[] chars, int off, int len)
-        {
-            if (this.wrapJSON)
-            {
-                if (this.startLine)
-                {
-                    this.startLine();
-                    this.startLine = false;
-                }
-
-                String v = new String(chars, off, len);
-                StringTokenizer st = new StringTokenizer(v, "\r\n\"", true);
-                while (st.hasMoreTokens())
-                {
-                    String t = st.nextToken();
-                    if (t.length() == 1)
-                    {
-                        char c = t.charAt(0);
-                        if (c == '\r')
-                        {
-                            // ignore
-                        }
-                        else if (c == '\n')
-                        {
-                            this.println();
-                            this.startLine();
-                        }
-                        else if (c == '"')
-                        {
-                            super.write('\\');
-                            super.write(c);
-                        }
-                        else
-                        {
-                            super.write(c);
-                        }
-                    }
-                    else
-                    {
-                        super.write(t.toCharArray(), 0, t.length());
-                    }
-                }
-            }
-            else
-            {
-                super.write(chars, off, len);
-            }
-        }
-
-        // write the string unmodified unless filtering is enabled in
-        // which case the writeFiltered(String) method is called for filtering
-        public void write(final String string, final int off, final int len)
-        {
-            write(string.toCharArray(), off, len);
-        }
-
-        private void startLine()
-        {
-            if (this.needComma)
-            {
-                super.write(',');
-                super.println();
-                this.needComma = false;
-            }
-
-            super.write("    \"".toCharArray(), 0, 5);
-            this.startLine = false;
-        }
-    }
-
-    /**
-     * The HTML configuration writer outputs the status as an HTML snippet.
-     */
-    private static class HtmlConfigurationWriter extends ConfigurationWriter
-    {
-
-        // whether or not to filter "<" signs in the output
-        private boolean doFilter;
-
-        HtmlConfigurationWriter(final Writer delegatee)
-        {
-            super(delegatee);
-        }
-
-        void enableFilter(final boolean doFilter)
-        {
-            this.doFilter = doFilter;
-        }
-
-        // IE has an issue with white-space:pre in our case so, we write
-        // <br/> instead of [CR]LF to get the line break. This also works
-        // in other browsers.
-        public void println()
-        {
-            if (doFilter)
-            {
-                this.write('\n'); // write <br/>
-            }
-            else
-            {
-                super.println();
-            }
-        }
-
-        // some VM implementation directly write in underlying stream, instead
-        // of
-        // delegation to the write() method. So we need to override this, to
-        // make
-        // sure, that everything is escaped correctly
-        public void print(final String str)
-        {
-            final char[] chars = str.toCharArray();
-            write(chars, 0, chars.length);
-        }
-
-        private final char[] oneChar = new char[1];
-
-        // always delegate to write(char[], int, int) otherwise in some VM
-        // it cause endless cycle and StackOverflowError
-        public void write(final int character)
-        {
-            synchronized (oneChar)
-            {
-                oneChar[0] = (char) character;
-                write(oneChar, 0, 1);
-            }
-        }
-
-        // write the characters unmodified unless filtering is enabled in
-        // which case the writeFiltered(String) method is called for filtering
-        public void write(char[] chars, int off, int len)
-        {
-            if (doFilter)
-            {
-                chars = this.escapeHtml(new String(chars, off, len)).toCharArray();
-                off = 0;
-                len = chars.length;
-            }
-            super.write(chars, off, len);
-        }
-
-        // write the string unmodified unless filtering is enabled in
-        // which case the writeFiltered(String) method is called for filtering
-        public void write(final String string, final int off, final int len)
-        {
-            write(string.toCharArray(), off, len);
-        }
-
-        /**
-         * Escapes HTML special chars like: <>&\r\n and space
-         *
-         *
-         * @param text the text to escape
-         * @return the escaped text
-         */
-        private String escapeHtml(final String text)
-        {
-            final StringBuffer sb = new StringBuffer(text.length() * 4 / 3);
-            char ch, oldch = '_';
-            for (int i = 0; i < text.length(); i++)
-            {
-                switch (ch = text.charAt(i))
-                {
-                    case '<':
-                        sb.append("&lt;"); //$NON-NLS-1$
-                        break;
-                    case '>':
-                        sb.append("&gt;"); //$NON-NLS-1$
-                        break;
-                    case '&':
-                        sb.append("&amp;"); //$NON-NLS-1$
-                        break;
-                    case ' ':
-                        sb.append("&nbsp;"); //$NON-NLS-1$
-                        break;
-                    case '\r':
-                    case '\n':
-                        if (oldch != '\r' && oldch != '\n') // don't add twice
-                                                            // <br>
-                            sb.append("<br/>\n"); //$NON-NLS-1$
-                        break;
-                    default:
-                        sb.append(ch);
-                }
-                oldch = ch;
-            }
-
-            return sb.toString();
-        }
-    }
-
-    /**
-     * The plain text configuration writer outputs the status as plain text.
-     */
-    private static class PlainTextConfigurationWriter extends ConfigurationWriter
-    {
-
-        PlainTextConfigurationWriter(final Writer delegatee)
-        {
-            super(delegatee);
-        }
-
-        protected void title(final String title) throws IOException
-        {
-            print("*** ");
-            print(title);
-            println(":");
-        }
-
-        protected void end() throws IOException
-        {
-            println();
-        }
-    }
-
-    /**
-     * The ZIP configuration writer creates a zip with
-     * - txt output of a inventory printers (if supported)
-     * - json output of a inventory printers (if supported)
-     * - attachments from a inventory printer (if supported)
-     */
-    private static class ZipConfigurationWriter extends ConfigurationWriter
-    {
-
-        private final ZipOutputStream zip;
-
-        ZipConfigurationWriter(final ZipOutputStream zip)
-        {
-            super(new OutputStreamWriter(zip));
-            this.zip = zip;
-        }
-
-        public void printInventory(final Format format, final InventoryPrinterHandler handler) throws IOException
-        {
-            if (format == Format.TEXT)
-            {
-                final ZipEntry entry = new ZipEntry(handler.getName().concat(".txt"));
-                zip.putNextEntry(entry);
-                handler.print(this, format, false);
-                flush();
-                zip.closeEntry();
-
-                handler.addAttachments(this.zip, handler.getName().concat("/"));
-            }
-            else if (format == Format.JSON)
-            {
-                final String name = "json/".concat(handler.getName()).concat(".json");
-
-                final ZipEntry entry = new ZipEntry(name);
-                zip.putNextEntry(entry);
-                handler.print(this, Format.JSON, true);
-                flush();
-
-                zip.closeEntry();
-                if (!handler.supports(Format.TEXT))
-                {
-                    handler.addAttachments(this.zip, handler.getName().concat("/"));
-                }
-            }
-        }
-    }
 }
