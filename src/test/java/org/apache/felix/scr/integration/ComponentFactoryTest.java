@@ -49,6 +49,7 @@ public class ComponentFactoryTest extends ComponentTestBase
 
     static
     {
+        descriptorFile = "/integration_test_simple_factory_components.xml";
         // uncomment to enable debugging of this test class
 //        paxRunnerVmOption = DEBUG_VM_OPTION;
     }

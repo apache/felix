@@ -53,6 +53,7 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
     static
     {
         NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = true;
+        descriptorFile = "/integration_test_simple_factory_components.xml";
         // uncomment to enable debugging of this test class
         // paxRunnerVmOption = DEBUG_VM_OPTION;
     }
