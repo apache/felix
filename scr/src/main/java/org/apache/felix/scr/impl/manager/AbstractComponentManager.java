@@ -1307,12 +1307,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return m_state;
         }
 
-        void ungetService( ImmediateComponentManager dcm )
-        {
-            throw new IllegalStateException("ungetService" + this);
-        }
-
-
         void enable( AbstractComponentManager acm )
         {
             log( acm, "enable" );
@@ -1427,11 +1421,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
             doDeactivate( acm, reason, disable );
-        }
-
-        void ungetService( ImmediateComponentManager dcm )
-        {
-            //do nothing, deactivate will unget all the services.
         }
 
         void dispose( AbstractComponentManager acm, int reason )
@@ -1562,11 +1551,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             acm.changeState( Disposed.getInstance() );
         }
 
-        void ungetService( ImmediateComponentManager dcm )
-        {
-            //do nothing.  This can arise if component is deactivated concurrently with ungetService on a delayed component.
-        }
-
     }
 
     protected static abstract class Satisfied extends State
@@ -1635,15 +1619,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return m_inst;
         }
 
-
-        void ungetService( ImmediateComponentManager dcm )
-        {
-            dcm.deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
-            if ( dcm.enabled )
-            {
-                dcm.changeState( Registered.getInstance() );
-            }
-        }
     }
 
     /**
@@ -1668,10 +1643,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return m_inst;
         }
 
-        void ungetService( ImmediateComponentManager dcm )
-        {
-            //do nothing.  This can arise if component is deactivated concurrently with ungetService on a delayed component.
-        }
     }
 
     /**
@@ -1720,12 +1691,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         static State getInstance()
         {
             return m_inst;
-        }
-
-        void ungetService( ImmediateComponentManager dcm )
-        {
-            dcm.deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
-            dcm.changeState( Registered.getInstance() );
         }
 
         void deactivate( AbstractComponentManager acm, int reason, boolean disable )

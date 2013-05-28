@@ -837,7 +837,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 {
                     if ( m_useCount.get() == 0 )
                     {
-                        Active.getInstance().ungetService( this );
+                        ungetService( );
                         unsetDependenciesCollected();
                     }
                 }
@@ -846,6 +846,15 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                     releaseWriteLock( "ImmediateComponentManager.ungetService.1" );
                 }
             }
+        }
+    }
+
+    void ungetService( )
+    {
+        deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
+        if ( isEnabled() )
+        {
+            changeState( Registered.getInstance() );
         }
     }
 
