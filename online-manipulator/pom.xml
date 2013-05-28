@@ -32,7 +32,9 @@
     <description>
         iPOJO online manipulator allowing install time manipulation of iPOJO bundle.
     </description>
-    <url>http://felix.apache.org/site/apache-felix-ipojo-online-manipulator.html</url>
+    <url>
+        http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/apache-felix-ipojo-online-manipulator.html
+    </url>
 
     <properties>
         <ipojo.import.packages>[1.8.0,2.0.0)</ipojo.import.packages>
@@ -107,7 +109,7 @@
                         <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
                         <Private-Package>org.apache.felix.ipojo.online.manipulator</Private-Package>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/apache-felix-ipojo-online-manipulator.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/apache-felix-ipojo-online-manipulator.html
                         </Bundle-DocURL>
                         <Export-Package>
                             org.apache.felix.ipojo.manipulation*; version="${ipojo.manipulator.version}",
