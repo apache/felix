@@ -594,11 +594,21 @@ public class ConfigurationSupport implements ConfigurationListener
     {
         String bsn = bundle.getSymbolicName();
         String version = bundle.getVersion().toString();
-        String location = bundle.getLocation();
+        String location = escape(bundle.getLocation());
         String f = String.format(
                 "(|(%1$s=%2$s)(%1$s=%2$s|%3$s)(%1$s=%2$s|%3$s|%4$s)(%1$s=%2$s|%3$s|%4$s|%5$s))", 
                 key, pid, bsn, version, location );
         return f;
+    }
+    
+    /**
+     * see core spec 3.2.7.  Escape \*() with preceding \
+     * @param value
+     * @return escaped string
+     */
+    static final String escape(String value)
+    {
+        return value.replaceAll( "([\\\\\\*\\(\\)])", "\\\\$1" );
     }
     
     
