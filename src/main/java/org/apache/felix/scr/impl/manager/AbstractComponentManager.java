@@ -74,6 +74,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         "Component disabled",
         "Bundle stopped"};
 
+    private final boolean m_factoryInstance;
     // the ID of this component
     private long m_componentId;
 
@@ -120,7 +121,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     private final Condition missingCondition = missingLock.newCondition();
     private final Set<Integer> missing = new TreeSet<Integer>( );
 
-
+    volatile boolean m_activated;
 
     /**
      * The constructor receives both the activator and the metadata
@@ -131,6 +132,12 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     protected AbstractComponentManager( BundleComponentActivator activator, ComponentMetadata metadata, ComponentMethods componentMethods )
     {
+        this( activator, metadata, componentMethods, false );
+    }
+    
+    protected AbstractComponentManager( BundleComponentActivator activator, ComponentMetadata metadata, ComponentMethods componentMethods, boolean factoryInstance )
+    {
+        m_factoryInstance = factoryInstance;
         m_activator = activator;
         m_componentMetadata = metadata;
         this.m_componentMethods = componentMethods;
@@ -695,18 +702,123 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     final void activateInternal( int trackingCount )
     {
-         m_state.activate( this );
+        log( LogService.LOG_DEBUG, "ActivateInternal",
+                null );
+        if ( disposed )
+        {
+            log( LogService.LOG_DEBUG, "ActivateInternal: disposed",
+                    null );
+            throw new IllegalStateException( "Cannot activate disposed component: " + getName() );
+        }
+        if ( m_activated ) {
+            log( LogService.LOG_DEBUG, "ActivateInternal: already activated",
+                    null );
+            return;
+        }
+        if ( !isEnabled())
+        {
+            log( LogService.LOG_DEBUG, "Component is not enabled; not activating component",
+                    null );
+            return;
+        }
+        if ( !isActivatorActive() )
+        {
+            log( LogService.LOG_DEBUG, "Bundle's component activator is not active; not activating component",
+                    null );
+            return;
+        }
+
+        log( LogService.LOG_DEBUG, "Activating component from state {0}", new Object[] {state()},  null );
+
+        // Before creating the implementation object, we are going to
+        // test if we have configuration if such is required
+        if ( !hasConfiguration() && getComponentMetadata().isConfigurationRequired() )
+        {
+            log( LogService.LOG_DEBUG, "Missing required configuration, cannot activate", null );
+            return;
+        }
+
+        // Before creating the implementation object, we are going to
+        // test that the bundle has enough permissions to register services
+        if ( !hasServiceRegistrationPermissions() )
+        {
+            log( LogService.LOG_DEBUG, "Component is not permitted to register all services, cannot activate",
+                    null );
+            return;
+        }
+
+        // Update our target filters.
+        log( LogService.LOG_DEBUG, "Updating target filters", null );
+        updateTargets( getProperties() );
+
+        // Before creating the implementation object, we are going to
+        // test if all the mandatory dependencies are satisfied
+        if ( !verifyDependencyManagers() )
+        {
+            log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
+            return;
+        }
+
+        // set satisfied state before registering the service because
+        // during service registration a listener may try to get the
+        // service from the service reference which may cause a
+        // delayed service object instantiation through the State
+
+        // actually since we don't have the activating state any
+        // longer, we have to set the satisfied state already
+        // before actually creating the component such that services
+        // may be accepted.
+        final State satisfiedState = getSatisfiedState();
+        changeState( satisfiedState );
+
+        if ( !registerService() )
+        {
+            //some other thread is activating us, or we got concurrently deactivated.
+            return;
+        }
+
+        if ( ( isImmediate() || getComponentMetadata().isFactory() ) )
+        {
+            getServiceInternal();
+        }
     }
 
     final void deactivateInternal( int reason, boolean disable, int trackingCount )
     {
-        m_state.deactivate( this, reason, disable );
+        if ( disposed )
+        {
+            throw new IllegalStateException( "Cannot deactivate disposed component " + getName() );
+        }
+        if ( m_factoryInstance )
+        {
+            disposeInternal( reason );
+            return;
+        }
+        m_activated = false;
+        log( LogService.LOG_DEBUG, "Deactivating component", null );
+
+        // catch any problems from deleting the component to prevent the
+        // component to remain in the deactivating state !
+        doDeactivate( reason, disable );
+        if ( state().isSatisfied() )
+        {
+            changeState( Unsatisfied.getInstance() );
+        }
+        if ( isFactory() )
+        {
+            clear();
+        }
     }
 
     final void disableInternal()
     {
         m_internalEnabled = false;
-        m_state.disable( this );
+        if ( disposed )
+        {
+            throw new IllegalStateException( "Cannot disable a disposed component " + getName() );
+        }
+        unregisterComponentId();
+        changeState( Disabled.getInstance() );
     }
 
     /**
@@ -721,12 +833,16 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     public final void disposeInternal( int reason )
     {
         log( LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null );
-        doDeactivate( reason, true );
+        if ( m_activated )
+        {
+            m_activated = false;
+            doDeactivate( reason, true );
+        }
         //may call this multiple times.
 //        disableDependencyManagers();
         clear();
         changeState( Disposed.getInstance() );
-             }
+    }
          
     void doDeactivate( int reason, boolean disable )
     {
@@ -996,7 +1112,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         if ( m_activator != null )
         {
             m_activator.unregisterComponentId( this );
-            m_activator = null;
+//            m_activator = null;
         }
     }
 
@@ -1359,61 +1475,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return m_state;
         }
 
-        void activate( AbstractComponentManager acm )
-        {
-            log( acm, "activate" );
-        }
-
-
-        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
-        {
-            log( acm, "deactivate (reason: " + REASONS[ reason ] + ") (dsable: " + disable + ")" );
-        }
-
-
-        void disable( AbstractComponentManager acm )
-        {
-            throw new IllegalStateException("disable" + this);
-        }
-
-
-        private void log( AbstractComponentManager acm, String event )
-        {
-            acm.log( LogService.LOG_DEBUG, "Current state: {0}, Event: {1}, Service registration: {2}", new Object[]
-                { m_name, event, acm.getServiceRegistration() }, null );
-        }
-
-        void doDeactivate( AbstractComponentManager acm, int reason, boolean disable )
-        {
-            try
-            {
-                if ( !acm.unregisterService() )
-                {
-                    acm.log( LogService.LOG_DEBUG, "Component deactivation occuring on another thread", null );
-                    //another thread is deactivating.
-                    return;
-                }
-                acm.obtainWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
-                try
-                {
-                    acm.deleteComponent( reason );
-                    acm.deactivateDependencyManagers();
-                    if ( disable )
-                    {
-                        acm.disableDependencyManagers();
-                    }
-                    acm.unsetDependenciesCollected();
-                }
-                finally
-                {
-                    acm.releaseWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
-                }
-            }
-            catch ( Throwable t )
-            {
-                acm.log( LogService.LOG_WARNING, "Component deactivation threw an exception", t );
-            }
-        }
 
         public boolean isSatisfied()
         {
@@ -1438,11 +1499,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
 
 
-        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
-        {
-            doDeactivate( acm, reason, disable );
-        }
-
     }
 
     protected static final class Unsatisfied extends State
@@ -1461,99 +1517,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return m_inst;
         }
 
-        /**
-         * returns true if this thread succeeds in activating the component, or the component is not able to be activated.
-         * Returns false if some other thread succeeds in activating the component.
-         * @param acm
-         */
-        void activate( AbstractComponentManager acm )
-        {
-            if ( !acm.isActivatorActive() )
-            {
-                acm.log( LogService.LOG_DEBUG, "Bundle's component activator is not active; not activating component",
-                    null );
-                return;
-            }
-
-            acm.log( LogService.LOG_DEBUG, "Activating component from state {0}", new Object[] {this},  null );
-
-            // Before creating the implementation object, we are going to
-            // test if we have configuration if such is required
-            if ( !acm.hasConfiguration() && acm.getComponentMetadata().isConfigurationRequired() )
-            {
-                acm.log( LogService.LOG_DEBUG, "Missing required configuration, cannot activate", null );
-                return;
-            }
-
-            // Before creating the implementation object, we are going to
-            // test that the bundle has enough permissions to register services
-            if ( !acm.hasServiceRegistrationPermissions() )
-            {
-                acm.log( LogService.LOG_DEBUG, "Component is not permitted to register all services, cannot activate",
-                    null );
-                return;
-            }
-
-            // Update our target filters.
-            acm.log( LogService.LOG_DEBUG, "Updating target filters", null );
-            acm.updateTargets( acm.getProperties() );
-
-            // Before creating the implementation object, we are going to
-            // test if all the mandatory dependencies are satisfied
-            if ( !acm.verifyDependencyManagers() )
-            {
-                acm.log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
-                return;
-            }
-
-            // set satisfied state before registering the service because
-            // during service registration a listener may try to get the
-            // service from the service reference which may cause a
-            // delayed service object instantiation through the State
-
-            // actually since we don't have the activating state any
-            // longer, we have to set the satisfied state already
-            // before actually creating the component such that services
-            // may be accepted.
-            final State satisfiedState = acm.getSatisfiedState();
-            acm.changeState( satisfiedState );
-
-            if ( !acm.registerService() )
-            {
-                //some other thread is activating us, or we got concurrently deactivated.
-                return;
-            }
-
-            if ( ( acm.isImmediate() || acm.getComponentMetadata().isFactory() ) )
-            {
-                acm.getServiceInternal();
-            }
- 
-        }
-
-        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
-        {
-            acm.log( LogService.LOG_DEBUG, "Deactivating component in state Unsatisfied for reason {0}: disable: {1}",
-                    new Object[] {reason, disable}, null );
-
-            // catch any problems from deleting the component to prevent the
-            // component to remain in the deactivating state !
-            doDeactivate(acm, reason, disable );
-
-            acm.log( LogService.LOG_DEBUG, "Component deactivated", null );
-        }
-
-        void disable( AbstractComponentManager acm )
-        {
-            acm.log( LogService.LOG_DEBUG, "Disabling component", null );
-            acm.unregisterComponentId();
-
-            // we are now disabled, ready for re-enablement or complete destroyal
-            acm.changeState( Disabled.getInstance() );
-
-            acm.log( LogService.LOG_DEBUG, "Component disabled", null );
-        }
-
     }
 
     protected static abstract class Satisfied extends State
@@ -1561,28 +1524,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         protected Satisfied( String name, int state )
         {
             super( name, state );
-        }
-
-        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
-        {
-            acm.log( LogService.LOG_DEBUG, "Deactivating component for reason {0}", new Object[] {REASONS[ reason ]},  null );
-
-            // catch any problems from deleting the component to prevent the
-            // component to remain in the deactivating state !
-            doDeactivate(acm, reason, disable );
-
-            if ( acm.state().isSatisfied() )
-            {
-                acm.changeState( Unsatisfied.getInstance() );
-            }
-            acm.log( LogService.LOG_DEBUG, "Component deactivated", null );
-        }
-
-        void disable( AbstractComponentManager acm )
-        {
-            acm.unregisterComponentId();
-            acm.changeState( Disabled.getInstance() );
-            acm.log( LogService.LOG_DEBUG, "Component disabled", null );
         }
 
         @Override
@@ -1687,11 +1628,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             return m_inst;
         }
-
-        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
-        {
-            acm.disposeInternal( reason );
-        }
     }
 
     /*
@@ -1711,21 +1647,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         static State getInstance()
         {
             return m_inst;
-        }
-
-        void activate( AbstractComponentManager acm )
-        {
-            throw new IllegalStateException( "activate: " + this );
-        }
-
-        void deactivate( AbstractComponentManager acm, int reason, boolean disable )
-        {
-            throw new IllegalStateException( "deactivate: " + this );
-        }
-
-        void disable( AbstractComponentManager acm )
-        {
-            throw new IllegalStateException( "disable: " + this );
         }
 
     }

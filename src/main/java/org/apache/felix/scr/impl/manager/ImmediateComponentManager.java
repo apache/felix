@@ -84,7 +84,13 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     public ImmediateComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
             ComponentMetadata metadata, ComponentMethods componentMethods )
     {
-        super( activator, metadata, componentMethods );
+        this(activator, componentHolder, metadata, componentMethods, false);
+    }
+    
+    public ImmediateComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
+            ComponentMetadata metadata, ComponentMethods componentMethods, boolean factoryInstance )
+    {
+        super( activator, metadata, componentMethods, factoryInstance );
 
         m_componentHolder = componentHolder;
     }
@@ -767,6 +773,10 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                         if ( result == null )
                         {
                             success = false;;
+                        }
+                        else
+                        {
+                            m_activated = true;
                         }
                     }
                 }
