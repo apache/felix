@@ -259,16 +259,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         return props;
     }
 
-    State getSatisfiedState()
-    {
-        return Factory.getInstance();
-    }
-
-    State getActiveState()
-    {
-        return Factory.getInstance();
-    }
-    
     boolean hasInstance()
     {
         return false;
@@ -526,11 +516,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
                 ComponentMetadata metadata, ComponentMethods componentMethods )
         {
             super( activator, componentHolder, metadata, componentMethods, true );
-        }
-
-        State getActiveState()
-        {
-            return FactoryInstance.getInstance();
         }
 
     }

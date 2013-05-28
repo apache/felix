@@ -334,21 +334,11 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     }
 
-    State getSatisfiedState()
-    {
-        return Registered.getInstance();
-    }
-    
     boolean hasInstance()
     {
         return m_componentContext != null;
     }
 
-    State getActiveState()
-    {
-        return Active.getInstance();
-    }
-    
     <T> void invokeBindMethod( DependencyManager<S, T> dependencyManager, RefPair<T> refPair, int trackingCount )
     {
         ComponentContextImpl<S> componentContext = m_componentContext;
@@ -809,7 +799,6 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
         if ( createComponent() )
         {
-            changeState( getActiveState() );
             return getInstance();
         }
 
@@ -867,10 +856,6 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     void ungetService( )
     {
         deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
-        if ( isEnabled() )
-        {
-            changeState( Registered.getInstance() );
-        }
     }
 
     private boolean keepInstances()

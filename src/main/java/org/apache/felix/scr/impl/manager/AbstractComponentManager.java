@@ -78,11 +78,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     // the ID of this component
     private long m_componentId;
 
-    // The state of this instance manager
-    // methods accessing this field should be synchronized unless there is a
-    // good reason to not be synchronized
-    private volatile State m_state;
-
     // The metadata
     private final ComponentMetadata m_componentMetadata;
 
@@ -143,7 +138,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         this.m_componentMethods = componentMethods;
         m_componentId = -1;
 
-        m_state = Disabled.getInstance();
         m_dependencyManagers = loadDependencyManagers( metadata );
 
         m_stateLock = new ReentrantLock( true );
@@ -696,7 +690,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
         registerComponentId();
         m_internalEnabled = true;
-        changeState( Unsatisfied.getInstance() );
         log( LogService.LOG_DEBUG, "Component enabled", null );
     }
 
@@ -728,7 +721,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return;
         }
 
-        log( LogService.LOG_DEBUG, "Activating component from state {0}", new Object[] {state()},  null );
+        log( LogService.LOG_DEBUG, "Activating component from state {0}", new Object[] {getState()},  null );
 
         // Before creating the implementation object, we are going to
         // test if we have configuration if such is required
@@ -764,8 +757,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             //some other thread is activating us, or we got concurrently deactivated.
             return;
         }
-        final State satisfiedState = getSatisfiedState();
-        changeState( satisfiedState );
 
 
         if ( ( isImmediate() || getComponentMetadata().isFactory() ) )
@@ -791,10 +782,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         // catch any problems from deleting the component to prevent the
         // component to remain in the deactivating state !
         doDeactivate( reason, disable );
-        if ( state().isSatisfied() )
-        {
-            changeState( Unsatisfied.getInstance() );
-        }
         if ( isFactory() )
         {
             clear();
@@ -809,7 +796,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             throw new IllegalStateException( "Cannot disable a disposed component " + getName() );
         }
         unregisterComponentId();
-        changeState( Disabled.getInstance() );
     }
 
     /**
@@ -829,10 +815,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             m_activated = false;
             doDeactivate( reason, true );
         }
-        //may call this multiple times.
-//        disableDependencyManagers();
         clear();
-        changeState( Disposed.getInstance() );
     }
          
     void doDeactivate( int reason, boolean disable )
@@ -904,10 +887,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     {
         return this;
     }
-
-    abstract State getSatisfiedState();
-
-    abstract State getActiveState();
 
     ComponentMethods getComponentMethods()
     {
@@ -1409,33 +1388,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return Component.STATE_ACTIVE;
         }
         return Component.STATE_REGISTERED;
-//        return m_state.getState();
     }
 
     abstract boolean hasInstance();
-
-    protected State state()
-    {
-        return m_state;
-    }
-
-    /**
-     * sets the state of the manager
-     */
-    void changeState( State newState )
-    {
-        log( LogService.LOG_DEBUG, "State transition : {0} -> {1} : service reg: {2}", new Object[]
-            { m_state, newState, getServiceRegistration() }, null );
-        m_state = newState;
-//        if ( getState() != newState.getState())
-//        {
-//            log(  LogService.LOG_ERROR,  "inconsistent state: expected {0} ({1}), but got {2}: disposed: {3} internalEnabled: {4} " +
-//            		"serviceReg: {5} hasServices: {6} verifyDependencyManagers: {7} factory: {8} factoryInstance {9} hasInstance {10}",
-//            		new Object[] {newState, newState.getState(), getState(), disposed, m_internalEnabled, 
-//                    getServiceRegistration() != null, getProvidedServices() != null, verifyDependencyManagers(), isFactory(), m_factoryInstance, hasInstance()}, 
-//            		new Exception("stack trace") );
-//        }
-    }
 
     public void setServiceProperties( MethodResult methodResult )
     {
@@ -1451,225 +1406,4 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return m_internalEnabled;
     }
     
-   //--------- State classes
-
-    /**
-     * There are 12 states in all. They are: Disabled, Unsatisfied,
-     * Registered, Factory, Active, Disposed, as well as the transient states
-     * Enabling, Activating, Deactivating, Disabling, and Disposing.
-     * The Registered, Factory, FactoryInstance and Active states are the
-     * "Satisfied" state in concept. The tansient states will be changed to
-     * other states automatically when work is done.
-     * <p>
-     * The transition cases are listed below.
-     * <ul>
-     * <li>Disabled -(enable/ENABLING) -> Unsatisifed</li>
-     * <li>Disabled -(dispose/DISPOSING)-> Disposed</li>
-     * <li>Unsatisfied -(activate/ACTIVATING, SUCCESS) -> Satisfied(Registered, Factory or Active)</li>
-     * <li>Unsatisfied -(activate/ACTIVATING, FAIL) -> Unsatisfied</li>
-     * <li>Unsatisfied -(disable/DISABLING) -> Disabled</li>
-     * <li>Registered -(getService, SUCCESS) -> Active</li>
-     * <li>Registered -(getService, FAIL) -> Unsatisfied</li>
-     * <li>Satisfied -(deactivate/DEACTIVATING)-> Unsatisfied</li>
-     * </ul>
-     */
-    protected static abstract class State
-    {
-        private final String m_name;
-        private final int m_state;
-
-
-        protected State( String name, int state )
-        {
-            m_name = name;
-            m_state = state;
-        }
-
-
-        public String toString()
-        {
-            return m_name;
-        }
-
-
-        int getState()
-        {
-            return m_state;
-        }
-
-
-        public boolean isSatisfied()
-        {
-            return false;
-        }
-    }
-
-    protected static final class Disabled extends State
-    {
-        private static final Disabled m_inst = new Disabled();
-
-
-        private Disabled()
-        {
-            super( "Disabled", STATE_DISABLED );
-        }
-
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
-
-
-    }
-
-    protected static final class Unsatisfied extends State
-    {
-        private static final Unsatisfied m_inst = new Unsatisfied();
-
-
-        private Unsatisfied()
-        {
-            super( "Unsatisfied", STATE_UNSATISFIED );
-        }
-
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
-
-    }
-
-    protected static abstract class Satisfied extends State
-    {
-        protected Satisfied( String name, int state )
-        {
-            super( name, state );
-        }
-
-        @Override
-        public boolean isSatisfied()
-        {
-            return true;
-        }
-    }
-
-    /**
-     * The <code>Active</code> state is the satisified state of an immediate
-     * component after activation. Dealyed and service factory components switch
-     * to this state from the {@link Registered} state once the service
-     * object has (first) been requested.
-     */
-    protected static final class Active extends Satisfied
-    {
-        private static final Active m_inst = new Active();
-
-
-        private Active()
-        {
-            super( "Active", STATE_ACTIVE );
-        }
-
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
-
-    }
-
-    /**
-     * The <code>Registered</code> state is the statisfied state of a delayed or
-     * service factory component before the actual service instance is
-     * (first) retrieved. After getting the actualo service instance the
-     * component switches to the {@link Active} state.
-     */
-    protected static final class Registered extends Satisfied
-    {
-        private static final Registered m_inst = new Registered();
-
-
-        private Registered()
-        {
-            super( "Registered", STATE_REGISTERED );
-        }
-
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
-
-    }
-
-    /**
-     * The <code>Factory</code> state is the satisfied state of component
-     * factory components.
-     */
-    protected static final class Factory extends Satisfied
-    {
-        private static final Factory m_inst = new Factory();
-
-
-        private Factory()
-        {
-            super( "Factory", STATE_FACTORY );
-        }
-
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
-    }
-
-
-    /**
-     * The <code>FactoryInstance</code> state is the satisfied state of
-     * instances of component factory components created with the
-     * <code>ComponentFactory.newInstance</code> method. This state acts the
-     * same as the {@link Active} state except that the
-     * {@link org.apache.felix.scr.impl.manager.AbstractComponentManager.State#deactivate(AbstractComponentManager, int, boolean)} switches to the
-     * real {@link Active} state before actually disposing off the component
-     * because component factory instances are never reactivated after
-     * deactivated due to not being satisified any longer. See section 112.5.5,
-     * Factory Component, for full details.
-     */
-    protected static final class FactoryInstance extends Satisfied
-    {
-        private static final FactoryInstance m_inst = new FactoryInstance();
-
-
-        private FactoryInstance()
-        {
-            super("FactoryInstance", STATE_ACTIVE);
-        }
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
-    }
-
-    /*
-    final state.
-     */
-    protected static final class Disposed extends State
-    {
-        private static final Disposed m_inst = new Disposed();
-
-
-        private Disposed()
-        {
-            super( "Disposed", STATE_DISPOSED );
-        }
-
-
-        static State getInstance()
-        {
-            return m_inst;
-        }
-
-    }
 }
