@@ -108,7 +108,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     private final Object enabledLatchLock = new Object();
 
     protected volatile boolean m_internalEnabled;
-
+    
+    private volatile boolean disposed;
+    
     //service event tracking
     private int floor;
 
@@ -513,6 +515,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     public void dispose( int reason )
     {
+        disposed = true;
         disposeInternal( reason );
     }
     
@@ -673,7 +676,20 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     final void enableInternal()
     {
-        m_state.enable( this );
+        if ( disposed )
+        {
+            throw new IllegalStateException( "enable: " + this );
+        }
+        if ( !isActivatorActive() )
+        {
+            log( LogService.LOG_DEBUG, "Bundle's component activator is not active; not enabling component",
+                    null );
+            return;
+        }
+
+        registerComponentId();
+        changeState( Unsatisfied.getInstance() );
+        log( LogService.LOG_DEBUG, "Component enabled", null );
         m_internalEnabled = true;
     }
 
@@ -1307,12 +1323,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return m_state;
         }
 
-        void enable( AbstractComponentManager acm )
-        {
-            log( acm, "enable" );
-        }
-
-
         void activate( AbstractComponentManager acm )
         {
             log( acm, "activate" );
@@ -1403,20 +1413,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return m_inst;
         }
 
-
-        void enable( AbstractComponentManager acm )
-        {
-            if ( !acm.isActivatorActive() )
-            {
-                acm.log( LogService.LOG_DEBUG, "Bundle's component activator is not active; not enabling component",
-                    null );
-                return;
-            }
-
-            acm.registerComponentId();
-            acm.changeState( Unsatisfied.getInstance() );
-            acm.log( LogService.LOG_DEBUG, "Component enabled", null );
-        }
 
         void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
@@ -1738,9 +1734,5 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             //factory instance can have dispose called with no effect. 112.5.5
         }
 
-        void enable( AbstractComponentManager acm )
-        {
-            throw new IllegalStateException( "enable: " + this );
-        }
     }
 }
