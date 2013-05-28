@@ -33,7 +33,9 @@
     <description>
         iPOJO extension to implement an extender pattern (host).
     </description>
-    <url>http://felix.apache.org/site/extender-pattern-handler.html</url>
+    <url>
+        http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/extender-pattern-handler.html
+    </url>
 
     <dependencies>
         <dependency>
@@ -54,7 +56,7 @@
                         <Bundle-Description>iPOJO Extender Pattern Handler
                         </Bundle-Description>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/extender-pattern-handler.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/extender-pattern-handler.html
                         </Bundle-DocURL>
                         <Private-Package>org.apache.felix.ipojo.handler.extender
                         </Private-Package>

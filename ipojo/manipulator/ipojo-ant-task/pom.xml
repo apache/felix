@@ -83,7 +83,9 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Bundle-Description>iPOJO Ant Task</Bundle-Description>
-                        <Bundle-DocURL>http://felix.apache.org/site/ipojo-ant-task.html</Bundle-DocURL>
+                        <Bundle-DocURL>
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/ipojo-ant-task.html
+                        </Bundle-DocURL>
                         <Private-Package>
                             org.apache.felix.ipojo.metadata,
                             org.apache.felix.ipojo.manipulator*,

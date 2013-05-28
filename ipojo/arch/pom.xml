@@ -31,7 +31,9 @@
     <version>1.7.0-SNAPSHOT</version>
 
     <description>Arch command to collect and print information about iPOJO instances.</description>
-    <url>http://felix.apache.org/site/ipojo-arch-command.html</url>
+    <url>
+        http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/ipojo-arch-command.html
+    </url>
 
     <dependencies>
         <dependency>
@@ -60,7 +62,7 @@
                         <Bundle-Description>iPOJO Arch command for Felix
                         </Bundle-Description>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/ipojo-arch-command.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/ipojo-arch-command.html
                         </Bundle-DocURL>
                         <Private-Package>org.apache.felix.ipojo.arch</Private-Package>
                     </instructions>

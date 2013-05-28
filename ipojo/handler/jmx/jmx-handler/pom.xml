@@ -32,7 +32,9 @@
     <description>
         iPOJO extension to expose instances as MBean inside a MBean Server.
     </description>
-    <url>http://felix.apache.org/site/ipojo-jmx-handler.html</url>
+    <url>
+        http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/ipojo-jmx-handler.html
+    </url>
 
     <dependencies>
         <dependency>
@@ -61,7 +63,7 @@
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Bundle-Description>iPOJO JMX Handler</Bundle-Description>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/ipojo-jmx-handler.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/ipojo-jmx-handler.html
                         </Bundle-DocURL>
                     </instructions>
                 </configuration>

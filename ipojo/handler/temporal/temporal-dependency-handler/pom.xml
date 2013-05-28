@@ -33,7 +33,9 @@
     <description>
         iPOJO extension to inject temporal service dependencies.
     </description>
-    <url>http://felix.apache.org/site/temporal-service-dependency.html</url>
+    <url>
+        http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/temporal-service-dependency.html
+    </url>
 
     <dependencies>
         <dependency>
@@ -81,7 +83,7 @@
                         <Bundle-Description>iPOJO Temporal Dependency Handler
                         </Bundle-Description>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/temporal-service-dependency.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/temporal-service-dependency.html
                         </Bundle-DocURL>
                     </instructions>
                 </configuration>

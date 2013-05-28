@@ -34,7 +34,7 @@
         iPOJO extension to easily implement a white-board pattern (host).
     </description>
     <url>
-        http://felix.apache.org/site/white-board-pattern-handler.html
+        http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/white-board-pattern-handler.html
     </url>
 
     <dependencies>
@@ -58,7 +58,7 @@
                         <Bundle-Description>iPOJO White-Board Pattern Handler
                         </Bundle-Description>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/white-board-pattern-handler.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/white-board-pattern-handler.html
                         </Bundle-DocURL>
                         <Private-Package>org.apache.felix.ipojo.handler.wbp
                         </Private-Package>

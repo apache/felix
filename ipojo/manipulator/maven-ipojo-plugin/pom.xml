@@ -33,7 +33,7 @@
         Maven Plugin to package iPOJO-powered bundles.
     </description>
     <url>
-        http://felix.apache.org/site/ipojo-maven-plug-in.html
+        http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/ipojo-maven-plug-in.html
     </url>
 
     <dependencies>

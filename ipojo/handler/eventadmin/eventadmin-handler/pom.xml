@@ -33,7 +33,9 @@
     <description>
         iPOJO extension to easily interact with the OSGi Event Admin.
     </description>
-    <url>http://felix.apache.org/site/event-admin-handlers.html</url>
+    <url>
+        http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/event-admin-handlers.html
+    </url>
 
     <dependencies>
         <dependency>
@@ -67,7 +69,7 @@
                         <Bundle-Description>iPOJO Event Admin Handlers
                         </Bundle-Description>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/event-admin-handlers.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/event-admin-handlers.html
                         </Bundle-DocURL>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                     </instructions>

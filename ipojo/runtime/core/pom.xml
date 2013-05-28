@@ -118,7 +118,7 @@
                         <Bundle-Description>iPOJO Core Framework</Bundle-Description>
                         <Bundle-Activator>org.apache.felix.ipojo.extender.internal.Extender</Bundle-Activator>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/apache-felix-ipojo.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo.html
                         </Bundle-DocURL>
                         <IPOJO-Extension>
                             component:org.apache.felix.ipojo.ComponentFactory,

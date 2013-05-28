@@ -32,7 +32,9 @@
     <description>
         iPOJO API used to define component types and instances using Java.
     </description>
-    <url>http://felix.apache.org/site/apache-felix-ipojo-api.html</url>
+    <url>
+        http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/apache-felix-ipojo-api.html
+    </url>
 
     <build>
         <plugins>
@@ -46,7 +48,7 @@
                         <Bundle-SymbolicName>${project.artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/apache-felix-ipojo-api.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/apache-felix-ipojo-api.html
                         </Bundle-DocURL>
                         <Import-Package>
                             org.apache.felix.ipojo.composite;resolution:=optional,
