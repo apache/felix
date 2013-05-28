@@ -338,6 +338,11 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     {
         return Registered.getInstance();
     }
+    
+    boolean hasInstance()
+    {
+        return m_componentContext != null;
+    }
 
     State getActiveState()
     {

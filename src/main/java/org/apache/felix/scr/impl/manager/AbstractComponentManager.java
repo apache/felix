@@ -695,9 +695,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
 
         registerComponentId();
+        m_internalEnabled = true;
         changeState( Unsatisfied.getInstance() );
         log( LogService.LOG_DEBUG, "Component enabled", null );
-        m_internalEnabled = true;
     }
 
     final void activateInternal( int trackingCount )
@@ -759,23 +759,14 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return;
         }
 
-        // set satisfied state before registering the service because
-        // during service registration a listener may try to get the
-        // service from the service reference which may cause a
-        // delayed service object instantiation through the State
-
-        // actually since we don't have the activating state any
-        // longer, we have to set the satisfied state already
-        // before actually creating the component such that services
-        // may be accepted.
-        final State satisfiedState = getSatisfiedState();
-        changeState( satisfiedState );
-
         if ( !registerService() )
         {
             //some other thread is activating us, or we got concurrently deactivated.
             return;
         }
+        final State satisfiedState = getSatisfiedState();
+        changeState( satisfiedState );
+
 
         if ( ( isImmediate() || getComponentMetadata().isFactory() ) )
         {
@@ -1397,8 +1388,31 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     public int getState()
     {
-        return m_state.getState();
+        if (disposed)
+        {
+            return Component.STATE_DISPOSED;
+        }
+        if ( !m_internalEnabled)
+        {
+            return Component.STATE_DISABLED;
+        }
+        if ( getServiceRegistration() == null && (getProvidedServices() != null || !hasInstance()))
+        {
+            return Component.STATE_UNSATISFIED;
+        }
+        if ( isFactory() && !m_factoryInstance )
+        {
+            return Component.STATE_FACTORY;
+        }
+        if ( hasInstance() )
+        {
+            return Component.STATE_ACTIVE;
+        }
+        return Component.STATE_REGISTERED;
+//        return m_state.getState();
     }
+
+    abstract boolean hasInstance();
 
     protected State state()
     {
@@ -1413,6 +1427,14 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         log( LogService.LOG_DEBUG, "State transition : {0} -> {1} : service reg: {2}", new Object[]
             { m_state, newState, getServiceRegistration() }, null );
         m_state = newState;
+//        if ( getState() != newState.getState())
+//        {
+//            log(  LogService.LOG_ERROR,  "inconsistent state: expected {0} ({1}), but got {2}: disposed: {3} internalEnabled: {4} " +
+//            		"serviceReg: {5} hasServices: {6} verifyDependencyManagers: {7} factory: {8} factoryInstance {9} hasInstance {10}",
+//            		new Object[] {newState, newState.getState(), getState(), disposed, m_internalEnabled, 
+//                    getServiceRegistration() != null, getProvidedServices() != null, verifyDependencyManagers(), isFactory(), m_factoryInstance, hasInstance()}, 
+//            		new Exception("stack trace") );
+//        }
     }
 
     public void setServiceProperties( MethodResult methodResult )

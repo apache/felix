@@ -268,6 +268,11 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     {
         return Factory.getInstance();
     }
+    
+    boolean hasInstance()
+    {
+        return false;
+    }
 
     protected boolean collectDependencies()
     {
