@@ -720,9 +720,45 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     public final void disposeInternal( int reason )
     {
-        m_state.dispose( this, reason );
+        log( LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null );
+        doDeactivate( reason, true );
+        //may call this multiple times.
+//        disableDependencyManagers();
+        clear();
+        changeState( Disposed.getInstance() );
+             }
+         
+    void doDeactivate( int reason, boolean disable )
+    {
+        try
+        {
+            if ( !unregisterService() )
+            {
+                log( LogService.LOG_DEBUG, "Component deactivation occuring on another thread", null );
+                //another thread is deactivating.
+                return;
+            }
+            obtainWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
+            try
+            {
+                deleteComponent( reason );
+                deactivateDependencyManagers();
+                if ( disable )
+                {
+                    disableDependencyManagers();
+                }
+                unsetDependenciesCollected();
+            }
+            finally
+            {
+                releaseWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
+            }
+        }
+        catch ( Throwable t )
+        {
+            log( LogService.LOG_WARNING, "Component deactivation threw an exception", t );
+        }
     }
-
 
     final ServiceReference<S> getServiceReference()
     {
@@ -1341,12 +1377,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
 
 
-        void dispose( AbstractComponentManager acm, int reason )
-        {
-            throw new IllegalStateException("dispose" + this);
-        }
-
-
         private void log( AbstractComponentManager acm, String event )
         {
             acm.log( LogService.LOG_DEBUG, "Current state: {0}, Event: {1}, Service registration: {2}", new Object[]
@@ -1385,12 +1415,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             }
         }
 
-        void doDisable( AbstractComponentManager acm )
-        {
-            // reset the component id now (a disabled component has none)
-            acm.unregisterComponentId();
-        }
-
         public boolean isSatisfied()
         {
             return false;
@@ -1419,14 +1443,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             doDeactivate( acm, reason, disable );
         }
 
-        void dispose( AbstractComponentManager acm, int reason )
-        {
-            acm.log( LogService.LOG_DEBUG, "Disposing component (reason: {0})", new Object[] { REASONS[ reason ] }, null );
-            acm.clear();
-            acm.changeState( Disposed.getInstance() );
-
-            acm.log( LogService.LOG_DEBUG, "Component disposed", null );
-        }
     }
 
     protected static final class Unsatisfied extends State
@@ -1530,21 +1546,12 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         void disable( AbstractComponentManager acm )
         {
             acm.log( LogService.LOG_DEBUG, "Disabling component", null );
-            doDisable( acm );
+            acm.unregisterComponentId();
 
             // we are now disabled, ready for re-enablement or complete destroyal
             acm.changeState( Disabled.getInstance() );
 
             acm.log( LogService.LOG_DEBUG, "Component disabled", null );
-        }
-
-        void dispose( AbstractComponentManager acm, int reason )
-        {
-            acm.log( LogService.LOG_DEBUG, "Disposing component for reason {0}", new Object[] { REASONS[ reason] }, null );
-            acm.disableDependencyManagers();
-            doDisable( acm );
-            acm.clear();   //content of Disabled.dispose
-            acm.changeState( Disposed.getInstance() );
         }
 
     }
@@ -1573,17 +1580,9 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
         void disable( AbstractComponentManager acm )
         {
-            doDisable( acm );
+            acm.unregisterComponentId();
             acm.changeState( Disabled.getInstance() );
             acm.log( LogService.LOG_DEBUG, "Component disabled", null );
-        }
-
-        void dispose( AbstractComponentManager acm, int reason )
-        {
-            doDeactivate( acm, reason, true );
-            doDisable(acm);
-            acm.clear();   //content of Disabled.dispose
-            acm.changeState( Disposed.getInstance() );
         }
 
         @Override
@@ -1727,11 +1726,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         void disable( AbstractComponentManager acm )
         {
             throw new IllegalStateException( "disable: " + this );
-        }
-
-        void dispose( AbstractComponentManager acm, int reason )
-        {
-            //factory instance can have dispose called with no effect. 112.5.5
         }
 
     }
