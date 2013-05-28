@@ -249,6 +249,12 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
         }
         return result;
     }
+    
+    @Override
+    boolean hasInstance()
+    {
+        return !serviceContexts.isEmpty();
+    }
 
     //---------- Component interface
 
