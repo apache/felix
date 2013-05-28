@@ -86,7 +86,7 @@ public class ConfigurationPrinterAdapter
             {
                 modes = ref.getProperty(ConsoleConstants.PROPERTY_MODES);
             }
-            final Method titleMethod = getMethod(service.getClass(), "getTitle", null);
+            final Method titleMethod = getMethod(service.getClass(), "getTitle", null, false);
             if (titleMethod == null)
             {
                 return null;
@@ -104,7 +104,7 @@ public class ConfigurationPrinterAdapter
 
         // first: printConfiguration(PrintWriter, String)
         final Method method2Params = getMethod(service.getClass(), "printConfiguration", new Class[]
-            { PrintWriter.class, String.class });
+            { PrintWriter.class, String.class }, true);
         if (method2Params != null)
         {
             cfgPrinter = service;
@@ -115,7 +115,7 @@ public class ConfigurationPrinterAdapter
         {
             // second: printConfiguration(PrintWriter)
             final Method method1Params = getMethod(service.getClass(), "printConfiguration", new Class[]
-                { PrintWriter.class });
+                { PrintWriter.class }, true);
             if (method1Params != null)
             {
                 cfgPrinter = service;
@@ -187,7 +187,7 @@ public class ConfigurationPrinterAdapter
 
             return new ConfigurationPrinterAdapter(cfgPrinter, printMethod, getMethod(cfgPrinter.getClass(),
                 "getAttachments", new Class[]
-                    { String.class }), title, (label instanceof String ? (String) label : null), modesArray,
+                    { String.class }, true), title, (label instanceof String ? (String) label : null), modesArray,
                 !webUnescaped);
         }
         return null;
@@ -279,16 +279,21 @@ public class ConfigurationPrinterAdapter
         return title + " (" + printer.getClass() + ")";
     }
 
-    private static Method getMethod(final Class clazz, final String mName, final Class[] params)
+    private static Method getMethod(final Class clazz, final String mName, final Class[] params, final boolean declaredByClass)
     {
         try
         {
-            final Method m = clazz.getDeclaredMethod(mName, params);
-            if (Modifier.isPublic(m.getModifiers()))
+            if (declaredByClass)
             {
-                return m;
+                final Method m = clazz.getDeclaredMethod(mName, params);
+                if (Modifier.isPublic(m.getModifiers()))
+                {
+                    return m;
+                }
             }
-        }
+
+            return clazz.getMethod(mName, params);
+       }
         catch (Throwable nsme)
         {
             // ignore, we catch Throwable above to not only catch
