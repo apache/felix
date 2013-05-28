@@ -123,9 +123,6 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
         catch (IOException e) {
             throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Unable to process resource.", e);
         }
-        catch (XmlPullParserException e) {
-            throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Supplied configuration is not conform the metatype xml specification.", e);
-        }
         if (data == null) {
             throw new ResourceProcessorException(ResourceProcessorException.CODE_OTHER_ERROR, "Supplied configuration is not conform the metatype xml specification.");
         }

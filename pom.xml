@@ -46,18 +46,18 @@
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>org.apache.felix.dependencymanager</artifactId>
-            <version>3.0.0</version>
+            <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>org.apache.felix.deploymentadmin</artifactId>
-            <version>0.9.0</version>
+            <version>0.9.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>${pom.groupId}</groupId>
             <artifactId>org.apache.felix.metatype</artifactId>
-            <version>1.0.5-SNAPSHOT</version>
+            <version>1.0.6</version>
         </dependency>
     </dependencies>
     <build>
@@ -87,6 +87,7 @@
                         <Bundle-Description>A customizer bundle that publishes a Resource Processor service that processes configuration resources shipped in a Deployment Package.</Bundle-Description>
                         <Bundle-Vendor>Apache Software Foundation</Bundle-Vendor>
                         <Private-Package>org.apache.felix.deployment.rp.autoconf, org.apache.felix.metatype, org.apache.felix.metatype.internal.l10n, org.apache.felix.metatype.internal, org.kxml2.io;-split-package:=merge-first, org.xmlpull.v1;-split-package:=merge-first, org.osgi.service.metatype;-split-package:=merge-first</Private-Package>
+                        <Import-Package>org.apache.felix.dm;managementagent=true,org.osgi.service.deploymentadmin;managementagent=true,org.osgi.service.deploymentadmin.spi;managementagent=true,org.osgi.service.event;managmentagent=true,org.osgi.service.log;managementagent=true,*</Import-Package>
                         <Export-Package>org.osgi.service.deploymentadmin.spi;version="1.0"</Export-Package>
                         <DeploymentPackage-Customizer>true</DeploymentPackage-Customizer>
                         <Deployment-ProvidesResourceProcessor>org.osgi.deployment.rp.autoconf</Deployment-ProvidesResourceProcessor>
