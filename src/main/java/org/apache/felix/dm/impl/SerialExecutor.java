@@ -31,6 +31,7 @@ import java.util.NoSuchElementException;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public final class SerialExecutor {
+	private static final Runnable DUMMY_RUNNABLE = new Runnable() { public void run() {}; };
     private final LinkedList m_workQueue = new LinkedList();
     private Runnable m_active;
     
@@ -63,6 +64,10 @@ public final class SerialExecutor {
     	Runnable active;
     	synchronized (this) {
     		active = m_active;
+    		// for now just put some non-null value in there so we can never
+    		// get a race condition when two threads enter this section after
+    		// one another (causing sheduleNext() to be invoked twice below)
+    		m_active = DUMMY_RUNNABLE;
     	}
     	if (active == null) {
     		scheduleNext();
