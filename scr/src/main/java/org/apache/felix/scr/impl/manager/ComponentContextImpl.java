@@ -40,7 +40,7 @@ import org.osgi.service.log.LogService;
  */
 public class ComponentContextImpl<S> implements ExtComponentContext {
 
-    private final AbstractComponentManager<S> m_componentManager;
+    private final ImmediateComponentManager<S> m_componentManager;
     
     private final EdgeInfo[] edgeInfos;
     
@@ -54,7 +54,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     
     private final CountDownLatch accessibleLatch = new CountDownLatch(1);
 
-    ComponentContextImpl( AbstractComponentManager<S> componentManager, Bundle usingBundle, S implementationObject )
+    ComponentContextImpl( ImmediateComponentManager<S> componentManager, Bundle usingBundle, S implementationObject )
     {
         m_componentManager = componentManager;
         m_usingBundle = usingBundle;
@@ -86,7 +86,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         Arrays.fill( edgeInfos, null );
     }
 
-    protected AbstractComponentManager<S> getComponentManager()
+    protected ImmediateComponentManager<S> getComponentManager()
     {
         return m_componentManager;
     }

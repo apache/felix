@@ -202,13 +202,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public Object getInstance()
-    {
-        // this does not return the component instance actually
-        return null;
-    }
-
-
     public boolean hasConfiguration()
     {
         return m_hasConfiguration;

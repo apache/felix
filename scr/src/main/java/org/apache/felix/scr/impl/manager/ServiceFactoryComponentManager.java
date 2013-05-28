@@ -94,7 +94,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
     /* (non-Javadoc)
      * @see org.apache.felix.scr.AbstractComponentManager#getInstance()
      */
-    Object getInstance()
+    S getInstance()
     {
         // this method is not expected to be called as the base call is
         // overwritten in the ComponentContextImpl class

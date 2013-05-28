@@ -180,7 +180,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
      *
      * @return the object that implements the services
      */
-    Object getInstance()
+    S getInstance()
     {
         return m_componentContext == null? null: m_componentContext.getImplementationObject( true );
     }
@@ -763,7 +763,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                     if ( m_componentContext == null )
                     {
                         //state should be "Registered"
-                        S result = (S) Registered.getInstance().getService( this );
+                        S result = getService( );
                         if ( result == null )
                         {
                             success = false;;
@@ -782,6 +782,41 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             //normally this will have been done after object becomes accessible.  This is double-checking.
             m_circularReferences.remove();
         }
+    }
+
+    private S getService()
+    {
+        //should be write locked
+        if (!isEnabled())
+        {
+            return null;
+        }
+
+        if ( createComponent() )
+        {
+            changeState( getActiveState() );
+            return getInstance();
+        }
+
+        // log that the delayed component cannot be created (we don't
+        // know why at this moment; this should already have been logged)
+        log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
+
+        // component could not really be created. This may be temporary
+        // so we stay in the registered state but ensure the component
+        // instance is deleted
+        try
+        {
+            deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
+        }
+        catch ( Throwable t )
+        {
+            log( LogService.LOG_DEBUG, "Cannot delete incomplete component instance. Ignoring.", t );
+        }
+
+        // no service can be returned (be prepared for more logging !!)
+        return null;
+
     }
 
     public void ungetService( Bundle bundle, ServiceRegistration<S> serviceRegistration, S o )
