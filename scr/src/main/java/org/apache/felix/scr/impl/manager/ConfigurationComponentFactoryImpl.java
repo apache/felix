@@ -240,7 +240,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
         public ComponentFactoryConfiguredInstance( BundleComponentActivator activator, ComponentHolder componentHolder,
                 ComponentMetadata metadata, ComponentMethods componentMethods )
         {
-            super( activator, componentHolder, metadata, componentMethods );
+            super( activator, componentHolder, metadata, componentMethods, true );
         }
 
         public boolean isImmediate()

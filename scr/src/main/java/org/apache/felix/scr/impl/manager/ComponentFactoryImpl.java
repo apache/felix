@@ -520,7 +520,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         public ComponentFactoryNewInstance( BundleComponentActivator activator, ComponentHolder componentHolder,
                 ComponentMetadata metadata, ComponentMethods componentMethods )
         {
-            super( activator, componentHolder, metadata, componentMethods );
+            super( activator, componentHolder, metadata, componentMethods, true );
         }
 
         State getActiveState()
