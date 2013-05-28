@@ -163,15 +163,6 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
             // know why at this moment; this should already have been logged)
             log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
         }
-        else
-        {
-            // if this is the first use of this component, switch to ACTIVE state
-            if ( getState() == STATE_REGISTERED )
-            {
-                changeState( Active.getInstance() );
-            }
-
-        }
 
         return service;
     }
@@ -198,7 +189,6 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
             // if this was the last use of the component, go back to REGISTERED state
             if ( serviceContexts.isEmpty() && getState() == STATE_ACTIVE )
             {
-                changeState( Registered.getInstance() );
                 unsetDependenciesCollected();
             }
         }
