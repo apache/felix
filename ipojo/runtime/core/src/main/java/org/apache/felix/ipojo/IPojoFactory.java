@@ -366,7 +366,7 @@ public abstract class IPojoFactory implements Factory {
     }
 
     /**
-     * Computes the list of missing handlers. This method is called with the monitor lock.
+     * Computes the list of missing handlers.
      * @return the list of missing handlers.
      * @see org.apache.felix.ipojo.Factory#getMissingHandlers()
      */
@@ -392,12 +392,11 @@ public abstract class IPojoFactory implements Factory {
 
     /**
      * Gets the list of required handlers.
-     * This method is synchronized to avoid the concurrent modification
-     * of the required handlers.
+     * The required handler list cannot change.
      * @return the list of required handlers.
      * @see org.apache.felix.ipojo.Factory#getRequiredHandlers()
      */
-    public synchronized List<String> getRequiredHandlers() {
+    public List<String> getRequiredHandlers() {
         List<String> list = new ArrayList<String>();
         for (RequiredHandler req : m_requiredHandlers) {
             list.add(req.getFullName());
