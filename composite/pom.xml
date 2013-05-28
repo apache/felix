@@ -36,7 +36,9 @@
     <description>
         iPOJO Composition Model. This is an iPOJO extension to execute service composition.
     </description>
-    <url>http://felix.apache.org/site/ipojo-composition-tutorial.html</url>
+    <url>
+        http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-gettingstarted/ipojo-composition-tutorial.html
+    </url>
 
     <dependencies>
         <dependency>
@@ -70,7 +72,7 @@
                         <Bundle-Description>iPOJO Composition Layer
                         </Bundle-Description>
                         <Bundle-DocURL>
-                            http://felix.apache.org/site/ipojo-composition-tutorial.html
+                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-gettingstarted/ipojo-composition-tutorial.html
                         </Bundle-DocURL>
                         <Import-Package>
                             org.apache.felix.ipojo,
