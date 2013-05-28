@@ -496,13 +496,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
-    /**
-     * Get the object that is implementing this descriptor
-     *
-     * @return the object that implements the services
-     */
-    abstract Object getInstance();
-
     // supports the ComponentInstance.dispose() method
     void dispose()
     {
@@ -1263,7 +1256,12 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
-    //--------- State classes
+    boolean isEnabled()
+    {
+        return m_internalEnabled;
+    }
+    
+   //--------- State classes
 
     /**
      * There are 12 states in all. They are: Disabled, Unsatisfied,
@@ -1308,13 +1306,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             return m_state;
         }
-
-
-        Object getService( ImmediateComponentManager dcm )
-        {
-            throw new IllegalStateException("getService" + this);
-        }
-
 
         void ungetService( ImmediateComponentManager dcm )
         {
@@ -1436,11 +1427,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         void deactivate( AbstractComponentManager acm, int reason, boolean disable )
         {
             doDeactivate( acm, reason, disable );
-        }
-
-        Object getService( ImmediateComponentManager dcm )
-        {
-            return null;
         }
 
         void ungetService( ImmediateComponentManager dcm )
@@ -1576,12 +1562,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             acm.changeState( Disposed.getInstance() );
         }
 
-        Object getService( ImmediateComponentManager dcm )
-        {
-            //concurrent attempt to get service and remove dependency
-            return null;
-        }
-
         void ungetService( ImmediateComponentManager dcm )
         {
             //do nothing.  This can arise if component is deactivated concurrently with ungetService on a delayed component.
@@ -1656,12 +1636,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
 
 
-        Object getService( ImmediateComponentManager dcm )
-        {
-            return dcm.getInstance();
-        }
-
-
         void ungetService( ImmediateComponentManager dcm )
         {
             dcm.deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
@@ -1692,35 +1666,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         static State getInstance()
         {
             return m_inst;
-        }
-
-
-        Object getService( ImmediateComponentManager dcm )
-        {
-            if ( dcm.createComponent() )
-            {
-                dcm.changeState( dcm.getActiveState() );
-                return dcm.getInstance();
-            }
-
-            // log that the delayed component cannot be created (we don't
-            // know why at this moment; this should already have been logged)
-            dcm.log( LogService.LOG_ERROR, "Failed creating the component instance; see log for reason", null );
-
-            // component could not really be created. This may be temporary
-            // so we stay in the registered state but ensure the component
-            // instance is deleted
-            try
-            {
-                dcm.deleteComponent( ComponentConstants.DEACTIVATION_REASON_UNSPECIFIED );
-            }
-            catch ( Throwable t )
-            {
-                dcm.log( LogService.LOG_DEBUG, "Cannot delete incomplete component instance. Ignoring.", t );
-            }
-
-            // no service can be returned (be prepared for more logging !!)
-            return null;
         }
 
         void ungetService( ImmediateComponentManager dcm )
@@ -1776,12 +1721,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             return m_inst;
         }
-
-        Object getService( ImmediateComponentManager dcm )
-        {
-            return dcm.getInstance();
-        }
-
 
         void ungetService( ImmediateComponentManager dcm )
         {
