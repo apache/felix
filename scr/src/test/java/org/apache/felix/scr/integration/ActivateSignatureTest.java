@@ -40,6 +40,7 @@ public class ActivateSignatureTest extends ComponentTestBase
     {
         // use different components
         descriptorFile = "/integration_test_signature_components.xml";
+        COMPONENT_PACKAGE = COMPONENT_PACKAGE + ".activatesignature";
 
         // uncomment to enable debugging of this test class
         // paxRunnerVmOption = DEBUG_VM_OPTION;

@@ -111,6 +111,8 @@ public abstract class ComponentTestBase
 
     // the descriptor file to use for the installed test bundle
     protected static String descriptorFile = "/integration_test_simple_components.xml";
+    protected static String COMPONENT_PACKAGE = "org.apache.felix.scr.integration.components";
+
 
     protected static boolean NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
     protected volatile Log log;
@@ -180,7 +182,7 @@ public abstract class ComponentTestBase
         configAdminTracker = new ServiceTracker( bundleContext, "org.osgi.service.cm.ConfigurationAdmin", null );
         configAdminTracker.open();
 
-        bundle = installBundle( descriptorFile );
+        bundle = installBundle( descriptorFile, COMPONENT_PACKAGE );
         bundle.start();
     }
 
@@ -399,20 +401,14 @@ public abstract class ComponentTestBase
     }
 
 
-    protected Bundle installBundle( final String descriptorFile ) throws BundleException
+    protected Bundle installBundle( final String descriptorFile, String componentPackage ) throws BundleException
     {
         final InputStream bundleStream = bundle()
             .add("OSGI-INF/components.xml", getClass().getResource(descriptorFile))
 
                 .set(Constants.BUNDLE_SYMBOLICNAME, "simplecomponent")
                 .set(Constants.BUNDLE_VERSION, "0.0.11")
-                .set(Constants.IMPORT_PACKAGE,
-                        "org.apache.felix.scr.integration.components," +
-                        "org.apache.felix.scr.integration.components.activatesignature," +
-                        "org.apache.felix.scr.integration.components.circular," +
-                        "org.apache.felix.scr.integration.components.concurrency," +
-                        "org.apache.felix.scr.integration.components.felix3680," +
-                        "org.apache.felix.scr.integration.components.felix3680_2")
+                .set(Constants.IMPORT_PACKAGE, componentPackage)
                 .set("Service-Component", "OSGI-INF/components.xml")
             .build(withBnd());
 

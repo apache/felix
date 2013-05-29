@@ -30,6 +30,7 @@ public class ComponentConcurrencyTest extends ComponentTestBase
         // uncomment to enable debugging of this test class
 //        paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_component_concurrency.xml";
+        COMPONENT_PACKAGE = COMPONENT_PACKAGE + ".concurrency";
     }
 
     @Inject

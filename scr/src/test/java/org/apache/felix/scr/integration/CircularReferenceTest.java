@@ -46,7 +46,8 @@ public class CircularReferenceTest extends ComponentTestBase
 //        paxRunnerVmOption = DEBUG_VM_OPTION;
 
         descriptorFile = "/integration_test_circular.xml";
-    }
+        COMPONENT_PACKAGE = COMPONENT_PACKAGE + ".circular";
+   }
 
 
     /**
