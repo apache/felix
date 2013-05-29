@@ -29,9 +29,9 @@ import org.osgi.service.log.LogService;
 public class ActivateMethod extends BaseMethod
 {
 
-    Class[] ACTIVATE_TYPES_DS11 =
+    private static final Class[] ACTIVATE_TYPES_DS11 =
         { COMPONENT_CONTEXT_CLASS, BUNDLE_CONTEXT_CLASS, MAP_CLASS };
-    Class[] ACTIVATE_TYPES_DS10 =
+    static final Class[] ACTIVATE_TYPES_DS10 =
         { COMPONENT_CONTEXT_CLASS };
 
 
