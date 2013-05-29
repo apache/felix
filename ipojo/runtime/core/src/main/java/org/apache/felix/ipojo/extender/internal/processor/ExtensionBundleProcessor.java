@@ -19,6 +19,7 @@
 
 package org.apache.felix.ipojo.extender.internal.processor;
 
+import org.apache.felix.ipojo.IPojoFactory;
 import org.apache.felix.ipojo.extender.internal.BundleProcessor;
 import org.apache.felix.ipojo.extender.internal.builder.ReflectiveFactoryBuilder;
 import org.apache.felix.ipojo.extender.internal.declaration.DefaultExtensionDeclaration;
@@ -125,12 +126,18 @@ public class ExtensionBundleProcessor implements BundleProcessor {
              */
             String[] nameparts = ParseUtils.split(segments[0].trim(), " \t");
             String type = nameparts.length == 1 ? nameparts[0] : nameparts[0] + ":" + nameparts[1];
+            String classname = segments[1];
 
-            Class clazz;
+            Class<? extends IPojoFactory> clazz;
             try {
-                clazz = bundle.loadClass(segments[1]);
+                clazz = bundle.loadClass(classname).asSubclass(IPojoFactory.class);
             } catch (ClassNotFoundException e) {
-                m_logger.log(Logger.ERROR, "Cannot load the extension " + type, e);
+                String message = String.format("Cannot load class '%s' from bundle %s (%s) for extension '%s'",
+                                               classname,
+                                               bundle.getSymbolicName(),
+                                               bundle.getVersion(),
+                                               type);
+                m_logger.log(Logger.ERROR, message, e);
                 return;
             }
 
