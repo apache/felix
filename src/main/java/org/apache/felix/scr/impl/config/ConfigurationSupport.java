@@ -108,6 +108,10 @@ public class ConfigurationSupport implements ConfigurationListener
         if (!holder.getComponentMetadata().isConfigurationIgnored())
         {
             final BundleContext bundleContext = holder.getActivator().getBundleContext();
+            if ( bundleContext == null )
+            {
+                return;// bundle was stopped concurrently with configuration deletion
+            }
             final String confPid = holder.getComponentMetadata().getConfigurationPid();
 
             final ServiceReference caRef = bundleContext.getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
