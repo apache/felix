@@ -61,7 +61,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <version>4.0.0</version>
+            <version>4.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -129,7 +129,7 @@
                             org.osgi.framework.wiring;resolution:=optional,
                             org.osgi.service.cm,
                             org.osgi.service.log,
-                            org.osgi.util.tracker;version=1.3,
+                            org.osgi.util.tracker;version=1.4, <!-- BundleTracker is in R4.2 -->
                             !sun.io,
                             !net.sourceforge.cobertura.*, <!--  To support code coverage -->
                             !org.objectweb.asm.signature,
