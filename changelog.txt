@@ -1,2 +1,17 @@
+Release 0.9.2
+-------------
+
+FELIX-3336 Exceptions related to the pipe used in deployment admin
+FELIX-3272 Add property to allow foreign resource processors
+FELIX-3515 DeploymentAdmin triggers IOException on install
+FELIX-1307 Log situation in DeploymentAdmin impl very unclear
+FELIX-3270 Deployment admin incorrectly takes snapshots of bundle data areas
+FELIX-3526 DeploymentAdmin fails on windows due to unclosed iostreams
+FELIX-1828 Mistake in code of the class UpdateCommand
+FELIX-1829 Method AbstractDeploymentPackage.getBundle(...) throws NullPointerException
+FELIX-3678 org.apache.felix.deploymentadmin imports wrong version of org.osgi.service.deploymentadmin
+FELIX-3139 Implement uninstall() for deployment admin.
+
+
 Initial Release 0.9.0
 ---------------------
