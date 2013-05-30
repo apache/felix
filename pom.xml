@@ -85,7 +85,7 @@
                         <Bundle-Activator>org.apache.felix.deployment.rp.autoconf.Activator</Bundle-Activator>
                         <Bundle-Name>Apache Felix AutoConf Resource Processor</Bundle-Name>
                         <Bundle-Description>A customizer bundle that publishes a Resource Processor service that processes configuration resources shipped in a Deployment Package.</Bundle-Description>
-                        <Bundle-Vendor>Apache Software Foundation</Bundle-Vendor>
+                        <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Private-Package>org.apache.felix.deployment.rp.autoconf, org.apache.felix.metatype, org.apache.felix.metatype.internal.l10n, org.apache.felix.metatype.internal, org.kxml2.io;-split-package:=merge-first, org.xmlpull.v1;-split-package:=merge-first, org.osgi.service.metatype;-split-package:=merge-first</Private-Package>
                         <Import-Package>org.apache.felix.dm;managementagent=true,org.osgi.service.deploymentadmin;managementagent=true,org.osgi.service.deploymentadmin.spi;managementagent=true,org.osgi.service.event;managmentagent=true,org.osgi.service.log;managementagent=true,*</Import-Package>
                         <Export-Package>org.osgi.service.deploymentadmin.spi;version="1.0"</Export-Package>
