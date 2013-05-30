@@ -24,8 +24,6 @@ import aQute.lib.osgi.Clazz;
 import aQute.lib.osgi.Jar;
 import aQute.lib.osgi.Resource;
 import aQute.libg.reporter.Reporter;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
 import org.apache.felix.ipojo.manipulator.ResourceVisitor;
 import org.apache.felix.ipojo.manipulator.render.MetadataRenderer;
