@@ -32,11 +32,13 @@ import org.apache.felix.ipojo.extender.internal.queue.pref.PreferenceQueueServic
 import org.apache.felix.ipojo.extender.internal.queue.pref.enforce.EnforcedQueueService;
 import org.apache.felix.ipojo.util.Logger;
 import org.osgi.framework.*;
+import org.osgi.util.tracker.BundleTracker;
+import org.osgi.util.tracker.BundleTrackerCustomizer;
 
 /**
  * iPOJO main activator.
  */
-public class Extender implements BundleActivator, SynchronousBundleListener {
+public class Extender implements BundleActivator {
     /**
      * Enables the iPOJO internal dispatcher.
      * This internal dispatcher helps the OSGi framework to support large
@@ -91,6 +93,11 @@ public class Extender implements BundleActivator, SynchronousBundleListener {
     private DeclarationLinker m_linker;
 
     private LifecycleQueueService m_queueService;
+
+    /**
+     * Track ACTIVE bundles.
+     */
+    private BundleTracker m_tracker;
 
     /**
      * The iPOJO bundle is starting.
@@ -150,16 +157,24 @@ public class Extender implements BundleActivator, SynchronousBundleListener {
         // Begin by initializing core handlers
         m_processor.activate(m_bundle);
 
-        synchronized (this) {
-            // listen to any changes in bundles.
-            m_context.addBundleListener(this);
-            // compute already started bundles.
-            for (int i = 0; i < context.getBundles().length; i++) {
-                if (context.getBundles()[i].getState() == Bundle.ACTIVE) {
-                    m_processor.activate(context.getBundles()[i]);
+        m_tracker = new BundleTracker(context, Bundle.ACTIVE, new BundleTrackerCustomizer() {
+            public Object addingBundle(final Bundle bundle, final BundleEvent event) {
+                if (bundle.getBundleId() == m_bundle.getBundleId()) {
+                    // Not interested in our own bundle
+                    return null;
                 }
+                m_processor.activate(bundle);
+                return bundle;
             }
-        }
+
+            public void modifiedBundle(final Bundle bundle, final BundleEvent event, final Object object) {}
+
+            public void removedBundle(final Bundle bundle, final BundleEvent event, final Object object) {
+                m_processor.deactivate(bundle);
+            }
+        });
+
+        m_tracker.open();
 
         m_logger.log(Logger.INFO, "iPOJO Main Extender started");
     }
@@ -171,7 +186,9 @@ public class Extender implements BundleActivator, SynchronousBundleListener {
      * @throws Exception something terrible happen
      */
     public void stop(BundleContext context) throws Exception {
-        context.removeBundleListener(this);
+        m_tracker.close();
+
+        m_processor.deactivate(m_bundle);
 
         //Shutdown ConfigurationTracker
         ConfigurationTracker.shutdown();
@@ -187,28 +204,6 @@ public class Extender implements BundleActivator, SynchronousBundleListener {
 
         m_logger.log(Logger.INFO, "iPOJO Main Extender stopped");
         m_context = null;
-    }
-
-    /**
-     * A bundle event was caught.
-     *
-     * @param event the event
-     */
-    public void bundleChanged(BundleEvent event) {
-        if (m_bundle.getBundleId() != (event.getBundle().getBundleId())) {
-            // Do not process our-self (already done)
-            switch (event.getType()) {
-                case BundleEvent.STARTED:
-                    // Put the bundle in the queue
-                    m_processor.activate(event.getBundle());
-                    break;
-                case BundleEvent.STOPPING:
-                    m_processor.deactivate(event.getBundle());
-                    break;
-                default:
-                    break;
-            }
-        }
     }
 
     /**
