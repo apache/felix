@@ -83,13 +83,9 @@ public class BndJarResourceStore implements ResourceStore {
     public void accept(ResourceVisitor visitor) {
 
         try {
-            // TODO make this configurable (react to other annotations)
-            // Only visit classes annotated with @Component or @Handler
-            String annotations = Component.class.getPackage().getName() + ".*";
-
+            // Collect all annotated classes
             Collection<Clazz> classes = m_analyzer.getClasses("",
-                    Clazz.QUERY.ANNOTATION.name(), annotations,
-                    Clazz.QUERY.NAMED.name(), "*");
+                    Clazz.QUERY.CLASSANNOTATIONS.name());
 
             classes = filter(classes);
 
