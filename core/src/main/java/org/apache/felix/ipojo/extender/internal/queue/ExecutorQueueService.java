@@ -97,6 +97,12 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
      */
     public void stop() {
         m_executorService.shutdown();
+        // Wait for potential executed tasks to finish their executions
+        try {
+            m_executorService.awaitTermination(1, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            // Ignored
+        }
         super.stop();
     }
 
