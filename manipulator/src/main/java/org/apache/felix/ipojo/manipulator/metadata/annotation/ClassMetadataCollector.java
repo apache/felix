@@ -103,7 +103,7 @@ public class ClassMetadataCollector extends EmptyVisitor {
     	 * at runtime. We retain runtime visible annotations on component
     	 * as they are and left them out in meta-data calculation.
     	 */
-    	if(visible){
+    	if(visible) {
     		return null;
     	}
     	
