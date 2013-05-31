@@ -1,4 +1,4 @@
-Release 0.1.2
+Release 0.1.4
 -------------
 
 FELIX-3243 Autoconf does not recognize non-local non-factory OCDs
