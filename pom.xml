@@ -30,11 +30,10 @@
     <packaging>pom</packaging>
 
     <description>
-        The iPOJO runtime project contains the core iPOJO bundle, the composite support and the annotations.
+        The iPOJO runtime project contains the core iPOJO bundle, the composite support and the api.
     </description>
 
     <modules>
-        <module>annotations</module>
         <module>core</module>
         <module>core-it</module>
         <module>composite</module>
