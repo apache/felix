@@ -250,7 +250,7 @@ public class DefaultBindingModule extends AbsBindingModule {
                 .to(new AnnotationVisitorFactory() {
                     public AnnotationVisitor newAnnotationVisitor(BindingContext context) {
                         MethodNode node = (MethodNode) context.getNode();
-                        return new MethodBindVisitor(context.getWorkbench(), Action.BIND, node.name);
+                        return new MethodBindVisitor(context.getWorkbench(), Action.BIND, node, context.getReporter());
                     }
                 });
 
@@ -258,7 +258,7 @@ public class DefaultBindingModule extends AbsBindingModule {
                 .to(new AnnotationVisitorFactory() {
                     public AnnotationVisitor newAnnotationVisitor(BindingContext context) {
                         MethodNode node = (MethodNode) context.getNode();
-                        return new MethodBindVisitor(context.getWorkbench(), Action.UNBIND, node.name);
+                        return new MethodBindVisitor(context.getWorkbench(), Action.UNBIND, node, context.getReporter());
                     }
                 });
 
@@ -266,7 +266,7 @@ public class DefaultBindingModule extends AbsBindingModule {
                 .to(new AnnotationVisitorFactory() {
                     public AnnotationVisitor newAnnotationVisitor(BindingContext context) {
                         MethodNode node = (MethodNode) context.getNode();
-                        return new MethodBindVisitor(context.getWorkbench(), Action.MODIFIED, node.name);
+                        return new MethodBindVisitor(context.getWorkbench(), Action.MODIFIED, node, context.getReporter());
                     }
                 });
 

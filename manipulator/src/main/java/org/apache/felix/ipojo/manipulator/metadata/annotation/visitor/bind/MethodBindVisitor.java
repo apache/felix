@@ -19,10 +19,12 @@
 
 package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.bind;
 
+import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Names;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
+import org.objectweb.asm.tree.MethodNode;
 
 import static org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Names.computeEffectiveMethodName;
 
@@ -35,11 +37,17 @@ public class MethodBindVisitor extends AbstractBindVisitor {
     /**
      * Method name.
      */
-    private String m_name;
+    private MethodNode m_node;
 
-    public MethodBindVisitor(ComponentWorkbench workbench, Action action, String method) {
+    /**
+     * Error reporter.
+     */
+    private Reporter m_reporter;
+
+    public MethodBindVisitor(ComponentWorkbench workbench, Action action, MethodNode method, Reporter reporter) {
         super(workbench, action);
-        this.m_name = method;
+        this.m_node = method;
+        this.m_reporter = reporter;
     }
 
     /**
@@ -50,19 +58,28 @@ public class MethodBindVisitor extends AbstractBindVisitor {
      */
     public void visitEnd() {
         if (m_id == null) {
-            String identifier = Names.getMethodIdentifier(m_name);
+            String identifier = Names.getMethodIdentifier(m_node);
             if (identifier != null) {
                 m_id = identifier;
             } else {
-                System.err.println("Cannot determine the id of the " + action.name() + " method : " + computeEffectiveMethodName(m_name));
-                return;
+                if (m_specification != null) {
+                    m_id = m_specification;
+                } else {
+                    m_reporter.error("Cannot determine the requires identifier for the (%s) %s method: %s",
+                                     computeEffectiveMethodName(m_node.name),
+                                     action.name(),
+                                     "Either 'id' attribute is missing or method name do not follow the bind/set/add/modified " +
+                                     "naming pattern, or no specification (service interface) can be found in method signature " +
+                                     "or specified in annotation. Dependency will be ignored (would cause an Exception at runtime)");
+                    return;
+                }
             }
         }
 
         Element requires = getRequiresElement();
 
         Element callback = new Element("callback", "");
-        callback.addAttribute(new Attribute("method", computeEffectiveMethodName(m_name)));
+        callback.addAttribute(new Attribute("method", computeEffectiveMethodName(m_node.name)));
         callback.addAttribute(new Attribute("type", action.name().toLowerCase()));
         requires.addElement(callback);
 
