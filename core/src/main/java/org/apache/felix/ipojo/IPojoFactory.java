@@ -84,7 +84,7 @@ public abstract class IPojoFactory implements Factory {
     /**
      * The list of required handlers.
      */
-    protected List<RequiredHandler> m_requiredHandlers = new ArrayList<RequiredHandler>();
+    protected final List<RequiredHandler> m_requiredHandlers = new ArrayList<RequiredHandler>();
 
     /**
      * The list of factory state listeners.
@@ -161,7 +161,7 @@ public abstract class IPojoFactory implements Factory {
             m_version = version;
         }
 
-        m_requiredHandlers = getRequiredHandlerList(); // Call sub-class to get the list of required handlers.
+        m_requiredHandlers.addAll(getRequiredHandlerList()); // Call sub-class to get the list of required handlers.
 
         m_logger.log(Logger.INFO, "New factory created : " + m_factoryName);
     }
@@ -588,7 +588,7 @@ public abstract class IPojoFactory implements Factory {
      */
     synchronized void dispose() {
         stop(); // Does not hold the lock.
-        m_requiredHandlers = null;
+        m_requiredHandlers.clear();
         m_listeners = null;
     }
 
@@ -643,7 +643,8 @@ public abstract class IPojoFactory implements Factory {
      */
     public void restart() {
     	// Call sub-class to get the list of required handlers.
-        m_requiredHandlers = getRequiredHandlerList();
+        m_requiredHandlers.clear();
+        m_requiredHandlers.addAll(getRequiredHandlerList());
     }
 
     /**
