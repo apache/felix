@@ -200,6 +200,10 @@ public class ResourceDependencyImpl extends DependencyBase implements ResourceDe
     		long counter;
     		Object[] services;
     		synchronized (this) {
+    			if (m_resources.indexOf(resource) == -1) {
+    				m_logger.log(Logger.LOG_WARNING, "handleResourceRemoved called for unknown resource: " + resource);
+    				return;
+    			}
     			m_resourceProperties.remove(m_resources.indexOf(resource));
     		    m_resources.remove(resource);
     			counter = m_resources.size();

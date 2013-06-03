@@ -28,6 +28,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -83,6 +84,16 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     private String m_propagateCallbackMethod;
     private final Map m_sr = new HashMap(); /* <DependencyService, Set<Tuple<ServiceReference, Object>> */
 	private Map m_componentByRank = new HashMap(); /* <Component, Map<Long, Map<Integer, Tuple>>> */
+	private boolean m_debug = false;
+	private String m_debugKey = null;
+	
+	private final LinkedList m_injectionQueue = new LinkedList();
+	
+	public ServiceDependency setDebug(String identifier) {
+		this.m_debug = true;
+		this.m_debugKey = identifier;
+		return this;
+	}
     
     private static final Comparator COMPARATOR = new Comparator() {
         public int getRank(ServiceReference ref) {
@@ -416,7 +427,13 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             }
         }
         if (needsStarting) {
-            m_tracker.open();
+        	// when the swapped callback is set, also track the aspects
+        	boolean trackAllServices = false;
+        	boolean trackAllAspects = false;
+        	if (m_callbackSwapped != null) {
+        		trackAllAspects = true;
+        	} 
+        	m_tracker.open(trackAllServices, trackAllAspects);
         }
     }
 
@@ -448,6 +465,9 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
 
     public void addedService(ServiceReference ref, Object service) {
+    	if (m_debug) {
+    		log("addedservice: " + ref);
+    	}
         boolean makeAvailable = makeAvailable();
         
         Object[] services;
@@ -458,20 +478,32 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             DependencyService ds = (DependencyService) services[i];
             if (makeAvailable) {
                 if (ds.isInstantiated() && isInstanceBound() && isRequired()) {
-                    invokeAdded(ds, ref, service);
+                	if (m_debug) {
+                		log("invoke added: " + ref);
+                	}
+                    invokeAdded(ds, ref, service); //**
                 }
-                // The dependency callback will be defered until all required dependency are available.
-                ds.dependencyAvailable(this);
+                // The dependency callback will be deferred until all required dependency are available.
+                if (m_debug) {
+                	log("dependency available: " + ref);
+                }
+                ds.dependencyAvailable(this); //**
                 if (!isRequired()) {
                     // For optional dependency, we always invoke callback, because at this point, we know
                     // that the service has been started, and the service start method has been called.
                     // (See the ServiceImpl.bindService method, which will activate optional dependencies using 
-                    // startTrackingOptional() method). 
-                    invokeAdded(ds, ref, service);
+                    // startTrackingOptional() method).
+                	if (m_debug) {
+                		log("invoke added: " + ref);
+                	}
+                    invokeAdded(ds, ref, service); //**
                 }
             }
             else {
-                ds.dependencyChanged(this);
+            	if (m_debug) {
+            		log("dependency changed: " + ref);
+            	}
+                ds.dependencyChanged(this); //**
                 // At this point, either the dependency is optional (meaning that the service has been started,
                 // because if not, then our dependency would not be active); or the dependency is required,
                 // meaning that either the service is not yet started, or already started.
@@ -479,7 +511,10 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                 
                 // we only try to invoke the method here if we are really already instantiated
                 if (ds.isInstantiated() && ds.getCompositionInstances().length > 0) {
-                    invokeAdded(ds, ref, service);
+                	if (m_debug) {
+                		log("invoke added: " + ref);
+                	}
+                    invokeAdded(ds, ref, service); //**
                 }
             }
         }
@@ -500,8 +535,13 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
 
     public void removedService(ServiceReference ref, Object service) {
+    	if (m_debug) {
+    		log("removedservice: " + ref);
+    	}
         boolean makeUnavailable = makeUnavailable();
-        
+        if (m_debug) {
+        	log("make unavailable: " + makeUnavailable);
+        }
         Object[] services;
         synchronized (this) {
             services = m_services.toArray();
@@ -511,6 +551,8 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             DependencyService ds = (DependencyService) services[i];
             if (makeUnavailable) {
                 ds.dependencyUnavailable(this);
+                // when the dependency is optional or the dependency is instance bound and the component is instantiated (and the dependency is required)
+                // then remove is invoked. In other cases the removed has been when the component was unconfigured.
                 if (!isRequired() || (ds.isInstantiated() && isInstanceBound())) {
                     invokeRemoved(ds, ref, service);
                 }
@@ -526,6 +568,9 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
     
     public void invokeAdded(DependencyService dependencyService, ServiceReference reference, Object service) {
+    	if (m_debug) {
+    		log("invoke added");
+    	}
         boolean added = false;
         synchronized (m_sr) {
             Set set = (Set) m_sr.get(dependencyService);
@@ -546,14 +591,39 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
     }
     
-    private void handleAspectAwareAdded(DependencyService dependencyService, ServiceReference reference, Object service) {
+    private synchronized void waitForCallbackLock(Runnable runnable) {
+    	while (m_injectionQueue.indexOf(runnable) != 0) {
+    		try {
+				wait();
+			} catch (InterruptedException e) {
+			}
+    	}
+    }
+    
+    private synchronized void enqueueCallback(Runnable runnable) {
+    	m_injectionQueue.addLast(runnable);
+    }
+    
+    private synchronized void releaseCallback(Runnable runnable) {
+    	m_injectionQueue.remove(runnable);
+    	notifyAll();
+    }
+    
+    private void handleAspectAwareAdded(final DependencyService dependencyService, final ServiceReference reference, final Object service) {
+    	if (m_debug) {
+    		log("aspectawareadded: " + reference.getProperty("service.ranking"));
+    	}
 		if (componentIsDependencyManagerFactory(dependencyService)) {
 			// component is either aspect or adapter factory instance, these must be ignored.
 			return;
 		}
 		boolean invokeAdded = false;
+		boolean invokeSwapped = false;
 		Integer ranking = ServiceUtil.getRankingAsInteger(reference);
-		Tuple highestRankedService = null;
+		Tuple newHighestRankedService = null;
+		Tuple prevHighestRankedService = null;
+		Runnable callbackRunnable = null;
+		Map rankings = null;
 		synchronized (m_componentByRank) {
 			Long originalServiceId = ServiceUtil.getServiceIdAsLong(reference);
 			Map componentMap = (Map) m_componentByRank.get(dependencyService); /* <Long, Map<Integer, Tuple>> */
@@ -562,7 +632,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 				componentMap = new HashMap(); /* <Long, Map<Integer, Tuple>> */
 				m_componentByRank.put(dependencyService, componentMap);
 			}
-			Map rankings = (Map) componentMap.get(originalServiceId); /* <Integer, Tuple> */
+			rankings = (Map) componentMap.get(originalServiceId); /* <Integer, Tuple> */
 			if (rankings == null) {
 				// new component added
 				rankings = new HashMap(); /* <Integer, Tuple> */
@@ -572,14 +642,84 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 			} 
 			
 			if (!invokeAdded) {
-				highestRankedService = swapHighestRankedService(dependencyService, originalServiceId, reference, service, ranking);
+				// current highest ranked
+				prevHighestRankedService = (Tuple)getHighestRankedService(dependencyService, originalServiceId).getValue();
+				newHighestRankedService = swapHighestRankedService(dependencyService, originalServiceId, reference, service, ranking);
+				if (m_debug) {
+					log("prevhigh: " + prevHighestRankedService.getServiceReference().getProperty("service.ranking") + ", new high: " + newHighestRankedService.getServiceReference().getProperty("service.ranking"));
+				}
+				if (!prevHighestRankedService.getServiceReference().equals(newHighestRankedService.getServiceReference())) {
+					// new highest ranked service
+					if (m_debug) {
+						log("New highest ranked to swap to");
+					}
+					invokeSwapped = true;
+				} else {
+					if (m_debug) {
+						log("Ignoring lower ranked or irrelevant swap");
+					}
+				}
+			}
+			if (m_debug) {
+				log(m_componentByRank.toString());
+			}
+			
+			// up until this point should be synchronized on m_componentsByRank to keep integrity of the administration and consequences
+			// then the do phase comes, here we want to guarantee the effects of this operation are done like they were synchronized, however
+			// synchronization on m_componentsByRank to too course grained here, so we'd like to switch to synchronization on the
+			// original service id, therefore we're using our own guarded block to ensure the correct order.
+			
+			if (invokeAdded) {
+				if (m_debug) {
+					log("invoke added: " + reference.getProperty("service.ranking"));
+				}
+				callbackRunnable = createCallbackRunnable(dependencyService, reference, service, m_callbackAdded);
+				enqueueCallback(callbackRunnable);
+			} else if (invokeSwapped) {
+				if (m_debug) {
+					log("invoke swapped: " + newHighestRankedService.getServiceReference().getProperty("service.ranking") + " replacing " + prevHighestRankedService.getServiceReference().getProperty("service.ranking"));
+				}
+				callbackRunnable = createSwapRunnable(dependencyService, prevHighestRankedService.getServiceReference(), prevHighestRankedService.getService(), newHighestRankedService.getServiceReference(), newHighestRankedService.getService());
+				enqueueCallback(callbackRunnable);
+			}    	
+		}
+		if (callbackRunnable != null) {
+			waitForCallbackLock(callbackRunnable);
+			synchronized (rankings) {
+				releaseCallback(callbackRunnable);
+				execute(callbackRunnable);
 			}
 		}
-		if (invokeAdded) {
-			invoke(dependencyService, reference, service, m_callbackAdded);
-		} else {
-			invokeSwappedCallback(dependencyService, highestRankedService.getServiceReference(), highestRankedService.getService(), reference, service);
-		}    	
+    }
+    
+    private Runnable createCallbackRunnable(final DependencyService dependencyService, final ServiceReference reference, final Object service, final String callback) {
+    	return new Runnable() {
+			public void run() {
+				invoke(dependencyService, reference, service, callback);			
+			}
+			public String toString() {
+				return callback + " on " + dependencyService;
+			}
+		};
+    }
+    
+    private Runnable createSwapRunnable(final DependencyService dependencyService, final ServiceReference prevReference, final Object prevService, final ServiceReference newReference, final Object newService) {
+    	return new Runnable() {
+			public void run() {
+				invokeSwappedCallback(dependencyService, prevReference, prevService, newReference, newService);					
+			}
+			public String toString() {
+				return "swap on " + dependencyService;
+			}
+		};
+    }
+    
+    private void execute(Runnable runnable) {
+    	runnable.run();
+    }
+    
+    private void log(String message) {
+    	m_logger.log(Logger.LOG_DEBUG, message);
     }
     
     private boolean componentIsDependencyManagerFactory(DependencyService dependencyService) {
@@ -594,13 +734,12 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
     
 	private Tuple swapHighestRankedService(DependencyService dependencyService, Long serviceId, ServiceReference newReference, Object newService, Integer newRanking) {
-		// does a component with a higher ranking exists
+		// does a component with a higher ranking exist
 		synchronized (m_componentByRank) {
 			Map componentMap = (Map) m_componentByRank.get(dependencyService); /* <Long, Map<Integer, Tuple>> */
 			Map rankings = (Map) componentMap.get(serviceId); /* <Integer, Tuple> */
-			Entry highestEntry = getHighestRankedService(dependencyService, serviceId); /* <Integer, Tuple> */
-			rankings.remove(highestEntry.getKey());
 			rankings.put(newRanking, new Tuple(newReference, newService));
+			Entry highestEntry = getHighestRankedService(dependencyService, serviceId); /* <Integer, Tuple> */
 			return (Tuple) highestEntry.getValue();
 		}
 	}
@@ -643,6 +782,9 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 		// 1) a call to added(original-service)
 		// 2) that causes a swap
 		// 3) a call to removed(aspect-service) <-- that's what we're talking about
+		if (m_debug) {
+			log(m_componentByRank.toString());
+		}
 		return (componentMap != null && rankings != null && rankings.size() == 1 && ((Entry)rankings.entrySet().iterator().next()).getKey()
 				.equals(ServiceUtil.getRankingAsInteger(reference)));
 	}
@@ -653,10 +795,16 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
 
     public void invokeRemoved(DependencyService dependencyService, ServiceReference reference, Object service) {
+    	if (m_debug) {
+    		log("invoke removed");
+    	}
         boolean removed = false;
         synchronized (m_sr) {
             Set set = (Set) m_sr.get(dependencyService);
             removed = (set != null && set.remove(new Tuple(reference, service)));
+        }
+        if (m_debug) {
+        	log("removed: " + removed);
         }
         if (removed) {
         	if (m_callbackSwapped != null) {
@@ -669,37 +817,94 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
     
 	private void handleAspectAwareRemoved(DependencyService dependencyService, ServiceReference reference, Object service) {
+		if (m_debug) {
+			log("aspectawareremoved: " + reference.getProperty("service.ranking"));
+		}
 		if (componentIsDependencyManagerFactory(dependencyService)) {
 			// component is either aspect or adapter factory instance, these must be ignored.
 			return;
 		}
+		// we might need to swap here too!
+		boolean invokeRemoved = false;
 		Long serviceId = ServiceUtil.getServiceIdAsLong(reference);
-			synchronized (m_componentByRank) {
-				if (isLastService(dependencyService, reference, service, serviceId)) {
-					invoke(dependencyService, reference, service, m_callbackRemoved);
-				}
-				Long originalServiceId = ServiceUtil.getServiceIdAsLong(reference);
-				Map componentMap = (Map) m_componentByRank.get(dependencyService); /* <Long, Map<Integer, Tuple>> */
-				if (componentMap != null) {
-					Map rankings = (Map) componentMap.get(originalServiceId); /* <Integer, Tuple> */
-					for (Iterator entryIterator = rankings.entrySet().iterator(); entryIterator.hasNext(); ) {
-						Entry mapEntry = (Entry) entryIterator.next();
-						if (((Tuple)mapEntry.getValue()).getServiceReference().equals(reference)) {
-							// remove the reference
-							rankings.remove(mapEntry.getKey());
-						}
+		Tuple prevHighestRankedService = null;
+		Tuple newHighestRankedService = null;
+		boolean invokeSwapped = false;
+		Map rankings = null;
+		Runnable callbackRunnable = null;
+		synchronized (m_componentByRank) {
+			Long originalServiceId = ServiceUtil.getServiceIdAsLong(reference);
+			if (isLastService(dependencyService, reference, service, serviceId)) {
+				invokeRemoved = true;
+			} else {
+				// not the last service, but should we swap?
+				prevHighestRankedService = (Tuple)getHighestRankedService(dependencyService, originalServiceId).getValue();
+				if (prevHighestRankedService.getServiceReference().equals(reference)) {
+					// swapping out
+					if (m_debug) {
+						log("Swap out on remove!");
 					}
-					if (rankings.size() == 0) {
-						componentMap.remove(originalServiceId);
-					}
-					if (componentMap.size() == 0) {
-						m_componentByRank.remove(dependencyService);
-					}
+					invokeSwapped = true;
 				}
 			}
+			if (m_debug) {
+				log("is last service: " + invokeRemoved);
+			}
+			// cleanup
+			Map componentMap = (Map) m_componentByRank.get(dependencyService); /* <Long, Map<Integer, Tuple>> */
+			if (componentMap != null) {
+				rankings = (Map) componentMap.get(originalServiceId); /* <Integer, Tuple> */
+				List rankingsToRemove = new ArrayList();
+				for (Iterator entryIterator = rankings.entrySet().iterator(); entryIterator.hasNext(); ) {
+					Entry mapEntry = (Entry) entryIterator.next();
+					if (((Tuple)mapEntry.getValue()).getServiceReference().equals(reference)) {
+						// remove the reference
+						// rankings.remove(mapEntry.getKey());
+						rankingsToRemove.add(mapEntry.getKey());
+					}
+				}
+				for (Iterator rankingIterator = rankingsToRemove.iterator(); rankingIterator.hasNext(); ) {
+					rankings.remove(rankingIterator.next());
+				}
+				if (rankings.size() == 0) {
+					componentMap.remove(originalServiceId);
+				}
+				if (componentMap.size() == 0) {
+					m_componentByRank.remove(dependencyService);
+				}
+			}
+			// determine current highest ranked service
+			if (invokeSwapped) {
+				newHighestRankedService = (Tuple)getHighestRankedService(dependencyService, originalServiceId).getValue();
+			}
+			if (invokeRemoved) {
+				// handle invoke outside the sync block since we won't know what will happen there
+				if (m_debug) {
+					log("invoke removed: " + reference.getProperty("service.ranking"));
+				}
+				callbackRunnable = createCallbackRunnable(dependencyService, reference, service, m_callbackRemoved);
+				enqueueCallback(callbackRunnable);
+			} else if (invokeSwapped) {
+				if (m_debug) {
+					log("invoke swapped: " + newHighestRankedService.getServiceReference().getProperty("service.ranking") + " replacing " + prevHighestRankedService.getServiceReference().getProperty("service.ranking"));
+				}
+				callbackRunnable = createSwapRunnable(dependencyService, prevHighestRankedService.getServiceReference(), prevHighestRankedService.getService(), newHighestRankedService.getServiceReference(), newHighestRankedService.getService());
+				enqueueCallback(callbackRunnable);
+			}
+		}
+		if (callbackRunnable != null) {
+			waitForCallbackLock(callbackRunnable);
+			synchronized (rankings) {
+				releaseCallback(callbackRunnable);
+				execute(callbackRunnable);
+			}
+		}
 	}    
 
     public void invoke(DependencyService dependencyService, ServiceReference reference, Object service, String name) {
+    	if (m_debug) {
+    		log("invoke: " + name);
+    	}
         if (name != null) {
             dependencyService.invokeCallbackMethod(getCallbackInstances(dependencyService), name, 
                 new Class[][] {
@@ -724,11 +929,26 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 			throw new IllegalStateException("Attempt to swap a service for a service with the same rank! previousReference: " + previousReference + ", currentReference: " + currentServiceReference);
 		}
 		
-		component.invokeCallbackMethod(getCallbackInstances(component), m_callbackSwapped, new Class[][] { { m_trackedServiceName, m_trackedServiceName },
-				{ Object.class, Object.class }, { ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName },
-				{ ServiceReference.class, Object.class, ServiceReference.class, Object.class } }, new Object[][] { { previous, current },
-				{ previous, current }, { previousReference, previous, currentServiceReference, current },
-				{ previousReference, previous, currentServiceReference, current } });
+		component.invokeCallbackMethod(getCallbackInstances(component), m_callbackSwapped, new Class[][] { 
+					{ m_trackedServiceName, m_trackedServiceName },
+					{ Object.class, Object.class }, 
+					{ ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName },
+					{ ServiceReference.class, Object.class, ServiceReference.class, Object.class }, 
+					{ Component.class, m_trackedServiceName, m_trackedServiceName },
+					{ Component.class, Object.class, Object.class }, 
+					{ Component.class, ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName },
+					{ Component.class, ServiceReference.class, Object.class, ServiceReference.class, Object.class } 
+				}, 
+				new Object[][] { 
+					{ previous, current },
+					{ previous, current }, 
+					{ previousReference, previous, currentServiceReference, current },
+					{ previousReference, previous, currentServiceReference, current },
+					{ component, previous, current },
+					{ component, previous, current }, 
+					{ component, previousReference, previous, currentServiceReference, current },
+					{ component, previousReference, previous, currentServiceReference, current } 					
+				});
 	}    
 
     protected synchronized boolean makeAvailable() {
@@ -1066,6 +1286,9 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
 
     public void invokeAdded(DependencyService service) {
+    	if (m_debug) {
+    		log("invoke added due to configure. (component is activated)");
+    	}
         ServiceReference[] refs = m_tracker.getServiceReferences();
         if (refs != null) {
             for (int i = 0; i < refs.length; i++) {
@@ -1077,19 +1300,25 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     }
     
     public void invokeRemoved(DependencyService service) {
+    	if (m_debug) {
+    		log("invoke removed due to unconfigure. (component is destroyed)");
+    	}
         Set references = null;
+        Object[] tupleArray = null;
         synchronized (m_sr) {
             references = (Set) m_sr.get(service);
+            // is this null check necessary ??
+            if (references != null) {
+	            tupleArray = references.toArray(new Tuple[references.size()]);
+            }
         }
-        Tuple[] refs = (Tuple[]) (references != null ? references.toArray(new Tuple[references.size()]) : new Tuple[0]);
+
+        Tuple[] refs = (Tuple[]) (tupleArray != null ?  tupleArray : new Tuple[0]);
     
         for (int i = 0; i < refs.length; i++) {
             ServiceReference sr = refs[i].getServiceReference();
             Object svc = refs[i].getService();
             invokeRemoved(service, sr, svc);
-        }
-        if (references != null) {
-            references.clear();
         }
     }
 

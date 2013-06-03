@@ -214,4 +214,11 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
 	 * @param isInstanceBound <code>true</code> if this dependency should be instance bound
 	 */
     public ServiceDependency setInstanceBound(boolean isInstanceBound);    
+    
+    /**
+     * Enabled debug logging for this dependency instance. The logging is prefixed with the given identifier.
+     * @param identifier
+     * @return this service dependency.
+     */
+    public ServiceDependency setDebug(String identifier);
 }
