@@ -19,6 +19,8 @@
 
 package org.apache.felix.ipojo.task;
 
+import static java.lang.String.format;
+
 import org.apache.commons.cli.*;
 import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.felix.ipojo.manipulator.util.Constants;
@@ -28,7 +30,7 @@ import java.util.List;
 
 /**
  * A command line tools to manipulate iPOJO bundles.
- * It case be used as follow:
+ * It can be used as follow:
  * <code>java -jar this-jar.jar --input the-jar-to-manipulate</code><br/>
  * <code>java -jar this-jar.jar --input the-jar-to-manipulate  --output the-output-jar</code><br/>
  * <code>java -jar this-jar.jar --input the-jar-to-manipulate  --metadata the-xml-metadata</code><br/>
@@ -36,34 +38,61 @@ import java.util.List;
 public class IPojoc {
 
     /**
-     * CLI options.
+     * Input file to be manipulated.
      */
-    private static Options options;
+    private File m_input;
+
+    /**
+     * Output file (temporary or not).
+     */
+    private File m_output;
+
+    /**
+     * Metadata file (may be null).
+     */
+    private File m_metadata;
+
+    /**
+     * Manipulator.
+     */
+    private Pojoization m_pojoization;
 
     /**
      * The main entry point
      * @param args the arguments
-     * @throws ParseException
      */
-    public static void main(String[] args) throws ParseException {
-        options = getOptions();
-        CommandLineParser parser = new GnuParser();
+    public static void main(String[] args) {
+        Options options = buildOptions();
+        CommandLine cmd = null;
         try {
-            CommandLine cmd = parser.parse(options, args);
-            if (cmd.hasOption("h")) {
-                printHelp();
+            cmd = buildCommandLine(args, options);
+            if (cmd.hasOption('h')) {
+                printHelp(options);
             } else {
-                process(cmd);
+                IPojoc compiler = new IPojoc();
+                compiler.execute(cmd);
             }
         } catch (MissingOptionException e) {
             for (String opt : (List<String>) e.getMissingOptions()) {
                 System.err.println("The '" + opt + "' option is missing");
             }
-            printHelp();
+            printHelp(options);
         } catch (MissingArgumentException e) {
             System.err.println("The option '" + e.getOption() + "' requires an argument");
-            printHelp();
+            printHelp(options);
+        } catch (Exception e) {
+            System.out.printf("Manipulation failed: %s%n", e.getMessage());
+            if ((cmd != null) && cmd.hasOption('X')) {
+                e.printStackTrace(System.out);
+            } else {
+                System.out.printf("Use -X option to print the full stack trace%n");
+            }
         }
+    }
+
+    private static CommandLine buildCommandLine(final String[] args, final Options options) throws ParseException {
+        CommandLineParser parser = new GnuParser();
+        return parser.parse(options, args);
     }
 
     /**
@@ -71,104 +100,100 @@ public class IPojoc {
      * @param cmd the command line
      * @throws ParseException
      */
-    private static void process(CommandLine cmd) throws ParseException {
-        // All arguments are set
-        File input, output, metadata;
+    private void execute(CommandLine cmd) throws Exception {
+        System.out.printf("iPOJO Manipulation (%s)%n", Constants.getVersion());
+        System.out.println("-----------------------------------------------");
+        readInputOption(cmd);
+        readOutputOption(cmd);
+        readMetadataOption(cmd);
 
-        // Check that the input file exist
-        try {
-            input = (File) cmd.getParsedOptionValue("i");
-            if (input == null || !input.isFile()) {
-                System.err.println("The input option must be an existing file, '" + cmd.getOptionValue('i') + "' does " +
-                        "not exist");
-                return;
+        manipulate();
+        printStatus();
+    }
+
+    private void readMetadataOption(final CommandLine cmd) throws Exception {
+        // Retrieve the metadata file
+        if (cmd.hasOption("m")) {
+            m_metadata = (File) cmd.getParsedOptionValue("m");
+            if (m_metadata != null && !m_metadata.isFile()) {
+                throw new Exception(
+                        format("The metadata option must be an existing file, '%s' does not exist", cmd.getOptionValue('m'))
+                );
             }
-        } catch (ParseException pe) {
-            System.err.println("The input option must be an existing file");
-            return;
+            System.out.println("metadata file  => " + m_metadata.getAbsolutePath());
+        } else {
+            System.out.println("metadata file  => no metadata file");
         }
+    }
 
+    private void readOutputOption(final CommandLine cmd) throws Exception {
         // Retrieve output file
         if (cmd.hasOption("o")) {
             try {
-                output = (File) cmd.getParsedOptionValue("o");
+                m_output = (File) cmd.getParsedOptionValue("o");
             } catch (ParseException pe) {
-                System.err.println("The output option must be a valid file");
-                return;
+                throw new Exception(
+                        format("The output option must be an existing file, '%s' does not exist", cmd.getOptionValue('o'))
+                );
             }
+            System.out.println("output file    => " + m_output.getAbsolutePath());
         } else {
             // Inline replacement
             // We create a temporary file marked by a __ prefix
             // It will be substituted upon success.
-            output = new File("__" + input.getName());
+            m_output = new File("__" + m_input.getName());
+            System.out.println("output file    => " + m_input.getAbsolutePath());
         }
+    }
 
-        // Retrieve the metadata file
-        if (cmd.hasOption("m")) {
-            try {
-                metadata = (File) cmd.getParsedOptionValue("m");
-                if (metadata != null && !metadata.isFile()) {
-                    System.err.println("The metadata option must be an existing file , " +
-                            "'" + cmd.getOptionValue('m') + "' does " +
-                            "not exist");
-                    return;
-                }
-            } catch (ParseException pe) {
-                System.err.println("The metadata option must be a valid file");
-                return;
-            }
-        } else {
-            metadata = null;
+    private void readInputOption(final CommandLine cmd) throws Exception {
+        // Check that the input file exist
+        m_input = (File) cmd.getParsedOptionValue("i");
+        if (m_input == null || !m_input.isFile()) {
+            throw new Exception(
+                    format("The input option must be an existing file, '%s' does not exist", cmd.getOptionValue('i'))
+            );
         }
+        System.out.println("input file     => " + m_input.getAbsolutePath());
+    }
 
-        System.out.println("iPOJO Manipulation:");
-        System.out.println("input file     => " + input.getAbsolutePath());
-        if (output.getName().startsWith("__")) {
-            System.out.println("output file    => " + input.getAbsolutePath());
-        } else {
-            System.out.println("output file    => " + output.getAbsolutePath());
-        }
-        if (metadata != null) {
-            System.out.println("metadata file  => " + metadata.getAbsolutePath());
-        } else {
-            System.out.println("metadata file  => no metadata file");
-        }
+    private void manipulate() {
+        m_pojoization = new Pojoization();
+        m_pojoization.pojoization(m_input, m_output, m_metadata);
+    }
 
-        Pojoization pojoization = new Pojoization();
-        pojoization.pojoization(input, output, metadata);
-
-        if (pojoization.getErrors().size() != 0) {
+    private void printStatus() {
+        if (m_pojoization.getErrors().size() != 0) {
             System.err.println("iPOJO Manipulation failed :");
-            for (String error : pojoization.getErrors()) {
-                System.err.println("\t" +error);
+            for (String error : m_pojoization.getErrors()) {
+                System.err.println("\t" + error);
             }
             System.exit(-1);
         } else {
             System.err.println("iPOJO Manipulation successfully completed.");
-            for (String warning : pojoization.getWarnings()) {
+            for (String warning : m_pojoization.getWarnings()) {
                 System.err.println(warning);
             }
-            cleanup(input, output);
+            cleanup();
             System.exit(0);
         }
     }
 
     /**
      * Upon success, cleanup temporary files.
-     * @param input the input jar
-     * @param output the output jar
      */
-    private static void cleanup(File input, File output) {
-        if (output.getName().startsWith("__")) {
-            input.delete();
-            output.renameTo(input);
+    private void cleanup() {
+        if (m_output.getName().startsWith("__")) {
+            m_input.delete();
+            m_output.renameTo(m_input);
         }
     }
 
     /**
      * Print help.
+     * @param options
      */
-    private static void printHelp() {
+    private static void printHelp(final Options options) {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("java -jar org.apache.felix.ipojo.ant-" + Constants.getVersion() + ".jar", options);
     }
@@ -177,7 +202,7 @@ public class IPojoc {
      * Builds the option list
      * @return the options
      */
-    public static Options getOptions() {
+    public static Options buildOptions() {
         Option input =
                 OptionBuilder.withArgName("input file")
                         .withLongOpt("input")
@@ -207,9 +232,16 @@ public class IPojoc {
                         .withType(File.class)
                         .create('m');
 
+        Option verbose = new Option("X", "exception", false, "print exception stack trace in case of error");
+
         Option help =
                 OptionBuilder.withLongOpt("help").withDescription("print this message").create('h');
 
-        return new Options().addOption(input).addOption(output).addOption(metadata).addOption(help);
+        return new Options()
+                .addOption(input)
+                .addOption(output)
+                .addOption(metadata)
+                .addOption(verbose)
+                .addOption(help);
     }
 }
