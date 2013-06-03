@@ -39,9 +39,9 @@ import org.apache.felix.dm.impl.dependencies.ResourceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.ServiceDependencyImpl;
 import org.apache.felix.dm.impl.dependencies.TemporalServiceDependencyImpl;
 import org.apache.felix.dm.impl.index.AspectFilterIndex;
-import org.apache.felix.dm.impl.index.MultiPropertyExactFilter;
 import org.apache.felix.dm.impl.index.AdapterFilterIndex;
 import org.apache.felix.dm.impl.index.ServiceRegistryCache;
+import org.apache.felix.dm.impl.index.multiproperty.MultiPropertyFilterIndex;
 import org.apache.felix.dm.impl.metatype.PropertyMetaDataImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -110,8 +110,7 @@ public class DependencyManager {
                     	m_serviceRegistryCache.addFilterIndex(new AdapterFilterIndex());
                     }
                     else {
-                        String[] propList = props[i].split(",");
-                        m_serviceRegistryCache.addFilterIndex(new MultiPropertyExactFilter(propList));
+                    	m_serviceRegistryCache.addFilterIndex(new MultiPropertyFilterIndex(props[i]));
                     }
                 }
             }
@@ -146,7 +145,6 @@ public class DependencyManager {
     
     private BundleContext createContext(BundleContext context) {
         if (m_serviceRegistryCache != null) {
-//            System.out.println("DM: Enabling bundle context interceptor for bundle #" + context.getBundle().getBundleId());
             return m_serviceRegistryCache.createBundleContextInterceptor(context);
         }
         else {
