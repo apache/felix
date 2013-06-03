@@ -24,7 +24,6 @@ import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
-import sun.awt.geom.AreaOp;
 
 /**
  * iPOJO Ant Task. This Ant task manipulates an input bundle.
