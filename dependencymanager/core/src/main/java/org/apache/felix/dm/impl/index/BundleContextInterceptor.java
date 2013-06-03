@@ -21,8 +21,10 @@ package org.apache.felix.dm.impl.index;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.dm.FilterIndex;
+import org.apache.felix.dm.impl.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -34,11 +36,16 @@ import org.osgi.framework.ServiceReference;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class BundleContextInterceptor extends BundleContextInterceptorBase {
+	private static final String INDEX_LOG_BAD_PERFORMING_FILTERS = "org.apache.felix.dependencymanager.index.logbadperformingfilters";
+	private static AtomicLong maxLookupTime = new AtomicLong(0L);
     private final ServiceRegistryCache m_cache;
+    private final boolean perfmon = "true".equals(System.getProperty(INDEX_LOG_BAD_PERFORMING_FILTERS));
+	private final Logger m_logger;
 
-    public BundleContextInterceptor(ServiceRegistryCache cache, BundleContext context) {
+    public BundleContextInterceptor(ServiceRegistryCache cache, BundleContext context, Logger logger) {
         super(context);
         m_cache = cache;
+		m_logger = logger;
     }
 
     public void addServiceListener(ServiceListener listener, String filter) throws InvalidSyntaxException {
@@ -74,6 +81,10 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
     }
 
     public ServiceReference[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
+    	long start = 0L;
+    	if (perfmon) {
+    		start = System.currentTimeMillis();
+    	}
         // first we ask the cache if there is an index for our request (class and filter combination)
         FilterIndex filterIndex = m_cache.hasFilterIndexFor(clazz, filter);
         if (filterIndex != null) {
@@ -89,6 +100,13 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
                     }
                 }
             }
+            if (perfmon) {
+	        	long duration = System.currentTimeMillis() - start;
+	        	if (maxLookupTime.get() < duration) {
+	        		maxLookupTime.set(duration);
+	        		m_logger.log(org.apache.felix.dm.impl.Logger.LOG_DEBUG, "new worst performing filter (" + duration + "ms.): " + clazz + " " + filter);
+	        	}
+            }
             if (result == null || result.size() == 0) {
                 return null;
             }
@@ -96,7 +114,15 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
         }
         else {
             // if they don't know, we ask the real bundle context instead
-            return m_context.getServiceReferences(clazz, filter);
+            ServiceReference[] serviceReferences = m_context.getServiceReferences(clazz, filter);
+            if (perfmon) {
+	        	long duration = System.currentTimeMillis() - start;
+	        	if (maxLookupTime.get() < duration) {
+	        		maxLookupTime.set(duration);
+	        		System.out.println("new worst performing filter (" + duration + "ms.): " + clazz + " " + filter);
+	        	}
+            }
+        	return serviceReferences;
         }
     }
 
