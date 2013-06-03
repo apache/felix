@@ -48,7 +48,7 @@ public class AnnotationMetadataProvider implements MetadataProvider {
 
     public AnnotationMetadataProvider(final ResourceStore store,
                                       final Reporter reporter) {
-        this(store, newBindingRegistry(reporter), reporter);
+        this(store, newBindingRegistry(reporter, store), reporter);
     }
 
     public AnnotationMetadataProvider(final ResourceStore store,

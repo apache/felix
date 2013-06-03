@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * Updated callback are called after a reconfiguration.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface Updated {
 
 }

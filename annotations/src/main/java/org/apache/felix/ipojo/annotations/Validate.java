@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * This annotation declares a validate callback.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface Validate {
 
 }

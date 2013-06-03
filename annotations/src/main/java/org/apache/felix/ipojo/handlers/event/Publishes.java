@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * it refers to an external handler.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 public @interface Publishes {
 
     /**

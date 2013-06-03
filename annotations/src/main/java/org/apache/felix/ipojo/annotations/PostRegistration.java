@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * This annotation declares a post-service-registration method.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface PostRegistration {
 
 }

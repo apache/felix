@@ -40,19 +40,22 @@ public class BindingContext {
     private int parameterIndex;
     private Reporter reporter;
     private Type annotationType;
+    private Object visitor;
 
     public BindingContext(final ComponentWorkbench workbench,
                           final Reporter reporter,
                           final Type annotationType,
                           final MemberNode node,
                           final ElementType elementType,
-                          final int parameterIndex) {
+                          final int parameterIndex,
+                          final Object visitor) {
         this.workbench = workbench;
         this.reporter = reporter;
         this.annotationType = annotationType;
         this.node = node;
         this.elementType = elementType;
         this.parameterIndex = parameterIndex;
+        this.visitor = visitor;
     }
 
     public ComponentWorkbench getWorkbench() {
@@ -77,5 +80,9 @@ public class BindingContext {
 
     public Type getAnnotationType() {
         return annotationType;
+    }
+
+    public Object getVisitor() {
+        return visitor;
     }
 }

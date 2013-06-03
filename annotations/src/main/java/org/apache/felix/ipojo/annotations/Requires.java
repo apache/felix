@@ -27,7 +27,7 @@ import java.util.Comparator;
  * This annotation declares a service requirement.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Target({ ElementType.FIELD, ElementType.PARAMETER })
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE})
 @Inherited
 public @interface Requires {
 
