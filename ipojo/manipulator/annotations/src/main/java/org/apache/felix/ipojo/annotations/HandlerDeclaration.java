@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * This annotation is used to configure a handler.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 public @interface HandlerDeclaration {
 
     /**

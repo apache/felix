@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * current component type.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 public @interface Instantiate {
     
     /**

@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 * This annotation declares that the component instances will provide a service.
 * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
 */
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 public @interface Provides {
 
     /**

@@ -26,6 +26,7 @@ import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.EmptyVisitor;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -103,13 +104,13 @@ public class ClassMetadataCollector extends EmptyVisitor {
     	 * at runtime. We retain runtime visible annotations on component
     	 * as they are and left them out in meta-data calculation.
     	 */
-    	if(visible) {
+    	if (visible) {
     		return null;
     	}
     	
         // Return the visitor to be executed (may be null)
         return registry.selection(workbench)
-                .type(node)
+                .type(this, node)
                 .annotatedWith(desc)
                 .get();
 
@@ -151,30 +152,38 @@ public class ClassMetadataCollector extends EmptyVisitor {
      */
     @Override
     public void visitEnd() {
-        if (workbench.getRoot() == null) {
-            // No 'top-level' element has been contributed
+        // Only process real class (no annotations, no interfaces)
+        if (!(is(Opcodes.ACC_ANNOTATION) || is(Opcodes.ACC_INTERFACE) || is(Opcodes.ACC_ABSTRACT))) {
+            if (workbench.getRoot() == null) {
+                // No 'top-level' element has been contributed
 
-            if (!workbench.getElements().isEmpty()) {
-                // There are other annotation's contribution on this type (additional handler declaration/configuration)
-                // That means that there is a missing 'component type' annotation
+                if (!workbench.getElements().isEmpty()) {
+                    // There are other annotation's contribution on this type (additional handler declaration/configuration)
+                    // That means that there is a missing 'component type' annotation
 
-                reporter.warn("Class %s has not been marked as a component type (no @Component, @Handler, " +
-                        "...). It will be ignored by the iPOJO manipulator.",
-                        workbench.getType().getClassName());
+                    reporter.warn("Class %s has not been marked as a component type (no @Component, @Handler, " +
+                                          "...). It will be ignored by the iPOJO manipulator.",
+                                  workbench.getType().getClassName());
+                    return;
+                } // else: no root and no elements
                 return;
-            } // else: no root and no elements
-            return;
-        }
+            }
 
-        componentMetadata = workbench.build();
-        instanceMetadata = workbench.getInstance();
+            componentMetadata = workbench.build();
+            instanceMetadata = workbench.getInstance();
 
-        // If we have an instance declared and the component metadata has a name, we update the component's attribute
-        // of the instance (https://issues.apache.org/jira/browse/FELIX-4052).
-        if (componentMetadata != null  && componentMetadata.containsAttribute("name")  && instanceMetadata != null) {
-            // Update the component attribute
-            instanceMetadata.addAttribute(new Attribute("component", componentMetadata.getAttribute("name")));
+            // If we have an instance declared and the component metadata has a name, we update the component's attribute
+            // of the instance (https://issues.apache.org/jira/browse/FELIX-4052).
+            if (componentMetadata != null  && componentMetadata.containsAttribute("name")  && instanceMetadata != null) {
+                // Update the component attribute
+                instanceMetadata.addAttribute(new Attribute("component", componentMetadata.getAttribute("name")));
+            }
+
         }
+    }
+
+    private boolean is(int flags) {
+        return (node.access & flags) == flags;
     }
 
 }

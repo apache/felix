@@ -62,7 +62,7 @@ public class FieldMetadataCollector extends EmptyVisitor implements FieldVisitor
 
         // Return the visitor to be executed (may be null)
         return registry.selection(workbench)
-                .field(node)
+                .field(this, node)
                 .annotatedWith(desc)
                 .get();
 

@@ -23,6 +23,9 @@ import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench;
 import org.apache.felix.ipojo.manipulator.spi.BindingContext;
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -48,6 +51,7 @@ public class Selection implements Iterable<AnnotationVisitor> {
     private int index = -1;
     private String annotation;
     private ElementType elementType = null;
+    private Object visitor;
 
     public Selection(BindingRegistry registry, ComponentWorkbench workbench, Reporter reporter) {
         this.registry = registry;
@@ -55,25 +59,29 @@ public class Selection implements Iterable<AnnotationVisitor> {
         this.reporter = reporter;
     }
 
-    public Selection field(FieldNode node) {
+    public Selection field(FieldVisitor visitor, FieldNode node) {
+        this.visitor = visitor;
         this.node = node;
         this.elementType = ElementType.FIELD;
         return this;
     }
 
-    public Selection method(MethodNode node) {
+    public Selection method(MethodVisitor visitor, MethodNode node) {
+        this.visitor = visitor;
         this.node = node;
         this.elementType = ElementType.METHOD;
         return this;
     }
 
-    public Selection type(ClassNode node) {
+    public Selection type(ClassVisitor visitor, ClassNode node) {
+        this.visitor = visitor;
         this.node = node;
         this.elementType = ElementType.TYPE;
         return this;
     }
 
-    public Selection parameter(MethodNode node, int index) {
+    public Selection parameter(MethodVisitor visitor, MethodNode node, int index) {
+        this.visitor = visitor;
         this.index = index;
         this.node = node;
         this.elementType = ElementType.PARAMETER;
@@ -97,7 +105,7 @@ public class Selection implements Iterable<AnnotationVisitor> {
 
         List<AnnotationVisitor> visitors = new ArrayList<AnnotationVisitor>();
 
-        BindingContext context = new BindingContext(workbench, reporter, Type.getType(annotation), node, elementType, index);
+        BindingContext context = new BindingContext(workbench, reporter, Type.getType(annotation), node, elementType, index, visitor);
         List<Binding> predicates = registry.getBindings(annotation);
 
         if (predicates != null && !predicates.isEmpty()) {
@@ -116,7 +124,9 @@ public class Selection implements Iterable<AnnotationVisitor> {
         for (Binding binding : bindings) {
             if (binding.getPredicate().matches(context)) {
                 AnnotationVisitor visitor = binding.getFactory().newAnnotationVisitor(context);
-                visitors.add(visitor);
+                if (visitor != null) {
+                    visitors.add(visitor);
+                }
             }
         }
     }

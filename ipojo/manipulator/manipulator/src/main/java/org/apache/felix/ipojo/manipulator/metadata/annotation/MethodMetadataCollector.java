@@ -70,7 +70,7 @@ public class MethodMetadataCollector extends EmptyVisitor implements MethodVisit
 
         // Return the visitor to be executed (may be null)
         return registry.selection(workbench)
-                .method(node)
+                .method(this, node)
                 .annotatedWith(desc)
                 .get();
 
@@ -89,7 +89,7 @@ public class MethodMetadataCollector extends EmptyVisitor implements MethodVisit
 
             // Return the visitor to be executed (may be null)
             return registry.selection(workbench)
-                    .parameter(node, index)
+                    .parameter(this, node, index)
                     .annotatedWith(desc)
                     .get();
 
