@@ -2,7 +2,7 @@ Changes from 1.13.0 to 1.12.0
 -----------------------------
 ** Bug
     * [FELIX-4049] - SCR-Plugin creates invalid manifest-header on incremental-build (eclipse-IDE-integration)
-    * [FELIX-4058] -  PropertyType password has a type (passwort)
+    * [FELIX-4058] - PropertyType password has a wrong type (passwort)
 
 
 Changes from 1.12.0 to 1.11.0
