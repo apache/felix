@@ -171,7 +171,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-            <version>1.10.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -183,7 +183,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator.online</artifactId>
-            <version>1.10.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- End of tested version -->
