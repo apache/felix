@@ -20,6 +20,8 @@
 package org.apache.felix.ipojo.manipulator.metadata;
 
 import junit.framework.TestCase;
+
+import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
 import org.apache.felix.ipojo.manipulator.ResourceVisitor;
@@ -27,6 +29,7 @@ import org.apache.felix.ipojo.manipulator.util.Streams;
 import org.apache.felix.ipojo.manipulator.util.Strings;
 import org.apache.felix.ipojo.metadata.Element;
 import test.AnnotatedComponent;
+import test.FakeAnnotation;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +41,7 @@ import static org.mockito.Mockito.mock;
 
 public class AnnotationMetadataProviderTestCase extends TestCase {
     public void testGetMetadatas() throws Exception {
-        MiniStore store = new MiniStore(AnnotatedComponent.class);
+        MiniStore store = new MiniStore(AnnotatedComponent.class, FakeAnnotation.class);
         Reporter reporter = mock(Reporter.class);
         AnnotationMetadataProvider provider = new AnnotationMetadataProvider(store, reporter);
 
