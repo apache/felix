@@ -19,6 +19,8 @@
 
 package org.apache.felix.ipojo.bnd;
 
+import static java.lang.String.format;
+
 import aQute.lib.osgi.Analyzer;
 import aQute.lib.osgi.Clazz;
 import aQute.lib.osgi.Jar;
@@ -67,6 +69,9 @@ public class BndJarResourceStore implements ResourceStore {
         Resource resource = m_analyzer.getJar().getResource(path);
         if (resource == null) {
             Jar embed = findJar(path);
+            if (embed == null) {
+                throw new IOException(format("Cannot find resource %s in jar and classpath", path));
+            }
             resource = embed.getResource(path);
         }
         InputStream is = null;

@@ -39,6 +39,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
@@ -47,6 +48,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 /**
@@ -74,6 +76,9 @@ public class SelectionTestCase extends TestCase {
         registry = new BindingRegistry(reporter);
         when(factory.newAnnotationVisitor(any(BindingContext.class)))
                 .thenReturn(visitor);
+        // Simulate a resource not found exception
+        when(store.read(anyString()))
+                .thenThrow(new IOException());
     }
 
     public void testSelectionOnClassNodeOnly() throws Exception {

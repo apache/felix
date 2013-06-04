@@ -253,16 +253,11 @@ public class Bindings {
 
                         // Try to read the annotation's byte code
                         byte[] bytes = store.read(Strings.asResourcePath(context.getAnnotationType().getClassName()));
-                        if (bytes != null) {
-                            StereotypeParser parser = new StereotypeParser();
-                            parser.read(bytes);
-                            if (parser.isStereotype()) {
-                                registry.addStereotype(type, parser.getRecorders());
-                                return true;
-                            } else {
-                                registry.addUnbound(type);
-                                return false;
-                            }
+                        StereotypeParser parser = new StereotypeParser();
+                        parser.read(bytes);
+                        if (parser.isStereotype()) {
+                            registry.addStereotype(type, parser.getRecorders());
+                            return true;
                         }
                         registry.addUnbound(type);
                         return false;
