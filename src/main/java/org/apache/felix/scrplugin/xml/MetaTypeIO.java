@@ -19,11 +19,13 @@
 package org.apache.felix.scrplugin.xml;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.xml.transform.TransformerException;
 
@@ -79,7 +81,7 @@ public class MetaTypeIO {
     public static List<String> generateDescriptors(final DescriptionContainer module,
             final Options options,
             final Log logger)
-                    throws SCRDescriptorException {
+    throws SCRDescriptorException {
         // create a list with relevant components
         final List<ComponentContainer> components = new ArrayList<ComponentContainer>();
         for(final ComponentContainer component : module.getComponents()) {
@@ -106,10 +108,76 @@ public class MetaTypeIO {
                     } else {
                         useFile = new File(mtDir, ccc.className + ".xml");
                     }
-                    logger.info("Generating " + ccc.components.size() + " MetaType Descriptors in " + useFile);
-                    MetaTypeIO.write(module, ccc.components, useFile);
-                    fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + useFile.getName());
+                    String metatypeLocation = MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype";
 
+                    // check if all labels and descriptions are inlined
+                    boolean allInlined = true;
+                    for(final ComponentContainer cc : ccc.components) {
+                        final MetatypeContainer mc = cc.getMetatypeContainer();
+
+                        if ( mc.getName() != null && mc.getName().startsWith("%") ) {
+                            allInlined = false;
+                        }
+                        if ( mc.getDescription() != null && mc.getDescription().startsWith("%") ) {
+                            allInlined = false;
+                        }
+                        for(final MetatypeAttributeDefinition mad : mc.getProperties()) {
+                            if ( mad.getName() != null && mad.getName().startsWith("%") ) {
+                                allInlined = false;
+                            }
+                            if ( mad.getDescription() != null && mad.getDescription().startsWith("%") ) {
+                                allInlined = false;
+                            }
+                        }
+                    }
+                    if ( allInlined ) {
+                        final Properties metatypeProps = new Properties();
+
+                        // externalize all labels and descriptions
+                        for(final ComponentContainer cc : ccc.components) {
+                            final MetatypeContainer mc = cc.getMetatypeContainer();
+
+                            final String baseKey = cc.getClassDescription().getDescribedClass().getName().replace("$", ".");
+
+                            if ( mc.getName() != null ) {
+                                final String key = baseKey + ".name";
+                                metatypeProps.put(key, mc.getName());
+                                mc.setName("%" + key);
+                            }
+                            if ( mc.getDescription() != null ) {
+                                final String key = baseKey + ".description";
+                                metatypeProps.put(key, mc.getDescription());
+                                mc.setDescription("%" + key);
+                            }
+                            for(final MetatypeAttributeDefinition mad : mc.getProperties()) {
+                                if ( mad.getName() != null ) {
+                                    final String key = baseKey + "." + mad.getId() + ".name";
+                                    metatypeProps.put(key, mad.getName());
+                                    mad.setName("%" + key);
+                                }
+                                if ( mad.getDescription() != null ) {
+                                    final String key = baseKey + "." + mad.getId() + ".description";
+                                    metatypeProps.put(key, mad.getDescription());
+                                    mad.setDescription("%" + key);
+                                }
+                            }
+                        }
+                        if ( metatypeProps.size() > 0 ) {
+                            final int lastDot = useFile.getName().lastIndexOf(".");
+                            final String baseName = useFile.getName().substring(0, lastDot);
+                            final File propsFile = new File(useFile.getParentFile(), baseName + ".properties");
+                            try {
+                                metatypeProps.store(new FileWriter(propsFile), null);
+                            } catch (IOException e) {
+                                throw new SCRDescriptorException("Unable to get metatype.properties", propsFile.getAbsolutePath());
+                            }
+                            fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + propsFile.getName());
+                            metatypeLocation = MetaTypeService.METATYPE_DOCUMENTS_LOCATION + '/' + baseName;
+                        }
+                    }
+                    logger.info("Generating " + ccc.components.size() + " MetaType Descriptors in " + useFile);
+                    MetaTypeIO.write(module, ccc.components, useFile, metatypeLocation);
+                    fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + useFile.getName());
                 }
 
                 return fileNames;
@@ -152,7 +220,10 @@ public class MetaTypeIO {
      * @param contentHandler
      * @throws SAXException
      */
-    private static void write(final DescriptionContainer metaData, final List<ComponentContainer> components, final File file)
+    private static void write(final DescriptionContainer metaData,
+            final List<ComponentContainer> components,
+            final File file,
+            final String localization)
     throws SCRDescriptorException {
         final String namespace = detectMetatypeVersion(metaData);
 
@@ -163,7 +234,7 @@ public class MetaTypeIO {
             contentHandler.startPrefixMapping(PREFIX, namespace);
 
             final AttributesImpl ai = new AttributesImpl();
-            IOUtils.addAttribute(ai, "localization", MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype");
+            IOUtils.addAttribute(ai, "localization", localization);
 
             contentHandler.startElement(namespace, METADATA_ELEMENT, METADATA_ELEMENT_QNAME, ai);
             IOUtils.newline(contentHandler);
