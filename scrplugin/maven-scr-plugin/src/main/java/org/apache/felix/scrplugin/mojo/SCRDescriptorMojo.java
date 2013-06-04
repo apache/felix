@@ -308,6 +308,13 @@ public class SCRDescriptorMojo extends AbstractMojo {
                 buildContext.refresh(metaTypeFile);
             }
 
+            final File metaTypePropsFile = new File(mtDir, source.getClassName() + ".properties");
+            getLog().debug("Deleting " + metaTypePropsFile + " ");
+            deleted = metaTypePropsFile.delete();
+            if ( deleted ) {
+                buildContext.refresh(metaTypePropsFile);
+            }
+
             final File componentDescriptorFile = new File(componentDir, source.getClassName() + ".xml");
             getLog().debug("Deleting " + componentDescriptorFile);
             deleted = componentDescriptorFile.delete();
