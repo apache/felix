@@ -37,7 +37,7 @@ import org.osgi.framework.ServiceReference;
  */
 public class BundleContextInterceptor extends BundleContextInterceptorBase {
 	private static final String INDEX_LOG_BAD_PERFORMING_FILTERS = "org.apache.felix.dependencymanager.index.logbadperformingfilters";
-	private static AtomicLong maxLookupTime = new AtomicLong(0L);
+	private static long maxLookupTime = 0L;
     private final ServiceRegistryCache m_cache;
     private final boolean perfmon = "true".equals(System.getProperty(INDEX_LOG_BAD_PERFORMING_FILTERS));
 	private final Logger m_logger;
@@ -102,8 +102,8 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
             }
             if (perfmon) {
 	        	long duration = System.currentTimeMillis() - start;
-	        	if (maxLookupTime.get() < duration) {
-	        		maxLookupTime.set(duration);
+	        	if (maxLookupTime < duration) {
+	        		maxLookupTime = duration;
 	        		m_logger.log(org.apache.felix.dm.impl.Logger.LOG_DEBUG, "new worst performing filter (" + duration + "ms.): " + clazz + " " + filter);
 	        	}
             }
@@ -117,8 +117,8 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
             ServiceReference[] serviceReferences = m_context.getServiceReferences(clazz, filter);
             if (perfmon) {
 	        	long duration = System.currentTimeMillis() - start;
-	        	if (maxLookupTime.get() < duration) {
-	        		maxLookupTime.set(duration);
+	        	if (maxLookupTime < duration) {
+	        		maxLookupTime = duration;
 	        		System.out.println("new worst performing filter (" + duration + "ms.): " + clazz + " " + filter);
 	        	}
             }
