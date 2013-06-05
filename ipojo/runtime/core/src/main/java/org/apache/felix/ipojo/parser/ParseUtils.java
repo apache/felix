@@ -60,7 +60,7 @@ public final class ParseUtils {
      * @param str the string form
      * @return the resulting list
      */
-    public static List parseArraysAsList(String str) {
+    public static List<String> parseArraysAsList(String str) {
         return Arrays.asList(parseArrays(str));
     }
     
