@@ -1,0 +1,5 @@
+Initial Release 1.0.0
+---------------------
+
+** Improvement
+    * [FELIX-3861] - Set felix.webconsole.category on Web Console plugins

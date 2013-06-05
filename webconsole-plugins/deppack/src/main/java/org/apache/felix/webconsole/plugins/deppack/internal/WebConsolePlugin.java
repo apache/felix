@@ -46,6 +46,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
     private static final String LABEL = "deppack"; //$NON-NLS-1$
     private static final String TITLE = "%deppack.pluginTitle"; //$NON-NLS-1$
     private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" }; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String CATEGORY = "OSGi"; //$NON-NLS-1$
 
     //
     private static final String ACTION_DEPLOY = "deploydp"; //$NON-NLS-1$
@@ -65,6 +66,11 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         // load templates
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
         this.adminTracker = adminTracker;
+    }
+
+    public String getCategory()
+    {
+        return CATEGORY;
     }
 
     /**
