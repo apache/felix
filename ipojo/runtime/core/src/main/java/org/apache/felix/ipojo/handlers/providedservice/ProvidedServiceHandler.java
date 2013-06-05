@@ -19,11 +19,7 @@
 package org.apache.felix.ipojo.handlers.providedservice;
 
 import java.lang.reflect.Field;
-import java.util.Dictionary;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.HandlerFactory;
@@ -59,7 +55,7 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
     /**
      * The list of the provided service.
      */
-    private ProvidedService[] m_providedServices = new ProvidedService[0];
+    private Set<ProvidedService> m_providedServices = new LinkedHashSet<ProvidedService>();
 
     /**
      * The handler description.
@@ -67,32 +63,11 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
     private ProvidedServiceHandlerDescription m_description;
 
     /**
-     * Add a provided service to the list .
-     *
-     * @param svc : the provided service to add
-     */
-    private void addProvidedService(ProvidedService svc) {
-        // Verify that the provided service is not already in the array.
-        for (int i = 0; i < m_providedServices.length; i++) {
-            if (m_providedServices[i] == svc) { return; }
-        }
-
-        if (m_providedServices.length > 0) {
-            ProvidedService[] newPS = new ProvidedService[m_providedServices.length + 1];
-            System.arraycopy(m_providedServices, 0, newPS, 0, m_providedServices.length);
-            newPS[m_providedServices.length] = svc;
-            m_providedServices = newPS;
-        } else {
-            m_providedServices = new ProvidedService[] { svc };
-        }
-    }
-
-    /**
      * Get the array of provided service.
      * @return the list of the provided service.
      */
     public ProvidedService[] getProvidedServices() {
-        return m_providedServices;
+        return m_providedServices.toArray(new ProvidedService[m_providedServices.size()]);
     }
 
     /**
@@ -100,21 +75,21 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @param componentMetadata : the component type metadata
      * @param configuration : the instance configuration
      * @throws ConfigurationException : the metadata are not correct.
-     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.InstanceManager, org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
+     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element componentMetadata, Dictionary configuration) throws ConfigurationException {
-        m_providedServices = new ProvidedService[0];
+        m_providedServices.clear();
         // Create the dependency according to the component metadata
         Element[] providedServices = componentMetadata.getElements("Provides");
-        for (int i = 0; i < providedServices.length; i++) {
-            String[] serviceSpecifications = ParseUtils.parseArrays(providedServices[i].getAttribute("specifications")); // Set by the initialize component factory.
+        for (Element providedService : providedServices) {
+            String[] serviceSpecifications = ParseUtils.parseArrays(providedService.getAttribute("specifications")); // Set by the initialize component factory.
 
             // Get the factory policy
             int factory = ProvidedService.SINGLETON_STRATEGY;
             Class custom = null;
-            String strategy = providedServices[i].getAttribute("strategy");
+            String strategy = providedService.getAttribute("strategy");
             if (strategy == null) {
-                strategy = providedServices[i].getAttribute("factory");
+                strategy = providedService.getAttribute("factory");
             }
             if (strategy != null) {
                 if ("singleton".equalsIgnoreCase(strategy)) {
@@ -129,7 +104,7 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
                     // Customized policy
                     try {
                         custom = getInstanceManager().getContext().getBundle().loadClass(strategy);
-                        if (! CreationStrategy.class.isAssignableFrom(custom)) {
+                        if (!CreationStrategy.class.isAssignableFrom(custom)) {
                             throw new ConfigurationException("The custom creation policy class " + custom.getName() + " does not implement " + CreationStrategy.class.getName());
                         }
                     } catch (ClassNotFoundException e) {
@@ -145,20 +120,20 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             ProvidedService svc = new ProvidedService(this, serviceSpecifications, factory, custom, configuration);
 
             // Post-Registration callback
-            String post = providedServices[i].getAttribute("post-registration");
+            String post = providedService.getAttribute("post-registration");
             if (post != null) {
-                Callback cb = new Callback(post, new Class[] {ServiceReference.class}, false, getInstanceManager());
+                Callback cb = new Callback(post, new Class[]{ServiceReference.class}, false, getInstanceManager());
                 svc.setPostRegistrationCallback(cb);
             }
 
-            post = providedServices[i].getAttribute("post-unregistration");
+            post = providedService.getAttribute("post-unregistration");
             if (post != null) {
                 // TODO Can we really send the service reference here ?
-                Callback cb = new Callback(post, new Class[] {ServiceReference.class}, false, getInstanceManager());
+                Callback cb = new Callback(post, new Class[]{ServiceReference.class}, false, getInstanceManager());
                 svc.setPostUnregistrationCallback(cb);
             }
 
-            Element[] props = providedServices[i].getElements("Property");
+            Element[] props = providedService.getElements("Property");
             if (props != null) {
                 //Property[] properties = new Property[props.length];
                 Property[] properties = new Property[props.length];
@@ -188,19 +163,19 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
                 svc.setProperties(properties);
             }
 
-            Element[] controllers = providedServices[i].getElements("Controller");
+            Element[] controllers = providedService.getElements("Controller");
             if (controllers != null) {
-                for (int k = 0; k < controllers.length; k++) {
-                    String field = controllers[k].getAttribute("field");
+                for (Element controller : controllers) {
+                    String field = controller.getAttribute("field");
                     if (field == null) {
                         throw new ConfigurationException("The field attribute of a controller is mandatory");
                     }
 
-                    String v = controllers[k].getAttribute("value");
-                    boolean value = ! (v != null  && v.equalsIgnoreCase("false"));
-                    String s = controllers[k].getAttribute("specification");
+                    String v = controller.getAttribute("value");
+                    boolean value = !(v != null && v.equalsIgnoreCase("false"));
+                    String s = controller.getAttribute("specification");
                     if (s == null) {
-                        s ="ALL";
+                        s = "ALL";
                     }
                     svc.setController(field, value, s);
 
@@ -209,18 +184,18 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             }
 
             if (checkProvidedService(svc)) {
-                addProvidedService(svc);
+                m_providedServices.add(svc);
             } else {
-                StringBuffer itfs = new StringBuffer();
-                for (int j = 0; j < serviceSpecifications.length; j++) {
+                StringBuilder itfs = new StringBuilder();
+                for (String serviceSpecification : serviceSpecifications) {
                     itfs.append(' ');
-                    itfs.append(serviceSpecifications[j]);
+                    itfs.append(serviceSpecification);
                 }
                 throw new ConfigurationException("The provided service" + itfs + " is not valid");
             }
 
             // Initialize the description.
-            m_description = new ProvidedServiceHandlerDescription(this, m_providedServices);
+            m_description = new ProvidedServiceHandlerDescription(this, getProvidedServices());
 
         }
     }
@@ -234,12 +209,14 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @param classes : the set of extended classes
      * @throws ClassNotFoundException : occurs when an interface cannot be loaded.
      */
-    private void computeInterfacesAndSuperClasses(String[] specs, String parent, Bundle bundle, Set interfaces, Set classes) throws ClassNotFoundException {
+    private void computeInterfacesAndSuperClasses(String[] specs, String parent, Bundle bundle,
+                                                  Set<String> interfaces,
+            Set<String> classes) throws ClassNotFoundException {
         // First iterate on found specification in manipulation metadata
-        for (int i = 0; i < specs.length; i++) {
-            interfaces.add(specs[i]);
+        for (String spec : specs) {
+            interfaces.add(spec);
             // Iterate on interfaces implemented by the current interface
-            Class clazz = bundle.loadClass(specs[i]);
+            Class clazz = bundle.loadClass(spec);
             collectInterfaces(clazz, interfaces, bundle);
         }
 
@@ -259,11 +236,11 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @param bundle : bundle
      * @throws ClassNotFoundException : occurs when an interface cannot be loaded.
      */
-    private void collectInterfaces(Class clazz, Set acc, Bundle bundle) throws ClassNotFoundException {
+    private void collectInterfaces(Class clazz, Set<String> acc, Bundle bundle) throws ClassNotFoundException {
         Class[] clazzes = clazz.getInterfaces();
-        for (int i = 0; i < clazzes.length; i++) {
-            acc.add(clazzes[i].getName());
-            collectInterfaces(clazzes[i], acc, bundle);
+        for (Class clazze : clazzes) {
+            acc.add(clazze.getName());
+            collectInterfaces(clazze, acc, bundle);
         }
     }
 
@@ -275,11 +252,12 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @param bundle : bundle.
      * @throws ClassNotFoundException : occurs if an interface cannot be load.
      */
-    private void collectInterfacesFromClass(Class clazz, Set acc, Bundle bundle) throws ClassNotFoundException {
+    private void collectInterfacesFromClass(Class clazz, Set<String> acc,
+                                            Bundle bundle) throws ClassNotFoundException {
         Class[] clazzes = clazz.getInterfaces();
-        for (int i = 0; i < clazzes.length; i++) {
-            acc.add(clazzes[i].getName());
-            collectInterfaces(clazzes[i], acc, bundle);
+        for (Class clazze : clazzes) {
+            acc.add(clazze.getName());
+            collectInterfaces(clazze, acc, bundle);
         }
         // Iterate on parent classes
         Class sup = clazz.getSuperclass();
@@ -295,7 +273,8 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @param bundle : bundle.
      * @throws ClassNotFoundException : occurs if an interface cannot be load.
      */
-    private void collectParentClassesFromClass(Class clazz, Set acc, Bundle bundle) throws ClassNotFoundException {
+    private void collectParentClassesFromClass(Class clazz, Set<String> acc,
+                                               Bundle bundle) throws ClassNotFoundException {
         Class parent = clazz.getSuperclass();
         if (parent != null) {
             acc.add(parent.getName());
@@ -427,17 +406,15 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @param pojo : the pojo object on which the field is accessed
      * @param fieldName : field name
      * @param value : new value
-     * @see org.apache.felix.ipojo.Handler#onSet(Object,
-     * java.lang.String, java.lang.Object)
+     * @see org.apache.felix.ipojo.FieldInterceptor#onSet(Object, String, Object)
      */
     public void onSet(Object pojo, String fieldName, Object value) {
         // Verify that the field name correspond to a dependency
-        for (int i = 0; i < m_providedServices.length; i++) {
-            ProvidedService svc = m_providedServices[i];
+        for (ProvidedService svc : m_providedServices) {
             boolean update = false;
             for (int j = 0; j < svc.getProperties().length; j++) {
                 Property prop = svc.getProperties()[j];
-                if (fieldName.equals(prop.getField()) && ! prop.getValue().equals(value)) {
+                if (fieldName.equals(prop.getField()) && !prop.getValue().equals(value)) {
                     // it is the associated property
                     prop.setValue(value);
                     update = true;
@@ -451,7 +428,7 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
                 if (value instanceof Boolean) {
                     ctrl.setValue((Boolean) value);
                 } else {
-                    warn("Boolean value expected for the service controler " + fieldName);
+                    warn("Boolean value expected for the service controller " + fieldName);
                 }
             }
         }
@@ -465,12 +442,10 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @param fieldName : field name
      * @param value : value pushed by the previous handler
      * @return the stored value or the previous value.
-     * @see org.apache.felix.ipojo.Handler#onGet(Object,
-     * java.lang.String, java.lang.Object)
+     * @see org.apache.felix.ipojo.FieldInterceptor#onGet(Object, String, Object)
      */
     public Object onGet(Object pojo, String fieldName, Object value) {
-        for (int i = 0; i < m_providedServices.length; i++) {
-            ProvidedService svc = m_providedServices[i];
+        for (ProvidedService svc : m_providedServices) {
             for (int j = 0; j < svc.getProperties().length; j++) {
                 Property prop = svc.getProperties()[j];
                 if (fieldName.equals(prop.getField())) {
@@ -480,7 +455,7 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             }
             ServiceController ctrl = svc.getController(fieldName);
             if (ctrl != null) {
-                return new Boolean(ctrl.getValue());
+                return ctrl.getValue();
             }
         }
         // Else it is not a property
@@ -488,27 +463,26 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
     }
 
     /**
-     * Register the services if the new state is VALID. Unregister the services
+     * Register the services if the new state is VALID. Un-register the services
      * if the new state is UNRESOLVED.
      *
      * @param state : the new instance state.
      * @see org.apache.felix.ipojo.Handler#stateChanged(int)
      */
     public void stateChanged(int state) {
-        // If the new state is INVALID => unregister all the services
+        // If the new state is INVALID => un-register all the services
         if (state == InstanceManager.INVALID) {
-            for (int i = 0; i < m_providedServices.length; i++) {
-                m_providedServices[i].unregisterService();
+            for (ProvidedService m_providedService : m_providedServices) {
+                m_providedService.unregisterService();
             }
             return;
         }
 
         // If the new state is VALID => register all the services
         if (state == InstanceManager.VALID) {
-            for (int i = 0; i < m_providedServices.length; i++) {
-                m_providedServices[i].registerService();
+            for (ProvidedService ps : m_providedServices) {
+                ps.registerService();
             }
-            return;
         }
     }
 
@@ -517,9 +491,9 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @param dict : dictionary of properties to add
      */
     public void addProperties(Dictionary dict) {
-        for (int i = 0; i < m_providedServices.length; i++) {
-            m_providedServices[i].addProperties(dict);
-            m_providedServices[i].update();
+        for (ProvidedService ps : m_providedServices) {
+            ps.addProperties(dict);
+            ps.update();
         }
     }
 
@@ -529,9 +503,9 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
      * @param dict : dictionary of properties to delete.
      */
     public void removeProperties(Dictionary dict) {
-        for (int i = 0; i < m_providedServices.length; i++) {
-            m_providedServices[i].deleteProperties(dict);
-            m_providedServices[i].update();
+        for (ProvidedService ps : m_providedServices) {
+            ps.deleteProperties(dict);
+            ps.update();
         }
     }
 
@@ -554,10 +528,10 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             ProvidedService svc = getProvidedServices()[j];
             Property[] props = svc.getProperties();
             boolean update = false;
-            for (int k = 0; k < props.length; k++) {
-                if (dict.get(props[k].getName()) != null) {
+            for (Property prop : props) {
+                if (dict.get(prop.getName()) != null) {
                     update = true;
-                    props[k].setValue(dict.get(props[k].getName()));
+                    prop.setValue(dict.get(prop.getName()));
                 }
             }
             if (update) {
@@ -578,12 +552,12 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
         Element[] provides = metadata.getElements("provides");
         PojoMetadata manipulation = getFactory().getPojoMetadata();
 
-        for (int i = 0; i < provides.length; i++) {
+        for (Element provide : provides) {
             // First : create the serviceSpecification list
             String[] serviceSpecification = manipulation.getInterfaces();
             String parent = manipulation.getSuperClass();
-            Set interfaces = new HashSet();
-            Set parentClasses = new HashSet();
+            Set<String> interfaces = new HashSet<String>();
+            Set<String> parentClasses = new HashSet<String>();
             try {
                 computeInterfacesAndSuperClasses(serviceSpecification, parent, desc.getBundleContext().getBundle(), interfaces, parentClasses);
                 getLogger().log(Logger.INFO, "Collected interfaces from " + metadata.getAttribute("classname") + " : " + interfaces);
@@ -592,24 +566,24 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
                 throw new ConfigurationException("An interface or parent class cannot be loaded", e);
             }
 
-            String serviceSpecificationStr = provides[i].getAttribute("specifications");
+            String serviceSpecificationStr = provide.getAttribute("specifications");
             if (serviceSpecificationStr == null) {
-                serviceSpecificationStr = provides[i].getAttribute("interface");
+                serviceSpecificationStr = provide.getAttribute("interface");
                 if (serviceSpecificationStr != null) {
                     warn("The 'interface' attribute is deprecated, use the 'specifications' attribute instead of 'interface'");
                 }
             }
 
             if (serviceSpecificationStr != null) {
-                List itfs = ParseUtils.parseArraysAsList(serviceSpecificationStr);
-                for (int j = 0; j < itfs.size(); j++) {
-                    if (! interfaces.contains(itfs.get(j))
-                            && ! parentClasses.contains(itfs.get(j))
-                            && ! desc.getFactory().getClassName().equals(itfs.get(j))) {
-                            desc.getFactory().getLogger().log(Logger.ERROR, "The specification " + itfs.get(j) + " is not implemented by " + metadata.getAttribute("classname"));
+                List<String> itfs = ParseUtils.parseArraysAsList(serviceSpecificationStr);
+                for (String itf : itfs)
+                    if (!interfaces.contains(itf)
+                            && !parentClasses.contains(itf)
+                            && !desc.getFactory().getClassName().equals(itf)) {
+                        desc.getFactory().getLogger().log(Logger.ERROR, "The specification " + itf + " is not implemented by " + metadata.getAttribute("classname"));
                     }
-                }
-                interfaces = new HashSet(itfs);
+                interfaces.clear();
+                interfaces.addAll(itfs);
             }
 
             if (interfaces.isEmpty()) {
@@ -618,11 +592,9 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             }
 
             StringBuffer specs = null;
-            Set set = new HashSet(interfaces);
+            Set<String> set = new HashSet<String>(interfaces);
             set.remove(Pojo.class.getName()); // Remove POJO.
-            Iterator iterator = set.iterator();
-            while (iterator.hasNext()) {
-                String spec = (String) iterator.next();
+            for (String spec : set) {
                 desc.addProvidedServiceSpecification(spec);
                 if (specs == null) {
                     specs = new StringBuffer("{");
@@ -634,9 +606,9 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             }
 
             specs.append('}');
-            provides[i].addAttribute(new Attribute("specifications", specs.toString())); // Add interface attribute to avoid checking in the configure method
+            provide.addAttribute(new Attribute("specifications", specs.toString())); // Add interface attribute to avoid checking in the configure method
 
-            Element[] props = provides[i].getElements("property");
+            Element[] props = provide.getElements("property");
             for (int j = 0; props != null && j < props.length; j++) {
                 String name = props[j].getAttribute("name");
                 String value = props[j].getAttribute("value");

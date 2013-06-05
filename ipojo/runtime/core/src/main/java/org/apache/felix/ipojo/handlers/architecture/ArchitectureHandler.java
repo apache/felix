@@ -25,6 +25,7 @@ import org.apache.felix.ipojo.PrimitiveHandler;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.architecture.InstanceDescription;
 import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.util.SecurityHelper;
 import org.osgi.framework.ServiceRegistration;
 
 import java.util.Dictionary;
@@ -58,12 +59,16 @@ public class ArchitectureHandler extends PrimitiveHandler implements Architectur
         Dictionary<String, String> dict = new Hashtable<String, String>();
         dict.put(ARCHITECTURE_INSTANCE, m_name);
 
-        debug("Registering architecture service for " + m_name);
-        m_serviceRegistration = getInstanceManager().getContext().registerService(Architecture.class.getName(), this, dict);
-
-        // We can't use the regular handler stateChanged method as this method is not called when the instance is
-        // disposed. This handler stays actives until the instance disposal.
-        getInstanceManager().addInstanceStateListener(this);
+        if (SecurityHelper.canRegisterService(getInstanceManager().getContext())) {
+            debug("Registering architecture service for " + m_name);
+            m_serviceRegistration = getInstanceManager().getContext().registerService(Architecture.class.getName(), this, dict);
+            // We can't use the regular handler stateChanged method as this method is not called when the instance is
+            // disposed. This handler stays actives until the instance disposal.
+            getInstanceManager().addInstanceStateListener(this);
+        } else {
+            error("Cannot register the architecture service, bundle " + getInstanceManager().getContext().getBundle()
+                    .getBundleId() + " is not in a valid state" );
+        }
     }
 
     /**

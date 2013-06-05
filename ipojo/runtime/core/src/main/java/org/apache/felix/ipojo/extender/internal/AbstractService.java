@@ -33,12 +33,10 @@ public abstract class AbstractService implements Lifecycle {
      * The bundle context.
      */
     private final BundleContext m_bundleContext;
-
     /**
      * The service specification.
      */
     private final Class<?> m_type;
-
     /**
      * The service registration.
      */
