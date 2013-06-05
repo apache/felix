@@ -22,6 +22,7 @@ import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.apache.felix.ipojo.extender.internal.Extender;
 import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.util.Log;
 import org.apache.felix.ipojo.util.Logger;
 import org.apache.felix.ipojo.util.SecurityHelper;
 import org.osgi.framework.BundleContext;
@@ -586,7 +587,7 @@ public abstract class IPojoFactory implements Factory {
      * Destroys the factory.
      * The factory cannot be restarted. Only the {@link Extender} can call this method.
      */
-    synchronized void dispose() {
+    public synchronized void dispose() {
         stop(); // Does not hold the lock.
         m_requiredHandlers.clear();
         m_listeners = null;
@@ -628,13 +629,17 @@ public abstract class IPojoFactory implements Factory {
             }
             BundleContext bc = SecurityHelper.selectContextToRegisterServices(m_componentDesc.getFactoryInterfacesToPublish(),
                     m_context, getIPOJOBundleContext());
-            m_sr =
-                    bc.registerService(m_componentDesc.getFactoryInterfacesToPublish(), this, m_componentDesc
-                            .getPropertiesToPublish());
+            if (SecurityHelper.canRegisterService(bc)) {
+                m_sr =
+                        bc.registerService(m_componentDesc.getFactoryInterfacesToPublish(), this, m_componentDesc
+                                .getPropertiesToPublish());
+                m_logger.log(Logger.INFO, "Factory " + m_factoryName + " started");
+            } else {
+                m_logger.log(Log.ERROR, "Cannot register the Factory service with the bundle context of the bundle "
+                        + bc.getBundle().getBundleId() + " - the bundle is in the state " + bc.getBundle().getState()
+                );
+            }
         }
-
-        m_logger.log(Logger.INFO, "Factory " + m_factoryName + " started");
-
     }
 
     /**
@@ -777,7 +782,9 @@ public abstract class IPojoFactory implements Factory {
 
                 m_state = VALID;
                 if (m_sr != null) {
-                    m_sr.setProperties(m_componentDesc.getPropertiesToPublish());
+                    if (SecurityHelper.canUpdateService(m_sr)) {
+                        m_sr.setProperties(m_componentDesc.getPropertiesToPublish());
+                    }
                 }
 
                 // Register the factory on the ConfigurationTracker
@@ -812,7 +819,8 @@ public abstract class IPojoFactory implements Factory {
 
                 m_componentInstances.clear();
 
-                if (m_sr != null) {
+                if (SecurityHelper.canUpdateService(m_sr)) {
+                    // No null check required as the security helper is checking this too.
                     m_sr.setProperties(m_componentDesc.getPropertiesToPublish());
                 }
             }

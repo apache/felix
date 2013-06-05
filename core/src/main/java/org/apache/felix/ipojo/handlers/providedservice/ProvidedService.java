@@ -351,7 +351,7 @@ public class ProvidedService implements ServiceFactory {
                     BundleContext bc = m_handler.getInstanceManager().getContext();
                     // Security check
                     if (SecurityHelper.hasPermissionToRegisterServices(
-                            m_serviceSpecifications, bc)) {
+                            m_serviceSpecifications, bc)  && SecurityHelper.canRegisterService(bc)) {
                         serviceProperties = getServiceProperties();
                         m_strategy.onPublication(getInstanceManager(),
                                 getServiceSpecificationsToRegister(),
@@ -373,7 +373,8 @@ public class ProvidedService implements ServiceFactory {
 
         // An update may happen during the registration, re-check and apply.
         // This must be call outside the synchronized block.
-        if (reg != null && m_wasUpdated) {
+        // If the registration is null, the security helper returns false.
+        if (m_wasUpdated  && SecurityHelper.canUpdateService(reg)) {
             Properties updated = getServiceProperties();
             reg.setProperties((Dictionary) updated);
             m_publishedProperties = updated;
@@ -497,21 +498,26 @@ public class ProvidedService implements ServiceFactory {
 
             // First check, are the size equals
             if (oldProps.size() != newProps.size()) {
-                m_handler.info("Updating Registration : " + oldProps.size() + " / " + newProps.size());
-                m_publishedProperties = updated;
-                m_serviceRegistration.setProperties((Dictionary) updated);
+                if (SecurityHelper.canUpdateService(m_serviceRegistration)) {
+                    m_handler.info("Updating Registration : " + oldProps.size() + " / " + newProps.size());
+                    m_publishedProperties = updated;
+                    m_serviceRegistration.setProperties(updated);
+                }
             } else {
                 // Check changes
                 Enumeration keys = oldProps.keys();
-                while (keys.hasMoreElements()) {
+                boolean hasChanged = false;
+                while (! hasChanged  && keys.hasMoreElements()) {
                     String k = (String) keys.nextElement();
                     Object val = oldProps.get(k);
                     if (! val.equals(updated.get(k))) {
-                        m_handler.info("Updating Registration : " + k);
-                        m_publishedProperties = updated;
-                        m_serviceRegistration.setProperties((Dictionary) updated);
-                        return;
+                        hasChanged = true;
                     }
+                }
+                if (hasChanged  && SecurityHelper.canUpdateService(m_serviceRegistration)) {
+                    m_handler.info("Updating Registration : " + updated);
+                    m_publishedProperties = updated;
+                    m_serviceRegistration.setProperties(updated);
                 }
             }
         } else {

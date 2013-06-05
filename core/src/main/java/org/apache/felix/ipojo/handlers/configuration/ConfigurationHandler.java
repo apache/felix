@@ -358,7 +358,8 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
 
             // Security Check
             if (SecurityHelper.hasPermissionToRegisterService(ManagedService.class.getName(),
-                    getInstanceManager().getContext())) {
+                    getInstanceManager().getContext())  && SecurityHelper.canRegisterService
+                    (getInstanceManager().getContext())) {
                 m_sr = getInstanceManager().getContext().registerService(ManagedService.class.getName(), this, props);
             } else {
                 error("Cannot register the ManagedService - The bundle "

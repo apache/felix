@@ -20,8 +20,10 @@ package org.apache.felix.ipojo.util;
 
 import java.security.Permission;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServicePermission;
+import org.osgi.framework.ServiceRegistration;
 
 
 /**
@@ -45,8 +47,8 @@ public class SecurityHelper {
     public static BundleContext selectContextToRegisterServices(String[] itfs,
             BundleContext comp, BundleContext ipojo) {
         if (System.getSecurityManager() != null) {
-            for (int i = 0; i < itfs.length; i++) {
-                final Permission perm = new ServicePermission(itfs[i],
+            for (String itf : itfs) {
+                final Permission perm = new ServicePermission(itf,
                         ServicePermission.REGISTER);
                 if (!comp.getBundle().hasPermission(perm)) {
                     return ipojo;
@@ -132,8 +134,8 @@ public class SecurityHelper {
     public static boolean hasPermissionToGetServices(String[] itfs,
             BundleContext comp) {
         if (System.getSecurityManager() != null) {
-            for (int i = 0; i < itfs.length; i++) {
-                final Permission perm = new ServicePermission(itfs[i],
+            for (String itf : itfs) {
+                final Permission perm = new ServicePermission(itf,
                         ServicePermission.GET);
                 if (!comp.getBundle().hasPermission(perm)) {
                     return false;
@@ -172,8 +174,8 @@ public class SecurityHelper {
     public static boolean hasPermissionToRegisterServices(String[] itfs,
             BundleContext comp) {
         if (System.getSecurityManager() != null) {
-            for (int i = 0; i < itfs.length; i++) {
-                final Permission perm = new ServicePermission(itfs[i],
+            for (String itf : itfs) {
+                final Permission perm = new ServicePermission(itf,
                         ServicePermission.REGISTER);
                 if (!comp.getBundle().hasPermission(perm)) {
                     return false;
@@ -181,6 +183,36 @@ public class SecurityHelper {
             }
         }
         return true;
+    }
+
+    /**
+     * Checks that the given bundle context is in a state where it is possible to register services.
+     * This methods ensures that the bundle associated to the given context, is starting or active.
+     * @param context the bundle context
+     * @return {@literal true} if the context can register a service, {@literal false} otherwise.
+     */
+    public static boolean canRegisterService(BundleContext context) {
+        return context.getBundle().getState() == Bundle.ACTIVE
+                || context.getBundle().getState() == Bundle.STARTING;
+    }
+
+    /**
+     * Checks that the given service registration can be updated.
+     * This methods ensures that the bundle associated to the given service, is starting or active.
+     * @param registration the service registration
+     * @return {@literal true} if the service can be updated, {@literal false} otherwise.
+     */
+    public static boolean canUpdateService(ServiceRegistration registration) {
+        if (registration == null) {
+            return false;
+        }
+        try {
+            BundleContext context = registration.getReference().getBundle().getBundleContext();
+            return context.getBundle().getState() == Bundle.ACTIVE
+                    || context.getBundle().getState() == Bundle.STARTING;
+        } catch (IllegalStateException e) {
+            return false;
+        }
     }
 
 }
