@@ -161,6 +161,15 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
      * Stopping the management.
      */
     public void stop() {
+        try {
+            IPojoFactory factory = m_future.get();
+            if (factory != null) {
+                factory.dispose();
+            }
+        } catch (Exception e) {
+            // Ignored.
+        }
+
         m_instanceTracker.close();
         m_extensionTracker.close();
     }
@@ -187,7 +196,6 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
      */
     private class ExtensionSupport implements ServiceTrackerCustomizer {
         public Object addingService(ServiceReference reference) {
-            // TODO Check if we can cast the instance
             final Object service = m_bundleContext.getService(reference);
             if (service instanceof ExtensionDeclaration) {
                 m_future = m_queueService.submit(new ReferenceableCallable<IPojoFactory>(reference.getBundle()) {
@@ -233,8 +241,8 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
                 IPojoFactory factory = m_future.get();
                 // It is possible that the factory couldn't be created
                 if (factory != null) {
-                    factory.stop();
                     factory.removeFactoryStateListener(ManagedType.this);
+                    factory.dispose();
                     m_declaration.unbind("Extension '%s' is missing");
                 }
             } catch (InterruptedException e) {
@@ -248,7 +256,6 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
 
     private class InstanceSupport implements ServiceTrackerCustomizer {
         public Object addingService(final ServiceReference reference) {
-            // TODO Check if we can cast the instance
             Object service = m_bundleContext.getService(reference);
             if (service instanceof InstanceDeclaration) {
                 final InstanceDeclaration instanceDeclaration = (InstanceDeclaration) service;
@@ -325,7 +332,7 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
         public void removedService(ServiceReference reference, Object o) {
             InstanceDeclaration instanceDeclaration = (InstanceDeclaration) m_bundleContext.getService(reference);
             Future<ComponentInstance> future = (Future<ComponentInstance>) o;
-            ComponentInstance instance = null;
+            ComponentInstance instance;
             try {
                 instance = future.get();
                 // It is possible that the instance couldn't be created
