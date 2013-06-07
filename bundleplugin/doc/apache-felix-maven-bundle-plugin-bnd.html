@@ -19,7 +19,7 @@
 	<li><a href="http://www.apache.org/foundation/sponsorship.html" class="external-link" rel="nofollow">sponsorship</a></li>
 	<li><a href="http://www.apache.org/foundation/thanks.html" class="external-link" rel="nofollow">sponsors</a>
 <!-- ApacheCon Ad -->
-<iframe src="apache-felix-maven-bundle-plugin-bnd_files/button.html" style="border-width: 0pt; float: left;" frameborder="0" height="135" scrolling="no" width="135"></iframe>
+<iframe src="apache-felix-maven-bundle-plugin-bnd_files/button.html" style="border-width:0; float: left" frameborder="0" height="135" scrolling="no" width="135"></iframe>
 <p style="height: 100px">
 <!-- ApacheCon Ad --></p></li>
 </ul>
@@ -36,7 +36,7 @@ This plugin wraps BND to make it work specifically with the Maven 2
 project structure and to provide it with reasonable default behavior for
  Maven 2 projects.</p>
 
-<div class="panelMacro"><table class="infoMacro"><colgroup><col width="24"><col></colgroup><tbody><tr><td valign="top"><img src="apache-felix-maven-bundle-plugin-bnd_files/information.gif" alt="" align="absmiddle" border="0" height="16" width="16"></td><td>If you have questions about the maven-bundle-plugin please read the <a href="http://felix.apache.org/site/apache-felix-bundle-plugin-faq.html" class="external-link" rel="nofollow">FAQ</a> first. If you still have questions you can ask them on the <a href="http://felix.apache.org/site/mailinglists.html" class="external-link" rel="nofollow">Felix user list</a>.</td></tr></tbody></table></div>
+<div class="panelMacro"><table class="infoMacro"><colgroup><col width="24"><col></colgroup><tbody><tr><td valign="top"><img src="apache-felix-maven-bundle-plugin-bnd_files/information.gif" alt="" height="16" align="absmiddle" border="0" width="16"></td><td>If you have questions about the maven-bundle-plugin please read the <a href="http://felix.apache.org/site/apache-felix-bundle-plugin-faq.html" class="external-link" rel="nofollow">FAQ</a> first. If you still have questions you can ask them on the <a href="http://felix.apache.org/site/mailinglists.html" class="external-link" rel="nofollow">Felix user list</a>.</td></tr></tbody></table></div>
 
 <p><em>NOTE: test scoped dependencies are <b>not</b> included in the classpath seen by BND.</em></p>
 
@@ -46,9 +46,9 @@ local Maven repository, and also supports remote OBRs for bundle
 distribution. The plug-in automatically computes bundle capabilities and
  requirements, using a combination of Bindex and Maven metadata.</p>
 
-<div class="panelMacro"><table class="tipMacro"><colgroup><col width="24"><col></colgroup><tbody><tr><td valign="top"><img src="apache-felix-maven-bundle-plugin-bnd_files/check.gif" alt="" align="absmiddle" border="0" height="16" width="16"></td><td><b><a href="http://svn.apache.org/repos/asf/felix/releases/maven-bundle-plugin-2.3.6/doc/site/index.html" class="external-link" rel="nofollow">Standard Maven Documentation is now available for maven-bundle-plugin 2.3.6</a></b></td></tr></tbody></table></div>
+<div class="panelMacro"><table class="tipMacro"><colgroup><col width="24"><col></colgroup><tbody><tr><td valign="top"><img src="apache-felix-maven-bundle-plugin-bnd_files/check.gif" alt="" height="16" align="absmiddle" border="0" width="16"></td><td><b><a href="http://svn.apache.org/repos/asf/felix/releases/maven-bundle-plugin-2.3.7/doc/site/index.html" class="external-link" rel="nofollow">Standard Maven Documentation is now available for maven-bundle-plugin 2.3.7</a></b></td></tr></tbody></table></div>
 
-<div class="panelMacro"><table class="tipMacro"><colgroup><col width="24"><col></colgroup><tbody><tr><td valign="top"><img src="apache-felix-maven-bundle-plugin-bnd_files/check.gif" alt="" align="absmiddle" border="0" height="16" width="16"></td><td><b><a href="http://www.aqute.biz/Bnd/Format" class="external-link" rel="nofollow">A complete list of instructions and their format is available from the BND website</a></b></td></tr></tbody></table></div>
+<div class="panelMacro"><table class="tipMacro"><colgroup><col width="24"><col></colgroup><tbody><tr><td valign="top"><img src="apache-felix-maven-bundle-plugin-bnd_files/check.gif" alt="" height="16" align="absmiddle" border="0" width="16"></td><td><b><a href="http://www.aqute.biz/Bnd/Format" class="external-link" rel="nofollow">A complete list of instructions and their format is available from the BND website</a></b></td></tr></tbody></table></div>
 
 <p><a name="ApacheFelixMavenBundlePlugin(BND)-simpleexample"></a></p>
 
@@ -483,6 +483,21 @@ for them in the bundleplugin configuration, for example if you want to use the p
     <span class="code-tag">&lt;/instructions&gt;</span>
   <span class="code-tag">&lt;/configuration&gt;</span>
 <span class="code-tag">&lt;/plugin&gt;</span>
+</pre>
+</div></div>
+
+<p>You'll also need to configure the other plugin to pick up and use the generated manifest, which is written to <tt>${project.build.outputDirectory}/META-INF/MANIFEST.MF</tt> by default (unless you choose a different <tt>manifestLocation</tt> in the maven-bundle-plugin configuration). Continuing with our WAR example:</p>
+
+<div class="code panel" style="border-width: 1px;"><div class="codeContent panelContent">
+<pre class="code-java">&lt;plugin&gt;
+  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+  &lt;artifactId&gt;maven-war-plugin&lt;/artifactId&gt;
+  &lt;configuration&gt;
+    &lt;archive&gt;
+      &lt;manifestFile&gt;${project.build.outputDirectory}/META-INF/MANIFEST.MF&lt;/manifestFile&gt;
+    &lt;/archive&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;
 </pre>
 </div></div>
 
@@ -1206,7 +1221,7 @@ Bindex) must be correct, because the plug-in does not check its syntax.</li>
 
 <p>Subscribe to the Felix users mailing list by sending a message to <a href="mailto:users-subscribe@felix.apache.org" class="external-link" rel="nofollow">users-subscribe@felix.apache.org</a>; after subscribing, email questions or feedback to <a href="mailto:users@felix.apache.org" class="external-link" rel="nofollow">users@felix.apache.org</a>.</p>
         <div class="timestamp" style="margin-top: 30px; font-size: 80%; text-align: right;">
-Last modified by mcculls on Fri Dec 02 10:50:53 EST 2011
+Last modified by mcculls on Wed Nov 21 20:06:53 EST 2012
         </div>
         <div class="trademarkFooter">
 Apache Felix, Felix, Apache, the Apache feather logo, and the Apache 
