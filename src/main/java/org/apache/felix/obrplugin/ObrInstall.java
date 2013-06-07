@@ -138,15 +138,18 @@ public final class ObrInstall extends AbstractMojo
             Config userConfig = new Config();
 
             update = new ObrUpdate( repositoryXml, obrXmlFile, project, mavenRepository, userConfig, log );
-            update.parseRepositoryXml();
-
-            updateLocalBundleMetadata( project.getArtifact(), update );
-            for ( Iterator i = attachedArtifacts.iterator(); i.hasNext(); )
+            synchronized ( ObrUpdate.class ) // protect against concurrent in-process updates
             {
-                updateLocalBundleMetadata( ( Artifact ) i.next(), update );
-            }
+                update.parseRepositoryXml();
 
-            update.writeRepositoryXml();
+                updateLocalBundleMetadata( project.getArtifact(), update );
+                for ( Iterator i = attachedArtifacts.iterator(); i.hasNext(); )
+                {
+                    updateLocalBundleMetadata( ( Artifact ) i.next(), update );
+                }
+
+                update.writeRepositoryXml();
+            }
         }
         catch ( Exception e )
         {

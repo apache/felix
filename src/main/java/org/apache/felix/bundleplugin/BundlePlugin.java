@@ -421,7 +421,10 @@ public class BundlePlugin extends AbstractMojo
         properties.putAll( transformDirectives( originalInstructions ) );
 
         Builder builder = new Builder();
-        builder.setBase( getBase( currentProject ) );
+        synchronized ( BundlePlugin.class ) // protect setBase...getBndLastModified which uses static DateFormat 
+        {
+            builder.setBase( getBase( currentProject ) );
+        }
         builder.setProperties( sanitize( properties ) );
         if ( classpath != null )
         {
