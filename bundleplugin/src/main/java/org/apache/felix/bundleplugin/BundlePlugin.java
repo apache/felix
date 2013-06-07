@@ -720,16 +720,18 @@ public class BundlePlugin extends AbstractMojo
 
             // First grab the external manifest file (if specified and different to target location)
             File externalManifestFile = archiveConfig.getManifestFile();
-            if ( !externalManifestFile.isAbsolute() )
+            if ( null != externalManifestFile )
             {
-                externalManifestFile = new File( currentProject.getBasedir(), externalManifestFile.getPath() );
-            }
-            if ( null != externalManifestFile && externalManifestFile.exists()
-                && !externalManifestFile.equals( new File( manifestLocation, "MANIFEST.MF" ) ) )
-            {
-                InputStream mis = new FileInputStream( externalManifestFile );
-                mavenManifest.read( mis );
-                mis.close();
+                if ( !externalManifestFile.isAbsolute() )
+                {
+                    externalManifestFile = new File( currentProject.getBasedir(), externalManifestFile.getPath() );
+                }
+                if ( externalManifestFile.exists() && !externalManifestFile.equals( new File( manifestLocation, "MANIFEST.MF" ) ) )
+                {
+                    InputStream mis = new FileInputStream( externalManifestFile );
+                    mavenManifest.read( mis );
+                    mis.close();
+                }
             }
 
             // Then apply customized entries from the jar plugin; note: manifest encoding is UTF8
