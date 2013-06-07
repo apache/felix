@@ -129,8 +129,7 @@ public class ComponentTypeDescription {
      * @param immutable : the property is immutable.
      */
     public void addProperty(String name, String value, boolean immutable) {
-        PropertyDescription prop = new PropertyDescription(name, String.class.getName(), value);
-        addProperty(prop);
+        addProperty(new PropertyDescription(name, String.class.getName(), value, immutable));
     }
 
     /**
