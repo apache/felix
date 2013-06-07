@@ -132,6 +132,14 @@ public class BundlePlugin extends AbstractMojo
     protected String classifier;
 
     /**
+     * Packaging type of the bundle to be installed.  For example, "jar".
+     * Defaults to none which means use the same packaging as the project.
+     *
+     * @parameter
+     */
+    protected String packaging;
+
+    /**
      * @component
      */
     private MavenProjectHelper m_projectHelper;
@@ -369,13 +377,24 @@ public class BundlePlugin extends AbstractMojo
                 mainArtifact.setArtifactHandler( m_artifactHandlerManager.getArtifactHandler( "jar" ) );
             }
 
-            if ( null == classifier || classifier.trim().length() == 0 )
+            boolean customClassifier = null != classifier && classifier.trim().length() > 0;
+            boolean customPackaging = null != packaging && packaging.trim().length() > 0;
+
+            if ( customClassifier && customPackaging )
             {
-                mainArtifact.setFile( jarFile );
+                m_projectHelper.attachArtifact( currentProject, packaging, classifier, jarFile );
+            }
+            else if ( customClassifier )
+            {
+                m_projectHelper.attachArtifact( currentProject, jarFile, classifier );
+            }
+            else if ( customPackaging )
+            {
+                m_projectHelper.attachArtifact( currentProject, packaging, jarFile );
             }
             else
             {
-                m_projectHelper.attachArtifact( currentProject, jarFile, classifier );
+                mainArtifact.setFile( jarFile );
             }
 
             if ( unpackBundle )
