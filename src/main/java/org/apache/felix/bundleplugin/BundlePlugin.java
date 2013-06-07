@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -68,12 +67,15 @@ import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.PropertyUtils;
 import org.codehaus.plexus.util.StringUtils;
 
+import aQute.bnd.header.Attrs;
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Builder;
 import aQute.bnd.osgi.Constants;
+import aQute.bnd.osgi.Descriptors.PackageRef;
 import aQute.bnd.osgi.EmbeddedResource;
 import aQute.bnd.osgi.FileResource;
 import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Packages;
 import aQute.bnd.osgi.Processor;
 import aQute.lib.spring.SpringXMLType;
 
@@ -1283,9 +1285,9 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    private static void addLocalPackages( File outputDirectory, Analyzer analyzer )
+    private static void addLocalPackages( File outputDirectory, Analyzer analyzer ) throws IOException
     {
-        Collection packages = new TreeSet();
+        Packages packages = new Packages();
 
         if ( outputDirectory != null && outputDirectory.isDirectory() )
         {
@@ -1301,78 +1303,74 @@ public class BundlePlugin extends AbstractMojo
             String[] paths = scanner.getIncludedFiles();
             for ( int i = 0; i < paths.length; i++ )
             {
-                packages.add( getPackageName( paths[i] ) );
+                packages.put( analyzer.getPackageRef( getPackageName( paths[i] ) ) );
             }
         }
 
-        StringBuffer exportedPkgs = new StringBuffer();
-        StringBuffer privatePkgs = new StringBuffer();
+        Packages exportedPkgs = new Packages();
+        Packages privatePkgs = new Packages();
 
         boolean noprivatePackages = "!*".equals( analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) );
 
-        for ( Iterator i = packages.iterator(); i.hasNext(); )
+        for ( PackageRef pkg : packages.keySet() )
         {
-            String pkg = ( String ) i.next();
-
             // mark all source packages as private by default (can be overridden by export list)
-            if ( privatePkgs.length() > 0 )
-            {
-                privatePkgs.append( ';' );
-            }
-            privatePkgs.append( pkg );
+            privatePkgs.put( pkg );
 
             // we can't export the default package (".") and we shouldn't export internal packages 
-            if ( noprivatePackages || !( ".".equals( pkg ) || pkg.contains( ".internal" ) || pkg.contains( ".impl" ) ) )
+            String fqn = pkg.getFQN();
+            if ( noprivatePackages || !( ".".equals( fqn ) || fqn.contains( ".internal" ) || fqn.contains( ".impl" ) ) )
             {
-                if ( exportedPkgs.length() > 0 )
-                {
-                    exportedPkgs.append( ';' );
-                }
-                exportedPkgs.append( pkg );
+                exportedPkgs.put( pkg );
             }
         }
 
-        if ( analyzer.getProperty( Analyzer.EXPORT_PACKAGE ) == null )
+        Properties properties = analyzer.getProperties();
+        String exported = properties.getProperty( Analyzer.EXPORT_PACKAGE );
+        if ( exported == null )
         {
-            if ( analyzer.getProperty( Analyzer.EXPORT_CONTENTS ) == null )
+            if ( !properties.containsKey( Analyzer.EXPORT_CONTENTS ) )
             {
                 // no -exportcontents overriding the exports, so use our computed list
-                analyzer.setProperty( Analyzer.EXPORT_PACKAGE, exportedPkgs + ";-split-package:=merge-first" );
+                for ( Attrs attrs : exportedPkgs.values() )
+                {
+                    attrs.put( Constants.SPLIT_PACKAGE_DIRECTIVE, "merge-first" );
+                }
+                properties.setProperty( Analyzer.EXPORT_PACKAGE, Processor.printClauses( exportedPkgs ) );
             }
             else
             {
                 // leave Export-Package empty (but non-null) as we have -exportcontents
-                analyzer.setProperty( Analyzer.EXPORT_PACKAGE, "" );
+                properties.setProperty( Analyzer.EXPORT_PACKAGE, "" );
             }
         }
-        else
+        else if ( exported.indexOf( LOCAL_PACKAGES ) >= 0 )
         {
-            String exported = analyzer.getProperty( Analyzer.EXPORT_PACKAGE );
-            if ( exported.indexOf( LOCAL_PACKAGES ) >= 0 )
-            {
-                String newExported = StringUtils.replace( exported, LOCAL_PACKAGES, exportedPkgs.toString() );
-                analyzer.setProperty( Analyzer.EXPORT_PACKAGE, newExported );
-
-            }
+            String newExported = StringUtils.replace( exported, LOCAL_PACKAGES, Processor.printClauses( exportedPkgs ) );
+            properties.setProperty( Analyzer.EXPORT_PACKAGE, newExported );
         }
 
-        String internal = analyzer.getProperty( Analyzer.PRIVATE_PACKAGE );
+        String internal = properties.getProperty( Analyzer.PRIVATE_PACKAGE );
         if ( internal == null )
         {
-            if ( privatePkgs.length() > 0 )
+            if ( !privatePkgs.isEmpty() )
             {
-                analyzer.setProperty( Analyzer.PRIVATE_PACKAGE, privatePkgs + ";-split-package:=merge-first" );
+                for ( Attrs attrs : privatePkgs.values() )
+                {
+                    attrs.put( Constants.SPLIT_PACKAGE_DIRECTIVE, "merge-first" );
+                }
+                properties.setProperty( Analyzer.PRIVATE_PACKAGE, Processor.printClauses( privatePkgs ) );
             }
             else
             {
                 // if there are really no private packages then use "!*" as this will keep the Bnd Tool happy
-                analyzer.setProperty( Analyzer.PRIVATE_PACKAGE, "!*" );
+                properties.setProperty( Analyzer.PRIVATE_PACKAGE, "!*" );
             }
         }
         else if ( internal.indexOf( LOCAL_PACKAGES ) >= 0 )
         {
-            String newInternal = StringUtils.replace( internal, LOCAL_PACKAGES, privatePkgs.toString() );
-            analyzer.setProperty( Analyzer.PRIVATE_PACKAGE, newInternal );
+            String newInternal = StringUtils.replace( internal, LOCAL_PACKAGES, Processor.printClauses( privatePkgs ) );
+            properties.setProperty( Analyzer.PRIVATE_PACKAGE, newInternal );
         }
     }
 
