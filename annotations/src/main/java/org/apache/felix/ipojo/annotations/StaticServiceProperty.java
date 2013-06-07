@@ -51,4 +51,11 @@ public @interface StaticServiceProperty {
      * This value is required only for static properties.
      */
     String type();
+
+    /**
+     * Is the property immutable ?
+     * An immutable property <b>MUST</b> have a value
+     * Default: {@literal false}
+     */
+    boolean immutable() default false;
 }
