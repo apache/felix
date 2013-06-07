@@ -32,6 +32,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedServiceFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class defines common mechanisms of iPOJO component factories
@@ -63,7 +64,7 @@ public abstract class IPojoFactory implements Factory {
      * The list of the managed instance managers.
      * The key of this map is the name (i.e. instance names) of the created instance
      */
-    protected final Map<String, ComponentInstance> m_componentInstances = new HashMap<String, ComponentInstance>();
+    protected final Map<String, ComponentInstance> m_componentInstances = new ConcurrentHashMap<String, ComponentInstance>();
 
     /**
      * The component type metadata.
@@ -421,9 +422,7 @@ public abstract class IPojoFactory implements Factory {
      * @return the component instance, {@literal null} if not found
      */
     public ComponentInstance getInstanceByName(String name) {
-        synchronized (this) {
-            return m_componentInstances.get(name);
-        }
+        return m_componentInstances.get(name);
     }
 
     /**
@@ -720,9 +719,7 @@ public abstract class IPojoFactory implements Factory {
      */
     public void disposed(ComponentInstance instance) {
         String name = instance.getInstanceName();
-        synchronized (this) {
-            m_componentInstances.remove(name);
-        }
+        m_componentInstances.remove(name);
         INSTANCE_NAME.remove(name);
     }
 
