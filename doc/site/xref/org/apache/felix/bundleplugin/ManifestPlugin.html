@@ -45,10 +45,10 @@
 <a name="35" href="#35">35</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.plugin.MojoFailureException;
 <a name="36" href="#36">36</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.project.MavenProject;
 <a name="37" href="#37">37</a>  
-<a name="38" href="#38">38</a>  <strong class="jxr_keyword">import</strong> aQute.lib.osgi.Analyzer;
-<a name="39" href="#39">39</a>  <strong class="jxr_keyword">import</strong> aQute.lib.osgi.Builder;
-<a name="40" href="#40">40</a>  <strong class="jxr_keyword">import</strong> aQute.lib.osgi.Jar;
-<a name="41" href="#41">41</a>  <strong class="jxr_keyword">import</strong> aQute.lib.osgi.Resource;
+<a name="38" href="#38">38</a>  <strong class="jxr_keyword">import</strong> aQute.bnd.osgi.Analyzer;
+<a name="39" href="#39">39</a>  <strong class="jxr_keyword">import</strong> aQute.bnd.osgi.Builder;
+<a name="40" href="#40">40</a>  <strong class="jxr_keyword">import</strong> aQute.bnd.osgi.Jar;
+<a name="41" href="#41">41</a>  <strong class="jxr_keyword">import</strong> aQute.bnd.osgi.Resource;
 <a name="42" href="#42">42</a>  
 <a name="43" href="#43">43</a>  
 <a name="44" href="#44">44</a>  <em class="jxr_javadoccomment">/**</em>
@@ -182,106 +182,113 @@
 <a name="172" href="#172">172</a> 
 <a name="173" href="#173">173</a>         <strong class="jxr_keyword">if</strong> ( !file.exists() )
 <a name="174" href="#174">174</a>         {
-<a name="175" href="#175">175</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> FileNotFoundException( file.getPath() );
-<a name="176" href="#176">176</a>         }
-<a name="177" href="#177">177</a> 
-<a name="178" href="#178">178</a>         Builder analyzer = getOSGiBuilder( project, instructions, properties, classpath );
-<a name="179" href="#179">179</a> 
-<a name="180" href="#180">180</a>         analyzer.setJar( file );
-<a name="181" href="#181">181</a> 
-<a name="182" href="#182">182</a>         <em class="jxr_comment">// calculateExportsFromContents when we have no explicit instructions defining</em>
-<a name="183" href="#183">183</a>         <em class="jxr_comment">// the contents of the bundle *and* we are not analyzing the output directory,</em>
-<a name="184" href="#184">184</a>         <em class="jxr_comment">// otherwise fall-back to addMavenInstructions approach</em>
-<a name="185" href="#185">185</a> 
-<a name="186" href="#186">186</a>         <strong class="jxr_keyword">boolean</strong> isOutputDirectory = file.equals( getOutputDirectory() );
-<a name="187" href="#187">187</a> 
-<a name="188" href="#188">188</a>         <strong class="jxr_keyword">if</strong> ( analyzer.getProperty( Analyzer.EXPORT_PACKAGE ) == <strong class="jxr_keyword">null</strong>
-<a name="189" href="#189">189</a>             &amp;&amp; analyzer.getProperty( Analyzer.EXPORT_CONTENTS ) == <strong class="jxr_keyword">null</strong>
-<a name="190" href="#190">190</a>             &amp;&amp; analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) == <strong class="jxr_keyword">null</strong> &amp;&amp; !isOutputDirectory )
-<a name="191" href="#191">191</a>         {
-<a name="192" href="#192">192</a>             String export = calculateExportsFromContents( analyzer.getJar() );
-<a name="193" href="#193">193</a>             analyzer.setProperty( Analyzer.EXPORT_PACKAGE, export );
-<a name="194" href="#194">194</a>         }
-<a name="195" href="#195">195</a> 
-<a name="196" href="#196">196</a>         addMavenInstructions( project, analyzer );
-<a name="197" href="#197">197</a> 
-<a name="198" href="#198">198</a>         <em class="jxr_comment">// if we spot Embed-Dependency and the bundle is "target/classes", assume we need to rebuild</em>
-<a name="199" href="#199">199</a>         <strong class="jxr_keyword">if</strong> ( analyzer.getProperty( DependencyEmbedder.EMBED_DEPENDENCY ) != <strong class="jxr_keyword">null</strong> &amp;&amp; isOutputDirectory )
-<a name="200" href="#200">200</a>         {
-<a name="201" href="#201">201</a>             analyzer.build();
-<a name="202" href="#202">202</a>         }
-<a name="203" href="#203">203</a>         <strong class="jxr_keyword">else</strong>
-<a name="204" href="#204">204</a>         {
-<a name="205" href="#205">205</a>             analyzer.mergeManifest( analyzer.getJar().getManifest() );
-<a name="206" href="#206">206</a>             analyzer.calcManifest();
-<a name="207" href="#207">207</a>         }
-<a name="208" href="#208">208</a> 
-<a name="209" href="#209">209</a>         mergeMavenManifest( project, analyzer );
-<a name="210" href="#210">210</a> 
-<a name="211" href="#211">211</a>         <strong class="jxr_keyword">return</strong> analyzer;
-<a name="212" href="#212">212</a>     }
-<a name="213" href="#213">213</a> 
-<a name="214" href="#214">214</a> 
-<a name="215" href="#215">215</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> writeManifest( Manifest manifest, File outputFile ) <strong class="jxr_keyword">throws</strong> IOException
-<a name="216" href="#216">216</a>     {
-<a name="217" href="#217">217</a>         outputFile.getParentFile().mkdirs();
-<a name="218" href="#218">218</a> 
-<a name="219" href="#219">219</a>         FileOutputStream os;
-<a name="220" href="#220">220</a>         os = <strong class="jxr_keyword">new</strong> FileOutputStream( outputFile );
-<a name="221" href="#221">221</a>         <strong class="jxr_keyword">try</strong>
-<a name="222" href="#222">222</a>         {
-<a name="223" href="#223">223</a>             Jar.writeManifest( manifest, os );
-<a name="224" href="#224">224</a>         }
-<a name="225" href="#225">225</a>         <strong class="jxr_keyword">finally</strong>
-<a name="226" href="#226">226</a>         {
-<a name="227" href="#227">227</a>             <strong class="jxr_keyword">try</strong>
-<a name="228" href="#228">228</a>             {
-<a name="229" href="#229">229</a>                 os.close();
-<a name="230" href="#230">230</a>             }
-<a name="231" href="#231">231</a>             <strong class="jxr_keyword">catch</strong> ( IOException e )
-<a name="232" href="#232">232</a>             {
-<a name="233" href="#233">233</a>                 <em class="jxr_comment">// nothing we can do here</em>
-<a name="234" href="#234">234</a>             }
-<a name="235" href="#235">235</a>         }
-<a name="236" href="#236">236</a>     }
-<a name="237" href="#237">237</a> 
-<a name="238" href="#238">238</a> 
-<a name="239" href="#239">239</a>     <em class="jxr_comment">/*</em>
-<a name="240" href="#240">240</a> <em class="jxr_comment">     * Patched version of bnd's Analyzer.calculateExportsFromContents</em>
-<a name="241" href="#241">241</a> <em class="jxr_comment">     */</em>
-<a name="242" href="#242">242</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> String calculateExportsFromContents( Jar bundle )
-<a name="243" href="#243">243</a>     {
-<a name="244" href="#244">244</a>         String ddel = <span class="jxr_string">""</span>;
-<a name="245" href="#245">245</a>         StringBuffer sb = <strong class="jxr_keyword">new</strong> StringBuffer();
-<a name="246" href="#246">246</a>         Map&lt;String, Map&lt;String, Resource&gt;&gt; map = bundle.getDirectories();
-<a name="247" href="#247">247</a>         <strong class="jxr_keyword">for</strong> ( Iterator&lt;Entry&lt;String, Map&lt;String, Resource&gt;&gt;&gt; i = map.entrySet().iterator(); i.hasNext(); )
-<a name="248" href="#248">248</a>         {
-<a name="249" href="#249">249</a>             <em class="jxr_comment">//----------------------------------------------------</em>
-<a name="250" href="#250">250</a>             <em class="jxr_comment">// should also ignore directories with no resources</em>
-<a name="251" href="#251">251</a>             <em class="jxr_comment">//----------------------------------------------------</em>
-<a name="252" href="#252">252</a>             Entry&lt;String, Map&lt;String, Resource&gt;&gt; entry = i.next();
-<a name="253" href="#253">253</a>             <strong class="jxr_keyword">if</strong> ( entry.getValue() == <strong class="jxr_keyword">null</strong> || entry.getValue().isEmpty() )
-<a name="254" href="#254">254</a>                 <strong class="jxr_keyword">continue</strong>;
-<a name="255" href="#255">255</a>             <em class="jxr_comment">//----------------------------------------------------</em>
-<a name="256" href="#256">256</a>             String directory = entry.getKey();
-<a name="257" href="#257">257</a>             <strong class="jxr_keyword">if</strong> ( directory.equals( <span class="jxr_string">"META-INF"</span> ) || directory.startsWith( <span class="jxr_string">"META-INF/"</span> ) )
-<a name="258" href="#258">258</a>                 <strong class="jxr_keyword">continue</strong>;
-<a name="259" href="#259">259</a>             <strong class="jxr_keyword">if</strong> ( directory.equals( <span class="jxr_string">"OSGI-OPT"</span> ) || directory.startsWith( <span class="jxr_string">"OSGI-OPT/"</span> ) )
-<a name="260" href="#260">260</a>                 <strong class="jxr_keyword">continue</strong>;
-<a name="261" href="#261">261</a>             <strong class="jxr_keyword">if</strong> ( directory.equals( <span class="jxr_string">"/"</span> ) )
-<a name="262" href="#262">262</a>                 <strong class="jxr_keyword">continue</strong>;
-<a name="263" href="#263">263</a> 
-<a name="264" href="#264">264</a>             <strong class="jxr_keyword">if</strong> ( directory.endsWith( <span class="jxr_string">"/"</span> ) )
-<a name="265" href="#265">265</a>                 directory = directory.substring( 0, directory.length() - 1 );
-<a name="266" href="#266">266</a> 
-<a name="267" href="#267">267</a>             directory = directory.replace( '/', '.' );
-<a name="268" href="#268">268</a>             sb.append( ddel );
-<a name="269" href="#269">269</a>             sb.append( directory );
-<a name="270" href="#270">270</a>             ddel = <span class="jxr_string">","</span>;
-<a name="271" href="#271">271</a>         }
-<a name="272" href="#272">272</a>         <strong class="jxr_keyword">return</strong> sb.toString();
-<a name="273" href="#273">273</a>     }
-<a name="274" href="#274">274</a> }
+<a name="175" href="#175">175</a>             <strong class="jxr_keyword">if</strong> ( file.equals( getOutputDirectory() ) )
+<a name="176" href="#176">176</a>             {
+<a name="177" href="#177">177</a>                 file.mkdirs();
+<a name="178" href="#178">178</a>             }
+<a name="179" href="#179">179</a>             <strong class="jxr_keyword">else</strong>
+<a name="180" href="#180">180</a>             {
+<a name="181" href="#181">181</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> FileNotFoundException( file.getPath() );
+<a name="182" href="#182">182</a>             }
+<a name="183" href="#183">183</a>         }
+<a name="184" href="#184">184</a> 
+<a name="185" href="#185">185</a>         Builder analyzer = getOSGiBuilder( project, instructions, properties, classpath );
+<a name="186" href="#186">186</a> 
+<a name="187" href="#187">187</a>         analyzer.setJar( file );
+<a name="188" href="#188">188</a> 
+<a name="189" href="#189">189</a>         <em class="jxr_comment">// calculateExportsFromContents when we have no explicit instructions defining</em>
+<a name="190" href="#190">190</a>         <em class="jxr_comment">// the contents of the bundle *and* we are not analyzing the output directory,</em>
+<a name="191" href="#191">191</a>         <em class="jxr_comment">// otherwise fall-back to addMavenInstructions approach</em>
+<a name="192" href="#192">192</a> 
+<a name="193" href="#193">193</a>         <strong class="jxr_keyword">boolean</strong> isOutputDirectory = file.equals( getOutputDirectory() );
+<a name="194" href="#194">194</a> 
+<a name="195" href="#195">195</a>         <strong class="jxr_keyword">if</strong> ( analyzer.getProperty( Analyzer.EXPORT_PACKAGE ) == <strong class="jxr_keyword">null</strong>
+<a name="196" href="#196">196</a>             &amp;&amp; analyzer.getProperty( Analyzer.EXPORT_CONTENTS ) == <strong class="jxr_keyword">null</strong>
+<a name="197" href="#197">197</a>             &amp;&amp; analyzer.getProperty( Analyzer.PRIVATE_PACKAGE ) == <strong class="jxr_keyword">null</strong> &amp;&amp; !isOutputDirectory )
+<a name="198" href="#198">198</a>         {
+<a name="199" href="#199">199</a>             String export = calculateExportsFromContents( analyzer.getJar() );
+<a name="200" href="#200">200</a>             analyzer.setProperty( Analyzer.EXPORT_PACKAGE, export );
+<a name="201" href="#201">201</a>         }
+<a name="202" href="#202">202</a> 
+<a name="203" href="#203">203</a>         addMavenInstructions( project, analyzer );
+<a name="204" href="#204">204</a> 
+<a name="205" href="#205">205</a>         <em class="jxr_comment">// if we spot Embed-Dependency and the bundle is "target/classes", assume we need to rebuild</em>
+<a name="206" href="#206">206</a>         <strong class="jxr_keyword">if</strong> ( analyzer.getProperty( DependencyEmbedder.EMBED_DEPENDENCY ) != <strong class="jxr_keyword">null</strong> &amp;&amp; isOutputDirectory )
+<a name="207" href="#207">207</a>         {
+<a name="208" href="#208">208</a>             analyzer.build();
+<a name="209" href="#209">209</a>         }
+<a name="210" href="#210">210</a>         <strong class="jxr_keyword">else</strong>
+<a name="211" href="#211">211</a>         {
+<a name="212" href="#212">212</a>             analyzer.mergeManifest( analyzer.getJar().getManifest() );
+<a name="213" href="#213">213</a>             analyzer.getJar().setManifest( analyzer.calcManifest() );
+<a name="214" href="#214">214</a>         }
+<a name="215" href="#215">215</a> 
+<a name="216" href="#216">216</a>         mergeMavenManifest( project, analyzer );
+<a name="217" href="#217">217</a> 
+<a name="218" href="#218">218</a>         <strong class="jxr_keyword">return</strong> analyzer;
+<a name="219" href="#219">219</a>     }
+<a name="220" href="#220">220</a> 
+<a name="221" href="#221">221</a> 
+<a name="222" href="#222">222</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> writeManifest( Manifest manifest, File outputFile ) <strong class="jxr_keyword">throws</strong> IOException
+<a name="223" href="#223">223</a>     {
+<a name="224" href="#224">224</a>         outputFile.getParentFile().mkdirs();
+<a name="225" href="#225">225</a> 
+<a name="226" href="#226">226</a>         FileOutputStream os;
+<a name="227" href="#227">227</a>         os = <strong class="jxr_keyword">new</strong> FileOutputStream( outputFile );
+<a name="228" href="#228">228</a>         <strong class="jxr_keyword">try</strong>
+<a name="229" href="#229">229</a>         {
+<a name="230" href="#230">230</a>             Jar.writeManifest( manifest, os );
+<a name="231" href="#231">231</a>         }
+<a name="232" href="#232">232</a>         <strong class="jxr_keyword">finally</strong>
+<a name="233" href="#233">233</a>         {
+<a name="234" href="#234">234</a>             <strong class="jxr_keyword">try</strong>
+<a name="235" href="#235">235</a>             {
+<a name="236" href="#236">236</a>                 os.close();
+<a name="237" href="#237">237</a>             }
+<a name="238" href="#238">238</a>             <strong class="jxr_keyword">catch</strong> ( IOException e )
+<a name="239" href="#239">239</a>             {
+<a name="240" href="#240">240</a>                 <em class="jxr_comment">// nothing we can do here</em>
+<a name="241" href="#241">241</a>             }
+<a name="242" href="#242">242</a>         }
+<a name="243" href="#243">243</a>     }
+<a name="244" href="#244">244</a> 
+<a name="245" href="#245">245</a> 
+<a name="246" href="#246">246</a>     <em class="jxr_comment">/*</em>
+<a name="247" href="#247">247</a> <em class="jxr_comment">     * Patched version of bnd's Analyzer.calculateExportsFromContents</em>
+<a name="248" href="#248">248</a> <em class="jxr_comment">     */</em>
+<a name="249" href="#249">249</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> String calculateExportsFromContents( Jar bundle )
+<a name="250" href="#250">250</a>     {
+<a name="251" href="#251">251</a>         String ddel = <span class="jxr_string">""</span>;
+<a name="252" href="#252">252</a>         StringBuffer sb = <strong class="jxr_keyword">new</strong> StringBuffer();
+<a name="253" href="#253">253</a>         Map&lt;String, Map&lt;String, Resource&gt;&gt; map = bundle.getDirectories();
+<a name="254" href="#254">254</a>         <strong class="jxr_keyword">for</strong> ( Iterator&lt;Entry&lt;String, Map&lt;String, Resource&gt;&gt;&gt; i = map.entrySet().iterator(); i.hasNext(); )
+<a name="255" href="#255">255</a>         {
+<a name="256" href="#256">256</a>             <em class="jxr_comment">//----------------------------------------------------</em>
+<a name="257" href="#257">257</a>             <em class="jxr_comment">// should also ignore directories with no resources</em>
+<a name="258" href="#258">258</a>             <em class="jxr_comment">//----------------------------------------------------</em>
+<a name="259" href="#259">259</a>             Entry&lt;String, Map&lt;String, Resource&gt;&gt; entry = i.next();
+<a name="260" href="#260">260</a>             <strong class="jxr_keyword">if</strong> ( entry.getValue() == <strong class="jxr_keyword">null</strong> || entry.getValue().isEmpty() )
+<a name="261" href="#261">261</a>                 <strong class="jxr_keyword">continue</strong>;
+<a name="262" href="#262">262</a>             <em class="jxr_comment">//----------------------------------------------------</em>
+<a name="263" href="#263">263</a>             String directory = entry.getKey();
+<a name="264" href="#264">264</a>             <strong class="jxr_keyword">if</strong> ( directory.equals( <span class="jxr_string">"META-INF"</span> ) || directory.startsWith( <span class="jxr_string">"META-INF/"</span> ) )
+<a name="265" href="#265">265</a>                 <strong class="jxr_keyword">continue</strong>;
+<a name="266" href="#266">266</a>             <strong class="jxr_keyword">if</strong> ( directory.equals( <span class="jxr_string">"OSGI-OPT"</span> ) || directory.startsWith( <span class="jxr_string">"OSGI-OPT/"</span> ) )
+<a name="267" href="#267">267</a>                 <strong class="jxr_keyword">continue</strong>;
+<a name="268" href="#268">268</a>             <strong class="jxr_keyword">if</strong> ( directory.equals( <span class="jxr_string">"/"</span> ) )
+<a name="269" href="#269">269</a>                 <strong class="jxr_keyword">continue</strong>;
+<a name="270" href="#270">270</a> 
+<a name="271" href="#271">271</a>             <strong class="jxr_keyword">if</strong> ( directory.endsWith( <span class="jxr_string">"/"</span> ) )
+<a name="272" href="#272">272</a>                 directory = directory.substring( 0, directory.length() - 1 );
+<a name="273" href="#273">273</a> 
+<a name="274" href="#274">274</a>             directory = directory.replace( '/', '.' );
+<a name="275" href="#275">275</a>             sb.append( ddel );
+<a name="276" href="#276">276</a>             sb.append( directory );
+<a name="277" href="#277">277</a>             ddel = <span class="jxr_string">","</span>;
+<a name="278" href="#278">278</a>         }
+<a name="279" href="#279">279</a>         <strong class="jxr_keyword">return</strong> sb.toString();
+<a name="280" href="#280">280</a>     }
+<a name="281" href="#281">281</a> }
 </pre>
 <hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
 </html>
