@@ -148,52 +148,55 @@
 <a name="138" href="#138">138</a>             <a href="../../../../org/apache/felix/obrplugin/Config.html">Config</a> userConfig = <strong class="jxr_keyword">new</strong> <a href="../../../../org/apache/felix/obrplugin/Config.html">Config</a>();
 <a name="139" href="#139">139</a> 
 <a name="140" href="#140">140</a>             update = <strong class="jxr_keyword">new</strong> <a href="../../../../org/apache/felix/obrplugin/ObrUpdate.html">ObrUpdate</a>( repositoryXml, obrXmlFile, project, mavenRepository, userConfig, log );
-<a name="141" href="#141">141</a>             update.parseRepositoryXml();
-<a name="142" href="#142">142</a> 
-<a name="143" href="#143">143</a>             updateLocalBundleMetadata( project.getArtifact(), update );
-<a name="144" href="#144">144</a>             <strong class="jxr_keyword">for</strong> ( Iterator i = attachedArtifacts.iterator(); i.hasNext(); )
-<a name="145" href="#145">145</a>             {
-<a name="146" href="#146">146</a>                 updateLocalBundleMetadata( ( Artifact ) i.next(), update );
-<a name="147" href="#147">147</a>             }
-<a name="148" href="#148">148</a> 
-<a name="149" href="#149">149</a>             update.writeRepositoryXml();
-<a name="150" href="#150">150</a>         }
-<a name="151" href="#151">151</a>         <strong class="jxr_keyword">catch</strong> ( Exception e )
-<a name="152" href="#152">152</a>         {
-<a name="153" href="#153">153</a>             log.warn( <span class="jxr_string">"Exception while updating local OBR: "</span> + e.getLocalizedMessage(), e );
-<a name="154" href="#154">154</a>         }
-<a name="155" href="#155">155</a>     }
-<a name="156" href="#156">156</a> 
-<a name="157" href="#157">157</a> 
-<a name="158" href="#158">158</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> updateLocalBundleMetadata( Artifact artifact, ObrUpdate update ) <strong class="jxr_keyword">throws</strong> MojoExecutionException
-<a name="159" href="#159">159</a>     {
-<a name="160" href="#160">160</a>         <strong class="jxr_keyword">if</strong> ( !supportedProjectTypes.contains( artifact.getType() ) )
-<a name="161" href="#161">161</a>         {
-<a name="162" href="#162">162</a>             <strong class="jxr_keyword">return</strong>;
-<a name="163" href="#163">163</a>         }
-<a name="164" href="#164">164</a>         <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> ( <strong class="jxr_keyword">null</strong> == artifact.getFile() || artifact.getFile().isDirectory() )
-<a name="165" href="#165">165</a>         {
-<a name="166" href="#166">166</a>             getLog().error( <span class="jxr_string">"No artifact found, try \&quot;mvn install bundle:install\&quot;"</span> );
-<a name="167" href="#167">167</a>             <strong class="jxr_keyword">return</strong>;
-<a name="168" href="#168">168</a>         }
-<a name="169" href="#169">169</a> 
-<a name="170" href="#170">170</a>         URI bundleJar = ObrUtils.getArtifactURI( localRepository, artifact );
-<a name="171" href="#171">171</a> 
-<a name="172" href="#172">172</a>         URI sourceJar = <strong class="jxr_keyword">null</strong>;
-<a name="173" href="#173">173</a>         <strong class="jxr_keyword">if</strong> ( <strong class="jxr_keyword">null</strong> != m_sourceArtifact )
-<a name="174" href="#174">174</a>         {
-<a name="175" href="#175">175</a>             sourceJar = ObrUtils.getArtifactURI( localRepository, m_sourceArtifact );
-<a name="176" href="#176">176</a>         }
-<a name="177" href="#177">177</a> 
-<a name="178" href="#178">178</a>         URI docJar = <strong class="jxr_keyword">null</strong>;
-<a name="179" href="#179">179</a>         <strong class="jxr_keyword">if</strong> ( <strong class="jxr_keyword">null</strong> != m_docArtifact )
-<a name="180" href="#180">180</a>         {
-<a name="181" href="#181">181</a>             docJar = ObrUtils.getArtifactURI( localRepository, m_docArtifact );
-<a name="182" href="#182">182</a>         }
-<a name="183" href="#183">183</a> 
-<a name="184" href="#184">184</a>         update.updateRepository( bundleJar, sourceJar, docJar );
-<a name="185" href="#185">185</a>     }
-<a name="186" href="#186">186</a> }
+<a name="141" href="#141">141</a>             <strong class="jxr_keyword">synchronized</strong> ( ObrUpdate.<strong class="jxr_keyword">class</strong> ) <em class="jxr_comment">// protect against concurrent in-process updates</em>
+<a name="142" href="#142">142</a>             {
+<a name="143" href="#143">143</a>                 update.parseRepositoryXml();
+<a name="144" href="#144">144</a> 
+<a name="145" href="#145">145</a>                 updateLocalBundleMetadata( project.getArtifact(), update );
+<a name="146" href="#146">146</a>                 <strong class="jxr_keyword">for</strong> ( Iterator i = attachedArtifacts.iterator(); i.hasNext(); )
+<a name="147" href="#147">147</a>                 {
+<a name="148" href="#148">148</a>                     updateLocalBundleMetadata( ( Artifact ) i.next(), update );
+<a name="149" href="#149">149</a>                 }
+<a name="150" href="#150">150</a> 
+<a name="151" href="#151">151</a>                 update.writeRepositoryXml();
+<a name="152" href="#152">152</a>             }
+<a name="153" href="#153">153</a>         }
+<a name="154" href="#154">154</a>         <strong class="jxr_keyword">catch</strong> ( Exception e )
+<a name="155" href="#155">155</a>         {
+<a name="156" href="#156">156</a>             log.warn( <span class="jxr_string">"Exception while updating local OBR: "</span> + e.getLocalizedMessage(), e );
+<a name="157" href="#157">157</a>         }
+<a name="158" href="#158">158</a>     }
+<a name="159" href="#159">159</a> 
+<a name="160" href="#160">160</a> 
+<a name="161" href="#161">161</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> updateLocalBundleMetadata( Artifact artifact, ObrUpdate update ) <strong class="jxr_keyword">throws</strong> MojoExecutionException
+<a name="162" href="#162">162</a>     {
+<a name="163" href="#163">163</a>         <strong class="jxr_keyword">if</strong> ( !supportedProjectTypes.contains( artifact.getType() ) )
+<a name="164" href="#164">164</a>         {
+<a name="165" href="#165">165</a>             <strong class="jxr_keyword">return</strong>;
+<a name="166" href="#166">166</a>         }
+<a name="167" href="#167">167</a>         <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> ( <strong class="jxr_keyword">null</strong> == artifact.getFile() || artifact.getFile().isDirectory() )
+<a name="168" href="#168">168</a>         {
+<a name="169" href="#169">169</a>             getLog().error( <span class="jxr_string">"No artifact found, try \&quot;mvn install bundle:install\&quot;"</span> );
+<a name="170" href="#170">170</a>             <strong class="jxr_keyword">return</strong>;
+<a name="171" href="#171">171</a>         }
+<a name="172" href="#172">172</a> 
+<a name="173" href="#173">173</a>         URI bundleJar = ObrUtils.getArtifactURI( localRepository, artifact );
+<a name="174" href="#174">174</a> 
+<a name="175" href="#175">175</a>         URI sourceJar = <strong class="jxr_keyword">null</strong>;
+<a name="176" href="#176">176</a>         <strong class="jxr_keyword">if</strong> ( <strong class="jxr_keyword">null</strong> != m_sourceArtifact )
+<a name="177" href="#177">177</a>         {
+<a name="178" href="#178">178</a>             sourceJar = ObrUtils.getArtifactURI( localRepository, m_sourceArtifact );
+<a name="179" href="#179">179</a>         }
+<a name="180" href="#180">180</a> 
+<a name="181" href="#181">181</a>         URI docJar = <strong class="jxr_keyword">null</strong>;
+<a name="182" href="#182">182</a>         <strong class="jxr_keyword">if</strong> ( <strong class="jxr_keyword">null</strong> != m_docArtifact )
+<a name="183" href="#183">183</a>         {
+<a name="184" href="#184">184</a>             docJar = ObrUtils.getArtifactURI( localRepository, m_docArtifact );
+<a name="185" href="#185">185</a>         }
+<a name="186" href="#186">186</a> 
+<a name="187" href="#187">187</a>         update.updateRepository( bundleJar, sourceJar, docJar );
+<a name="188" href="#188">188</a>     }
+<a name="189" href="#189">189</a> }
 </pre>
 <hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
 </html>

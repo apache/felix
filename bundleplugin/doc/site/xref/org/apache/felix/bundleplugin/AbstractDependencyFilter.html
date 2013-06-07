@@ -38,8 +38,8 @@
 <a name="28" href="#28">28</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.artifact.Artifact;
 <a name="29" href="#29">29</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.plugin.MojoExecutionException;
 <a name="30" href="#30">30</a>  
-<a name="31" href="#31">31</a>  <strong class="jxr_keyword">import</strong> aQute.lib.osgi.Instruction;
-<a name="32" href="#32">32</a>  <strong class="jxr_keyword">import</strong> aQute.libg.header.OSGiHeader;
+<a name="31" href="#31">31</a>  <strong class="jxr_keyword">import</strong> aQute.bnd.osgi.Instruction;
+<a name="32" href="#32">32</a>  <strong class="jxr_keyword">import</strong> aQute.bnd.header.OSGiHeader;
 <a name="33" href="#33">33</a>  
 <a name="34" href="#34">34</a>  
 <a name="35" href="#35">35</a>  <em class="jxr_javadoccomment">/**</em>
@@ -76,7 +76,7 @@
 <a name="66" href="#66">66</a>  
 <a name="67" href="#67">67</a>          <strong class="jxr_keyword">public</strong> <a href="../../../../org/apache/felix/bundleplugin/AbstractDependencyFilter.html">DependencyFilter</a>( String expression, String defaultValue )
 <a name="68" href="#68">68</a>          {
-<a name="69" href="#69">69</a>              m_instruction = Instruction.getPattern( expression );
+<a name="69" href="#69">69</a>              m_instruction = <strong class="jxr_keyword">new</strong> Instruction( expression );
 <a name="70" href="#70">70</a>              m_defaultValue = defaultValue;
 <a name="71" href="#71">71</a>          }
 <a name="72" href="#72">72</a>  

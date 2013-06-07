@@ -47,9 +47,9 @@
 <a name="37" href="#37">37</a>  <strong class="jxr_keyword">import</strong> org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter;
 <a name="38" href="#38">38</a>  <strong class="jxr_keyword">import</strong> org.osgi.framework.Constants;
 <a name="39" href="#39">39</a>  
-<a name="40" href="#40">40</a>  <strong class="jxr_keyword">import</strong> aQute.lib.osgi.Analyzer;
-<a name="41" href="#41">41</a>  <strong class="jxr_keyword">import</strong> aQute.lib.osgi.Builder;
-<a name="42" href="#42">42</a>  <strong class="jxr_keyword">import</strong> aQute.lib.osgi.Jar;
+<a name="40" href="#40">40</a>  <strong class="jxr_keyword">import</strong> aQute.bnd.osgi.Analyzer;
+<a name="41" href="#41">41</a>  <strong class="jxr_keyword">import</strong> aQute.bnd.osgi.Builder;
+<a name="42" href="#42">42</a>  <strong class="jxr_keyword">import</strong> aQute.bnd.osgi.Jar;
 <a name="43" href="#43">43</a>  
 <a name="44" href="#44">44</a>  
 <a name="45" href="#45">45</a>  <em class="jxr_javadoccomment">/**</em>
@@ -134,7 +134,7 @@
 <a name="124" href="#124">124</a>             { jar } );
 <a name="125" href="#125">125</a> 
 <a name="126" href="#126">126</a>         analyzer.setProperty( Analyzer.EXPORT_PACKAGE, <span class="jxr_string">"*"</span> );
-<a name="127" href="#127">127</a>         analyzer.calcManifest();
+<a name="127" href="#127">127</a>         analyzer.getJar().setManifest( analyzer.calcManifest() );
 <a name="128" href="#128">128</a> 
 <a name="129" href="#129">129</a>         assertEquals( 3, analyzer.getExports().size() );
 <a name="130" href="#130">130</a> 
