@@ -720,6 +720,10 @@ public class BundlePlugin extends AbstractMojo
 
             // First grab the external manifest file (if specified and different to target location)
             File externalManifestFile = archiveConfig.getManifestFile();
+            if ( !externalManifestFile.isAbsolute() )
+            {
+                externalManifestFile = new File( currentProject.getBasedir(), externalManifestFile.getPath() );
+            }
             if ( null != externalManifestFile && externalManifestFile.exists()
                 && !externalManifestFile.equals( new File( manifestLocation, "MANIFEST.MF" ) ) )
             {
