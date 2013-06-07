@@ -116,6 +116,7 @@
      <issueManagementSystems>
       <issueManagementSystem>JIRA</issueManagementSystem>
      </issueManagementSystems>
+     <useJql>true</useJql>
     </configuration>
    </plugin>
   </plugins>

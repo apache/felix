@@ -1,3 +1,30 @@
+Changes from 2.3.7 to 2.4.0
+---------------------------
+
+** Bug
+    * [FELIX-3293] - Exception while creating empty fragment bundles with version 2.3.6
+    * [FELIX-3349] - wrong bundle manifest contents in some cases
+    * [FELIX-3352] - Maven Bundle Plugin ignores resource properties configured inside <filters> section
+    * [FELIX-3407] - Imports are missed for generics
+    * [FELIX-3497] - Wrong artifact type attached as a secondary artifact when project packaging is set to "pom"
+    * [FELIX-3582] - finalName not properly populated in maven-bundle-plugin with buildnumber-maven-plugin
+    * [FELIX-3585] - Dependencies with classes or resources in the default package cannot be embedded
+    * [FELIX-3601] - Incorrect namespace in component XML for DS Annotations
+    * [FELIX-3619] - "IOException: Failed to delete repository.xml while trying to rename" in maven-bundle-plugin
+    * [FELIX-3630] - Packages exported by bundle are (re)-imported with incorrect version
+    * [FELIX-3638] - Missing package import for annotation default value
+    * [FELIX-3772] - maven-bundle-plugin does not scan blueprint in workspace outside default location
+    * [FELIX-3973] - Exclusion from {local-packages} doesn't work anymore
+    * [FELIX-4005] - Maven Bundle Plugin fails with ArrayIndexOutOfBoundsException, "Invalid Class File" errors with Java 8 features
+    * [FELIX-4017] - @ProviderType does not work (bnd "provide:=true" annotation?)
+
+** Improvement
+    * [FELIX-3277] - Support BND Service Component generation
+    * [FELIX-3602] - The bundle plugin should generate the blueprint header with the file locations
+
+** Wish
+    * [FELIX-4067] - Old BND used causes problems during annotations processing
+
 Changes from 2.3.6 to 2.3.7
 ---------------------------
 
