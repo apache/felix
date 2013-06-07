@@ -65,6 +65,7 @@ import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.PropertyUtils;
 import org.codehaus.plexus.util.StringUtils;
 
 import aQute.bnd.osgi.Analyzer;
@@ -1210,6 +1211,16 @@ public class BundlePlugin extends AbstractMojo
 
         properties.putAll( currentProject.getProperties() );
         properties.putAll( currentProject.getModel().getProperties() );
+
+        for ( Iterator i = currentProject.getFilters().iterator(); i.hasNext(); )
+        {
+            File filterFile = new File( ( String ) i.next() );
+            if ( filterFile.isFile() )
+            {
+                properties.putAll( PropertyUtils.loadProperties( filterFile ) );
+            }
+        }
+
         if ( m_mavenSession != null )
         {
             try
