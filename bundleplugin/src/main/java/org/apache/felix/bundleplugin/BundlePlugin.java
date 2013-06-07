@@ -124,6 +124,13 @@ public class BundlePlugin extends AbstractMojo
     protected String excludeDependencies;
 
     /**
+     * Final name of the bundle (without classifier or extension)
+     * 
+     * @parameter expression="${project.build.finalName}"
+     */ 
+    private String finalName; 
+
+    /**
      * Classifier type of the bundle to be installed.  For example, "jdk14".
      * Defaults to none which means this is the project's main bundle.
      *
@@ -1132,7 +1139,6 @@ public class BundlePlugin extends AbstractMojo
         {
             extension = "jar"; // just in case maven gets confused
         }
-        String finalName = currentProject.getBuild().getFinalName();
         if ( null != classifier && classifier.trim().length() > 0 )
         {
             return finalName + '-' + classifier + '.' + extension;
