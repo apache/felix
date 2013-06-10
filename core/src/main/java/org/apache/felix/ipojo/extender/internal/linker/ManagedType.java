@@ -19,6 +19,8 @@
 
 package org.apache.felix.ipojo.extender.internal.linker;
 
+import static java.lang.String.format;
+
 import org.apache.felix.ipojo.*;
 import org.apache.felix.ipojo.extender.ExtensionDeclaration;
 import org.apache.felix.ipojo.extender.InstanceDeclaration;
@@ -102,7 +104,7 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
      * @throws InvalidSyntaxException cannot happen
      */
     private void initExtensionTracker() throws InvalidSyntaxException {
-        String filter = String.format(
+        String filter = format(
                 "(&(objectclass=%s)(%s=%s))",
                 ExtensionDeclaration.class.getName(),
                 ExtensionDeclaration.EXTENSION_NAME_PROPERTY,
@@ -124,7 +126,7 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
             // Track instance for:
             // * this component AND
             // * this component's version OR no version
-            filter = String.format(
+            filter = format(
                     "(&(objectClass=%s)(%s=%s)(|(%s=%s)(!(%s=*))))",
                     InstanceDeclaration.class.getName(),
                     InstanceDeclaration.COMPONENT_NAME_PROPERTY,
@@ -136,7 +138,7 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
         } else {
             // Track instance for:
             // * this component AND no version
-            filter = String.format(
+            filter = format(
                     "(&(objectClass=%s)(%s=%s)(!(%s=*)))",
                     InstanceDeclaration.class.getName(),
                     InstanceDeclaration.COMPONENT_NAME_PROPERTY,
@@ -161,15 +163,6 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
      * Stopping the management.
      */
     public void stop() {
-        try {
-            IPojoFactory factory = m_future.get();
-            if (factory != null) {
-                factory.dispose();
-            }
-        } catch (Exception e) {
-            // Ignored.
-        }
-
         m_instanceTracker.close();
         m_extensionTracker.close();
     }
@@ -218,14 +211,17 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
 
                             return factory;
                         } catch (FactoryBuilderException e) {
-                            m_declaration.unbind(String.format("Cannot build '%s' factory instance", m_declaration.getExtension()), e);
+                            m_declaration.unbind(format("Cannot build '%s' factory instance", m_declaration.getExtension()), e);
                         } catch (Throwable t) {
-                            m_declaration.unbind(String.format("Error during '%s' factory instance creation", m_declaration.getExtension()), t);
+                            m_declaration.unbind(format("Error during '%s' factory instance creation", m_declaration.getExtension()), t);
                         }
 
                         return null;
                     }
                 });
+                // Return something, otherwise, ServiceTracker think that we're not interested
+                // in this service and never call us back on disposal.
+                return service;
             }
 
             return null;
@@ -236,6 +232,7 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
 
         public void removedService(ServiceReference reference, Object o) {
 
+            ExtensionDeclaration extensionDeclaration = (ExtensionDeclaration) o;
             // Then stop the factory
             try {
                 IPojoFactory factory = m_future.get();
@@ -243,7 +240,8 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
                 if (factory != null) {
                     factory.removeFactoryStateListener(ManagedType.this);
                     factory.dispose();
-                    m_declaration.unbind("Extension '%s' is missing");
+                    m_declaration.unbind(format("Extension '%s' is missing",
+                                                extensionDeclaration.getExtensionName()));
                 }
             } catch (InterruptedException e) {
                 m_declaration.unbind("Could not create Factory", e);
@@ -270,14 +268,14 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
                     if (!reference.getBundle().equals(m_bundleContext.getBundle())) {
                         Bundle origin = m_bundleContext.getBundle();
                         instanceDeclaration.unbind(
-                                String.format("Component '%s/%s' is private. It only accept instances " +
-                                        "from bundle %s/%s [%d] (instance bundle origin: %d)",
-                                        m_declaration.getComponentName(),
-                                        m_declaration.getComponentVersion(),
-                                        origin.getSymbolicName(),
-                                        origin.getVersion(),
-                                        origin.getBundleId(),
-                                        reference.getBundle().getBundleId())
+                                format("Component '%s/%s' is private. It only accept instances " +
+                                               "from bundle %s/%s [%d] (instance bundle origin: %d)",
+                                       m_declaration.getComponentName(),
+                                       m_declaration.getComponentVersion(),
+                                       origin.getSymbolicName(),
+                                       origin.getVersion(),
+                                       origin.getBundleId(),
+                                       reference.getBundle().getBundleId())
                         );
                         return null;
                     }
@@ -296,14 +294,14 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
 
                             return instance;
                         } catch (UnacceptableConfiguration c) {
-                            instanceDeclaration.unbind(String.format("Instance configuration is invalid (component:%s/%s, bundle:%d)",
-                                    m_declaration.getComponentName(),
-                                    m_declaration.getComponentVersion(),
-                                    reference.getBundle().getBundleId()),
+                            instanceDeclaration.unbind(format("Instance configuration is invalid (component:%s/%s, bundle:%d)",
+                                                              m_declaration.getComponentName(),
+                                                              m_declaration.getComponentVersion(),
+                                                              reference.getBundle().getBundleId()),
                                     c);
                         } catch (MissingHandlerException e) {
                             instanceDeclaration.unbind(
-                                    String.format(
+                                    format(
                                             "Component '%s/%s' (required for instance creation) is missing some handlers",
                                             m_declaration.getComponentName(),
                                             m_declaration.getComponentVersion()
@@ -311,7 +309,7 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
                                     e);
                         } catch (ConfigurationException e) {
                             instanceDeclaration.unbind(
-                                    String.format(
+                                    format(
                                             "Instance configuration is incorrect for component '%s/%s'",
                                             m_declaration.getComponentName(),
                                             m_declaration.getComponentVersion()),
@@ -337,9 +335,9 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
                 instance = future.get();
                 // It is possible that the instance couldn't be created
                 if (instance != null) {
-                    String message = String.format("Factory for Component '%s/%s' is missing",
-                            instance.getFactory().getName(),
-                            m_declaration.getComponentVersion());
+                    String message = format("Factory for Component '%s/%s' is missing",
+                                            instance.getFactory().getName(),
+                                            m_declaration.getComponentVersion());
                     instanceDeclaration.unbind(message);
 
                     instance.stop();
