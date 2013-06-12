@@ -21,17 +21,16 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
         <version>2.1</version>
-        <relativePath>../../pom/pom.xml</relativePath>
+        <relativePath>../../../pom/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
-    <name>Apache Felix iPOJO Arch Gogo Command</name>
-    <artifactId>org.apache.felix.ipojo.arch.gogo</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <name>Apache Felix iPOJO Gogo Command</name>
+    <artifactId>org.apache.felix.ipojo.gogo</artifactId>
+    <version>1.10.1-SNAPSHOT</version>
 
     <description>
-        Arch command to collect and print information about iPOJO instances.
-        This command is made for Gogo.
+        Provides commands for the Gogo shell to introspect the iPOJO ecosystem.
     </description>
     <url>
         http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/ipojo-arch-command.html
@@ -85,7 +84,7 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Bundle-Description>
-                            iPOJO Arch command for Gogo
+                            Gogo commands for iPOJO
                         </Bundle-Description>
                         <Bundle-DocURL>
                             http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/ipojo-arch-command.html
@@ -120,10 +119,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/ipojo/arch-gogo</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/ipojo/arch-gogo</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/ipojo/arch-gogo</url>
-    </scm>
 </project>

@@ -46,7 +46,6 @@
 
         <!-- tools -->
         <module>arch</module>
-        <module>arch-gogo</module>
         <module>webconsole-plugin</module>
 
         <!-- distribution and tutorials -->

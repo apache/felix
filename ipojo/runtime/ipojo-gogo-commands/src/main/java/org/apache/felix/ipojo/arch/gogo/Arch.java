@@ -65,7 +65,9 @@ public class Arch {
         "instances",
         "instance",
         "factory",
+        "component",
         "factories",
+        "components",
         "handlers",
         "extensions"
     };
@@ -192,6 +194,17 @@ public class Arch {
         }
 
     }
+
+    /**
+     * Displays the information about a specific factory.
+     * Note that factory name are not unique, so all matching
+     * factories are displayed.
+     * @param name the factory name
+     */
+    @Descriptor("Display the information about a specific factory / component")
+    public void component(@Descriptor("target factory name") String name) {
+        factory(name);
+    }
     
     /**
      * Displays the information about a specific factory.
@@ -247,6 +260,14 @@ public class Arch {
             }
         }
 
+    }
+
+    /**
+     * Displays the list of public iPOJO factories.
+     */
+    @Descriptor("Display iPOJO factories / components")
+    public void components() {
+        factories();
     }
     
     /**

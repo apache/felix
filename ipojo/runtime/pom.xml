@@ -40,6 +40,7 @@
         <module>composite-it</module>
         <module>api</module>
         <module>api-it</module>
+        <module>ipojo-gogo-commands</module>
     </modules>
 
     <scm>
