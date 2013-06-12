@@ -143,12 +143,10 @@ public class DependencyHandlerDescription extends HandlerDescription {
             }
             
             dep.addAttribute(new Attribute("State", state));
-            List set = m_dependencies[i].getUsedServices();
+            List<ServiceReference> set = m_dependencies[i].getUsedServices();
             if (set != null) {
-                Iterator iterator = set.iterator();
-                while (iterator.hasNext()) {
+                for (ServiceReference ref : set) {
                     Element use = new Element("Uses", "");
-                    ServiceReference ref = (ServiceReference) iterator.next();
                     use.addAttribute(new Attribute(Constants.SERVICE_ID, ref.getProperty(Constants.SERVICE_ID).toString()));
                     String instance = (String) ref.getProperty(Factory.INSTANCE_NAME_PROPERTY);
                     if (instance != null) {
@@ -157,7 +155,35 @@ public class DependencyHandlerDescription extends HandlerDescription {
                     dep.addElement(use);
                 }
             }
-            
+
+            set = m_dependencies[i].getServiceReferences();
+            if (set != null) {
+                for (ServiceReference ref : set) {
+                    Element use = new Element("Selected", "");
+                    use.addAttribute(new Attribute(Constants.SERVICE_ID, ref.getProperty(Constants.SERVICE_ID).toString()));
+                    String instance = (String) ref.getProperty(Factory.INSTANCE_NAME_PROPERTY);
+                    if (instance != null) {
+                        use.addAttribute(new Attribute(Factory.INSTANCE_NAME_PROPERTY, instance));
+                    }
+                    dep.addElement(use);
+                }
+            }
+
+            if (m_dependencies[i].getDependency() != null) {
+                set = m_dependencies[i].getDependency().getServiceReferenceManager().getMatchingServices();
+                if (set != null) {
+                    for (ServiceReference ref : set) {
+                        Element use = new Element("Matches", "");
+                        use.addAttribute(new Attribute(Constants.SERVICE_ID, ref.getProperty(Constants.SERVICE_ID).toString()));
+                        String instance = (String) ref.getProperty(Factory.INSTANCE_NAME_PROPERTY);
+                        if (instance != null) {
+                            use.addAttribute(new Attribute(Factory.INSTANCE_NAME_PROPERTY, instance));
+                        }
+                        dep.addElement(use);
+                    }
+                }
+            }
+
             deps.addElement(dep);
         }
         return deps;

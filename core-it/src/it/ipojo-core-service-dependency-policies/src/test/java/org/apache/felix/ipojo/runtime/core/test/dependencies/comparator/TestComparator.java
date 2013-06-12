@@ -63,10 +63,11 @@ public class TestComparator extends Common {
 
         CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
         Properties result = cs.getProps();
-        int fsGrade = ((Integer) result.get("fs")).intValue();
-        int fs2Grade = ((Integer) result.get("fs2")).intValue();
+        int fsGrade = (Integer) result.get("fs");
+        int fs2Grade = (Integer) result.get("fs2");
         int[] fssGrades = (int[]) result.get("fss");
 
+        // We should have been injected with the highest one.
         assertEquals("fs grade -1", 2, fsGrade);
         assertEquals("fs2 grade -1", 2, fs2Grade);
         assertEquals("fss grade size -1", 2, fssGrades.length);
@@ -112,8 +113,8 @@ public class TestComparator extends Common {
 
         CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
         Properties result = cs.getProps();
-        int fsGrade = ((Integer) result.get("fs")).intValue();
-        int fs2Grade = ((Integer) result.get("fs2")).intValue();
+        int fsGrade = (Integer) result.get("fs");
+        int fs2Grade = (Integer) result.get("fs2");
         int[] fssGrades = (int[]) result.get("fss");
 
         assertEquals("fs grade -1", 2, fsGrade);
@@ -151,7 +152,7 @@ public class TestComparator extends Common {
 
     private ComponentInstance createGrade(int grade) {
         Properties props = new Properties();
-        props.put("grade", new Integer(grade));
+        props.put("grade", grade);
         return ipojoHelper.createComponentInstance(gradeFactory, props);
     }
 

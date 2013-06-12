@@ -283,7 +283,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                         } else {
                             // The service left already, or the service object cannot be created.
                             // We consider it as a departure.
-                            removedService(refs[i],  null);
+                            m_serviceReferenceManager.removedService(refs[i], null);
                         }
                     }
                 } else {
@@ -294,7 +294,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                     } else {
                         // The service left already, or the service object cannot be created.
                         // We consider it as a departure.
-                        removedService(refs[0],  null);
+                        m_serviceReferenceManager.removedService(refs[0], null);
                     }
                 }
             }
@@ -374,7 +374,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                         // We can't get the service object (https://issues.apache.org/jira/browse/FELIX-3896).
                         // This is probably because the service is leaving.
                         // We consider it as a departure.
-                        removedService(ref, null);
+                        m_serviceReferenceManager.removedService(ref, null);
                     }
                 }
             }
@@ -557,7 +557,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * Get the used service references list.
      * @return the used service reference or null if no service reference are available.
      */
-    public List getServiceReferencesAsList() {
+    public List<ServiceReference> getServiceReferencesAsList() {
         ServiceReference[] refs = super.getServiceReferences();
         if (refs == null) {
             return null;

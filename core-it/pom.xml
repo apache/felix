@@ -259,6 +259,12 @@
             <artifactId>pax-url-wrap</artifactId>
             <version>1.5.2</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.easytesting</groupId>
+            <artifactId>fest-assert</artifactId>
+            <version>1.4</version>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -380,6 +386,7 @@
                 <module>src/it/ipojo-core-service-dependency-policies</module>
                 <module>src/it/ipojo-core-service-dependency-proxies</module>
                 <module>src/it/ipojo-core-service-dependency-test</module>
+                <module>src/it/ipojo-core-service-dependency-interceptor-test</module>
                 <module>src/it/ipojo-core-service-providing-test</module>
             </modules>
 

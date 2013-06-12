@@ -34,6 +34,7 @@ import org.apache.felix.ipojo.composite.instance.InstanceHandler;
 import org.apache.felix.ipojo.composite.util.SourceManager;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.ParseException;
+import org.apache.felix.ipojo.util.DependencyMetadataHelper;
 import org.apache.felix.ipojo.util.DependencyModel;
 import org.apache.felix.ipojo.util.DependencyStateListener;
 import org.osgi.framework.BundleContext;
@@ -130,9 +131,9 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
         String optional = service.getAttribute("optional");
         boolean opt = optional != null && optional.equalsIgnoreCase("true");
 
-        int policy = DependencyModel.getPolicy(service);
+        int policy = DependencyMetadataHelper.getPolicy(service);
 
-        Comparator cmp = DependencyModel.getComparator(service, getCompositeManager().getGlobalContext());
+        Comparator cmp = DependencyMetadataHelper.getComparator(service, getCompositeManager().getGlobalContext());
 
         SvcInstance inst = new SvcInstance(this, spec, instanceConfiguration, agg, opt, fil, cmp, policy);
         m_instances.add(inst);
@@ -205,9 +206,9 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
                 }
             }
 
-            Comparator cmp = DependencyModel.getComparator(imp, getCompositeManager().getGlobalContext());
-            Class spec = DependencyModel.loadSpecification(specification, getCompositeManager().getGlobalContext());
-            int policy = DependencyModel.getPolicy(imp);
+            Comparator cmp = DependencyMetadataHelper.getComparator(imp, getCompositeManager().getGlobalContext());
+            Class spec = DependencyMetadataHelper.loadSpecification(specification, getCompositeManager().getGlobalContext());
+            int policy = DependencyMetadataHelper.getPolicy(imp);
 
             ServiceImporter importer = new ServiceImporter(spec, fil, aggregate, optional, cmp, policy, context, identitity, this);
             m_importers.add(importer);

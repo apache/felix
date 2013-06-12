@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 
+import org.apache.felix.ipojo.dependency.interceptors.TransformedServiceReference;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -176,6 +177,9 @@ public class PolicyServiceContext implements ServiceContext {
      * @see org.apache.felix.ipojo.ServiceContext#getService(org.osgi.framework.ServiceReference)
      */
     public Object getService(ServiceReference ref) {
+        if (ref instanceof TransformedServiceReference) {
+            ref = ((TransformedServiceReference) ref).getWrappedReference();
+        }
         switch(m_policy) { // NOPMD No break needed as we return in each branch.
             case LOCAL:
                 // The reference comes from the local scope

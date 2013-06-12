@@ -20,10 +20,7 @@ package org.apache.felix.ipojo.composite;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.Factory;
@@ -31,6 +28,7 @@ import org.apache.felix.ipojo.IPojoContext;
 import org.apache.felix.ipojo.ServiceContext;
 import org.apache.felix.ipojo.context.ServiceReferenceImpl;
 import org.apache.felix.ipojo.context.ServiceRegistry;
+import org.apache.felix.ipojo.dependency.interceptors.TransformedServiceReference;
 import org.apache.felix.ipojo.util.Tracker;
 import org.apache.felix.ipojo.util.TrackerCustomizer;
 import org.osgi.framework.Bundle;
@@ -73,7 +71,7 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
     /**
      * List of imported factories.
      */
-    private List m_factories = new ArrayList();
+    private List<Record> m_factories = new ArrayList<Record>();
     /**
      * Internal service registry.
      */
@@ -161,8 +159,15 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
      * @see org.apache.felix.ipojo.ServiceContext#getService(org.osgi.framework.ServiceReference)
      */
     public Object getService(ServiceReference arg0) {
-        if (arg0 instanceof ServiceReferenceImpl) {
-            return m_registry.getService(m_instance, arg0);
+        ServiceReference ref;
+        if (arg0 instanceof TransformedServiceReference) {
+            ref = ((TransformedServiceReference) arg0).getWrappedReference();
+        } else {
+            ref = arg0;
+        }
+
+        if (ref instanceof ServiceReferenceImpl) {
+            return m_registry.getService(m_instance, ref);
         } else {
             throw new RuntimeException("Cannot get a global service from the local registry");
         }
@@ -177,6 +182,17 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
      */
     public ServiceReference getServiceReference(String arg0) {
         return m_registry.getServiceReference(arg0);
+    }
+
+    public <S> ServiceReference<S> getServiceReference(Class<S> clazz) {
+        //noinspection unchecked
+        return getServiceReference(clazz.getName());
+    }
+
+    @SuppressWarnings("unchecked")
+    public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter) throws InvalidSyntaxException {
+        ServiceReference<S>[] refs = getServiceReferences(clazz.getName(), filter);
+        return Arrays.asList(refs);
     }
 
     /**
@@ -243,7 +259,7 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
     private void importFactory(ServiceReference ref) {        
         Record rec = new Record();
         m_factories.add(rec);
-        Dictionary dict = new Properties();
+        Dictionary<String, Object> dict = new Hashtable<String, Object>();
         for (int j = 0; j < ref.getPropertyKeys().length; j++) {
             dict.put(ref.getPropertyKeys()[j], ref.getProperty(ref.getPropertyKeys()[j]));
         }
@@ -259,7 +275,7 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
      */
     private void removeFactory(ServiceReference ref) {
         for (int i = 0; i < m_factories.size(); i++) {
-            Record rec = (Record) m_factories.get(i);
+            Record rec = m_factories.get(i);
             if (rec.m_ref == ref) {
                 if (rec.m_reg != null) {
                     rec.m_reg.unregister();
@@ -286,8 +302,8 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
     public synchronized void stop() {
         m_tracker.close();
         m_registry.reset();
-        for (int i = 0; i < m_factories.size(); i++) {
-            Record rec = (Record) m_factories.get(i);
+        List<Record> records = new ArrayList<Record>(m_factories);
+        for (Record rec : records) {
             removeFactory(rec.m_ref);
         }
         m_tracker = null;
@@ -300,8 +316,7 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
      * @return true if the list contains the given reference.
      */
     private boolean containsRef(ServiceReference ref) {
-        for (int i = 0; i < m_factories.size(); i++) {
-            Record rec = (Record) m_factories.get(i);
+        for (Record rec : m_factories) {
             if (rec.m_ref == ref) {
                 return true;
             }
@@ -338,6 +353,10 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
      */
     public Filter createFilter(String arg0) throws InvalidSyntaxException {
         return m_global.createFilter(arg0);
+    }
+
+    public Bundle getBundle(String location) {
+        return m_global.getBundle(location);
     }
 
     /**
@@ -430,6 +449,10 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
         m_global.removeFrameworkListener(listener);
     }
 
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties) {
+        return registerService(clazz.getName(), service, properties);
+    }
+
     /**
      * A new factory is detected.
      * @param reference : service reference
@@ -437,10 +460,7 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
      * @see org.apache.felix.ipojo.util.TrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
      */
     public boolean addingService(ServiceReference reference) {
-        if (!containsRef(reference)) {
-            return true;
-        }
-        return false;
+        return !containsRef(reference);
     }
     
     /**
@@ -459,10 +479,9 @@ public class CompositeServiceContext implements ServiceContext, TrackerCustomize
      * @see org.apache.felix.ipojo.util.TrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
      */
     public void modifiedService(ServiceReference reference, Object service) {
-        for (int i = 0; i < m_factories.size(); i++) {
-            Record rec = (Record) m_factories.get(i);
+        for (Record rec : m_factories) {
             if (rec.m_ref == reference) {
-                Dictionary dict = new Properties();
+                Dictionary<String, Object> dict = new Hashtable<String, Object>();
                 for (int j = 0; j < reference.getPropertyKeys().length; j++) {
                     dict.put(reference.getPropertyKeys()[j], reference.getProperty(reference.getPropertyKeys()[j]));
                 }

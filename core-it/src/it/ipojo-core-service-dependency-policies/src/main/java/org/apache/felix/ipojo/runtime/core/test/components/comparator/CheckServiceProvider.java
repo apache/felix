@@ -38,8 +38,8 @@ public class CheckServiceProvider implements CheckService {
 
     public Properties getProps() {
         Properties props = new Properties();
-        props.put("fs", new Integer(fs.getInt()));
-        props.put("fs2", new Integer(fs2.getInt()));
+        props.put("fs", fs.getInt());
+        props.put("fs2", fs2.getInt());
 
         int[] grades = new int[fss.length];
 

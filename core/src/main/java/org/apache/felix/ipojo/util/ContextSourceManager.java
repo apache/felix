@@ -290,7 +290,6 @@ public class ContextSourceManager implements ContextListener {
          * @see TrackerCustomizer#addedService(org.osgi.framework.ServiceReference)
          */
         public void addedService(ServiceReference reference) {
-            System.out.println("Source added");
             addContextSource((ContextSource) m_tracker.getService(reference));
         }
 

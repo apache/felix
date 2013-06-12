@@ -76,7 +76,7 @@ public class DependencyDescription {
      * @return the list of matching service reference,
      * <code>null</code> if no service reference.
      */
-    public List getServiceReferences() { return m_dependency.getServiceReferencesAsList(); }
+    public List<ServiceReference> getServiceReferences() { return m_dependency.getServiceReferencesAsList(); }
 
     /**
      * Gets the service reference if only one service reference is used.
@@ -97,7 +97,7 @@ public class DependencyDescription {
      * @return the list [service reference] containing the used services,
      * <code>null</code> if no providers are used
      */
-    public List getUsedServices() { return m_dependency.getUsedServiceReferences(); }
+    public List<ServiceReference> getUsedServices() { return m_dependency.getUsedServiceReferences(); }
     
     /**
      * Sets the dependency comparator.
@@ -141,6 +141,8 @@ public class DependencyDescription {
     public String getSpecification() {
         return m_dependency.getSpecification().getName();
     }
-    
 
+    public Dependency getDependency() {
+        return m_dependency;
+    }
 }

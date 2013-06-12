@@ -63,6 +63,13 @@
             <artifactId>org.osgi.compendium</artifactId>
             <version>4.2.0</version>
         </dependency>
+        <!-- We use the FilterImpl of Felix in tests -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>4.2.1</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.metadata</artifactId>
@@ -143,6 +150,7 @@
                             org.objectweb.asm;-split-package:=merge-last,
                             org.objectweb.asm.commons;-split-package:=merge-last,
                             org.apache.felix.ipojo.metadata,
+                            org.apache.felix.ipojo.dependency.impl,
                             <!-- Compendium packages -->
                             org.osgi.service.cm,
                             org.osgi.service.log
@@ -162,6 +170,7 @@
                             org.apache.felix.ipojo.handlers.providedservice.*; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.handlers.configuration; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.context; version="${ipojo.package.version}",
+                            org.apache.felix.ipojo.dependency.interceptors; version="${ipojo.package.version}",
                             <!-- Compendium packages -->
                             org.osgi.service.cm,
                             org.osgi.service.log

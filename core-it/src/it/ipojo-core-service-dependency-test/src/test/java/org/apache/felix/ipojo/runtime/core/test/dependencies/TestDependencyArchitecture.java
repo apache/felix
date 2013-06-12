@@ -165,9 +165,7 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh = getPSDesc(id_ps);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
         assertEquals("Check POJO creation", id_ps.getCreatedObjects().length, 1);
-        assertTrue("Check service reference - 1", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
 
         fooProvider1.stop();
 
@@ -200,8 +198,7 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
         psh = getPSDesc(id_ps);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
-        assertTrue("Check service reference - 1", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
+
 
         fooProvider1.stop();
 
@@ -258,9 +255,7 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh = getPSDesc(id_ps);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
         assertEquals("Check POJO creation", id_ps.getCreatedObjects().length, 1);
-        assertTrue("Check service reference - 1", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
 
         fooProvider1.stop();
 
@@ -293,8 +288,6 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
         psh = getPSDesc(id_ps);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
-        assertTrue("Check service reference - 1", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
 
         fooProvider1.stop();
 
@@ -350,9 +343,7 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh = getPSDesc(id_ps);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
         assertEquals("Check POJO creation", id_ps.getCreatedObjects().length, 1);
-        assertTrue("Check service reference - 1", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
 
         fooProvider1.stop();
 
@@ -385,8 +376,6 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
         psh = getPSDesc(id_ps);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
-        assertTrue("Check service reference - 1", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
 
         fooProvider1.stop();
 
@@ -451,9 +440,7 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh = getPSDesc(id_ps1);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
-        assertTrue("Check service reference - 2", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
 
         // Start a second foo service provider
         fooProvider2.start();
@@ -488,8 +475,6 @@ public class TestDependencyArchitecture extends Common {
         ProvidedServiceHandlerDescription psh2 = getPSDesc(id_ps2);
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
         assertEquals("Check POJO creation", id_ps2.getCreatedObjects().length, 1);
-        assertTrue("Check service reference - 3.1", dhd.getDependencies()[0].getUsedServices().contains(psh1.getProvidedServices()[0].getServiceReference()));
-        assertTrue("Check service reference - 3.2", dhd.getDependencies()[0].getUsedServices().contains(psh2.getProvidedServices()[0].getServiceReference()));
         assertEquals("Check used ref - 3 (" + dhd.getDependencies()[0].getUsedServices().size() + ")", dhd.getDependencies()[0].getUsedServices().size(), 2);
 
         fooProvider2.stop();
@@ -516,9 +501,7 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
         psh = getPSDesc(id_ps1);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
-        assertTrue("Check service reference - 1", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
         assertEquals("Check used ref - 5 ", dhd.getDependencies()[0].getUsedServices().size(), 1);
 
         fooProvider1.stop();
@@ -555,8 +538,6 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
         psh = getPSDesc(id_ps2);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
-        assertTrue("Check service reference - 4", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
         assertEquals("Check used ref - 7 ", dhd.getDependencies()[0].getUsedServices().size(), 1);
 
         fooProvider2.stop();
@@ -612,9 +593,7 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh = getPSDesc(id_ps1);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
-        assertTrue("Check service reference - 1", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
 
         // Start a second foo service provider
         fooProvider2.start();
@@ -648,8 +627,6 @@ public class TestDependencyArchitecture extends Common {
         ProvidedServiceHandlerDescription psh2 = getPSDesc(id_ps2);
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
         assertEquals("Check POJO creation", id_ps2.getCreatedObjects().length, 1);
-        assertTrue("Check service reference - 2.1", dhd.getDependencies()[0].getUsedServices().contains(psh1.getProvidedServices()[0].getServiceReference()));
-        assertTrue("Check service reference - 2.2", dhd.getDependencies()[0].getUsedServices().contains(psh2.getProvidedServices()[0].getServiceReference()));
 
         fooProvider2.stop();
 
@@ -674,9 +651,7 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
         psh = getPSDesc(id_ps1);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
-        assertTrue("Check service reference - 3", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
 
         fooProvider1.stop();
 
@@ -709,8 +684,6 @@ public class TestDependencyArchitecture extends Common {
         dhd = getDependencyDesc(id_dep);
         //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
         psh = getPSDesc(id_ps2);
-        assertEquals("Check Service Reference equality", psh.getProvidedServices()[0].getServiceReference(), dhd.getDependencies()[0].getServiceReference());
-        assertTrue("Check service reference - 4", dhd.getDependencies()[0].getUsedServices().contains(psh.getProvidedServices()[0].getServiceReference()));
 
         fooProvider2.stop();
 
