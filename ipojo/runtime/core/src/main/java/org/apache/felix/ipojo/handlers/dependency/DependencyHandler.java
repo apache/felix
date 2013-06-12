@@ -26,10 +26,7 @@ import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.FieldMetadata;
 import org.apache.felix.ipojo.parser.MethodMetadata;
 import org.apache.felix.ipojo.parser.PojoMetadata;
-import org.apache.felix.ipojo.util.DependencyModel;
-import org.apache.felix.ipojo.util.DependencyStateListener;
-import org.apache.felix.ipojo.util.InstanceConfigurationSource;
-import org.apache.felix.ipojo.util.SystemPropertiesSource;
+import org.apache.felix.ipojo.util.*;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -434,11 +431,11 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
             Class spec = null;
             if (serviceSpecification != null) {
-                spec = DependencyModel.loadSpecification(serviceSpecification, getInstanceManager().getContext());
+                spec = DependencyMetadataHelper.loadSpecification(serviceSpecification, getInstanceManager().getContext());
             }
 
-            int policy = DependencyModel.getPolicy(dependencyElement);
-            Comparator cmp = DependencyModel.getComparator(dependencyElement, getInstanceManager().getGlobalContext());
+            int policy = DependencyMetadataHelper.getPolicy(dependencyElement);
+            Comparator cmp = DependencyMetadataHelper.getComparator(dependencyElement, getInstanceManager().getGlobalContext());
 
             Dependency dep = new Dependency(this, field, spec, fil, optional, aggregate, nullable, isProxy, identity, context, policy, cmp, defaultImpl);
 
@@ -584,12 +581,9 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                 methodType = DependencyCallback.MODIFIED;
             }
 
-            dep.addDependencyCallback(createDependencyCallback(dep, method, methodType));
+            DependencyCallback callback = new DependencyCallback(dep, method, methodType);
+            dep.addDependencyCallback(callback);
         }
-    }
-
-    protected DependencyCallback createDependencyCallback(final Dependency dep, final String method, final int type) {
-        return new DependencyCallback(dep, method, type);
     }
 
     private Filter createAndCheckFilter(String filter) throws ConfigurationException {

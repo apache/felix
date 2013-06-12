@@ -18,33 +18,26 @@
  */
 package org.apache.felix.ipojo.util;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.felix.ipojo.ComponentInstance;
-import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.IPOJOServiceFactory;
-import org.apache.felix.ipojo.context.ServiceReferenceImpl;
-import org.apache.felix.ipojo.metadata.Element;
+import org.apache.felix.ipojo.dependency.impl.ServiceReferenceManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+
+import java.util.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Abstract dependency model.
  * This class is the parent class of every service dependency. It manages the most
  * part of dependency management. This class creates an interface between the service
  * tracker and the concrete dependency.
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public abstract class DependencyModel implements TrackerCustomizer {
+public abstract class DependencyModel {
 
     /**
      * Dependency state : BROKEN.
@@ -52,34 +45,29 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * broken when a used service disappears in the static binding policy.
      */
     public static final int BROKEN = -1;
-
     /**
      * Dependency state : UNRESOLVED.
      * A dependency is unresolved if the dependency is not valid and no service
      * providers are available.
      */
     public static final int UNRESOLVED = 0;
-
     /**
      * Dependency state : RESOLVED.
      * A dependency is resolved if the dependency is optional or at least one
      * provider is available.
      */
     public static final int RESOLVED = 1;
-
     /**
      * Binding policy : Dynamic.
      * In this policy, services can appears and departs without special treatment.
      */
     public static final int DYNAMIC_BINDING_POLICY = 0;
-
     /**
      * Binding policy : Static.
      * Once a service is used, if this service disappears the dependency becomes
      * {@link DependencyModel#BROKEN}. The instance needs to be recreated.
      */
     public static final int STATIC_BINDING_POLICY = 1;
-
     /**
      * Binding policy : Dynamic-Priority.
      * In this policy, services can appears and departs. However, once a service
@@ -87,121 +75,110 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * new service is re-injected.
      */
     public static final int DYNAMIC_PRIORITY_BINDING_POLICY = 2;
-
+    /**
+     * The service reference manager.
+     */
+    protected final ServiceReferenceManager m_serviceReferenceManager;
     /**
      * The manager handling context sources.
      */
     private final ContextSourceManager m_contextSourceManager;
-
-    /**
-     * Does the dependency bind several providers ?
-     */
-    private boolean m_aggregate;
-
-    /**
-     * Is the dependency optional ?
-     */
-    private boolean m_optional;
-
-    /**
-     * The required specification.
-     * Cannot change once set.
-     */
-    private Class m_specification;
-
-    /**
-     * The comparator to sort service references.
-     */
-    private Comparator<ServiceReference> m_comparator;
-
-    /**
-     * The LDAP filter object selecting service references
-     * from the set of providers providing the required specification.
-     */
-    private Filter m_filter;
-
-    /**
-     * Bundle context used by the dependency.
-     * (may be a {@link org.apache.felix.ipojo.ServiceContext}).
-     */
-    private BundleContext m_context;
-
     /**
      * Listener object on which invoking the {@link DependencyStateListener#validate(DependencyModel)}
      * and {@link DependencyStateListener#invalidate(DependencyModel)} methods.
      */
     private final DependencyStateListener m_listener;
-
+    /**
+     * The instance requiring the service.
+     */
+    private final ComponentInstance m_instance;
+    /**
+     * Does the dependency bind several providers ?
+     */
+    private boolean m_aggregate;
+    /**
+     * Is the dependency optional ?
+     */
+    private boolean m_optional;
+    /**
+     * The required specification.
+     * Cannot change once set.
+     */
+    private Class m_specification;
+    /**
+     * Bundle context used by the dependency.
+     * (may be a {@link org.apache.felix.ipojo.ServiceContext}).
+     */
+    private BundleContext m_context;
     /**
      * The actual state of the dependency.
      * {@link DependencyModel#UNRESOLVED} at the beginning.
      */
     private int m_state;
-
     /**
      * The Binding policy of the dependency.
      */
     private int m_policy = DYNAMIC_BINDING_POLICY;
-
     /**
      * The tracker used by this dependency to track providers.
      */
     private Tracker m_tracker;
-
-    /**
-     * The list of matching service references. This list is a
-     * subset of tracked references. This set is computed according
-     * to the filter and the {@link DependencyModel#match(ServiceReference)} method.
-     */
-    private final List<ServiceReference> m_matchingRefs = new ArrayList<ServiceReference>();
-
-    /**
-     * The instance requiring the service.
-     */
-    private final ComponentInstance m_instance;
-
     /**
      * Map {@link ServiceReference} -> Service Object.
      * This map stores service object, and so is able to handle
      * iPOJO custom policies.
      */
     private Map<ServiceReference, Object> m_serviceObjects = new HashMap<ServiceReference, Object>();
+    /**
+     * The current list of bound services.
+     */
+    private List<ServiceReference> m_boundServices = new ArrayList<ServiceReference>();
+    /**
+     * The lock ensuring state consistency of the dependency.
+     * This lock can be acquired from all collaborators.
+     */
+    private ReentrantReadWriteLock m_lock = new ReentrantReadWriteLock();
 
     /**
      * Creates a DependencyModel.
      * If the dependency has no comparator and follows the
      * {@link DependencyModel#DYNAMIC_PRIORITY_BINDING_POLICY} policy
      * the OSGi Service Reference Comparator is used.
+     *
      * @param specification the required specification
-     * @param aggregate is the dependency aggregate ?
-     * @param optional is the dependency optional ?
-     * @param filter the LDAP filter
-     * @param comparator the comparator object to sort references
-     * @param policy the binding policy
-     * @param context the bundle context (or service context)
-     * @param listener the dependency lifecycle listener to notify from dependency
-     * @param ci instance managing the dependency
-     * state changes.
+     * @param aggregate     is the dependency aggregate ?
+     * @param optional      is the dependency optional ?
+     * @param filter        the LDAP filter
+     * @param comparator    the comparator object to sort references
+     * @param policy        the binding policy
+     * @param context       the bundle context (or service context)
+     * @param listener      the dependency lifecycle listener to notify from dependency
+     * @param ci            instance managing the dependency
+     *                      state changes.
      */
     public DependencyModel(Class specification, boolean aggregate, boolean optional, Filter filter,
                            Comparator<ServiceReference> comparator, int policy,
-            BundleContext context, DependencyStateListener listener, ComponentInstance ci) {
+                           BundleContext context, DependencyStateListener listener, ComponentInstance ci) {
         m_specification = specification;
         m_aggregate = aggregate;
         m_optional = optional;
-        m_filter = filter;
-        m_comparator = comparator;
-        m_context = context;
-        m_policy = policy;
-        // If the dynamic priority policy is chosen, and we have no comparator, fix it to OSGi standard service reference comparator.
-        if (m_policy == DYNAMIC_PRIORITY_BINDING_POLICY && m_comparator == null) {
-            m_comparator = new ServiceReferenceRankingComparator();
-        }
-        m_state = UNRESOLVED;
-        m_listener = listener;
+
         m_instance = ci;
 
-        if (m_filter != null) {
+        m_policy = policy;
+        // If the dynamic priority policy is chosen, and we have no comparator, fix it to OSGi standard service reference comparator.
+        if (m_policy == DYNAMIC_PRIORITY_BINDING_POLICY && comparator == null) {
+            comparator = new ServiceReferenceRankingComparator();
+        }
+
+        if (context != null) {
+            m_context = context;
+            // If the context is null, it gonna be set later using the setBundleContext method.
+        }
+
+        m_serviceReferenceManager = new ServiceReferenceManager(this, filter, comparator);
+
+        if (filter != null) {
             try {
                 m_contextSourceManager = new ContextSourceManager(this);
             } catch (InvalidSyntaxException e) {
@@ -210,23 +187,50 @@ public abstract class DependencyModel implements TrackerCustomizer {
         } else {
             m_contextSourceManager = null;
         }
+        m_state = UNRESOLVED;
+        m_listener = listener;
     }
 
     /**
      * Opens the tracking.
-     * This method computes the dependency state
-     * @see DependencyModel#computeDependencyState()
+     * This method computes the dependency state.
+     * <p/>
+     * As the dependency is starting, locking is not required here.
+     *
+     * @see DependencyModel#computeAndSetDependencyState()
      */
     public void start() {
         m_state = UNRESOLVED;
-        m_tracker = new Tracker(m_context, m_specification.getName(), this);
+        m_tracker = new Tracker(m_context, m_specification.getName(), m_serviceReferenceManager);
+        m_serviceReferenceManager.open();
         m_tracker.open();
 
         if (m_contextSourceManager != null) {
             m_contextSourceManager.start();
         }
 
-        computeDependencyState();
+        computeAndSetDependencyState();
+    }
+
+    /**
+     * Gets the bundle context used by the dependency.
+     * @return the bundle context
+     */
+    public BundleContext getBundleContext() {
+        // Immutable member, no lock required.
+        return m_context;
+    }
+
+    /**
+     * This callback is called by ranking interceptor to notify the dependency that the selected service set has
+     * changed and must be recomputed.
+     */
+    public void invalidateSelectedServices() {
+        m_serviceReferenceManager.invalidateSelectedServices();
+    }
+
+    public void invalidateMatchingServices() {
+        m_serviceReferenceManager.invalidateMatchingServices();
     }
 
     /**
@@ -235,21 +239,29 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * at the end of this method.
      */
     public void stop() {
-        if (m_tracker != null) {
-            m_tracker.close();
-            m_tracker = null;
-        }
-        m_matchingRefs.clear();
-        ungetAllServices();
-        m_state = UNRESOLVED;
-        if (m_contextSourceManager != null) {
-            m_contextSourceManager.stop();
+        // We're stopping, we must take the exclusive lock
+        try {
+            acquireWriteLockIfNotHeld();
+            if (m_tracker != null) {
+                m_tracker.close();
+                m_tracker = null;
+            }
+            m_boundServices.clear();
+            m_serviceReferenceManager.close();
+            ungetAllServices();
+            m_state = UNRESOLVED;
+            if (m_contextSourceManager != null) {
+                m_contextSourceManager.stop();
+            }
+        } finally {
+            releaseWriteLockIfHeld();
         }
     }
 
     /**
      * Ungets all 'get' service references.
      * This also clears the service object map.
+     * The method is called while holding the exclusive lock.
      */
     private void ungetAllServices() {
         for (Map.Entry<ServiceReference, Object> entry : m_serviceObjects.entrySet()) {
@@ -272,16 +284,16 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * the static dependencies to become frozen only when needed.
      * This method returns <code>false</code> by default.
      * The method must always return <code>false</code> for non-static dependencies.
+     *
      * @return <code>true</code> if the reference set is frozen.
      */
     public boolean isFrozen() {
         return false;
     }
 
-
     /**
      * Unfreezes the dependency.
-     * This method must be overide by concrete dependency to support
+     * This method must be override by concrete dependency to support
      * the static binding policy. This method is called after tracking restarting.
      */
     public void unfreeze() {
@@ -289,10 +301,11 @@ public abstract class DependencyModel implements TrackerCustomizer {
     }
 
     /**
-     * Does the service reference match ? This method must be override by
+     * Does the service reference match ? This method must be overridden by
      * concrete dependencies if they need advanced testing on service reference
      * (that cannot be expressed in the LDAP filter). By default this method
      * returns <code>true</code>.
+     *
      * @param ref the tested reference.
      * @return <code>true</code> if the service reference matches.
      */
@@ -303,14 +316,23 @@ public abstract class DependencyModel implements TrackerCustomizer {
     /**
      * Computes the actual dependency state.
      * This methods invokes the {@link DependencyStateListener}.
+     * If this method is called without the write lock, it takes it. Anyway, the lock will be released before called
+     * the
+     * callbacks.
      */
-    private void computeDependencyState() {
-        if (m_state == BROKEN) { return; } // The dependency is broken ...
+    private void computeAndSetDependencyState() {
+        try {
+            boolean mustCallValidate = false;
+            boolean mustCallInvalidate = false;
 
-        boolean mustCallValidate = false;
-        boolean mustCallInvalidate = false;
-        synchronized (this) {
-            if (m_optional || !m_matchingRefs.isEmpty()) {
+            acquireWriteLockIfNotHeld();
+
+            // The dependency is broken, nothing else can be done
+            if (m_state == BROKEN) {
+                return;
+            }
+
+            if (m_optional || !m_serviceReferenceManager.isEmpty()) {
                 // The dependency is valid
                 if (m_state == UNRESOLVED) {
                     m_state = RESOLVED;
@@ -323,256 +345,85 @@ public abstract class DependencyModel implements TrackerCustomizer {
                     mustCallInvalidate = true;
                 }
             }
-        }
 
-        // Invoke callback in a non-synchronized region
-        if (mustCallInvalidate) {
-            invalidate();
-        } else if (mustCallValidate) {
-            validate();
-        }
-
-    }
-
-    /**
-     * Service tracker adding service callback.
-     * It accepts the service only if the dependency isn't broken or frozen.
-     * @param ref the arriving service reference.
-     * @return <code>true</code> if the reference must be tracked.
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
-     */
-    public boolean addingService(ServiceReference ref) {
-        return !((m_state == BROKEN) || isFrozen());
-    }
-
-    /**
-     * Service Tracker added service callback.
-     * If the service matches (against the filter and the {@link DependencyModel#match(ServiceReference)},
-     * manages the provider arrival.
-     * @param ref : new references.
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#addedService(org.osgi.framework.ServiceReference)
-     */
-    public void addedService(ServiceReference ref) {
-        if (matchAgainstFilter(ref) && match(ref)) {
-            manageArrival(ref);
-        }
-        // Do not store the service if it doesn't match.
-    }
-
-    /**
-     * Checks if the given service reference match the current filter.
-     * This method aims to avoid calling {@link Filter#match(ServiceReference)}
-     * method when manipulating a composite reference. In fact, this method thrown
-     * a {@link ClassCastException} on Equinox.
-     * @param ref the service reference to check.
-     * @return <code>true</code> if the service reference matches.
-     */
-    private boolean matchAgainstFilter(ServiceReference ref) {
-        boolean match = true;
-        if (m_filter != null) {
-            if (ref instanceof ServiceReferenceImpl) {
-                // Can't use the match(ref) as it throw a class cast exception on Equinox.
-                match = m_filter.match(((ServiceReferenceImpl) ref).getProperties());
-            } else { // Non composite reference.
-                match = m_filter.match(ref);
+            // Invoke callback in a non-synchronized region
+            // First unlock the lock
+            releaseWriteLockIfHeld();
+            // Now we can call the callbacks
+            if (mustCallInvalidate) {
+                invalidate();
+            } else if (mustCallValidate) {
+                validate();
             }
-        }
-        return match;
-    }
-
-    /**
-     * Manages the arrival of a new service reference.
-     * The reference is valid and matches the filter and the {@link DependencyModel#match(ServiceReference)}
-     * method. This method has different behavior according to the binding policy.
-     * @param ref the new reference
-     */
-    private void manageArrival(ServiceReference ref) {
-        // Create a local copy of the state and of the list size.
-        int state = m_state;
-        int size;
-
-        synchronized (this) {
-            m_matchingRefs.add(ref);
-
-            // Sort the collection if needed, if not sort, services are append to the list.
-            if (m_comparator != null) {
-                // The collection must be sort only if:
-                // The policy is dynamic-priority
-                // No services are already used
-                // If so, sorting can imply a re-binding, and so don't follow the Dynamic Binding policy
-                if (m_policy == DYNAMIC_PRIORITY_BINDING_POLICY
-                       || m_tracker.getUsedServiceReferences() == null
-                       || m_tracker.getUsedServiceReferences().isEmpty()) {
-                    Collections.sort(m_matchingRefs, m_comparator);
-                }
-            }
-
-            size = m_matchingRefs.size();
-        }
-
-        if (m_aggregate) {
-            onServiceArrival(ref); // Always notify the arrival for aggregate dependencies.
-            if (state == UNRESOLVED) { // If we was unresolved, try to validate the dependency.
-                computeDependencyState();
-            }
-        } else { // We are not aggregate.
-            if (size == 1) {
-                onServiceArrival(ref); // It is the first service, so notify.
-                computeDependencyState();
-            } else {
-                // In the case of a dynamic priority binding, we have to test if we have to update the bound reference
-                if (m_policy == DYNAMIC_PRIORITY_BINDING_POLICY && m_matchingRefs.get(0) == ref) {
-                    // We are sure that we have at least two references, so if the highest ranked references (first one) is the new received
-                    // references,
-                    // we have to unbind the used one and to bind the the new one.
-                    onServiceDeparture(m_matchingRefs.get(1));
-                    onServiceArrival(ref);
-                }
-            }
-        }
-        // Ignore others cases
-    }
-
-    /**
-     * Service tracker removed service callback.
-     * A service provider goes away. The depart needs to be managed only if the
-     * reference was used.
-     * @param ref the leaving service reference
-     * @param svc the service object if the service was already get
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
-     */
-    public void removedService(ServiceReference ref, Object svc) {
-        if (m_matchingRefs.contains(ref)) {
-            manageDeparture(ref, svc);
-        }
-    }
-
-    /**
-     * Manages the departure of a used service.
-     * @param ref the leaving service reference
-     * @param svc the service object if the service was get
-     */
-    private void manageDeparture(ServiceReference ref, Object svc) {
-        // Unget the service reference
-        ungetService(ref);
-
-        // If we already get this service and the binding policy is static, the dependency becomes broken
-        if (isFrozen() && svc != null) {
-            if (m_state != BROKEN) {
-                m_state = BROKEN;
-                invalidate();  // This will invalidate the instance.
-                // Reinitialize the dependency tracking
-                ComponentInstance instance;
-                synchronized (this) {
-                    instance = m_instance;
-                }
-                instance.stop(); // Stop the instance
-                unfreeze();
-                instance.start();
-            }
-        } else {
-            synchronized (this) {
-                m_matchingRefs.remove(ref);
-            }
-            if (svc == null) {
-                computeDependencyState(); // check if the dependency stills valid.
-            } else {
-                // A used service disappears, we have to sort the available providers to choose the best one.
-                // However, the sort has to be done only for scalar dependencies following the dynamic binding
-                // policy. Static dependencies will be broken, DP dependencies are always sorted.
-                // Aggregate dependencies does not need to be sorted, as it will change the array
-                // order.
-                if (m_comparator != null && m_policy == DYNAMIC_BINDING_POLICY && ! m_aggregate) {
-                    Collections.sort(m_matchingRefs, m_comparator);
-                }
-                onServiceDeparture(ref);
-                ServiceReference newRef = getServiceReference();
-                if (newRef == null) { // Check if there is another provider.
-                    computeDependencyState(); // no more references.
-                } else {
-                    if (!m_aggregate) {
-                        onServiceArrival(newRef); // Injecting the new service reference for non aggregate dependencies.
-                    }
-                }
-            }
+        } finally {
+            // If we are still holding the exclusive lock, unlock it.
+            releaseWriteLockIfHeld();
         }
 
     }
 
     /**
-     * Service tracker modified service callback.
-     * This method must handle if the modified service should be considered as
-     * a depart or an arrival.
-     * According to the dependency filter, a service can now match or can no match
-     * anymore.
-     * @param ref the modified reference
-     * @param arg1 the service object if already get.
-     * @see org.apache.felix.ipojo.util.TrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
-     */
-    public void modifiedService(ServiceReference ref, Object arg1) {
-        if (m_matchingRefs.contains(ref)) {
-            // It's a used service. Check if the service always match.
-            if (!matchAgainstFilter(ref) && match(ref)) {
-                // The service does not match anymore. Call removedService.
-                manageDeparture(ref, arg1);
-            } else {
-                manageModification(ref);
-            }
-        } else {
-            // The service was not used. Check if it matches.
-            if (matchAgainstFilter(ref) && match(ref)) {
-                manageArrival(ref);
-            }
-            // Else, the service does not match.
-        }
-    }
-
-    /**
-     * Gets the next matching service reference.
+     * Gets the first bound service reference.
+     *
      * @return <code>null</code> if no more provider is available,
-     * else returns the first reference from the matching set.
+     *         else returns the first reference from the matching set.
      */
     public ServiceReference getServiceReference() {
-        synchronized (this) {
-            if (m_matchingRefs.isEmpty()) {
+        // Read lock required
+        try {
+            acquireReadLockIfNotHeld();
+            if (m_boundServices.isEmpty()) {
                 return null;
             } else {
-                return m_matchingRefs.get(0);
+                return m_boundServices.get(0);
             }
+        } finally {
+            releaseReadLockIfHeld();
         }
     }
 
     /**
-     * Gets matching service references.
+     * Gets bound service references.
+     *
      * @return the sorted (if a comparator is used) array of matching service
-     * references, <code>null</code> if no references are available.
+     *         references, <code>null</code> if no references are available.
      */
     public ServiceReference[] getServiceReferences() {
-        synchronized (this) {
-            if (m_matchingRefs.isEmpty()) { return null; }
-            // TODO Consider sorting the array (on a copy of matching ref) if dynamic priority used.
-            return (ServiceReference[]) m_matchingRefs.toArray(new ServiceReference[m_matchingRefs.size()]);
+        // Read lock required
+        try {
+            acquireReadLockIfNotHeld();
+            if (m_boundServices.isEmpty()) {
+                return null;
+            }
+            return m_boundServices.toArray(new ServiceReference[m_boundServices.size()]);
+        } finally {
+            releaseReadLockIfHeld();
         }
     }
 
     /**
      * Gets the list of currently used service references.
      * If no service references, returns <code>null</code>
+     *
      * @return the list of used reference (according to the service tracker).
      */
     public List<ServiceReference> getUsedServiceReferences() {
-        synchronized (this) {
+        // Read lock required
+        try {
+            acquireReadLockIfNotHeld();
             // The list must confront actual matching services with already get services from the tracker.
 
-            int size = m_matchingRefs.size();
+            int size = m_boundServices.size();
             List<ServiceReference> usedByTracker = null;
             if (m_tracker != null) {
                 usedByTracker = m_tracker.getUsedServiceReferences();
             }
-            if (size == 0 || usedByTracker == null) { return null; }
+            if (size == 0 || usedByTracker == null) {
+                return null;
+            }
 
             List<ServiceReference> list = new ArrayList<ServiceReference>(1);
-            for (ServiceReference ref : m_matchingRefs) {
+            for (ServiceReference ref : m_boundServices) {
                 if (usedByTracker.contains(ref)) {
                     list.add(ref); // Add the service in the list.
                     if (!isAggregate()) { // IF we are not multiple, return the list when the first element is found.
@@ -582,6 +433,8 @@ public abstract class DependencyModel implements TrackerCustomizer {
             }
 
             return list;
+        } finally {
+            releaseReadLockIfHeld();
         }
     }
 
@@ -589,21 +442,29 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * @return the component instance on which this dependency is plugged.
      */
     public ComponentInstance getComponentInstance() {
+        // No lock required as m_instance is final
         return m_instance;
     }
 
     /**
      * Gets the number of actual matching references.
+     *
      * @return the number of matching references
      */
     public int getSize() {
-        return m_matchingRefs.size();
+        try {
+            acquireReadLockIfNotHeld();
+            return m_boundServices.size();
+        } finally {
+            releaseReadLockIfHeld();
+        }
     }
 
     /**
      * Concrete dependency callback.
      * This method is called when a new service needs to be
      * re-injected in the underlying concrete dependency.
+     *
      * @param ref the service reference to inject.
      */
     public abstract void onServiceArrival(ServiceReference ref);
@@ -611,6 +472,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
     /**
      * Concrete dependency callback.
      * This method is called when a used service (already injected) is leaving.
+     *
      * @param ref the leaving service reference.
      */
     public abstract void onServiceDeparture(ServiceReference ref);
@@ -618,39 +480,18 @@ public abstract class DependencyModel implements TrackerCustomizer {
     /**
      * Concrete dependency callback.
      * This method is called when a used service (already injected) is modified.
+     *
      * @param ref the modified service reference.
      */
     public abstract void onServiceModification(ServiceReference ref);
-
-    /**
-     * This method can be override by the concrete dependency to be notified
-     * of service modification.
-     * This modification is not an arrival or a departure.
-     * @param ref the modified service reference.
-     */
-    public void manageModification(ServiceReference ref) {
-        if (m_policy == DYNAMIC_PRIORITY_BINDING_POLICY) {
-            // Check that the order has changed or not.
-            int indexBefore = m_matchingRefs.indexOf(ref);
-            Collections.sort(m_matchingRefs, m_comparator);
-            if (indexBefore != m_matchingRefs.indexOf(ref) && ! m_aggregate) {
-                // The order has changed during the sort.
-                onServiceDeparture(m_matchingRefs.get(1));
-                onServiceArrival(ref);
-            }
-
-        } else {
-            // It's a modification...
-            onServiceModification(ref);
-        }
-    }
 
     /**
      * Concrete dependency callback.
      * This method is called when the dependency is reconfigured and when this
      * reconfiguration implies changes on the matching service set ( and by the
      * way on the injected service).
-     * @param departs the service leaving the matching set.
+     *
+     * @param departs  the service leaving the matching set.
      * @param arrivals the service arriving in the matching set.
      */
     public abstract void onDependencyReconfiguration(ServiceReference[] departs, ServiceReference[] arrivals);
@@ -658,6 +499,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
     /**
      * Calls the listener callback to notify the new state of the current
      * dependency.
+     * No lock hold when calling this callback.
      */
     private void invalidate() {
         m_listener.invalidate(this);
@@ -666,6 +508,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
     /**
      * Calls the listener callback to notify the new state of the current
      * dependency.
+     * No lock hold when calling this callback.
      */
     private void validate() {
         m_listener.validate(this);
@@ -676,11 +519,17 @@ public abstract class DependencyModel implements TrackerCustomizer {
      * @return the state of the dependency.
      */
     public int getState() {
-        return m_state;
+        try {
+            acquireReadLockIfNotHeld();
+            return m_state;
+        } finally {
+            releaseReadLockIfHeld();
+        }
     }
 
     /**
      * Gets the tracked specification.
+     *
      * @return the Class object tracked by the dependency.
      */
     public Class getSpecification() {
@@ -690,6 +539,8 @@ public abstract class DependencyModel implements TrackerCustomizer {
     /**
      * Sets the required specification of this service dependency.
      * This operation is not supported if the dependency tracking has already begun.
+     * So, we don't have to hold a lock.
+     *
      * @param specification the required specification.
      */
     public void setSpecification(Class specification) {
@@ -701,223 +552,311 @@ public abstract class DependencyModel implements TrackerCustomizer {
     }
 
     /**
-     * Sets the filter of the dependency. This method recomputes the
-     * matching set and call the onDependencyReconfiguration callback.
-     * @param filter the new LDAP filter.
+     * Acquires the write lock only and only if the write lock is not already held by the current thread.
+     * @return {@literal true} if the lock was acquired within the method, {@literal false} otherwise.
      */
-    public void setFilter(Filter filter) { //NOPMD
-        m_filter = filter;
-        if (m_tracker != null) { // Tracking started ...
-            List<ServiceReference> toRemove = new ArrayList<ServiceReference>();
-            List<ServiceReference> toAdd = new ArrayList<ServiceReference>();
-            ServiceReference usedRef = null;
-            synchronized (this) {
-
-                // Store the used service references.
-                if (!m_aggregate && !m_matchingRefs.isEmpty()) {
-                    usedRef = m_matchingRefs.get(0);
-                }
-
-                // Get actually all tracked references.
-                ServiceReference[] refs = m_tracker.getServiceReferences();
-
-                if (refs == null) {
-                    // All references need to be removed.
-                    toRemove.addAll(m_matchingRefs);
-                    // No more matching dependency. Clear the matching reference set.
-                    m_matchingRefs.clear();
-                } else {
-                    // Compute matching services.
-                    List<ServiceReference> matching = new ArrayList<ServiceReference>();
-                    for (ServiceReference ref : refs) {
-                        if (matchAgainstFilter(ref) && match(ref)) {
-                            matching.add(ref);
-                        }
-                    }
-                    // Now compare with used services.
-                    for (ServiceReference ref : m_matchingRefs) {
-                        // Check if the reference is inside the matching list:
-                        if (!matching.contains(ref)) {
-                            // The reference should be removed
-                            toRemove.add(ref);
-                        }
-                    }
-
-                    // Then remove services which do no more match.
-                    m_matchingRefs.removeAll(toRemove);
-
-                    // Then, add new matching services.
-
-                    for (ServiceReference ref : matching) {
-                        if (!m_matchingRefs.contains(ref)) {
-                            m_matchingRefs.add(ref);
-                            toAdd.add(ref);
-                        }
-                    }
-
-                    // Sort the collections if needed.
-                    if (m_comparator != null) {
-                        Collections.sort(m_matchingRefs, m_comparator);
-                        Collections.sort(toAdd, m_comparator);
-                        Collections.sort(toRemove, m_comparator);
-                    }
-
-                }
-            }
-
-            // Call the callback outside the sync bloc.
-            if (m_aggregate) {
-                ServiceReference[] rem = null;
-                ServiceReference[] add = null;
-                if (!toAdd.isEmpty()) {
-                    add = toAdd.toArray(new ServiceReference[toAdd.size()]);
-                }
-                if (!toRemove.isEmpty()) {
-                    rem = toRemove.toArray(new ServiceReference[toRemove.size()]);
-                }
-                if (rem != null || add != null) { // Notify the change only when a change is made on the matching reference list.
-                    onDependencyReconfiguration(rem, add);
-                }
-            } else {
-                // Create a local copy to avoid un-sync reference list access.
-                int size;
-                ServiceReference newRef = null;
-                synchronized (m_matchingRefs) {
-                    size = m_matchingRefs.size();
-                    if (size > 0) {
-                        newRef = m_matchingRefs.get(0);
-                    }
-                }
-                // Non aggregate case.
-                // If the used reference was not null
-                if (usedRef == null) {
-                    // The used ref was null,
-                    if (size > 0) {
-                        onDependencyReconfiguration(null, new ServiceReference[] { newRef });
-                    } // Don't notify the change, if the set is not touched by the reconfiguration.
-                } else {
-                    // If the used ref disappears, inject a new service if available, else reinject null.
-                    if (toRemove.contains(usedRef)) {
-                        // We have to replace the service.
-                        if (size > 0) {
-                            onDependencyReconfiguration(new ServiceReference[] { usedRef }, new ServiceReference[] { newRef });
-                        } else {
-                            onDependencyReconfiguration(new ServiceReference[] { usedRef }, null);
-                        }
-                    } else if (m_policy == DYNAMIC_PRIORITY_BINDING_POLICY && newRef != usedRef) { //NOPMD
-                        // In the case of dynamic-priority, check if the used ref is no more the highest reference
-                        onDependencyReconfiguration(new ServiceReference[] { usedRef }, new ServiceReference[] { newRef });
-                    }
-                }
-            }
-            // Now, compute the new dependency state.
-            computeDependencyState();
+    public boolean acquireWriteLockIfNotHeld() {
+        if (! m_lock.isWriteLockedByCurrentThread()) {
+            m_lock.writeLock().lock();
+            return true;
         }
+        return false;
+    }
+
+    /**
+     * Releases the write lock only and only if the write lock is held by the current thread.
+     * @return {@literal true} if the lock has no more holders, {@literal false} otherwise.
+     */
+    public boolean releaseWriteLockIfHeld() {
+        if (m_lock.isWriteLockedByCurrentThread()) {
+            m_lock.writeLock().unlock();
+        }
+        return m_lock.getWriteHoldCount() == 0;
+    }
+
+    /**
+     * Acquires the read lock only and only if no read lock is already held by the current thread.
+     * @return {@literal true} if the lock was acquired within the method, {@literal false} otherwise.
+     */
+    public boolean acquireReadLockIfNotHeld() {
+        if (! m_lock.isWriteLockedByCurrentThread()) {
+            m_lock.writeLock().lock();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Releases the read lock only and only if the read lock is held by the current thread.
+     * @return {@literal true} if the lock has no more holders, {@literal false} otherwise.
+     */
+    public boolean releaseReadLockIfHeld() {
+        if (m_lock.isWriteLockedByCurrentThread()) {
+            m_lock.writeLock().unlock();
+        }
+        return m_lock.getWriteHoldCount() == 0;
     }
 
     /**
      * Returns the dependency filter (String form).
+     *
      * @return the String form of the LDAP filter used by this dependency,
-     * <code>null</code> if not set.
+     *         <code>null</code> if not set.
      */
     public String getFilter() {
-        if (m_filter == null) {
+        Filter filter;
+        try {
+            acquireReadLockIfNotHeld();
+            filter = m_serviceReferenceManager.getFilter();
+        } finally {
+            releaseReadLockIfHeld();
+        }
+
+        if (filter == null) {
             return null;
         } else {
-            return m_filter.toString();
+            return filter.toString();
+        }
+    }
+
+    /**
+     * Sets the filter of the dependency. This method recomputes the
+     * matching set and call the onDependencyReconfiguration callback.
+     *
+     * @param filter the new LDAP filter.
+     */
+    public void setFilter(Filter filter) {
+        try {
+            acquireWriteLockIfNotHeld();
+            ServiceReferenceManager.ChangeSet changeSet = m_serviceReferenceManager.setFilter(filter, m_tracker);
+            // We call this method when holding the lock, but the method may decide to release the lock to invoke
+            // callbacks, so we must defensively unlock the lock in the finally block.
+            applyReconfiguration(changeSet);
+        } finally {
+            releaseWriteLockIfHeld();
+        }
+    }
+
+    /**
+     * Applies the given reconfiguration.
+     * This method check if the current thread is holding the write lock, if not, acquire it.
+     * The lock will be released before calling callbacks. As a consequence, the caller has to check if the lock is
+     * still hold when this method returns.
+     * @param changeSet the reconfiguration changes
+     */
+    public void applyReconfiguration(ServiceReferenceManager.ChangeSet changeSet) {
+        List<ServiceReference> arr = new ArrayList<ServiceReference>();
+        List<ServiceReference> dep = new ArrayList<ServiceReference>();
+
+        try  {
+            acquireWriteLockIfNotHeld();
+            if (m_tracker == null) {
+                // Nothing else to do.
+                return;
+            } else {
+                // Update bindings
+                m_boundServices.clear();
+                if (m_aggregate) {
+                    m_boundServices = new ArrayList<ServiceReference>(changeSet.selected);
+                    arr = changeSet.arrivals;
+                    dep = changeSet.departures;
+                } else {
+                    ServiceReference used = null;
+                    if (!m_boundServices.isEmpty()) {
+                        used = m_boundServices.get(0);
+                    }
+
+                    if (!changeSet.selected.isEmpty()) {
+                        final ServiceReference best = changeSet.newFirstReference;
+                        // We didn't a provider
+                        if (used == null) {
+                            // We are not bound with anyone yet, so take the first of the selected set
+                            m_boundServices.add(best);
+                            arr.add(best);
+                        } else {
+                            // A provider was already bound, did we changed ?
+                            if (changeSet.selected.contains(used)) {
+                                // We are still valid - but in dynamic priority, we may have to change
+                                if (getBindingPolicy() == DYNAMIC_PRIORITY_BINDING_POLICY && used != best) {
+                                    m_boundServices.add(best);
+                                    dep.add(used);
+                                    arr.add(best);
+                                } else {
+                                    // We restore the old binding.
+                                    m_boundServices.add(used);
+                                }
+                            } else {
+                                // The used service has left.
+                                m_boundServices.add(best);
+                                dep.add(used);
+                                arr.add(best);
+                            }
+                        }
+                    } else {
+                        // We don't have any service anymore
+                        if (used != null) {
+                            arr.add(used);
+                        }
+                    }
+                }
+            }
+        } finally {
+            releaseWriteLockIfHeld();
+        }
+
+        // This method releases the exclusive lock.
+        computeAndSetDependencyState();
+
+        // As the previous method has released the lock, we can call the callback safely.
+        onDependencyReconfiguration(
+                dep.toArray(new ServiceReference[dep.size()]),
+                arr.toArray(new ServiceReference[arr.size()]));
+    }
+
+    public boolean isAggregate() {
+        try {
+            acquireReadLockIfNotHeld();
+            return m_aggregate;
+        } finally {
+            releaseReadLockIfHeld();
         }
     }
 
     /**
      * Sets the aggregate attribute of the current dependency.
      * If the tracking is opened, it will call arrival and departure callbacks.
+     *
      * @param isAggregate the new aggregate attribute value.
      */
-    public synchronized void setAggregate(boolean isAggregate) {
-        if (m_tracker == null) { // Not started ...
-            m_aggregate = isAggregate;
-        } else {
-            // We become aggregate.
-            if (!m_aggregate && isAggregate) {
-                m_aggregate = true;
-                // Call the callback on all non already injected service.
-                if (m_state == RESOLVED) {
+    public void setAggregate(boolean isAggregate) {
+        // Acquire the write lock here.
+        acquireWriteLockIfNotHeld();
+        List<ServiceReference> arrivals = new ArrayList<ServiceReference>();
+        List<ServiceReference> departures = new ArrayList<ServiceReference>();
+        try {
+            if (m_tracker == null) { // Not started ...
+                m_aggregate = isAggregate;
+            } else {
+                // We become aggregate.
+                if (!m_aggregate && isAggregate) {
+                    m_aggregate = true;
+                    // Call the callback on all non already injected service.
+                    if (m_state == RESOLVED) {
 
-                    for (int i = 1; i < m_matchingRefs.size(); i++) { // The loop begin at 1, as the 0 is already injected.
-                        onServiceArrival(m_matchingRefs.get(i));
+                        for (ServiceReference ref : m_serviceReferenceManager.getSelectedServices()) {
+                            if (!m_boundServices.contains(ref)) {
+                                m_boundServices.add(ref);
+                                arrivals.add(ref);
+                            }
+                        }
+                    }
+                } else if (m_aggregate && !isAggregate) {
+                    m_aggregate = false;
+                    // We become non-aggregate.
+                    if (m_state == RESOLVED) {
+                        List<ServiceReference> list = new ArrayList<ServiceReference>(m_boundServices);
+                        for (int i = 1; i < list.size(); i++) { // The loop begin at 1, as the 0 stays injected.
+                            m_boundServices.remove(list.get(i));
+                            departures.add(list.get(i));
+                        }
                     }
                 }
-            } else if (m_aggregate && !isAggregate) {
-                m_aggregate = false;
-                // We become non-aggregate.
-                if (m_state == RESOLVED) {
-                    for (int i = 1; i < m_matchingRefs.size(); i++) { // The loop begin at 1, as the 0 stills injected.
-                        onServiceDeparture(m_matchingRefs.get(i));
-                    }
-                }
+                // Else, do nothing.
             }
-            // Else, do nothing.
+        } finally {
+            releaseWriteLockIfHeld();
         }
-    }
 
-    public synchronized boolean isAggregate() {
-        return m_aggregate;
+        // Now call callbacks, the lock is not held anymore
+        // Only one of the list is not empty..
+        for (ServiceReference ref : arrivals) {
+            onServiceArrival(ref);
+        }
+        for (ServiceReference ref : departures) {
+            onServiceDeparture(ref);
+        }
+
+
     }
 
     /**
      * Sets the optionality attribute of the current dependency.
+     *
      * @param isOptional the new optional attribute value.
      */
     public void setOptionality(boolean isOptional) {
-        if (m_tracker == null) { // Not started ...
-            m_optional = isOptional;
-        } else {
-            computeDependencyState();
+        try {
+            acquireWriteLockIfNotHeld();
+            if (m_tracker == null) { // Not started ...
+                m_optional = isOptional;
+            } else {
+                // This method releases the exclusive lock
+                computeAndSetDependencyState();
+            }
+        } finally {
+            releaseWriteLockIfHeld();
         }
     }
 
     public boolean isOptional() {
-        return m_optional;
+        try {
+            acquireReadLockIfNotHeld();
+            return m_optional;
+        } finally {
+            releaseReadLockIfHeld();
+        }
     }
 
     /**
      * Gets the used binding policy.
+     *
      * @return the current binding policy.
      */
     public int getBindingPolicy() {
-        return m_policy;
-    }
+        try {
+            acquireReadLockIfNotHeld();
+            return m_policy;
+        } finally {
+            releaseReadLockIfHeld();
+        }
 
-    /**
-     * Sets the binding policy.
-     * Not yet supported.
-     */
-    public void setBindingPolicy() {
-        throw new UnsupportedOperationException("Binding Policy change is not yet supported");
-        // TODO supporting dynamic policy change.
-    }
-
-    public void setComparator(Comparator<ServiceReference> cmp) {
-        m_comparator = cmp;
-        // NOTE: the array will be sorted on the next 'get'.
     }
 
     /**
      * Gets the used comparator name.
-     * <code>Null</code> if no comparator (i.e. the OSGi one is used).
+     * <code>null</code> if no comparator (i.e. the OSGi one is used).
+     *
      * @return the comparator class name or <code>null</code> if the dependency doesn't use a comparator.
      */
-    public synchronized String getComparator() {
-        if (m_comparator != null) {
-            return m_comparator.getClass().getName();
+    public String getComparator() {
+        final Comparator<ServiceReference> comparator;
+        try {
+            acquireReadLockIfNotHeld();
+            comparator = m_serviceReferenceManager.getComparator();
+        } finally {
+            releaseReadLockIfHeld();
+        }
+
+        if (comparator != null) {
+            return comparator.getClass().getName();
         } else {
             return null;
         }
     }
 
+    public void setComparator(Comparator<ServiceReference> cmp) {
+        try {
+            acquireWriteLockIfNotHeld();
+            m_serviceReferenceManager.setComparator(cmp);
+        } finally {
+            releaseWriteLockIfHeld();
+        }
+    }
+
     /**
      * Sets the bundle context used by this dependency.
-     * This operation is not supported if the tracker is already opened.
+     * This operation is not supported if the tracker is already opened, and as a consequence does not require locking.
+     *
      * @param context the bundle context or service context to use
      */
     public void setBundleContext(BundleContext context) {
@@ -931,6 +870,7 @@ public abstract class DependencyModel implements TrackerCustomizer {
     /**
      * Gets a service object for the given reference.
      * The service object is stored to handle custom policies.
+     *
      * @param ref the wanted service reference
      * @return the service object attached to the given reference
      */
@@ -940,112 +880,196 @@ public abstract class DependencyModel implements TrackerCustomizer {
 
     /**
      * Gets a service object for the given reference.
-     * @param ref the wanted service reference
+     *
+     * @param ref   the wanted service reference
      * @param store enables / disables the storing of the reference.
      * @return the service object attached to the given reference
      */
     public Object getService(ServiceReference ref, boolean store) {
-        Object svc =  m_tracker.getService(ref);
+        Object svc = m_tracker.getService(ref);
+        IPOJOServiceFactory factory = null;
+
         if (svc instanceof IPOJOServiceFactory) {
-            Object obj =  ((IPOJOServiceFactory) svc).getService(m_instance);
-            if (store) {
-                m_serviceObjects.put(ref, svc); // We store the factory !
-            }
-            return obj;
-        } else {
-            if (store) {
-                m_serviceObjects.put(ref, svc);
-            }
-            return svc;
+            factory = (IPOJOServiceFactory) svc;
+            svc = factory.getService(m_instance);
         }
+
+        if (store) {
+            try {
+                acquireWriteLockIfNotHeld();
+                if (factory != null) {
+                    m_serviceObjects.put(ref, factory);
+                } else {
+                    m_serviceObjects.put(ref, svc);
+                }
+            } finally {
+                releaseWriteLockIfHeld();
+            }
+        }
+
+        return svc;
     }
 
     /**
      * Ungets a used service reference.
+     *
      * @param ref the reference to unget.
      */
     public void ungetService(ServiceReference ref) {
         m_tracker.ungetService(ref);
-        Object obj = m_serviceObjects.remove(ref);  // Remove the service object
-        if (obj != null  && obj instanceof IPOJOServiceFactory) {
+        Object obj;
+        try {
+            acquireWriteLockIfNotHeld();
+            obj = m_serviceObjects.remove(ref);
+        } finally {
+            releaseWriteLockIfHeld();
+        }
+
+        // Call the callback outside the lock.
+        if (obj != null && obj instanceof IPOJOServiceFactory) {
             ((IPOJOServiceFactory) obj).ungetService(m_instance, obj);
         }
     }
 
+    public ContextSourceManager getContextSourceManager() {
+        // Final member, no lock required.
+        return m_contextSourceManager;
+    }
+
     /**
-     * Helper method parsing the comparator attribute and returning the
-     * comparator object. If the 'comparator' attribute is not set, this method
-     * returns null. If the 'comparator' attribute is set to 'osgi', this method
-     * returns the normal OSGi comparator. In other case, it tries to create
-     * an instance of the declared comparator class.
-     * @param dep the Element describing the dependency
-     * @param context the bundle context (to load the comparator class)
-     * @return the comparator object, <code>null</code> if not set.
-     * @throws ConfigurationException the comparator class cannot be load or the
-     * comparator cannot be instantiated correctly.
+     * Gets the dependency id.
+     *
+     * @return the dependency id. Specification name by default.
      */
-    public static Comparator getComparator(Element dep, BundleContext context) throws ConfigurationException {
-        Comparator cmp = null;
-        String comp = dep.getAttribute("comparator");
-        if (comp != null) {
-            if (comp.equalsIgnoreCase("osgi")) {
-                cmp = new ServiceReferenceRankingComparator();
-            } else {
-                try {
-                    Class cla = context.getBundle().loadClass(comp);
-                    cmp = (Comparator) cla.newInstance();
-                } catch (ClassNotFoundException e) {
-                    throw new ConfigurationException("Cannot load a customized comparator", e);
-                } catch (IllegalAccessException e) {
-                    throw new ConfigurationException("Cannot create a customized comparator", e);
-                } catch (InstantiationException e) {
-                    throw new ConfigurationException("Cannot create a customized comparator", e);
+    public String getId() {
+        // Immutable, no lock required.
+        return getSpecification().getName();
+    }
+
+    private void breakDependency() {
+        // Static dependency broken.
+        m_state = BROKEN;
+
+        // We are going to call callbacks, releasing the lock.
+        releaseWriteLockIfHeld();
+        invalidate();  // This will invalidate the instance.
+        m_instance.stop(); // Stop the instance
+        unfreeze();
+        m_instance.start();
+    }
+
+    /**
+     * Callbacks call by the ServiceReferenceManager when the selected service set has changed.
+     * @param set the change set.
+     */
+    public void onChange(ServiceReferenceManager.ChangeSet set) {
+        try {
+            acquireWriteLockIfNotHeld();
+            // First handle the static case with a frozen state
+            if (isFrozen() && getState() != BROKEN) {
+                for (ServiceReference ref : set.departures) {
+                    // Check if any of the service that have left was in used.
+                    if (m_boundServices.contains(ref)) {
+                        breakDependency();
+                        return;
+                    }
                 }
             }
+
+            List<ServiceReference> arrivals = new ArrayList<ServiceReference>();
+            List<ServiceReference> departures = new ArrayList<ServiceReference>();
+
+            // Manage departures
+            // We unbind all bound services that are leaving.
+            for (ServiceReference ref : set.departures) {
+                if (m_boundServices.contains(ref)) {
+                    // We were using the reference
+                    m_boundServices.remove(ref);
+                    departures.add(ref);
+                }
+            }
+
+            // Manage arrivals
+            // For aggregate dependencies, call onServiceArrival for all services not-yet-bound and in the order of the
+            // selection.
+            if (m_aggregate) {
+                // If the dependency is not already in used,
+                // the bindings must be sorted as in set.selected
+                if (m_serviceObjects.isEmpty() || DYNAMIC_PRIORITY_BINDING_POLICY == getBindingPolicy()) {
+                    m_boundServices.clear();
+                    m_boundServices.addAll(set.selected);
+                }
+
+                // Now we notify from the arrival.
+                // If we didn't add the reference yet, we add it.
+                for (ServiceReference ref : set.arrivals) {
+                    // We bind all not-already bound services, so it's an arrival
+                    if (!m_boundServices.contains(ref)) {
+                        m_boundServices.add(ref);
+                    }
+                    arrivals.add(ref);
+                }
+            } else {
+                if (!set.selected.isEmpty()) {
+                    final ServiceReference best = set.selected.get(0);
+                    // We have a provider
+                    if (m_boundServices.isEmpty()) {
+                        // We are not bound with anyone yet, so take the first of the selected set
+                        m_boundServices.add(best);
+                        arrivals.add(best);
+                    } else {
+                        final ServiceReference current = m_boundServices.get(0);
+                        // We are already bound, to the rebinding decision depends on the binding strategy
+                        if (getBindingPolicy() == DYNAMIC_PRIORITY_BINDING_POLICY) {
+                            // Rebinding in the DP binding policy if the bound one if not the new best one.
+                            if (current != best) {
+                                m_boundServices.remove(current);
+                                m_boundServices.add(best);
+                                departures.add(current);
+                                arrivals.add(best);
+                            }
+                        } else {
+                            // In static and dynamic binding policy, if the service is not yet used and the new best is not
+                            // the currently selected one, we should switch.
+                            boolean isUsed = m_serviceObjects.containsKey(current);
+                            if (!isUsed && current != best) {
+                                m_boundServices.remove(current);
+                                m_boundServices.add(best);
+                                departures.add(current);
+                                arrivals.add(best);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Leaving the locked region to invoke callbacks
+            releaseWriteLockIfHeld();
+            for (ServiceReference ref : departures) {
+                onServiceDeparture(ref);
+            }
+            for (ServiceReference ref : arrivals) {
+                onServiceArrival(ref);
+            }
+            // Do we have a modified service ?
+            if (set.modified != null && m_boundServices.contains(set.modified)) {
+                onServiceModification(set.modified);
+            }
+
+
+            // Did our state changed ?
+            // this method will manage its own synchronization.
+            computeAndSetDependencyState();
+        } finally {
+            releaseWriteLockIfHeld();
         }
-        return cmp;
     }
 
-    /**
-     * Loads the given specification class.
-     * @param specification the specification class name to load
-     * @param context the bundle context
-     * @return the class object for the given specification
-     * @throws ConfigurationException if the class cannot be loaded correctly.
-     */
-    public static Class loadSpecification(String specification, BundleContext context) throws ConfigurationException {
-        Class spec;
-        try {
-            spec = context.getBundle().loadClass(specification);
-        } catch (ClassNotFoundException e) {
-            throw new ConfigurationException("A required specification cannot be loaded : " + specification, e);
-        }
-        return spec;
+    public ServiceReferenceManager getServiceReferenceManager() {
+        return m_serviceReferenceManager;
     }
 
-    /**
-     * Helper method parsing the binding policy.
-     * If the 'policy' attribute is not set in the dependency, the method returns
-     * the 'DYNAMIC BINDING POLICY'. Accepted policy values are : dynamic,
-     * dynamic-priority and static.
-     * @param dep the Element describing the dependency
-     * @return the policy attached to this dependency
-     * @throws ConfigurationException if an unknown binding policy was described.
-     */
-    public static int getPolicy(Element dep) throws ConfigurationException {
-        String policy = dep.getAttribute("policy");
-        if (policy == null || policy.equalsIgnoreCase("dynamic")) {
-            return DYNAMIC_BINDING_POLICY;
-        } else if (policy.equalsIgnoreCase("dynamic-priority")) {
-            return DYNAMIC_PRIORITY_BINDING_POLICY;
-        } else if (policy.equalsIgnoreCase("static")) {
-            return STATIC_BINDING_POLICY;
-        } else {
-            throw new ConfigurationException("Binding policy unknown : " + policy);
-        }
-    }
-
-    public ContextSourceManager getContextSourceManager() {
-        return m_contextSourceManager;
+    public Tracker getTracker() {
+        return m_tracker;
     }
 }

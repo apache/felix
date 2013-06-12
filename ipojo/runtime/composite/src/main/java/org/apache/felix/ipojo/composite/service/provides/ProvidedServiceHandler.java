@@ -43,6 +43,7 @@ import org.apache.felix.ipojo.composite.service.instantiator.SvcInstance;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.ManifestMetadataParser;
 import org.apache.felix.ipojo.parser.ParseException;
+import org.apache.felix.ipojo.util.DependencyMetadataHelper;
 import org.apache.felix.ipojo.util.DependencyModel;
 import org.apache.felix.ipojo.util.DependencyStateListener;
 import org.osgi.framework.BundleContext;
@@ -160,9 +161,9 @@ public class ProvidedServiceHandler extends CompositeHandler implements Dependen
                     throw new ConfigurationException("An exporter filter is invalid " + filter, e);
                 }
 
-                Comparator cmp = DependencyModel.getComparator(provides[i], m_context);
-                int policy = DependencyModel.getPolicy(provides[i]);
-                Class spec = DependencyModel.loadSpecification(specification, m_context);
+                Comparator cmp = DependencyMetadataHelper.getComparator(provides[i], m_context);
+                int policy = DependencyMetadataHelper.getPolicy(provides[i]);
+                Class spec = DependencyMetadataHelper.loadSpecification(specification, m_context);
 
                 ServiceExporter imp = new ServiceExporter(spec, fil, aggregate, optional, cmp, policy, getCompositeManager().getServiceContext(), m_context, this, getCompositeManager());
                 m_exporters.add(imp);
