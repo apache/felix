@@ -154,6 +154,13 @@ public class ProvidedServiceDescription {
     public Object[] getServices() {
         return m_ps.getInstanceManager().getPojoObjects();
     }
-    
+
+    public int getPolicy() {
+        return m_ps.getPolicy();
+    }
+
+    public Class<? extends CreationStrategy> getCreationStrategy() {
+        return m_ps.getCreationStrategy();
+    }
 
 }
