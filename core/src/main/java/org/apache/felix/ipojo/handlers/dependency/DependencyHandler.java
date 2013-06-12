@@ -584,9 +584,12 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                 methodType = DependencyCallback.MODIFIED;
             }
 
-            DependencyCallback callback = new DependencyCallback(dep, method, methodType);
-            dep.addDependencyCallback(callback);
+            dep.addDependencyCallback(createDependencyCallback(dep, method, methodType));
         }
+    }
+
+    protected DependencyCallback createDependencyCallback(final Dependency dep, final String method, final int type) {
+        return new DependencyCallback(dep, method, type);
     }
 
     private Filter createAndCheckFilter(String filter) throws ConfigurationException {
