@@ -579,8 +579,8 @@ public abstract class DependencyModel {
      * @return {@literal true} if the lock was acquired within the method, {@literal false} otherwise.
      */
     public boolean acquireReadLockIfNotHeld() {
-        if (! m_lock.isWriteLockedByCurrentThread()) {
-            m_lock.writeLock().lock();
+        if (m_lock.getReadHoldCount() == 0) {
+            m_lock.readLock().lock();
             return true;
         }
         return false;
@@ -591,8 +591,8 @@ public abstract class DependencyModel {
      * @return {@literal true} if the lock has no more holders, {@literal false} otherwise.
      */
     public boolean releaseReadLockIfHeld() {
-        if (m_lock.isWriteLockedByCurrentThread()) {
-            m_lock.writeLock().unlock();
+        if (m_lock.getReadHoldCount() > 0) {
+            m_lock.readLock().unlock();
         }
         return m_lock.getWriteHoldCount() == 0;
     }
