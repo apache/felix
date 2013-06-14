@@ -720,4 +720,15 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
     public void reconfigure(Dictionary configuration) {
         m_instanceConfigurationSource.reconfigure(configuration);
     }
+
+    @Override
+    public void stateChanged(int state) {
+        if (state == ComponentInstance.DISPOSED) {
+            // Cleanup all dependencies
+            for (Dependency dep : m_dependencies) {
+                dep.cleanup();
+            }
+        }
+        super.stateChanged(state);
+    }
 }

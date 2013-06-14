@@ -21,16 +21,7 @@ package org.apache.felix.ipojo.handlers.providedservice;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.felix.ipojo.*;
 import org.apache.felix.ipojo.util.Callback;
@@ -143,6 +134,11 @@ public class ProvidedService implements ServiceFactory {
      * The published properties.
      */
     private Dictionary m_publishedProperties = new Properties();
+
+    /**
+     * The provided service listeners.
+     */
+    private List<ProvidedServiceListener> m_listeners = new ArrayList<ProvidedServiceListener>();
 
     /**
      * Creates a provided service object.
@@ -419,32 +415,43 @@ public class ProvidedService implements ServiceFactory {
                 }
             }
         }
+
+        // Notify: ProvidedServiceListeners.serviceRegistered()
+        notifyListeners(+1);
+
     }
 
     /**
      * Unregisters the service.
      */
-    protected synchronized void unregisterService() {
-        // Create a copy of the service reference in the case we need
-        // to inject it to the post-unregistration callback.
+    protected void unregisterService() {
         ServiceReference ref = null;
-        if (m_serviceRegistration != null) {
-            ref = m_serviceRegistration.getReference();
-            m_serviceRegistration.unregister();
-            m_serviceRegistration = null;
+        synchronized (this) {
+            // Create a copy of the service reference in the case we need
+            // to inject it to the post-unregistration callback.
+            if (m_serviceRegistration != null) {
+                ref = m_serviceRegistration.getReference();
+                m_serviceRegistration.unregister();
+                m_serviceRegistration = null;
+            }
+
+            m_strategy.onUnpublication();
+
+            // Call the post-unregistration callback in the same thread holding the monitor lock.
+            // This allows to be sure that the callback is called once per unregistration.
+            // But the callback must take care to not create a deadlock
+            if (m_postUnregistration != null   && ref != null) {
+                try {
+                    m_postUnregistration.call(new Object[] { ref });
+                } catch (Exception e) {
+                    m_handler.error("Cannot invoke the post-unregistration callback " + m_postUnregistration.getMethod(), e);
+                }
+            }
         }
 
-        m_strategy.onUnpublication();
-
-        // Call the post-unregistration callback in the same thread holding the monitor lock.
-        // This allows to be sure that the callback is called once per unregistration.
-        // But the callback must take care to not create a deadlock
-        if (m_postUnregistration != null   && ref != null) {
-            try {
-                m_postUnregistration.call(new Object[] { ref });
-            } catch (Exception e) {
-                m_handler.error("Cannot invoke the post-unregistration callback " + m_postUnregistration.getMethod(), e);
-            }
+        // Notify: ProvidedServiceListeners.serviceUnregistered()
+        if (ref != null) {
+            notifyListeners(-1);
         }
 
     }
@@ -495,54 +502,63 @@ public class ProvidedService implements ServiceFactory {
      * Update the service properties. The new list of properties is sent to
      * the service registry.
      */
-    public synchronized void update() {
-        // Update the service registration
-        if (m_serviceRegistration != null) {
-            Properties updated = getServiceProperties();
-            Dictionary oldProps = (Dictionary) ((Properties) m_publishedProperties).clone();
-            Dictionary newProps = (Dictionary) (updated.clone());
+    public void update() {
+        boolean doCallListener = false;
+        synchronized (this) {
+            // Update the service registration
+            if (m_serviceRegistration != null) {
+                Properties updated = getServiceProperties();
+                Dictionary oldProps = (Dictionary) ((Properties) m_publishedProperties).clone();
+                Dictionary newProps = (Dictionary) (updated.clone());
 
-            // Remove keys that must not be compared
-            newProps.remove(Factory.INSTANCE_NAME_PROPERTY);
-            oldProps.remove(Factory.INSTANCE_NAME_PROPERTY);
-            newProps.remove(Constants.SERVICE_ID);
-            oldProps.remove(Constants.SERVICE_ID);
-            newProps.remove(Constants.SERVICE_PID);
-            oldProps.remove(Constants.SERVICE_PID);
-            newProps.remove("factory.name");
-            oldProps.remove("factory.name");
-            newProps.remove(ConfigurationAdmin.SERVICE_FACTORYPID);
-            oldProps.remove(ConfigurationAdmin.SERVICE_FACTORYPID);
+                // Remove keys that must not be compared
+                newProps.remove(Factory.INSTANCE_NAME_PROPERTY);
+                oldProps.remove(Factory.INSTANCE_NAME_PROPERTY);
+                newProps.remove(Constants.SERVICE_ID);
+                oldProps.remove(Constants.SERVICE_ID);
+                newProps.remove(Constants.SERVICE_PID);
+                oldProps.remove(Constants.SERVICE_PID);
+                newProps.remove("factory.name");
+                oldProps.remove("factory.name");
+                newProps.remove(ConfigurationAdmin.SERVICE_FACTORYPID);
+                oldProps.remove(ConfigurationAdmin.SERVICE_FACTORYPID);
 
-            // Trigger the update only if the properties have changed.
+                // Trigger the update only if the properties have changed.
 
-            // First check, are the size equals
-            if (oldProps.size() != newProps.size()) {
-                if (SecurityHelper.canUpdateService(m_serviceRegistration)) {
-                    m_handler.info("Updating Registration : " + oldProps.size() + " / " + newProps.size());
-                    m_publishedProperties = updated;
-                    m_serviceRegistration.setProperties(updated);
-                }
-            } else {
-                // Check changes
-                Enumeration keys = oldProps.keys();
-                boolean hasChanged = false;
-                while (! hasChanged  && keys.hasMoreElements()) {
-                    String k = (String) keys.nextElement();
-                    Object val = oldProps.get(k);
-                    if (! val.equals(updated.get(k))) {
-                        hasChanged = true;
+                // First check, are the size equals
+                if (oldProps.size() != newProps.size()) {
+                    if (SecurityHelper.canUpdateService(m_serviceRegistration)) {
+                        m_handler.info("Updating Registration : " + oldProps.size() + " / " + newProps.size());
+                        m_publishedProperties = updated;
+                        m_serviceRegistration.setProperties(updated);
+                        doCallListener = true;
+                    }
+                } else {
+                    // Check changes
+                    Enumeration keys = oldProps.keys();
+                    boolean hasChanged = false;
+                    while (! hasChanged  && keys.hasMoreElements()) {
+                        String k = (String) keys.nextElement();
+                        Object val = oldProps.get(k);
+                        if (! val.equals(updated.get(k))) {
+                            hasChanged = true;
+                        }
+                    }
+                    if (hasChanged  && SecurityHelper.canUpdateService(m_serviceRegistration)) {
+                        m_handler.info("Updating Registration : " + updated);
+                        m_publishedProperties = updated;
+                        m_serviceRegistration.setProperties(updated);
+                        doCallListener = true;
                     }
                 }
-                if (hasChanged  && SecurityHelper.canUpdateService(m_serviceRegistration)) {
-                    m_handler.info("Updating Registration : " + updated);
-                    m_publishedProperties = updated;
-                    m_serviceRegistration.setProperties(updated);
-                }
+            } else {
+                // Need to be updated later.
+                m_wasUpdated = true;
             }
-        } else {
-            // Need to be updated later.
-            m_wasUpdated = true;
+        }
+        if (doCallListener) {
+            // Notify: ProvidedServiceListeners.serviceUpdated()
+            notifyListeners(0);
         }
     }
 
@@ -723,6 +739,93 @@ public class ProvidedService implements ServiceFactory {
 
     public Class<? extends CreationStrategy> getCreationStrategy() {
         return m_strategy.getClass();
+    }
+
+    /**
+     * Add the given listener to the provided service handler's list of listeners.
+     *
+     * @param listener the {@code ProvidedServiceListener} object to be added
+     * @throws NullPointerException if {@code listener} is {@code null}
+     */
+    public void addListener(ProvidedServiceListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("null listener");
+        }
+        synchronized (m_listeners) {
+            m_listeners.add(listener);
+        }
+    }
+
+    /**
+     * Remove the given listener from the provided service handler's list of listeners.
+     *
+     * @param listener the {@code ProvidedServiceListener} object to be removed
+     * @throws NullPointerException if {@code listener} is {@code null}
+     * @throws NoSuchElementException if {@code listener} wasn't present the in provided service handler's list of listeners
+     */
+    public void removeListener(ProvidedServiceListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("null listener");
+        }
+        synchronized (m_listeners) {
+            // We definitely cannot rely on listener's equals method...
+            // ...so we need to manually search for the listener, using ==.
+            int i = -1;
+            for(int j = m_listeners.size() -1; j>=0 ; j--) {
+                if (m_listeners.get(j) == listener) {
+                    // Found!
+                    i = j;
+                    break;
+                }
+            }
+            if (i != -1) {
+                m_listeners.remove(i);
+            } else {
+                throw new NoSuchElementException("no such listener");
+            }
+        }
+    }
+
+    /**
+     * Notify all listeners that a change has occurred in this provided service.
+     *
+     * @param direction the "direction" of the change (+1:registration, 0:update, -1:unregistration)
+     */
+    private void notifyListeners(int direction) {
+        // Get a snapshot of the listeners
+        List<ProvidedServiceListener> tmp;
+        synchronized (m_listeners) {
+            tmp = new ArrayList<ProvidedServiceListener>(m_listeners);
+        }
+        // Do notify, outside the m_listeners lock
+        for (ProvidedServiceListener l : tmp) {
+            try {
+                if (direction > 0) {
+                    l.serviceRegistered(m_handler.getInstanceManager(), this);
+                } else if (direction < 0) {
+                    l.serviceUnregistered(m_handler.getInstanceManager(), this);
+                } else {
+                    l.serviceModified(m_handler.getInstanceManager(), this);
+                }
+            } catch (Throwable e) {
+                // Put a warning on the logger, and continue
+                m_handler.warn(
+                        String.format(
+                                "[%s] A ProvidedServiceListener has failed: %s",
+                                m_handler.getInstanceManager().getInstanceName(),
+                                e.getMessage())
+                        , e);
+            }
+        }
+    }
+
+    /**
+     * Removes all the listeners from this provided service before it gets disposed.
+     */
+    public void cleanup() {
+        synchronized (m_listeners) {
+            m_listeners.clear();
+        }
     }
 
     /**

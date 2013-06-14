@@ -30,6 +30,11 @@ import org.osgi.framework.ServiceReference;
 
 import java.util.*;
 
+import static org.apache.felix.ipojo.util.DependencyModel.DependencyEventType;
+import static org.apache.felix.ipojo.util.DependencyModel.DependencyEventType.ARRIVAL;
+import static org.apache.felix.ipojo.util.DependencyModel.DependencyEventType.DEPARTURE;
+import static org.apache.felix.ipojo.util.DependencyModel.DependencyEventType.MODIFIED;
+
 /**
  * This class is handling the transformations between the base service set and the selected service set.
  * It handles the matching services and the selected service set.
@@ -384,6 +389,7 @@ public class ServiceReferenceManager implements TrackerCustomizer {
             // Callback invoked outside of locks.
             // The called method is taking the write lock anyway.
             onNewMatchingService(ref);
+            m_dependency.notifyListeners(ARRIVAL, ref, null);
         }
     }
 
@@ -485,6 +491,11 @@ public class ServiceReferenceManager implements TrackerCustomizer {
         // 1) the service was matching and does not match anymore -> it's a departure.
         // 2) the service was not matching and matches -> it's an arrival
         // 3) the service was matching and still matches -> it's a modification.
+
+        // The dependency event to send
+        DependencyEventType eventType = null;
+        ServiceReference<?> eventRef = null;
+
         try {
             m_dependency.acquireWriteLockIfNotHeld();
 
@@ -497,12 +508,16 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                     // case 1
                     m_matchingReferences.remove(reference);
                     onDepartureOfAMatchingService(initial, service);
+                    eventType = DEPARTURE;
+                    eventRef = initial;
                 } else {
                     // Do we have a real change
                     if (!ServiceReferenceUtils.haveSameProperties(initial, accepted)) {
                         // case 3
                         m_matchingReferences.put(reference, accepted);
                         onModificationOfAMatchingService(accepted, service);
+                        eventType = MODIFIED;
+                        eventRef = accepted;
                     }
                 }
             } else {
@@ -513,10 +528,16 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                     // case 2
                     m_matchingReferences.put(reference, transformed);
                     onNewMatchingService(transformed);
+                    eventType = ARRIVAL;
+                    eventRef = transformed;
                 }
             }
         } finally {
             m_dependency.releaseWriteLockIfHeld();
+        }
+
+        if (eventType != null) {
+            m_dependency.notifyListeners(eventType, eventRef, service);
         }
     }
 
@@ -544,9 +565,10 @@ public class ServiceReferenceManager implements TrackerCustomizer {
         // 1 - the service was in the matching set => real departure
         // 2 - the service was not in the matching set => nothing do do.
 
+        TransformedServiceReference initial = null;
         try {
             m_dependency.acquireWriteLockIfNotHeld();
-            TransformedServiceReference initial = m_matchingReferences.remove(reference);
+            initial = m_matchingReferences.remove(reference);
             if (initial != null) {
                 // Case 1
                 onDepartureOfAMatchingService(initial, service);
@@ -554,6 +576,11 @@ public class ServiceReferenceManager implements TrackerCustomizer {
             // else case 2.
         } finally {
             m_dependency.releaseWriteLockIfHeld();
+        }
+
+        // Call the listeners outside the locked region.
+        if (initial != null) {
+            m_dependency.notifyListeners(DEPARTURE, initial, service);
         }
 
     }
