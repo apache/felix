@@ -347,8 +347,8 @@ public class Tracker implements TrackerCustomizer {
     }
 
     /**
-     * Gets the list of stored service reference.
-     * @return the list containing used service reference
+     * Gets the list of stored service references.
+     * @return the list containing service references
      */
     public List<ServiceReference> getServiceReferencesList() {
         Tracked tracked = this.m_tracked; // use local var since we are not synchronized
