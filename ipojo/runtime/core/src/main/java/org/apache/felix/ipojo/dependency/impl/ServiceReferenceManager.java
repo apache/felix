@@ -659,7 +659,7 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                 m_comparator = cmp;
             }
             // Be aware that this method will release the lock to call the dependency callback.
-            setRankingInterceptor(new ComparatorBasedServiceRankingInterceptor(cmp));
+            setRankingInterceptor(new ComparatorBasedServiceRankingInterceptor(m_comparator));
         } finally {
             m_dependency.releaseWriteLockIfHeld();
         }
