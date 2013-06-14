@@ -25,8 +25,10 @@ import org.apache.felix.ipojo.util.DependencyModel;
 import org.apache.felix.ipojo.util.Log;
 import org.osgi.framework.*;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 
 /**
  * Builds the properties used to checks if an interceptor matches a specific dependency.
@@ -34,6 +36,7 @@ import java.util.Hashtable;
 public class DependencyProperties {
 
     //TODO Externalize and use constants
+    // TODO Cache dependency properties.
 
     public static  Dictionary<String, ?> getDependencyProperties(DependencyModel dependency) {
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
@@ -49,16 +52,23 @@ public class DependencyProperties {
         }
 
         // Dependency specification, and id
-        properties.put("dependency.specification", dependency.getSpecification().getName());
+        final Class specification = dependency.getSpecification();
+        properties.put("dependency.specification", specification.getName());
         properties.put("dependency.id", dependency.getId());
         properties.put("dependency.state", dependency.getState());
 
         // We also provide the objectclass property, and to be compliant with the osgi specification,
-        // we put an array in the dictionary
-        properties.put(Constants.OBJECTCLASS, new String[] { dependency.getSpecification().getName()});
+        // all interfaces are collected to this array.
+        List<String> classes = new ArrayList<String>();
+        classes.add(specification.getName());
+        for (Class clazz : specification.getInterfaces()) {
+            classes.add(clazz.getName());
+        }
+        properties.put(Constants.OBJECTCLASS, classes.toArray(new String[classes.size()]));
 
         return properties;
     }
+
 
     /**
      * Checks that the 'target' property of the service reference matches the dependency.
