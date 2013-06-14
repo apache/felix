@@ -59,9 +59,12 @@ public class Property {
 			m_valid = false;
 		}
 		if (this.m_value == null) {
+			// value has not bee set yet
 			this.m_value = value;
 		}
-		m_values.add(value);
+		if (value != null) {
+			m_values.add(value);
+		}
 	}
 	
 	public boolean isNegate() {
