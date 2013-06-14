@@ -803,12 +803,8 @@ public abstract class DependencyModel {
     public void setOptionality(boolean isOptional) {
         try {
             acquireWriteLockIfNotHeld();
-            if (m_tracker == null) { // Not started ...
-                m_optional = isOptional;
-            } else {
-                // This method releases the exclusive lock
-                computeAndSetDependencyState();
-            }
+            m_optional = isOptional;
+            computeAndSetDependencyState();
         } finally {
             releaseWriteLockIfHeld();
         }
