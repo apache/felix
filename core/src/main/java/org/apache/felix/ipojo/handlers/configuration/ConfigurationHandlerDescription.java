@@ -20,7 +20,6 @@ package org.apache.felix.ipojo.handlers.configuration;
 
 import java.util.List;
 
-import org.apache.felix.ipojo.Handler;
 import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.apache.felix.ipojo.metadata.Attribute;
@@ -46,13 +45,19 @@ public class ConfigurationHandlerDescription extends HandlerDescription {
     private String m_pid;
 
     /**
+     * The configuration handler.
+     */
+    private final ConfigurationHandler m_conf;
+
+    /**
      * Creates the description object for the configuration handler description.
      * @param handler the configuration handler.
      * @param props the list of properties.
      * @param pid the managed service pid or <code>null</code> if not set.
      */
-    public ConfigurationHandlerDescription(Handler handler, List/*<Property>*/ props, String pid) {
+    public ConfigurationHandlerDescription(ConfigurationHandler handler, List/*<Property>*/ props, String pid) {
         super(handler);
+        m_conf = handler;
         m_properties = new PropertyDescription[props.size()];
         for (int i = 0; i < props.size(); i++) {
             m_properties[i] = new PropertyDescription((Property) props.get(i));
@@ -106,6 +111,27 @@ public class ConfigurationHandlerDescription extends HandlerDescription {
      */
     public String getManagedServicePid() {
         return m_pid;
+    }
+
+    /**
+     * Add the given listener to the configuration handler's list of listeners.
+     *
+     * @param listener the {@code ConfigurationListener} object to be added
+     * @throws NullPointerException if {@code listener} is {@code null}
+     */
+    public void addListener(ConfigurationListener listener) {
+        m_conf.addListener(listener);
+    }
+
+    /**
+     * Remove the given listener from the configuration handler's list of listeners.
+     *
+     * @param listener the {@code ConfigurationListener} object to be removed
+     * @throws NullPointerException if {@code listener} is {@code null}
+     * @throws java.util.NoSuchElementException if {@code listener} wasn't present the in configuration handler's list of listeners
+     */
+    public void removeListener(ConfigurationListener listener) {
+        m_conf.removeListener(listener);
     }
 
 }

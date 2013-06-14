@@ -140,6 +140,11 @@ public abstract class DependencyModel {
     private ReentrantReadWriteLock m_lock = new ReentrantReadWriteLock();
 
     /**
+     * The listeners of the dependency model.
+     */
+    private final List<DependencyModelListener> m_listeners = new ArrayList<DependencyModelListener>();
+
+    /**
      * Creates a DependencyModel.
      * If the dependency has no comparator and follows the
      * {@link DependencyModel#DYNAMIC_PRIORITY_BINDING_POLICY} policy
@@ -503,6 +508,8 @@ public abstract class DependencyModel {
      */
     private void invalidate() {
         m_listener.invalidate(this);
+        // Notify dependency invalidation to listeners
+        notifyListeners(DependencyEventType.INVALIDATE, null, null);
     }
 
     /**
@@ -512,6 +519,8 @@ public abstract class DependencyModel {
      */
     private void validate() {
         m_listener.validate(this);
+        // Notify dependency validation to listeners
+        notifyListeners(DependencyEventType.VALIDATE, null, null);
     }
 
     /**
@@ -709,6 +718,9 @@ public abstract class DependencyModel {
         onDependencyReconfiguration(
                 dep.toArray(new ServiceReference[dep.size()]),
                 arr.toArray(new ServiceReference[arr.size()]));
+
+        // Notify dependency reconfiguration to listeners
+        notifyListeners(DependencyEventType.RECONFIGURED, null, null);
     }
 
     public boolean isAggregate() {
@@ -765,13 +777,19 @@ public abstract class DependencyModel {
             releaseWriteLockIfHeld();
         }
 
+        // TODO shouldn't we call onDependencyReconfiguration here????
+
         // Now call callbacks, the lock is not held anymore
         // Only one of the list is not empty..
         for (ServiceReference ref : arrivals) {
             onServiceArrival(ref);
+            // Notify service binding to listeners
+            notifyListeners(DependencyEventType.BINDING, ref, getService(ref, false));
         }
         for (ServiceReference ref : departures) {
             onServiceDeparture(ref);
+            // Notify service unbinding to listeners
+            notifyListeners(DependencyEventType.UNBINDING, ref, getService(ref, false));
         }
 
 
@@ -944,18 +962,6 @@ public abstract class DependencyModel {
         return getSpecification().getName();
     }
 
-    private void breakDependency() {
-        // Static dependency broken.
-        m_state = BROKEN;
-
-        // We are going to call callbacks, releasing the lock.
-        releaseWriteLockIfHeld();
-        invalidate();  // This will invalidate the instance.
-        m_instance.stop(); // Stop the instance
-        unfreeze();
-        m_instance.start();
-    }
-
     /**
      * Callbacks call by the ServiceReferenceManager when the selected service set has changed.
      * @param set the change set.
@@ -968,7 +974,20 @@ public abstract class DependencyModel {
                 for (ServiceReference ref : set.departures) {
                     // Check if any of the service that have left was in used.
                     if (m_boundServices.contains(ref)) {
-                        breakDependency();
+                        // Static dependency broken.
+                        m_state = BROKEN;
+
+                        // We are going to call callbacks, releasing the lock.
+                        releaseWriteLockIfHeld();
+
+                        // Notify listeners
+                        notifyListeners(DependencyEventType.UNBINDING, ref, getService(ref, false));
+                        notifyListeners(DependencyEventType.DEPARTURE, ref, null);
+
+                        invalidate();  // This will invalidate the instance.
+                        m_instance.stop(); // Stop the instance
+                        unfreeze();
+                        m_instance.start();
                         return;
                     }
                 }
@@ -1045,13 +1064,18 @@ public abstract class DependencyModel {
             releaseWriteLockIfHeld();
             for (ServiceReference ref : departures) {
                 onServiceDeparture(ref);
+                // Notify service unbinding to listeners
+                notifyListeners(DependencyEventType.UNBINDING, ref, getService(ref, false));
             }
             for (ServiceReference ref : arrivals) {
                 onServiceArrival(ref);
+                // Notify service binding to listeners
+                notifyListeners(DependencyEventType.BINDING, ref, getService(ref, false));
             }
             // Do we have a modified service ?
             if (set.modified != null && m_boundServices.contains(set.modified)) {
                 onServiceModification(set.modified);
+                // TODO call boundServiceModified on listeners???
             }
 
 
@@ -1069,5 +1093,124 @@ public abstract class DependencyModel {
 
     public Tracker getTracker() {
         return m_tracker;
+    }
+
+    public enum DependencyEventType {
+        VALIDATE,
+        INVALIDATE,
+        ARRIVAL,
+        MODIFIED,
+        DEPARTURE,
+        BINDING,
+        UNBINDING,
+        RECONFIGURED
+    }
+
+    /**
+     * Add the given listener to the dependency model's list of listeners.
+     *
+     * @param listener the {@code DependencyModelListener} object to be added
+     * @throws NullPointerException if {@code listener} is {@code null}
+     */
+    public void addListener(DependencyModelListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("null listener");
+        }
+        synchronized (m_listeners) {
+            m_listeners.add(listener);
+        }
+    }
+
+    /**
+     * Remove the given listener from the dependency model's list of listeners.
+     *
+     * @param listener the {@code DependencyModelListener} object to be removed
+     * @throws NullPointerException if {@code listener} is {@code null}
+     * @throws NoSuchElementException if {@code listener} wasn't present in the dependency model's list of listeners
+     */
+    public void removeListener(DependencyModelListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("null listener");
+        }
+        synchronized (m_listeners) {
+            // We definitely cannot rely on listener's equals method...
+            // ...so we need to manually search for the listener, using ==.
+            int i = -1;
+            for(int j = m_listeners.size() -1; j>=0 ; j--) {
+                if (m_listeners.get(j) == listener) {
+                    // Found!
+                    i = j;
+                    break;
+                }
+            }
+            if (i != -1) {
+                m_listeners.remove(i);
+            } else {
+                throw new NoSuchElementException("no such listener");
+            }
+        }
+    }
+
+    /**
+     * Notify all listeners that a change has occurred in this dependency model.
+     *
+     * @param type the type of event
+     * @param service the reference of the concerned service (may be null)
+     * @param object the concerned service object (may be null)
+     */
+    public void notifyListeners(DependencyEventType type, ServiceReference<?> service, Object object) {
+        // Get a snapshot of the listeners
+        List<DependencyModelListener> tmp;
+        synchronized (m_listeners) {
+            tmp = new ArrayList<DependencyModelListener>(m_listeners);
+        }
+        // Do notify, outside the m_listeners lock
+        for (DependencyModelListener l : tmp) {
+            try {
+                switch (type) {
+                    case VALIDATE:
+                        l.validate(this);
+                        break;
+                    case INVALIDATE:
+                        l.invalidate(this);
+                        break;
+                    case ARRIVAL:
+                        l.matchingServiceArrived(this, service);
+                        break;
+                    case MODIFIED:
+                        l.matchingServiceModified(this, service);
+                        break;
+                    case DEPARTURE:
+                        l.matchingServiceDeparted(this, service);
+                        break;
+                    case BINDING:
+                        l.serviceBound(this, service, object);
+                        break;
+                    case UNBINDING:
+                        l.serviceUnbound(this, service, object);
+                        break;
+                    case RECONFIGURED:
+                        l.reconfigured(this);
+                        break;
+                }
+            } catch (Throwable e) {
+                // Put a warning on the logger, and continue
+                getComponentInstance().getFactory().getLogger().log(Log.WARNING,
+                        String.format(
+                                "[%s] A DependencyModelListener has failed: %s",
+                                getComponentInstance().getInstanceName(),
+                                e.getMessage())
+                        , e);
+            }
+        }
+    }
+
+    /**
+     * Removes all the listeners from this dependency before it gets disposed.
+     */
+    public void cleanup() {
+        synchronized (m_listeners) {
+            m_listeners.clear();
+        }
     }
 }

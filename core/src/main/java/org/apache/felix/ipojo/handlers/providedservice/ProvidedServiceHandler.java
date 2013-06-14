@@ -484,6 +484,13 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
                 ps.registerService();
             }
         }
+
+        // If the new state is DISPOSED => cleanup all the provided services listeners
+        if (state == InstanceManager.DISPOSED) {
+            for (ProvidedService ps : m_providedServices) {
+                ps.cleanup();
+            }
+        }
     }
 
     /**
