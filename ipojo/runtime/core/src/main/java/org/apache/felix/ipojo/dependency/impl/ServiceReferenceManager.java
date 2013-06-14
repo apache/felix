@@ -23,10 +23,7 @@ import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.dependency.interceptors.ServiceRankingInterceptor;
 import org.apache.felix.ipojo.dependency.interceptors.ServiceTrackingInterceptor;
 import org.apache.felix.ipojo.dependency.interceptors.TransformedServiceReference;
-import org.apache.felix.ipojo.util.DependencyModel;
-import org.apache.felix.ipojo.util.Log;
-import org.apache.felix.ipojo.util.Tracker;
-import org.apache.felix.ipojo.util.TrackerCustomizer;
+import org.apache.felix.ipojo.util.*;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
@@ -656,7 +653,11 @@ public class ServiceReferenceManager implements TrackerCustomizer {
     public void setComparator(Comparator<ServiceReference> cmp) {
         try {
             m_dependency.acquireWriteLockIfNotHeld();
-            m_comparator = cmp;
+            if (cmp == null) {
+                m_comparator = new ServiceReferenceRankingComparator();
+            } else {
+                m_comparator = cmp;
+            }
             // Be aware that this method will release the lock to call the dependency callback.
             setRankingInterceptor(new ComparatorBasedServiceRankingInterceptor(cmp));
         } finally {
