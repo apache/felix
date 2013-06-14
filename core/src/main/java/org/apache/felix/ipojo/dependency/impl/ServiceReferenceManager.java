@@ -80,6 +80,7 @@ public class ServiceReferenceManager implements TrackerCustomizer {
      */
     private LinkedList<ServiceTrackingInterceptor> m_trackingInterceptors = new
             LinkedList<ServiceTrackingInterceptor>();
+    private List<ServiceReference> serviceReferencesList;
 
     /**
      * Creates the service reference manager.
@@ -232,11 +233,14 @@ public class ServiceReferenceManager implements TrackerCustomizer {
             ServiceReference oldBest = getFirstService();
             // Recompute the matching services.
             m_matchingReferences.clear();
-            for (ServiceReference reference : m_dependency.getTracker().getServiceReferencesList()) {
-                TransformedServiceReference ref = new TransformedServiceReferenceImpl(reference);
-                ref = accept(ref);
-                if (ref != null) {
-                    m_matchingReferences.put(reference, ref);
+            serviceReferencesList = m_dependency.getTracker().getServiceReferencesList();
+            if (serviceReferencesList != null) {
+                for (ServiceReference reference : serviceReferencesList) {
+                    TransformedServiceReference ref = new TransformedServiceReferenceImpl(reference);
+                    ref = accept(ref);
+                    if (ref != null) {
+                        m_matchingReferences.put(reference, ref);
+                    }
                 }
             }
 
