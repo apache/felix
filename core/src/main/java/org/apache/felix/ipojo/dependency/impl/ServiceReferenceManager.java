@@ -598,11 +598,14 @@ public class ServiceReferenceManager implements TrackerCustomizer {
 
                 // Recompute the matching services.
                 m_matchingReferences.clear();
-                for (ServiceReference reference : tracker.getServiceReferencesList()) {
-                    TransformedServiceReference ref = new TransformedServiceReferenceImpl(reference);
-                    ref = accept(ref);
-                    if (ref != null) {
-                        m_matchingReferences.put(reference, ref);
+                final List<ServiceReference> serviceReferencesList = tracker.getServiceReferencesList();
+                if (serviceReferencesList != null) {
+                    for (ServiceReference reference : serviceReferencesList) {
+                        TransformedServiceReference ref = new TransformedServiceReferenceImpl(reference);
+                        ref = accept(ref);
+                        if (ref != null) {
+                            m_matchingReferences.put(reference, ref);
+                        }
                     }
                 }
 
