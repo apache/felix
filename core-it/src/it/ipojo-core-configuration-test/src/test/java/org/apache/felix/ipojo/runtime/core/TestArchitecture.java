@@ -31,6 +31,7 @@ import java.util.Hashtable;
 
 import static junit.framework.Assert.*;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 public class TestArchitecture extends Common {
 
@@ -92,6 +93,9 @@ public class TestArchitecture extends Common {
         assertEquals(2, hd.getProperties().length);
         assertEquals("FooProvider-3", hd.getManagedServicePid());
 
+        // Check the getInstance() method
+        assertSame(arch.getInstanceDescription().getInstance(), instance1);
+
     }
 
     @Test
@@ -109,6 +113,9 @@ public class TestArchitecture extends Common {
 
         assertEquals(2, hd.getProperties().length);
         assertEquals("instance", hd.getManagedServicePid());
+
+        // Check the getInstance() method
+        assertSame(arch.getInstanceDescription().getInstance(), instance2);
 
     }
 

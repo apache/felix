@@ -33,17 +33,17 @@ public class InstanceDescription implements InstanceStateListener {
     /**
      * The list of handlers plugged on the component instance.
      */
-    protected HandlerDescription[] m_handlers = new HandlerDescription[0];
+    protected HandlerDescription[] m_handlers;
     
     /**
      * The Underlying component instance.
      */
-    protected ComponentInstance m_instance;
+    protected final ComponentInstance m_instance;
 
     /**
      * Component Type of the instance.
      */
-    protected ComponentTypeDescription m_type;
+    protected final ComponentTypeDescription m_type;
 
     /**
      * Creates the instance description.
@@ -55,6 +55,14 @@ public class InstanceDescription implements InstanceStateListener {
         m_type = desc;
         m_instance = ci;
         m_instance.addInstanceStateListener(this);
+    }
+
+    /**
+     * Gets the underlying component instance
+     * @return the component instance.
+     */
+    public ComponentInstance getInstance() {
+        return m_instance;
     }
 
     /**
@@ -87,10 +95,10 @@ public class InstanceDescription implements InstanceStateListener {
      */
     public void addHandler(HandlerDescription desc) {
         // Verify that the dependency description is not already in the array.
-        for (int i = 0; i < m_handlers.length; i++) {
-            if (m_handlers[i] == desc) {
+        for (HandlerDescription handler : m_handlers) {
+            if (handler == desc) {
                 return; // NOTHING TO DO, the description is already in the
-                        // array
+                // array
             }
         }
         // The component Description is not in the array, add it
@@ -107,9 +115,9 @@ public class InstanceDescription implements InstanceStateListener {
      * @return the handler description or <code>null</code> if not found
      */
     public HandlerDescription getHandlerDescription(String handler) {
-        for (int i = 0; i < m_handlers.length; i++) {
-            if (m_handlers[i].getHandlerName().equalsIgnoreCase(handler)) {
-                return m_handlers[i];
+        for (HandlerDescription description : m_handlers) {
+            if (description.getHandlerName().equalsIgnoreCase(handler)) {
+                return description;
             }
         }
         return null;
@@ -160,8 +168,8 @@ public class InstanceDescription implements InstanceStateListener {
         instance.addAttribute(new Attribute("component.type", m_type.getName()));
 
         // Handlers
-        for (int i = 0; i < m_handlers.length; i++) {
-            instance.addElement(m_handlers[i].getHandlerInfo());
+        for (HandlerDescription description : m_handlers) {
+            instance.addElement(description.getHandlerInfo());
         }
 
         return instance;
