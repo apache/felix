@@ -67,6 +67,7 @@ public class ConfigurationTracker implements ConfigurationListener {
 
     public static void shutdown() {
         m_singleton.dispose();
+        m_singleton = null;
     }
 
     public static ConfigurationTracker get() {
