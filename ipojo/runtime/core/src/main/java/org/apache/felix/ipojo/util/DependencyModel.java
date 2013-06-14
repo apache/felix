@@ -576,25 +576,23 @@ public abstract class DependencyModel {
 
     /**
      * Acquires the read lock only and only if no read lock is already held by the current thread.
+     *
+     * As the introspection methods provided by this method are java 6+, we just take a read lock.
      * @return {@literal true} if the lock was acquired within the method, {@literal false} otherwise.
      */
     public boolean acquireReadLockIfNotHeld() {
-        if (m_lock.getReadHoldCount() == 0) {
-            m_lock.readLock().lock();
-            return true;
-        }
-        return false;
+        m_lock.readLock().lock();
+        return true;
     }
 
     /**
      * Releases the read lock only and only if the read lock is held by the current thread.
+     * * As the introspection methods provided by this method are java 6+, we just unlock the read lock.
      * @return {@literal true} if the lock has no more holders, {@literal false} otherwise.
      */
     public boolean releaseReadLockIfHeld() {
-        if (m_lock.getReadHoldCount() > 0) {
-            m_lock.readLock().unlock();
-        }
-        return m_lock.getWriteHoldCount() == 0;
+        m_lock.readLock().unlock();
+        return true;
     }
 
     /**
