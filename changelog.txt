@@ -1,4 +1,42 @@
-Changes from 1.8.6 to 1.8.10
+Changes from 1.10.0 to 1.10.1
+-----------------------------
+
+** Bug
+    * [FELIX-4072] - onGet and onSet methods do not provide the reference on the pojo object
+    * [FELIX-4076] - Useless locking on getRequiredHandler
+    * [FELIX-4077] - Fix documentation urls in maven projects
+    * [FELIX-4089] - Extender do not deactivate managed components when stopped
+    * [FELIX-4096] - NPE when retrieve required and missing handler on a disposed factory
+    * [FELIX-4105] - Factories not disposed when their bundle is leaving
+    * [FELIX-4106] - Defensive service registration and update
+    * [FELIX-4108] - Deadlock in the new extender
+    * [FELIX-4109] - ComponentTypeDescription.addProperty() ignore immutable parameter
+    * [FELIX-4113] - Factories not disposed when the extension provider is leaving
+    * [FELIX-4114] - iPOJO ProvidedServiceDescription does not expose policy & CreationStrategy
+    * [FELIX-4123] - Deadlock in new extender because of factory lock used in removedService
+    * [FELIX-4127] - Configuration tracker bug when starting and stopping iPOJO successively
+    * [FELIX-4129] - Cannot change the optionality of a dependency
+
+** Improvement
+    * [FELIX-1430] - Notification mechanism on bind/unbind events
+    * [FELIX-4073] - PrimitiveHandler.attach(ComponentInstance) is final
+    * [FELIX-4119] - Allow customization of DependencyHandler created Callbacks
+
+** New Feature
+    * [FELIX-4116] - Ability to listen for component service dependencies, providings, configuration properties, ...
+    * [FELIX-4120] - Allow external entity to interact during the service resolution
+    * [FELIX-4125] - Provide 'components' and 'component' commands
+    * [FELIX-4130] - Allow retrieving the component instance from the instance description
+    * [FELIX-4131] - Explicitly set configuration's location when the configuration is null
+
+** Task
+    * [FELIX-4092] - Move 'annotation' module from 'runtime' to 'manipulator' project
+    * [FELIX-4103] - Skip deployment of it-tests
+    * [FELIX-4104] - Do not run integration-tests in the default build
+    * [FELIX-4124] - Move arch-gogo to runtime
+
+
+Changes from 1.8.6 to 1.10.0
 ----------------------------
 
 ** Bug
