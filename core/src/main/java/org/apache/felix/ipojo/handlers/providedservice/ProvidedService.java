@@ -359,9 +359,7 @@ public class ProvidedService implements ServiceFactory {
             if (m_serviceRegistration != null) {
                 return;
             } else {
-                if (m_handler.getInstanceManager().getState() == ComponentInstance.VALID
-                        && m_serviceRegistration == null
-                        && isAtLeastAServiceControllerValid()) {
+                if (m_handler.getInstanceManager().getState() == ComponentInstance.VALID && isAtLeastAServiceControllerValid()) {
                     // Build the service properties list
 
                     BundleContext bc = m_handler.getInstanceManager().getContext();
