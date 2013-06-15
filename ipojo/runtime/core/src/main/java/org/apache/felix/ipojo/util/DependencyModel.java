@@ -781,15 +781,20 @@ public abstract class DependencyModel {
 
         // Now call callbacks, the lock is not held anymore
         // Only one of the list is not empty..
-        for (ServiceReference ref : arrivals) {
-            onServiceArrival(ref);
-            // Notify service binding to listeners
-            notifyListeners(DependencyEventType.BINDING, ref, getService(ref, false));
-        }
-        for (ServiceReference ref : departures) {
-            onServiceDeparture(ref);
-            // Notify service unbinding to listeners
-            notifyListeners(DependencyEventType.UNBINDING, ref, getService(ref, false));
+        try {
+            acquireReadLockIfNotHeld();
+            for (ServiceReference ref : arrivals) {
+                onServiceArrival(ref);
+                // Notify service binding to listeners
+                notifyListeners(DependencyEventType.BINDING, ref, m_serviceObjects.get(ref));
+            }
+            for (ServiceReference ref : departures) {
+                onServiceDeparture(ref);
+                // Notify service unbinding to listeners
+                notifyListeners(DependencyEventType.UNBINDING, ref, m_serviceObjects.get(ref));
+            }
+        } finally {
+            releaseReadLockIfHeld();
         }
 
 
@@ -974,10 +979,11 @@ public abstract class DependencyModel {
                         m_state = BROKEN;
 
                         // We are going to call callbacks, releasing the lock.
+                        Object svc = m_serviceObjects.get(ref);
                         releaseWriteLockIfHeld();
 
                         // Notify listeners
-                        notifyListeners(DependencyEventType.UNBINDING, ref, getService(ref, false));
+                        notifyListeners(DependencyEventType.UNBINDING, ref, svc);
                         notifyListeners(DependencyEventType.DEPARTURE, ref, null);
 
                         invalidate();  // This will invalidate the instance.
@@ -1056,24 +1062,30 @@ public abstract class DependencyModel {
                 }
             }
 
-            // Leaving the locked region to invoke callbacks
+            // Leaving the locked region to invoke callbacks, but grab the read lock
             releaseWriteLockIfHeld();
-            for (ServiceReference ref : departures) {
-                onServiceDeparture(ref);
-                // Notify service unbinding to listeners
-                notifyListeners(DependencyEventType.UNBINDING, ref, getService(ref, false));
+            try {
+                acquireReadLockIfNotHeld();
+                for (ServiceReference ref : departures) {
+                    onServiceDeparture(ref);
+                    // Notify service unbinding to listeners
+                    Object svc = m_serviceObjects.get(ref);
+                    notifyListeners(DependencyEventType.UNBINDING, ref, svc);
+                }
+                for (ServiceReference ref : arrivals) {
+                    onServiceArrival(ref);
+                    // Notify service binding to listeners
+                    Object svc = m_serviceObjects.get(ref);
+                    notifyListeners(DependencyEventType.BINDING, ref, svc);
+                }
+                // Do we have a modified service ?
+                if (set.modified != null && m_boundServices.contains(set.modified)) {
+                    onServiceModification(set.modified);
+                    // TODO call boundServiceModified on listeners???
+                }
+            } finally {
+                releaseReadLockIfHeld();
             }
-            for (ServiceReference ref : arrivals) {
-                onServiceArrival(ref);
-                // Notify service binding to listeners
-                notifyListeners(DependencyEventType.BINDING, ref, getService(ref, false));
-            }
-            // Do we have a modified service ?
-            if (set.modified != null && m_boundServices.contains(set.modified)) {
-                onServiceModification(set.modified);
-                // TODO call boundServiceModified on listeners???
-            }
-
 
             // Did our state changed ?
             // this method will manage its own synchronization.

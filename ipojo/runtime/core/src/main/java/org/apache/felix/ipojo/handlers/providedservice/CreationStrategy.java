@@ -46,7 +46,7 @@ public abstract class CreationStrategy implements ServiceFactory {
     
     /**
      * Checks if the given method object is the
-     * {@link IPOJOServiceFactory#getService(ComponentInstance)}
+     * {@link org.apache.felix.ipojo.IPOJOServiceFactory#getService(org.apache.felix.ipojo.ComponentInstance)}
      * method.
      * @param method the method to check
      * @return <code>true</code> if the method is the getService method
@@ -61,7 +61,7 @@ public abstract class CreationStrategy implements ServiceFactory {
     
     /**
      * Checks if the given method object is the
-     * {@link IPOJOServiceFactory#ungetService(ComponentInstance, Object)}
+     * {@link org.apache.felix.ipojo.IPOJOServiceFactory#ungetService(org.apache.felix.ipojo.ComponentInstance, Object)}
      * method.
      * @param method the method to check
      * @return <code>true</code> if the method is the ungetService method
