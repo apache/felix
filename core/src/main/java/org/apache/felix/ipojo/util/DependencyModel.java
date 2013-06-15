@@ -600,7 +600,11 @@ public abstract class DependencyModel {
      * @return {@literal true} if the lock has no more holders, {@literal false} otherwise.
      */
     public boolean releaseReadLockIfHeld() {
-        m_lock.readLock().unlock();
+        try {
+            m_lock.readLock().unlock();
+        } catch (IllegalMonitorStateException e) {
+            // Oupsy we were not holding the lock...
+        }
         return true;
     }
 
@@ -1062,20 +1066,22 @@ public abstract class DependencyModel {
                 }
             }
 
-            // Leaving the locked region to invoke callbacks, but grab the read lock
+            // Before leaving the protected region, copy used services.
+            Map<ServiceReference, Object> services = new HashMap<ServiceReference, Object>(m_serviceObjects);
+
+            // Leaving the locked region to invoke callbacks
             releaseWriteLockIfHeld();
-            try {
-                acquireReadLockIfNotHeld();
+
                 for (ServiceReference ref : departures) {
                     onServiceDeparture(ref);
                     // Notify service unbinding to listeners
-                    Object svc = m_serviceObjects.get(ref);
+                    Object svc = services.get(ref);
                     notifyListeners(DependencyEventType.UNBINDING, ref, svc);
                 }
                 for (ServiceReference ref : arrivals) {
                     onServiceArrival(ref);
                     // Notify service binding to listeners
-                    Object svc = m_serviceObjects.get(ref);
+                    Object svc = services.get(ref);
                     notifyListeners(DependencyEventType.BINDING, ref, svc);
                 }
                 // Do we have a modified service ?
@@ -1083,9 +1089,6 @@ public abstract class DependencyModel {
                     onServiceModification(set.modified);
                     // TODO call boundServiceModified on listeners???
                 }
-            } finally {
-                releaseReadLockIfHeld();
-            }
 
             // Did our state changed ?
             // this method will manage its own synchronization.
