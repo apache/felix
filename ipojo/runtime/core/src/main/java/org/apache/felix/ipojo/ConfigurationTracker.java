@@ -265,7 +265,9 @@ public class ConfigurationTracker implements ConfigurationListener {
             // configuration exists but can't be managed by iPOJO.
             final Configuration cfg = admin.getConfiguration(pid);
             final String bundleLocation = bundle.getLocation();
-            if (cfg.getBundleLocation() == null || bundleLocation.equals(cfg.getBundleLocation())) {
+            if (cfg.getBundleLocation() == null || bundleLocation.equals(cfg.getBundleLocation())
+                    || m_context.getBundle().getLocation().equals(cfg.getBundleLocation())) {
+                cfg.setBundleLocation(bundleLocation);
                 return cfg;
             }
 
