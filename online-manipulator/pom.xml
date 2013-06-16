@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO - Online Manipulator</name>
     <artifactId>org.apache.felix.ipojo.manipulator.online</artifactId>
-    <version>1.10.1</version>
+    <version>1.10.2-SNAPSHOT</version>
 
     <description>
         iPOJO online manipulator allowing install time manipulation of iPOJO bundle.
@@ -177,10 +177,4 @@
             </plugin>
         </plugins>
     </build>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.10.1/org.apache.felix.ipojo.manipulator.online</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.10.1/org.apache.felix.ipojo.manipulator.online</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.manipulator-project-1.10.1/org.apache.felix.ipojo.manipulator.online</url>
-  </scm>
 </project>
