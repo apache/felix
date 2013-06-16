@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO</name>
     <artifactId>org.apache.felix.ipojo</artifactId>
-    <version>1.10.1</version>
+    <version>1.10.2-SNAPSHOT</version>
 
     <properties>
         <!--
@@ -253,10 +253,4 @@
             </plugin>
         </plugins>
     </build>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.10.1/org.apache.felix.ipojo</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.10.1/org.apache.felix.ipojo</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.runtime-project-1.10.1/org.apache.felix.ipojo</url>
-  </scm>
 </project>
