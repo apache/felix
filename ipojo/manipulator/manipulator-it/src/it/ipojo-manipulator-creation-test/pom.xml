@@ -31,7 +31,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.apache.felix</groupId>
     <artifactId>ipojo-manipulator-creation-test</artifactId>
 
     <name>${project.artifactId}</name>
