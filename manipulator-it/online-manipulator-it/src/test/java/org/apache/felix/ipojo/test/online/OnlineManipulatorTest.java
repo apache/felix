@@ -111,6 +111,8 @@ public class OnlineManipulatorTest {
         helper = new OSGiHelper(context);
         waitForStability(context);
 
+        helper.waitForService(URLStreamHandlerService.class, null, 1000);
+
         Assert.assertEquals("Check online manipulator bundle state",
                 helper.getBundle("org.apache.felix.ipojo.manipulator.online").getState(),
                 Bundle.ACTIVE);
