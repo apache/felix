@@ -26,13 +26,10 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.ipojo.manipulator.manipulator-it</artifactId>
         <version>1.10.2-SNAPSHOT</version>
-        <relativePath>../../../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ipojo-manipulator-creation-test</artifactId>
-
-    <name>${project.artifactId}</name>
-
+    <name>Apache Felix iPOJO Manipulator ~ Creation IT</name>
 </project>
