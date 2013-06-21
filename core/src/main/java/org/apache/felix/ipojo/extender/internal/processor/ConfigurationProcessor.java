@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.extender.internal.processor;
 
 import org.apache.felix.ipojo.configuration.Instance;
 import org.apache.felix.ipojo.extender.internal.BundleProcessor;
+import org.apache.felix.ipojo.extender.internal.Extender;
 import org.apache.felix.ipojo.extender.internal.declaration.DefaultInstanceDeclaration;
 import org.apache.felix.ipojo.extender.internal.declaration.DefaultTypeDeclaration;
 import org.apache.felix.ipojo.util.InvocationResult;
@@ -28,6 +29,7 @@ import org.apache.felix.ipojo.util.Log;
 import org.objectweb.asm.ClassReader;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleWiring;
 
 import java.io.Closeable;
@@ -101,9 +103,17 @@ public class ConfigurationProcessor implements BundleProcessor {
      * @param bundle the bundle
      */
     public void activate(Bundle bundle) {
-        if (! m_enabled) { return; }
+        if (! m_enabled  && Extender.getIPOJOBundleContext().getBundle().getBundleId() == bundle.getBundleId()) {
+            // Fast return if the configuration tracking is disabled, or if we are iPOJO
+            return;
+        }
 
-        // TODO - optimization, ignore all bundles that do not import org.apache.felix.ipojo.configuration
+        // It's not required to process bundle not importing the configuration package.
+        final String imports = bundle.getHeaders().get(Constants.IMPORT_PACKAGE);
+        if (imports == null  || ! imports.contains("org.apache.felix.ipojo.configuration")) {
+            // TODO Check dynamic imports to verify if the package is not imported lazily.
+            return;
+        }
 
         BundleWiring wiring = bundle.adapt(BundleWiring.class);
         if (wiring == null) {
