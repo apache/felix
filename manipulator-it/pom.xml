@@ -213,7 +213,8 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>1.10.0</version>
+            <!-- To update before the release -->
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
