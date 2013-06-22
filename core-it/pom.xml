@@ -231,7 +231,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>1.10.0</version>
+            <version>1.10.2-SNAPSHOT</version>
         </dependency>
 
         <dependency>
