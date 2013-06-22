@@ -65,6 +65,7 @@
         <module>ipojo-core-service-dependency-test</module>
         <module>ipojo-core-service-dependency-interceptor-test</module>
         <module>ipojo-core-service-providing-test</module>
+        <module>ipojo-api-test</module>
     </modules>
 
     <build>
