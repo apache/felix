@@ -134,7 +134,7 @@ public class TestBadConfigurations extends Common {
          * Get the list of available components.
          */
         try {
-            String header = (String) testedBundle.getHeaders().get(
+            String header = (String) getTestBundle().getHeaders().get(
                     "iPOJO-Components");
             m_components = ManifestMetadataParser.parseHeaderMetadata(header)
                     .getElements("component");

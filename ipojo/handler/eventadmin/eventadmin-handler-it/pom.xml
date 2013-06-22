@@ -138,7 +138,7 @@
         <dependency>
             <groupId>org.ow2.chameleon.testing</groupId>
             <artifactId>osgi-helpers</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.2-SNAPSHOT</version>
         </dependency>
 
         <dependency>
