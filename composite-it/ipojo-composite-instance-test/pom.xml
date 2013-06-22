@@ -26,13 +26,12 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.ipojo.runtime.composite-it</artifactId>
         <version>1.10.2-SNAPSHOT</version>
-        <relativePath>../../../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.apache.felix</groupId>
-    <artifactId>ipojo-composite-runtime-test</artifactId>
+    <artifactId>ipojo-composite-instance-test</artifactId>
 
     <name>${project.artifactId}</name>
     
