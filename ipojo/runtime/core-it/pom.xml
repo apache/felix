@@ -300,6 +300,12 @@
             <artifactId>fest-assert</artifactId>
             <version>1.4</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>${felix.version}</version>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -370,7 +376,6 @@
                     <groupId>org.apache.felix</groupId>
                     <artifactId>org.apache.felix.framework</artifactId>
                     <version>${felix.version}</version>
-                    <scope>test</scope>
                 </dependency>
             </dependencies>
         </profile>
