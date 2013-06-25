@@ -44,7 +44,7 @@ public class ProvidedServiceDescription {
     /**
      * The describe provided service.
      */
-    private ProvidedService m_ps;
+    private final ProvidedService m_ps;
 
     /**
      * Constructor.
@@ -52,6 +52,14 @@ public class ProvidedServiceDescription {
      */
     public ProvidedServiceDescription(ProvidedService ps) {
         m_ps = ps;
+    }
+
+    /**
+     * Gets the represented provided service.
+     * @return the provided service
+     */
+    public ProvidedService getProvidedService() {
+        return m_ps;
     }
 
     /**
@@ -98,7 +106,7 @@ public class ProvidedServiceDescription {
 
     /**
      * Gets provided service state.
-     * @return the state of the provided service (UNREGISTERED | REGISTRED).
+     * @return the state of the provided service (UNREGISTERED | REGISTERED).
      */
     public int getState() {
         return m_ps.getState();

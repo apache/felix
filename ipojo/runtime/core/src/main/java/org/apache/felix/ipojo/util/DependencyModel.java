@@ -1072,23 +1072,23 @@ public abstract class DependencyModel {
             // Leaving the locked region to invoke callbacks
             releaseWriteLockIfHeld();
 
-                for (ServiceReference ref : departures) {
-                    onServiceDeparture(ref);
-                    // Notify service unbinding to listeners
-                    Object svc = services.get(ref);
-                    notifyListeners(DependencyEventType.UNBINDING, ref, svc);
-                }
-                for (ServiceReference ref : arrivals) {
-                    onServiceArrival(ref);
-                    // Notify service binding to listeners
-                    Object svc = services.get(ref);
-                    notifyListeners(DependencyEventType.BINDING, ref, svc);
-                }
-                // Do we have a modified service ?
-                if (set.modified != null && m_boundServices.contains(set.modified)) {
-                    onServiceModification(set.modified);
-                    // TODO call boundServiceModified on listeners???
-                }
+            for (ServiceReference ref : departures) {
+                onServiceDeparture(ref);
+                // Notify service unbinding to listeners
+                Object svc = services.get(ref);
+                notifyListeners(DependencyEventType.UNBINDING, ref, svc);
+            }
+            for (ServiceReference ref : arrivals) {
+                onServiceArrival(ref);
+                // Notify service binding to listeners
+                Object svc = services.get(ref);
+                notifyListeners(DependencyEventType.BINDING, ref, svc);
+            }
+            // Do we have a modified service ?
+            if (set.modified != null && m_boundServices.contains(set.modified)) {
+                onServiceModification(set.modified);
+                // TODO call boundServiceModified on listeners???
+            }
 
             // Did our state changed ?
             // this method will manage its own synchronization.

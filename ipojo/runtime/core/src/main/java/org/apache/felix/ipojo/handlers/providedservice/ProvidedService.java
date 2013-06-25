@@ -352,7 +352,7 @@ public class ProvidedService implements ServiceFactory {
      * service.
      * This method also notifies the creation strategy of the publication.
      */
-    protected void registerService() {
+    public void registerService() {
         ServiceRegistration reg = null;
         Properties serviceProperties = null;
         synchronized (this) {
@@ -420,9 +420,9 @@ public class ProvidedService implements ServiceFactory {
     }
 
     /**
-     * Unregisters the service.
+     * Withdraws the service from the service registry.
      */
-    protected void unregisterService() {
+    public void unregisterService() {
         ServiceReference ref = null;
         synchronized (this) {
             // Create a copy of the service reference in the case we need

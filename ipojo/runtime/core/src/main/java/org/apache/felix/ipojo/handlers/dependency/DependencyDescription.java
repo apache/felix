@@ -143,6 +143,10 @@ public class DependencyDescription {
         return m_dependency.getSpecification().getName();
     }
 
+    /**
+     * Gets the described dependency.
+     * @return the dependency.
+     */
     public Dependency getDependency() {
         return m_dependency;
     }
