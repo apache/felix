@@ -16,10 +16,13 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -95,6 +98,9 @@ public final class JettyConfig
     /** Felix specific property to set the servlet context path of the Http Service */
     public static final String FELIX_HTTP_CONTEXT_PATH = "org.apache.felix.http.context_path";
 
+    /** Felix specific property to set the list of path exclusions for Web Application Bundles */
+    public static final String FELIX_HTTP_PATH_EXCLUSIONS = "org.apache.felix.http.path_exclusions";
+
     private final BundleContext context;
     private boolean debug;
     private String host;
@@ -116,6 +122,7 @@ public final class JettyConfig
     private int requestBufferSize;
     private int responseBufferSize;
     private String contextPath;
+    private String[] pathExclusions;
 
     /**
      * Properties from the configuration not matching any of the
@@ -247,6 +254,11 @@ public final class JettyConfig
         return contextPath;
     }
 
+    public String[] getPathExclusions()
+    {
+        return this.pathExclusions;
+    }
+
     public void reset()
     {
         update(null);
@@ -278,6 +290,7 @@ public final class JettyConfig
         this.requestBufferSize = getIntProperty(FELIX_JETTY_REQUEST_BUFFER_SIZE, 8 * 014);
         this.responseBufferSize = getIntProperty(FELIX_JETTY_RESPONSE_BUFFER_SIZE, 24 * 1024);
         this.contextPath = validateContextPath(getProperty(props, FELIX_HTTP_CONTEXT_PATH, null));
+        this.pathExclusions = getStringArrayProperty(props, FELIX_HTTP_PATH_EXCLUSIONS, new String[] { "/system" });
 
         // copy rest of the properties
         Enumeration keys = props.keys();
@@ -315,6 +328,41 @@ public final class JettyConfig
         try {
             return Integer.parseInt(getProperty(props, name, null));
         } catch (Exception e) {
+            return defValue;
+        }
+    }
+
+    private String[] getStringArrayProperty(Dictionary props, String name, String[] defValue)
+    {
+        Object value = props.remove(name);
+        if (value == null)
+        {
+            value = this.context.getProperty(name);
+        }
+        if (value instanceof String)
+        {
+            return new String[]
+                { (String) value };
+        }
+        else if (value instanceof String[])
+        {
+            return (String[]) value;
+        }
+        else if (value instanceof Collection)
+        {
+            ArrayList<String> conv = new ArrayList<String>();
+            for (Iterator<?> vi = ((Collection<?>) value).iterator(); vi.hasNext();)
+            {
+                Object object = vi.next();
+                if (object != null)
+                {
+                    conv.add(String.valueOf(object));
+                }
+            }
+            return conv.toArray(new String[conv.size()]);
+        }
+        else
+        {
             return defValue;
         }
     }
