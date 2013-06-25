@@ -153,7 +153,7 @@ public class TransformedServiceReferenceImpl<S> implements TransformedServiceRef
         if (o instanceof ServiceReference) {
             Object id1 = ((ServiceReference) o).getProperty(Constants.SERVICE_ID);
             Object id2 = this.getProperty(Constants.SERVICE_ID);
-            return id1 == id2;
+            return (id1 != null && id1.equals(id2)) || (id1 == id2);
         }
         return m_origin.equals(o);
     }
