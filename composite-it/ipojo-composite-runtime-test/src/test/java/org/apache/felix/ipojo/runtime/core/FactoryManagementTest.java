@@ -30,6 +30,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Properties;
@@ -112,6 +113,14 @@ public class FactoryManagementTest extends Common {
         public Element getComponentMetadata() {
             return null;
         }
+
+        public List<ComponentInstance> getInstances() {
+		    return new ArrayList<ComponentInstance>();
+	    }
+
+	    public List<String> getInstancesNames() {
+		    return new ArrayList<String>();
+	    }
 
     }
 

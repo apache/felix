@@ -368,6 +368,28 @@ public abstract class IPojoFactory implements Factory {
     }
 
     /**
+     * Gets the list of instances created by the factory. The instances must be still alive.
+     *
+     * @return the list of created (and living) instances
+     * @since 1.10.2
+     */
+    public List<ComponentInstance> getInstances() {
+        // m_componentInstances is a concurrent hashmap, we can create retrieve values directly.
+        return new ArrayList<ComponentInstance>(m_componentInstances.values());
+    }
+
+    /**
+     * Gets the list of the names of the instances created by the factory. The instances must be still alive.
+     *
+     * @return the list of the names of created (and living) instances
+     * @since 1.10.2
+     */
+    public List<String> getInstancesNames() {
+        // m_componentInstances is a concurrent hashmap, we can create retrieve values directly.
+        return new ArrayList<String>(m_componentInstances.keySet());
+    }
+
+    /**
      * Computes the list of missing handlers.
      * @return the list of missing handlers.
      * @see org.apache.felix.ipojo.Factory#getMissingHandlers()
