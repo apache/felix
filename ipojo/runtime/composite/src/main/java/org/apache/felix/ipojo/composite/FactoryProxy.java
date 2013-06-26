@@ -178,4 +178,12 @@ public class FactoryProxy implements Factory {
         return m_delegate.getComponentMetadata();
     }
 
+    public List<ComponentInstance> getInstances() {
+        return m_delegate.getInstances();
+    }
+
+    public List<String> getInstancesNames() {
+        return m_delegate.getInstancesNames();
+    }
+
 }
