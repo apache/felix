@@ -907,6 +907,11 @@ public abstract class DependencyModel {
      * @return the service object attached to the given reference
      */
     public Object getService(ServiceReference ref, boolean store) {
+        if (m_tracker == null) {
+            // The tracker is already closed, we can't access the service anymore.
+            return null;
+        }
+
         Object svc = m_tracker.getService(ref);
         IPOJOServiceFactory factory = null;
 
