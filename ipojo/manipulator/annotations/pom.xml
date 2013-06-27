@@ -26,7 +26,6 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.annotations</artifactId>
     <version>1.10.2-SNAPSHOT</version>
-    <packaging>bundle</packaging>
     <name>Apache Felix iPOJO Annotations</name>
 
     <description>
@@ -45,32 +44,6 @@
                 <configuration>
                     <source>1.5</source>
                     <target>1.5</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.7</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-Name>Apache Felix iPOJO Annotations</Bundle-Name>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-                        <Bundle-Description>iPOJO Annotations</Bundle-Description>
-                        <Bundle-DocURL>
-                            http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-gettingstarted/how-to-use-ipojo-annotations.html
-                        </Bundle-DocURL>
-                        <Export-Package>org.apache.felix.ipojo.annotations,
-                            org.apache.felix.ipojo.handler.temporal,
-                            org.apache.felix.ipojo.handlers.jmx,
-                            org.apache.felix.ipojo.extender,
-                            org.apache.felix.ipojo.whiteboard,
-                            org.apache.felix.ipojo.handlers.event,
-                            org.apache.felix.ipojo.transaction
-                        </Export-Package>
-                    </instructions>
-                    <obrRepository>NONE</obrRepository>
                 </configuration>
             </plugin>
         </plugins>
