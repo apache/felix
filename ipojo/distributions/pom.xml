@@ -50,12 +50,12 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.ipojo</artifactId>
-                <version>1.8.6</version>
+                <version>1.10.1</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.ipojo.arch.gogo</artifactId>
-                <version>1.0.1</version>
+                <artifactId>org.apache.felix.ipojo.gogo</artifactId>
+                <version>1.10.1</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
@@ -66,7 +66,7 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-                <version>1.8.6</version>
+                <version>1.10.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

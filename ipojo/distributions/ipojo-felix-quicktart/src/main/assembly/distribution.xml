@@ -45,7 +45,7 @@
         <dependencySet>
             <includes>
                 <include>*:org.apache.felix.ipojo:*</include>
-                <include>*:org.apache.felix.ipojo.arch.gogo:*</include>
+                <include>*:org.apache.felix.ipojo.gogo:*</include>
             </includes>
             <unpack>false</unpack>
             <outputDirectory>./felix-framework-${felix.version}/bundle</outputDirectory>

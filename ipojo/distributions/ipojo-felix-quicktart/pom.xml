@@ -50,7 +50,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.arch.gogo</artifactId>
+            <artifactId>org.apache.felix.ipojo.gogo</artifactId>
         </dependency>
     </dependencies>
 

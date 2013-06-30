@@ -37,8 +37,8 @@
 
     <properties>
         <felix.version>4.2.1</felix.version>
-        <ipojo.ant.version>1.9.0-SNAPSHOT</ipojo.ant.version>
-        <ipojo.runtime.version>1.9.0-SNAPSHOT</ipojo.runtime.version>
+        <ipojo.ant.version>1.10.1</ipojo.ant.version>
+        <ipojo.runtime.version>1.10.1</ipojo.runtime.version>
         <bnd.version>1.50.0</bnd.version>
     </properties>
 
@@ -89,7 +89,7 @@
                                 org.apache.felix.ipojo.properties.handler,
                                 org.apache.felix.ipojo.properties.consumer,
                                 org.apache.felix.ipojo,
-                                org.apache.felix.ipojo.arch.gogo
+                                org.apache.felix.ipojo.gogo
                             </includeArtifactIds>
                             <outputDirectory>${project.build.directory}/dist/felix-framework-${felix.version}/bundle
                             </outputDirectory>
@@ -214,7 +214,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.ipojo.arch.gogo</artifactId>
+            <artifactId>org.apache.felix.ipojo.gogo</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -227,12 +227,12 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.ipojo</artifactId>
-                <version>1.8.6</version>
+                <version>1.10.1</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.ipojo.arch.gogo</artifactId>
-                <version>1.0.1</version>
+                <artifactId>org.apache.felix.ipojo.gogo</artifactId>
+                <version>1.10.1</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
@@ -243,7 +243,7 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-                <version>1.8.6</version>
+                <version>1.10.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
