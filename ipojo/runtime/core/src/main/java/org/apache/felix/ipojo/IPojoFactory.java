@@ -609,6 +609,12 @@ public abstract class IPojoFactory implements Factory {
      * The factory cannot be restarted. Only the {@link Extender} can call this method.
      */
     public synchronized void dispose() {
+        // Fast exit if already disposed
+        // The m_listeners field is ONLY set to null after dispose(), so if it's null, that
+        // means the factory has already be disposed. We can return safely.
+        if (m_listeners == null) {
+            return;
+        }
         stop(); // Does not hold the lock.
         m_requiredHandlers.clear();
         m_listeners = null;
