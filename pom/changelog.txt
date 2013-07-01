@@ -1,0 +1,26 @@
+Changes from 2.1 to 3
+---------------------
+
+** Improvement
+    * [FELIX-3486] - Allow for easy specification of class file compliance
+         and Java API use
+
+** Task
+    * [FELIX-4152] - Update to latest Apache Parent POM 13
+    * [FELIX-4153] - Use latest JavaDoc plugin and provide default
+         configuration
+
+
+Changes from 2 to 2.1
+---------------------
+
+Generate zip and tar.gz project archives
+
+
+Changes from 1 to 2
+-------------------
+
+** Wish
+    * [FELIX-1747] - Use Remote Resources Plugin to generate the legal files
+
+         
