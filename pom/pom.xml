@@ -44,6 +44,9 @@
         <felix.java.signature.groupId>org.codehaus.mojo.signature</felix.java.signature.groupId>
         <felix.java.signature.artifactId>java13-sun</felix.java.signature.artifactId>
         <felix.java.signature.version>1.0</felix.java.signature.version>
+        
+        <!-- Default settings for the site plugins -->
+        <site.javadoc.exclude>*.impl:*.internal:</site.javadoc.exclude>
     </properties>
 
     <issueManagement>
@@ -144,9 +147,21 @@
                     <artifactId>apache-rat-plugin</artifactId>
                     <version>0.7</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.9.1</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <excludePackageNames>${site.javadoc.exclude}</excludePackageNames>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
