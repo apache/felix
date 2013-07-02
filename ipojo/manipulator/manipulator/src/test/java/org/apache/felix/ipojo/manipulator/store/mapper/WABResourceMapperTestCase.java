@@ -24,27 +24,42 @@ import junit.framework.TestCase;
 import org.apache.felix.ipojo.manipulator.store.ResourceMapper;
 
 public class WABResourceMapperTestCase extends TestCase {
-    public void testSimpleInternalize() throws Exception {
+
+    public void testWebInfClassesResourceIsMapped() throws Exception {
         ResourceMapper mapper = new WABResourceMapper();
-        String path = "jndi.properties";
-        Assert.assertEquals("WEB-INF/classes/" + path, mapper.internalize(path));
+
+        String normalized = "jndi.properties";
+        String resource = "WEB-INF/classes/jndi.properties";
+
+        Assert.assertEquals(normalized, mapper.externalize(resource));
+        Assert.assertEquals(resource, mapper.internalize(normalized));
     }
 
-    public void testSimpleExternalize() throws Exception {
+    public void testWebInfLibResourceIsUnchanged() throws Exception {
         ResourceMapper mapper = new WABResourceMapper();
-        String path = "WEB-INF/classes/jndi.properties";
-        Assert.assertEquals("jndi.properties", mapper.externalize(path));
+
+        String normalized = "WEB-INF/lib/commons-logging.jar";
+        String resource = "WEB-INF/lib/commons-logging.jar";
+
+        Assert.assertEquals(normalized, mapper.externalize(resource));
+        Assert.assertEquals(resource, mapper.internalize(normalized));
     }
 
-    public void testExternalizeError() throws Exception {
+    public void testMetaInfManifestIsUnchanged() throws Exception {
         ResourceMapper mapper = new WABResourceMapper();
-        String path = "jndi.properties";
 
-        try {
-            mapper.externalize(path);
-            fail("Should have thrown an IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // ok
-        }
+        String normalized = "META-INF/MANIFEST.MF";
+        String resource = "META-INF/MANIFEST.MF";
+
+        Assert.assertEquals(normalized, mapper.externalize(resource));
+        Assert.assertEquals(resource, mapper.internalize(normalized));
+    }
+
+    public void testResourceNotMapped() throws Exception {
+        ResourceMapper mapper = new WABResourceMapper();
+
+        String resource = "images/logo.png";
+
+        Assert.assertEquals(resource, mapper.internalize(resource));
     }
 }
