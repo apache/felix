@@ -40,6 +40,7 @@
         <module>core-it</module>
         <module>composite-it</module>
         <module>ipojo-gogo-commands</module>
+        <module>distributions/quickstart</module>
     </modules>
 
     <scm>
