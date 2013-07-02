@@ -19,28 +19,40 @@
 
 package org.apache.felix.ipojo.manipulator.store.mapper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.felix.ipojo.manipulator.store.ResourceMapper;
 
 /**
  * A {@code WABResourceMapper} knows how to map resource names for a Web Application Bundle (WAB).
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- *
- * TODO It is not actually used by default, that will probably lead to some Exception
  */
 public class WABResourceMapper implements ResourceMapper {
 
     public static final String WEB_INF_CLASSES = "WEB-INF/classes/";
 
+    /**
+     * Store externalized names so that internalize can rebuild the good resource name.
+     */
+    private List<String> mappedNames = new ArrayList<String>();
+
     public String internalize(String name) {
-        return WEB_INF_CLASSES + name;
+        if (mappedNames.contains(name)) {
+            return WEB_INF_CLASSES + name;
+        }
+        return name;
     }
 
     public String externalize(String name) {
         if (name.startsWith(WEB_INF_CLASSES)) {
-            return name.substring(WEB_INF_CLASSES.length());
-        } else {
-            throw new IllegalArgumentException("Path '" + name + "' do not start with '" + WEB_INF_CLASSES + "'");
+            String externalized = name.substring(WEB_INF_CLASSES.length());
+            mappedNames.add(externalized);
+            return externalized;
         }
+        // Leave the name unchanged
+        // (it's probably META-INF/** or WEB-INF/lib/**)
+        return name;
     }
 }
