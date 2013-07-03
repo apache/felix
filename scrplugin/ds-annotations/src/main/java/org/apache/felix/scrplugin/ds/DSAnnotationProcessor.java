@@ -179,12 +179,41 @@ public class DSAnnotationProcessor implements AnnotationProcessor {
                     final String type = (typeSep == -1 ? PropertyType.String.name() : prefix.substring(typeSep + 1));
 
                     final PropertyType propType = PropertyType.valueOf(type);
-                    final PropertyDescription pd = new PropertyDescription(cad);
-                    describedClass.add(pd);
-                    pd.setName(key);
-                    pd.setValue(value);
-                    pd.setType(propType);
-                    pd.setUnbounded(PropertyUnbounded.DEFAULT);
+                    // FELIX-4159 : check if this is a multi value prop
+                    final List<PropertyDescription> existingProps = describedClass.getDescriptions(PropertyDescription.class);
+                    PropertyDescription found = null;
+                    for(final PropertyDescription current : existingProps) {
+                        if ( current.getName().equals(key) ) {
+                            found = current;
+                            break;
+                        }
+                    }
+                    if ( found == null ) {
+                        final PropertyDescription pd = new PropertyDescription(cad);
+                        describedClass.add(pd);
+                        pd.setName(key);
+                        pd.setValue(value);
+                        pd.setType(propType);
+                        pd.setUnbounded(PropertyUnbounded.DEFAULT);
+                    } else {
+                        if ( propType != found.getType() ) {
+                            throw new SCRDescriptorException("Multi value property '" + key + "' has different types: "
+                                    + found.getType() + " & " + propType,
+                                    describedClass.getSource());
+                        }
+                        if ( found.getValue() != null ) {
+                            final String[] values = new String[2];
+                            values[0] = found.getValue();
+                            values[1] = value;
+                            found.setMultiValue(values);
+                        } else {
+                            final String[] oldValues = found.getMultiValue();
+                            final String[] newValues = new String[oldValues.length + 1];
+                            System.arraycopy(oldValues, 0, newValues, 0, oldValues.length);
+                            newValues[oldValues.length] = value;
+                            found.setMultiValue(newValues);
+                        }
+                    }
                 }
             }
         }
