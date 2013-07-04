@@ -19,7 +19,8 @@
 
 package org.apache.felix.ipojo.bnd;
 
-import aQute.lib.osgi.AbstractResource;
+
+import aQute.bnd.osgi.AbstractResource;
 
 /**
  * A {@code ByteArrayResource} is ...

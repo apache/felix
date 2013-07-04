@@ -19,27 +19,28 @@
 
 package org.apache.felix.ipojo.bnd;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Clazz;
-import aQute.lib.osgi.Jar;
-import aQute.lib.osgi.Resource;
-import aQute.lib.osgi.URLResource;
-import aQute.libg.reporter.Reporter;
-import junit.framework.TestCase;
-import org.mockito.Matchers;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Clazz;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Resource;
+import aQute.bnd.osgi.URLResource;
+import aQute.service.reporter.Reporter;
+import junit.framework.TestCase;
 
 /**
  * Created with IntelliJ IDEA.
@@ -143,7 +144,7 @@ public class BndJarResourceStoreTestCase extends TestCase {
 
         Collection<Clazz> classes = new ArrayList<Clazz>();
         Resource typeResource = new URLResource(getClass().getResource("EmptyComponent.class"));
-        Clazz clazz = new Clazz(path, typeResource);
+        Clazz clazz = new Clazz(analyzer, path, typeResource);
         clazz.parseClassFile();
         classes.add(clazz);
         doReturn(classes).when(analyzer).getClasses(Matchers.<String[]>anyVararg());
