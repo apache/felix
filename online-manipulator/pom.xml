@@ -106,7 +106,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Private-Package>org.apache.felix.ipojo.online.manipulator</Private-Package>
                         <Bundle-DocURL>
                             http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-tools/apache-felix-ipojo-online-manipulator.html
@@ -147,6 +147,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.10</version>
                 <configuration>
                     <enableRulesSummary>false</enableRulesSummary>
                     <violationSeverity>warning</violationSeverity>
