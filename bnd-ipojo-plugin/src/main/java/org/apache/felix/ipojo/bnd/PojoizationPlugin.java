@@ -19,11 +19,11 @@
 
 package org.apache.felix.ipojo.bnd;
 
-import aQute.bnd.service.AnalyzerPlugin;
-import aQute.bnd.service.Plugin;
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Resource;
-import aQute.libg.reporter.Reporter;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.felix.ipojo.manipulator.ManipulationVisitor;
 import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
@@ -35,12 +35,11 @@ import org.apache.felix.ipojo.manipulator.visitor.check.CheckFieldConsistencyVis
 import org.apache.felix.ipojo.manipulator.visitor.writer.ManipulatedResourcesWriter;
 import org.apache.felix.ipojo.metadata.Element;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import static org.apache.felix.ipojo.bnd.Manifests.hasEmbedComponents;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Resource;
+import aQute.bnd.service.AnalyzerPlugin;
+import aQute.bnd.service.Plugin;
+import aQute.service.reporter.Reporter;
 
 /**
  * A {@code BndIpojoPlugin} is ...
@@ -108,7 +107,7 @@ public class PojoizationPlugin implements Plugin, AnalyzerPlugin {
 
         int nbComponents = findElements(cache.getMetadatas(), "component").size();
         int nbHandlers = findElements(cache.getMetadatas(), "handler").size();
-        this.m_reporter.progress("iPOJO manipulation performed performed in %s ms (%d components, %d handlers).",
+        this.m_reporter.trace("iPOJO manipulation performed performed in %s ms (%d components, %d handlers).",
                                (System.currentTimeMillis() - start),
                                nbComponents,
                                nbHandlers);

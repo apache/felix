@@ -21,11 +21,16 @@ package org.apache.felix.ipojo.bnd;
 
 import static java.lang.String.format;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Clazz;
-import aQute.lib.osgi.Jar;
-import aQute.lib.osgi.Resource;
-import aQute.libg.reporter.Reporter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
+
 import org.apache.felix.ipojo.manipulator.ResourceStore;
 import org.apache.felix.ipojo.manipulator.ResourceVisitor;
 import org.apache.felix.ipojo.manipulator.render.MetadataRenderer;
@@ -34,18 +39,12 @@ import org.apache.felix.ipojo.manipulator.util.Metadatas;
 import org.apache.felix.ipojo.manipulator.util.Streams;
 import org.apache.felix.ipojo.metadata.Element;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
+import aQute.bnd.header.Attrs;
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Clazz;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Resource;
+import aQute.service.reporter.Reporter;
 
 public class BndJarResourceStore implements ResourceStore {
 
@@ -94,7 +93,7 @@ public class BndJarResourceStore implements ResourceStore {
 
             // Iterates over discovered resources
             for (Clazz clazz : classes) {
-                visitor.visit(clazz.getPath());
+                visitor.visit(clazz.getAbsolutePath());
             }
         } catch (Exception e) {
             m_reporter.error("Cannot find iPOJO annotated types: " + e.getMessage());
@@ -106,7 +105,7 @@ public class BndJarResourceStore implements ResourceStore {
         for (Clazz clazz : classes) {
 
             // If it is i the main jar, simply use it
-            if (m_analyzer.getJar().getResource(clazz.getPath()) != null) {
+            if (m_analyzer.getJar().getResource(clazz.getAbsolutePath()) != null) {
                 manipulable.add(clazz);
                 continue;
             }
@@ -114,7 +113,7 @@ public class BndJarResourceStore implements ResourceStore {
             if (m_includeEmbedComponents) {
                 // Otherwise ...
                 // Try to see if it is in an embed dependencies
-                Jar jar = findJar(clazz.getPath());
+                Jar jar = findJar(clazz.getAbsolutePath());
                 if (jar == null) {
                     m_reporter.error("Resource for class %s not found in classpath", clazz.getFQN());
                     continue;
@@ -165,9 +164,10 @@ public class BndJarResourceStore implements ResourceStore {
 
         // Find referred packages and add them into Bnd
         for (String referred : Metadatas.findReferredPackages(metadata)) {
-            if (m_analyzer.getReferred().get(referred) == null) {
+            if (!m_analyzer.getReferred().containsFQN(referred)) {
                 // The given package is not referred ATM
-                m_analyzer.getReferred().put(referred, new HashMap<String, String>());
+                m_analyzer.getReferred().put(m_analyzer.getPackageRef(referred),
+                                             new Attrs());
             }
         }
 
@@ -192,7 +192,7 @@ public class BndJarResourceStore implements ResourceStore {
                     Attributes main = manifest.getMainAttributes();
                     String components = Manifests.getComponents(main);
                     if (components != null) {
-                        m_reporter.progress("Merging components from %s", jar.getName());
+                        m_reporter.trace("Merging components from %s", jar.getName());
                         builder.append(components);
                     }
                 } catch (Exception e) {
@@ -210,24 +210,28 @@ public class BndJarResourceStore implements ResourceStore {
         }
 
         // Add some mandatory imported packages
-        Map<String, String> version = new TreeMap<String, String>();
-        version.put("version", Constants.getPackageImportClause());
+        Attrs version = new Attrs();
+        version.put("version:Version", Constants.getPackageImportClause());
 
-        if (m_analyzer.getReferred().get("org.apache.felix.ipojo") == null) {
-            m_analyzer.getReferred().put("org.apache.felix.ipojo", version);
+        if (!m_analyzer.getReferred().containsFQN("org.apache.felix.ipojo")) {
+            m_analyzer.getReferred().put(m_analyzer.getPackageRef("org.apache.felix.ipojo"),
+                                         version);
         }
-        if (m_analyzer.getReferred().get("org.apache.felix.ipojo.architecture") == null) {
-            m_analyzer.getReferred().put("org.apache.felix.ipojo.architecture", version);
+        if (!m_analyzer.getReferred().containsFQN("org.apache.felix.ipojo.architecture")) {
+            m_analyzer.getReferred().put(m_analyzer.getPackageRef("org.apache.felix.ipojo.architecture"),
+                                         version);
         }
-        if (m_analyzer.getReferred().get("org.osgi.service.cm") == null) {
-            Map<String, String> cm = new TreeMap<String, String>();
-            cm.put("version", "1.2");
-            m_analyzer.getReferred().put("org.osgi.service.cm", cm);
+        if (!m_analyzer.getReferred().containsFQN("org.osgi.service.cm")) {
+            Attrs cm = new Attrs();
+            cm.put("version:Version", "1.2");
+            m_analyzer.getReferred().put(m_analyzer.getPackageRef("org.osgi.service.cm"),
+                                         cm);
         }
-        if (m_analyzer.getReferred().get("org.osgi.service.log") == null) {
-            Map<String, String> log = new TreeMap<String, String>();
-            log.put("version", "1.3");
-            m_analyzer.getReferred().put("org.osgi.service.log", log);
+        if (!m_analyzer.getReferred().containsFQN("org.osgi.service.log")) {
+            Attrs log = new Attrs();
+            log.put("version:Version", "1.3");
+            m_analyzer.getReferred().put(m_analyzer.getPackageRef("org.osgi.service.log"),
+                                         log);
         }
 
 

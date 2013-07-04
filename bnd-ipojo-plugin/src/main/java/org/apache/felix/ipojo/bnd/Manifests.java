@@ -19,10 +19,10 @@
 
 package org.apache.felix.ipojo.bnd;
 
-import aQute.lib.osgi.Analyzer;
-import aQute.lib.osgi.Jar;
-
 import java.util.jar.Attributes;
+
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Jar;
 
 /**
  * A {@code Manifests} is a utility class for extracting data from Bundle's Manifest.

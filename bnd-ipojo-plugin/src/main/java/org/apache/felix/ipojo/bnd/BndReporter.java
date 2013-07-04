@@ -22,8 +22,9 @@ package org.apache.felix.ipojo.bnd;
 import java.util.ArrayList;
 import java.util.List;
 
-import aQute.libg.reporter.Reporter;
 import org.apache.felix.ipojo.manipulator.reporter.EmptyReporter;
+
+import aQute.service.reporter.Reporter;
 
 /**
  * A {@code BndReporter} knows how to wrap a Bnd Reporter into an iPOJO Reporter.
@@ -47,7 +48,7 @@ public class BndReporter extends EmptyReporter {
      */
     private List<String> m_warnings = new ArrayList<String>();
 
-    public BndReporter(aQute.libg.reporter.Reporter reporter) {
+    public BndReporter(Reporter reporter) {
         m_reporter = reporter;
     }
 
@@ -66,7 +67,7 @@ public class BndReporter extends EmptyReporter {
 
     @Override
     public void info(String message, Object... args) {
-        m_reporter.progress(message, args);
+        m_reporter.trace(message, args);
     }
 
     @Override
