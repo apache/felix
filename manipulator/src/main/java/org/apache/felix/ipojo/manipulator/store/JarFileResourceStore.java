@@ -148,7 +148,7 @@ public class JarFileResourceStore implements ResourceStore {
     }
 
     public void write(String resourcePath, byte[] resource) throws IOException {
-        this.m_content.put(resourcePath, resource);
+        this.m_content.put(getInternalPath(resourcePath), resource);
     }
 
     public void close() throws IOException {
