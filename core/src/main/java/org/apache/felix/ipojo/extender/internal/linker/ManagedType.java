@@ -124,29 +124,43 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
         String version = m_declaration.getComponentVersion();
         if (version != null) {
             // Track instance for:
-            // * this component AND
+            // * this component's name OR classname
+            //            AND
             // * this component's version OR no version
             filter = format(
-                    "(&(objectClass=%s)(%s=%s)(|(%s=%s)(!(%s=*))))",
+                    "(&(objectClass=%s)(|(%s=%s)(%s=%s))(|(%s=%s)(!(%s=*))))",
                     InstanceDeclaration.class.getName(),
                     InstanceDeclaration.COMPONENT_NAME_PROPERTY,
                     m_declaration.getComponentName(),
+                    InstanceDeclaration.COMPONENT_NAME_PROPERTY,
+                    getComponentClassname(),
                     InstanceDeclaration.COMPONENT_VERSION_PROPERTY,
                     version,
                     InstanceDeclaration.COMPONENT_VERSION_PROPERTY
             );
         } else {
             // Track instance for:
-            // * this component AND no version
+            // * this component's name OR classname
+            //       AND
+            // * no version
             filter = format(
-                    "(&(objectClass=%s)(%s=%s)(!(%s=*)))",
+                    "(&(objectClass=%s)(|(%s=%s)(%s=%s))(!(%s=*)))",
                     InstanceDeclaration.class.getName(),
                     InstanceDeclaration.COMPONENT_NAME_PROPERTY,
                     m_declaration.getComponentName(),
+                    InstanceDeclaration.COMPONENT_NAME_PROPERTY,
+                    getComponentClassname(),
                     InstanceDeclaration.COMPONENT_VERSION_PROPERTY
             );
         }
         m_instanceTracker = new ServiceTracker(m_bundleContext, m_bundleContext.createFilter(filter), new InstanceSupport());
+    }
+
+    /**
+     * Returns the {@literal classname} attribute value.
+     */
+    private String getComponentClassname() {
+        return m_declaration.getComponentMetadata().getAttribute("classname");
     }
 
     /**
