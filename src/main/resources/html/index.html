@@ -139,6 +139,38 @@ function graphServiceProviders(json) {
   else showGraph(g)
 }
 
+function graphB2B(json) {
+  $("#legend").html("Black squares are bundles, pointing to the bundles they use for their services.")
+  var g = new Graph()
+
+  var empty = true
+  for (provider in json) {
+    empty = false
+    g.addNode(provider, {
+      getShape : function(r,x,y) {
+        // create a square shape to differentiate bundles from services
+        return r.rect(x-30, y-13, 62, 33, 5).attr({"fill": "#f00", "stroke-width": 1})
+      }
+    })
+    for (i = 0; i < json[provider].length; i++) {
+      // point using bundle to provider bundle
+      var user = json[provider][i]
+      g.addNode(user, {
+        getShape : function(r,x,y) {
+          // create a square shape to differentiate bundles from services
+          return r.rect(x-30, y-13, 62, 33, 5).attr({"stroke-width": 2})
+        }
+      })
+      g.addEdge(user, provider, { directed : true } )
+    }
+  }
+
+  if (empty) {
+    $("#canvas").empty().append($("<h1>").html("Service Registry empty: no service found."))
+  }
+  else showGraph(g)
+}
+
 function showGraph(g) {
     debug(g)
     $("#warning").html("")
@@ -187,6 +219,11 @@ function loadServiceUsers() {
   loadServices("using")
 }
 
+function loadB2B() {
+  grapher = graphB2B
+  loadServices("b2b")
+}
+
 function loadServices(cmd) {
   $("#canvas").html("Loading data. Please wait...")
   $.ajax({
@@ -210,6 +247,8 @@ $(document).ready(function(){
   	.append($("<a>").attr("href", "javascript:loadServiceProviders()").html("Show Service Providers"))
   	.append($("<span>").html("&nbsp;|&nbsp;"))
   	.append($("<a>").attr("href", "javascript:loadServiceUsers()").html("Show Service Users"))
+  	.append($("<span>").html("&nbsp;|&nbsp;"))
+  	.append($("<a>").attr("href", "javascript:loadB2B()").html("Show Bundles Dependencies"))
   	.append($("<span>").html("&nbsp;|&nbsp;"))
   	.append($("<a>").attr("href", "javascript:loadUnavail()").html("Show Not Avail"))
   	.append($("<span>").html("&nbsp;"))

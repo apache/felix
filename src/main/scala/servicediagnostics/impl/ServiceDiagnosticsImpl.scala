@@ -47,11 +47,11 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
      * and filters all intermediate known unregistered services
      * to keep only missing "leaf" dependencies
      */
-    override def notavail :Map[String, List[String]] = 
+    override def notavail :Map[String, Set[String]] = 
     {
         val unavail = plugins.flatMap(_.components).filterNot(_.registered)
-        unavail.foldLeft(Map[String,List[String]]()) { (map,comp) =>
-            val missing = comp.deps.filterNot { d =>
+        unavail.foldLeft(Map[String,Set[String]]()) { (map,comp) =>
+            val missing = comp.deps.toSet.filterNot { d =>
                   d.available || unavail.exists(c => d.matchedBy(c))
                 }.map(_.toString) 
             if (missing isEmpty) map else map + (shorten(comp.impl) -> missing)
@@ -82,7 +82,7 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
      * from the original graph. This is done because "perfect loops" have no border node and are 
      * therefore "invisible" to the traversing algorithm.
      */
-    override def unresolved(optionals:Boolean) :Map[String, List[String]] = 
+    override def unresolved(optionals:Boolean) :Map[String, Set[String]] = 
     {
         // first build a traversable graph from all found components and dependencies
         def buildGraph(link:(Node,Node)=>Unit) = {
@@ -138,16 +138,16 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
         // finally filter the original graph by removing all resolved nodes
         // and format the result (keeping only the names)
         (for (node <- graph.filterNot(n => n.edges.isEmpty || resolved.contains(n)))
-          yield (node.name -> node.edges.map{ n => n.name }.toList)).toMap
+          yield (node.name -> node.edges.map{ n => n.name }.toSet)).toMap
     }
 
     /**
      * Implements ServiceDiagnostics.usingBundles.
      */
-    override def usingBundles:Map[String,List[String]] = 
-        allServices.foldLeft(Map[String,List[String]]()) { case (result, (name, ref)) =>
+    override def usingBundles:Map[String,Set[String]] = 
+        allServices.foldLeft(Map[String,Set[String]]()) { case (result, (name, ref)) =>
             Option(ref.getUsingBundles).map { _.toList.map(_.toString) }.getOrElse(Nil) match {
-                case using @ h::t => result + (name -> using)
+                case using @ h::t => result + (name -> using.toSet)
                 case Nil => result
             }
         }
@@ -155,10 +155,22 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
     /**
      * Implements ServiceDiagnostics.serviceProviders.
      */
-    override def serviceProviders:Map[String, List[String]] = 
-        allServices.foldLeft(Map[String,List[String]]()) { case (result, (name, ref)) =>
+    override def serviceProviders:Map[String, Set[String]] = 
+        allServices.foldLeft(Map[String,Set[String]]()) { case (result, (name, ref)) =>
             val b = ref.getBundle.toString
-            result.updated(b, name :: result.getOrElse(b, Nil))
+            result.updated(b, result.getOrElse(b, Set()) + name)
+        }
+
+    override def b2b:Map[String,Set[String]] = 
+        allServices.foldLeft(Map[String,Set[String]]()) { case (result, (name, ref)) =>
+            Option(ref.getUsingBundles).map { _.toList.map(_.toString) }.getOrElse(Nil) match {
+                case using @ h::t => 
+                    val b = ref.getBundle.toString
+                    val filteredUsers = using.filter(_ != b)
+                    if (filteredUsers isEmpty) result
+                    else result.updated(b, result.getOrElse(b, Set()) ++ using)
+                case Nil => result
+            }
         }
 
     /**

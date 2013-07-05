@@ -96,6 +96,6 @@ object Util
     /** 
      * turn the ServiceDiagnostics output into a JSON representation.
      */
-    def json(map:Map[String,List[String]]) = 
-      new JSONObject(asJavaMap(mMap() ++ map.map(kv => (kv._1, asJavaList(kv._2)))))
+    def json(map:Map[String,Set[String]]) = 
+      new JSONObject(asJavaMap(mMap() ++ map.map(kv => (kv._1, asJavaList(kv._2.toList)))))
 }

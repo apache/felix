@@ -33,11 +33,12 @@ class CLI extends Command
 
     override def getName = "sd"
     override def getShortDescription = "Service Diagnostics"
-    override def getUsage = "notavail|loops|using|providing"
+    override def getUsage = "notavail|loops|using|providing|b2b"
 
     // for gogo
     def using = execute("sd using", System.out, System.err)
     def providing = execute("sd providing", System.out, System.err)
+    def b2b = execute("sd b2b", System.out, System.err)
     def notavail = execute("sd notavail", System.out, System.err)
     def loops = execute("sd loops", System.out, System.err)
 
@@ -47,6 +48,8 @@ class CLI extends Command
             out.println(json(engine.usingBundles).toString(2))
         case "providing"::Nil => 
             out.println(json(engine.serviceProviders).toString(2))
+        case "b2b"::Nil => 
+            out.println(json(engine.b2b).toString(2))
         case "notavail"::Nil => 
             out.println(json(engine.notavail).toString(2))
         case "loops"::Nil => showloops(out)

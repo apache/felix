@@ -56,6 +56,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin("servicegraph", "Service G
         req.getPathInfo match {
             case "/servicegraph/using" => resp.getWriter.println(json(engine.usingBundles))
             case "/servicegraph/providing" => resp.getWriter.println(json(engine.serviceProviders))
+            case "/servicegraph/b2b" => resp.getWriter.println(json(engine.b2b))
             case "/servicegraph/notavail" => resp.getWriter.println(new JSONObject()
                                   .put("notavail", json(engine.notavail))
                                   .put("unresolved", 
