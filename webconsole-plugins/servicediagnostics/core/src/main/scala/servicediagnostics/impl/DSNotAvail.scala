@@ -49,11 +49,12 @@ class DSNotAvail extends ServiceDiagnosticsPlugin
             service <- Option[Array[String]](comp.getServices).getOrElse(Array())
             deps = Option[Array[Reference]](comp.getReferences).getOrElse(Array())
                           .map(dep => new Dependency(dep.getServiceName,
-                                                     dep.getTarget,
-                                                     dep.isSatisfied)).toList
+                                                     Option(dep.getTarget),
+                                                     dep.isSatisfied || dep.isOptional)).toList
           }
             // yield Comp builds a list of Comp out of the for comprehension
-            yield new Comp(service,
+            yield new Comp(comp.getClassName.trim,
+                           service.trim,
                            comp.getProperties,
                            comp.getState != Component.STATE_UNSATISFIED,
                            deps)) toList

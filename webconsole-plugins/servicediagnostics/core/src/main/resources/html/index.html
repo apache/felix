@@ -21,26 +21,33 @@
     <script type="text/javascript">
 <!--
 
-var _redraw;
-var height = 600;
-var width = 1000;
+var _redraw
+var height = 600
+var width = 1000
 
-DEBUG = false;
-debug = function (obj) { if(DEBUG && console) console.debug(obj); }
+DEBUG = false
+debug = function (obj) { if(DEBUG && console) console.debug(obj) }
 
-var services;
+function isEmpty(obj) { 
+  for (var key in obj) return false 
+  return true
+}
+
+var services
+var grapher
 
 // from graph demo @ http://blog.ameisenbar.de/en/2010/03/02/dracula/
 function graphUnavail(json) {
-  var g = new Graph();
+  $("#legend").html("Bubbles are components, dotted squares are missing required dependencies.")
+  var g = new Graph()
 
-  var empty = true;
-  notavail = json.notavail;
+  var empty = true
+  notavail = json.notavail
   for (s in notavail) {
-    empty = false;
+    empty = false
     for (i = 0; i < notavail[s].length; i++) {
       // point unregistered service to dependency name
-      var dep = notavail[s][i];
+      var dep = notavail[s][i]
       g.addNode(dep, {
         getShape : function(r,x,y) {
           // create a dashed square shape to differentiate the missing dependency
@@ -49,107 +56,149 @@ function graphUnavail(json) {
             "stroke": "gray", 
             "stroke-width": 2, 
             "stroke-dasharray": "--"
-          });
+          })
         }
-      });
-      g.addEdge(s, dep, { directed : true } );
+      })
+      g.addEdge(s, dep, { directed : true } )
     }
   }
-  // show unresolved
-  var unresolved = json.unresolved
-  if (unresolved) for (s in unresolved) {
-    $("#warning").html("circular dependencies detected!");
-    for (i = 0; i < unresolved[s].length; i++) {
-      g.addEdge(s, unresolved[s][i], { directed : true } );
-    }
-  }
+  // warn unresolved
+  if (json.unresolved && !isEmpty(json.unresolved)) 
+    $("#warning").html("circular dependencies detected! <a href='javascript:graphUnresolved()'>(show)</a>")
+  else 
+    $("#warning").html("") //clear previous
 
   if (empty) {
-    $("#canvas").empty().append($("<h1>").html("Service Registry status OK: No unresolved service found."));
+    $("#canvas").empty().append($("<h1>").html("Service Registry status OK: No unresolved service found."))
   } 
   else showGraph(g)
 }
 
-function graphAllServices(json) {
-  var g = new Graph();
+function graphUnresolved() {
+  grapher = graphUnresolved
+  $("#legend").html("Bubbles are unresolvable components linked to each other.")
+  var g = new Graph()
+  var unresolved = services.unresolved
+  for (s in unresolved) {
+    for (i = 0; i < unresolved[s].length; i++) {
+      g.addEdge(s, unresolved[s][i], { directed : true } )
+    }
+  }
+  showGraph(g)
+}
 
-  var empty = true;
+function graphUsingServices(json) {
+  $("#legend").html("Black squares are bundles, pointing to the services they use.")
+  var g = new Graph()
+
+  var empty = true
   for (s in json) {
-    empty = false;
+    empty = false
     for (i = 0; i < json[s].length; i++) {
       // point using bundle to service name
-      var bundle = json[s][i];
+      var bundle = json[s][i]
       g.addNode(bundle, {
         getShape : function(r,x,y) {
           // create a square shape to differentiate bundles from services
-          return r.rect(x-30, y-13, 62, 33, 5).attr({"fill": "#f00", "stroke-width": 2});
+          return r.rect(x-30, y-13, 62, 33, 5).attr({"fill": "#f00", "stroke-width": 2})
         }
-      });
-      g.addEdge(bundle, s, { directed : true } );
+      })
+      g.addEdge(bundle, s, { directed : true } )
     }
   }
 
   if (empty) {
-    $("#canvas").empty().append($("<h1>").html("Service Registry empty: no service found."));
+    $("#canvas").empty().append($("<h1>").html("Service Registry empty: no service found."))
+  }
+  else showGraph(g)
+}
+
+function graphServiceProviders(json) {
+  $("#legend").html("Black squares are bundles, pointing to the services they provide.")
+  var g = new Graph()
+
+  var empty = true
+  for (bundle in json) {
+    empty = false
+    g.addNode(bundle, {
+      getShape : function(r,x,y) {
+        // create a square shape to differentiate bundles from services
+        return r.rect(x-30, y-13, 62, 33, 5).attr({"fill": "#f00", "stroke-width": 2})
+      }
+    })
+    for (i = 0; i < json[bundle].length; i++) {
+      // point bundle to service name
+      var service = json[bundle][i]
+      g.addEdge(bundle, service, { directed : true } )
+    }
+  }
+
+  if (empty) {
+    $("#canvas").empty().append($("<h1>").html("Service Registry empty: no service found."))
   }
   else showGraph(g)
 }
 
 function showGraph(g) {
-    debug(g);
+    debug(g)
+    $("#warning").html("")
 
     /* layout the graph using the Spring layout implementation */
-    var layouter = new Graph.Layout.Spring(g);
-    layouter.layout();
+    var layouter = new Graph.Layout.Spring(g)
+    layouter.layout()
     
     /* draw the graph using the RaphaelJS draw implementation */
-    $("#canvas").empty();
-    var renderer = new Graph.Renderer.Raphael('canvas', g, width, height);
-    renderer.draw();
+    $("#canvas").empty()
+    var renderer = new Graph.Renderer.Raphael('canvas', g, width, height)
+    renderer.draw()
     
     _redraw = function() {
-        layouter.layout();
-        renderer.draw();
-    };
+        layouter.layout()
+        renderer.draw()
+    }
+    $("#filterdiv").show()
 }
 
 function redraw() {
-  var filter = $("#filter").val();
+  var filter = $("#filter").val()
   if (filter) {
-    var grep = {}; 
-    for (s in services) if (s.indexOf(filter) >= 0) grep[s] = services[s]; 
-    graphAllServices(grep);
+    var grep = {}
+    for (s in services) if (s.indexOf(filter) >= 0) grep[s] = services[s]
+    grapher(grep)
   } else {
-    graphAllServices(services);
+    grapher(services)
   }
 }
 
 function loadUnavail() {
-  $("#canvas").html("Loading data. Please wait...");
-  $.ajax({
-    url: "servicegraph/notavail",
-    dataType: "json",
-    success: function(json){
-      services = json;
-      debug("Got services");
-      debug(json);
-      graphUnavail(json);
-    }
-  });
+  var withOpt = ""
+  if ($("#optionals").attr("checked")) withOpt = "?optionals=true"
+  grapher = graphUnavail
+  loadServices("notavail"+withOpt)
 }
 
-function loadAllServices() {
-  $("#canvas").html("Loading data. Please wait...");
+function loadServiceProviders() {
+  grapher = graphServiceProviders
+  loadServices("providing")
+}
+
+function loadServiceUsers() {
+  grapher = graphUsingServices
+  loadServices("using")
+}
+
+function loadServices(cmd) {
+  $("#canvas").html("Loading data. Please wait...")
   $.ajax({
-    url: "servicegraph/all",
+    url: "servicegraph/"+cmd,
     dataType: "json",
     success: function(json){
-      services = json;
-      debug("Got services");
-      debug(json);
-      graphAllServices(json);
+      services = json
+      debug("Got services")
+      debug(json)
+      grapher(json)
     }
-  });
+  })
 }
 
 /* only do all this when document has finished loading (needed for RaphaelJS) */
@@ -158,20 +207,26 @@ $(document).ready(function(){
     $.getScript("servicegraph/html/js/graffle-1.3.1.js")
     $.getScript("servicegraph/html/js/graph.js")
     $("#actions")
-  	.append($("<a>").attr("href", "javascript:loadAllServices()").html("Show Service Registry"))
+  	.append($("<a>").attr("href", "javascript:loadServiceProviders()").html("Show Service Providers"))
+  	.append($("<span>").html("&nbsp;|&nbsp;"))
+  	.append($("<a>").attr("href", "javascript:loadServiceUsers()").html("Show Service Users"))
   	.append($("<span>").html("&nbsp;|&nbsp;"))
   	.append($("<a>").attr("href", "javascript:loadUnavail()").html("Show Not Avail"))
-});
+  	.append($("<span>").html("&nbsp;"))
+        .append($("<input>").attr("id", "optionals").attr("type", "checkbox"))
+        .append($("<span>").html("Include optionals in loops"))
+})
 
 -->
     </script>
     <style>
       #actions a { color:black; font-weight:bold; text-decoration:none; }
       #warning { color:red; font-weight:bold; }
+      #filterdiv { visibility:none; display:none; }
     </style>
 <div id="servicegraph">
-Filter:&nbsp;<input type="text" id="filter"/><button id="redraw" onclick="redraw();">redraw</button>
-&nbsp;&nbsp;<span id="actions"></span>
-&nbsp;&nbsp;<span id="warning"></span>
+<span id="actions"></span>&nbsp;&nbsp;<span id="warning"></span>
+<div id="filterdiv">Filter:&nbsp;<input type="text" id="filter"/><button id="redraw" onclick="redraw();">redraw</button></div>
+<div><span id="legend"></span>&nbsp;<span>(All nodes can be dragged around)</span></div>
 <div id="canvas"></div>
 </div>

@@ -3,9 +3,15 @@ Changes from 0.1.2 to 0.1.3
 
 ** Bug
   * [FELIX-3898] name parsing issue on BundleDependency
+  * [FELIX-4162] incorrect loop detection
 
 ** Improvement
   * [FELIX-3899] switch to Scala 2.10
+  * [FELIX-3769] webconsole categories
+  * [FELIX-4163] command line interface
+  * circular dependencies shown on a separate graph with or wihtout optionals
+  * show both using bundles and providing bundles
+  * show components as implementations ans services as interfaces
 
 Changes from 0.1.1 to 0.1.2
 ---------------------------

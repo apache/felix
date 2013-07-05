@@ -154,7 +154,6 @@ class TestDM extends DependencyActivatorBase
     def start = try 
     {
         println("unavail="+diagnostics.notavail)
-        println("all="+diagnostics.allServices)
     }
     catch 
     {

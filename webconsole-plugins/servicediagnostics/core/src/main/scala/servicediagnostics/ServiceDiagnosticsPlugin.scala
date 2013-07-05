@@ -21,6 +21,10 @@ package org.apache.felix.servicediagnostics
 import org.osgi.framework.FrameworkUtil
 import collection.JavaConversions._
 
+import scala.collection.mutable.{Map => mMap}
+
+import org.json.JSONObject
+
 import Util._
 
 /**
@@ -40,33 +44,40 @@ trait ServiceDiagnosticsPlugin
 
 /**
  * This class represents a service component.
- * @param name the service interface name 
+ * @param impl the implementation class name
+ * @param service the service interface name 
  *   (use different instances for objects registering multiple services)
  * @param props the service properties
  * @param registered true if the component is already registered in the Service Registry
  * @param deps the list of declared dependencies
  */
-class Comp(val name:String, val props:java.util.Dictionary[_,_], val registered:Boolean, val deps:List[Dependency])
+class Comp(val impl:String, val service:String, val props:java.util.Dictionary[_,_], val registered:Boolean, val deps:List[Dependency])
 {
-    override def toString = {if (registered) "[registered]" else "[unregistered]"}+shorten(name)+{
-        if (props != null && !props.isEmpty) " "+props else ""}
+    override def toString = {if (registered) "[registered]" else "[unregistered]"}+shorten(impl)+"("+shorten(service)+
+        Option(props).map("#"+_.toString.hashCode).mkString+")" //properties can be too long to display :(
+    
+    override def equals(o:Any) = o != null && o.getClass == getClass && {
+      val oc = o.asInstanceOf[Comp]
+      oc.impl == impl && oc.service == service && oc.props == props
+    }
 }
 
 /**
  * This class represents a service dependency.
  * @param name the service interface name
  * @param filter the optional service filter
- * @param available true if the dependency is already available in the Service Registry
+ * @param available true if the dependency is already available in the Service Registry, 
+ *         or optional (irrelevant for diagnostics)
  */
-class Dependency(val name:String, val filter:String, val available:Boolean = false) 
+class Dependency(val name:String, val filter:Option[String], val available:Boolean = false) 
 {
-    private val compiled = if (filter != null && !filter.isEmpty) FrameworkUtil.createFilter(filter) else null
+    private val compiled = filter.map(FrameworkUtil.createFilter(_))
 
-    def matchedBy(comp:Comp):Boolean = comp.name == name && 
-        !(compiled != null && comp.props == null) && //filter and no props, doesn't match
-        (compiled == null || compiled.`match`(comp.props))
+    def matchedBy(comp:Comp):Boolean = comp.service == name && 
+        !(compiled.isDefined && comp.props == null) && //filter and no props, doesn't match
+        (compiled.isEmpty || compiled.get.`match`(comp.props))
     
-    override def toString = shorten(name)+{if (filter != null) filter else ""}
+    override def toString = shorten(name) + filter.mkString
 }
 
 /** 
@@ -81,4 +92,10 @@ object Util
         val l = classname.split('.').toList
         l.map(_.take(1)).mkString(".") + l.last.drop(1)
     }
+
+    /** 
+     * turn the ServiceDiagnostics output into a JSON representation.
+     */
+    def json(map:Map[String,List[AnyRef]]) = 
+      new JSONObject(asJavaMap(mMap() ++ map.map(kv => (kv._1, asJavaList(kv._2)))))
 }

@@ -32,12 +32,18 @@ trait ServiceDiagnostics
 
     /**
      * returns a graph of unresolvable components (typically loops)
+     * @param optionals if true, include optional services in loop detection
      */
-    def unresolved :Map[String, List[String]]
+    def unresolved(optionals:Boolean) :Map[String, List[String]]
 
     /**
      * returns a map of resolved service names to list of bundles using the service
      */
-    def allServices:Map[String, List[String]]
+    def usingBundles:Map[String, List[String]]
+
+    /**
+     * returns a map of bundle names to list of provided services
+     */
+    def serviceProviders:Map[String, List[String]]
 }
 

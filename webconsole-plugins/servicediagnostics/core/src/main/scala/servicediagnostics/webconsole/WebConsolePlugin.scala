@@ -18,9 +18,6 @@
  */
 package org.apache.felix.servicediagnostics.webconsole
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable.{Map => mMap}
-
 import java.io.PrintStream
 
 import javax.servlet.http._
@@ -31,6 +28,7 @@ import org.json.JSONArray
 import org.apache.felix.webconsole.SimpleWebConsolePlugin
 
 import org.apache.felix.servicediagnostics.ServiceDiagnostics
+import org.apache.felix.servicediagnostics.Util._
 
 /**
  * This is the Apache Felix WebConsolePlugin implementation.
@@ -38,8 +36,7 @@ import org.apache.felix.servicediagnostics.ServiceDiagnostics
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-//class WebConsolePlugin extends SimpleWebConsolePlugin("servicegraph", "Service Graph", "OSGi", Array[String]()) 
-class WebConsolePlugin extends SimpleWebConsolePlugin("servicegraph", "Service Graph", Array[String]()) 
+class WebConsolePlugin extends SimpleWebConsolePlugin("servicegraph", "Service Graph", "OSGi", Array[String]()) 
 {
     var engine:ServiceDiagnostics = _ //dependency injection. see Activator.
 
@@ -57,16 +54,13 @@ class WebConsolePlugin extends SimpleWebConsolePlugin("servicegraph", "Service G
      */
     override def doGet(req:HttpServletRequest, resp:HttpServletResponse) = 
         req.getPathInfo match {
-            case "/servicegraph/all" => resp.getWriter.println(json(engine.allServices))
+            case "/servicegraph/using" => resp.getWriter.println(json(engine.usingBundles))
+            case "/servicegraph/providing" => resp.getWriter.println(json(engine.serviceProviders))
             case "/servicegraph/notavail" => resp.getWriter.println(new JSONObject()
                                   .put("notavail", json(engine.notavail))
-                                  .put("unresolved", json(engine.unresolved)))
+                                  .put("unresolved", 
+                                      json(engine.unresolved(
+                                          Option(req.getParameter("optionals")).isDefined))))
             case x => super.doGet(req, resp)
           }
-
-    /** 
-     * turn the ServiceDiagnostics output into a JSON representation.
-     */
-    private def json(map:Map[String,List[AnyRef]]) = 
-      new JSONObject(asJavaMap(mMap() ++ map.map(kv => (kv._1, asJavaList(kv._2)))))
 }
