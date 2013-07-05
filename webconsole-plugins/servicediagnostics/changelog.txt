@@ -10,8 +10,9 @@ Changes from 0.1.2 to 0.1.3
   * [FELIX-3769] webconsole categories
   * [FELIX-4163] command line interface
   * circular dependencies shown on a separate graph with or wihtout optionals
-  * show both using bundles and providing bundles
-  * show components as implementations ans services as interfaces
+  * new visualisations of the service registry: service providers, using
+  bundles, and bundles wiring via services
+  * show components as implementations and services as interfaces
 
 Changes from 0.1.1 to 0.1.2
 ---------------------------
