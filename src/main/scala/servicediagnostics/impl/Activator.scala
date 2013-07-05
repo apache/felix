@@ -22,12 +22,16 @@ import java.util. { Hashtable => jHT }
 
 import org.osgi.framework.BundleContext
 
+import org.apache.felix.shell.Command
+import org.apache.felix.service.command.CommandProcessor
+
 import org.apache.felix.dm.DependencyActivatorBase
 import org.apache.felix.dm.DependencyManager
 
 import org.apache.felix.servicediagnostics.ServiceDiagnostics
 import org.apache.felix.servicediagnostics.ServiceDiagnosticsPlugin
 import org.apache.felix.servicediagnostics.webconsole.WebConsolePlugin
+import org.apache.felix.servicediagnostics.shell.CLI
 
 /**
  * Activator class for the service diagnostics core implementation
@@ -65,6 +69,18 @@ class Activator extends DependencyActivatorBase
                   put("felix.webconsole.label", "servicegraph")
               }})
             .setImplementation(classOf[WebConsolePlugin])
+            .add(createServiceDependency
+                .setService(classOf[ServiceDiagnostics])
+                .setRequired(true)
+                .setAutoConfig("engine")))
+
+        // register the shell command
+        dm.add(createComponent
+            .setInterface(classOf[Command].getName, new jHT[String,Any]() {{
+                  put(CommandProcessor.COMMAND_FUNCTION, Array("notavail", "circular"))
+                  put(CommandProcessor.COMMAND_SCOPE, "sd")
+              }})
+            .setImplementation(classOf[CLI])
             .add(createServiceDependency
                 .setService(classOf[ServiceDiagnostics])
                 .setRequired(true)

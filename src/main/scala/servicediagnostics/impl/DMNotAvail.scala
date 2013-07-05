@@ -43,20 +43,27 @@ class DMNotAvail(val bc:BundleContext) extends ServiceDiagnosticsPlugin
     override def components:List[Comp] = 
     {
         // this involves a bit of type casting gymnastics because the underlying 
-        // API does not use generic types
+        // API does not use generic types and parsing of strings because the 
+        // underlying API does not provide accessors
         (for {
             dm <- DependencyManager.getDependencyManagers.map(_.asInstanceOf[DependencyManager])
             comp <- dm.getComponents.map(_.asInstanceOf[Component])
             compdec = comp.asInstanceOf[ComponentDeclaration]
+            impl = comp.toString.split(" ").toList.last.takeWhile(_ != ']').trim
+            service <- compdec.getName.takeWhile(_ != '(').split(",") //multiple services for one comp
             deps = compdec.getComponentDependencies
-                          .map(dep => new Dependency(dep.getName.takeWhile(_ != '('), 
-                                           dep.getName.dropWhile(_ != '(').trim,
+                          .map(dep => new Dependency(dep.getName.takeWhile(_ != '(').trim, 
+                                           dep.getName.dropWhile(_ != '(').trim match {
+                                               case "" => None
+                                               case f => Some(f)
+                                           },
                                            dep.getState != STATE_UNAVAILABLE_REQUIRED)).toList
           }
             // yield Comp builds a list of Comp out of the for comprehension
-            yield new Comp(compdec.getName.takeWhile(_ != '('), 
+            yield new Comp(impl,
+                           service.trim, 
                            comp.getServiceProperties,
                            (compdec.getState != STATE_UNREGISTERED),
-                           deps)) toList
+                           deps)) toList 
     }
 }

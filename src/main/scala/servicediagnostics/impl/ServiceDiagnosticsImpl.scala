@@ -20,12 +20,14 @@ package org.apache.felix.servicediagnostics.impl
 
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.{Set => mSet}
+import scala.collection.JavaConversions._
 
 import org.osgi.framework.BundleContext
 import org.osgi.framework.ServiceReference
 import org.osgi.framework.Constants.OBJECTCLASS
 
 import org.apache.felix.servicediagnostics._
+import org.apache.felix.servicediagnostics.Util._
 
 /**
  * This is the ServiceDiagnostics implementation. 
@@ -41,29 +43,33 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
     /**
      * Implements ServiceDiagnostics.notavail.
      * 
-     * This method gathers components information from all plugins
+     * This method aggregates unregistered components from all plugins
      * and filters all intermediate known unregistered services
      * to keep only missing "leaf" dependencies
      */
     override def notavail :Map[String, List[String]] = 
     {
-        val unavail :List[Comp] = for {
-                          plugin <- plugins.toList
-                          comp <- plugin.components
-                          if (! comp.registered)
-                      } yield comp
-        (for {
-            comp <- unavail
-            dep <- comp.deps.filterNot(_.available)
-            if (! unavail.exists(c => dep.matchedBy(c)))
-        } yield comp.toString -> comp.deps.filterNot(_.available).map(_.toString) ) toMap
-
+        val unavail = plugins.flatMap(_.components).filterNot(_.registered)
+        unavail.foldLeft(Map[String,List[String]]()) { (map,comp) =>
+            val missing = comp.deps.filterNot { d =>
+                  d.available || unavail.exists(c => d.matchedBy(c))
+                }.map(_.toString) 
+            if (missing isEmpty) map else map + (shorten(comp.impl) -> missing)
+        }
     }
     
     class Node(val comp:Comp, val edges:mSet[Node] = mSet[Node]()) {
-      def name = comp.toString
+      def name = comp.impl
       override def toString = name + " -> " + edges.map(_.name)
+      override def equals(o:Any) = o != null && o.getClass == getClass && o.asInstanceOf[Node].comp == comp
     }
+
+    //debug helper
+    def json(l:Iterable[Node]) = l.toList.foldLeft(new org.json.JSONArray()) { (j,n) => 
+      j.put(new org.json.JSONObject(new java.util.HashMap[String,java.util.List[String]] {{
+          put(n.name, new java.util.ArrayList[String] {{ addAll(n.edges.map(_.name)) }})
+        }}))
+    }.toString(2)
 
     /**
      * Implements ServiceDiagnostics.unresolved.
@@ -76,21 +82,26 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
      * from the original graph. This is done because "perfect loops" have no border node and are 
      * therefore "invisible" to the traversing algorithm.
      */
-    override def unresolved :Map[String, List[String]] = 
+    override def unresolved(optionals:Boolean) :Map[String, List[String]] = 
     {
         // first build a traversable graph from all found components and dependencies
         def buildGraph(link:(Node,Node)=>Unit) = {
             // concatenate component nodes from all plugins
-            val allnodes = for ( p <- plugins; comp <- p.components ) yield new Node(comp)
+            val allnodes = plugins.flatMap(_.components).map(new Node(_))
 
             // and connect the nodes according to component dependencies
             // the 'link' method gives the direction of the link
-            for ( node <- allnodes; dep <- node.comp.deps )
+            // note that all dependencies not pointing to a known component are dropped from the graph
+            for {
+              node <- allnodes 
+              dep <- node.comp.deps 
+              if (optionals || !dep.available)
+            }
             {
                 allnodes.filter(n => dep.matchedBy(n.comp)).foreach(n => link(node, n) )
             }
 
-            allnodes.toList //return the graph
+            allnodes.toSet //return the graph
         }
 
         // a "forward" graph of who depends on who
@@ -121,44 +132,49 @@ class ServiceDiagnosticsImpl(val bc:BundleContext) extends ServiceDiagnostics
         // now traverse the graph starting from border nodes (nodes not pointed by anyone)
         val resolved:Set[Node] = (for { 
             border <- triggers filter (_.edges.size == 0)
-            node <- graph.find(_.name == border.name)
+            node <- graph.find(_ == border) // graph and triggers contain different Node instances; this uses the overriden equals methods
         } yield resolve(node)).flatten.toSet
 
         // finally filter the original graph by removing all resolved nodes
         // and format the result (keeping only the names)
-        (for (node <- graph.filterNot(n => resolved.contains(n)))
-            yield (node.name -> node.edges.map(_.name).toList)).toMap
+        (for (node <- graph.filterNot(n => n.edges.isEmpty || resolved.contains(n)))
+          yield (node.name -> node.edges.map{ n => n.name }.toList)).toMap
     }
 
     /**
-     * Implements ServiceDiagnostics.allServices.
+     * Implements ServiceDiagnostics.usingBundles.
      */
-    override def allServices:Map[String,List[String]] = 
+    override def usingBundles:Map[String,List[String]] = 
+        allServices.foldLeft(Map[String,List[String]]()) { case (result, (name, ref)) =>
+            Option(ref.getUsingBundles).map { _.toList.map(_.toString) }.getOrElse(Nil) match {
+                case using @ h::t => result + (name -> using)
+                case Nil => result
+            }
+        }
+
+    /**
+     * Implements ServiceDiagnostics.serviceProviders.
+     */
+    override def serviceProviders:Map[String, List[String]] = 
+        allServices.foldLeft(Map[String,List[String]]()) { case (result, (name, ref)) =>
+            val b = ref.getBundle.toString
+            result.updated(b, name :: result.getOrElse(b, Nil))
+        }
+
+    /**
+     * returns map(service name -> service reference)
+     */
+    def allServices:Map[String,ServiceReference] = 
     {
         val allrefs = bc.getAllServiceReferences(null, null)
         if (allrefs == null) return Map()
 
-        // inner method used to return all the interface names a ServiceReference was registered under
-        def names(ref:ServiceReference):Array[String] = 
-        {
-            val n = ref.getProperty(OBJECTCLASS)
-            if (n != null) n.asInstanceOf[Array[String]] else Array()
-        }
-
-        // inner method used to return all the bundles using a given ServiceReference
-        def using(ref:ServiceReference):List[String] = 
-        {
-            val u = ref.getUsingBundles
-            if (u != null) u.toList.map(_ toString) else List()
-        }
-
-        //scan all service references to build a map of service name to list of using bundles
-        (for(ref <- bc.getAllServiceReferences(null, null);
-            name <- names(ref);
-            u = using(ref);
-            if (u.nonEmpty))
-            // yield (key,value) accumulates a list of (key,value) pairs
-            // the resulting list is transformed to a map and returned
-            yield (name, u)) toMap
+        // scan all service references to build a map of service name to list of using bundles
+        // yield (key,value) accumulates a list of (key,value) pairs
+        // the resulting list is transformed to a map and returned
+        (for {
+            ref <- bc.getAllServiceReferences(null, null)
+            name <- Option(ref.getProperty(OBJECTCLASS)).map(_.asInstanceOf[Array[String]]).getOrElse(Array())
+        } yield (name, ref)) toMap
     }
 }
