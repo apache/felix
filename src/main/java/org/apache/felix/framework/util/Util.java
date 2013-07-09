@@ -341,10 +341,30 @@ public class Util
                 {
                     if (w.getCapability().getNamespace()
                             .equals(BundleRevision.PACKAGE_NAMESPACE) &&
-                        w.getCapability().getAttributes()
-                            .get(BundleRevision.PACKAGE_NAMESPACE).equals(name))
+                            w.getCapability().getAttributes()
+                                    .get(BundleRevision.PACKAGE_NAMESPACE).equals(name))
                     {
                         return w;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static BundleCapability getPackageCapability(BundleRevision br, String name)
+    {
+        if (br.getWiring() != null)
+        {
+            List<BundleCapability> capabilities = br.getWiring().getCapabilities(null);
+            if (capabilities != null)
+            {
+                for (BundleCapability c : capabilities)
+                {
+                    if (c.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
+                        && c.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE).equals(name))
+                    {
+                        return c;
                     }
                 }
             }
