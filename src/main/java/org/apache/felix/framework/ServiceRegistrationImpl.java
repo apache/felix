@@ -29,6 +29,7 @@ import org.apache.felix.framework.util.Util;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.osgi.framework.*;
 import org.osgi.framework.BundleReference;
+import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 
@@ -165,6 +166,18 @@ class ServiceRegistrationImpl implements ServiceRegistration
             && !((BundleReference) m_factory.getClass()
                 .getClassLoader()).getBundle().equals(m_bundle))
         {
+            try
+            {
+                Class providedClazz = m_bundle.loadClass(clazz.getName());
+                if (providedClazz != null)
+                {
+                    return providedClazz == clazz;
+                }
+            }
+            catch (ClassNotFoundException ex)
+            {
+                // Ignore and try interface class loaders.
+            }
             return true;
         }
 
@@ -485,12 +498,14 @@ class ServiceRegistrationImpl implements ServiceRegistration
             // Get the package.
             String pkgName =
                 Util.getClassPackage(className);
-            BundleRevision requesterRevision = requester.adapt(BundleRevision.class);
             // Get package wiring from service requester.
+            BundleRevision requesterRevision = requester.adapt(BundleRevision.class);
             BundleWire requesterWire = Util.getWire(requesterRevision, pkgName);
+            BundleCapability requesterCap = Util.getPackageCapability(requesterRevision, pkgName);
             // Get package wiring from service provider.
             BundleRevision providerRevision = m_bundle.adapt(BundleRevision.class);
             BundleWire providerWire = Util.getWire(providerRevision, pkgName);
+            BundleCapability providerCap = Util.getPackageCapability(providerRevision, pkgName);
 
             // There are four situations that may occur here:
             //   1. Neither the requester, nor provider have wires for the package.
@@ -533,10 +548,11 @@ class ServiceRegistrationImpl implements ServiceRegistration
             // Case 2: Requester has no wire, but provider does.
             else if ((requesterWire == null) && (providerWire != null))
             {
-                // Allow if the requester is the exporter of the provider's wire.
-                if (providerWire.getProviderWiring().getRevision().equals(requesterRevision))
+                // If the requester exports the package, then the provider must
+                // be wired to it.
+                if (requesterCap != null)
                 {
-                    allow = true;
+                    allow = providerWire.getProviderWiring().getRevision().equals(requesterRevision);
                 }
                 // Otherwise, check if the requester has access to the class and,
                 // if so, if it is the same class as the provider.
@@ -571,13 +587,11 @@ class ServiceRegistrationImpl implements ServiceRegistration
             // Case 3: Requester has a wire, but provider does not.
             else if ((requesterWire != null) && (providerWire == null))
             {
-                // If the provider is the exporter of the requester's package, then check
-                // if the requester is wired to the latest version of the provider, if so
-                // then allow else don't (the provider has been updated but not refreshed).
-                if (((BundleImpl) m_bundle).hasRevision(
-                    requesterWire.getProviderWiring().getRevision()))
+                // If the provider exports the package, then the requester must
+                // be wired to it.
+                if (providerCap != null)
                 {
-                    allow = providerRevision.equals(requesterWire.getProviderWiring().getRevision());
+                    allow = requesterWire.getProviderWiring().getRevision().equals(providerRevision);
                 }
                 // If the provider is not the exporter of the requester's package,
                 // then try to use the service registration to see if the requester's
