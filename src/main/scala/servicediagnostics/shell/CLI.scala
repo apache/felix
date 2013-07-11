@@ -27,37 +27,52 @@ import java.io.PrintStream
 // gogo shell
 import org.apache.felix.service.command.Descriptor
 
+// constants
+object CLI {
+    val scope = "sd"
+    val usage = "notavail|loops|users|providers|b2b"
+    val description = """Service Diagnostics
+        |sd notavail: dumps a summary of leaf missing dependencies as a json map of component to list of dependencies
+        |sd loops [-o]: checks for unresolvable components (typically circular dependencies). -o to include optionals.
+        |sd users: dumps service usage as a json map of service to list of using bundles 
+        |sd providers: dumps service providers as a json map of bundle to list of services
+        |sd b2b: shows bundle to bundle links via service usage (merged users and providers) as a json map of provider to list of users
+        |""".stripMargin
+}
 class CLI extends Command
 {
     var engine:ServiceDiagnostics = _ //dependency injection. see Activator.
 
-    override def getName = "sd"
-    override def getShortDescription = "Service Diagnostics"
-    override def getUsage = "notavail|loops|using|providing|b2b"
+    override def getName = CLI.scope
+    override def getShortDescription = CLI.description
+    override def getUsage = CLI.usage
 
     // for gogo
-    def using = execute("sd using", System.out, System.err)
-    def providing = execute("sd providing", System.out, System.err)
+    def users = execute("sd users", System.out, System.err)
+    def providers = execute("sd providers", System.out, System.err)
     def b2b = execute("sd b2b", System.out, System.err)
     def notavail = execute("sd notavail", System.out, System.err)
     def loops = execute("sd loops", System.out, System.err)
 
     // for old shell
     override def execute(commandLine:String, out:PrintStream, err:PrintStream) = commandLine.split(" ").toList.tail match {
-        case "using"::Nil => 
+        case "users"::Nil => 
             out.println(json(engine.usingBundles).toString(2))
-        case "providing"::Nil => 
+        case "providers"::Nil => 
             out.println(json(engine.serviceProviders).toString(2))
         case "b2b"::Nil => 
             out.println(json(engine.b2b).toString(2))
         case "notavail"::Nil => 
             out.println(json(engine.notavail).toString(2))
-        case "loops"::Nil => showloops(out)
+        case "loops"::tail => tail match {
+            case "-o"::Nil => showloops(out, true)
+            case _  => showloops(out, false)
+        }
       case _ => err.println(getUsage)
     }
 
-    def showloops(out:PrintStream) = {
-        val unresolved = engine.unresolved(false) // map(comp -> list(comp))
+    def showloops(out:PrintStream, o:Boolean) = {
+        val unresolved = engine.unresolved(o) // map(comp -> list(comp))
         out.println(json(unresolved).toString(2))
         def follow(n:String, stack:Set[String] = Set()) :Set[String] = 
             if (stack contains n) stack 
@@ -66,7 +81,7 @@ class CLI extends Command
                 case Some(list) => list.toSet.flatMap { (d:String) => follow(d, stack+n) }
             }
         unresolved.keySet.map(follow(_)).foreach { loop => 
-            if (loop.size > 1 && unresolved(loop.last) == loop.head) 
+            if (loop.size > 1 && unresolved(loop.last).contains(loop.head))
                 out.println(loop.mkString("", " -> ", " -> "+loop.head)) 
         }
     }
