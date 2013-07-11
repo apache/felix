@@ -100,6 +100,7 @@
             <exclude>src/main/resources/html/js/raphael-1.3.1.min.js</exclude>
             <exclude>src/main/resources/html/js/graffle-1.3.1.js</exclude>
             <exclude>src/main/resources/html/js/graph.js</exclude>
+            <exclude>src/main/resources/html/js/diagnostics.js</exclude>
           </excludes>
         </configuration>
       </plugin>

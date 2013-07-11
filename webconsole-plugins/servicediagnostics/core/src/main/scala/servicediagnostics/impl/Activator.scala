@@ -77,8 +77,8 @@ class Activator extends DependencyActivatorBase
         // register the shell command
         dm.add(createComponent
             .setInterface(classOf[Command].getName, new jHT[String,Any]() {{
-                  put(CommandProcessor.COMMAND_FUNCTION, Array("notavail", "circular"))
-                  put(CommandProcessor.COMMAND_SCOPE, "sd")
+                  put(CommandProcessor.COMMAND_FUNCTION, CLI.usage.split("|"))
+                  put(CommandProcessor.COMMAND_SCOPE, CLI.scope)
               }})
             .setImplementation(classOf[CLI])
             .add(createServiceDependency
