@@ -17,7 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.2.0">
 
     <!-- 
         Components used for the ComponentActivationTest integration test.
@@ -149,7 +149,7 @@
     </scr:component>
 
     <!-- 1n static dependency -->
-    <scr:component name="ActivatorComponent.bind.multiple.static"
+    <scr:component name="ActivatorComponent.bind.multiple.static.reluctant"
         enabled="false"
         activate="myActivate"
         deactivate="myDeactivate">
@@ -164,6 +164,27 @@
             bind="bindSimpleService"
             unbind="unbindSimpleService"
             policy="static"
+            cardinality="1..n"
+        />
+    </scr:component>
+
+    <!-- 1n static greedy dependency -->
+    <scr:component name="ActivatorComponent.bind.multiple.static.greedy"
+        enabled="false"
+        activate="myActivate"
+        deactivate="myDeactivate">
+        <implementation class="org.apache.felix.scr.integration.components.ActivatorComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.ActivatorComponent"/>
+        </service>
+        <property name="registerService" value="true" />
+        <reference
+            name="service"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+            policy="static"
+            policy-option="greedy"
             cardinality="1..n"
         />
     </scr:component>
@@ -188,7 +209,7 @@
         />
     </scr:component>
 
-    <!-- 11 static dependency -->
+    <!-- 1n dynamic dependency -->
     <scr:component name="ActivatorComponent.bind.multiple.dynamic"
         enabled="false"
         activate="myActivate"

@@ -285,9 +285,17 @@ public class ComponentActivationTest extends ComponentTestBase
     }
 
     @Test
-    public void test_activate_register_service_multiple_static_dependency()
+    public void test_activate_register_service_multiple_static_reluctant_dependency()
     {
-        final String componentname = "ActivatorComponent.bind.multiple.static";
+        final String componentname = "ActivatorComponent.bind.multiple.static.reluctant";
+
+        testRequiredDependency( componentname );
+    }
+
+    @Test
+    public void test_activate_register_service_multiple_static_greedy_dependency()
+    {
+        final String componentname = "ActivatorComponent.bind.multiple.static.greedy";
 
         testRequiredDependency( componentname );
     }
