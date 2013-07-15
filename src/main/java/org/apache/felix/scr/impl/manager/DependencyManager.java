@@ -348,29 +348,24 @@ public class DependencyManager<S, T> implements Reference
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
-            if ( isActive() )
+            boolean unbind = isOptional() || !getTracker().isEmpty();
+            if ( unbind )
             {
-                boolean unbind = isOptional() || !getTracker().isEmpty();
-                if ( unbind )
+                if ( isActive() )
                 {
                     m_componentManager.invokeUnbindMethod( DependencyManager.this, refPair, trackingCount );
-                    m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed (unbind) {2}", new Object[] {getName(), trackingCount, serviceReference}, null );
-                    tracked( trackingCount );
                 }
-                else
-                {
-                    lastRefPair = refPair;
-                    lastRefPairTrackingCount = trackingCount;
-                    tracked( trackingCount );
-                    m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
-                    lastRefPair = null;
-                    m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed (deactivate) {2}", new Object[] {getName(), trackingCount, serviceReference}, null );
-                }
+                m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed (unbind) {2}", new Object[] {getName(), trackingCount, serviceReference}, null );
+                tracked( trackingCount );
             }
             else
             {
-                m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed (inactive) {2}", new Object[] {getName(), trackingCount, serviceReference}, null );
+                lastRefPair = refPair;
+                lastRefPairTrackingCount = trackingCount;
                 tracked( trackingCount );
+                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );
+                lastRefPair = null;
+                m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed (deactivate) {2}", new Object[] {getName(), trackingCount, serviceReference}, null );
             }
             ungetService( refPair );
         }
@@ -485,6 +480,13 @@ public class DependencyManager<S, T> implements Reference
                 //try to reactivate after ref is no longer tracked.
                 m_componentManager.activateInternal( trackingCount );
             }
+            else if ( !isOptional() && getTracker().isEmpty() )
+            {
+                m_componentManager.log( LogService.LOG_DEBUG,
+                        "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
+                        {getName(), m_dependencyMetadata.getInterface()}, null );
+                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );                
+            }
             //This is unlikely
             ungetService( refPair );
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy removed {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
@@ -583,6 +585,13 @@ public class DependencyManager<S, T> implements Reference
                     m_componentManager.activateInternal( trackingCount );
 
                 }
+            }
+            else if ( !isOptional() && getTracker().isEmpty() )
+            {
+                m_componentManager.log( LogService.LOG_DEBUG,
+                        "Dependency Manager: Static dependency on {0}/{1} is broken", new Object[]
+                        {getName(), m_dependencyMetadata.getInterface()}, null );
+                m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, trackingCount );                
             }
             ungetService( refPair );
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant removed {2} (exit)", new Object[] {getName(), trackingCount, serviceReference}, null );
@@ -743,27 +752,28 @@ public class DependencyManager<S, T> implements Reference
             RefPair<T> nextRefPair = null;
             synchronized ( getTracker().tracked() )
             {
-                if ( refPair == this.refPair )
+                if ( refPair == this.refPair && isActive() )
                 {
-                    if ( isActive() )
+                    if ( !getTracker().isEmpty() )
                     {
-                        if ( !getTracker().isEmpty() )
-                        {
-                            AtomicInteger trackingCount2 = new AtomicInteger();
-                            SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true,
-                                    trackingCount2 );
-                            nextRefPair = tracked.values().iterator().next();
-                        }
-                        if ( isOptional() || nextRefPair != null )
-                        {
-                            oldRefPair = this.refPair;
-                            this.refPair = null;
-                        }
-                        else 
-                        {
-                            deactivate = true;            //required and no replacement service, deactivate
-                        }
+                        AtomicInteger trackingCount2 = new AtomicInteger();
+                        SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true,
+                                trackingCount2 );
+                        nextRefPair = tracked.values().iterator().next();
                     }
+                    if ( isOptional() || nextRefPair != null )
+                    {
+                        oldRefPair = this.refPair;
+                        this.refPair = null;
+                    }
+                    else 
+                    {
+                        deactivate = true;            //required and no replacement service, deactivate
+                    }
+                }
+                else if ( !isOptional() && this.refPair == null && getTracker().isEmpty())
+                {
+                    deactivate = true;
                 }
             }
             if ( nextRefPair != null )
@@ -947,7 +957,7 @@ public class DependencyManager<S, T> implements Reference
             boolean reactivate;
             synchronized (getTracker().tracked())
             {
-                reactivate = isActive() && refPair == this.refPair;
+                reactivate = ( isActive() && refPair == this.refPair) || ( !isOptional() && getTracker().isEmpty());
             }
             if ( reactivate )
             {

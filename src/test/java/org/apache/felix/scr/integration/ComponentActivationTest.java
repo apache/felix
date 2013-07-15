@@ -23,6 +23,8 @@ import junit.framework.TestCase;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.ActivatorComponent;
+import org.apache.felix.scr.integration.components.SimpleService;
+import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -244,6 +246,7 @@ public class ComponentActivationTest extends ComponentTestBase
         delay();
         TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
     }
+    
     @Test
     public void test_activate_service_factory_register_service()
     {
@@ -272,4 +275,75 @@ public class ComponentActivationTest extends ComponentTestBase
         delay();
         TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
     }
+    
+    @Test
+    public void test_activate_register_service_single_static_dependency()
+    {
+        final String componentname = "ActivatorComponent.bind.single.static";
+
+        testRequiredDependency( componentname );
+    }
+
+    @Test
+    public void test_activate_register_service_multiple_static_dependency()
+    {
+        final String componentname = "ActivatorComponent.bind.multiple.static";
+
+        testRequiredDependency( componentname );
+    }
+
+    @Test
+    public void test_activate_register_service_single_dynamic_dependency()
+    {
+        final String componentname = "ActivatorComponent.bind.single.dynamic";
+
+        testRequiredDependency( componentname );
+    }
+
+    @Test
+    public void test_activate_register_service_multiple_dynamic_dependency()
+    {
+        final String componentname = "ActivatorComponent.bind.multiple.dynamic";
+
+        testRequiredDependency( componentname );
+    }
+
+
+    private void testRequiredDependency(final String componentname)
+    {
+        final Component component = findComponentByName( componentname );
+
+        TestCase.assertNotNull( component );
+        TestCase.assertFalse( component.isDefaultEnabled() );
+
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+
+        component.enable();
+        delay();
+
+        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+        
+        SimpleServiceImpl ss = SimpleServiceImpl.create( bundleContext, "foo" );
+        
+        TestCase.assertEquals( Component.STATE_REGISTERED, component.getState() );
+
+        ServiceReference<ActivatorComponent> ref = bundleContext.getServiceReference( ActivatorComponent.class );
+        
+        ss.drop();
+        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+        
+        TestCase.assertNull(bundleContext.getServiceReference( ActivatorComponent.class ));
+        ss = SimpleServiceImpl.create( bundleContext, "foo" );
+        ref = bundleContext.getServiceReference( ActivatorComponent.class );
+        ActivatorComponent ac = bundleContext.getService( ref );
+        TestCase.assertNotNull( ac.getSimpleService() );
+
+        TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
+
+        component.disable();
+
+        delay();
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+    }
+
 }

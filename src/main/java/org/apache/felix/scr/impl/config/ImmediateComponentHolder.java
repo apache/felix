@@ -254,7 +254,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
         }
         else
         {
-            icm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
+            icm.dispose( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED );
         }
     }
 

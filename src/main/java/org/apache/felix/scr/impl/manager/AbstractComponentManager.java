@@ -701,7 +701,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             log( LogService.LOG_DEBUG, "ActivateInternal: disposed",
                     null );
-            throw new IllegalStateException( "Cannot activate disposed component: " + getName() );
+            return;
         }
         if ( m_activated ) {
             log( LogService.LOG_DEBUG, "ActivateInternal: already activated",
@@ -769,7 +769,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     {
         if ( disposed )
         {
-            throw new IllegalStateException( "Cannot deactivate disposed component " + getName() );
+            return;
         }
         if ( m_factoryInstance )
         {
@@ -807,7 +807,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      * method has to actually complete before other actions like bundle stopping
      * may continue.
      */
-    public final void disposeInternal( int reason )
+    final void disposeInternal( int reason )
     {
         log( LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null );
         if ( m_activated )
