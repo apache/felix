@@ -127,4 +127,86 @@
             cardinality="0..n"
         />
     </scr:component>
+
+    <!-- 11 static dependency -->
+    <scr:component name="ActivatorComponent.bind.single.static"
+        enabled="false"
+        activate="myActivate"
+        deactivate="myDeactivate">
+        <implementation class="org.apache.felix.scr.integration.components.ActivatorComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.ActivatorComponent"/>
+        </service>
+        <property name="registerService" value="true" />
+        <reference
+            name="service"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+            policy="static"
+            cardinality="1..1"
+        />
+    </scr:component>
+
+    <!-- 1n static dependency -->
+    <scr:component name="ActivatorComponent.bind.multiple.static"
+        enabled="false"
+        activate="myActivate"
+        deactivate="myDeactivate">
+        <implementation class="org.apache.felix.scr.integration.components.ActivatorComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.ActivatorComponent"/>
+        </service>
+        <property name="registerService" value="true" />
+        <reference
+            name="service"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+            policy="static"
+            cardinality="1..n"
+        />
+    </scr:component>
+
+    <!-- 11 dynamic dependency -->
+    <scr:component name="ActivatorComponent.bind.single.dynamic"
+        enabled="false"
+        activate="myActivate"
+        deactivate="myDeactivate">
+        <implementation class="org.apache.felix.scr.integration.components.ActivatorComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.ActivatorComponent"/>
+        </service>
+        <property name="registerService" value="true" />
+        <reference
+            name="service"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+            policy="dynamic"
+            cardinality="1..1"
+        />
+    </scr:component>
+
+    <!-- 11 static dependency -->
+    <scr:component name="ActivatorComponent.bind.multiple.dynamic"
+        enabled="false"
+        activate="myActivate"
+        deactivate="myDeactivate">
+        <implementation class="org.apache.felix.scr.integration.components.ActivatorComponent" />
+        <service factory="false">
+            <provide interface="org.apache.felix.scr.integration.components.ActivatorComponent"/>
+        </service>
+        <property name="registerService" value="true" />
+        <reference
+            name="service"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+            policy="dynamic"
+            cardinality="1..n"
+        />
+    </scr:component>
+
+
 </components>
