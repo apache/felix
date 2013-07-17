@@ -38,6 +38,7 @@
         <module>ds-annotations</module>
         <module>maven-scr-plugin</module>
         <module>scrtask</module>
+        <module>bnd-scr-plugin</module>
     </modules>
 
 </project>
