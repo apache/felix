@@ -51,7 +51,6 @@ import org.apache.felix.scrplugin.helper.ComponentContainerUtil;
 import org.apache.felix.scrplugin.helper.ComponentContainerUtil.ComponentContainerContainer;
 import org.apache.felix.scrplugin.helper.DescriptionContainer;
 import org.apache.felix.scrplugin.helper.IssueLog;
-import org.apache.felix.scrplugin.helper.StringUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -748,51 +747,47 @@ public class ComponentDescriptorIO {
 
         // check descriptor file
         final File descriptorDir = options.getComponentDescriptorDirectory();
-        final File descriptorFile = StringUtils.isEmpty(options.getSCRName()) ? null : new File(descriptorDir, options.getSCRName());
 
         // terminate if there is nothing else to write
         if (components.isEmpty()) {
             logger.debug("No Service Component Descriptors found in project.");
-            // remove file if it exists
-            if (descriptorFile != null && descriptorFile.exists()) {
-                logger.debug("Removing obsolete service descriptor " + descriptorFile);
-                descriptorFile.delete();
+            // remove files if it exists
+            if ( descriptorDir.exists() ) {
+                for(final File f : descriptorDir.listFiles()) {
+                    if ( f.isFile() ) {
+                        logger.debug("Removing obsolete service descriptor " + f);
+                        f.delete();
+                    }
+                }
             }
+
             return null;
-        }
-        if ( !options.isGenerateSeparateDescriptors() && descriptorFile == null ) {
-            throw new SCRDescriptorFailureException("Descriptor file name must not be empty.");
         }
 
         // finally the descriptors have to be written ....
         descriptorDir.mkdirs(); // ensure parent dir
 
         final List<String> fileNames = new ArrayList<String>();
-        final List<ComponentContainerContainer> containers = ComponentContainerUtil.split(components, options.isGenerateSeparateDescriptors());
+        final List<ComponentContainerContainer> containers = ComponentContainerUtil.split(components);
         for(final ComponentContainerContainer ccc : containers) {
             final SpecVersion globalVersion = module.getOptions().getSpecVersion();
 
-            final File useFile;
-            if ( ccc.className == null ) {
-                useFile = descriptorFile;
-            } else {
-                SpecVersion sv = null;
-                for(final ComponentContainer cc : ccc.components ) {
-                    if ( sv == null || sv.ordinal() < cc.getComponentDescription().getSpecVersion().ordinal() ) {
-                        sv = cc.getComponentDescription().getSpecVersion();
-                    }
+            SpecVersion sv = null;
+            for(final ComponentContainer cc : ccc.components ) {
+                if ( sv == null || sv.ordinal() < cc.getComponentDescription().getSpecVersion().ordinal() ) {
+                    sv = cc.getComponentDescription().getSpecVersion();
                 }
-                module.getOptions().setSpecVersion(sv);
-                useFile = new File(descriptorDir, ccc.className + ".xml");
             }
+            module.getOptions().setSpecVersion(sv);
+            final File useFile = new File(descriptorDir, ccc.className + ".xml");
             try {
                 ComponentDescriptorIO.generateXML(module, ccc.components, useFile, logger);
             } catch (final IOException e) {
-                throw new SCRDescriptorException("Unable to generate xml", descriptorFile.toString(), e);
+                throw new SCRDescriptorException("Unable to generate xml", useFile.toString(), e);
             } catch (final TransformerException e) {
-                throw new SCRDescriptorException("Unable to generate xml", descriptorFile.toString(), e);
+                throw new SCRDescriptorException("Unable to generate xml", useFile.toString(), e);
             } catch (final SAXException e) {
-                throw new SCRDescriptorException("Unable to generate xml", descriptorFile.toString(), e);
+                throw new SCRDescriptorException("Unable to generate xml", useFile.toString(), e);
             }
             fileNames.add(PARENT_NAME + '/' + useFile.getName());
 

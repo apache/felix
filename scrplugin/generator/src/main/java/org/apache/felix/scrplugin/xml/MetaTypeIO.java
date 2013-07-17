@@ -38,7 +38,6 @@ import org.apache.felix.scrplugin.helper.ComponentContainerUtil.ComponentContain
 import org.apache.felix.scrplugin.helper.DescriptionContainer;
 import org.apache.felix.scrplugin.helper.MetatypeAttributeDefinition;
 import org.apache.felix.scrplugin.helper.MetatypeContainer;
-import org.apache.felix.scrplugin.helper.StringUtils;
 import org.osgi.service.metatype.MetaTypeService;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -89,108 +88,101 @@ public class MetaTypeIO {
                 components.add(component);
             }
         }
-        // write meta type info if there is a file name
-        if (!StringUtils.isEmpty(options.getMetaTypeName())) {
-            final File mtDir = options.getMetaTypeDirectory();
-            final File parentDir = mtDir.getParentFile();
+        // write meta type info
+        final File mtDir = options.getMetaTypeDirectory();
+        final File parentDir = mtDir.getParentFile();
 
-            final File mtFile = new File(mtDir, options.getMetaTypeName());
+        if (components.size() > 0) {
+            mtDir.mkdirs();
 
-            if (components.size() > 0) {
-                mtDir.mkdirs();
+            final List<String> fileNames = new ArrayList<String>();
+            final List<ComponentContainerContainer> containers = ComponentContainerUtil.split(components);
+            for(final ComponentContainerContainer ccc : containers) {
+                final File useFile = new File(mtDir, ccc.className + ".xml");
 
-                final List<String> fileNames = new ArrayList<String>();
-                final List<ComponentContainerContainer> containers = ComponentContainerUtil.split(components, options.isGenerateSeparateDescriptors());
-                for(final ComponentContainerContainer ccc : containers) {
-                    final File useFile;
-                    if ( ccc.className == null ) {
-                        useFile = mtFile;
-                    } else {
-                        useFile = new File(mtDir, ccc.className + ".xml");
+                String metatypeLocation = MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype";
+
+                // check if all labels and descriptions are inlined
+                boolean allInlined = true;
+                for(final ComponentContainer cc : ccc.components) {
+                    final MetatypeContainer mc = cc.getMetatypeContainer();
+
+                    if ( mc.getName() != null && mc.getName().startsWith("%") ) {
+                        allInlined = false;
                     }
-                    String metatypeLocation = MetaTypeService.METATYPE_DOCUMENTS_LOCATION + "/metatype";
+                    if ( mc.getDescription() != null && mc.getDescription().startsWith("%") ) {
+                        allInlined = false;
+                    }
+                    for(final MetatypeAttributeDefinition mad : mc.getProperties()) {
+                        if ( mad.getName() != null && mad.getName().startsWith("%") ) {
+                            allInlined = false;
+                        }
+                        if ( mad.getDescription() != null && mad.getDescription().startsWith("%") ) {
+                            allInlined = false;
+                        }
+                    }
+                }
+                if ( allInlined ) {
+                    final Properties metatypeProps = new Properties();
 
-                    // check if all labels and descriptions are inlined
-                    boolean allInlined = true;
+                    // externalize all labels and descriptions
                     for(final ComponentContainer cc : ccc.components) {
                         final MetatypeContainer mc = cc.getMetatypeContainer();
 
-                        if ( mc.getName() != null && mc.getName().startsWith("%") ) {
-                            allInlined = false;
+                        final String baseKey = cc.getClassDescription().getDescribedClass().getName().replace("$", ".");
+
+                        if ( mc.getName() != null ) {
+                            final String key = baseKey + ".name";
+                            metatypeProps.put(key, mc.getName());
+                            mc.setName("%" + key);
                         }
-                        if ( mc.getDescription() != null && mc.getDescription().startsWith("%") ) {
-                            allInlined = false;
+                        if ( mc.getDescription() != null ) {
+                            final String key = baseKey + ".description";
+                            metatypeProps.put(key, mc.getDescription());
+                            mc.setDescription("%" + key);
                         }
                         for(final MetatypeAttributeDefinition mad : mc.getProperties()) {
-                            if ( mad.getName() != null && mad.getName().startsWith("%") ) {
-                                allInlined = false;
+                            if ( mad.getName() != null ) {
+                                final String key = baseKey + "." + mad.getId() + ".name";
+                                metatypeProps.put(key, mad.getName());
+                                mad.setName("%" + key);
                             }
-                            if ( mad.getDescription() != null && mad.getDescription().startsWith("%") ) {
-                                allInlined = false;
+                            if ( mad.getDescription() != null ) {
+                                final String key = baseKey + "." + mad.getId() + ".description";
+                                metatypeProps.put(key, mad.getDescription());
+                                mad.setDescription("%" + key);
                             }
                         }
                     }
-                    if ( allInlined ) {
-                        final Properties metatypeProps = new Properties();
-
-                        // externalize all labels and descriptions
-                        for(final ComponentContainer cc : ccc.components) {
-                            final MetatypeContainer mc = cc.getMetatypeContainer();
-
-                            final String baseKey = cc.getClassDescription().getDescribedClass().getName().replace("$", ".");
-
-                            if ( mc.getName() != null ) {
-                                final String key = baseKey + ".name";
-                                metatypeProps.put(key, mc.getName());
-                                mc.setName("%" + key);
-                            }
-                            if ( mc.getDescription() != null ) {
-                                final String key = baseKey + ".description";
-                                metatypeProps.put(key, mc.getDescription());
-                                mc.setDescription("%" + key);
-                            }
-                            for(final MetatypeAttributeDefinition mad : mc.getProperties()) {
-                                if ( mad.getName() != null ) {
-                                    final String key = baseKey + "." + mad.getId() + ".name";
-                                    metatypeProps.put(key, mad.getName());
-                                    mad.setName("%" + key);
-                                }
-                                if ( mad.getDescription() != null ) {
-                                    final String key = baseKey + "." + mad.getId() + ".description";
-                                    metatypeProps.put(key, mad.getDescription());
-                                    mad.setDescription("%" + key);
-                                }
-                            }
+                    if ( metatypeProps.size() > 0 ) {
+                        final int lastDot = useFile.getName().lastIndexOf(".");
+                        final String baseName = useFile.getName().substring(0, lastDot);
+                        final File propsFile = new File(useFile.getParentFile(), baseName + ".properties");
+                        try {
+                            metatypeProps.store(new FileWriter(propsFile), null);
+                        } catch (IOException e) {
+                            throw new SCRDescriptorException("Unable to get metatype.properties", propsFile.getAbsolutePath());
                         }
-                        if ( metatypeProps.size() > 0 ) {
-                            final int lastDot = useFile.getName().lastIndexOf(".");
-                            final String baseName = useFile.getName().substring(0, lastDot);
-                            final File propsFile = new File(useFile.getParentFile(), baseName + ".properties");
-                            try {
-                                metatypeProps.store(new FileWriter(propsFile), null);
-                            } catch (IOException e) {
-                                throw new SCRDescriptorException("Unable to get metatype.properties", propsFile.getAbsolutePath());
-                            }
-                            fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + propsFile.getName());
-                            metatypeLocation = MetaTypeService.METATYPE_DOCUMENTS_LOCATION + '/' + baseName;
-                        }
+                        fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + propsFile.getName());
+                        metatypeLocation = MetaTypeService.METATYPE_DOCUMENTS_LOCATION + '/' + baseName;
                     }
-                    logger.info("Generating " + ccc.components.size() + " MetaType Descriptors in " + useFile);
-                    MetaTypeIO.write(module, ccc.components, useFile, metatypeLocation);
-                    fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + useFile.getName());
                 }
-
-                return fileNames;
-            }
-            if (mtFile.exists()) {
-                mtFile.delete();
+                logger.info("Generating " + ccc.components.size() + " MetaType Descriptors in " + useFile);
+                MetaTypeIO.write(module, ccc.components, useFile, metatypeLocation);
+                fileNames.add(parentDir.getName() + '/' + mtDir.getName() + '/' + useFile.getName());
             }
 
-        } else {
-            if (components.size() > 0) {
-                logger.info("Meta type file name is not set: meta type info is not written.");
+            return fileNames;
+        }
+        if (mtDir.exists()) {
+            for(final File f : mtDir.listFiles()) {
+                if ( f.isFile() ) {
+                    logger.debug("Removing obsolete metatype file " + f);
+                    f.delete();
+                }
             }
         }
+
         return null;
     }
 

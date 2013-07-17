@@ -33,46 +33,37 @@ public abstract class ComponentContainerUtil {
      * Split the list of components into separate lists depending
      * on the configuration.
      */
-    public static List<ComponentContainerContainer> split(final List<ComponentContainer> components,
-            final boolean generateSeparateDescriptors) {
+    public static List<ComponentContainerContainer> split(final List<ComponentContainer> components) {
         final List<ComponentContainerContainer> result = new ArrayList<ComponentContainerContainer>();
 
-        if ( generateSeparateDescriptors ) {
-            while ( !components.isEmpty() ) {
-                // get the first component
-                final List<ComponentContainer> innerList = new ArrayList<ComponentContainer>();
-                final ComponentContainer component = components.remove(0);
-                innerList.add(component);
-                final int pos = component.getClassDescription().getDescribedClass().getName().indexOf('$');
-                final String baseClassName;
-                if ( pos == -1 ) {
-                    baseClassName = component.getClassDescription().getDescribedClass().getName();
-                } else {
-                    baseClassName = component.getClassDescription().getDescribedClass().getName().substring(0, pos);
-                }
-                final String baseClassPrefix = baseClassName + '$';
-
-                // check for inner classes
-                final Iterator<ComponentContainer> i = components.iterator();
-                while ( i.hasNext() ) {
-                    final ComponentContainer cc = i.next();
-                    if ( cc.getClassDescription().getDescribedClass().getName().startsWith(baseClassPrefix) ) {
-                        innerList.add(cc);
-                        i.remove();
-                    }
-                }
-
-                final ComponentContainerContainer ccc = new ComponentContainerContainer();
-                ccc.components = innerList;
-                ccc.className = baseClassName;
-                result.add(ccc);
+        while ( !components.isEmpty() ) {
+            // get the first component
+            final List<ComponentContainer> innerList = new ArrayList<ComponentContainer>();
+            final ComponentContainer component = components.remove(0);
+            innerList.add(component);
+            final int pos = component.getClassDescription().getDescribedClass().getName().indexOf('$');
+            final String baseClassName;
+            if ( pos == -1 ) {
+                baseClassName = component.getClassDescription().getDescribedClass().getName();
+            } else {
+                baseClassName = component.getClassDescription().getDescribedClass().getName().substring(0, pos);
             }
-        } else {
-            if ( components.size() > 0 ) {
-                final ComponentContainerContainer ccc = new ComponentContainerContainer();
-                ccc.components = components;
-                result.add(ccc);
+            final String baseClassPrefix = baseClassName + '$';
+
+            // check for inner classes
+            final Iterator<ComponentContainer> i = components.iterator();
+            while ( i.hasNext() ) {
+                final ComponentContainer cc = i.next();
+                if ( cc.getClassDescription().getDescribedClass().getName().startsWith(baseClassPrefix) ) {
+                    innerList.add(cc);
+                    i.remove();
+                }
             }
+
+            final ComponentContainerContainer ccc = new ComponentContainerContainer();
+            ccc.components = innerList;
+            ccc.className = baseClassName;
+            result.add(ccc);
         }
 
         return result;
