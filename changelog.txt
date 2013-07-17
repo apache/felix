@@ -1,3 +1,10 @@
+Changes from 1.8.0 to 1.7.0
+---------------------------
+** Improvement
+    * [FELIX-4101] - Create metatype.properties file when description and label are inlined
+    * [FELIX-4126] - Discontinue creation of single XML descriptor files 
+
+
 Changes from 1.7.0 to 1.6.0
 ---------------------------
 ** Bug

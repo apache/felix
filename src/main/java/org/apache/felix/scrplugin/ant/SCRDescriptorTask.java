@@ -49,16 +49,6 @@ public class SCRDescriptorTask extends MatchingTask {
     private Path classpath;
 
     /**
-     * Name of the generated descriptor.
-     */
-    private String finalName = "serviceComponents.xml";
-
-    /**
-     * Name of the generated meta type file.
-     */
-    private String metaTypeName = "metatype.xml";
-
-    /**
      * This flag controls the generation of the bind/unbind methods.
      */
     private boolean generateAccessors = true;
@@ -92,8 +82,6 @@ public class SCRDescriptorTask extends MatchingTask {
         scrLog.debug( "  implicitFileset: " + getImplicitFileSet() );
         scrLog.debug( "  outputDirectory: " + destdir );
         scrLog.debug( "  classpath: " + classpath );
-        scrLog.debug( "  finalName: " + finalName );
-        scrLog.debug( "  metaTypeName: " + metaTypeName );
         scrLog.debug( "  generateAccessors: " + generateAccessors );
         scrLog.debug( "  strictMode: " + strictMode );
         scrLog.debug( "  specVersion: " + specVersion );
@@ -110,8 +98,6 @@ public class SCRDescriptorTask extends MatchingTask {
             // create options
             final Options options = new Options();
             options.setOutputDirectory(destdir);
-            options.setSCRName(finalName);
-            options.setMetaTypeName(metaTypeName);
             options.setGenerateAccessors(generateAccessors);
             options.setStrictMode(strictMode);
             options.setProperties(new HashMap<String, String>());
@@ -196,11 +182,9 @@ public class SCRDescriptorTask extends MatchingTask {
         return this.classpath;
     }
 
-
     public void setClasspath( Path classPath ) {
         createClasspath().add( classPath );
     }
-
 
     public void setClasspathRef( Reference classpathRef ) {
         if ( classpathRef != null && classpathRef.getReferencedObject() instanceof Path ) {
@@ -208,11 +192,9 @@ public class SCRDescriptorTask extends MatchingTask {
         }
     }
 
-
     public void setSrcdir( File srcdir )  {
         getImplicitFileSet().setDir( srcdir );
     }
-
 
     public void setDestdir( File outputDirectory ) {
         this.destdir = outputDirectory;
@@ -223,21 +205,9 @@ public class SCRDescriptorTask extends MatchingTask {
         }
     }
 
-
-    public void setFinalName( String finalName ) {
-        this.finalName = finalName;
-    }
-
-
-    public void setMetaTypeName( String metaTypeName ) {
-        this.metaTypeName = metaTypeName;
-    }
-
-
     public void setGenerateAccessors( boolean generateAccessors ) {
         this.generateAccessors = generateAccessors;
     }
-
 
     public void setStrictMode( boolean strictMode ) {
         this.strictMode = strictMode;
