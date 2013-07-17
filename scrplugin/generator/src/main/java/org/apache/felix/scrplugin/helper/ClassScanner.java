@@ -169,8 +169,8 @@ public class ClassScanner {
                 if ( desc.getDescription(PropertyDescription.class) != null
                      || desc.getDescription(ReferenceDescription.class) != null
                      || desc.getDescription(ServiceDescription.class) != null ) {
-                    iLog.addWarning("Class '" + src.getClassName() + "' contains SCR annotations, but not a" +
-                         "@Component (or equivalent) annotation. Therefore no component descriptor is created for this" +
+                    iLog.addWarning("Class '" + src.getClassName() + "' contains SCR annotations, but not a " +
+                         "@Component (or equivalent) annotation. Therefore no component descriptor is created for this " +
                          "class. Please add a @Component annotation and consider making it abstract.",
                          src.getFile().toString());
                 }
