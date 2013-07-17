@@ -279,6 +279,7 @@ public class SCRDescriptorGenerator {
             }
         }
     }
+
     /**
      * Create the SCR objects based on the descriptions
      */
@@ -344,6 +345,12 @@ public class SCRDescriptorGenerator {
             inherit = (cd == null ? true : cd.isInherit());
 
             if ( cd != null ) {
+                if ( current != desc ) {
+                    iLog.addWarning(" Component " + componentDesc.getName() + " is using the " +
+                                    "deprecated inheritance feature and inherits from " + current.getDescribedClass().getName() +
+                                    ". This feature will be removed in future versions.",
+                                    desc.getSource());
+                }
                 // handle enabled and immediate
                 if ( componentDesc.getEnabled() == null ) {
                     componentDesc.setEnabled(cd.getEnabled());
@@ -370,12 +377,13 @@ public class SCRDescriptorGenerator {
                     // policy requires 1.1
                     componentDesc.setSpecVersion(SpecVersion.VERSION_1_1);
                 }
+
+                // services, properties, references
+                this.processServices(current, container);
+                this.processProperties(current, container, ocd);
+                this.processReferences(current, container);
             }
 
-            // services, properties, references
-            this.processServices(current, container);
-            this.processProperties(current, container, ocd);
-            this.processReferences(current, container);
 
             // go up in the class hierarchy
             if ( !inherit || current.getDescribedClass().getSuperclass() == null ) {
