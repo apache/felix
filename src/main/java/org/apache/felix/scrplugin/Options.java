@@ -43,15 +43,6 @@ public class Options {
     /** The output directory for the generated files. */
     private File outputDirectory;
 
-    /** The name of the scr file. */
-    private String scrName = "serviceComponents.xml";
-
-    /** The name of the metatype file. */
-    private String metaTypeName = "metatype.xml";
-
-    /** Flag for generating separate descriptor files. */
-    private boolean generateSeparateDescriptors = false;
-
     /**
      * @see #setGenerateAccessors(boolean)
      * @return Whether accessor methods should be generated.
@@ -148,62 +139,6 @@ public class Options {
      */
     public void setOutputDirectory(final File outputDirectory) {
         this.outputDirectory = outputDirectory;
-    }
-
-    /**
-     * @see #setSCRName(String)
-     * @return The file name for the SCR file.
-     */
-    public String getSCRName() {
-        return this.scrName;
-    }
-
-    /**
-     * Sets the name of the SCR declaration descriptor file. This file will be
-     * created in the <i>OSGI-INF</i> directory below the {@link #setOutputDirectory(File) output directory}.
-     * <p>
-     * This file will be overwritten if already existing. If no descriptors are created the file is actually removed.
-     * <p>
-     * The default value of this property is <code>serviceComponents.xml</code>.
-     */
-    public void setSCRName(final String finalName) {
-        this.scrName = finalName;
-    }
-
-    /**
-     * @see #setMetaTypeName(String)
-     * @return The name for the metatype file
-     */
-    public String getMetaTypeName() {
-        return this.metaTypeName;
-    }
-
-    /**
-     * Sets the name of the file taking the Metatype Service descriptors. This
-     * file will be created in the <i>OSGI-INF/metatype</i> directory below the {@link #setOutputDirectory(File) output directory}
-     * .
-     * <p>
-     * This file will be overwritten if already existing. If no descriptors are created the file is actually removed.
-     * <p>
-     * The default value of this property is <code>metatype.xml</code>.
-     */
-    public void setMetaTypeName(final String metaTypeName) {
-        this.metaTypeName = metaTypeName;
-    }
-
-    /**
-     * Should separate descriptor files be generated?
-     */
-    public boolean isGenerateSeparateDescriptors() {
-        return generateSeparateDescriptors;
-    }
-
-    /**
-     * Set whether separate descriptor files should be generated.
-     * @param generateSeparateDescriptors
-     */
-    public void setGenerateSeparateDescriptors(boolean generateSeparateDescriptors) {
-        this.generateSeparateDescriptors = generateSeparateDescriptors;
     }
 
     private static final String PARENT_NAME = "OSGI-INF";

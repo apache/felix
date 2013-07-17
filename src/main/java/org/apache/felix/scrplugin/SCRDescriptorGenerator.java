@@ -123,11 +123,8 @@ public class SCRDescriptorGenerator {
         }
 
         this.logger.debug("..using output directory: " + this.options.getOutputDirectory());
-        this.logger.debug("..using scr name: " + this.options.getSCRName());
-        this.logger.debug("..using metatype name: " + this.options.getMetaTypeName());
         this.logger.debug("..strict mode: " + this.options.isStrictMode());
         this.logger.debug("..generating accessors: " + this.options.isGenerateAccessors());
-        this.logger.debug("..generating separate descs: " + this.options.isGenerateSeparateDescriptors());
 
         // check speck version configuration
         SpecVersion specVersion = options.getSpecVersion();
