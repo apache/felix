@@ -61,16 +61,6 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 	private static final String DESTDIR = "destdir";
 
 	/**
-	 * "finalName" parameter, optionally provided in the "-plugin" directive.
-	 */
-	private static final String FINALNAME = "finalName";
-
-	/**
-	 * "metaTypeName" parameter, optionally provided in the "-plugin" directive.
-	 */
-	private static final String METATYPENAME = "metaTypeName";
-
-	/**
 	 * "generateAccessors" parameter, optionally provided in the "-plugin"
 	 * directive.
 	 */
@@ -85,12 +75,6 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 	 * "specVersion" parameter, optionally provided in the "-plugin" directive.
 	 */
 	private static final String SPECVERSION = "specVersion";
-
-	/**
-	 * "genSeparateDescs" parameter, optionally provided in the "-plugin"
-	 * directive.
-	 */
-	private static final String GENSEPDESC = "genSeparateDescs";
 
 	/**
 	 * "log" parameter, which may be provided in the "-plugin" directive.
