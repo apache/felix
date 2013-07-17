@@ -78,6 +78,7 @@ public @interface Component {
     /**
      * Whether any service, property and reference declarations from base
      * classes should be inherited by this class.
+     * @deprecated This feature will not be supported in future versions.
      */
     boolean inherit() default true;
 
@@ -93,6 +94,7 @@ public @interface Component {
      * This marks an abstract service description which is not added to the
      * descriptor but intended for reuse through inheritance. This attribute
      * defaults to true for abstract classes and false for concrete classes.
+     * @deprecated This feature will not be supported in future versions.
      */
     boolean componentAbstract() default false;
 
