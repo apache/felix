@@ -105,21 +105,6 @@ public class SCRDescriptorMojo extends AbstractMojo {
     private MavenProject project;
 
     /**
-     * Name of the generated descriptor.
-     *
-     * @parameter expression="${scr.descriptor.name}"
-     *            default-value="serviceComponents.xml"
-     */
-    private String finalName;
-
-    /**
-     * Name of the generated meta type file.
-     *
-     * @parameter default-value="metatype.xml"
-     */
-    private String metaTypeName;
-
-    /**
      * This flag controls the generation of the bind/unbind methods.
      *
      * @parameter default-value="true"
@@ -132,13 +117,6 @@ public class SCRDescriptorMojo extends AbstractMojo {
      * @parameter default-value="false"
      */
     private boolean strictMode;
-
-    /**
-     * If set to false, a single descriptor will be created.
-     *
-     * @parameter default-value="true"
-     */
-    private boolean generateSeparateDescriptors;
 
     /**
      * The comma separated list of tokens to include when processing sources.
@@ -219,13 +197,10 @@ public class SCRDescriptorMojo extends AbstractMojo {
         // create options
         final Options options = new Options();
         options.setOutputDirectory(outputDirectory);
-        options.setSCRName(finalName);
-        options.setMetaTypeName(metaTypeName);
         options.setGenerateAccessors(generateAccessors);
         options.setStrictMode(strictMode);
         options.setProperties(properties);
         options.setSpecVersion(SpecVersion.fromName(specVersion));
-        options.setGenerateSeparateDescriptors(this.generateSeparateDescriptors);
 
         if ( specVersion != null && options.getSpecVersion() == null ) {
             throw new MojoExecutionException("Unknown spec version specified: " + specVersion);
@@ -240,19 +215,13 @@ public class SCRDescriptorMojo extends AbstractMojo {
             generator.setOptions(options);
             generator.setProject(project);
 
-            // don't try to delete per-class descriptors if only one descriptor is generated
-            if ( options.isGenerateSeparateDescriptors() ) {
-                this.removePossiblyStaleFiles(scanner.getSources(), options);
-            }
+            this.removePossiblyStaleFiles(scanner.getSources(), options);
 
             final Result result = generator.execute();
             this.setServiceComponentHeader();
 
             this.updateProjectResources();
-            // don't try to delete per-class descriptors if only one descriptor is generated
-            if ( options.isGenerateSeparateDescriptors() ) {
-                this.cleanUpDeletedSources(scanner.getDeletedSources(), options);
-            }
+            this.cleanUpDeletedSources(scanner.getDeletedSources(), options);
 
             this.refreshMessages(result.getProcessedSourceFiles());
             this.updateBuildContext(result);
