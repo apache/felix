@@ -51,7 +51,7 @@ import aQute.service.reporter.Reporter;
  * The <code>SCRDescriptorBndPlugin</code> class is a <code>bnd</code> analyzer
  * plugin which generates a service descriptor file based on annotations found
  * in the sources.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
@@ -108,16 +108,6 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 	private BndLog log;
 
 	/**
-	 * Name of the generated descriptor.
-	 */
-	private String finalName = "serviceComponents.xml";
-
-	/**
-	 * Name of the generated meta type file.
-	 */
-	private String metaTypeName = "metatype.xml";
-
-	/**
 	 * This flag controls the generation of the bind/unbind methods.
 	 */
 	private boolean generateAccessor = true;
@@ -132,11 +122,6 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 	 * default the version is detected by the used tags.
 	 */
 	private SpecVersion specVersion;
-
-	/**
-	 * Do we must generate descriptors in separate files
-	 */
-	private boolean generateSeparateDescriptors = true;
 
 	/**
 	 * Bnd plugin properties.
@@ -185,13 +170,10 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 			// create options
 			final Options options = new Options();
 			options.setOutputDirectory(destDir);
-			options.setSCRName(finalName);
-			options.setMetaTypeName(metaTypeName);
 			options.setGenerateAccessors(generateAccessor);
 			options.setStrictMode(strictMode);
 			options.setProperties(new HashMap<String, String>());
 			options.setSpecVersion(specVersion);
-			options.setGenerateSeparateDescriptors(generateSeparateDescriptors);
 
 			final SCRDescriptorGenerator generator = new SCRDescriptorGenerator(
 					log);
@@ -244,8 +226,6 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 					+ " directory.");
 		}
 
-		finalName = parseOption(properties, FINALNAME, finalName);
-		metaTypeName = parseOption(properties, METATYPENAME, metaTypeName);
 		generateAccessor = parseOption(properties, GENERATE_ACCESSOR,
 				generateAccessor);
 		strictMode = parseOption(properties, STRICT_MODE, strictMode);
@@ -255,16 +235,11 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 			throw new IllegalArgumentException(
 					"Unknown spec version specified: " + version);
 		}
-		generateSeparateDescriptors = parseOption(properties, GENSEPDESC,
-				generateSeparateDescriptors);
 
 		if (log.isInfoEnabled()) {
 			log.info("Initialized Bnd ScrPlugin: destDir=" + destDir
-					+ ", finalName=" + finalName + ", metaTypeName="
-					+ metaTypeName + ", strictMode=" + strictMode
-					+ ", specVersion=" + specVersion
-					+ ", generateSeparateDescriptors="
-					+ generateSeparateDescriptors);
+					+ ", strictMode=" + strictMode
+					+ ", specVersion=" + specVersion);
 		}
 	}
 
