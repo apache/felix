@@ -74,7 +74,8 @@
               org.apache.felix.servicediagnostics;version=0.1
             </Export-Package>
             <Import-Package>
-              sun.misc*;resolution:=optional, *
+            <!-- make imports on webconsole optional, so that core diagnostics engine can be used independently -->
+              *;resolution:=optional
             </Import-Package>
             <Private-Package>
               org.apache.felix.servicediagnostics.impl,
