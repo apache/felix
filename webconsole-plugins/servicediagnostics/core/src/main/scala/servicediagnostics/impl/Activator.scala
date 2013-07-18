@@ -63,28 +63,42 @@ class Activator extends DependencyActivatorBase
                 .setCallbacks("addPlugin", null, null)
                 .setRequired(false)))
 
-        // register the webconsole plugin 
-        dm.add(createComponent
-            .setInterface(classOf[javax.servlet.Servlet].getName, new jHT[String,String]() {{
-                  put("felix.webconsole.label", "servicegraph")
-              }})
-            .setImplementation(classOf[WebConsolePlugin])
-            .add(createServiceDependency
-                .setService(classOf[ServiceDiagnostics])
-                .setRequired(true)
-                .setAutoConfig("engine")))
+        try // if the engine is used alone, the webconsole may just not be there 
+        { 
+            // register the webconsole plugin 
+            dm.add(createComponent
+                .setInterface(classOf[javax.servlet.Servlet].getName, new jHT[String,String]() {{
+                      put("felix.webconsole.label", "servicegraph")
+                  }})
+                .setImplementation(classOf[WebConsolePlugin])
+                .add(createServiceDependency
+                    .setService(classOf[ServiceDiagnostics])
+                    .setRequired(true)
+                    .setAutoConfig("engine")))
+        }
+        catch 
+        {
+            case t:Throwable => println("failed to register the servicediagnostics webconsole plugin")
+        }
 
-        // register the shell command
-        dm.add(createComponent
-            .setInterface(classOf[Command].getName, new jHT[String,Any]() {{
-                  put(CommandProcessor.COMMAND_FUNCTION, CLI.usage.split("|"))
-                  put(CommandProcessor.COMMAND_SCOPE, CLI.scope)
-              }})
-            .setImplementation(classOf[CLI])
-            .add(createServiceDependency
-                .setService(classOf[ServiceDiagnostics])
-                .setRequired(true)
-                .setAutoConfig("engine")))
+        try // if the engine is used alone, the shell may just not be there 
+        { 
+            // register the shell command
+            dm.add(createComponent
+                .setInterface(classOf[Command].getName, new jHT[String,Any]() {{
+                      put(CommandProcessor.COMMAND_FUNCTION, CLI.usage.split("|"))
+                      put(CommandProcessor.COMMAND_SCOPE, CLI.scope)
+                  }})
+                .setImplementation(classOf[CLI])
+                .add(createServiceDependency
+                    .setService(classOf[ServiceDiagnostics])
+                    .setRequired(true)
+                    .setAutoConfig("engine")))
+        }
+        catch 
+        {
+            case t:Throwable => println("failed to register the servicediagnostics shell plugin")
+        }
     }
 
     override def destroy(bc:BundleContext, dm:DependencyManager) = {}
