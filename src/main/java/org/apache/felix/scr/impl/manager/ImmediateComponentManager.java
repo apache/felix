@@ -270,10 +270,17 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                         new Object[]
                                 {dm.getName()}, null );
 
-                // make sure, we keep no bindings
+                // make sure, we keep no bindings. Only close the dm's we opened.
+                boolean skip = true;
                 for ( DependencyManager md: getReversedDependencyManagers() )
                 {
-                    md.close( implementationObject, componentContext.getEdgeInfo( md ) );
+                    if ( skip && dm == md ) {
+                        skip = false;
+                    }
+                    if ( !skip )
+                    {
+                        md.close( implementationObject, componentContext.getEdgeInfo( md ) );
+                    }
                 }
 
                 setter.resetImplementationObject( implementationObject );
