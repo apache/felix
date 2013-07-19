@@ -39,6 +39,8 @@ public class StopBundleCommand extends Command {
 
     public void execute(DeploymentSessionImpl session) throws DeploymentException {
         String stopUnaffectedBundle = System.getProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", "true");
+
+        LogService log = session.getLog();
         
         AbstractDeploymentPackage target = session.getTargetAbstractDeploymentPackage();
         BundleInfo[] bundleInfos = target.getOrderedBundleInfos();
@@ -52,16 +54,20 @@ public class StopBundleCommand extends Command {
         		if ("false".equalsIgnoreCase(stopUnaffectedBundle) && omitBundleStop(session, symbolicName)) {
         			continue;
         		}
-                addRollback(new StartBundleRunnable(session, bundle));
-                try {
-                    bundle.stop();
-                }
-                catch (BundleException e) {
-                	session.getLog().log(LogService.LOG_WARNING, "Could not stop bundle '" + bundle.getSymbolicName() + "'", e);
-                }
+        		if (isFragmentBundle(bundle)) {
+                    log.log(LogService.LOG_INFO, "Skipping fragment bundle '" + bundle.getSymbolicName() + "'");
+        		} else {
+        		    addRollback(new StartBundleRunnable(session, bundle));
+        		    try {
+        		        bundle.stop();
+        		    }
+        		    catch (BundleException e) {
+        		        log.log(LogService.LOG_WARNING, "Could not stop bundle '" + bundle.getSymbolicName() + "'", e);
+        		    }
+        		}
             }
             else {
-            	session.getLog().log(LogService.LOG_WARNING, "Could not stop bundle '" + symbolicName + "' because it was not defined int he framework");
+            	log.log(LogService.LOG_WARNING, "Could not stop bundle '" + symbolicName + "' because it was not defined int he framework");
             }
         }
     }

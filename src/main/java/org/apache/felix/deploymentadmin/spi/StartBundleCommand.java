@@ -48,14 +48,18 @@ public class StartBundleCommand extends Command {
         BundleInfoImpl[] bundleInfos = source.getOrderedBundleInfos();
         for (int i = 0; i < bundleInfos.length; i++) {
             BundleInfoImpl bundleInfoImpl = bundleInfos[i];
-            if(!bundleInfoImpl.isCustomizer()) {
+            if (!bundleInfoImpl.isCustomizer()) {
                 Bundle bundle = source.getBundle(bundleInfoImpl.getSymbolicName());
                 if (bundle != null) {
-                    try {
-                        bundle.start();
-                    }
-                    catch (BundleException be) {
-                        log.log(LogService.LOG_WARNING, "Could not start bundle '" + bundle.getSymbolicName() + "'", be);
+                    if (isFragmentBundle(bundle)) {
+                        log.log(LogService.LOG_INFO, "Skipping fragment bundle '" + bundle.getSymbolicName() + "'");
+                    } else {
+                        try {
+                            bundle.start();
+                        }
+                        catch (BundleException be) {
+                            log.log(LogService.LOG_WARNING, "Could not start bundle '" + bundle.getSymbolicName() + "'", be);
+                        }
                     }
                 }
                 else {
