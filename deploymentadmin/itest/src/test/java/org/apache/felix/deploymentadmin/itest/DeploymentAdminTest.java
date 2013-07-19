@@ -25,14 +25,14 @@ import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder.JarManifestManipulatingFilter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentException;
 
 /**
  * Generic tests for {@link DeploymentAdmin}.
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class DeploymentAdminTest extends BaseIntegrationTest {
 
     @Test

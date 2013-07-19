@@ -18,19 +18,24 @@
  */
 package org.apache.felix.deploymentadmin.itest;
 
-import static org.osgi.service.deploymentadmin.DeploymentException.*;
+import static org.osgi.service.deploymentadmin.DeploymentException.CODE_FOREIGN_CUSTOMIZER;
+import static org.osgi.service.deploymentadmin.DeploymentException.CODE_OTHER_ERROR;
+import static org.osgi.service.deploymentadmin.DeploymentException.CODE_PROCESSOR_NOT_FOUND;
 
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 
 /**
  * Provides test cases on the use of customizers in Deployment Admin. 
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
+@ExamReactorStrategy(PerMethod.class)
 public class CustomizerTest extends BaseIntegrationTest {
 
     /**

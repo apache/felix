@@ -65,6 +65,7 @@ public class DeploymentPackageBuilder {
                 jos.closeEntry();
             }
             jos.close();
+            jis.close();
 
             return new ByteArrayInputStream(baos.toByteArray());
         }

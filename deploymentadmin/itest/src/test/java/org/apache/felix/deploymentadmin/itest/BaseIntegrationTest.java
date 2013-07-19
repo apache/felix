@@ -18,21 +18,18 @@
  */
 package org.apache.felix.deploymentadmin.itest;
 
-import static org.ops4j.pax.exam.Constants.START_LEVEL_SYSTEM_BUNDLES;
-import static org.ops4j.pax.exam.Constants.START_LEVEL_TEST_BUNDLE;
 import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
 import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
-import static org.ops4j.pax.exam.CoreOptions.felix;
-import static org.ops4j.pax.exam.CoreOptions.frameworkStartLevel;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.url;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,18 +41,18 @@ import javax.inject.Inject;
 import junit.framework.TestCase;
 
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
+import org.junit.After;
 import org.junit.Before;
-import org.ops4j.pax.exam.CoreOptions;
+import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.Version;
+import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentException;
-import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -72,8 +69,6 @@ public abstract class BaseIntegrationTest extends TestCase {
     protected volatile BundleContext m_context;
     @Inject
     protected volatile DeploymentAdmin m_deploymentAdmin;
-    @Inject
-    protected volatile PackageAdmin m_packageAdmin;
 
     protected volatile AtomicInteger m_gate = new AtomicInteger(0);
     protected volatile String m_testBundleBasePath;
@@ -82,40 +77,30 @@ public abstract class BaseIntegrationTest extends TestCase {
     private int cnt = 0;        
     
     @Configuration
-    public Option[] config() {
+    public Option[] config() throws Exception {
+        File f = new File("src/test/resources/logback.xml");
+        if (!f.exists()) {
+            throw new RuntimeException("No log configuration...!");
+        }
         return options(
             bootDelegationPackage("sun.*"),
             cleanCaches(),
-            CoreOptions.systemProperty("logback.configurationFile").value("file:src/test/resources/logback.xml"),
-//            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
-
-            mavenBundle("org.slf4j", "slf4j-api").version("1.6.5").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("ch.qos.logback", "logback-core").version("1.0.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("ch.qos.logback", "logback-classic").version("1.0.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-
-            url("link:classpath:META-INF/links/org.ops4j.pax.exam.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.exam.inject.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.extender.service.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.base.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.core.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.extender.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.lifecycle.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.framework.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            url("link:classpath:META-INF/links/org.apache.geronimo.specs.atinject.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-
-            mavenBundle("org.osgi", "org.osgi.core").version("4.2.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.osgi", "org.osgi.compendium").version("4.2.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager").version("3.0.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin").version("0.9.1-SNAPSHOT").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.eventadmin").version("1.2.14").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.configadmin").version("1.2.8").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.log").version("1.0.1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-//            mavenBundle("org.apache.felix", "org.apache.felix.shell").version("1.4.3").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-//            mavenBundle("org.apache.felix", "org.apache.felix.shell.tui").version("1.4.1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN"),
             
-            junitBundles(),
-            frameworkStartLevel(START_LEVEL_TEST_BUNDLE),
-            felix());
+            mavenBundle("org.slf4j", "slf4j-api").version("1.7.5"),
+            mavenBundle("ch.qos.logback", "logback-core").version("1.0.13"),
+            mavenBundle("ch.qos.logback", "logback-classic").version("1.0.13"),
+            systemProperty("logback.configurationFile").value(f.toURI().toASCIIString()),
+
+            mavenBundle("org.apache.felix", "org.apache.felix.metatype").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.eventadmin").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject(),
+            mavenBundle("org.apache.felix", "org.apache.felix.log").versionAsInProject(),
+            
+            junitBundles()
+        );
     }
 
     @Before
@@ -145,6 +130,12 @@ public abstract class BaseIntegrationTest extends TestCase {
             }
             versions.add(bundle.getVersion());
         }
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        System.setProperty("rp1", "");
+        System.setProperty("bundle3", "");
     }
 
     protected void assertBundleExists(String symbolicName, String version) {
@@ -228,11 +219,6 @@ public abstract class BaseIntegrationTest extends TestCase {
         return resource;
     }
 
-    /**
-     * @param baseName
-     * @return
-     * @throws MalformedURLException
-     */
     protected URL getTestBundle(String baseName) throws MalformedURLException {
         File f = new File(m_testBundleBasePath, String.format("%1$s/target/org.apache.felix.deploymentadmin.test.%1$s-1.0.0.jar", baseName));
         assertTrue("No such bundle: " + f, f.exists() && f.isFile());
@@ -275,5 +261,20 @@ public abstract class BaseIntegrationTest extends TestCase {
 
     protected boolean isBundleResolved(Bundle bundle) {
         return isBundleInState(bundle, Bundle.RESOLVED);
+    }
+
+    protected boolean resolveBundles(Bundle... bundles) throws Exception {
+        Bundle systemBundle = m_context.getBundle(0L);
+
+        FrameworkWiring frameworkWiring = systemBundle.adapt(FrameworkWiring.class);
+        frameworkWiring.resolveBundles(Arrays.asList(bundles));
+        
+        for (Bundle bundle : bundles) {
+            if ((bundle.getState() & Bundle.RESOLVED) == 0) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 }

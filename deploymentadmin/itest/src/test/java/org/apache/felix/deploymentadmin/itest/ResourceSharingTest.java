@@ -22,7 +22,7 @@ import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder.JarManifestManipulatingFilter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentException;
@@ -31,7 +31,7 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
 /**
  * Generic tests for {@link DeploymentAdmin}.
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ResourceSharingTest extends BaseIntegrationTest {
 
     @Test

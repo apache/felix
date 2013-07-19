@@ -18,7 +18,8 @@
  */
 package org.apache.felix.deploymentadmin.itest;
 
-import static org.osgi.service.deploymentadmin.DeploymentException.*;
+import static org.osgi.service.deploymentadmin.DeploymentException.CODE_BAD_HEADER;
+import static org.osgi.service.deploymentadmin.DeploymentException.CODE_BUNDLE_SHARING_VIOLATION;
 import static org.osgi.service.deploymentadmin.DeploymentException.CODE_MISSING_BUNDLE;
 import static org.osgi.service.deploymentadmin.DeploymentException.CODE_MISSING_FIXPACK_TARGET;
 import static org.osgi.service.deploymentadmin.DeploymentException.CODE_MISSING_RESOURCE;
@@ -26,7 +27,7 @@ import static org.osgi.service.deploymentadmin.DeploymentException.CODE_MISSING_
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
@@ -34,7 +35,7 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
 /**
  * Provides test cases regarding the use of "fix-packages" in DeploymentAdmin.
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class InstallFixPackageTest extends BaseIntegrationTest {
 
     /**

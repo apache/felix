@@ -21,14 +21,14 @@ package org.apache.felix.deploymentadmin.itest;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 
 /**
  * Provides test cases regarding the use of "normal" deployment packages in DeploymentAdmin.
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class InstallDeploymentPackageTest extends BaseIntegrationTest {
 
     /**
@@ -82,7 +82,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         assertBundleExists(getSymbolicName("bundle2"), "1.0.0");
 
         // We shouldn't be able to resolve the deps for bundle2...
-        assertFalse(m_packageAdmin.resolveBundles(new Bundle[] { dp1.getBundle(getSymbolicName("bundle2")) }));
+        assertFalse(resolveBundles(dp1.getBundle(getSymbolicName("bundle2"))));
 
         assertTrue(isBundleInstalled(dp1.getBundle(getSymbolicName("bundle2"))));
 
@@ -100,7 +100,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         assertBundleExists(getSymbolicName("bundle2"), "1.0.0");
 
         // Now we should be able to resolve the dependencies for bundle2...
-        assertTrue(m_packageAdmin.resolveBundles(new Bundle[] { dp1.getBundle(getSymbolicName("bundle2")) }));
+        assertTrue(resolveBundles(dp1.getBundle(getSymbolicName("bundle2"))));
 
         assertTrue(isBundleActive(dp2.getBundle(getSymbolicName("bundle1"))));
         assertTrue(isBundleResolved(dp1.getBundle(getSymbolicName("bundle2"))));
@@ -134,6 +134,30 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     }
 
     /**
+     * Tests that installing a bundle along with a fragment bundle succeeds (DA should not try to start the fragment, see FELIX-4167).
+     */
+    @Test
+    public void testInstallBundleWithFragmentOk() throws Exception {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("fragment1")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        assertNotNull("No deployment package returned?!", dp);
+
+        awaitRefreshPackagesEvent();
+
+        assertBundleExists(getSymbolicName("bundle1"), "1.0.0");
+        assertBundleExists(getSymbolicName("fragment1"), "1.0.0");
+
+        assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle1"))));
+        assertFalse(isBundleActive(dp.getBundle(getSymbolicName("fragment1"))));
+
+        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+    }
+
+    /**
      * Tests that installing a bundle whose dependencies cannot be met, is installed, but not started.
      */
     @Test
@@ -154,6 +178,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
 
         assertTrue(isBundleInstalled(dp.getBundle(getSymbolicName("bundle2"))));
     }
+
 
     /**
      * Tests that installing a bundle along with other (non-bundle) artifacts succeeds.
@@ -225,6 +250,43 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
     }
 
     /**
+     * Tests that if an exception is thrown during the uninstall of a bundle, the installation/update continues and succeeds.
+     */
+    @Test
+    public void testUninstallBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        assertNotNull("No deployment package returned?!", dp);
+
+        awaitRefreshPackagesEvent();
+
+        assertBundleExists(getSymbolicName("bundle3"), "1.0.0");
+
+        System.setProperty("bundle3", "stop");
+
+        dpBuilder = dpBuilder.create("1.0.1");
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+
+        dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        assertNotNull("No deployment package returned?!", dp);
+
+        assertBundleExists(getSymbolicName("bundle1"), "1.0.0");
+        assertBundleExists(getSymbolicName("bundle2"), "1.0.0");
+        assertBundleNotExists(getSymbolicName("bundle3"), "1.0.0");
+
+        assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle1"))));
+        assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle2"))));
+
+        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+    }
+
+    /**
      * Tests that if an exception is thrown during the stop of a bundle, the installation/update continues and succeeds.
      */
     @Test
@@ -259,43 +321,6 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle1"))));
         assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle2"))));
         assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle3"))));
-
-        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
-    }
-
-    /**
-     * Tests that if an exception is thrown during the uninstall of a bundle, the installation/update continues and succeeds.
-     */
-    @Test
-    public void testUninstallBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception {
-        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
-
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
-        assertNotNull("No deployment package returned?!", dp);
-
-        awaitRefreshPackagesEvent();
-
-        assertBundleExists(getSymbolicName("bundle3"), "1.0.0");
-
-        System.setProperty("bundle3", "stop");
-
-        dpBuilder = dpBuilder.create("1.0.1");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
-
-        dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
-        assertNotNull("No deployment package returned?!", dp);
-
-        assertBundleExists(getSymbolicName("bundle1"), "1.0.0");
-        assertBundleExists(getSymbolicName("bundle2"), "1.0.0");
-        assertBundleNotExists(getSymbolicName("bundle3"), "1.0.0");
-
-        assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle1"))));
-        assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle2"))));
 
         assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
     }

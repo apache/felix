@@ -25,7 +25,7 @@ import static org.osgi.service.deploymentadmin.DeploymentException.CODE_PROCESSO
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
@@ -33,7 +33,7 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
 /**
  * Provides test cases regarding the use of "normal" deployment packages in DeploymentAdmin.
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
 
     /**
@@ -66,6 +66,70 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
         assertTrue("No bundle should be started!", getCurrentBundles().isEmpty());
 
         assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+    }
+
+    /**
+     * Tests that uninstalling a DP containing a bundle along with a fragment bundle succeeds (DA should not try to stop the fragment, see FELIX-4167).
+     */
+    @Test
+    public void testUninstallBundleWithFragmentOk() throws Exception {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("fragment1")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        assertNotNull("No deployment package returned?!", dp);
+
+        awaitRefreshPackagesEvent();
+
+        assertBundleExists(getSymbolicName("bundle1"), "1.0.0");
+        assertBundleExists(getSymbolicName("fragment1"), "1.0.0");
+
+        assertTrue(isBundleActive(dp.getBundle(getSymbolicName("bundle1"))));
+        assertFalse(isBundleActive(dp.getBundle(getSymbolicName("fragment1"))));
+
+        // Should succeed...
+        dp.uninstall();
+
+        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+
+        // Both bundles should be uninstalled...
+        assertBundleNotExists(getSymbolicName("bundle1"), "1.0.0");
+        assertBundleNotExists(getSymbolicName("fragment1"), "1.0.0");
+    }
+
+    /**
+     * Tests that uninstalling a DP with a bundle along with other (non-bundle) artifacts succeeds.
+     */
+    @Test
+    public void testUninstallBundleWithOtherArtifactsOk() throws Exception {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        dpBuilder
+            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
+            .add(
+                dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1)
+                    .setUrl(getTestResource("test-config1.xml")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        assertNotNull("No deployment package returned?!", dp);
+
+        awaitRefreshPackagesEvent();
+
+        // Though the commit failed; the package should be installed...
+        assertBundleExists(getSymbolicName("rp1"), "1.0.0");
+        assertBundleExists(getSymbolicName("bundle3"), "1.0.0");
+
+        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+
+        // Should succeed...
+        dp.uninstall();
+
+        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+
+        assertBundleNotExists(getSymbolicName("rp1"), "1.0.0");
+        assertBundleNotExists(getSymbolicName("bundle3"), "1.0.0");
     }
 
     /**
@@ -233,6 +297,6 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
         
         assertTrue("One bundle should be started!", getCurrentBundles().size() == 1);
 
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected one deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
     }
 }
