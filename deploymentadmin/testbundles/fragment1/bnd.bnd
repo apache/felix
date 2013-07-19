@@ -1,0 +1,5 @@
+Bundle-Version: 1.0.0
+Bundle-SymbolicName: testbundles.fragment1
+Fragment-Host: testbundles.bundle1
+Private-Package: org.apache.felix.deploymentadmin.test.fragment1.impl
+
