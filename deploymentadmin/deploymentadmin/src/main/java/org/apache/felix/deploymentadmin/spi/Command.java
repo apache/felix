@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.felix.deploymentadmin.Constants;
+import org.osgi.framework.Bundle;
 import org.osgi.service.deploymentadmin.DeploymentException;
 
 /**
@@ -105,7 +107,7 @@ public abstract class Command {
     protected void addCommit(Runnable runnable) {
         m_commit.add(runnable);
     }
-
+    
     /**
      * Sets the command to being cancelled, this does not have an immediate effect. Commands that are executing should
      * check regularly if they were cancelled and if so they should make an effort to stop their operations as soon as possible
@@ -113,5 +115,15 @@ public abstract class Command {
      */
     public void cancel() {
         m_cancelled = true;
+    }
+
+    /**
+     * Determines whether a given bundle is actually a fragment bundle.
+     * @param bundle the bundle to test, cannot be <code>null</code>.
+     * @return <code>true</code> if the given bundle is actually a fragment bundle, <code>false</code> otherwise.
+     */
+    static final boolean isFragmentBundle(Bundle bundle) {
+        Object fragmentHost = bundle.getHeaders().get(Constants.FRAGMENT_HOST);
+        return fragmentHost != null;
     }
 }
