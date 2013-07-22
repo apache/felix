@@ -132,7 +132,7 @@
     <bundle>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>4.0.0</version>
+      <version>4.2.0</version>
     </bundle>
     <bundle>
       <groupId>org.apache.geronimo.bundles</groupId>
