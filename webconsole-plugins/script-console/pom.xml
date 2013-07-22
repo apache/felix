@@ -16,8 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
@@ -29,7 +28,7 @@
 
   <artifactId>org.apache.felix.webconsole.plugins.scriptconsole</artifactId>
   <packaging>bundle</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <name>Apache Felix Script Console Plugin</name>
   <description>
@@ -48,11 +47,11 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/script-console</connection>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.scriptconsole-1.0.0</connection>
     <developerConnection>
-        scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/script-console
+        scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.scriptconsole-1.0.0
     </developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/script-console</url>
+    <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.webconsole.plugins.scriptconsole-1.0.0</url>
   </scm>
 
   <build>
@@ -335,8 +334,7 @@
                 </goals>
                 <configuration>
                   <target>
-                    <copy file="${project.build.directory}/${project.build.finalName}.jar"
-                          tofile="${project.build.directory}/scriptconsole.jar" />
+                    <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.build.directory}/scriptconsole.jar" />
                   </target>
                 </configuration>
               </execution>
