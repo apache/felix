@@ -59,6 +59,12 @@ public class SCRDescriptorTask extends MatchingTask {
     protected boolean strictMode = false;
 
     /**
+     * Set to true to scan classes instead of sources.
+     * By default scan sources to be backwards compatible
+     */
+    private boolean scanClasses = false;
+
+    /**
      * The version of the DS spec this plugin generates a descriptor for. By
      * default the version is detected by the used tags.
      *
@@ -131,11 +137,20 @@ public class SCRDescriptorTask extends MatchingTask {
         final List<Source> result = new ArrayList<Source>();
         @SuppressWarnings("unchecked")
         final Iterator<Resource> resources = sourceFiles.iterator();
+
+        final String ext;
+        if(scanClasses) {
+            ext = ".class";
+        } else {
+            ext = ".java";
+        }
+
         while ( resources.hasNext() ) {
             final Resource r = resources.next();
             if ( r instanceof FileResource ) {
                 final File file = ( ( FileResource ) r ).getFile();
-                if ( file.getName().endsWith(".java") ) {
+
+                if ( file.getName().endsWith(ext) ) {
                     result.add(new Source() {
 
                         public File getFile() {
@@ -144,7 +159,7 @@ public class SCRDescriptorTask extends MatchingTask {
 
                         public String getClassName() {
                             String name = file.getAbsolutePath().substring(prefixLength).replace(File.separatorChar, '/').replace('/', '.');
-                            return name.substring(0, name.length() - 5);
+                            return name.substring(0, name.length() - ext.length());
                         }
                     });
                 }
@@ -215,5 +230,13 @@ public class SCRDescriptorTask extends MatchingTask {
 
     public void setSpecVersion( String specVersion ) {
         this.specVersion = specVersion;
+    }
+
+    public boolean isScanClasses() {
+        return scanClasses;
+    }
+
+    public void setScanClasses(boolean scanClasses) {
+        this.scanClasses = scanClasses;
     }
 }
