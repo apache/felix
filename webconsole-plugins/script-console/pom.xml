@@ -32,7 +32,9 @@
   <version>0.0.1-SNAPSHOT</version>
 
   <name>Apache Felix Script Console Plugin</name>
-  <description>Apache Felix Script Console Plugin allows invocation of script through Felix Web Console UI
+  <description>
+      Apache Felix Script Console Plugin allows invocation of script through Felix Web Console UI. Refer to
+      http://felix.apache.org/documentation/subprojects/apache-felix-script-console-plugin.html for more details.
   </description>
 
   <properties>
