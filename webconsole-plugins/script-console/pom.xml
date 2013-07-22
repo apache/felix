@@ -28,7 +28,7 @@
 
   <artifactId>org.apache.felix.webconsole.plugins.scriptconsole</artifactId>
   <packaging>bundle</packaging>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
 
   <name>Apache Felix Script Console Plugin</name>
   <description>
@@ -47,11 +47,11 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.scriptconsole-1.0.0</connection>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/script-console</connection>
     <developerConnection>
-        scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.webconsole.plugins.scriptconsole-1.0.0
+        scm:svn:https://svn.apache.org/repos/asf/felix/trunk/webconsole-plugins/script-console
     </developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.webconsole.plugins.scriptconsole-1.0.0</url>
+    <url>http://svn.apache.org/viewvc/felix/trunk/webconsole-plugins/script-console</url>
   </scm>
 
   <build>
