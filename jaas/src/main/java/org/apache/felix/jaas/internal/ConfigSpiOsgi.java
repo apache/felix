@@ -19,29 +19,6 @@
 
 package org.apache.felix.jaas.internal;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.Provider;
-import java.security.Security;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.security.auth.Subject;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.Configuration;
-import javax.security.auth.login.ConfigurationSpi;
-import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
-
 import org.apache.felix.jaas.LoginContextFactory;
 import org.apache.felix.jaas.LoginModuleFactory;
 import org.apache.felix.jaas.boot.ProxyLoginModule;
@@ -59,6 +36,16 @@ import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
+
+import javax.security.auth.Subject;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.*;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Provider;
+import java.security.Security;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component(label = "%jaas.spi.name",
         description = "%jaas.spi.description",
@@ -245,8 +232,8 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
 
     void open()
     {
-        this.tracker.open();
         this.configs = Collections.emptyMap();
+        this.tracker.open();
     }
 
     void close()
