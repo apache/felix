@@ -21,7 +21,10 @@ import java.util.Hashtable;
 
 import javax.servlet.Servlet;
 
-import org.osgi.framework.*;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * Setup the event plugin
@@ -61,6 +64,7 @@ public class Activator implements BundleActivator
         props.put( "felix.webconsole.label", "events");
         props.put( "felix.webconsole.title", "%plugin.events.title");
         props.put( "felix.webconsole.css", "/events/res/ui/events.css");
+        props.put( "felix.webconsole.category", "OSGi");
         this.pluginRegistration = context.registerService(Servlet.class.getName(),
                                 plugin,
                                 props);
