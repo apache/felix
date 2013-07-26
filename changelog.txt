@@ -4,6 +4,7 @@ Changes from 1.8.0 to 1.7.0
     * [FELIX-4175] - scr.ant task does not provide scanClasses option
     * [FELIX-4101] - Create metatype.properties file when description and label are inlined
     * [FELIX-4126] - Discontinue creation of single XML descriptor files 
+    * [FELIX-4170] - Deprecate inheritance of component descriptors
 
 
 Changes from 1.7.0 to 1.6.0
