@@ -19,21 +19,23 @@
 
 package org.apache.felix.ipojo.manipulator.spi;
 
-import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.Binding;
+import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.onlySupportedElements;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.alwaysTrue;
-import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.on;
-import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.onlySupportedElements;
-import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.or;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.model.AnnotationType;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.model.literal.AnnotationLiteral;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.model.literal.AnnotationPlayback;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.Binding;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.GenericVisitorFactory;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.ignore.NullBinding;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.stereotype.StereotypeVisitorFactory;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Elements;
+import org.apache.felix.ipojo.metadata.Element;
+import org.objectweb.asm.Type;
 
 /**
  * All provided {@link Module}s have to inherit from this class.
@@ -64,6 +66,18 @@ public abstract class AbsBindingModule implements Module {
      */
     protected AnnotationBindingBuilder bind(Class<? extends Annotation> annotationType) {
         return new AnnotationBindingBuilder(bindings, annotationType);
+    }
+
+    protected StereotypeBindingBuilder bindStereotype(Class<? extends Annotation> annotationType) {
+        return new StereotypeBindingBuilder(bindings, annotationType);
+    }
+
+    protected HandlerBindingBuilder bindHandlerBinding(Class<? extends Annotation> annotationType) {
+        return new HandlerBindingBuilder(bindings, annotationType);
+    }
+
+    protected void bindIgnore(Class<? extends Annotation> annotationType) {
+        bindings.add(new NullBinding(Type.getType(annotationType)));
     }
 
     /**
@@ -104,7 +118,7 @@ public abstract class AbsBindingModule implements Module {
          */
         private Binding build() {
             Binding binding = new Binding();
-            binding.setAnnotationType(annotationType);
+            binding.setAnnotationType(Type.getType(annotationType));
             binding.setPredicate(onlySupportedElements(annotationType));
             binding.setFactory(factory);
             return binding;
@@ -145,4 +159,40 @@ public abstract class AbsBindingModule implements Module {
         }
     }
 
+    public class StereotypeBindingBuilder {
+        private final AnnotationType m_annotationType;
+
+        public StereotypeBindingBuilder(final List<Binding> bindings, final Class<? extends Annotation> type) {
+            m_annotationType = new AnnotationType(Type.getType(type));
+            Binding binding = new Binding();
+            binding.setAnnotationType(m_annotationType.getType());
+            binding.setPredicate(onlySupportedElements(type));
+            binding.setFactory(new StereotypeVisitorFactory(m_annotationType));
+            bindings.add(binding);
+        }
+
+        public StereotypeBindingBuilder with(AnnotationLiteral<?> literal) {
+            m_annotationType.getPlaybacks().add(new AnnotationPlayback(literal));
+            return this;
+        }
+    }
+
+    public class HandlerBindingBuilder {
+
+        private final Binding m_binding;
+
+        public HandlerBindingBuilder(final List<Binding> bindings, final Class<? extends Annotation> annotationType) {
+            m_binding = new Binding();
+            Type type = Type.getType(annotationType);
+            m_binding.setAnnotationType(type);
+            m_binding.setPredicate(onlySupportedElements(annotationType));
+            Element e = Elements.buildElement(type);
+            m_binding.setFactory(new GenericVisitorFactory(e.getName(), e.getNameSpace()));
+            bindings.add(m_binding);
+        }
+
+        public void to(String namespace, String name) {
+            m_binding.setFactory(new GenericVisitorFactory(name, namespace));
+        }
+    }
 }

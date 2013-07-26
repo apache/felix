@@ -22,11 +22,6 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation.registry;
 import junit.framework.TestCase;
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
-import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.FieldGenericVisitor;
-import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.MethodGenericVisitor;
-import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.ParameterGenericVisitor;
-import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.TypeGenericVisitor;
-import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Bindings;
 import org.apache.felix.ipojo.manipulator.spi.AbsBindingModule;
 import org.apache.felix.ipojo.manipulator.spi.AnnotationVisitorFactory;
 import org.apache.felix.ipojo.manipulator.spi.BindingContext;
@@ -45,7 +40,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -73,7 +67,7 @@ public class SelectionTestCase extends TestCase {
     @Override
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        registry = new BindingRegistry(reporter);
+        registry = new DefaultBindingRegistry(reporter);
         when(factory.newAnnotationVisitor(any(BindingContext.class)))
                 .thenReturn(visitor);
         // Simulate a resource not found exception
@@ -147,23 +141,6 @@ public class SelectionTestCase extends TestCase {
         assertFieldSelection(OnBothMethodAndParameter.class, nullValue());
         assertMethodSelection(OnBothMethodAndParameter.class, equalTo(visitor));
         assertParameterSelection(OnBothMethodAndParameter.class, equalTo(visitor));
-
-    }
-
-    public void testSelectionForGenericVisitors() throws Exception {
-
-        assertClassSelection(OnTypeOnly.class, nullValue());
-        assertFieldSelection(OnFieldOnly.class, nullValue());
-        assertMethodSelection(OnMethodOnly.class, nullValue());
-        assertParameterSelection(OnParameterOnly.class, nullValue());
-
-        registry.getDefaultBindings().addAll(Bindings.newDefaultBindings(store, new AnnotationRegistry()));
-
-        // Verifications
-        assertClassSelection(OnTypeOnly.class, instanceOf(TypeGenericVisitor.class));
-        assertFieldSelection(OnFieldOnly.class, instanceOf(FieldGenericVisitor.class));
-        assertMethodSelection(OnMethodOnly.class, instanceOf(MethodGenericVisitor.class));
-        assertParameterSelection(OnParameterOnly.class, instanceOf(ParameterGenericVisitor.class));
 
     }
 

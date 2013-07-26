@@ -20,9 +20,16 @@
 package org.apache.felix.ipojo.manipulator.spi;
 
 import junit.framework.TestCase;
+
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.HandlerBinding;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.model.literal.AnnotationLiteral;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.Binding;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.GenericVisitorFactory;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.ignore.NullBinding;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.stereotype.StereotypeVisitorFactory;
 
 import java.lang.annotation.ElementType;
 import java.util.Iterator;
@@ -30,6 +37,7 @@ import java.util.Iterator;
 import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.on;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.only;
+import static org.objectweb.asm.Type.getType;
 
 /**
  * Created with IntelliJ IDEA.
@@ -52,7 +60,7 @@ public class AbsBindingModuleTestCase extends TestCase {
         Iterator<Binding> i = module.iterator();
         Binding one = i.next();
         assertNotNull(one);
-        assertEquals(Provides.class, one.getAnnotationType());
+        assertEquals(getType(Provides.class), one.getAnnotationType());
         assertEquals(factory, one.getFactory());
 
         // Only 1 Binding
@@ -72,13 +80,13 @@ public class AbsBindingModuleTestCase extends TestCase {
         Iterator<Binding> i = module.iterator();
         Binding one = i.next();
         assertNotNull(one);
-        assertEquals(Provides.class, one.getAnnotationType());
+        assertEquals(getType(Provides.class), one.getAnnotationType());
         assertEquals(factory, one.getFactory());
 
         // Second Binding
         Binding two = i.next();
         assertNotNull(two);
-        assertEquals(Requires.class, two.getAnnotationType());
+        assertEquals(getType(Requires.class), two.getAnnotationType());
         assertEquals(factory, two.getFactory());
     }
 
@@ -96,13 +104,13 @@ public class AbsBindingModuleTestCase extends TestCase {
         Iterator<Binding> i = module.iterator();
         Binding one = i.next();
         assertNotNull(one);
-        assertEquals(Provides.class, one.getAnnotationType());
+        assertEquals(getType(Provides.class), one.getAnnotationType());
         assertEquals(factory, one.getFactory());
 
         // Second Binding
         Binding two = i.next();
         assertNotNull(two);
-        assertEquals(Provides.class, two.getAnnotationType());
+        assertEquals(getType(Provides.class), two.getAnnotationType());
         assertEquals(factory2, two.getFactory());
     }
 
@@ -120,7 +128,7 @@ public class AbsBindingModuleTestCase extends TestCase {
         Iterator<Binding> i = module.iterator();
         Binding one = i.next();
         assertNotNull(one);
-        assertEquals(Provides.class, one.getAnnotationType());
+        assertEquals(getType(Provides.class), one.getAnnotationType());
         assertEquals(factory, one.getFactory());
 
         // Only 1 Binding
@@ -135,8 +143,8 @@ public class AbsBindingModuleTestCase extends TestCase {
                 bind(Provides.class)
                         .when(on(ElementType.FIELD))
                         .to(factory)
-                .when(on(ElementType.PARAMETER))
-                .to(factory2);
+                        .when(on(ElementType.PARAMETER))
+                        .to(factory2);
             }
         };
         module.configure();
@@ -144,14 +152,110 @@ public class AbsBindingModuleTestCase extends TestCase {
         Iterator<Binding> i = module.iterator();
         Binding one = i.next();
         assertNotNull(one);
-        assertEquals(Provides.class, one.getAnnotationType());
+        assertEquals(getType(Provides.class), one.getAnnotationType());
         assertEquals(factory, one.getFactory());
 
         // Second Binding
         Binding two = i.next();
         assertNotNull(two);
-        assertEquals(Provides.class, two.getAnnotationType());
+        assertEquals(getType(Provides.class), two.getAnnotationType());
         assertEquals(factory2, two.getFactory());
+    }
+
+    public void testHandlerBindings() throws Exception {
+        AbsBindingModule module = new AbsBindingModule() {
+            public void configure() {
+                bindHandlerBinding(Bound.class).to("com.acme", "foo");
+            }
+        };
+        module.configure();
+
+        Iterator<Binding> i = module.iterator();
+        Binding one = i.next();
+        assertNotNull(one);
+        assertEquals(getType(Bound.class), one.getAnnotationType());
+        assertTrue(one.getFactory() instanceof GenericVisitorFactory);
+    }
+
+    public void testStereotypeBindings() throws Exception {
+        AbsBindingModule module = new AbsBindingModule() {
+            public void configure() {
+                bindStereotype(Bound.class)
+                        .with(new ComponentLiteral() {
+                            @Override
+                            public boolean publicFactory() {
+                                return false;
+                            }
+                        });
+            }
+        };
+        module.configure();
+
+        Iterator<Binding> i = module.iterator();
+        Binding one = i.next();
+        assertNotNull(one);
+        assertEquals(getType(Bound.class), one.getAnnotationType());
+        assertTrue(one.getFactory() instanceof StereotypeVisitorFactory);
+    }
+
+
+    public void testIgnoreBindings() throws Exception {
+        AbsBindingModule module = new AbsBindingModule() {
+            public void configure() {
+                bindIgnore(Bound.class);
+            }
+        };
+        module.configure();
+
+        Iterator<Binding> i = module.iterator();
+        Binding one = i.next();
+        assertEquals(getType(Bound.class), one.getAnnotationType());
+        assertTrue(one instanceof NullBinding);
+    }
+
+    private static @interface Bound {}
+
+    private static class ComponentLiteral extends AnnotationLiteral<Component> implements Component {
+
+        public boolean public_factory() {
+            return true;
+        }
+
+        public boolean publicFactory() {
+            return true;
+        }
+
+        public String name() {
+            return "";
+        }
+
+        public boolean architecture() {
+            return false;
+        }
+
+        public boolean immediate() {
+            return false;
+        }
+
+        public boolean propagation() {
+            return false;
+        }
+
+        public String managedservice() {
+            return "";
+        }
+
+        public String factory_method() {
+            return "";
+        }
+
+        public String factoryMethod() {
+            return "";
+        }
+
+        public String version() {
+            return "";
+        }
     }
 
 
