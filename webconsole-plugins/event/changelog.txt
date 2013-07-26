@@ -1,0 +1,18 @@
+Changes from 1.0.2 to 1.0.4
+---------------------------
+
+** New Feature
+    * [FELIX-2331] - webconsole event plugin should be able to send/post events.
+
+** Bug
+    * [FELIX-3960] - exception in the event plugin
+    * [FELIX-3449] - Event plugin cannot send events without properties
+
+** Improvement
+    * [FELIX-4185] - Add category OSGi to event web console plugin 
+    * [FELIX-3454] - Add German language support for Event and UPnP plugins
+
+** Task
+    * [FELIX-3440] - native2ascii doesn't work for event plugin
+    * [FELIX-3268] - Cannot build webconsole and webconsole-plugins with JDK 7
+
