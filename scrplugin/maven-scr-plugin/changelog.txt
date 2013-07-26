@@ -3,6 +3,7 @@ Changes from 1.14.0 to 1.13.0
 ** Improvement
     * [FELIX-4101] - Create metatype.properties file when description and label are inlined
     * [FELIX-4126] - Discontinue creation of single XML descriptor files 
+    * [FELIX-4170] - Deprecate inheritance of component descriptors
 
 
 Changes from 1.13.0 to 1.12.0
