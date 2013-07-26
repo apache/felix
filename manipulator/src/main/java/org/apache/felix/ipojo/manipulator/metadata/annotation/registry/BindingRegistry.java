@@ -19,65 +19,25 @@
 
 package org.apache.felix.ipojo.manipulator.metadata.annotation.registry;
 
-import org.apache.felix.ipojo.manipulator.Reporter;
-import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench;
-import org.apache.felix.ipojo.manipulator.spi.Predicate;
-import org.objectweb.asm.Type;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench;
 
 /**
- * Stores all the {@link Binding}s coming from the {@link org.apache.felix.ipojo.manipulator.spi.Module}.
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * User: guillaume
+ * Date: 11/07/13
+ * Time: 16:12
  */
-public class BindingRegistry {
-    private Map<String, List<Binding>> tree;
-    private Reporter reporter;
+public interface BindingRegistry {
+    void addBindings(Iterable<Binding> bindings);
+
+    Selection selection(ComponentWorkbench workbench);
 
     /**
-     * When no other Binding is selected, the default Bindings list is used.
+     * Find the list of {@link Binding} registered with the given annotation type.
+     * This method returns an empty List if no bindings are registered.
+     * @param descriptor denotes the annotation's type
+     * @return the list of {@link Binding} registered with the given descriptor, the list may be empty if no bindings are found.
      */
-    private List<Binding> defaultBindings;
-
-    public BindingRegistry(Reporter reporter) {
-        this.reporter = reporter;
-        tree = new HashMap<String, List<Binding>>();
-        defaultBindings = new ArrayList<Binding>();
-    }
-
-    /**
-     * Stores the given Bindings
-     */
-    public void addBindings(Iterable<Binding> bindings) {
-        for (Binding binding : bindings) {
-            Type type = Type.getType(binding.getAnnotationType());
-
-            List<Binding> potential = tree.get(type.getDescriptor());
-            if (potential == null) {
-                // Annotation is not already found in supported list
-                potential = new ArrayList<Binding>();
-                tree.put(type.getDescriptor(), potential);
-            }
-
-            potential.add(binding);
-        }
-    }
-
-    /**
-     * Initiate a {@link Selection} for the given workbench.
-     */
-    public Selection selection(ComponentWorkbench workbench) {
-        return new Selection(this, workbench, reporter);
-    }
-
-    public List<Binding> getBindings(String descriptor) {
-        return tree.get(descriptor);
-    }
-
-    public List<Binding> getDefaultBindings() {
-        return defaultBindings;
-    }
+    List<Binding> getBindings(String descriptor);
 }

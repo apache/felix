@@ -22,6 +22,7 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation.registry;
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench;
 import org.apache.felix.ipojo.manipulator.spi.BindingContext;
+import org.apache.felix.ipojo.manipulator.util.ChainedAnnotationVisitor;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -34,7 +35,6 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.lang.annotation.ElementType;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -42,13 +42,13 @@ import java.util.List;
  * It's a query DSL.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class Selection implements Iterable<AnnotationVisitor> {
+public class Selection {
 
     private BindingRegistry registry;
     private ComponentWorkbench workbench;
     private Reporter reporter;
     private MemberNode node;
-    private int index = -1;
+    private int index = BindingContext.NO_INDEX;
     private String annotation;
     private ElementType elementType = null;
     private Object visitor;
@@ -94,31 +94,33 @@ public class Selection implements Iterable<AnnotationVisitor> {
     }
 
     public AnnotationVisitor get() {
-        Iterator<AnnotationVisitor> i = iterator();
-        if (iterator().hasNext()) {
-            return i.next();
+        List<AnnotationVisitor> visitors = list();
+
+        if (visitors.isEmpty()) {
+            return null;
         }
-        return null;
+
+        if (visitors.size() == 1) {
+            return visitors.get(0);
+        }
+
+        ChainedAnnotationVisitor chained = new ChainedAnnotationVisitor();
+        chained.getVisitors().addAll(visitors);
+        return chained;
     }
 
-    public Iterator<AnnotationVisitor> iterator() {
-
-        List<AnnotationVisitor> visitors = new ArrayList<AnnotationVisitor>();
+    private List<AnnotationVisitor> list() {
 
         BindingContext context = new BindingContext(workbench, reporter, Type.getType(annotation), node, elementType, index, visitor);
         List<Binding> predicates = registry.getBindings(annotation);
 
+        List<AnnotationVisitor> visitors = new ArrayList<AnnotationVisitor>();
         if (predicates != null && !predicates.isEmpty()) {
             collectMatchingVisitors(predicates, context, visitors);
         }
-
-        if (visitors.isEmpty() && !registry.getDefaultBindings().isEmpty()) {
-            collectMatchingVisitors(registry.getDefaultBindings(), context, visitors);
-        }
-
-
-        return visitors.iterator();
+        return visitors;
     }
+
 
     private void collectMatchingVisitors(List<Binding> bindings, BindingContext context, List<AnnotationVisitor> visitors) {
         for (Binding binding : bindings) {

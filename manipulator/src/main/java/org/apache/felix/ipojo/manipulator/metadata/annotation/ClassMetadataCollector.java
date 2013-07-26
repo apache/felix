@@ -99,15 +99,6 @@ public class ClassMetadataCollector extends EmptyVisitor {
      */
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
 
-    	/*
-    	 * Visible annotations are mostly destined to be read by reflection
-    	 * at runtime. We retain runtime visible annotations on component
-    	 * as they are and left them out in meta-data calculation.
-    	 */
-    	if (visible) {
-    		return null;
-    	}
-    	
         // Return the visitor to be executed (may be null)
         return registry.selection(workbench)
                 .type(this, node)

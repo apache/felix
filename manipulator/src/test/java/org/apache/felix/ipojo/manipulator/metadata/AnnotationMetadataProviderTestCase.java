@@ -63,7 +63,11 @@ public class AnnotationMetadataProviderTestCase extends TestCase {
         }
 
         public byte[] read(String path) throws IOException {
-            return resources.get(path);
+            byte[] bytes = resources.get(path);
+            if (bytes == null) {
+                throw new IOException();
+            }
+            return bytes;
         }
 
         public void accept(ResourceVisitor visitor) {

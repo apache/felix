@@ -24,7 +24,46 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Mark the annotated annotation type to be a marker annotation dedicated to an iPOJO handler.
+ * In many systems, use of architectural patterns produces a set of recurring roles. A stereotype allows a
+ * framework developer to identify such a role and declare some common metadata for objects with that role
+ * in a central place.
+ *
+ * A stereotype is an annotation, annotated with {@literal @Stereotype}, that captures several other annotations.
+ *
+ * For example, the following stereotype defines a @PseudoSingletonComponent annotation, that will act,
+ * when applied on a component, just like if @Component and @Instantiate where directly applied on the target component.
+ * <pre>
+ *
+ *     &#64;Component
+ *     &#64;Instantiate
+ *     &#64;Stereotype
+ *     &#64;Target(TYPE)
+ *     &#64;Retention(CLASS)
+ *     public &#64;interface PseudoSingletonComponent {}
+ *
+ * </pre>
+ *
+ * Usage:
+ * <pre>
+ *
+ *     &#64;PseudoSingletonComponent
+ *     public class HelloWorldComponent {
+ *       // ...
+ *     }
+ *
+ * </pre>
+ *
+ * Equivalent to:
+ * <pre>
+ *
+ *     &#64;Component
+ *     &#64;Instantiate
+ *     public class HelloWorldComponent {
+ *       // ...
+ *     }
+ *
+ * </pre>
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target(ElementType.ANNOTATION_TYPE)

@@ -19,8 +19,11 @@
 
 package org.apache.felix.ipojo.manipulator.metadata.annotation.registry;
 
+import static java.lang.String.format;
+
 import org.apache.felix.ipojo.manipulator.spi.AnnotationVisitorFactory;
 import org.apache.felix.ipojo.manipulator.spi.Predicate;
+import org.objectweb.asm.Type;
 
 import java.lang.annotation.Annotation;
 
@@ -29,15 +32,15 @@ import java.lang.annotation.Annotation;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Binding {
-    private Class<? extends Annotation> annotationType;
+    private Type annotationType;
     private AnnotationVisitorFactory factory;
     private Predicate predicate;
 
-    public Class<? extends Annotation> getAnnotationType() {
+    public Type getAnnotationType() {
         return annotationType;
     }
 
-    public void setAnnotationType(Class<? extends Annotation> annotationType) {
+    public void setAnnotationType(Type annotationType) {
         this.annotationType = annotationType;
     }
 
@@ -55,5 +58,10 @@ public class Binding {
 
     public void setPredicate(Predicate predicate) {
         this.predicate = predicate;
+    }
+
+    @Override
+    public String toString() {
+        return format("Binding[@%s->%s]", annotationType.getClassName(), factory);
     }
 }

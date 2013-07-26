@@ -19,9 +19,8 @@
 
 package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.stereotype;
 
-import java.util.List;
-
-import org.apache.felix.ipojo.manipulator.metadata.annotation.stereotype.replay.RootAnnotationRecorder;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.model.AnnotationType;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.model.Playback;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.commons.EmptyVisitor;
 
@@ -32,19 +31,19 @@ import org.objectweb.asm.commons.EmptyVisitor;
  */
 public class TypeStereotypeVisitor extends EmptyVisitor {
 
-    private final ClassVisitor delegate;
-    private final List<RootAnnotationRecorder> m_recorder;
+    private final ClassVisitor m_delegate;
+    private final AnnotationType m_annotationType;
 
-    public TypeStereotypeVisitor(final ClassVisitor delegate, List<RootAnnotationRecorder> recorder) {
-        this.delegate = delegate;
-        m_recorder = recorder;
+    public TypeStereotypeVisitor(final ClassVisitor delegate, AnnotationType annotationType) {
+        this.m_delegate = delegate;
+        m_annotationType = annotationType;
     }
 
     @Override
     public void visitEnd() {
         // Replay stereotype annotations
-        for (RootAnnotationRecorder recorder : m_recorder) {
-            recorder.accept(delegate);
+        for (Playback playback : m_annotationType.getPlaybacks()) {
+            playback.accept(m_delegate);
         }
     }
 }

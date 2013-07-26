@@ -31,6 +31,8 @@ import java.lang.annotation.ElementType;
  */
 public class BindingContext {
 
+    public static final int NO_INDEX = -1;
+
     /**
      *
      */
