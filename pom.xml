@@ -30,7 +30,7 @@
     <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
 
     <!-- We use the same major version as the spec. -->
-    <version>1.2.4</version>
+    <version>1.2.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Annotations for DS</name>
@@ -39,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.ds-annotations-1.2.4</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.ds-annotations-1.2.4</developerConnection>
-        <url>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.scr.ds-annotations-1.2.4</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/scrplugin/ds-annotations</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/scrplugin/ds-annotations</developerConnection>
+        <url>http://svn.apache.org/repos/asf/felix/scrplugin/ds-annotations</url>
     </scm>
 
     <dependencies>
