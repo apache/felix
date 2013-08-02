@@ -153,16 +153,13 @@ public class ServiceRegistry
         }
 
         // Now forcibly unget the service object for all stubborn clients.
-        synchronized (this)
+        Bundle[] clients = getUsingBundles(reg.getReference());
+        for (int i = 0; (clients != null) && (i < clients.length); i++)
         {
-            Bundle[] clients = getUsingBundles(reg.getReference());
-            for (int i = 0; (clients != null) && (i < clients.length); i++)
-            {
-                while (ungetService(clients[i], reg.getReference()))
-                    ; // Keep removing until it is no longer possible
-            }
-            ((ServiceRegistrationImpl) reg).invalidate();
+            while (ungetService(clients[i], reg.getReference()))
+                ; // Keep removing until it is no longer possible
         }
+        ((ServiceRegistrationImpl) reg).invalidate();
     }
 
     /**
