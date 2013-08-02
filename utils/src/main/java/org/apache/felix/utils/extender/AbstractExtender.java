@@ -99,6 +99,10 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
         this.preemptiveShutdown = preemptiveShutdown;
     }
 
+    public boolean isStopping() {
+        return stopping;
+    }
+
     public void start(BundleContext context) throws Exception {
         this.context = context;
         this.context.addBundleListener(this);
@@ -188,7 +192,7 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
         // If the bundle being stopped is the system bundle,
         // do an orderly shutdown of all blueprint contexts now
         // so that service usage can actually be useful
-        if (bundle.getBundleId() == 0 && bundle.getState() == Bundle.STOPPING) {
+        if (context.getBundle(0).equals(bundle) && bundle.getState() == Bundle.STOPPING) {
             if (preemptiveShutdown) {
                 try {
                     stop(context);
