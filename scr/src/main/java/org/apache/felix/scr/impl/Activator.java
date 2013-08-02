@@ -24,12 +24,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.config.ScrConfiguration;
+import org.apache.felix.utils.extender.AbstractExtender;
+import org.apache.felix.utils.extender.Extension;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
-import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
@@ -40,7 +39,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * 37,202 @@ in active bundles.
  *
  */
-public class Activator implements BundleActivator, SynchronousBundleListener
+public class Activator extends AbstractExtender
 {
     //  name of the LogService class (this is a string to not create a reference to the class)
     static final String LOGSERVICE_CLASS = "org.osgi.service.log.LogService";
@@ -69,6 +68,10 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     //  thread acting upon configurations
     private ComponentActorThread m_componentActor;
 
+    public Activator() {
+        setSynchronous(true);
+    }
+
     /**
      * Registers this instance as a (synchronous) bundle listener and loads the
      * components of already registered bundles.
@@ -79,21 +82,24 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     public void start( BundleContext context ) throws Exception
     {
         m_context = context;
+        super.start(context);
+    }
 
+    protected void doStart() throws Exception {
         // require the log service
-        m_logService = new ServiceTracker( context, LOGSERVICE_CLASS, null );
+        m_logService = new ServiceTracker( m_context, LOGSERVICE_CLASS, null );
         m_logService.open();
 
         // prepare component registry
         m_componentBundles = new HashMap<Long, BundleComponentActivator>();
-        m_componentRegistry = new ComponentRegistry( context );
+        m_componentRegistry = new ComponentRegistry( m_context );
 
         // get the configuration
-        m_configuration.start( context );
+        m_configuration.start( m_context );
 
         // log SCR startup
-        log( LogService.LOG_INFO, context.getBundle(), " Version = "
-            + context.getBundle().getHeaders().get( Constants.BUNDLE_VERSION ), null );
+        log( LogService.LOG_INFO, m_context.getBundle(), " Version = "
+            + m_context.getBundle().getHeaders().get( Constants.BUNDLE_VERSION ), null );
 
         // create and start the component actor
         m_componentActor = new ComponentActorThread();
@@ -101,14 +107,10 @@ public class Activator implements BundleActivator, SynchronousBundleListener
         t.setDaemon( true );
         t.start();
 
-        // register for bundle updates
-        context.addBundleListener( this );
-
-        // 112.8.2 load all components of active bundles
-        loadAllComponents( context );
+        super.doStart();
 
         // register the Gogo and old Shell commands
-        ScrCommand scrCommand = ScrCommand.register(context, m_componentRegistry, m_configuration);
+        ScrCommand scrCommand = ScrCommand.register(m_context, m_componentRegistry, m_configuration);
         m_configuration.setScrCommand( scrCommand );
     }
 
@@ -117,17 +119,11 @@ public class Activator implements BundleActivator, SynchronousBundleListener
      * Unregisters this instance as a bundle listener and unloads all components
      * which have been registered during the active life time of the SCR
      * implementation bundle.
-     *
-     * @param context The <code>BundleContext</code> of the SCR implementation
-     *      bundle.
      */
-    public void stop( BundleContext context ) throws Exception
+    public void doStop() throws Exception
     {
-        // unregister as bundle listener
-        context.removeBundleListener( this );
-
-        // 112.8.2 dispose off all active components
-        disposeAllComponents();
+        // stop tracking
+        super.doStop();
 
         // dispose component registry
         m_componentRegistry.dispose();
@@ -158,49 +154,25 @@ public class Activator implements BundleActivator, SynchronousBundleListener
     }
 
 
-    // ---------- BundleListener Interface -------------------------------------
-
-    /**
-     * Loads and unloads any components provided by the bundle whose state
-     * changed. If the bundle has been started, the components are loaded. If
-     * the bundle is about to stop, the components are unloaded.
-     *
-     * @param event The <code>BundleEvent</code> representing the bundle state
-     *      change.
-     */
-    public void bundleChanged( BundleEvent event )
-    {
-        if ( event.getType() == BundleEvent.LAZY_ACTIVATION || event.getType() == BundleEvent.STARTED )
-        {
-            // FELIX-1666 LAZY_ACTIVATION event is sent if the bundle has lazy
-            // activation policy and is waiting for class loader access to
-            // actually load it; STARTED event is sent if bundle has regular
-            // activation policy or if the lazily activated bundle finally is
-            // really started. In both cases just try to load the components
-            loadComponents( event.getBundle() );
-        }
-        else if ( event.getType() == BundleEvent.STOPPING )
-        {
-            disposeComponents( event.getBundle() );
-        }
-    }
-
-
     //---------- Component Management -----------------------------------------
 
-    // Loads the components of all bundles currently active.
-    private void loadAllComponents( BundleContext context )
+
+    @Override
+    protected Extension doCreateExtension(final Bundle bundle) throws Exception
     {
-        Bundle[] bundles = context.getBundles();
-        for ( Bundle bundle : bundles )
+        return new Extension()
         {
-            if ( ComponentRegistry.isBundleActive( bundle ) )
+            public void start() throws Exception
             {
                 loadComponents( bundle );
             }
-        }
-    }
 
+            public void destroy() throws Exception
+            {
+                disposeComponents( bundle );
+            }
+        };
+    }
 
     /**
      * Loads the components of the given bundle. If the bundle has no
@@ -309,11 +281,14 @@ public class Activator implements BundleActivator, SynchronousBundleListener
             ga = m_componentBundles.remove( bundle.getBundleId() );
         }
 
-        if ( ga instanceof BundleComponentActivator )
+        if ( ga != null )
         {
             try
             {
-                ( ( BundleComponentActivator ) ga ).dispose( ComponentConstants.DEACTIVATION_REASON_BUNDLE_STOPPED );
+                int reason = isStopping()
+                        ? ComponentConstants.DEACTIVATION_REASON_DISPOSED
+                        : ComponentConstants.DEACTIVATION_REASON_BUNDLE_STOPPED;
+                ( ( BundleComponentActivator ) ga ).dispose( reason );
             }
             catch ( Exception e )
             {
@@ -323,43 +298,20 @@ public class Activator implements BundleActivator, SynchronousBundleListener
         }
     }
 
-
-    // Unloads all components registered with the SCR
-    private void disposeAllComponents()
-    {
-        final Object[] activators;
-        synchronized ( m_componentBundles )
-        {
-            activators = m_componentBundles.values().toArray();
-            m_componentBundles.clear();
-        }
-
-        for ( Object activator : activators )
-        {
-            if ( activator instanceof BundleComponentActivator )
-            {
-                final BundleComponentActivator ga = ( BundleComponentActivator ) activator;
-                try
-                {
-                    final Bundle bundle = ga.getBundleContext().getBundle();
-                    try
-                    {
-                        ga.dispose( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
-                    }
-                    catch ( Exception e )
-                    {
-                        log( LogService.LOG_ERROR, m_context.getBundle(), "Error while disposing components of bundle "
-                                + bundle.getSymbolicName() + "/" + bundle.getBundleId(), e );
-                    }
-                }
-                catch ( IllegalStateException e )
-                {
-                    //bundle context was already shut down in another thread, bundle is not available.
-                }
-            }
-        }
+    @Override
+    protected void debug(Bundle bundle, String msg) {
+        log( LogService.LOG_DEBUG, bundle, msg, null );
     }
 
+    @Override
+    protected void warn(Bundle bundle, String msg, Throwable t) {
+        log( LogService.LOG_WARNING, bundle, msg, t );
+    }
+
+    @Override
+    protected void error(String msg, Throwable t) {
+        log( LogService.LOG_DEBUG, m_context.getBundle(), msg, t );
+    }
 
     /**
      * Method to actually emit the log message. If the LogService is available,
