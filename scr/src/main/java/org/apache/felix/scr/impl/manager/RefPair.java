@@ -42,12 +42,12 @@ public class RefPair<T>
         return ref;
     }
 
-    public T getServiceObject()
+    public synchronized T getServiceObject()
     {
         return serviceObject;
     }
 
-    public void setServiceObject( T serviceObject )
+    public synchronized void setServiceObject( T serviceObject )
     {
         this.serviceObject = serviceObject;
         if ( serviceObject != null)
@@ -56,12 +56,12 @@ public class RefPair<T>
         }
     }
 
-    public void setFailed( )
+    public synchronized void setFailed( )
     {
         this.failed = true;
     }
 
-    public boolean isFailed()
+    public synchronized boolean isFailed()
     {
         return failed;
     }
