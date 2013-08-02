@@ -578,7 +578,20 @@ public class BindMethod extends BaseMethod
                          "Could not get service from ref {0}", new Object[] {refPair.getRef()}, null );
                     return false;
                 }
-                refPair.setServiceObject( service );
+                Object oldService;
+                synchronized ( refPair )
+                {
+                    oldService = refPair.getServiceObject();
+                    if (oldService == null)
+                    {
+                        refPair.setServiceObject(service);
+                    }
+                }
+                if (oldService != null)
+                {
+                    // Another thread got the service before, so unget our
+                    context.ungetService( refPair.getRef() );
+                }
                 return true;
             }
         }

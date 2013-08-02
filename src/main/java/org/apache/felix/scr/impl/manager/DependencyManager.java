@@ -216,16 +216,21 @@ public class DependencyManager<S, T> implements Reference
 
         protected void ungetService( RefPair<T> ref )
         {
+            Object service;
             synchronized ( ref )
             {
-                if ( ref.getServiceObject() != null )
+                service = ref.getServiceObject();
+                if ( ref != null )
                 {
                     ref.setServiceObject( null );
-                    BundleContext bundleContext = m_componentManager.getBundleContext();
-                    if ( bundleContext != null )
-                    {
-                        bundleContext.ungetService( ref.getRef() );
-                    }
+                }
+            }
+            if ( service != null )
+            {
+                BundleContext bundleContext = m_componentManager.getBundleContext();
+                if ( bundleContext != null )
+                {
+                    bundleContext.ungetService( ref.getRef() );
                 }
             }
         }
@@ -377,16 +382,13 @@ public class DependencyManager<S, T> implements Reference
             SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true, trackingCount );
             for (RefPair<T> refPair: tracked.values())
             {
-                synchronized (refPair)
+                if (getServiceObject( m_bindMethods.getBind(), refPair ))
                 {
-                    if (getServiceObject( m_bindMethods.getBind(), refPair ))
-                    {
-                         success = true;
-                    }
-                    else
-                    {
-                         m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(), trackingCount.get() );
-                    }
+                     success = true;
+                }
+                else
+                {
+                     m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(), trackingCount.get() );
                 }
             }
             return success;
@@ -499,14 +501,11 @@ public class DependencyManager<S, T> implements Reference
             SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( success || !getTracker().isEmpty(), trackingCount );
             for (RefPair<T> refPair: tracked.values())
             {
-                synchronized (refPair)
+                success |= getServiceObject( m_bindMethods.getBind(), refPair );
+                if ( refPair.isFailed() )
                 {
-                    success |= getServiceObject( m_bindMethods.getBind(), refPair );
-                    if ( refPair.isFailed() )
-                    {
-                        m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(),
-                                trackingCount.get() );
-                    }
+                    m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(),
+                            trackingCount.get() );
                 }
             }
             return success;
@@ -605,10 +604,7 @@ public class DependencyManager<S, T> implements Reference
                 //another thread is concurrently opening, and it got done already
                 for (RefPair<T> refPair: refs)
                 {
-                    synchronized (refPair)
-                    {
-                        success |= getServiceObject( m_bindMethods.getBind(), refPair );
-                    }
+                    success |= getServiceObject( m_bindMethods.getBind(), refPair );
                 }
                 return success;
             }
@@ -617,10 +613,7 @@ public class DependencyManager<S, T> implements Reference
             SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true, trackingCount );
             for (RefPair<T> refPair: tracked.values())
             {
-                synchronized (refPair)
-                {
-                    success |= getServiceObject( m_bindMethods.getBind(), refPair );
-                }
+                success |= getServiceObject( m_bindMethods.getBind(), refPair );
                 refs.add(refPair) ;
             }
             if ( this.refs.compareAndSet( null, refs ) )
@@ -778,12 +771,9 @@ public class DependencyManager<S, T> implements Reference
             }
             if ( nextRefPair != null )
             {
-                synchronized ( nextRefPair )
+                if ( !getServiceObject( m_bindMethods.getBind(), nextRefPair ) )
                 {
-                    if ( !getServiceObject( m_bindMethods.getBind(), nextRefPair ) )
-                    {
-                        //TODO error???
-                    }
+                    //TODO error???
                 }
                 if ( !nextRefPair.isFailed() )
                 {
@@ -841,14 +831,11 @@ public class DependencyManager<S, T> implements Reference
             }
             if (refPair != null) 
             {
-                synchronized( refPair )
+                success |= getServiceObject( m_bindMethods.getBind(), refPair );
+                if ( refPair.isFailed() )
                 {
-                    success |= getServiceObject( m_bindMethods.getBind(), refPair );
-                    if ( refPair.isFailed() )
-                    {
-                        m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(),
-                                trackingCount.get() );
-                    }
+                    m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(),
+                            trackingCount.get() );
                 }
             }
             return success;
@@ -985,14 +972,11 @@ public class DependencyManager<S, T> implements Reference
                 }
                 if ( refPair != null )
                 {
-                    synchronized ( refPair )
+                    success |= getServiceObject( m_bindMethods.getBind(), refPair );
+                    if ( refPair.isFailed() )
                     {
-                        success |= getServiceObject( m_bindMethods.getBind(), refPair );
-                        if ( refPair.isFailed() )
-                        {
-                            m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(),
-                                    trackingCount.get() );
-                        }
+                        m_componentManager.registerMissingDependency( DependencyManager.this, refPair.getRef(),
+                                trackingCount.get() );
                     }
                 }
             }
@@ -1536,18 +1520,15 @@ public class DependencyManager<S, T> implements Reference
         }
         //TODO dynamic reluctant
         RefPair<T> refPair = trackerRef.get().getService( ref );
-        synchronized ( refPair )
+        if (refPair.getServiceObject() != null)
         {
-            if (refPair.getServiceObject() != null)
-            {
-                m_componentManager.log( LogService.LOG_DEBUG,
-                        "DependencyManager : late binding of service reference {1} skipped as service has already been located",
-                        new Object[] {ref}, null );
-                //something else got the reference and may be binding it.
-                return;
-            }
-            getServiceObject( m_bindMethods.getBind(), refPair );
+            m_componentManager.log( LogService.LOG_DEBUG,
+                    "DependencyManager : late binding of service reference {1} skipped as service has already been located",
+                    new Object[] {ref}, null );
+            //something else got the reference and may be binding it.
+            return;
         }
+        getServiceObject( m_bindMethods.getBind(), refPair );
         m_componentManager.invokeBindMethod( this, refPair, trackingCount );
     }
 
