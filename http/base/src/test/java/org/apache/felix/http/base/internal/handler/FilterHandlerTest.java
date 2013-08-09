@@ -54,8 +54,8 @@ public class FilterHandlerTest
         FilterHandler h1 = createHandler("a", 0);
         FilterHandler h2 = createHandler("b", 10);
 
-        Assert.assertEquals(10, h1.compareTo(h2));
-        Assert.assertEquals(-10, h2.compareTo(h1));
+        Assert.assertEquals(1, h1.compareTo(h2));
+        Assert.assertEquals(-1, h2.compareTo(h1));
     }
 
     @Test
