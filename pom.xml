@@ -54,12 +54,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.scr.ds-annotations</artifactId>
-			<version>1.2.4</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.ow2.asm</groupId>
 			<artifactId>asm-all</artifactId>
 			<version>4.0</version>
@@ -118,7 +112,7 @@
 						</goals>
 						<configuration>
 							<includeArtifactIds>
-								org.osgi.compendium,asm-all,org.apache.felix.scr.generator,org.apache.felix.scr.annotations,org.apache.felix.scr.ds-annotations
+								org.osgi.compendium,asm-all,org.apache.felix.scr.generator,org.apache.felix.scr.annotations
 							</includeArtifactIds>
 							<outputDirectory>
 								${project.build.outputDirectory}
