@@ -179,7 +179,7 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 					putResource(analyzer, scrFile);
 				}
 				sb.setLength(sb.length() - 1);
-				analyzer.setProperty("Service-Component", sb.toString());
+				addServiceComponentHeader(analyzer, sb.toString());
 			}
 
 			// Embed metatype descriptors in target jar
@@ -196,7 +196,19 @@ public class SCRDescriptorBndPlugin implements AnalyzerPlugin, Plugin {
 		} finally {
 			log.close();
 		}
-		return true;
+		return false; // do not reanalyze bundle classpath because our plugin has not changed it.
+	}
+
+	private void addServiceComponentHeader(Analyzer analyzer, String components) {
+		String oldComponents = analyzer.getProperty("Service-Component");
+		if (oldComponents != null && oldComponents.length() > 0) {
+			StringBuilder sb = new StringBuilder(oldComponents);
+			sb.append(",");
+			sb.append(components);
+			components = sb.toString();
+		}
+		log.info("Setting Service-Component header: " + components);
+		analyzer.setProperty("Service-Component", components);
 	}
 
 	private void init(Analyzer analyzer) {
