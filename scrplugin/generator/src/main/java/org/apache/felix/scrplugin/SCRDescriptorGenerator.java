@@ -232,6 +232,11 @@ public class SCRDescriptorGenerator {
 
     private void generateMethods(final ComponentContainer container) throws SCRDescriptorException {
         for (final ReferenceDescription ref : container.getReferences().values()) {
+            // skip refs without a interface name (validate will be called next)
+            if (StringUtils.isEmpty(ref.getInterfaceName())) {
+                continue;
+            }
+
             // if this is a field with a single cardinality,
             // we look for the bind/unbind methods
             // and create them if they are not availabe
@@ -642,24 +647,26 @@ public class SCRDescriptorGenerator {
 
             this.testReference(current, component.getReferences(), rd, component.getClassDescription() == current);
 
-            // check for method signature
-            try {
-                final Validator.MethodResult bindMethod = Validator.findMethod(this.project, this.options, current, rd,
-                        rd.getBind() == null ? "bind" : rd.getBind());
-                if ( bindMethod != null ) {
-                    component.getComponentDescription().setSpecVersion(bindMethod.requiredSpecVersion);
-                }
+            // check for method signature - if interface name is set (empty interface name will fail during validate)
+            if (!StringUtils.isEmpty(rd.getInterfaceName())) {
 
-                final Validator.MethodResult unbindMethod = Validator.findMethod(this.project, this.options, current, rd,
-                        rd.getUnbind() == null ? "unbind" : rd.getUnbind());
-                if ( unbindMethod != null ) {
-                    component.getComponentDescription().setSpecVersion(unbindMethod.requiredSpecVersion);
-                }
+                try {
+                    final Validator.MethodResult bindMethod = Validator.findMethod(this.project, this.options, current, rd,
+                            rd.getBind() == null ? "bind" : rd.getBind());
+                    if ( bindMethod != null ) {
+                        component.getComponentDescription().setSpecVersion(bindMethod.requiredSpecVersion);
+                    }
 
-            } catch (final SCRDescriptorException sde) {
-                // this happens only if a class not found exception occurs, so we can ignore this at this point!
+                    final Validator.MethodResult unbindMethod = Validator.findMethod(this.project, this.options, current, rd,
+                            rd.getUnbind() == null ? "unbind" : rd.getUnbind());
+                    if ( unbindMethod != null ) {
+                        component.getComponentDescription().setSpecVersion(unbindMethod.requiredSpecVersion);
+                    }
+
+                } catch (final SCRDescriptorException sde) {
+                    // this happens only if a class not found exception occurs, so we can ignore this at this point!
+                }
             }
-
         }
     }
 
