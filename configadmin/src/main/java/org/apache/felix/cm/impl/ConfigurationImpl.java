@@ -258,14 +258,10 @@ public class ConfigurationImpl extends ConfigurationBase
         this.staticBundleLocation = bundleLocation;
         storeSilently();
 
-        // check whether the dynamic bundle location is different from the
-        // static now. If so, the dynamic bundle location has to be
-        // removed.
-        if ( bundleLocation != null && getDynamicBundleLocation() != null
-            && !bundleLocation.equals( getDynamicBundleLocation() ) )
-        {
-            setDynamicBundleLocation( null, false );
-        }
+        // FELIX-3360: Always clear dynamic binding if a new static
+        // location is set. The static location is the relevant binding
+        // for a configuration unless it is not explicitly set.
+        setDynamicBundleLocation( null, false );
 
         // CM 1.4
         this.getConfigurationManager().locationChanged( this, oldBundleLocation );
@@ -295,7 +291,7 @@ public class ConfigurationImpl extends ConfigurationBase
      * the case of this configuration to be dynamically bound a
      * <code>CM_LOCATION_CHANGED</code> event is dispatched.
      */
-    boolean tryBindLocation( final String bundleLocation )
+    void tryBindLocation( final String bundleLocation )
     {
         if ( this.getBundleLocation() == null )
         {
@@ -303,8 +299,6 @@ public class ConfigurationImpl extends ConfigurationBase
                 { getPidString(), bundleLocation } );
             setDynamicBundleLocation( bundleLocation, true );
         }
-
-        return true;
     }
 
 
