@@ -453,52 +453,54 @@ public class Validator {
             ref.setStrategy(ReferenceStrategy.EVENT);
         }
 
-        // validate bind and unbind methods
-        if (ref.getStrategy() != ReferenceStrategy.LOOKUP) {
-            String bindName = ref.getBind();
-            String unbindName = ref.getUnbind();
+        // validate methods only if interface name is set
+        if (!StringUtils.isEmpty(ref.getInterfaceName())) {
+            // validate bind and unbind methods
+            if (ref.getStrategy() != ReferenceStrategy.LOOKUP) {
+                String bindName = ref.getBind();
+                String unbindName = ref.getUnbind();
 
-            final boolean canGenerate = this.options.isGenerateAccessors() &&
-                            ref.getField() != null
-                            && (ref.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || ref.getCardinality() == ReferenceCardinality.MANDATORY_UNARY);
-            if (bindName == null && !canGenerate ) {
-                bindName = "bind";
-            }
-            if (unbindName == null && !canGenerate ) {
-                unbindName = "unbind";
-            }
+                final boolean canGenerate = this.options.isGenerateAccessors() &&
+                                ref.getField() != null
+                                && (ref.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || ref.getCardinality() == ReferenceCardinality.MANDATORY_UNARY);
+                if (bindName == null && !canGenerate ) {
+                    bindName = "bind";
+                }
+                if (unbindName == null && !canGenerate ) {
+                    unbindName = "unbind";
+                }
 
-            if ( bindName != null ) {
-                bindName = this.validateMethod(ref, bindName, componentIsAbstract);
-                if ( bindName == null && ref.getField() != null ) {
-                    iLog.addError("Something went wrong: " + canGenerate + " - " + this.options.isGenerateAccessors() + " - " + ref.getCardinality(), ref.getField().getName());
+                if ( bindName != null ) {
+                    bindName = this.validateMethod(ref, bindName, componentIsAbstract);
+                    if ( bindName == null && ref.getField() != null ) {
+                        iLog.addError("Something went wrong: " + canGenerate + " - " + this.options.isGenerateAccessors() + " - " + ref.getCardinality(), ref.getField().getName());
+                    }
+                } else {
+                    bindName = "bind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
+                }
+                if ( unbindName != null ) {
+                    unbindName = this.validateMethod(ref, unbindName, componentIsAbstract);
+                } else {
+                    unbindName = "unbind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
+                }
+
+                if (iLog.getNumberOfErrors() == currentIssueCount) {
+                    ref.setBind(bindName);
+                    ref.setUnbind(unbindName);
                 }
             } else {
-                bindName = "bind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
-            }
-            if ( unbindName != null ) {
-                unbindName = this.validateMethod(ref, unbindName, componentIsAbstract);
-            } else {
-                unbindName = "unbind" + Character.toUpperCase(ref.getName().charAt(0)) + ref.getName().substring(1);
+                ref.setBind(null);
+                ref.setUnbind(null);
             }
 
-            if (iLog.getNumberOfErrors() == currentIssueCount) {
-                ref.setBind(bindName);
-                ref.setUnbind(unbindName);
-            }
-        } else {
-            ref.setBind(null);
-            ref.setUnbind(null);
-        }
-
-        // validate updated method
-        if (ref.getUpdated() != null) {
-            if (this.options.getSpecVersion().ordinal() < SpecVersion.VERSION_1_1_FELIX.ordinal()) {
-                this.logError(ref, "Updated method declaration requires version "
-                                + SpecVersion.VERSION_1_1_FELIX.getName() + ", " + SpecVersion.VERSION_1_2.getName() + " or newer");
+            // validate updated method
+            if (ref.getUpdated() != null) {
+                if (this.options.getSpecVersion().ordinal() < SpecVersion.VERSION_1_1_FELIX.ordinal()) {
+                    this.logError(ref, "Updated method declaration requires version "
+                                    + SpecVersion.VERSION_1_1_FELIX.getName() + ", " + SpecVersion.VERSION_1_2.getName() + " or newer");
+                }
             }
         }
-
     }
 
     private String validateMethod(final ReferenceDescription ref, final String methodName, final boolean componentIsAbstract)
