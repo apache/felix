@@ -76,8 +76,9 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         configurationManager.log( LogService.LOG_DEBUG, "createFactoryConfiguration(factoryPid={0})", new Object[]
             { factoryPid } );
 
-        ConfigurationImpl config = configurationManager.createFactoryConfiguration( factoryPid, this.getBundle()
-            .getLocation() );
+        // FELIX-3360: new factory configuration with implicit binding is dynamic
+        ConfigurationImpl config = configurationManager.createFactoryConfiguration( factoryPid, null );
+        config.setDynamicBundleLocation( this.getBundle().getLocation(), false );
         return this.wrap( config );
     }
 
@@ -114,7 +115,10 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         ConfigurationImpl config = configurationManager.getConfiguration( pid );
         if ( config == null )
         {
-            config = configurationManager.createConfiguration( pid, getBundle().getLocation() );
+            config = configurationManager.createConfiguration( pid, null );
+
+            // FELIX-3360: configuration creation with implicit binding is dynamic
+            config.setDynamicBundleLocation( getBundle().getLocation(), false );
         }
         else
         {
@@ -125,7 +129,8 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
                         { config.getPid(), config.isNew() ? Boolean.TRUE : Boolean.FALSE,
                             this.getBundle().getLocation() } );
 
-                config.setStaticBundleLocation( this.getBundle().getLocation() );
+                // FELIX-3360: first implicit binding is dynamic
+                config.setDynamicBundleLocation( getBundle().getLocation(), true );
             }
             else
             {
