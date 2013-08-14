@@ -1,0 +1,30 @@
+# Apache Felix Configuration Admin Service
+# Bundle permissions
+# see FELIX-4039
+#
+
+# Imported/Exported packages
+# -> MANIFEST.MF
+(org.osgi.framework.PackagePermission "org.osgi.service.log" "import")
+(org.osgi.framework.PackagePermission "org.osgi.framework" "import")
+(org.osgi.framework.PackagePermission "org.osgi.service.cm" "import,exportonly")
+(org.osgi.framework.PackagePermission "org.apache.felix.cm" "import,exportonly")
+(org.osgi.framework.PackagePermission "org.apache.felix.cm.file" "import,exportonly")
+
+# General bundle permissions
+(java.util.PropertyPermission "felix.cm.*" "read")
+(org.osgi.framework.ServicePermission "org.apache.felix.cm.*" "get,register")
+(org.osgi.framework.ServicePermission "org.osgi.service.cm.*" "get,register")
+(org.osgi.framework.ServicePermission "org.osgi.service.log.LogService" "get")
+
+# Manage configurations
+# -> ConfigurationAdminImpl
+(org.osgi.framework.AdminPermission "*" "metadata")
+(org.osgi.service.cm.ConfigurationPermission "*" "configure,target")
+
+# Handle persistent configuration files
+# -> FilePersistenceManager
+(java.util.PropertyPermission "user.dir" "read")
+(java.io.FilePermission "-" "read,write,execute,delete")
+# -> ConfigurationManager
+(org.osgi.framework.ServicePermission "org.apache.felix.cm.PersistenceManager" "register")
