@@ -631,7 +631,12 @@ public class FilePersistenceManager implements PersistenceManager
                 // make sure the cfg file does not exists (just for sanity)
                 if ( cfgFile.exists() )
                 {
-                    cfgFile.delete();
+                    // FELIX-4165: detect failure to delete old file
+                    if ( !cfgFile.delete() )
+                    {
+                        throw new IOException( "Cannot remove old file '" + cfgFile + "'; changes in '" + tmpFile
+                            + "' cannot be persisted at this time" );
+                    }
                 }
 
                 // rename the temporary file to the new file
