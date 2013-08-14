@@ -1,3 +1,20 @@
+Changes from 1.6.0 to 1.8.0
+----------------------------
+
+** Bug
+    * [FELIX-3360] - Bundle location is statically set for dynamically bound bundles
+    * [FELIX-3762] - NPE in UpdateConfiguration#run
+    * [FELIX-3820] - Possible NPE in ConfigAdmin after shutting down when accessed by bad behaving bundles
+    * [FELIX-3823] - ConfigAdmin should explicitely unregister services
+    * [FELIX-4165] - FilePersistenceManager fails to rename configuration file
+
+** Improvement
+    * [FELIX-4039] - Add Permissions file in ConfigAdmin bundle 
+
+** Task
+    * [FELIX-3808] - Upgrade ConfigAdmin to pax-exam 2
+
+
 Changes from 1.4.0 to 1.6.0
 ----------------------------
 
