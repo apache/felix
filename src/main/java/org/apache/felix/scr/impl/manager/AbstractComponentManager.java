@@ -40,6 +40,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
+import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
@@ -1091,14 +1092,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     public boolean isLogEnabled( int level )
     {
-        BundleComponentActivator activator = getActivator();
-        if ( activator != null )
-        {
-            return activator.isLogEnabled( level );
-        }
-
-        // bundle activator has already been removed, so no logging
-        return false;
+        return Activator.isLogEnabled( level );
     }
 
 

@@ -66,4 +66,18 @@ final class ComponentRegistryKey
 
         return false;
     }
+
+
+    public long getBundleId()
+    {
+        return bundleId;
+    }
+
+
+    public String getComponentName()
+    {
+        return componentName;
+    }
+    
+    
 }

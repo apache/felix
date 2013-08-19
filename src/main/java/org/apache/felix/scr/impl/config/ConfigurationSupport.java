@@ -21,6 +21,7 @@ package org.apache.felix.scr.impl.config;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -155,8 +156,8 @@ public class ConfigurationSupport implements ConfigurationListener
                         }
                         else
                         {
-                            Activator.log( LogService.LOG_WARNING, null, "Cannot configure component "
-                                + holder.getComponentMetadata().getName(), null );
+                            Activator.log( LogService.LOG_WARNING, null, "Cannot configure component {0}",
+                                 new Object[] {holder.getComponentMetadata().getName()}, null );
                             Activator.log( LogService.LOG_WARNING, null,
                                 "Component Bundle's Configuration Admin is not compatible with "
                                     + "ours. This happens if multiple Configuration Admin API versions "
@@ -235,9 +236,9 @@ public class ConfigurationSupport implements ConfigurationListener
             holders = this.m_registry.getComponentHoldersByPid(factoryPid);
         }
 
-        Activator.log(LogService.LOG_DEBUG, null, "configurationEvent: Handling "
-                + ((event.getType() == ConfigurationEvent.CM_DELETED) ? "DELETE" : "UPDATE")
-                + " of Configuration PID=" + pid, null);
+        Activator.log(LogService.LOG_DEBUG, null, "configurationEvent: Handling {0}  of Configuration PID={1} for component holders {2}",
+                new Object[] {getEventType(event), pid, holders},
+                null);
 
         for  ( ComponentHolder componentHolder: holders )
         {
@@ -384,13 +385,29 @@ public class ConfigurationSupport implements ConfigurationListener
                     break;
                 }
                 default:
-                    Activator.log(LogService.LOG_WARNING, null, "Unknown ConfigurationEvent type " + event.getType(),
+                    Activator.log(LogService.LOG_WARNING, null, "Unknown ConfigurationEvent type {0}", new Object[] {event.getType()},
                         null);
                 }
             }
         }
     }
     
+    private String getEventType(ConfigurationEvent event)
+    {
+        switch (event.getType())
+        {
+        case ConfigurationEvent.CM_UPDATED:
+            return "UPDATED";
+        case ConfigurationEvent.CM_DELETED:
+            return "DELETED";
+        case ConfigurationEvent.CM_LOCATION_CHANGED:
+            return "LOCATION CHANGED";
+        default:
+            return "Unkown event type: " + event.getType();
+        }
+
+    }
+
     private static class ConfigurationInfo
     {
         private final Configuration configuration;
@@ -438,8 +455,8 @@ public class ConfigurationSupport implements ConfigurationListener
                         }
                         else
                         {
-                            Activator.log( LogService.LOG_WARNING, null, "Cannot reconfigure component "
-                                + componentHolder.getComponentMetadata().getName(), null );
+                            Activator.log( LogService.LOG_WARNING, null, "Cannot reconfigure component {0}",
+                                new Object[] {componentHolder.getComponentMetadata().getName()}, null );
                             Activator.log( LogService.LOG_WARNING, null,
                                 "Component Bundle's Configuration Admin is not compatible with " +
                                 "ours. This happens if multiple Configuration Admin API versions " +
@@ -474,7 +491,7 @@ public class ConfigurationSupport implements ConfigurationListener
         }
         catch (IOException ioe)
         {
-            Activator.log(LogService.LOG_WARNING, null, "Failed reading configuration for pid=" + pid, ioe);
+            Activator.log(LogService.LOG_WARNING, null, "Failed reading configuration for pid={0}", new Object[] {pid}, ioe);
         }
 
         return null;
@@ -583,11 +600,11 @@ public class ConfigurationSupport implements ConfigurationListener
         }
         catch (IOException ioe)
         {
-            Activator.log(LogService.LOG_WARNING, null, "Problem listing configurations for filter=" + filter, ioe);
+            Activator.log(LogService.LOG_WARNING, null, "Problem listing configurations for filter={0}", new Object[] {filter}, ioe);
         }
         catch (InvalidSyntaxException ise)
         {
-            Activator.log(LogService.LOG_ERROR, null, "Invalid Configuration selection filter " + filter, ise);
+            Activator.log(LogService.LOG_ERROR, null, "Invalid Configuration selection filter {0}", new Object[] {filter}, ise);
         }
 
         // no factories in case of problems

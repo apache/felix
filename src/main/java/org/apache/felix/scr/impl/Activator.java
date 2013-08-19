@@ -20,10 +20,12 @@ package org.apache.felix.scr.impl;
 
 
 import java.io.PrintStream;
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.config.ScrConfiguration;
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.utils.extender.AbstractExtender;
 import org.apache.felix.utils.extender.Extension;
 import org.osgi.framework.Bundle;
@@ -98,8 +100,8 @@ public class Activator extends AbstractExtender
         m_configuration.start( m_context );
 
         // log SCR startup
-        log( LogService.LOG_INFO, m_context.getBundle(), " Version = "
-            + m_context.getBundle().getHeaders().get( Constants.BUNDLE_VERSION ), null );
+        log( LogService.LOG_INFO, m_context.getBundle(), " Version = {0}",
+            new Object[] {m_context.getBundle().getHeaders().get( Constants.BUNDLE_VERSION )}, null );
 
         // create and start the component actor
         m_componentActor = new ComponentActorThread();
@@ -195,8 +197,8 @@ public class Activator extends AbstractExtender
         BundleContext context = bundle.getBundleContext();
         if ( context == null )
         {
-            log( LogService.LOG_ERROR, m_context.getBundle(), "Cannot get BundleContext of bundle "
-                + bundle.getSymbolicName() + "/" + bundle.getBundleId(), null );
+            log( LogService.LOG_ERROR, m_context.getBundle(), "Cannot get BundleContext of bundle {0}/{1}",
+                new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, null );
             return;
         }
 
@@ -223,8 +225,8 @@ public class Activator extends AbstractExtender
         // terminate if already loaded (or currently being loaded)
         if ( loaded )
         {
-            log( LogService.LOG_DEBUG, m_context.getBundle(), "Components for bundle  " + bundle.getSymbolicName()
-                + "/" + bundle.getBundleId() + " already loaded. Nothing to do.", null );
+            log( LogService.LOG_DEBUG, m_context.getBundle(), "Components for bundle {0}/{1} already loaded. Nothing to do.",
+                new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, null );
             return;
         }
 
@@ -253,17 +255,14 @@ public class Activator extends AbstractExtender
                 log(
                     LogService.LOG_DEBUG,
                     m_context.getBundle(),
-                    "Bundle "
-                        + bundle.getSymbolicName()
-                        + "/"
-                        + bundle.getBundleId()
-                        + " has been stopped while trying to activate its components. Trying again when the bundles gets startet again.",
+                    "Bundle {0}/{1} has been stopped while trying to activate its components. Trying again when the bundles gets started again.",
+                new Object[] {bundle.getSymbolicName(), bundle.getBundleId()},
                     e );
             }
             else
             {
-                log( LogService.LOG_ERROR, m_context.getBundle(), "Error while loading components of bundle "
-                    + bundle.getSymbolicName() + "/" + bundle.getBundleId(), e );
+                log( LogService.LOG_ERROR, m_context.getBundle(), "Error while loading components of bundle {0}/{1}",
+                new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, e );
             }
         }
     }
@@ -292,8 +291,8 @@ public class Activator extends AbstractExtender
             }
             catch ( Exception e )
             {
-                log( LogService.LOG_ERROR, m_context.getBundle(), "Error while disposing components of bundle "
-                    + bundle.getSymbolicName() + "/" + bundle.getBundleId(), e );
+                log( LogService.LOG_ERROR, m_context.getBundle(), "Error while disposing components of bundle {0}/{1}",
+                    new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, e );
             }
         }
     }
@@ -313,6 +312,23 @@ public class Activator extends AbstractExtender
         log( LogService.LOG_DEBUG, m_context.getBundle(), msg, t );
     }
 
+    public static void log( int level, Bundle bundle, String pattern, Object[] arguments, Throwable ex )
+    {
+        if ( isLogEnabled( level ) )
+        {
+            final String message = MessageFormat.format( pattern, arguments );
+            log( level, bundle, message, ex );
+        }
+    }
+
+    /**
+     * Returns <code>true</code> if logging for the given level is enabled.
+     */
+    public static boolean isLogEnabled( int level )
+    {
+        return m_configuration.getLogLevel() >= level;
+    }
+
     /**
      * Method to actually emit the log message. If the LogService is available,
      * the message will be logged through the LogService. Otherwise the message
@@ -325,7 +341,7 @@ public class Activator extends AbstractExtender
      */
     public static void log( int level, Bundle bundle, String message, Throwable ex )
     {
-        if ( m_configuration.getLogLevel() >= level )
+        if ( isLogEnabled( level ) )
         {
             ServiceTracker t = m_logService;
             Object logger = ( t != null ) ? t.getService() : null;
