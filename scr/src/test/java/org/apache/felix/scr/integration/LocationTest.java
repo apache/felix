@@ -77,7 +77,7 @@ public class LocationTest extends ComponentTestBase
         TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
         
         
-        Bundle b2 = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.11" );
+        Bundle b2 = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.11", null );
         b2.start();
         Component[] components = findComponentsByName( pid );
         TestCase.assertEquals( 2, components.length );
@@ -146,7 +146,7 @@ public class LocationTest extends ComponentTestBase
         TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
         
         
-        Bundle b2 = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.11" );
+        Bundle b2 = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.11", null );
         b2.start();
         Component[] components = findComponentsByName( pid );
         TestCase.assertEquals( 2, components.length );
@@ -224,7 +224,7 @@ public class LocationTest extends ComponentTestBase
         TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
         
         
-        Bundle b2 = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.11" );
+        Bundle b2 = installBundle( descriptorFile, COMPONENT_PACKAGE, "simplecomponent2", "0.0.11", null );
         b2.start();
         Component[] components = findComponentsByName( pid );
         TestCase.assertEquals( 2, components.length );

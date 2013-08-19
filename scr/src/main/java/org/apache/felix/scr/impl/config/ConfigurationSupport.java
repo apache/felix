@@ -102,7 +102,7 @@ public class ConfigurationSupport implements ConfigurationListener
 
     // ---------- BaseConfigurationSupport overwrites
 
-    public void configureComponentHolder(final ComponentHolder holder)
+    public boolean configureComponentHolder(final ComponentHolder holder)
     {
 
         // 112.7 configure unless configuration not required
@@ -111,11 +111,11 @@ public class ConfigurationSupport implements ConfigurationListener
             final BundleContext bundleContext = holder.getActivator().getBundleContext();
             if ( bundleContext == null )
             {
-                return;// bundle was stopped concurrently with configuration deletion
+                return false;// bundle was stopped concurrently with configuration deletion
             }
             final String confPid = holder.getComponentMetadata().getConfigurationPid();
 
-            final ServiceReference caRef = bundleContext.getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
+            final ServiceReference<?> caRef = bundleContext.getServiceReference(ComponentRegistry.CONFIGURATION_ADMIN);
             if (caRef != null)
             {
                 final Object cao = bundleContext.getService(caRef);
@@ -129,15 +129,17 @@ public class ConfigurationSupport implements ConfigurationListener
                             final Collection<Configuration> factory = findFactoryConfigurations(ca, confPid, bundleContext.getBundle());
                             if (!factory.isEmpty())
                             {
+                                boolean created = false;
                                 for (Configuration config: factory)
                                 {
                                     config = getConfiguration( ca, config.getPid() );
                                     if ( checkBundleLocation( config, bundleContext.getBundle() ))
                                     {
                                         long changeCount = changeCounter.getChangeCount( config, false, -1 );
-                                        holder.configurationUpdated(config.getPid(), config.getProperties(), changeCount, new TargetedPID(config.getFactoryPid()));
+                                        created |= holder.configurationUpdated(config.getPid(), config.getProperties(), changeCount, new TargetedPID(config.getFactoryPid()));
                                     }
                                 }
+                                return created;
                             }
                             else
                             {
@@ -148,8 +150,9 @@ public class ConfigurationSupport implements ConfigurationListener
                                     singleton = getConfiguration( ca, singleton.getPid() );
                                     if ( singleton != null && checkBundleLocation( singleton, bundleContext.getBundle() ))
                                     {
-                                    long changeCount = changeCounter.getChangeCount( singleton, false, -1 );
-                                    holder.configurationUpdated(confPid, singleton.getProperties(), changeCount, new TargetedPID(singleton.getPid()));
+                                        long changeCount = changeCounter.getChangeCount( singleton, false, -1 );
+                                        holder.configurationUpdated(confPid, singleton.getProperties(), changeCount, new TargetedPID(singleton.getPid()));
+                                        return true;
                                     }
                                 }
                             }
@@ -162,6 +165,7 @@ public class ConfigurationSupport implements ConfigurationListener
                                 "Component Bundle's Configuration Admin is not compatible with "
                                     + "ours. This happens if multiple Configuration Admin API versions "
                                     + "are deployed and different bundles wire to different versions", null );
+                            return false;
 
                         }
                     }
@@ -179,6 +183,7 @@ public class ConfigurationSupport implements ConfigurationListener
                 }
             }
         }
+        return false;
     }
 
     // ---------- ServiceListener
@@ -246,9 +251,10 @@ public class ConfigurationSupport implements ConfigurationListener
             {
                 switch (event.getType()) {
                 case ConfigurationEvent.CM_DELETED:
-                    componentHolder.configurationDeleted(pid.getServicePid());
-                    //fall back to less-strong pid match
-                    configureComponentHolder( componentHolder );
+                    if ( !configureComponentHolder( componentHolder ) )
+                    {
+                        componentHolder.configurationDeleted( pid.getServicePid() );
+                    }
                     break;
 
                 case ConfigurationEvent.CM_UPDATED:
@@ -266,7 +272,7 @@ public class ConfigurationSupport implements ConfigurationListener
                     }
 
                     TargetedPID targetedPid = factoryPid == null? pid: factoryPid;
-                    TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID();
+                    TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID(pid);
                     if ( targetedPid.equals(oldTargetedPID) || targetedPid.bindsStronger( oldTargetedPID ))
                     {
                         final ConfigurationInfo configInfo = getConfiguration( pid, componentHolder, bundleContext );
@@ -316,7 +322,7 @@ public class ConfigurationSupport implements ConfigurationListener
                     }
 
                     TargetedPID targetedPid = factoryPid == null? pid: factoryPid;
-                    TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID();
+                    TargetedPID oldTargetedPID = componentHolder.getConfigurationTargetedPID(pid);
                     if ( targetedPid.equals(oldTargetedPID))
                     {
                         //this sets the location to this component's bundle if not already set.  OK here

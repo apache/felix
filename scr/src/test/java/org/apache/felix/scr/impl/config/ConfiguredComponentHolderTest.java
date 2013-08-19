@@ -251,7 +251,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         }
 
 
-        public void reconfigure( Dictionary configuration, long changeCount )
+        public void reconfigure( Dictionary configuration, long changeCount, TargetedPID targetedPID )
         {
             this.m_configuration = configuration;
         }

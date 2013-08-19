@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.impl.BundleComponentActivator;
+import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.helper.ActivateMethod.ActivatorParameter;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
@@ -71,6 +72,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     private Dictionary<String, Object> m_configurationProperties;
     
     private volatile long m_changeCount = -1;
+    private TargetedPID m_targetedPID;
+
 
     private final ThreadLocal<Boolean> m_circularReferences = new ThreadLocal<Boolean>();
     
@@ -521,9 +524,15 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
      *                      the Configuration Admin Service or <code>null</code> if there is
      *                      no configuration or if the configuration has just been deleted.
      * @param changeCount TODO
+     * @param targetedPID TODO
      */
-    public void reconfigure( Dictionary<String, Object> configuration, long changeCount )
+    public void reconfigure( Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPID )
     {
+        if ( targetedPID == null || !targetedPID.equals( m_targetedPID ) )
+        {
+            m_targetedPID = targetedPID;
+            m_changeCount = -1;
+        }
         if ( configuration != null )
         {
             if ( changeCount <= m_changeCount )
@@ -873,5 +882,10 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     public long getChangeCount()
     {
         return m_changeCount;
+    }
+
+    public TargetedPID getConfigurationTargetedPID()
+    {
+        return m_targetedPID;
     }
 }

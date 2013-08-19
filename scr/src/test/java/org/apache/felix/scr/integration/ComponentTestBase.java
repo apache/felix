@@ -19,6 +19,7 @@
 package org.apache.felix.scr.integration;
 
 
+import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -109,6 +110,8 @@ public abstract class ComponentTestBase
 
     protected static String DS_LOGLEVEL = "debug";
 
+    protected static String bsnVersionUniqueness = "single";
+
     // the descriptor file to use for the installed test bundle
     protected static String descriptorFile = "/integration_test_simple_components.xml";
     protected static String COMPONENT_PACKAGE = "org.apache.felix.scr.integration.components";
@@ -160,6 +163,7 @@ public abstract class ComponentTestBase
                 mavenBundle( "org.apache.felix", "org.apache.felix.configadmin", felixCaVersion )
              ),
              junitBundles(),
+             frameworkProperty( "org.osgi.framework.bsnversion" ).value( bsnVersionUniqueness ),
              systemProperty( "ds.factory.enabled" ).value( Boolean.toString( NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR ) ),
              systemProperty( "ds.loglevel" ).value( DS_LOGLEVEL )
 
@@ -414,10 +418,10 @@ public abstract class ComponentTestBase
 
     protected Bundle installBundle( final String descriptorFile, String componentPackage ) throws BundleException
     {
-        return installBundle(descriptorFile, componentPackage, "simplecomponent", "0.0.11");
+        return installBundle(descriptorFile, componentPackage, "simplecomponent", "0.0.11", null);
     }
     
-    protected Bundle installBundle( final String descriptorFile, String componentPackage, String symbolicName, String version ) throws BundleException
+    protected Bundle installBundle( final String descriptorFile, String componentPackage, String symbolicName, String version, String location ) throws BundleException
     {
         final InputStream bundleStream = bundle()
                 .add("OSGI-INF/components.xml", getClass().getResource(descriptorFile))
@@ -430,7 +434,10 @@ public abstract class ComponentTestBase
 
         try
         {
-            final String location = "test:SimpleComponent/" + System.currentTimeMillis();
+            if ( location == null )
+            {
+                location = "test:SimpleComponent/" + System.currentTimeMillis();
+            }
             return bundleContext.installBundle( location, bundleStream );
         }
         finally

@@ -91,7 +91,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      */
     protected volatile long m_changeCount = -1;
     
-    private TargetedPID m_targetedPID;
+    protected TargetedPID m_targetedPID;
 
     public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
@@ -119,7 +119,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         ComponentInstance instance;
         cm.setFactoryProperties( ( Dictionary<String, Object> ) dictionary );
         //configure the properties
-        cm.reconfigure( m_configuration, m_changeCount );
+        cm.reconfigure( m_configuration, m_changeCount, m_targetedPID );
         // enable
         cm.enableInternal();
         //activate immediately
@@ -330,7 +330,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public void configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPid )
+    public boolean configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPid )
     {
         if ( m_targetedPID != null && !m_targetedPID.equals( targetedPid ))
         {
@@ -346,7 +346,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
                 log( LogService.LOG_DEBUG,
                         "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
                         new Object[] { getConfigurationPid(), m_changeCount, changeCount }, null );
-                return;
+                return false;
             }
             m_changeCount = changeCount;
         }
@@ -361,7 +361,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             // Ignore the configuration is our policy is 'ignore'
             if ( getComponentMetadata().isConfigurationIgnored() )
             {
-                return;
+                return false;
             }
 
             // Store the config admin configuration
@@ -388,7 +388,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
                     log( LogService.LOG_DEBUG,
                             "Component Factory target filters not satisfied anymore: deactivating", null );
                     deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, getTrackingCount().get() );
-                    return;
+                    return false;
                 }
             }
 
@@ -406,6 +406,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             // 112.7 Factory Configuration not allowed for factory component
             log( LogService.LOG_ERROR, "Component Factory cannot be configured by factory configuration", null );
         }
+        return false;
     }
 
 
@@ -520,7 +521,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
     }
 
-    public TargetedPID getConfigurationTargetedPID()
+    public TargetedPID getConfigurationTargetedPID(TargetedPID pid)
     {
         return m_targetedPID;
     }

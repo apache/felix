@@ -71,8 +71,10 @@ public interface ComponentHolder
      * @param props the property dictionary from the configuration.
      * @param changeCount change count of the configuration, or R4 imitation.
      * @param targetedPid TODO
+     * @return true if a new component is created for a factory PID, false if an existing factory pid configuration is updated or 
+     * we have no factory pid
      */
-    void configurationUpdated( String pid, Dictionary<String, Object> props, long changeCount, TargetedPID targetedPid );
+    boolean configurationUpdated( String pid, Dictionary<String, Object> props, long changeCount, TargetedPID targetedPid );
     
     /**
      * Change count (or fake R4 imitation)
@@ -82,9 +84,10 @@ public interface ComponentHolder
     
     /**
      * Returns the targeted PID used to configure this component
+     * @param pid TODO
      * @return
      */
-    TargetedPID getConfigurationTargetedPID();
+    TargetedPID getConfigurationTargetedPID(TargetedPID pid);
 
     /**
      * Returns all <code>Component</code> instances held by this holder.

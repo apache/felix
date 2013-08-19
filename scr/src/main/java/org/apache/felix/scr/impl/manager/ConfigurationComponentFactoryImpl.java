@@ -130,11 +130,11 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
     }
 
 
-    public void configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPid )
+    public boolean configurationUpdated( String pid, Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPid )
     {
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            super.configurationUpdated( pid, configuration, changeCount, targetedPid );
+            return super.configurationUpdated( pid, configuration, changeCount, targetedPid );
         }
         else   //non-spec backwards compatible
         {
@@ -151,7 +151,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
 
                 // this should not call component reactivation because it is
                 // not active yet
-                cm.reconfigure( configuration, changeCount );
+                cm.reconfigure( configuration, changeCount, m_targetedPID );
 
                 // enable asynchronously if components are already enabled
                 if ( getState() == STATE_FACTORY )
@@ -164,12 +164,14 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
                     // keep a reference for future updates
                     m_configuredServices.put( pid, cm );
                 }
+                return true;
 
             }
             else
             {
                 // update the configuration as if called as ManagedService
-                cm.reconfigure( configuration, changeCount );
+                cm.reconfigure( configuration, changeCount, m_targetedPID );
+                return false;
             }
         }
     }
