@@ -106,10 +106,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
      * enabled. Otherwise they are not enabled immediately.
      */
     private volatile boolean m_enabled;
-    private final ComponentMethods m_componentMethods;
-    
-    private TargetedPID m_targetedPID;
-    
+    private final ComponentMethods m_componentMethods;    
 
     public ImmediateComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
     {
@@ -192,7 +189,6 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
         log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration deleted for pid {0}",
                 new Object[] {pid}, null);
 
-        m_targetedPID = null;
         // component to deconfigure or dispose of
         final ImmediateComponentManager icm;
         boolean deconfigure = false;
@@ -251,7 +247,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
         // is not the "last" and has to be disposed off
         if ( deconfigure )
         {
-	        icm.reconfigure( null, -1 );
+	        icm.reconfigure( null, -1, null );
         }
         else
         {
@@ -273,30 +269,24 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
      * this case a new component is created, configured and stored in the map</li>
      * </ul>
      */
-    public void configurationUpdated( final String pid, final Dictionary<String, Object> props, long changeCount, TargetedPID targetedPid )
+    public boolean configurationUpdated( final String pid, final Dictionary<String, Object> props, long changeCount, TargetedPID targetedPid )
     {
         log( LogService.LOG_DEBUG, "ImmediateComponentHolder configuration updated for pid {0} with properties {1}",
                 new Object[] {pid, props}, null);
 
-        if ( m_targetedPID != null && !m_targetedPID.equals( targetedPid ))
-        {
-            log( LogService.LOG_ERROR, "ImmediateComponentHolder unexpected change in targetedPID from {0} to {1}",
-                    new Object[] {m_targetedPID, targetedPid}, null);
-            throw new IllegalStateException("Unexpected targetedPID change");
-        }
-        m_targetedPID = targetedPid;
         // component to update or create
         final ImmediateComponentManager icm;
         final String message;
         final boolean enable;
         Object[] notEnabledArguments = null;
+        boolean created = false;
 
         synchronized ( m_components )
         {
             // FELIX-2231: nothing to do any more, all components have been disposed off
             if (m_singleComponent == null) 
             {
-                return;
+                return false;
             }
 
             if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
@@ -319,6 +309,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
                 else
                 {
                     // factory configuration created
+                    created = true;
                     if ( !m_singleComponent.hasConfiguration() )
                     {
                         // configure the single instance if this is not configured
@@ -351,7 +342,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
         log( LogService.LOG_DEBUG, message, new Object[] {pid}, null);
 
         // configure the component
-        icm.reconfigure( props, changeCount );
+        icm.reconfigure( props, changeCount, targetedPid );
         log( LogService.LOG_DEBUG, "ImmediateComponentHolder Finished configuring the dependency managers for component for pid {0} ",
                 new Object[] {pid}, null );
 
@@ -366,6 +357,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
             log( LogService.LOG_DEBUG, "ImmediateComponentHolder Will not enable component for pid {0}: holder enabled state: {1}, metadata enabled: {2} ",
                     notEnabledArguments, null );
         }
+        return created;
     }
 
     public synchronized long getChangeCount( String pid)
@@ -566,9 +558,25 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
         }
     }
 
-    public TargetedPID getConfigurationTargetedPID()
+    public TargetedPID getConfigurationTargetedPID(TargetedPID pid)
     {
-        return m_targetedPID;
+        ImmediateComponentManager icm = null;
+        synchronized (m_components)
+        {
+            if ( pid.getServicePid().equals( m_componentMetadata.getConfigurationPid() )) {
+                //singleton
+                icm = m_singleComponent;
+            }
+            else 
+            {
+                icm = m_components.get( pid.getServicePid() );
+            }
+        }
+        if ( icm != null) 
+        {
+            return icm.getConfigurationTargetedPID();
+        }
+        return null;
     }
 
 }
