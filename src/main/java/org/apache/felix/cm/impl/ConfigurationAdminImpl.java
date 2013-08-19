@@ -95,7 +95,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
                 { factoryPid, location } );
 
         // CM 1.4 / 104.13.2.3
-        this.checkPermission( configurationManager, ( location == null ) ? "*" : location );
+        this.checkPermission( configurationManager, ( location == null ) ? "*" : location, false );
 
         ConfigurationImpl config = configurationManager.createFactoryConfiguration( factoryPid, location );
         return this.wrap( config );
@@ -135,7 +135,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
             else
             {
                 // CM 1.4 / 104.13.2.3
-                this.checkPermission( configurationManager, config.getBundleLocation() );
+                this.checkPermission( configurationManager, config.getBundleLocation(), false );
             }
         }
 
@@ -154,7 +154,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
             { pid, location } );
 
         // CM 1.4 / 104.13.2.3
-        this.checkPermission( configurationManager, ( location == null ) ? "*" : location );
+        this.checkPermission( configurationManager, ( location == null ) ? "*" : location, false );
 
         ConfigurationImpl config = configurationManager.getConfiguration( pid );
         if ( config == null )
@@ -164,7 +164,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
         else
         {
             final String configLocation = config.getBundleLocation();
-            this.checkPermission( configurationManager, ( configLocation == null ) ? "*" : configLocation );
+            this.checkPermission( configurationManager, ( configLocation == null ) ? "*" : configLocation, false );
         }
 
         return this.wrap( config );
@@ -213,7 +213,7 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
     {
         try
         {
-            checkPermission(configurationManager, name);
+            checkPermission(configurationManager, name, false);
             return true;
         }
         catch ( SecurityException se )
@@ -229,20 +229,21 @@ public class ConfigurationAdminImpl implements ConfigurationAdmin
      * <code>SecurityException</code> if this is not the case.
      *
      * @param name The bundle location to check for permission. If this
-     *      is <code>null</code> or exactly matches the using bundle's
-     *      location, permission is always granted.
+     *      is <code>null</code> permission is always granted.
+     * @param checkOwn If {@code false} permission is alwas granted if
+     *      {@code name} is the same the using bundle's location.
      *
      * @throws SecurityException if the access control context does not
      *      have the appropriate permission
      */
-    void checkPermission( final ConfigurationManager configurationManager, String name )
+    void checkPermission( final ConfigurationManager configurationManager, String name, boolean checkOwn )
     {
         // the caller's permission must be checked
         final SecurityManager sm = System.getSecurityManager();
         if ( sm != null )
         {
             // CM 1.4 / 104.11.1 Implicit permission
-            if ( name != null && !name.equals( getBundle().getLocation() ) )
+            if ( name != null && ( checkOwn || !name.equals( getBundle().getLocation() ) ) )
             {
                 try
                 {

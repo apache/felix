@@ -76,7 +76,7 @@ public class ConfigurationAdapter implements Configuration
         delegatee.getConfigurationManager().log( LogService.LOG_DEBUG, "getBundleLocation() ==> {0}", new Object[]
             { bundleLocation } );
         checkActive();
-        configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( bundleLocation == null ) ? "*" : bundleLocation );
+        configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( bundleLocation == null ) ? "*" : bundleLocation, true );
         checkDeleted();
         return bundleLocation;
     }
@@ -95,8 +95,8 @@ public class ConfigurationAdapter implements Configuration
         // CM 1.4 / 104.13.2.4
         checkActive();
         final String configLocation = delegatee.getBundleLocation();
-        configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( configLocation == null ) ? "*" : configLocation );
-        configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( bundleLocation == null ) ? "*" : bundleLocation );
+        configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( configLocation == null ) ? "*" : configLocation, true );
+        configurationAdmin.checkPermission( delegatee.getConfigurationManager(), ( bundleLocation == null ) ? "*" : bundleLocation, true );
         checkDeleted();
         delegatee.setStaticBundleLocation( bundleLocation );
     }
