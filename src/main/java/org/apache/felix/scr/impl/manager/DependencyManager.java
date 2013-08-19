@@ -216,15 +216,7 @@ public class DependencyManager<S, T> implements Reference
 
         protected void ungetService( RefPair<T> ref )
         {
-            Object service;
-            synchronized ( ref )
-            {
-                service = ref.getServiceObject();
-                if ( ref != null )
-                {
-                    ref.setServiceObject( null );
-                }
-            }
+            Object service = ref.unsetServiceObject();
             if ( service != null )
             {
                 BundleContext bundleContext = m_componentManager.getBundleContext();
@@ -1317,11 +1309,11 @@ public class DependencyManager<S, T> implements Reference
             //we don't know about this reference
             return null;
         }
-        if ( refPair.getServiceObject() != null )
-        {
-            return refPair.getServiceObject();
-        }
         T serviceObject;
+        if ( (serviceObject = refPair.getServiceObject()) != null )
+        {
+            return serviceObject;
+        }
         // otherwise acquire the service
         final BundleContext bundleContext = m_componentManager.getBundleContext();
         if (bundleContext == null)
@@ -1347,12 +1339,14 @@ public class DependencyManager<S, T> implements Reference
         }
 
         // keep the service for later ungetting
-        if ( serviceObject != null )
+        if ( !refPair.setServiceObject( serviceObject ) )
         {
-            refPair.setServiceObject( serviceObject );
+            //another thread got the service first
+            bundleContext.ungetService( refPair.getRef() );
         }
 
         // return the acquired service (may be null of course)
+        //even if we did not set the service object, all the getService are for the same bundle so will have the same object.
         return serviceObject;
     }
 
