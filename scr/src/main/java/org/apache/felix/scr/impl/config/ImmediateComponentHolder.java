@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.felix.scr.Component;
+import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
@@ -488,7 +489,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
      * <p>
      * A ImmediateComponentHolder is considered to be <b>equal to </b> another 
      * ImmediateComponentHolder if the component names are equal(using 
-     * {@code String.equals}).
+     * {@code String.equals}) and they have the same bundle activator
      * 
      * @param object The {@code ImmediateComponentHolder} object to be compared.
      * @return {@code true} if {@code object} is a
@@ -503,7 +504,8 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
         }
 
         ImmediateComponentHolder other = (ImmediateComponentHolder) object;
-        return getComponentMetadata().getName().equals(other.getComponentMetadata().getName());
+        return m_activator == other.m_activator
+                && getComponentMetadata().getName().equals(other.getComponentMetadata().getName());
     }
     
    /**
@@ -543,14 +545,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
 
     public boolean isLogEnabled( int level )
     {
-        BundleComponentActivator activator = getActivator();
-        if ( activator != null )
-        {
-            return activator.isLogEnabled( level );
-        }
-
-        // bundle activator has already been removed, so no logging
-        return false;
+        return Activator.isLogEnabled( level );
     }
 
     public void log( int level, String message, Throwable ex )

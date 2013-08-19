@@ -51,6 +51,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
+import org.osgi.service.log.LogService;
 
 
 /**
@@ -386,13 +387,17 @@ public class ComponentRegistry implements ScrService, ServiceListener
      */
     final void registerComponentHolder( final ComponentRegistryKey key, ComponentHolder componentHolder )
     {
+        Activator.log(LogService.LOG_DEBUG, null, 
+                "Registering component with pid {0} for bundle {1}",
+                new Object[] {componentHolder.getComponentMetadata().getConfigurationPid(),key.getBundleId()},
+                null);
         synchronized ( m_componentHoldersByName )
         {
             // only register the component if there is a m_registration for it !
             if ( m_componentHoldersByName.get( key ) != null )
             {
                 // this is not expected if all works ok
-                throw new ComponentException( "The component name '" + componentHolder.getComponentMetadata().getName()
+                throw new ComponentException( "The component name '{0}" + componentHolder.getComponentMetadata().getName()
                     + "' has already been registered." );
             }
 
@@ -505,6 +510,9 @@ public class ComponentRegistry implements ScrService, ServiceListener
         }
 
         if (component != null) {
+            Activator.log(LogService.LOG_DEBUG, null, 
+                    "Unregistering component with pid {0} for bundle {1}",
+                    new Object[] {component.getComponentMetadata().getConfigurationPid(), key.getBundleId()}, null);
             synchronized (m_componentHoldersByPid)
             {
                 String configurationPid = component.getComponentMetadata().getConfigurationPid();

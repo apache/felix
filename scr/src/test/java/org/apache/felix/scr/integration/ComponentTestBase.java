@@ -269,19 +269,30 @@ public abstract class ComponentTestBase
         return ca;
     }
 
+    protected org.osgi.service.cm.Configuration configure( String pid )
+    {
+        return configure( pid, null );
+        
+    }
 
-    protected void configure( String pid )
+    protected org.osgi.service.cm.Configuration configure( String pid, String bundleLocation )
     {
         ConfigurationAdmin ca = getConfigurationAdmin();
         try
         {
             org.osgi.service.cm.Configuration config = ca.getConfiguration( pid, null );
+            if (bundleLocation != null)
+            {
+                config.setBundleLocation( bundleLocation );
+            }
             config.update( theConfig );
+            return config;
         }
         catch ( IOException ioe )
         {
             TestCase.fail( "Failed updating configuration " + pid + ": " + ioe.toString() );
         }
+        return null;
     }
 
 
@@ -403,14 +414,19 @@ public abstract class ComponentTestBase
 
     protected Bundle installBundle( final String descriptorFile, String componentPackage ) throws BundleException
     {
+        return installBundle(descriptorFile, componentPackage, "simplecomponent", "0.0.11");
+    }
+    
+    protected Bundle installBundle( final String descriptorFile, String componentPackage, String symbolicName, String version ) throws BundleException
+    {
         final InputStream bundleStream = bundle()
-            .add("OSGI-INF/components.xml", getClass().getResource(descriptorFile))
+                .add("OSGI-INF/components.xml", getClass().getResource(descriptorFile))
 
-                .set(Constants.BUNDLE_SYMBOLICNAME, "simplecomponent")
-                .set(Constants.BUNDLE_VERSION, "0.0.11")
+                .set(Constants.BUNDLE_SYMBOLICNAME, symbolicName)
+                .set(Constants.BUNDLE_VERSION, version)
                 .set(Constants.IMPORT_PACKAGE, componentPackage)
                 .set("Service-Component", "OSGI-INF/components.xml")
-            .build(withBnd());
+                .build(withBnd());
 
         try
         {
