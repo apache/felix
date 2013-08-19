@@ -21,21 +21,25 @@ package org.apache.felix.http.sslfilter.internal;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-public class SslFilterRequest extends HttpServletRequestWrapper
+class SslFilterRequest extends HttpServletRequestWrapper
 {
+
+    // The HTTPS scheme name
+    private static final String HTTPS_SCHEME = "https";
+
+    // The HTTP scheme prefix in an URL
+    private static final String HTTP_SCHEME_PREFIX = "http://";
 
     private String requestURL;
 
-    public SslFilterRequest(HttpServletRequest request)
+    SslFilterRequest(HttpServletRequest request)
     {
         super(request);
-
-        // TODO: check request headers for SSL attribute information
     }
 
     public String getScheme()
     {
-        return "https";
+        return HTTPS_SCHEME;
     }
 
     public boolean isSecure()
@@ -45,11 +49,17 @@ public class SslFilterRequest extends HttpServletRequestWrapper
 
     public StringBuffer getRequestURL()
     {
-        if (this.requestURL == null) {
-            // insert an 's' after the http scheme
+        if (this.requestURL == null)
+        {
             StringBuffer tmp = super.getRequestURL();
-            tmp.insert(4, 's');
-            this.requestURL = tmp.toString();
+            if (tmp.indexOf(HTTP_SCHEME_PREFIX) == 0)
+            {
+                this.requestURL = HTTPS_SCHEME.concat(tmp.substring(4));
+            }
+            else
+            {
+                this.requestURL = tmp.toString();
+            }
         }
 
         return new StringBuffer(this.requestURL);
