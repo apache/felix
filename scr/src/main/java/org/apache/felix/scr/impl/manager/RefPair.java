@@ -20,6 +20,8 @@
 
 package org.apache.felix.scr.impl.manager;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -28,7 +30,7 @@ import org.osgi.framework.ServiceReference;
 public class RefPair<T>
 {
     private final ServiceReference<T> ref;
-    private T serviceObject;
+    private AtomicReference<T> serviceObjectRef = new AtomicReference<T>();
 
     private boolean failed;
 
@@ -42,26 +44,32 @@ public class RefPair<T>
         return ref;
     }
 
-    public synchronized T getServiceObject()
+    public T getServiceObject()
     {
-        return serviceObject;
+        return serviceObjectRef.get();
     }
 
-    public synchronized void setServiceObject( T serviceObject )
+    public boolean setServiceObject( T serviceObject )
     {
-        this.serviceObject = serviceObject;
+        boolean set = serviceObjectRef.compareAndSet( null, serviceObject );
         if ( serviceObject != null)
         {
             failed = false;
         }
+        return set;
+    }
+    
+    public T unsetServiceObject()
+    {
+        return serviceObjectRef.getAndSet( null );
     }
 
-    public synchronized void setFailed( )
+    public void setFailed( )
     {
         this.failed = true;
     }
 
-    public synchronized boolean isFailed()
+    public boolean isFailed()
     {
         return failed;
     }
@@ -70,6 +78,6 @@ public class RefPair<T>
     @Override
     public String toString()
     {
-        return "[RefPair: ref: [" + ref + "] service: [" + serviceObject + "]]";
+        return "[RefPair: ref: [" + ref + "] service: [" + serviceObjectRef.get() + "]]";
     }
 }
