@@ -77,12 +77,11 @@ public class ServiceReferenceManager implements TrackerCustomizer {
     private Tracker m_trackingInterceptorTracker;
     /**
      * The set of tracking interceptors.
-     * TODO this set should be ranking according to the OSGi ranking policy.
+     * TODO this set should be sorted according to the OSGi ranking policy.
      * The filter is always the last interceptor.
      */
     private LinkedList<ServiceTrackingInterceptor> m_trackingInterceptors = new
             LinkedList<ServiceTrackingInterceptor>();
-    private List<ServiceReference> serviceReferencesList;
 
     /**
      * Creates the service reference manager.
@@ -94,9 +93,11 @@ public class ServiceReferenceManager implements TrackerCustomizer {
     public ServiceReferenceManager(DependencyModel dep, Filter filter, Comparator<ServiceReference> comparator) {
         m_dependency = dep;
         m_filter = filter;
-        if (m_filter != null) {
-            m_trackingInterceptors.addLast(new FilterBasedServiceTrackingInterceptor(m_filter));
-        }
+        // The Filter based service tracking interceptor needs to be created every time even if the filter is null.
+        // This arises from the potential re-implementation of the match method in the dependency implementation.
+        // It must be the last interceptor as the chain ends on the filter matching. (FELIX-4199)
+        m_trackingInterceptors.addLast(new FilterBasedServiceTrackingInterceptor(m_filter));
+
         if (comparator != null) {
             m_comparator = comparator;
             m_rankingInterceptor = new ComparatorBasedServiceRankingInterceptor(comparator);
@@ -134,7 +135,9 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                     }
 
                     public void removedService(ServiceReference reference, Object service) {
-                        if (service != null && m_trackingInterceptors.contains(service)) {
+                        if (service != null && service instanceof ServiceTrackingInterceptor &&
+                                m_trackingInterceptors.contains(service)
+                        ) {
                             removeTrackingInterceptor((ServiceTrackingInterceptor) service);
                         }
                     }
@@ -235,7 +238,7 @@ public class ServiceReferenceManager implements TrackerCustomizer {
             ServiceReference oldBest = getFirstService();
             // Recompute the matching services.
             m_matchingReferences.clear();
-            serviceReferencesList = m_dependency.getTracker().getServiceReferencesList();
+            final List<ServiceReference> serviceReferencesList = m_dependency.getTracker().getServiceReferencesList();
             if (serviceReferencesList != null) {
                 for (ServiceReference reference : serviceReferencesList) {
                     TransformedServiceReference ref = new TransformedServiceReferenceImpl(reference);
@@ -345,13 +348,14 @@ public class ServiceReferenceManager implements TrackerCustomizer {
      * This method is called when holding the write lock on the dependency.
      *
      * @param reference the reference
-     * @param <S>
+     * @param <S> the service interface
      * @return the transformed reference, null if rejected
      */
     private <S> TransformedServiceReference<S> accept(TransformedServiceReference<S> reference) {
         TransformedServiceReference<S> accumulator = reference;
         for (ServiceTrackingInterceptor interceptor : m_trackingInterceptors) {
-            TransformedServiceReference<S> accepted = interceptor.accept(m_dependency, m_dependency.getBundleContext(), reference);
+            TransformedServiceReference<S> accepted = interceptor.accept(m_dependency,
+                    m_dependency.getBundleContext(), accumulator);
             if (accepted != null) {
                 accumulator = accepted;
             } else {
