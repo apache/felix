@@ -230,7 +230,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
      * @param metadata : the metadata of the component
      * @param conf : the instance configuration
      * @throws ConfigurationException : the specification attribute is missing
-     * @see org.apache.felix.ipojo.CompositeHandler#configure(org.apache.felix.ipojo.CompositeManager, org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
+     * @see CompositeHandler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary conf) throws ConfigurationException {
         Element[] services = metadata.getElements("subservice");
@@ -259,7 +259,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
     /**
      * Start the service instantiator handler.
      * Start all created service instance.
-     * @see org.apache.felix.ipojo.CompositeHandler#start()
+     * @see org.apache.felix.ipojo.composite.CompositeHandler#start()
      */
     public void start() {
         for (int i = 0; m_sources != null && i < m_sources.size(); i++) {
@@ -283,7 +283,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
 
     /**
      * Check the handler validity.
-     * @see org.apache.felix.ipojo.CompositeHandler#isValid()
+     * @see org.apache.felix.ipojo.composite.CompositeHandler#isValid()
      */
     private void isHandlerValid() {
         for (int i = 0; i < m_importers.size(); i++) {
@@ -308,7 +308,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
     /**
      * Handler stop method.
      * Stop all created service instance.
-     * @see org.apache.felix.ipojo.CompositeHandler#stop()
+     * @see org.apache.felix.ipojo.composite.CompositeHandler#stop()
      */
     public void stop() {
         for (int i = 0; m_sources != null && i < m_sources.size(); i++) {
@@ -377,7 +377,7 @@ public class ServiceDependencyHandler extends CompositeHandler implements Depend
     /**
      * Get the service instantiator handler description.
      * @return the description
-     * @see org.apache.felix.ipojo.CompositeHandler#getDescription()
+     * @see org.apache.felix.ipojo.composite.CompositeHandler#getDescription()
      */
     public HandlerDescription getDescription() {
         return m_description;

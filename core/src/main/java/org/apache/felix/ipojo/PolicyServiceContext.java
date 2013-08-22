@@ -485,13 +485,13 @@ public class PolicyServiceContext implements ServiceContext {
     /**
      * Registers a service.
      * Operation not supported.
-     * @param sClass
-     * @param s
-     * @param stringDictionary
-     * @param <S>
-     * @return
+     * @param clazz  the class object
+     * @param svc the service object
+     * @param properties the properties
+     * @param <S> the type of service
+     * @return the service registration
      */
-    public <S> ServiceRegistration<S> registerService(Class<S> sClass, S s, Dictionary<String, ?> stringDictionary) {
+    public <S> ServiceRegistration<S> registerService(Class<S> clazz, S svc, Dictionary<String, ?> properties) {
         throw new UnsupportedOperationException("PolicyServiceContext can only be used for service dependency and not to provide services");
     }
 

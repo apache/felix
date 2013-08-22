@@ -77,7 +77,7 @@ public class LifecycleCallbackHandler extends PrimitiveHandler {
      * @param metadata : the component type metadata
      * @param configuration : the instance configuration
      * @throws ConfigurationException : one callback metadata is not correct (either the transition or the method are not correct).
-     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.InstanceManager, org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
+     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary configuration) throws ConfigurationException {
         m_callbacks = new LifecycleCallback[0];

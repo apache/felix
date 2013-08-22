@@ -38,11 +38,12 @@ import java.util.*;
 /**
  * The component factory manages component instance objects. This management
  * consists to create and manage component instances build with the current
- * component factory. If the factory is public a {@see Factory} service is exposed.
+ * component factory. If the factory is public a {@link Factory} service is exposed.
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
- * @see IPojoFactory
- * @see TrackerCustomizer
+ * @see org.apache.felix.ipojo.Factory
+ * @see org.apache.felix.ipojo.IPojoFactory
+ * @see org.apache.felix.ipojo.util.TrackerCustomizer
  */
 public class ComponentFactory extends IPojoFactory implements TrackerCustomizer {
 

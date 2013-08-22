@@ -193,7 +193,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @param pojo the pojo on which the method is called.
      * @param method the method invoked.
      * @param args the arguments array.
-     * @see MethodInterceptor#onEntry(Object, Method, Object[])
+     * @see MethodInterceptor#onEntry(Object, java.lang.reflect.Member, Object[])
      */
     public void onEntry(Object pojo, Member method, Object[] args) {
         // Nothing to do in the default implementation
@@ -209,7 +209,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @param pojo the pojo on which the method exits.
      * @param method the exiting method.
      * @param returnedObj the returned object (boxed for primitive type)
-     * @see MethodInterceptor#onExit(Object, Method, Object)
+     * @see MethodInterceptor#onExit(Object, java.lang.reflect.Member, Object)
      */
     public void onExit(Object pojo, Member method, Object returnedObj) {
         // Nothing to do in the default implementation
@@ -223,7 +223,7 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
      * @param pojo the pojo on which the method was accessed.
      * @param method the invoked method.
      * @param throwable the thrown exception
-     * @see org.apache.felix.ipojo.MethodInterceptor#onError(java.lang.Object, java.lang.reflect.Method, java.lang.Throwable)
+     * @see org.apache.felix.ipojo.MethodInterceptor#onError(Object, java.lang.reflect.Member, Throwable)
      */
     public void onError(Object pojo, Member method, Throwable throwable) {
         // Nothing to do in the default implementation
@@ -231,10 +231,9 @@ public abstract class PrimitiveHandler extends Handler implements FieldIntercept
 
     /**
      * Callback method called when the execution of a method will terminate :
-     * just before to throw an exception or before to return.
-     * {@link MethodInterceptor#onExit(Object, Method, Object)} or
-     * {@link MethodInterceptor#onError(Object, Method, Throwable)}
-     * were already called.
+     * just before to throw an exception or before to return. This callback is called after
+     * {@link MethodInterceptor#onExit(Object, java.lang.reflect.Member, Object)} and
+     * {@link MethodInterceptor#onError(Object, java.lang.reflect.Member, Throwable)}
      * This default implementation does nothing.
      * @param pojo the pojo on which the method was accessed.
      * @param method the invoked method.

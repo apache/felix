@@ -32,22 +32,22 @@ package org.apache.felix.ipojo;
  */
 public interface ConstructorInjector {
 
-   /**
-    * Gets the type of the object to inject in the constructor parameter.
-    * This is the type looked into the Pojo class, so it must match.
-    * Returning <code>null</code> will try to get the class from the
-    * injected object, however this can be wrong (implementation instead of interface,
-    * boxed objects...) and error-prone.
-    * @param index the parameter index
-    * @return the Class object (must fit for primitive type)
-    */
+    /**
+     * Gets the object to inject in the constructor parameter.
+     * @param index the parameter index
+     * @return the object to be injected.
+     */
 	Object getConstructorParameter(int index);
 
-	/**
-	 * Gets the type of the object to
-	 * @param index
-	 * @return
-	 */
+    /**
+     * Gets the type of the object to inject in the constructor parameter.
+     * This is the type looked into the Pojo class, so it must match.
+     * Returning <code>null</code> will try to get the class from the
+     * injected object, however this can be wrong (implementation instead of interface,
+     * boxed objects...) and error-prone.
+     * @param index the parameter index
+     * @return the Class object (must fit also for primitive type)
+     */
 	Class getConstructorParameterType(int index);
 
 }

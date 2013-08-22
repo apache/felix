@@ -70,7 +70,7 @@ public class StringMap extends TreeMap {
      * @param key : key
      * @param value : value
      * @return an object.
-     * @see java.util.TreeMap#put(K, V)
+     * @see java.util.TreeMap#put(Object, Object)
      */
     public Object put(Object key, Object value) {
         return super.put(key.toString(), value);
@@ -118,7 +118,7 @@ public class StringMap extends TreeMap {
          * @param object1 : first object to compare
          * @param object2 : second object to compare
          * @return the comparison result
-         * @see java.util.Comparator#compare(T, T)
+         * @see java.util.Comparator#compare(Object, Object)
          */
         public int compare(Object object1, Object object2) {
             if (m_isCaseSensitive) {

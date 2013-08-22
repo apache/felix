@@ -125,7 +125,7 @@ public class ProvidedServiceHandler extends CompositeHandler implements Dependen
      * @param metadata : the metadata of the component
      * @param configuration : the instance configuration
      * @throws ConfigurationException  : the exporter cannot be created
-     * @see org.apache.felix.ipojo.CompositeHandler#configure(org.apache.felix.ipojo.CompositeManager, org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
+     * @see CompositeHandler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary configuration) throws ConfigurationException {
         m_context = getCompositeManager().getContext();
@@ -177,7 +177,7 @@ public class ProvidedServiceHandler extends CompositeHandler implements Dependen
     /**
      * Start method.
      * Start all managed provided service.
-     * @see org.apache.felix.ipojo.CompositeHandler#start()
+     * @see org.apache.felix.ipojo.composite.CompositeHandler#start()
      */
     public void start() {
         // Compute imports and instances
@@ -207,7 +207,7 @@ public class ProvidedServiceHandler extends CompositeHandler implements Dependen
     /**
      * Stop method.
      * Stop all managed provided service.
-     * @see org.apache.felix.ipojo.CompositeHandler#stop()
+     * @see org.apache.felix.ipojo.composite.CompositeHandler#stop()
      */
     public void stop() {
         for (int i = 0; i < m_managedServices.size(); i++) {
@@ -223,7 +223,7 @@ public class ProvidedServiceHandler extends CompositeHandler implements Dependen
 
     /**
      * Check the handler validity.
-     * @see org.apache.felix.ipojo.CompositeHandler#isValid()
+     * @see org.apache.felix.ipojo.composite.CompositeHandler#isValid()
      */
     private void isHandlerValid() {
         for (int i = 0; i < m_exporters.size(); i++) {
@@ -240,7 +240,7 @@ public class ProvidedServiceHandler extends CompositeHandler implements Dependen
     /**
      * Handler state changed.
      * @param state : the new instance state.
-     * @see org.apache.felix.ipojo.CompositeHandler#stateChanged(int)
+     * @see CompositeHandler#stateChanged(int)
      */
     public void stateChanged(int state) {
         if (state == ComponentInstance.INVALID) {
