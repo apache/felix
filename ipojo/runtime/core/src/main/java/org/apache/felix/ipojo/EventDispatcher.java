@@ -34,8 +34,8 @@ import org.osgi.framework.ServiceListener;
  * iPOJO Internal event dispatcher.
  * This class provides an internal service event dispatcher in order to tackle the
  * event storm that can happen when starting large-scale applications.
- * @see Extender
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * @see org.osgi.framework.ServiceListener
  */
 public final class EventDispatcher implements ServiceListener {
     

@@ -250,8 +250,7 @@ public class ServiceImporter extends DependencyModel {
 
     /**
      * Set that this dependency is a service level dependency.
-     * This forces the scoping policy to be STRICT. 
-     * @param b
+     * This forces the scoping policy to be STRICT.
      */
     public void setServiceLevelDependency() {
         m_specLevelReq = true;

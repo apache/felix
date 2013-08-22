@@ -51,7 +51,7 @@ public class ControllerHandler extends PrimitiveHandler {
      * @param metadata : metadata
      * @param configuration : configuration
      * @throws ConfigurationException : the field attribute is missing or does not exist in the class.
-     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.InstanceManager, org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
+     * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
     public void configure(Element metadata, Dictionary configuration) throws ConfigurationException {
         Element[] controller = metadata.getElements("controller");

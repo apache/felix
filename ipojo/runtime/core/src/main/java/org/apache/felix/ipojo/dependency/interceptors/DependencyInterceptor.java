@@ -26,9 +26,9 @@ import org.apache.felix.ipojo.util.DependencyModel;
  *
  * Interceptors publishes a service property (target) to select the dependencies they handle.
  *
- * Notice that interceptor can invalidate the set of service used by a dependency by calling {@link org.apache.felix
- * .ipojo.util.DependencyModel#invalidateMatchingServices()} and {@link org.apache.felix.ipojo.util
- * .DependencyModel#invalidateSelectedServices()}.
+ * Notice that interceptor can invalidate the set of service used by a dependency by calling
+ * {@link org.apache.felix.ipojo.util.DependencyModel#invalidateMatchingServices()} and
+ * {@link org.apache.felix.ipojo.util.DependencyModel#invalidateSelectedServices()}.
  */
 public interface DependencyInterceptor {
 

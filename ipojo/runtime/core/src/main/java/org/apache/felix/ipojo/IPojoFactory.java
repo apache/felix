@@ -240,7 +240,7 @@ public abstract class IPojoFactory implements Factory {
      * Creates an instance in the specified service context.
      * This method is synchronized to assert the validity of the factory during the creation.
      * Callbacks to sub-class and  created instances need to be aware that they are holding the monitor lock.
-     * This method call the override {@link IPojoFactory#createInstance(Dictionary, IPojoContext, HandlerManager[])
+     * This method call the override {@link IPojoFactory#createInstance(Dictionary, IPojoContext, HandlerManager[])}
      * method.
      * @param configuration the configuration of the created instance.
      * @param serviceContext the service context to push for this instance.

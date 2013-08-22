@@ -24,7 +24,6 @@ import org.apache.felix.ipojo.architecture.Architecture;
 
 
 @Component(immediate=true)
-@Instantiate
 /**
  * Throws an NPE when binding a service.
  */

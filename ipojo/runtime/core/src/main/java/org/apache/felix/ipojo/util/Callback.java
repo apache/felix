@@ -67,7 +67,7 @@ public class Callback {
     /**
      * Creates a Callback.
      * If the argument array is not null the reflection type are computed.
-     * @see {@link Callback#computeArguments(String[])}
+     * @see Callback#computeArguments(String[])
      * @param method the name of the method to call
      * @param args the argument type name, or <code>null</code> if no arguments
      * @param isStatic is the method a static method
@@ -104,7 +104,7 @@ public class Callback {
     /**
      * Creates a Callback.
      * @param method the {@link MethodMetadata} obtained from manipulation
-     * metadata ({@link PojoMetadata}).
+     * metadata ({@link org.apache.felix.ipojo.parser.PojoMetadata}).
      * @param manager the instance manager.
      */
     public Callback(MethodMetadata method, InstanceManager manager) {

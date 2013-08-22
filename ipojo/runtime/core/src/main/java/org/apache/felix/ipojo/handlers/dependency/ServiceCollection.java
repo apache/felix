@@ -295,7 +295,7 @@ public class ServiceCollection implements Collection, List, Set {
      * @param arg0 an index
      * @param arg1 an object
      * @return N/A
-     * @see java.util.List#set(int, E)
+     * @see java.util.List#set(int, Object)
      */
     public Object set(int arg0, Object arg1) {
         throw new UnsupportedOperationException("Cannot add elements inside this collection");
@@ -363,7 +363,7 @@ public class ServiceCollection implements Collection, List, Set {
         /**
          * Unsupported operation.
          * @param obj an object
-         * @see java.util.ListIterator#add(E)
+         * @see java.util.ListIterator#add(Object)
          */
         public void add(Object obj) {
             throw new UnsupportedOperationException();                        
@@ -411,7 +411,7 @@ public class ServiceCollection implements Collection, List, Set {
         /**
          * Unsupported operation.
          * @param obj an object
-         * @see java.util.ListIterator#set(E)
+         * @see java.util.ListIterator#set(Object)
          */
         public void set(Object obj) {
             throw new UnsupportedOperationException();  
