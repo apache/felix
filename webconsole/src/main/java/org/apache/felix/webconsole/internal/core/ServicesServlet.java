@@ -110,6 +110,9 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     private static final String TITLE = "%services.pluginTitle"; //$NON-NLS-1$
     private static final String CSS[] = null;
 
+    // an LDAP filter, that is used to search services
+    private static final String FILTER_PARAM = "filter";
+
     private final String TEMPLATE;
 
     /** Default constructor */
@@ -165,11 +168,15 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    private final ServiceReference[] getServices()
+    private final ServiceReference[] getServices(String filter)
     {
+        // empty filter string will return nothing, must set it to null to return all services
+        if (filter != null && filter.trim().length() == 0) {
+            filter = null;
+        }
         try
         {
-            final ServiceReference[] refs = getBundleContext().getAllServiceReferences( null, null );
+            final ServiceReference[] refs = getBundleContext().getAllServiceReferences( null, filter );
             if ( refs != null )
             {
                 return refs;
@@ -212,7 +219,7 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
         response.setCharacterEncoding( "UTF-8" );
 
         final PrintWriter pw = response.getWriter();
-        writeJSON( pw, service, locale );
+        writeJSON( pw, service, locale, null);
     }
 
 
@@ -306,16 +313,16 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
     }
 
 
-    private void writeJSON( final Writer pw, final ServiceReference service, final Locale locale ) throws IOException
+    private void writeJSON(final Writer pw, final ServiceReference service, final Locale locale, final String filter) throws IOException
     {
-        writeJSON( pw, service, false, locale );
+        writeJSON( pw, service, false, locale, filter );
     }
 
 
-    private void writeJSON( final Writer pw, final ServiceReference service, final boolean fullDetails, final Locale locale )
+    private void writeJSON( final Writer pw, final ServiceReference service, final boolean fullDetails, final Locale locale, final String filter )
         throws IOException
     {
-        final ServiceReference[] allServices = this.getServices();
+        final ServiceReference[] allServices = this.getServices(filter);
         final String statusLine = getStatusLine( allServices );
 
         final ServiceReference[] services = ( service != null ) ? new ServiceReference[]
@@ -392,13 +399,15 @@ public class ServicesServlet extends SimpleWebConsolePlugin implements OsgiManag
 
         final String appRoot = ( String ) request.getAttribute( WebConsoleConstants.ATTR_APP_ROOT );
         StringWriter w = new StringWriter();
-        writeJSON(w, reqInfo.service, request.getLocale());
+        final String filter = request.getParameter(FILTER_PARAM);
+        writeJSON(w, reqInfo.service, request.getLocale(), filter);
 
         // prepare variables
         DefaultVariableResolver vars = ( ( DefaultVariableResolver ) WebConsoleUtil.getVariableResolver( request ) );
         vars.put( "bundlePath", appRoot +  "/" + BundlesServlet.NAME + "/" );
         vars.put( "drawDetails", String.valueOf(reqInfo.serviceRequested));
         vars.put( "__data__", w.toString() );
+        vars.put( "filter", filter == null ? "" : filter);
 
         response.getWriter().print( TEMPLATE );
     }

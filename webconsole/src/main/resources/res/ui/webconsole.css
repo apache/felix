@@ -191,3 +191,8 @@ ul.icons li {
 /* language selection element */
 #langSelect { position: absolute;	top: 5px; right: 5px }
 #langSelect img   { display: block; padding: 2px 0 }
+
+.filterBox      { float: left; margin-left: 1em }
+.servicesFilter { width: 400px; }
+.servicesFilterApply { width: 85px; }
+

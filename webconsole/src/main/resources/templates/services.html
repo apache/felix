@@ -19,7 +19,18 @@ var data = ${__data__};
 
 <p class="statline">&nbsp;</p>
 
-<div class="ui-widget-header ui-corner-top buttonGroup">${services.caption}</div>
+<form method="get" action="" class="filterForm">
+    <div class="ui-widget-header ui-corner-top buttonGroup">
+        <div class="filterBox">
+            <label>
+                Filter:
+                <input class="servicesFilter" name="filter" value="${filter}" title="${services.filter.help}"/>
+            </label>
+            <input type="submit" value="${services.filter.apply}" class="servicesFilterApply"/>
+        </div>
+        <span>${services.caption}</span>
+    </div>
+</form>
 
 <table id="plugin_table" class="tablesorter nicetable noauto">
 	<thead>
