@@ -131,6 +131,41 @@ public class TestBadServiceDependencies extends Common {
         return elem;
     }
 
+    private Element getMissingCallbackType() {
+        Element elem = new Element("component", "");
+        elem.addAttribute(new Attribute("classname", clazz));
+
+        // iPOJO cannot determine the specification of this type of dependency.
+        Element dependency = new Element("requires", "");
+        dependency.addAttribute(new Attribute("field", "fs"));
+        Element callback = new Element("callback", "");
+        // callback.addAttribute(new Attribute("type", "bind")); --> Type missing.
+        callback.addAttribute(new Attribute("method", "refBind"));
+        dependency.addElement(callback);
+        elem.addElement(dependency);
+
+        elem.addElement(manipulation);
+        return elem;
+    }
+
+    private Element getMissingCallbackMethod() {
+        Element elem = new Element("component", "");
+        elem.addAttribute(new Attribute("classname", clazz));
+
+        // iPOJO cannot determine the specification of this type of dependency.
+        Element dependency = new Element("requires", "");
+        dependency.addAttribute(new Attribute("field", "fs"));
+        Element callback = new Element("callback", "");
+        callback.addAttribute(new Attribute("type", "bind"));
+        // callback.addAttribute(new Attribute("method", "refBind"));  --> Method missing.
+        dependency.addElement(callback);
+        elem.addElement(dependency);
+
+        elem.addElement(manipulation);
+        return elem;
+    }
+
+
     private Element getManipulationForComponent() {
         // On KF we must cast the result.
         String header = (String) getTestBundle().getHeaders().get("iPOJO-Components");
@@ -276,6 +311,49 @@ public class TestBadServiceDependencies extends Common {
     public void testDependencyWithoutSpecification() {
         try {
             ComponentFactory cf = new ComponentFactory(osgiHelper.getContext(), getMissingSpecification());
+            cf.start();
+            ComponentInstance ci = cf.createComponentInstance(props);
+            ci.dispose();
+            cf.stop();
+            fail("A service requirement with a bad type must be rejected " + cf);
+        } catch (ConfigurationException e) {
+            // OK
+        } catch (UnacceptableConfiguration e) {
+            fail("Unexpected exception when creating an instance : " + e.getMessage());
+        } catch (MissingHandlerException e) {
+            fail("Unexpected exception when creating an instance : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Check that a component using a service dependency with a callback without its type is rejected.
+     * The type is either 'bind' or 'unbind'.
+     */
+    @Test
+    public void testDependencyWithACallbackWithoutType() {
+        try {
+            ComponentFactory cf = new ComponentFactory(osgiHelper.getContext(), getMissingCallbackType());
+            cf.start();
+            ComponentInstance ci = cf.createComponentInstance(props);
+            ci.dispose();
+            cf.stop();
+            fail("A service requirement with a bad type must be rejected " + cf);
+        } catch (ConfigurationException e) {
+            // OK
+        } catch (UnacceptableConfiguration e) {
+            fail("Unexpected exception when creating an instance : " + e.getMessage());
+        } catch (MissingHandlerException e) {
+            fail("Unexpected exception when creating an instance : " + e.getMessage());
+        }
+    }
+
+    /**
+     * Check that a component using a service dependency with a callback without its method is rejected.
+     */
+    @Test
+    public void testDependencyWithACallbackWithoutMethod() {
+        try {
+            ComponentFactory cf = new ComponentFactory(osgiHelper.getContext(), getMissingCallbackMethod());
             cf.start();
             ComponentInstance ci = cf.createComponentInstance(props);
             ci.dispose();

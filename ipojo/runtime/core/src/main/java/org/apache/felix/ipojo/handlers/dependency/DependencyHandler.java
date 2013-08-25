@@ -567,7 +567,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
     private void addCallbacksToDependency(Element dependencyElement, Dependency dep) throws ConfigurationException {
         Element[] cbs = dependencyElement.getElements("Callback");
         for (int j = 0; cbs != null && j < cbs.length; j++) {
-            if (!cbs[j].containsAttribute("method") && cbs[j].containsAttribute("type")) {
+            if (!cbs[j].containsAttribute("method") || !cbs[j].containsAttribute("type")) {
                 throw new ConfigurationException("Requirement Callback : a dependency callback must contain a method " +
                         "and a type (bind or unbind) attribute");
             }
