@@ -232,7 +232,7 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
 
                         return null;
                     }
-                });
+                }, format("Building Factory for type %s", m_declaration.getComponentName()));
                 // Return something, otherwise, ServiceTracker think that we're not interested
                 // in this service and never call us back on disposal.
                 return service;
@@ -332,7 +332,9 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
 
                         return null;
                     }
-                });
+                }, format("Creating component instance of type %s (declaration from bundle %d)",
+                          m_declaration.getComponentName(),
+                          reference.getBundle().getBundleId()));
             }
 
             return null;

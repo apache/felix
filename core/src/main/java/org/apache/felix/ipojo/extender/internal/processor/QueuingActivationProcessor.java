@@ -19,6 +19,8 @@
 
 package org.apache.felix.ipojo.extender.internal.processor;
 
+import static java.lang.String.format;
+
 import org.apache.felix.ipojo.extender.internal.BundleProcessor;
 import org.apache.felix.ipojo.extender.internal.ReferenceableCallable;
 import org.apache.felix.ipojo.extender.queue.QueueService;
@@ -62,12 +64,14 @@ public class QueuingActivationProcessor extends ForwardingBundleProcessor {
      * @param bundle the bundle
      */
     public void activate(final Bundle bundle) {
-        m_queueService.submit(new ReferenceableCallable<Boolean>(bundle) {
-            public Boolean call() throws Exception {
-                QueuingActivationProcessor.super.activate(bundle);
-                return true;
-            }
-        });
+        m_queueService.submit(
+                new ReferenceableCallable<Boolean>(bundle) {
+                    public Boolean call() throws Exception {
+                        QueuingActivationProcessor.super.activate(bundle);
+                        return true;
+                    }
+                },
+                format("Bundle %d being activated", bundle.getBundleId()));
     }
 
 }
