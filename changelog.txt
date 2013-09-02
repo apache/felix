@@ -5,6 +5,8 @@ Changes from 1.0.6 to 1.0.8
     * [FELIX-3756] - Optional attributes validated invalid data as correct;
     * [FELIX-3757] - If an AttributeDefinition did not specify a minimum, maximum or option values, it did not detect missing values;
     * [FELIX-3758] - AttributeDefinition.validate() did not take non-zero cardinality into consideration.
+    * [FELIX-4214] - Cache in BundleResources works only for a single metatype properties file per bundle
+
 
 Changes from 1.0.4 to 1.0.6
 ---------------------------
