@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -112,10 +112,12 @@ public class BundleResources
             locale = Locale.getDefault().toString();
         }
 
+        final String key = basename + "-" + locale;
+
         // check the cache, if the bundle has not changed
         if ( isUpToDate() )
         {
-            Resources res = ( Resources ) resourcesByLocale.get( locale );
+            Resources res = ( Resources ) resourcesByLocale.get( key );
             if ( res != null )
             {
                 return res;
@@ -132,8 +134,9 @@ public class BundleResources
         List resList = createResourceList( locale );
         for ( Iterator ri = resList.iterator(); ri.hasNext(); )
         {
-            String tmpLocale = ( String ) ri.next();
-            Resources res = ( Resources ) resourcesByLocale.get( tmpLocale );
+            final String tmpLocale = ( String ) ri.next();
+            final String tmpKey = basename + "-" + tmpLocale;
+            Resources res = ( Resources ) resourcesByLocale.get( tmpKey );
             if ( res != null )
             {
                 parentProperties = res.getResources();
@@ -142,13 +145,13 @@ public class BundleResources
             {
                 Properties props = loadProperties( basename, tmpLocale, parentProperties );
                 res = new Resources( tmpLocale, props );
-                resourcesByLocale.put( tmpLocale, res );
+                resourcesByLocale.put( tmpKey, res );
                 parentProperties = props;
             }
         }
 
         // just return from the cache again
-        return ( Resources ) resourcesByLocale.get( locale );
+        return ( Resources ) resourcesByLocale.get( key );
     }
 
 
