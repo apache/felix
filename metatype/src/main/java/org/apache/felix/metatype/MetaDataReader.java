@@ -419,6 +419,11 @@ public class MetaDataReader
 
         ad.setOptions( options );
 
+        // reset value to force an options check (FELIX-3884)
+        if ( ad.getDefaultValue() != null )
+        {
+            ad.setDefaultValue( ad.getDefaultValue() );
+        }
         return ad;
     }
 

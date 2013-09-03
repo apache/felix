@@ -145,7 +145,7 @@ public class AD extends OptionalAttributes
      *        can be <code>null</code>.
      *
      * @return <code>null</code> if no validation is performed, <tt>""</tt> if
-     *         the value is accepted as valid, or a non-empty string 
+     *         the value is accepted as valid, or a non-empty string
      *         indicating a validation problem was found.
      *
      * @see ADValidator#validate(AD, String)
@@ -223,7 +223,7 @@ public class AD extends OptionalAttributes
      */
     public void setDefaultValue(String defaultValue)
     {
-        this.defaultValue = splitList(defaultValue);
+        this.setDefaultValue( splitList(defaultValue) );
     }
 
     /**
@@ -243,11 +243,44 @@ public class AD extends OptionalAttributes
     }
 
     /**
-     * @param defaultValue the defaultValue to set
+     * @param values the defaultValue to set
      */
-    public void setDefaultValue(String[] defaultValue)
+    public void setDefaultValue(String[] values)
     {
-        this.defaultValue = (String[]) defaultValue.clone();
+        if ( values != null )
+        {
+            int count = 0;
+            for(int i=0; i<values.length; i++)
+            {
+                if ( "".equals(ADValidator.validate(this, values[i])) )
+                {
+                    count++;
+                }
+                else
+                {
+                    values[i] = null;
+                }
+            }
+            if ( count == 0 )
+            {
+                values = null;
+            }
+            else if ( count != values.length )
+            {
+                String[] filterValues = new String[count];
+                int index = 0;
+                for(int i=0; i<values.length; i++)
+                {
+                    if ( values[i] != null )
+                    {
+                        filterValues[index] = values[i];
+                        index++;
+                    }
+                }
+                values = filterValues;
+            }
+        }
+        this.defaultValue = values;
     }
 
     /**
