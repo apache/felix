@@ -18,6 +18,9 @@
  */
 package org.apache.felix.metatype;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import junit.framework.TestCase;
 
 import org.osgi.service.metatype.AttributeDefinition;
@@ -149,9 +152,9 @@ public class ADTest extends TestCase
     }
 
     /**
-     * FELIX-3757: if an AD has only its 'required' property set, but no 
-     * min/max or option values defined, the validation still should detect 
-     * empty values. 
+     * FELIX-3757: if an AD has only its 'required' property set, but no
+     * min/max or option values defined, the validation still should detect
+     * empty values.
      */
     public void testValidateRequiredValueWithMinimalOptions()
     {
@@ -187,5 +190,40 @@ public class ADTest extends TestCase
         ad.setRequired(true);
 
         assertEquals("", ad.validate("1,2"));
+    }
+
+    /**
+     * FELIX-3884 : if an AD has options, default values must be in the option
+     * values.
+     */
+    public void testOptionsAndDefaultValues()
+    {
+        final AD ad = new AD();
+        ad.setType("String");
+        final Map options = new HashMap();
+        options.put("A", "L-A");
+        options.put("B", "L-B");
+        ad.setOptions(options);
+
+        ad.setDefaultValue(new String[] {"A", "B"});
+        equalsArray(new String[] {"A", "B"}, ad.getDefaultValue());
+
+        ad.setDefaultValue(new String[] {"A", "B", "C"});
+        equalsArray(new String[] {"A", "B"}, ad.getDefaultValue());
+
+        ad.setDefaultValue(new String[] {"X", "Y", "B"});
+        equalsArray(new String[] {"B"}, ad.getDefaultValue());
+
+        ad.setDefaultValue(new String[] {"X", "Y", "Z"});
+        assertNull(ad.getDefaultValue());
+    }
+
+    private void equalsArray(String[] a, String[] b)
+    {
+        assertEquals(a.length, b.length);
+        for(int i=0; i<a.length;i++)
+        {
+            assertEquals(a[i], b[i]);
+        }
     }
 }
