@@ -76,7 +76,7 @@
                         <Bundle-Name>${project.name}</Bundle-Name>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Import-Package>
-                            org.apache.felix.ipojo;version=1.8.1,
+                            org.apache.felix.ipojo;version=1.10.0,
                             !org.objectweb.asm.tree, *
                         </Import-Package>
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
@@ -91,15 +91,12 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-ipojo-plugin</artifactId>
-                <version>1.6.0</version>
+                <version>1.10.1</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>ipojo-bundle</goal>
                         </goals>
-                        <configuration>
-                            <metadata>metadata.xml</metadata>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
