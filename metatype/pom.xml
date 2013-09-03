@@ -33,7 +33,7 @@
     <description>
         Implementation of the OSGi Metatype Service Specification 1.2
     </description>
-    <version>1.0.9-SNAPSHOT</version>
+    <version>1.0.7-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
