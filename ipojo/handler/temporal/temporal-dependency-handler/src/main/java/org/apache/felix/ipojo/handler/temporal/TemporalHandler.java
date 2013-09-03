@@ -32,6 +32,7 @@ import org.apache.felix.ipojo.parser.MethodMetadata;
 import org.apache.felix.ipojo.parser.PojoMetadata;
 import org.apache.felix.ipojo.util.DependencyModel;
 import org.apache.felix.ipojo.util.DependencyStateListener;
+import org.apache.felix.ipojo.util.DependencyMetadataHelper;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 
@@ -245,7 +246,7 @@ public class TemporalHandler extends PrimitiveHandler implements DependencyState
                 }
             }
 
-            Class specification = DependencyModel.loadSpecification(spec, getInstanceManager().getContext());
+            Class specification = DependencyMetadataHelper.loadSpecification(spec, getInstanceManager().getContext());
             TemporalDependency dep = new TemporalDependency(specification, agg, collection, proxy, filter, getInstanceManager().getContext(), timeout, policy, di, this);
             m_dependencies.add(dep);
 
