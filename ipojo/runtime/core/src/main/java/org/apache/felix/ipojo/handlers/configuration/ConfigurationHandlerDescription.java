@@ -103,6 +103,21 @@ public class ConfigurationHandlerDescription extends HandlerDescription {
     public PropertyDescription[] getProperties() {
         return m_properties;
     }
+
+    /**
+     * Gets a property by name.
+     * @param name the property name
+     * @return the property description with the given name, {@code null} if there is no property with the given name.
+     * @since 1.10.2
+     */
+    public PropertyDescription getPropertyByName(String name) {
+        for (PropertyDescription desc :m_properties) {
+            if (name.equals(desc.getName())) {
+                return desc;
+            }
+        }
+        return null;
+    }
     
     /**
      * Gets the managed service pid.
