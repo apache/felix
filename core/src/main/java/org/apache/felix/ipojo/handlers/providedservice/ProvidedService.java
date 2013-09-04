@@ -78,6 +78,7 @@ public class ProvidedService implements ServiceFactory {
      * Custom creation strategy
      */
     public static final int CUSTOM_STRATEGY = -1;
+    public static final String ALL_SPECIFICATIONS_FOR_CONTROLLERS = "ALL";
 
     /**
      * At this time, it is only the java interface full name.
@@ -96,9 +97,9 @@ public class ProvidedService implements ServiceFactory {
     private ProvidedServiceHandler m_handler;
 
     /**
-     * Properties Array.
+     * The map of properties.
      */
-    private Property[] m_properties;
+    private Map<String, Property> m_properties = new TreeMap<String, Property>();
 
     /**
      * Service providing policy.
@@ -118,7 +119,7 @@ public class ProvidedService implements ServiceFactory {
     /**
      * Service Controller.
      */
-    private Map /*<Specification, ServiceController>*/ m_controllers = new HashMap/*<Specification, ServiceController>*/();
+    private Map<String, ServiceController> m_controllers = new HashMap<String, ServiceController>();
 
     /**
      * Post-Registration callback.
@@ -255,20 +256,7 @@ public class ProvidedService implements ServiceFactory {
      * @param prop : the element to add
      */
     private synchronized void addProperty(Property prop) {
-        for (int i = 0; (m_properties != null) && (i < m_properties.length); i++) {
-            if (m_properties[i] == prop) {
-                return;
-            }
-        }
-
-        if (m_properties == null) {
-            m_properties = new Property[] { prop };
-        } else {
-            Property[] newProp = new Property[m_properties.length + 1];
-            System.arraycopy(m_properties, 0, newProp, 0, m_properties.length);
-            newProp[m_properties.length] = prop;
-            m_properties = newProp;
-        }
+        m_properties.put(prop.getName(), prop);
     }
 
     /**
@@ -279,30 +267,7 @@ public class ProvidedService implements ServiceFactory {
      * <code>false</code> otherwise.
      */
     private synchronized boolean removeProperty(String name) {
-        int idx = -1;
-        for (int i = 0; i < m_properties.length; i++) {
-            if (m_properties[i].getName().equals(name)) {
-                idx = i;
-                break;
-            }
-        }
-
-        if (idx >= 0) {
-            if ((m_properties.length - 1) == 0) {
-                m_properties = null;
-            } else {
-                Property[] newPropertiesList = new Property[m_properties.length - 1];
-                System.arraycopy(m_properties, 0, newPropertiesList, 0, idx);
-                if (idx < newPropertiesList.length) {
-                    System.arraycopy(m_properties, idx + 1, newPropertiesList, idx, newPropertiesList.length - idx);
-                }
-                m_properties = newPropertiesList;
-
-            }
-            return true;
-        } else {
-            return false;
-        }
+        return m_properties.remove(name) != null;
     }
 
     /**
@@ -479,10 +444,10 @@ public class ProvidedService implements ServiceFactory {
     private Properties getServiceProperties() {
         // Build the service properties list
         Properties serviceProperties = new Properties();
-        for (int i = 0; i < m_properties.length; i++) {
-            Object value = m_properties[i].getValue();
-            if (value != null && value != Property.NO_VALUE) {
-                serviceProperties.put(m_properties[i].getName(), value);
+        for (Property p : m_properties.values()) {
+            final Object value = p.getValue();
+            if (value != null  && value != Property.NO_VALUE) {
+                serviceProperties.put(p.getName(), value);
             }
         }
         return serviceProperties;
@@ -493,7 +458,7 @@ public class ProvidedService implements ServiceFactory {
      * @return the properties attached to the provided service.
      */
     public Property[] getProperties() {
-        return m_properties;
+        return m_properties.values().toArray(new Property[m_properties.size()]);
     }
 
     /**
@@ -571,23 +536,18 @@ public class ProvidedService implements ServiceFactory {
             String key = (String) keys.nextElement();
             Object value = props.get(key);
 
-            boolean alreadyExisting = false;
-            for (int i = 0; i < m_properties.length; i++) {
-                if (key.equals(m_properties[i].getName())) {
-                    alreadyExisting = true;
-                    // Check whether the value changed.
-                    if (m_properties[i].getValue() == null
-                            || ! value.equals(m_properties[i].getValue())) {
-                        m_properties[i].setValue(value);
-                        updated = true;
-                    }
+            Property property  = m_properties.get(key);
+            if (property != null) {
+                // Already existing property
+                if (property.getValue() == null  || ! value.equals(property.getValue())) {
+                    m_properties.get(key).setValue(value);
+                    updated = true;
                 }
-            }
-
-            if (! alreadyExisting) {
+            } else {
                 try {
-                    Property prop = new Property(key, null, null, value, getInstanceManager(), m_handler);
-                    addProperty(prop);
+                    // Create the property.
+                    property = new Property(key, null, null, value, getInstanceManager(), m_handler);
+                    addProperty(property);
                     updated = true;
                 } catch (ConfigurationException e) {
                     m_handler.error("The propagated property " + key + " cannot be created correctly : " + e.getMessage());
@@ -645,18 +605,21 @@ public class ProvidedService implements ServiceFactory {
      */
     public void setController(String field, boolean value, String specification) {
         if (specification == null) {
-            m_controllers.put("ALL", new ServiceController(field, value));
+            m_controllers.put(ALL_SPECIFICATIONS_FOR_CONTROLLERS, new ServiceController(field, value));
         } else {
             m_controllers.put(specification, new ServiceController(field, value));
 
         }
     }
 
+    /**
+     * Gets the service controller attached to the given field.
+     * @param field the field name
+     * @return the service controller, {@code null} if there is no service controller attached to the given field
+     * name.
+     */
     public ServiceController getController(String field) {
-        Collection controllers = m_controllers.values();
-        Iterator iterator = controllers.iterator();
-        while (iterator.hasNext()) {
-            ServiceController controller = (ServiceController) iterator.next();
+        for (ServiceController controller: m_controllers.values()) {
             if (field.equals(controller.m_field)) {
                 return controller;
             }
@@ -664,8 +627,14 @@ public class ProvidedService implements ServiceFactory {
         return null;
     }
 
+    /**
+     * Gets the service controller handling the service publishing the given specification.
+     * @param spec the specification (qualified class name)
+     * @return the service controller, {@code null} if there is no service controller handling the service publishing
+     * the given service specification
+     */
     public ServiceController getControllerBySpecification(String spec) {
-        return (ServiceController) m_controllers.get(spec);
+        return m_controllers.get(spec);
     }
 
     /**
@@ -674,16 +643,12 @@ public class ProvidedService implements ServiceFactory {
      * is valid.
      */
     private boolean isAtLeastAServiceControllerValid() {
-        Collection controllers = m_controllers.values();
-
         // No controller
-        if (controllers.isEmpty()) {
+        if (m_controllers.isEmpty()) {
             return true;
         }
 
-        Iterator iterator = controllers.iterator();
-        while (iterator.hasNext()) {
-            ServiceController controller = (ServiceController) iterator.next();
+        for (ServiceController controller : m_controllers.values()) {
             if (controller.getValue()) {
                 return true;
             }
@@ -696,21 +661,19 @@ public class ProvidedService implements ServiceFactory {
             return m_serviceSpecifications;
         }
 
-        ArrayList l = new ArrayList();
-        if (m_controllers.containsKey("ALL")) {
-            ServiceController ctrl = (ServiceController) m_controllers.get("ALL");
+        ArrayList<String> l = new ArrayList<String>();
+        if (m_controllers.containsKey(ALL_SPECIFICATIONS_FOR_CONTROLLERS)) {
+            ServiceController ctrl = m_controllers.get(ALL_SPECIFICATIONS_FOR_CONTROLLERS);
             if (ctrl.m_value) {
                 l.addAll(Arrays.asList(m_serviceSpecifications));
             }
         }
 
-        Iterator iterator = m_controllers.keySet().iterator();
-        while (iterator.hasNext()) {
-            String spec = (String) iterator.next();
-            ServiceController ctrl = (ServiceController) m_controllers.get(spec);
+        for (String spec : m_controllers.keySet()) {
+            ServiceController ctrl = m_controllers.get(spec);
             if (ctrl.m_value) {
-                if (! "ALL".equals(spec)) { // Already added.
-                    if (! l.contains(spec)) {
+                if (!ALL_SPECIFICATIONS_FOR_CONTROLLERS.equals(spec)) { // Already added.
+                    if (!l.contains(spec)) {
                         l.add(spec);
                     }
                 }
@@ -719,7 +682,7 @@ public class ProvidedService implements ServiceFactory {
             }
         }
 
-        return (String[]) l.toArray(new String[l.size()]);
+        return l.toArray(new String[l.size()]);
 
     }
 
@@ -869,11 +832,11 @@ public class ProvidedService implements ServiceFactory {
          */
         public void setValue(Boolean value) {
             synchronized (ProvidedService.this) {
-                if (value.booleanValue() != m_value) {
+                if (value != m_value) {
                     // If there is a change to the ServiceController value then
                     // we will
                     // need to modify the registrations.
-                    m_value = value.booleanValue();
+                    m_value = value;
                     unregisterService();
                     if (getServiceSpecificationsToRegister().length != 0) {
                         registerService();
