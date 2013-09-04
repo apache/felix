@@ -127,7 +127,25 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 if (fieldName == null && methodName != null) {
                     name = methodName;
                 } else if (fieldName == null && paramIndex != null) {
-                    name = paramIndex;
+                    try {
+                    // Extract the name from the arguments.
+                    MethodMetadata[] constructors = getFactory().getPojoMetadata().getConstructors();
+                    if (constructors.length != 1) {
+                        throw new ConfigurationException("Cannot infer the property name injected in the constructor " +
+                                "parameter #" + paramIndex + " - add the `name` attribute");
+                    } else {
+                        int idx = Integer.valueOf(paramIndex);
+                        if (constructors[0].getMethodArgumentNames().length > idx) {
+                            name = constructors[0].getMethodArgumentNames()[idx];
+                        } else {
+                            throw new ConfigurationException("Cannot infer the property name injected in the constructor " +
+                                    "parameter #" + paramIndex + " - not enough argument in the constructor :" +
+                                    constructors[0].getArguments());
+                        }
+                    }
+                    } catch(Throwable e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     name = fieldName;
                 }
