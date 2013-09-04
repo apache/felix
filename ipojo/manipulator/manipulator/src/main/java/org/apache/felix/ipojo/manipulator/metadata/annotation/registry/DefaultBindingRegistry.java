@@ -56,7 +56,7 @@ public class DefaultBindingRegistry implements BindingRegistry {
                 tree.put(type.getDescriptor(), potential);
             }
 
-            reporter.trace("Registered @%s", type.getClassName());
+            //reporter.trace("Registered @%s", type.getClassName());
             potential.add(binding);
         }
     }
