@@ -438,7 +438,8 @@ public class Property implements FieldInterceptor, ConstructorInjector {
         if (Long.TYPE.equals(type)) { return new Long(strValue); }
         if (Float.TYPE.equals(type)) { return new Float(strValue); }
         if (Double.TYPE.equals(type)) { return new Double(strValue); }
-        if (Character.TYPE.equals(type)) { return new Character(strValue.charAt(0)); }
+        // Character is a bit tricky, it's a boxing type, but there is not creator taking a String as parameter.
+        if (Character.TYPE.equals(type)  || Character.class.equals(type)) { return strValue.charAt(0); }
 
         // Array :
         if (type.isArray()) {

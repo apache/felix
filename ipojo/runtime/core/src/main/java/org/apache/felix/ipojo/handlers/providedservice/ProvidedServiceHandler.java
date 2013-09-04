@@ -536,9 +536,10 @@ public class ProvidedServiceHandler extends PrimitiveHandler {
             Property[] props = svc.getProperties();
             boolean update = false;
             for (Property prop : props) {
-                if (dict.get(prop.getName()) != null) {
+                final Object receivedValue = dict.get(prop.getName());
+                if (receivedValue != null) {
                     update = true;
-                    prop.setValue(dict.get(prop.getName()));
+                    prop.setValue(receivedValue);
                 }
             }
             if (update) {
