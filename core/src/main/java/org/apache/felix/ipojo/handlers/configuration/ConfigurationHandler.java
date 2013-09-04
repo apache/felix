@@ -92,7 +92,6 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
      * This method is called when a reconfiguration is completed.
      */
     private Callback m_updated;
-
     /**
      * The configuration listeners.
      */
@@ -226,7 +225,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 String key = (String) keys.nextElement();
                 // To conform with 'Property Propagation 104.4.4 (Config Admin spec)',
                 // we don't propagate properties starting with .
-                if (!key.startsWith(".")) {
+                if (!excluded(key)) {
                     m_toPropagate.put(key, configuration.get(key));
                 }
             }
@@ -360,7 +359,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
 
             // Security Check
             if (SecurityHelper.hasPermissionToRegisterService(ManagedService.class.getName(),
-                    getInstanceManager().getContext())  && SecurityHelper.canRegisterService
+                    getInstanceManager().getContext()) && SecurityHelper.canRegisterService
                     (getInstanceManager().getContext())) {
                 m_sr = getInstanceManager().getContext().registerService(ManagedService.class.getName(), this, props);
             } else {
@@ -428,13 +427,16 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             // Check if the name is a configurable property
             for (Property prop : m_configurableProperties) {
                 if (prop.getName().equals(name)) {
-                    reconfigureProperty(prop, value);
+                    Object v = reconfigureProperty(prop, value);
                     found = true;
+                    if (m_mustPropagate && ! excluded(name)) {
+                        toPropagate.put(name, v);
+                    }
                     break; // Exit the search loop
                 }
             }
-            if (!found) {
-                // The property is not a configurable property, add it to the toPropagate list.
+
+            if (!found && m_mustPropagate && ! excluded(name)) {
                 toPropagate.put(name, value);
             }
         }
@@ -450,6 +452,18 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
     }
 
     /**
+     * Checks whether the property with this given name must not be propagated.
+     * @param name the name of the property
+     * @return {@code true} if the property must not be propagated
+     */
+    private boolean excluded(String name) {
+        return name.startsWith(".")
+                || Factory.INSTANCE_NAME_PROPERTY.equals(name)
+                || Factory.FACTORY_VERSION_PROPERTY.equals(name)
+                || "factory.name".equals(name);
+    }
+
+    /**
      * Reconfigures the given property with the given value.
      * This methods handles {@link org.apache.felix.ipojo.InstanceManager#onSet(Object, String, Object)}
      * call and the callback invocation.
@@ -457,8 +471,9 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
      *
      * @param prop  the property object to reconfigure
      * @param value the new value.
+     * @return the new property value
      */
-    public void reconfigureProperty(Property prop, Object value) {
+    public Object reconfigureProperty(Property prop, Object value) {
         if (prop.getValue() == null || !prop.getValue().equals(value)) {
             prop.setValue(value);
             if (prop.hasField()) {
@@ -470,6 +485,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 }
             }
         }
+        return prop.getValue();
     }
 
     /**
@@ -680,7 +696,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
      * Remove the given listener from the configuration handler's list of listeners.
      *
      * @param listener the {@code ConfigurationListener} object to be removed
-     * @throws NullPointerException if {@code listener} is {@code null}
+     * @throws NullPointerException   if {@code listener} is {@code null}
      * @throws NoSuchElementException if {@code listener} wasn't present the in configuration handler's list of listeners
      */
     public void removeListener(ConfigurationListener listener) {
@@ -691,7 +707,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             // We definitely cannot rely on listener's equals method...
             // ...so we need to manually search for the listener, using ==.
             int i = -1;
-            for(int j = m_listeners.size() -1; j>=0 ; j--) {
+            for (int j = m_listeners.size() - 1; j >= 0; j--) {
                 if (m_listeners.get(j) == listener) {
                     // Found!
                     i = j;
@@ -726,9 +742,9 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             } catch (Throwable e) {
                 // Failure inside a listener: put a warning on the logger, and continue
                 warn(String.format(
-                            "[%s] A ConfigurationListener has failed: %s",
-                            getInstanceManager().getInstanceName(),
-                            e.getMessage())
+                        "[%s] A ConfigurationListener has failed: %s",
+                        getInstanceManager().getInstanceName(),
+                        e.getMessage())
                         , e);
             }
         }
