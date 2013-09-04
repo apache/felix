@@ -20,6 +20,8 @@ package org.apache.felix.ipojo.parser;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.metadata.Element;
@@ -47,20 +49,27 @@ public class MethodMetadata {
      */
     public static final String CONSTRUCTOR_PREFIX = "$init";
 
+
     /**
      * The name of the method.
      */
-    private String m_name;
+    private final String m_name;
 
     /**
      * The argument type array.
      */
-    private String[] m_arguments = new String[0];
+    private final String[] m_arguments;
 
     /**
      * The returned type.
      */
-    private String m_return = "void";
+    private final String m_return;
+
+    /**
+     * The argument names if there were contained in the manifest.
+     * @since 1.10.2
+     */
+    private final String[] m_names;
 
     /**
      * Creates a Method Metadata.
@@ -69,12 +78,23 @@ public class MethodMetadata {
     MethodMetadata(Element metadata) {
         m_name = metadata.getAttribute("name");
         String arg = metadata.getAttribute("arguments");
+        String names = metadata.getAttribute("names");
         String result = metadata.getAttribute("return");
         if (arg != null) {
             m_arguments = ParseUtils.parseArrays(arg);
+        } else {
+            m_arguments = new String[0];
         }
+        if (names != null) {
+            m_names = ParseUtils.parseArrays(names);
+        } else {
+            m_names = new String[0];
+        }
+
         if (result != null) {
             m_return = result;
+        } else {
+            m_return = "void";
         }
     }
 
@@ -84,6 +104,24 @@ public class MethodMetadata {
 
     public String[] getMethodArguments() {
         return m_arguments;
+    }
+
+    public String[] getMethodArgumentNames() {
+        return m_names;
+    }
+
+    /**
+     * Gets the method arguments.
+     * The keys are the argument names, while the values are the argument type.
+     * @return the map of argument
+     * @since 1.10.2
+     */
+    public Map<String, String> getArguments() {
+        LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
+        for (int i = 0; i < m_names.length; i++) {
+            map.put(m_names[i], m_arguments[i]);
+        }
+        return map;
     }
 
     public String getMethodReturn() {
