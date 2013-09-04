@@ -19,12 +19,8 @@
 
 package org.apache.felix.ipojo.manipulation;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.apache.felix.ipojo.manipulation.ClassChecker.AnnotationDescriptor;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
@@ -83,6 +79,12 @@ public class MethodDescriptor {
      * Flag indicating is the described method is static.
      */
     private final boolean m_isStatic;
+
+    /**
+     * The local variables by index.
+     * This map is used to detect the argument names.
+     */
+    private LinkedHashMap<Integer, LocalVariableNode> m_locals = new LinkedHashMap<Integer, LocalVariableNode>();
 
     /**
      * Constructor.
@@ -164,13 +166,23 @@ public class MethodDescriptor {
 
         // Add arguments
         if (m_arguments.length > 0) {
-            StringBuffer args = new StringBuffer("{");
+            StringBuilder args = new StringBuilder("{");
+            StringBuilder names = new StringBuilder("{");
             args.append(m_arguments[0]);
+            if (m_locals.containsKey(1)) {
+                names.append(m_locals.get(1).name); // index +1 as the 0 is this
+            }
             for (int i = 1; i < m_arguments.length; i++) {
-                args.append("," + m_arguments[i]);
+                args.append(",").append(m_arguments[i]);
+                if (m_locals.containsKey(i +1)) {
+                    names.append(",").append(m_locals.get(i +1).name);
+                }
             }
             args.append("}");
+            names.append("}");
+
             method.addAttribute(new Attribute("arguments", args.toString()));
+            method.addAttribute(new Attribute("names", names.toString()));
         }
 
         return method;
@@ -221,6 +233,7 @@ public class MethodDescriptor {
     }
 
     public void addLocalVariable(String name, String desc, String signature, int index) {
+        m_locals.put(index, new LocalVariableNode(name, desc, signature, null, null, index));
         if (index >= m_argsVarLength) {
             // keep only argument-related local variables definitions (others relate to code which isn't in this method) 
             return;
