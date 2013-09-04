@@ -44,6 +44,7 @@ import java.util.*;
  */
 public class ConfigurationHandler extends PrimitiveHandler implements ManagedService {
 
+    public static final String MANAGED_SERVICE_PID = "managed.service.pid";
     /**
      * List of the configurable fields.
      */
@@ -239,7 +240,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
 
         // Check if the component support ConfigurationADmin reconfiguration
         m_managedServicePID = confs[0].getAttribute("pid"); // Look inside the component type description
-        String instanceMSPID = (String) configuration.get("managed.service.pid"); // Look inside the instance configuration.
+        String instanceMSPID = (String) configuration.get(MANAGED_SERVICE_PID); // Look inside the instance configuration.
         if (instanceMSPID != null) {
             m_managedServicePID = instanceMSPID;
         }
@@ -382,32 +383,112 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
     /**
      * Reconfigure the component instance.
      * Check if the new configuration modifies the current configuration.
-     * Invokes the updated method is needed.
+     * Invokes the updated method if needed.
      *
      * @param configuration : the new configuration
      * @see org.apache.felix.ipojo.Handler#reconfigure(java.util.Dictionary)
      */
     public void reconfigure(Dictionary configuration) {
         Map<String, Object> map = new LinkedHashMap<String, Object>();
+        boolean changed = false;
         synchronized (this) {
             info(getInstanceManager().getInstanceName() + " is reconfiguring the properties : " + configuration);
-            Properties props = reconfigureProperties(configuration);
-            propagate(props, m_propagatedFromInstance);
-            m_propagatedFromInstance = props;
 
-            if (getInstanceManager().getPojoObjects() != null) {
-                try {
-                    notifyUpdated(null);
-                } catch (Throwable e) {
-                    error("Cannot call the updated method : " + e.getMessage(), e);
+            // Is there any changes ?
+            changed = detectConfigurationChanges(configuration);
+            if (changed) {
+                Properties extra = reconfigureProperties(configuration);
+                propagate(extra, m_propagatedFromInstance);
+                m_propagatedFromInstance = extra;
+
+                if (getInstanceManager().getPojoObjects() != null) {
+                    try {
+                        notifyUpdated(null);
+                    } catch (Throwable e) {
+                        error("Cannot call the updated method : " + e.getMessage(), e);
+                    }
+                }
+                // Make a snapshot of the current configuration
+                for (Property p : m_configurableProperties) {
+                    map.put(p.getName(), p.getValue());
                 }
             }
-            // Make a snapshot of the current configuration
-            for (Property p : m_configurableProperties) {
-                map.put(p.getName(), p.getValue());
+        }
+
+        if (changed) {
+            notifyListeners(map);
+        }
+    }
+
+    private boolean detectConfigurationChanges(Dictionary configuration) {
+        Enumeration keysEnumeration = configuration.keys();
+        while (keysEnumeration.hasMoreElements()) {
+            String name = (String) keysEnumeration.nextElement();
+            Object value = configuration.get(name);
+
+            // Some properties are skipped
+            if (name.equals(Factory.INSTANCE_NAME_PROPERTY)
+                    || name.equals(Constants.SERVICE_PID)
+                    || name.equals(MANAGED_SERVICE_PID)) {
+                continue;
+            }
+
+            // Do we have a property.
+            Property p = getPropertyByName(name);
+            if (p != null) {
+                // Change detection based on the value.
+                if (p.getValue() == null) {
+                    return true;
+                } else if (! p.getValue().equals(value)) {
+                    return true;
+                }
+            } else {
+                // Was it propagated ?
+                if (m_propagatedFromCA != null) {
+                    Object v = m_propagatedFromCA.get(name);
+                    if (v == null  || ! v.equals(value)) {
+                        return true;
+                    }
+                }
+                if (m_propagatedFromInstance != null) {
+                    Object v = m_propagatedFromInstance.get(name);
+                    if (v == null  || ! v.equals(value)) {
+                        return true;
+                    }
+                }
             }
         }
-        notifyListeners(map);
+
+        // A propagated property may have been removed.
+        if (m_propagatedFromCA != null) {
+            Enumeration enumeration = m_propagatedFromCA.keys();
+            while (enumeration.hasMoreElements()) {
+                String k = (String) enumeration.nextElement();
+                if (configuration.get(k)  == null) {
+                    return true;
+                }
+            }
+        }
+        if (m_propagatedFromInstance != null) {
+            Enumeration enumeration = m_propagatedFromInstance.keys();
+            while (enumeration.hasMoreElements()) {
+                String k = (String) enumeration.nextElement();
+                if (configuration.get(k)  == null) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private Property getPropertyByName(String name) {
+        for (Property p : m_configurableProperties) {
+            if (p.getName().equals(name)) {
+                return p;
+            }
+        }
+        return null;
     }
 
     /**
@@ -502,8 +583,8 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
 
             if (newProps != null) {
                 // Remove the name, the pid and the managed service pid props
-                newProps.remove("name");
-                newProps.remove("managed.service.pid");
+                newProps.remove(Factory.INSTANCE_NAME_PROPERTY);
+                newProps.remove(MANAGED_SERVICE_PID);
                 newProps.remove(Constants.SERVICE_PID);
 
                 // Remove all properties starting with . (config admin specification)
@@ -590,7 +671,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 props.put(n, v);
             }
         }
-        // add propagate properties to the list if propagation is enabled
+        // add propagated properties to the list if propagation is enabled
         if (m_mustPropagate) {
             // Start by properties from the configuration admin,
             if (m_propagatedFromCA != null) {
