@@ -39,12 +39,12 @@ public class ClassCheckerTestCase extends TestCase {
 
     public void testIsAlreadyManipulatedWithNotManipulatedResource() throws Exception {
         ClassChecker checker = check(resource("test/SimplePojo.class"));
-        assertFalse(checker.isalreadyManipulated());
+        assertFalse(checker.isAlreadyManipulated());
     }
 
     public void testIsAlreadyManipulatedWithManipulatedResource() throws Exception {
         ClassChecker checker = check(manipulate(resource("test/SimplePojo.class")));
-        assertTrue(checker.isalreadyManipulated());
+        assertTrue(checker.isAlreadyManipulated());
     }
 
     public void testMetadataForAlreadyManipulatedClassAreCleaned() throws Exception {
