@@ -56,4 +56,8 @@ public class PlentyOfAnnotations {
         // ...
     }
 
+    public String doSomethingWithArguments(String message, int value) {
+        return message + " - " + value;
+    }
+
 }

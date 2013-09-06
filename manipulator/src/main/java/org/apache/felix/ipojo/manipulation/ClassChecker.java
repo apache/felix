@@ -157,7 +157,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      * Check if the class was already manipulated.
      * @return true if the class is already manipulated.
      */
-    public boolean isalreadyManipulated() {
+    public boolean isAlreadyManipulated() {
         return m_isAlreadyManipulated;
     }
 

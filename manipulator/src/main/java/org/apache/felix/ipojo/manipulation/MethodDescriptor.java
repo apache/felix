@@ -259,4 +259,7 @@ public class MethodDescriptor {
         return m_argLocalVariables;
     }
 
+    public LinkedHashMap<Integer, LocalVariableNode> getLocals() {
+        return m_locals;
+    }
 }

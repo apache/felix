@@ -19,11 +19,7 @@
 
 package org.apache.felix.ipojo.manipulation;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.felix.ipojo.manipulation.ClassChecker.AnnotationDescriptor;
 import org.objectweb.asm.ClassAdapter;
@@ -194,7 +190,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
             Type[] args = Type.getArgumentTypes(desc);
 
             // TODO HERE ! => All constructor matches, no distinction between the different constructors.
-            generateConstructor(access, desc, signature, exceptions, md.getAnnotations(), md.getParameterAnnotations());
+            generateConstructor(access, desc, signature, exceptions, md.getAnnotations(),
+                    md.getParameterAnnotations(), md.getLocals());
 
             if (args.length == 0) {
                 m_foundSuitableConstructor = true;
@@ -222,7 +219,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         if (md == null) {
             generateMethodHeader(access, name, desc, signature, exceptions, null, null, null);
         } else {
-            generateMethodHeader(access, name, desc, signature, exceptions, md.getArgumentLocalVariables(), md.getAnnotations(), md.getParameterAnnotations());
+            generateMethodHeader(access, name, desc, signature, exceptions, md.getArgumentLocalVariables(),
+                    md.getAnnotations(), md.getParameterAnnotations());
         }
 
         String id = generateMethodFlag(name, desc);
@@ -308,8 +306,11 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * @param signature : method signature
      * @param exceptions : declared exception
      * @param annotations : the annotations to move to this constructor.
+     * @param locals : the local variables from the original constructors.
      */
-    private void generateConstructor(int access, String descriptor, String signature, String[] exceptions, List<AnnotationDescriptor> annotations, Map<Integer, List<AnnotationDescriptor>> paramAnnotations) {
+    private void generateConstructor(int access, String descriptor, String signature, String[] exceptions,
+                                     List<AnnotationDescriptor> annotations, Map<Integer,
+            List<AnnotationDescriptor>> paramAnnotations, LinkedHashMap<Integer, LocalVariableNode> locals) {
          GeneratorAdapter mv = new GeneratorAdapter(
                  cv.visitMethod(access, "<init>", descriptor, signature, exceptions),
                  access, "<init>", descriptor);
@@ -318,11 +319,15 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
          newDesc = "(Lorg/apache/felix/ipojo/InstanceManager;" + newDesc;
 
          mv.visitCode();
+         Label start = new Label();
+         mv.visitLabel(start);
          mv.visitVarInsn(ALOAD, 0);
          mv.visitInsn(ACONST_NULL);
          mv.loadArgs();
          mv.visitMethodInsn(INVOKESPECIAL, m_owner, "<init>", newDesc);
          mv.visitInsn(RETURN);
+         Label stop = new Label();
+         mv.visitLabel(stop);
 
          // Move annotations
          if (annotations != null) {
@@ -345,6 +350,16 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
              }
          }
 
+         // Add local variables for the arguments.
+        for (Map.Entry<Integer, LocalVariableNode> local : locals.entrySet()) {
+            // Write the parameter name. Only write the local variable that are either `this` or parameters from the
+            // initial descriptor.
+            if (local.getValue().index <= Type.getArgumentTypes(descriptor).length) {
+                mv.visitLocalVariable(local.getValue().name, local.getValue().desc, local.getValue().signature, start,stop,
+                        local.getValue().index);
+            }
+        }
+
          mv.visitMaxs(0, 0);
          mv.visitEnd();
     }
@@ -362,7 +377,9 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * @param annotations : the annotations to move to this method.
      * @param paramAnnotations : the parameter annotations to move to this method.
      */
-    private void generateMethodHeader(int access, String name, String desc, String signature, String[] exceptions, List<LocalVariableNode> localVariables, List<AnnotationDescriptor> annotations, Map<Integer, List<AnnotationDescriptor>> paramAnnotations) {
+    private void generateMethodHeader(int access, String name, String desc, String signature, String[] exceptions,
+                                      List<LocalVariableNode> localVariables, List<AnnotationDescriptor> annotations,
+                                      Map<Integer, List<AnnotationDescriptor>> paramAnnotations) {
         GeneratorAdapter mv = new GeneratorAdapter(cv.visitMethod(access, name, desc, signature, exceptions), access, name, desc);
 
         // If we have variables, we wraps the code within labels. The `lifetime` of the variables are bound to those

@@ -97,7 +97,7 @@ public class Manipulator {
         m_version = ck.getClassVersion();
 
         ClassWriter finalWriter = null;
-        if (!ck.isalreadyManipulated()) {
+        if (!ck.isAlreadyManipulated()) {
             // Manipulation ->
             // Add the _setComponentManager method
             // Instrument all fields
@@ -115,7 +115,7 @@ public class Manipulator {
             finalWriter = cw0;
         }
         // The file is in the bundle
-        if (ck.isalreadyManipulated()) {
+        if (ck.isAlreadyManipulated()) {
             return origin;
         } else {
             return finalWriter.toByteArray();
