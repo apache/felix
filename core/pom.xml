@@ -150,10 +150,7 @@
                             org.objectweb.asm;-split-package:=merge-last,
                             org.objectweb.asm.commons;-split-package:=merge-last,
                             org.apache.felix.ipojo.metadata,
-                            org.apache.felix.ipojo.dependency.impl,
-                            <!-- Compendium packages -->
-                            org.osgi.service.cm,
-                            org.osgi.service.log
+                            org.apache.felix.ipojo.dependency.impl
                         </Private-Package>
                         <Export-Package>
                             org.apache.felix.ipojo; version="${ipojo.package.version}",
@@ -172,8 +169,8 @@
                             org.apache.felix.ipojo.context; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.dependency.interceptors; version="${ipojo.package.version}",
                             <!-- Compendium packages -->
-                            org.osgi.service.cm,
-                            org.osgi.service.log
+                            org.osgi.service.cm; version=1.3,
+                            org.osgi.service.log; version=1.3
                         </Export-Package>
 
                         <!-- OSGi Extender Namespace -->
