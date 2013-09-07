@@ -127,7 +127,6 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                 if (fieldName == null && methodName != null) {
                     name = methodName;
                 } else if (fieldName == null && paramIndex != null) {
-                    try {
                     // Extract the name from the arguments.
                     MethodMetadata[] constructors = getFactory().getPojoMetadata().getConstructors();
                     if (constructors.length != 1) {
@@ -142,9 +141,6 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                                     "parameter #" + paramIndex + " - not enough argument in the constructor :" +
                                     constructors[0].getArguments());
                         }
-                    }
-                    } catch(Throwable e) {
-                        e.printStackTrace();
                     }
                 } else {
                     name = fieldName;
