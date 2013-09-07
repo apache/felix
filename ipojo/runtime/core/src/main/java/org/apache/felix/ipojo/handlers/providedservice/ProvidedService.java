@@ -457,7 +457,7 @@ public class ProvidedService implements ServiceFactory {
      * Get the list of properties attached to the service registration.
      * @return the properties attached to the provided service.
      */
-    public Property[] getProperties() {
+    public synchronized Property[] getProperties() {
         return m_properties.values().toArray(new Property[m_properties.size()]);
     }
 
