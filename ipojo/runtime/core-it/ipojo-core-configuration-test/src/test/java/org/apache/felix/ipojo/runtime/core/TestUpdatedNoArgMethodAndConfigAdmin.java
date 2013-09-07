@@ -22,19 +22,16 @@ package org.apache.felix.ipojo.runtime.core;
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.ow2.chameleon.testing.helpers.IPOJOHelper;
-import org.ow2.chameleon.testing.helpers.OSGiHelper;
 
 import java.io.IOException;
+import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Properties;
 
@@ -91,7 +88,7 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
@@ -135,7 +132,7 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
@@ -180,7 +177,7 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
@@ -232,7 +229,7 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
@@ -286,7 +283,7 @@ public class TestUpdatedNoArgMethodAndConfigAdmin extends Common {
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", "0");

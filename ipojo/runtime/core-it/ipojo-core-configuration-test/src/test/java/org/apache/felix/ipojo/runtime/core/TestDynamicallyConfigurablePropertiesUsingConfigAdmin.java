@@ -28,6 +28,7 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 import java.io.IOException;
+import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Properties;
 
@@ -85,7 +86,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("bar", 2);
         conf.put("foo", "foo");
@@ -106,7 +107,6 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
         assertEquals("Check baz equality -2", bazP, "zab");
     }
 
-
     @Test
     public void testStaticNoValue() throws IOException, InterruptedException {
         ServiceReference fooRef = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), instance2.getInstanceName());
@@ -125,7 +125,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("bar", 2);
         conf.put("foo", "foo");
@@ -164,7 +164,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", 0);
@@ -214,7 +214,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", 0);
@@ -266,7 +266,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", "0");
@@ -317,7 +317,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "foo");
         conf.put("bar", 2);
@@ -368,7 +368,7 @@ public class TestDynamicallyConfigurablePropertiesUsingConfigAdmin extends Commo
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "foo");
         conf.put("bar", new Integer(2));
