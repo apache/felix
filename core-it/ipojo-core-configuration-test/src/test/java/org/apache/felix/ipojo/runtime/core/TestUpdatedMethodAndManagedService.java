@@ -22,24 +22,17 @@ package org.apache.felix.ipojo.runtime.core;
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.HandlerFactory;
 import org.apache.felix.ipojo.architecture.Architecture;
-import org.apache.felix.ipojo.extender.InstanceDeclaration;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
-import org.ow2.chameleon.testing.helpers.IPOJOHelper;
-import org.ow2.chameleon.testing.helpers.OSGiHelper;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -50,7 +43,8 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Properties;
 
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertNotNull;
 
 
@@ -120,7 +114,6 @@ public class TestUpdatedMethodAndManagedService extends Common {
     }
 
 
-
     @Test
     public void testStaticInstance1() throws IOException {
         for (Architecture architecture : osgiHelper.getServiceObjects(Architecture.class)) {
@@ -141,7 +134,7 @@ public class TestUpdatedMethodAndManagedService extends Common {
         assertNotNull("Check ManagedServiceFactory availability", msRef);
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
@@ -188,7 +181,7 @@ public class TestUpdatedMethodAndManagedService extends Common {
 
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
@@ -251,7 +244,7 @@ public class TestUpdatedMethodAndManagedService extends Common {
         assertNotNull("Check ManagedServiceFactory availability", msRef);
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
@@ -322,7 +315,7 @@ public class TestUpdatedMethodAndManagedService extends Common {
         assertNotNull("Check ManagedServiceFactory availability", msRef);
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));

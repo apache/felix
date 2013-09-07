@@ -26,21 +26,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedServiceFactory;
-import org.ow2.chameleon.testing.helpers.IPOJOHelper;
-import org.ow2.chameleon.testing.helpers.OSGiHelper;
 
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Properties;
 
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
@@ -93,7 +88,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
@@ -139,7 +134,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
@@ -186,7 +181,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
@@ -240,7 +235,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
@@ -297,7 +292,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
                 getTestBundle().getLocation());
 
         // Configuration of baz
-        Properties conf = new Properties();
+        Dictionary<String, Object> conf = new Hashtable<String, Object>();
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", "0");
