@@ -25,6 +25,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 
 import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
@@ -38,7 +40,7 @@ public class TestUpdated extends Common {
 
     @Test
     public void testNumberOfUpdatedCalls() throws IOException {
-        Properties props = new Properties();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put("message", "message");
         props.put("propagated", "propagated");
         props.put(".private", "wow");
@@ -77,7 +79,7 @@ public class TestUpdated extends Common {
 
     @Test
     public void testNumberOfUpdatedCallsWithManagedService() throws IOException {
-        Properties props = new Properties();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put("message", "message");
         props.put("propagated", "propagated");
         props.put(".private", "wow");
