@@ -54,9 +54,8 @@ public class ComponentMethods
 
         m_modifiedMethod = new ModifiedMethod( componentMetadata.getModified(), implementationObjectClass, isDS11, isDS12Felix );
 
-        for ( Iterator it = componentMetadata.getDependencies().iterator(); it.hasNext(); )
+        for ( ReferenceMetadata referenceMetadata: componentMetadata.getDependencies() )
         {
-            ReferenceMetadata referenceMetadata = ( ReferenceMetadata ) it.next();
             String refName = referenceMetadata.getName();
             BindMethods bindMethods = new BindMethods( referenceMetadata, implementationObjectClass, isDS11, isDS12Felix);
             bindMethodMap.put( refName, bindMethods );

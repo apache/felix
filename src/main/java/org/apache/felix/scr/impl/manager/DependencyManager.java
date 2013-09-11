@@ -61,7 +61,7 @@ import org.osgi.service.log.LogService;
 public class DependencyManager<S, T> implements Reference
 {
     // mask of states ok to send events
-    private static final int STATE_MASK = //Component.STATE_UNSATISFIED |
+    private static final int STATE_MASK = 
          Component.STATE_ACTIVE | Component.STATE_REGISTERED | Component.STATE_FACTORY;
 
     // the component to which this dependency belongs
@@ -72,11 +72,13 @@ public class DependencyManager<S, T> implements Reference
     
     private final int m_index;
 
-    private final AtomicReference<ServiceTracker<T, RefPair<T>>> trackerRef = new AtomicReference<ServiceTracker<T, RefPair<T>>>();
+    private final Customizer<T> m_customizer;
 
-    private final Customizer customizer;
+    //only set once, but it's not clear there is enough other synchronization to get the correct object before it's used.
+    private volatile BindMethods m_bindMethods;
 
-    private BindMethods m_bindMethods;
+    //reset on filter change
+    private volatile ServiceTracker<T, RefPair<T>> m_tracker;
 
     // the target service filter string
     private volatile String m_target;
@@ -84,7 +86,7 @@ public class DependencyManager<S, T> implements Reference
     // the target service filter
     private volatile Filter m_targetFilter;
 
-    private boolean registered;
+    //private volatile boolean m_registered;
 
     /**
      * Constructor that receives several parameters.
@@ -96,7 +98,7 @@ public class DependencyManager<S, T> implements Reference
         m_componentManager = componentManager;
         m_dependencyMetadata = dependency;
         m_index = index;
-        customizer = newCustomizer();
+        m_customizer = newCustomizer();
 
         // dump the reference information if DEBUG is enabled
         if ( m_componentManager.isLogEnabled( LogService.LOG_DEBUG ) )
@@ -156,7 +158,7 @@ public class DependencyManager<S, T> implements Reference
 
         public void setTracker( ServiceTracker<T, RefPair<T>> tracker )
         {
-            trackerRef.set( tracker );
+            m_tracker = tracker;
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracker reset (closed)", new Object[] {getName()}, null );
             trackerOpened = false;
         }
@@ -173,7 +175,7 @@ public class DependencyManager<S, T> implements Reference
 
         protected ServiceTracker<T, RefPair<T>> getTracker()
         {
-            return trackerRef.get();
+            return m_tracker;
         }
 
         /**
@@ -1110,7 +1112,7 @@ public class DependencyManager<S, T> implements Reference
 
     void deactivate()
     {
-        customizer.close();
+        m_customizer.close();
     }
 
 
@@ -1127,7 +1129,7 @@ public class DependencyManager<S, T> implements Reference
     int size()
     {
         AtomicInteger trackingCount = new AtomicInteger( );
-        return trackerRef.get().getTracked( null, trackingCount ).size();
+        return m_tracker.getTracked( null, trackingCount ).size();
     }
 
 
@@ -1185,11 +1187,7 @@ public class DependencyManager<S, T> implements Reference
      */
     private RefPair<T> getBestRefPair()
     {
-        if (customizer == null )
-        {
-            return null;
-        }
-        Collection<RefPair<T>> refs = customizer.getRefs( new AtomicInteger( ) );
+        Collection<RefPair<T>> refs = m_customizer.getRefs( new AtomicInteger( ) );
         if (refs.isEmpty())
         {
             return null;
@@ -1220,7 +1218,7 @@ public class DependencyManager<S, T> implements Reference
      */
     T[] getServices()
     {
-        Collection<RefPair<T>> refs = customizer.getRefs(  new AtomicInteger( ) );
+        Collection<RefPair<T>> refs = m_customizer.getRefs(  new AtomicInteger( ) );
         List<T> services = new ArrayList<T>( refs.size() );
         for ( RefPair<T> ref: refs)
         {
@@ -1243,7 +1241,7 @@ public class DependencyManager<S, T> implements Reference
      */
     public ServiceReference<T>[] getServiceReferences()
     {
-        Collection<RefPair<T>> bound = customizer.getRefs(  new AtomicInteger( ) );
+        Collection<RefPair<T>> bound = m_customizer.getRefs(  new AtomicInteger( ) );
         if ( bound.isEmpty() )
         {
             return null;
@@ -1280,7 +1278,7 @@ public class DependencyManager<S, T> implements Reference
     private RefPair<T> getRefPair( ServiceReference<T> serviceReference )
     {
         AtomicInteger trackingCount = new AtomicInteger( );
-        return trackerRef.get().getTracked( null, trackingCount ).get( serviceReference );
+        return m_tracker.getTracked( null, trackingCount ).get( serviceReference );
     }
 
 
@@ -1369,7 +1367,7 @@ public class DependencyManager<S, T> implements Reference
      */
     public boolean isSatisfied()
     {
-        return customizer.isSatisfied();
+        return m_customizer.isSatisfied();
     }
 
 
@@ -1391,7 +1389,7 @@ public class DependencyManager<S, T> implements Reference
 
     boolean prebind()
     {
-        return customizer.prebind();
+        return m_customizer.prebind();
     }
 
     /**
@@ -1429,9 +1427,9 @@ public class DependencyManager<S, T> implements Reference
         AtomicInteger trackingCount =  new AtomicInteger( );
         Collection<RefPair<T>> refs;
         CountDownLatch openLatch = new CountDownLatch(1);
-        synchronized ( trackerRef.get().tracked() )
+        synchronized ( m_tracker.tracked() )
         {
-            refs = customizer.getRefs( trackingCount );
+            refs = m_customizer.getRefs( trackingCount );
             edgeInfo.setOpen( trackingCount.get() );
             edgeInfo.setOpenLatch( openLatch );
         }
@@ -1470,9 +1468,9 @@ public class DependencyManager<S, T> implements Reference
         AtomicInteger trackingCount = new AtomicInteger();
         Collection<RefPair<T>> refPairs;
         CountDownLatch latch = new CountDownLatch( 1 );
-        synchronized ( trackerRef.get().tracked() )
+        synchronized ( m_tracker.tracked() )
         {
-            refPairs = customizer.getRefs( trackingCount );
+            refPairs = m_customizer.getRefs( trackingCount );
             edgeInfo.setClose( trackingCount.get() );
             edgeInfo.setCloseLatch( latch );
         }
@@ -1500,7 +1498,7 @@ public class DependencyManager<S, T> implements Reference
         }
         if ( !isMultiple() )
         {
-            Collection<RefPair<T>> refs = customizer.getRefs( new AtomicInteger( ) );
+            Collection<RefPair<T>> refs = m_customizer.getRefs( new AtomicInteger( ) );
             if (refs.isEmpty())
             {
                 return;
@@ -1513,7 +1511,7 @@ public class DependencyManager<S, T> implements Reference
             }
         }
         //TODO dynamic reluctant
-        RefPair<T> refPair = trackerRef.get().getService( ref );
+        RefPair<T> refPair = m_tracker.getService( ref );
         if (refPair.getServiceObject() != null)
         {
             m_componentManager.log( LogService.LOG_DEBUG,
@@ -1552,7 +1550,7 @@ public class DependencyManager<S, T> implements Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
-            synchronized ( trackerRef.get().tracked() )
+            synchronized ( m_tracker.tracked() )
             {
                 if (info.outOfRange( trackingCount ) )
                 {
@@ -1603,15 +1601,7 @@ public class DependencyManager<S, T> implements Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
-            if (refPair == null)
-            {
-
-                //TODO should this be possible? If so, reduce or eliminate logging
-                m_componentManager.log( LogService.LOG_WARNING,
-                        "DependencyManager : invokeUpdatedMethod : Component set, but reference not present", null );
-                return;
-            }
-            synchronized ( trackerRef.get().tracked() )
+            synchronized ( m_tracker.tracked() )
             {
                 if (info.outOfRange( trackingCount ) )
                 {
@@ -1742,13 +1732,6 @@ public class DependencyManager<S, T> implements Reference
                 //ignore
             }
 
-            if (refPair == null)
-            {
-                //TODO should this be possible? If so, reduce or eliminate logging
-                m_componentManager.log( LogService.LOG_WARNING,
-                        "DependencyManager : invokeUnbindMethod : Component set, but reference not present {0}",  new Object[] {getName()}, null );
-                return;
-            }
             if ( !getServiceObject( m_bindMethods.getUnbind(), refPair ))
             {
                 m_componentManager.log( LogService.LOG_WARNING,
@@ -1863,15 +1846,7 @@ public class DependencyManager<S, T> implements Reference
      */
     void setTargetFilter( Dictionary<String, Object> properties )
     {
-        try
-        {
-            setTargetFilter( ( String ) properties.get( m_dependencyMetadata.getTargetPropertyName() ) );
-        }
-        catch ( InvalidSyntaxException e )
-        {
-            // this should not occur.  The only choice would be if the filter for the object class was invalid,
-            // but we already set this once when we enabled.
-        }
+        setTargetFilter( ( String ) properties.get( m_dependencyMetadata.getTargetPropertyName() ) );
     }
 
 
@@ -1885,7 +1860,7 @@ public class DependencyManager<S, T> implements Reference
      * @param target The new target filter to be set. This may be
      *      <code>null</code> if no target filtering is to be used.
      */
-    private void setTargetFilter( String target) throws InvalidSyntaxException
+    private void setTargetFilter( String target)
     {
         // if configuration does not set filter, use the value from metadata
         if (target == null)
@@ -1896,8 +1871,8 @@ public class DependencyManager<S, T> implements Reference
         if ( ( m_target == null && target == null ) || ( m_target != null && m_target.equals( target ) ) )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "No change in target property for dependency {0}: currently registered: {1}", new Object[]
-                    {getName(), registered}, null );
-            if (registered)
+                    {getName(), m_tracker != null}, null );
+            if (m_tracker != null)
             {
                 return;
             }
@@ -1909,31 +1884,24 @@ public class DependencyManager<S, T> implements Reference
             filterString = "(&" + filterString + m_target + ")";
         }
 
-        SortedMap<ServiceReference<T>, RefPair<T>> refMap;
-        if ( registered )
-        {
-            refMap = unregisterServiceListener();
-        }
-        else
-        {
-            refMap = new TreeMap<ServiceReference<T>, RefPair<T>>(Collections.reverseOrder());
-        }
+        final ServiceTracker<T, RefPair<T>> oldTracker = m_tracker;
+        SortedMap<ServiceReference<T>, RefPair<T>> refMap = unregisterServiceListener();
         m_componentManager.log( LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}", new Object[]
                 {getName(), target}, null );
         BundleContext bundleContext = m_componentManager.getBundleContext();
         if ( bundleContext != null )
         {
-        try
-        {
+            try
+            {
                 m_targetFilter = bundleContext.createFilter( filterString );
-        }
-        catch ( InvalidSyntaxException ise )
-        {
-            m_componentManager.log( LogService.LOG_ERROR, "Invalid syntax in target property for dependency {0} to {1}", new Object[]
-                    {getName(), target}, null );
-            // TODO this is an error, how do we recover?
-            return; //avoid an NPE
-        }
+            }
+            catch ( InvalidSyntaxException ise )
+            {
+                m_componentManager.log( LogService.LOG_ERROR, "Invalid syntax in target property for dependency {0} to {1}", new Object[]
+                        {getName(), target}, null );
+                // TODO this is an error, how do we recover?
+                return; //avoid an NPE
+            }
         }
         else
         {
@@ -1942,21 +1910,15 @@ public class DependencyManager<S, T> implements Reference
             return;                
         }
 
-        registerServiceListener( bundleContext, refMap );
-    }
-
-    private void registerServiceListener( BundleContext bundleContext, SortedMap<ServiceReference<T>, RefPair<T>> refMap ) throws InvalidSyntaxException
-    {
-        final ServiceTracker<T, RefPair<T>> oldTracker = trackerRef.get();
-        customizer.setPreviousRefMap( refMap );
+        m_customizer.setPreviousRefMap( refMap );
         boolean initialActive = oldTracker != null && oldTracker.isActive();
-        m_componentManager.log( LogService.LOG_INFO, "New service tracker for {0}, initial active: {1}", new Object[]
-                {getName(), initialActive}, null );
-        ServiceTracker<T, RefPair<T>> tracker = new ServiceTracker<T, RefPair<T>>( bundleContext, m_targetFilter, customizer, initialActive );
-        customizer.setTracker( tracker );
-        registered = true;
+        m_componentManager.log( LogService.LOG_INFO, "New service tracker for {0}, initial active: {1}, previous references: {2}", new Object[]
+                {getName(), initialActive, refMap}, null );
+        ServiceTracker<T, RefPair<T>> tracker = new ServiceTracker<T, RefPair<T>>( bundleContext, m_targetFilter, m_customizer, initialActive );
+        m_customizer.setTracker( tracker );
+        //        m_registered = true;
         tracker.open( m_componentManager.getTrackingCount() );
-        customizer.setTrackerOpened();
+        m_customizer.setTrackerOpened();
         if ( oldTracker != null )
         {
             oldTracker.completeClose( refMap );
@@ -2013,20 +1975,22 @@ public class DependencyManager<S, T> implements Reference
     SortedMap<ServiceReference<T>, RefPair<T>> unregisterServiceListener()
     {
         SortedMap<ServiceReference<T>, RefPair<T>> refMap;
-        ServiceTracker<T, RefPair<T>> tracker = trackerRef.get();
-//        trackerRef.set( null ); //???
+        ServiceTracker<T, RefPair<T>> tracker = m_tracker;
         if ( tracker != null )
         {
             AtomicInteger trackingCount = new AtomicInteger( );
             refMap = tracker.close( trackingCount );
+            m_tracker = null;
+            m_componentManager.log( LogService.LOG_DEBUG, "unregistering service listener for dependency {0}", new Object[]
+                    {getName()}, null );
         }
         else
         {
             refMap = new TreeMap<ServiceReference<T>, RefPair<T>>(Collections.reverseOrder());
+            m_componentManager.log( LogService.LOG_DEBUG, " No existing service listener to unregister for dependency {0}", new Object[]
+                    {getName()}, null );
         }
-        registered = false;
-        m_componentManager.log( LogService.LOG_DEBUG, "unregistering service listener for dependency {0}", new Object[]
-                {getName()}, null );
+//        m_registered = false;
         return refMap;
     }
 
