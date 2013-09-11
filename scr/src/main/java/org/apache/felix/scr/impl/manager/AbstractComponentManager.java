@@ -91,7 +91,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     private volatile boolean m_dependenciesCollected;
 
-    private final AtomicInteger trackingCount = new AtomicInteger( );
+    private final AtomicInteger m_trackingCount = new AtomicInteger( );
 
     // A reference to the BundleComponentActivator
     private BundleComponentActivator m_activator;
@@ -100,22 +100,21 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     
     private final ReentrantLock m_stateLock;
 
-    protected volatile boolean enabled;
-    protected volatile CountDownLatch enabledLatch;
-    private final Object enabledLatchLock = new Object();
+    protected volatile boolean m_enabled;
+    protected final AtomicReference< CountDownLatch> m_enabledLatchRef = new AtomicReference<CountDownLatch>( new CountDownLatch(0) );
 
     protected volatile boolean m_internalEnabled;
     
-    private volatile boolean disposed;
+    private volatile boolean m_disposed;
     
     //service event tracking
-    private int floor;
+    private int m_floor;
 
-    private volatile int ceiling;
+    private volatile int m_ceiling;
 
-    private final Lock missingLock = new ReentrantLock();
-    private final Condition missingCondition = missingLock.newCondition();
-    private final Set<Integer> missing = new TreeSet<Integer>( );
+    private final Lock m_missingLock = new ReentrantLock();
+    private final Condition m_missingCondition = m_missingLock.newCondition();
+    private final Set<Integer> m_missing = new TreeSet<Integer>( );
 
     volatile boolean m_activated;
 
@@ -237,43 +236,43 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     //service event tracking
     void tracked( int trackingCount )
     {
-        missingLock.lock();
+        m_missingLock.lock();
         try
         {
-            if (trackingCount == floor + 1 )
+            if (trackingCount == m_floor + 1 )
             {
-                floor++;
-                missing.remove( trackingCount );
+                m_floor++;
+                m_missing.remove( trackingCount );
             }
-            else if ( trackingCount < ceiling )
+            else if ( trackingCount < m_ceiling )
             {
-                missing.remove( trackingCount );
+                m_missing.remove( trackingCount );
             }
-            if ( trackingCount > ceiling )
+            if ( trackingCount > m_ceiling )
             {
-                for (int i = ceiling + 1; i < trackingCount; i++ )
+                for (int i = m_ceiling + 1; i < trackingCount; i++ )
                 {
-                    missing.add( i );
+                    m_missing.add( i );
                 }
-                ceiling = trackingCount;
+                m_ceiling = trackingCount;
             }
-            missingCondition.signalAll();
+            m_missingCondition.signalAll();
         }
         finally
         {
-            missingLock.unlock();
+            m_missingLock.unlock();
         }
     }
 
     void waitForTracked( int trackingCount )
     {
-        missingLock.lock();
+        m_missingLock.lock();
         try
         {
-            while ( ceiling  < trackingCount || ( !missing.isEmpty() && missing.iterator().next() < trackingCount))
+            while ( m_ceiling  < trackingCount || ( !m_missing.isEmpty() && m_missing.iterator().next() < trackingCount))
             {
                 log( LogService.LOG_DEBUG, "waitForTracked trackingCount: {0} ceiling: {1} missing: {2}",
-                        new Object[] {trackingCount, ceiling, missing}, null );
+                        new Object[] {trackingCount, m_ceiling, m_missing}, null );
                 try
                 {
                     if ( !doMissingWait())
@@ -293,7 +292,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                     catch ( InterruptedException e1 )
                     {
                         log( LogService.LOG_ERROR, "waitForTracked interrupted twice: {0} ceiling: {1} missing: {2},  Expect further errors",
-                                new Object[] {trackingCount, ceiling, missing}, e1 );
+                                new Object[] {trackingCount, m_ceiling, m_missing}, e1 );
                     }
                     Thread.currentThread().interrupt();
                 }
@@ -301,18 +300,18 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
         finally
         {
-            missingLock.unlock();
+            m_missingLock.unlock();
         }
     }
     
     private boolean doMissingWait() throws InterruptedException
     {
-        if ( !missingCondition.await( getLockTimeout(), TimeUnit.MILLISECONDS ))
+        if ( !m_missingCondition.await( getLockTimeout(), TimeUnit.MILLISECONDS ))
         {
             log( LogService.LOG_ERROR, "waitForTracked timed out: {0} ceiling: {1} missing: {2},  Expect further errors",
-                    new Object[] {trackingCount, ceiling, missing}, null );
+                    new Object[] {m_trackingCount, m_ceiling, m_missing}, null );
             dumpThreads();
-            missing.clear();
+            m_missing.clear();
             return false;
         }
         return true;
@@ -365,24 +364,18 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     public final void enable( final boolean async )
     {
-        if (enabled)
+        if (m_enabled)
         {
             return;
         }
+        CountDownLatch enableLatch = null;
         try
         {
-            synchronized ( enabledLatchLock )
-            {
-                if ( enabledLatch != null )
-                {
-                    enabledLatch.await();
-                }
-                enabledLatch  = new CountDownLatch( 1 );
-            }
+            enableLatch = enableLatchWait();
             enableInternal();
             if ( !async )
             {
-                activateInternal( trackingCount.get() );
+                activateInternal( m_trackingCount.get() );
             }
         }
         catch ( InterruptedException e )
@@ -393,13 +386,14 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             if ( !async )
             {
-                enabledLatch.countDown();
+                enableLatch.countDown();
             }
-            enabled = true;
+            m_enabled = true;
         }
 
         if ( async )
         {
+            final CountDownLatch latch = enableLatch;
             m_activator.schedule( new Runnable()
             {
 
@@ -409,11 +403,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 {
                     try
                     {
-                        activateInternal( trackingCount.get() );
+                        activateInternal( m_trackingCount.get() );
                     }
                     finally
                     {
-                        enabledLatch.countDown();
+                        latch.countDown();
                     }
                 }
 
@@ -423,6 +417,20 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 }
             } );
         }
+    }
+
+    CountDownLatch enableLatchWait() throws InterruptedException
+    {
+        CountDownLatch enabledLatch;
+        CountDownLatch newEnabledLatch;
+        do
+        {
+            enabledLatch = m_enabledLatchRef.get();
+            enabledLatch.await();
+            newEnabledLatch = new CountDownLatch(1);
+        }
+        while ( !m_enabledLatchRef.compareAndSet( enabledLatch, newEnabledLatch) );
+        return newEnabledLatch;  
     }
 
     /**
@@ -439,23 +447,17 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     public final void disable( final boolean async )
     {
-        if (!enabled)
+        if (!m_enabled)
         {
             return;
         }
+        CountDownLatch enableLatch = null;
         try
         {
-            synchronized ( enabledLatchLock )
-            {
-                if (enabledLatch != null)
-                {
-                    enabledLatch.await();
-                }
-                enabledLatch = new CountDownLatch( 1 );
-            }
+            enableLatch = enableLatchWait();
             if ( !async )
             {
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, trackingCount.get() );
+                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, m_trackingCount.get() );
             }
             disableInternal();
         }
@@ -467,13 +469,14 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             if (!async)
             {
-                enabledLatch.countDown();
+                enableLatch.countDown();
             }
-            enabled = false;
+            m_enabled = false;
         }
 
         if ( async )
         {
+            final CountDownLatch latch = enableLatch;
             m_activator.schedule( new Runnable()
             {
 
@@ -483,11 +486,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 {
                     try
                     {
-                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, trackingCount.get() );
+                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, m_trackingCount.get() );
                     }
                     finally
                     {
-                        enabledLatch.countDown();
+                        latch.countDown();
                     }
                 }
 
@@ -517,7 +520,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     public void dispose( int reason )
     {
-        disposed = true;
+        m_disposed = true;
         disposeInternal( reason );
     }
     
@@ -678,7 +681,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     final void enableInternal()
     {
-        if ( disposed )
+        if ( m_disposed )
         {
             throw new IllegalStateException( "enable: " + this );
         }
@@ -690,6 +693,15 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
 
         registerComponentId();
+        // Before creating the implementation object, we are going to
+        // test if we have configuration if such is required
+        if ( hasConfiguration() || !getComponentMetadata().isConfigurationRequired() )
+        {
+            // Update our target filters.
+            log( LogService.LOG_DEBUG, "Updating target filters", null );
+            updateTargets( getProperties() );
+        }
+
         m_internalEnabled = true;
         log( LogService.LOG_DEBUG, "Component enabled", null );
     }
@@ -698,7 +710,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     {
         log( LogService.LOG_DEBUG, "ActivateInternal",
                 null );
-        if ( disposed )
+        if ( m_disposed )
         {
             log( LogService.LOG_DEBUG, "ActivateInternal: disposed",
                     null );
@@ -741,10 +753,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return;
         }
 
-        // Update our target filters.
-        log( LogService.LOG_DEBUG, "Updating target filters", null );
-        updateTargets( getProperties() );
-
         // Before creating the implementation object, we are going to
         // test if all the mandatory dependencies are satisfied
         if ( !verifyDependencyManagers() )
@@ -768,7 +776,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     final void deactivateInternal( int reason, boolean disable, int trackingCount )
     {
-        if ( disposed )
+        if ( m_disposed )
         {
             return;
         }
@@ -792,7 +800,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     final void disableInternal()
     {
         m_internalEnabled = false;
-        if ( disposed )
+        if ( m_disposed )
         {
             throw new IllegalStateException( "Cannot disable a disposed component " + getName() );
         }
@@ -976,7 +984,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     AtomicInteger getTrackingCount()
     {
-        return trackingCount;
+        return m_trackingCount;
     }
 
 
@@ -1170,14 +1178,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return depMgrList;
     }
 
-    protected void updateTargets(Dictionary<String, Object> properties)
+    final void updateTargets(Dictionary<String, Object> properties)
     {
-        if ( m_internalEnabled )
+        for ( DependencyManager<S, ?> dm: getDependencyManagers() )
         {
-            for ( DependencyManager<S, ?> dm: getDependencyManagers() )
-            {
-                dm.setTargetFilter( properties );
-            }
+            dm.setTargetFilter( properties );
         }
     }
 
@@ -1360,7 +1365,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     public int getState()
     {
-        if (disposed)
+        if (m_disposed)
         {
             return Component.STATE_DISPOSED;
         }

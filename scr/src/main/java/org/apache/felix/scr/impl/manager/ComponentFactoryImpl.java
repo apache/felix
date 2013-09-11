@@ -358,7 +358,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         {
             log( LogService.LOG_INFO, "Configuration PID updated for Component Factory", null );
 
-            // Ignore the configuration is our policy is 'ignore'
+            // Ignore the configuration if our policy is 'ignore'
             if ( getComponentMetadata().isConfigurationIgnored() )
             {
                 return false;
