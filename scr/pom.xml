@@ -128,21 +128,21 @@
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-container-forked</artifactId>
-            <version>2.4.0</version>
+            <version>3.2.0</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-junit4</artifactId>
-            <version>2.4.0</version>
+            <version>3.2.0</version>
             <scope>test</scope>
         </dependency>
     
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-link-mvn</artifactId>
-            <version>2.4.0</version>
+            <version>3.2.0</version>
             <scope>test</scope>
         </dependency>
     
