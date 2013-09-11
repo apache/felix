@@ -132,6 +132,8 @@ public class ConfigurationSupport implements ConfigurationListener
                                 boolean created = false;
                                 for (Configuration config: factory)
                                 {
+                                    Activator.log( LogService.LOG_DEBUG, null, "Configuring holder {0} with factory configuration {1}",
+                                            new Object[] {holder, config}, null );
                                     config = getConfiguration( ca, config.getPid() );
                                     if ( checkBundleLocation( config, bundleContext.getBundle() ))
                                     {
@@ -148,6 +150,8 @@ public class ConfigurationSupport implements ConfigurationListener
                                 if (singleton != null)
                                 {
                                     singleton = getConfiguration( ca, singleton.getPid() );
+                                    Activator.log( LogService.LOG_DEBUG, null, "Configuring holder {0} with configuration {1}",
+                                            new Object[] {holder, singleton}, null );
                                     if ( singleton != null && checkBundleLocation( singleton, bundleContext.getBundle() ))
                                     {
                                         long changeCount = changeCounter.getChangeCount( singleton, false, -1 );
@@ -251,7 +255,7 @@ public class ConfigurationSupport implements ConfigurationListener
             {
                 switch (event.getType()) {
                 case ConfigurationEvent.CM_DELETED:
-                    if ( !configureComponentHolder( componentHolder ) )
+                    if ( factoryPid != null || !configureComponentHolder( componentHolder ) )
                     {
                         componentHolder.configurationDeleted( pid.getServicePid() );
                     }

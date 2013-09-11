@@ -497,7 +497,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
 
         ImmediateComponentHolder other = (ImmediateComponentHolder) object;
         return m_activator == other.m_activator
-                && getComponentMetadata().getName().equals(other.getComponentMetadata().getName());
+                && getName().equals(other.getName());
     }
     
    /**
@@ -505,14 +505,26 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
     * 
     * @return An integer which is a hash code value for this object.
     */
+   @Override
    public int hashCode()
    {
-       return getComponentMetadata().getName().hashCode();
+       return getName().hashCode();
+   }
+   
+   @Override
+   public String toString()
+   {
+       return "[ImmediateComponentHolder:" + getName() + "]";
+   }
+   
+   String getName()
+   {
+       return m_componentMetadata.getName();
    }
 
     //---------- internal
 
-   /**
+    /**
      * Returns all components from the map, optionally also removing them
      * from the map. If there are no components in the map, <code>null</code>
      * is returned.
