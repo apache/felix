@@ -980,17 +980,17 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     }
 
 
-    boolean initDependencyManagers()
+    private void initDependencyManagers()
     {
         if ( m_dependencyManagersInitialized )
         {
-            return true;
+            return;
         }
         final Bundle bundle = getBundle();
         if (bundle == null)
         {
             log( LogService.LOG_ERROR, "bundle shut down while trying to load implementation object class", null );
-            return false;
+            throw new IllegalStateException("bundle shut down while trying to load implementation object class");
         }
         Class<?> implementationObjectClass;
         try
@@ -1001,7 +1001,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         catch ( ClassNotFoundException e )
         {
             log( LogService.LOG_ERROR, "Could not load implementation object class", e );
-            return false;
+            throw new IllegalStateException("Could not load implementation object class");
         }
         m_componentMethods.initComponentMethods( m_componentMetadata, implementationObjectClass );
 
@@ -1010,7 +1010,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             dependencyManager.initBindingMethods( m_componentMethods.getBindMethods( dependencyManager.getName() ) );
         }
         m_dependencyManagersInitialized = true;
-        return true;
     }
 
     /**
