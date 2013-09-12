@@ -21,7 +21,6 @@ package org.apache.felix.dm.impl.index;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.dm.FilterIndex;
 import org.apache.felix.dm.impl.Logger;
@@ -36,16 +35,19 @@ import org.osgi.framework.ServiceReference;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class BundleContextInterceptor extends BundleContextInterceptorBase {
-	private static final String INDEX_LOG_BAD_PERFORMING_FILTERS = "org.apache.felix.dependencymanager.index.logbadperformingfilters";
-	private static long maxLookupTime = 0L;
+	protected static final String INDEX_LOG_TRESHOLD = "org.apache.felix.dm.index.log.treshold";
     private final ServiceRegistryCache m_cache;
-    private final boolean perfmon = "true".equals(System.getProperty(INDEX_LOG_BAD_PERFORMING_FILTERS));
-	private final Logger m_logger;
+    private final boolean m_perfmon = System.getProperty(INDEX_LOG_TRESHOLD) != null;
+	private Logger m_logger;
+	private long m_treshold;
 
-    public BundleContextInterceptor(ServiceRegistryCache cache, BundleContext context, Logger logger) {
+    public BundleContextInterceptor(ServiceRegistryCache cache, BundleContext context) {
         super(context);
         m_cache = cache;
-		m_logger = logger;
+		if (m_perfmon) {
+			m_treshold = Long.parseLong(System.getProperty(INDEX_LOG_TRESHOLD));
+			m_logger = new Logger(context);
+		}
     }
 
     public void addServiceListener(ServiceListener listener, String filter) throws InvalidSyntaxException {
@@ -82,7 +84,7 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
 
     public ServiceReference[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
     	long start = 0L;
-    	if (perfmon) {
+    	if (m_perfmon) {
     		start = System.currentTimeMillis();
     	}
         // first we ask the cache if there is an index for our request (class and filter combination)
@@ -100,11 +102,10 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
                     }
                 }
             }
-            if (perfmon) {
+            if (m_perfmon) {
 	        	long duration = System.currentTimeMillis() - start;
-	        	if (maxLookupTime < duration) {
-	        		maxLookupTime = duration;
-	        		m_logger.log(org.apache.felix.dm.impl.Logger.LOG_DEBUG, "new worst performing filter (" + duration + "ms.): " + clazz + " " + filter);
+	        	if (duration > m_treshold) {
+	        		m_logger.log(org.apache.felix.dm.impl.Logger.LOG_DEBUG, "Indexed filter exceeds lookup time treshold (" + duration + "ms.): " + clazz + " " + filter);
 	        	}
             }
             if (result == null || result.size() == 0) {
@@ -115,11 +116,10 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
         else {
             // if they don't know, we ask the real bundle context instead
             ServiceReference[] serviceReferences = m_context.getServiceReferences(clazz, filter);
-            if (perfmon) {
+            if (m_perfmon) {
 	        	long duration = System.currentTimeMillis() - start;
-	        	if (maxLookupTime < duration) {
-	        		maxLookupTime = duration;
-	        		System.out.println("new worst performing filter (" + duration + "ms.): " + clazz + " " + filter);
+	        	if (duration > m_treshold) {
+	        		m_logger.log(org.apache.felix.dm.impl.Logger.LOG_DEBUG, "Unindexed filter exceeds lookup time treshold (" + duration + "ms.): " + clazz + " " + filter);
 	        	}
             }
         	return serviceReferences;

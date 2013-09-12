@@ -36,7 +36,6 @@ import org.osgi.framework.ServiceRegistration;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ServiceRegistryCache implements ServiceListener/*, CommandProvider*/ {
-    private static final String INDEX_PERFLOG = "org.apache.felix.dependencymanager.index.logmissingindices";
 	private final List /* <FilterIndex> */ m_filterIndexList = new CopyOnWriteArrayList();
     private final BundleContext m_context;
     private final FilterIndexBundleContext m_filterIndexBundleContext;
@@ -45,16 +44,9 @@ public class ServiceRegistryCache implements ServiceListener/*, CommandProvider*
     private long m_arrayVersion = -1;
     private BundleContextInterceptor[] m_interceptors = null;
     private ServiceRegistration m_registration;
-    private boolean m_dumpUnIndexedFilters = "true".equals(System.getProperty(INDEX_PERFLOG));
-    private List m_unindexedFilters = new ArrayList();
-	private Logger m_logger;
     
     public ServiceRegistryCache(BundleContext context) {
         m_context = context;
-        // only obtain the logservice when we actually want to log something.
-        if (System.getProperty(INDEX_PERFLOG) != null) {
-        	m_logger = new Logger(context);
-        }
         m_filterIndexBundleContext = new FilterIndexBundleContext(m_context);
     }
     
@@ -98,7 +90,7 @@ public class ServiceRegistryCache implements ServiceListener/*, CommandProvider*
         synchronized (m_bundleContextInterceptorMap) {
             BundleContextInterceptor bundleContextInterceptor = (BundleContextInterceptor) m_bundleContextInterceptorMap.get(context);
             if (bundleContextInterceptor == null) {
-                bundleContextInterceptor = new BundleContextInterceptor(this, context, m_logger);
+                bundleContextInterceptor = new BundleContextInterceptor(this, context);
                 m_bundleContextInterceptorMap.put(context, bundleContextInterceptor);
                 m_currentVersion++;
                 // TODO figure out a good way to clean up bundle contexts that are no longer valid so they can be garbage collected
@@ -114,13 +106,6 @@ public class ServiceRegistryCache implements ServiceListener/*, CommandProvider*
             if (filterIndex.isApplicable(clazz, filter)) {
                 return filterIndex;
             }
-        }
-        if (m_dumpUnIndexedFilters) {
-        	String filterStr = clazz + ":" + filter;
-	        if (!m_unindexedFilters.contains(filterStr)) {
-	        	m_unindexedFilters.add(filterStr);
-	        	m_logger.log(Logger.LOG_DEBUG, "No filter index for " + filterStr);
-	        }
         }
         return null;
     }
