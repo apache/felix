@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http SSL Filter</name>
     <artifactId>org.apache.felix.http.sslfilter</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <build>
@@ -107,10 +107,4 @@
         </dependency>
     </dependencies>
 
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-3/org.apache.felix.http.sslfilter</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-3/org.apache.felix.http.sslfilter</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.http-3/org.apache.felix.http.sslfilter</url>
-  </scm>
 </project>
