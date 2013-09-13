@@ -29,7 +29,7 @@
     <name>Apache Felix Http Reactor</name>
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.http</artifactId>
-    <version>3</version>
+    <version>3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -48,10 +48,4 @@
         <module>samples/whiteboard</module>
         <module>samples/cometd</module>
     </modules>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-3</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-3</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.http-3</url>
-  </scm>
 </project>
