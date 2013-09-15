@@ -195,7 +195,7 @@ public class Logger implements ServiceListener {
         }
         // if the current logger is going away, release it and try to
         // find another one
-        else if ((event.getType() == ServiceEvent.UNREGISTERING) && m_logRef.equals(event.getServiceReference())) {
+        else if ((event.getType() == ServiceEvent.UNREGISTERING) && m_logRef != null && m_logRef.equals(event.getServiceReference())) {
             // Unget the service object.
             m_context.ungetService(m_logRef);
             // Try to get an existing log service.
