@@ -70,7 +70,7 @@ public interface ComponentHolder
      * @param pid The PID of the configuration used to configure the component.
      * @param props the property dictionary from the configuration.
      * @param changeCount change count of the configuration, or R4 imitation.
-     * @param targetedPid TODO
+     * @param targetedPid Targeted PID for the configuration
      * @return true if a new component is created for a factory PID, false if an existing factory pid configuration is updated or 
      * we have no factory pid
      */
@@ -78,14 +78,15 @@ public interface ComponentHolder
     
     /**
      * Change count (or fake R4 imitation)
+     * @param pid PID of the component we are interested in.
      * @return the last change count from a configurationUpdated call for the given pid.
      */
     long getChangeCount( String pid );
     
     /**
      * Returns the targeted PID used to configure this component
-     * @param pid TODO
-     * @return
+     * @param pid a targetedPID containing the service pid for the component desired (the rest of the targeted pid is ignored)
+     * @return the complete targeted pid actually used to configure the comonent.
      */
     TargetedPID getConfigurationTargetedPID(TargetedPID pid);
 

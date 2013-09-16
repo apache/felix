@@ -529,8 +529,8 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
      * @param configuration The configuration properties for the component from
      *                      the Configuration Admin Service or <code>null</code> if there is
      *                      no configuration or if the configuration has just been deleted.
-     * @param changeCount TODO
-     * @param targetedPID TODO
+     * @param changeCount Change count for the configuration
+     * @param targetedPID TargetedPID for the configuration
      */
     public void reconfigure( Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPID )
     {
