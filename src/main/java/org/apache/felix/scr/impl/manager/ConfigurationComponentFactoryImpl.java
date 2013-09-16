@@ -81,6 +81,7 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
             ((AbstractComponentManager)i.next()).enable( false );
         }
 
+        m_activated = true;
         return true;
     }
 

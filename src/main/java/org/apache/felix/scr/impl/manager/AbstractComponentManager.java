@@ -823,34 +823,32 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     final void disposeInternal( int reason )
     {
         log( LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null );
-        if ( m_activated )
-        {
-            doDeactivate( reason, true );
-        }
+        doDeactivate( reason, true );
         clear();
     }
          
-    void doDeactivate( int reason, boolean disable )
+    final void doDeactivate( int reason, boolean disable )
     {
         try
         {
             if ( !unregisterService() )
             {
                 log( LogService.LOG_DEBUG, "Component deactivation occuring on another thread", null );
-                //another thread is deactivating.
-                return;
             }
             obtainWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
             try
             {
-                m_activated = false;
-                deleteComponent( reason );
-                deactivateDependencyManagers();
-                if ( disable )
+                if ( m_activated )
                 {
-                    disableDependencyManagers();
+                    m_activated = false;
+                    deleteComponent( reason );
+                    deactivateDependencyManagers();
+                    if ( disable )
+                    {
+                        disableDependencyManagers();
+                    }
+                    unsetDependenciesCollected();
                 }
-                unsetDependenciesCollected();
             }
             finally
             {
