@@ -2,7 +2,7 @@
 PLUGIN=core/target/org.apache.felix.servicediagnostics.plugin-0.1.4-SNAPSHOT.jar
 
 REPO=$HOME/.m2/repository
-SCALA=$REPO/org/apache/servicemix/bundles/org.apache.servicemix.bundles.scala-library/2.10.0/org.apache.servicemix.bundles.scala-library-2.10.0.jar
+SCALA=$REPO/org/scala-lang/scala-library/2.10.0/scala-library-2.10.0.jar
 CLASSPATH=$SCALA:$REPO/org/apache/felix/org.apache.felix.main/4.0.3/org.apache.felix.main-4.0.3.jar:sample/target/servicediagnostics.sample-0.1.1-SNAPSHOT.jar
 #scala 
 java -classpath $CLASSPATH org.apache.felix.servicediagnostics.sample.FelixLauncher \
