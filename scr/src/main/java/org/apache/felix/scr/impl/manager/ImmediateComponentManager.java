@@ -118,7 +118,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     // also be overwritten
     protected boolean createComponent()
     {
-        if ( !isWriteLocked() )
+        if ( !isStateLocked() )
         {
             throw new IllegalStateException( "need write lock (createComponent)" );
         }
@@ -160,7 +160,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
 
     protected void deleteComponent( int reason )
     {
-        if ( !isWriteLocked() )
+        if ( !isStateLocked() )
         {
             throw new IllegalStateException( "need write lock (deleteComponent)" );
         }
@@ -574,34 +574,11 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             
             // reactivate the component to ensure it is provided with the
             // configuration data
-            if ( ( getState() & ( STATE_DISPOSED | STATE_DISABLED ) ) != 0 )
+            if ( m_disposed || !m_internalEnabled )
             {
                 // nothing to do for inactive components, leave this method
-                log( LogService.LOG_DEBUG, "Component can not be configured in state {0}", new Object[] { getState() }, null );
-                //m_internalEnabled is false, we don't need to worry about activation
-                updateTargets( getProperties() );
-                return;
-            }
-
-            //TODO wait for activation/deactivation to complete, then lock(?) or internal disable...
-            
-            // unsatisfied component and non-ignored configuration may change targets
-            // to satisfy references
-            if ( getState() == STATE_UNSATISFIED
-                    && !getComponentMetadata().isConfigurationIgnored() )
-            {
-                log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
-                //do not allow activation before all targets are reset
-                m_internalEnabled = false;
-                try
-                {
-                    updateTargets( getProperties() );
-                }
-                finally 
-                {
-                    m_internalEnabled = true;
-                }
-                activateInternal( getTrackingCount().get() );
+                log( LogService.LOG_DEBUG, "Component can not be activated due to configuration in state {0}", new Object[] { getState() }, null );
+                //enabling the component will set the target properties, do nothing now.
                 return;
             }
 
@@ -615,33 +592,51 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 //when a configuration arrives the properties will get set based on the new configuration.
                 return;
             }
-            if ( !modify() )
-            {
-                // SCR 112.7.1 - deactivate if configuration is deleted or no modified method declared
-                log( LogService.LOG_DEBUG, "Deactivating and Activating to reconfigure from configuration", null );
-                int reason = ( configuration == null ) ? ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED
-                        : ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_MODIFIED;
 
-                // FELIX-2368: cycle component immediately, reconfigure() is
-                //     called through ConfigurationListener API which itself is
-                //     called asynchronously by the Configuration Admin Service
-                deactivateInternal( reason, false, getTrackingCount().get() );
-                //do not allow reactivation before all targets are reset
-                m_internalEnabled = false;
-                try
+            // unsatisfied component and non-ignored configuration may change targets
+            // to satisfy references
+            obtainActivationWriteLock( "reconfigure" );
+            try
+            {
+                if ( getState() == STATE_UNSATISFIED
+                        && !getComponentMetadata().isConfigurationIgnored() )
                 {
+                    log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
                     updateTargets( getProperties() );
+                    releaseActivationWriteeLock( "reconfigure.unsatisfied" );
+                    activateInternal( getTrackingCount().get() );
+                    return;
                 }
-                finally 
+
+                if ( !modify() )
                 {
-                    m_internalEnabled = true;
+                    // SCR 112.7.1 - deactivate if configuration is deleted or no modified method declared
+                    log( LogService.LOG_DEBUG, "Deactivating and Activating to reconfigure from configuration", null );
+                    int reason = ( configuration == null ) ? ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED
+                            : ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_MODIFIED;
+
+                    // FELIX-2368: cycle component immediately, reconfigure() is
+                    //     called through ConfigurationListener API which itself is
+                    //     called asynchronously by the Configuration Admin Service
+                    releaseActivationWriteeLock( "reconfigure.modified.1" );;
+                    deactivateInternal( reason, false, getTrackingCount().get() );
+                    obtainActivationWriteLock( "reconfigure.deactivate.activate" );
+                    try
+                    {
+                        updateTargets( getProperties() );
+                    }
+                    finally
+                    {
+                        releaseActivationWriteeLock( "reconfigure.deactivate.activate" );;
+                    }
+                    activateInternal( getTrackingCount().get() );
                 }
-                activateInternal( getTrackingCount().get() );
             }
-        }
-        catch ( InterruptedException e )
-        {
-            Thread.currentThread().interrupt();
+            finally
+            {
+                //used if modify succeeds or if there's an exception.
+                releaseActivationWriteeLock( "reconfigure.end" );;
+            }
         }
         finally
         {
@@ -680,7 +675,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         // 4. call method (nothing to do when failed, since it has already been logged)
         //   (call with non-null default result to continue even if the
         //    modify method call failed)
-        obtainWriteLock( "ImmediateComponentManager.modify" );
+        obtainStateLock( "ImmediateComponentManager.modify" );
         try
         {
             //cf 112.5.12 where invoking modified method before updating target services is specified.
@@ -720,7 +715,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         }
         finally
         {
-            releaseWriteLock( "ImmediateComponentManager.modify" );
+            releaseStateLock( "ImmediateComponentManager.modify" );
         }
     }
 
@@ -818,7 +813,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                             null );
                     success = false;
                 }
-                obtainWriteLock( "ImmediateComponentManager.getService.1" );
+                obtainStateLock( "ImmediateComponentManager.getService.1" );
                 try
                 {
                     if ( m_componentContext == null )
@@ -837,7 +832,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 }
                 finally
                 {
-                    releaseWriteLock( "ImmediateComponentManager.getService.1" );
+                    releaseStateLock( "ImmediateComponentManager.getService.1" );
                 }
             }
             return success;
@@ -896,7 +891,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             // be kept (FELIX-3039)
             if ( useCount == 0 && !isImmediate() && !keepInstances() )
             {
-                obtainWriteLock( "ImmediateComponentManager.ungetService.1" );
+                obtainStateLock( "ImmediateComponentManager.ungetService.1" );
                 try
                 {
                     if ( m_useCount.get() == 0 )
@@ -907,7 +902,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                 }
                 finally
                 {
-                    releaseWriteLock( "ImmediateComponentManager.ungetService.1" );
+                    releaseStateLock( "ImmediateComponentManager.ungetService.1" );
                 }
             }
         }

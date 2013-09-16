@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.Reference;
@@ -105,7 +106,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     protected volatile boolean m_internalEnabled;
     
-    private volatile boolean m_disposed;
+    protected volatile boolean m_disposed;
     
     //service event tracking
     private int m_floor;
@@ -117,6 +118,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     private final Set<Integer> m_missing = new TreeSet<Integer>( );
 
     volatile boolean m_activated;
+    
+    protected final ReentrantReadWriteLock m_activationLock = new ReentrantReadWriteLock();
 
     /**
      * The constructor receives both the activator and the metadata
@@ -170,13 +173,23 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
-    final void obtainWriteLock( String source )
+    final long getLockTimeout()
+    {
+        BundleComponentActivator activator = getActivator();
+        if ( activator != null )
+        {
+            return activator.getConfiguration().lockTimeout();
+        }
+        return ScrConfiguration.DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
+    }
+
+    private void obtainLock( Lock lock, String source )
     {
         try
         {
-            if (!m_stateLock.tryLock( getLockTimeout(), TimeUnit.MILLISECONDS ) )
+            if (!lock.tryLock( getLockTimeout(), TimeUnit.MILLISECONDS ) )
             {
-            	dumpThreads();
+                dumpThreads();
                 throw new IllegalStateException( "Could not obtain lock" );
             }
         }
@@ -184,7 +197,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             try
             {
-                if (!m_stateLock.tryLock( getLockTimeout(), TimeUnit.MILLISECONDS ) )
+                if (!lock.tryLock( getLockTimeout(), TimeUnit.MILLISECONDS ) )
                 {
                     dumpThreads();
                     throw new IllegalStateException( "Could not obtain lock" );
@@ -199,28 +212,46 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             Thread.currentThread().interrupt();
         }
     }
-
-    long getLockTimeout()
+    
+    final void obtainActivationReadLock( String source )
     {
-        BundleComponentActivator activator = getActivator();
-        if ( activator != null )
-        {
-            return activator.getConfiguration().lockTimeout();
-        }
-        return ScrConfiguration.DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
+        obtainLock( m_activationLock.readLock(), source);
     }
 
-    final void releaseWriteLock( String source )
+    final void releaseActivationReadLock( String source )
+    {
+        m_activationLock.readLock().unlock();
+    }
+    
+    final void obtainActivationWriteLock( String source )
+    {
+        obtainLock( m_activationLock.writeLock(), source);
+    }
+
+    final void releaseActivationWriteeLock( String source )
+    {
+        if ( m_activationLock.getWriteHoldCount() > 0 )
+        {
+            m_activationLock.writeLock().unlock();
+        }
+    }
+    
+    final void obtainStateLock( String source )
+    {
+        obtainLock( m_stateLock, source );
+    }
+
+    final void releaseStateLock( String source )
     {
         m_stateLock.unlock();
     }
 
-    final boolean isWriteLocked()
+    final boolean isStateLocked()
     {
         return m_stateLock.getHoldCount() > 0;
     }
     
-    void dumpThreads()
+    final void dumpThreads()
     {
         try
         {
@@ -383,10 +414,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 activateInternal( m_trackingCount.get() );
             }
         }
-        catch ( InterruptedException e )
-        {
-            Thread.currentThread().interrupt();
-        }
         finally
         {
             if ( !async )
@@ -424,14 +451,38 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
-    CountDownLatch enableLatchWait() throws InterruptedException
+    /**
+     * Use a CountDownLatch as a non-reentrant "lock" that can be passed between threads.
+     * This lock assures that enable, disable, and reconfigure operations do not overlap.
+     * 
+     * @return the latch to count down when the operation is complete (in the calling or another thread)
+     * @throws InterruptedException
+     */
+    CountDownLatch enableLatchWait()
     {
         CountDownLatch enabledLatch;
         CountDownLatch newEnabledLatch;
         do
         {
             enabledLatch = m_enabledLatchRef.get();
-            enabledLatch.await();
+            boolean waited = false;
+            boolean interrupted = false;
+            while ( !waited )
+            {
+                try
+                {
+                    enabledLatch.await();
+                    waited = true;
+                }
+                catch ( InterruptedException e )
+                {
+                    interrupted = true;
+                }
+            }
+            if ( interrupted )
+            {
+                Thread.currentThread().interrupt();
+            }
             newEnabledLatch = new CountDownLatch(1);
         }
         while ( !m_enabledLatchRef.compareAndSet( enabledLatch, newEnabledLatch) );
@@ -465,10 +516,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, m_trackingCount.get() );
             }
             disableInternal();
-        }
-        catch ( InterruptedException e )
-        {
-            Thread.currentThread().interrupt();
         }
         finally
         {
@@ -758,24 +805,32 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             return;
         }
 
-        // Before creating the implementation object, we are going to
-        // test if all the mandatory dependencies are satisfied
-        if ( !verifyDependencyManagers() )
+        obtainActivationReadLock( "activateInternal" );
+        try
         {
-            log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
-            return;
+            // Before creating the implementation object, we are going to
+            // test if all the mandatory dependencies are satisfied
+            if ( !verifyDependencyManagers() )
+            {
+                log( LogService.LOG_DEBUG, "Not all dependencies satisfied, cannot activate", null );
+                return;
+            }
+
+            if ( !registerService() )
+            {
+                //some other thread is activating us, or we got concurrently deactivated.
+                return;
+            }
+
+
+            if ( ( isImmediate() || getComponentMetadata().isFactory() ) )
+            {
+                getServiceInternal();
+            }
         }
-
-        if ( !registerService() )
+        finally
         {
-            //some other thread is activating us, or we got concurrently deactivated.
-            return;
-        }
-
-
-        if ( ( isImmediate() || getComponentMetadata().isFactory() ) )
-        {
-            getServiceInternal();
+            releaseActivationReadLock( "activateInternal" );
         }
     }
 
@@ -794,7 +849,15 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
         // catch any problems from deleting the component to prevent the
         // component to remain in the deactivating state !
-        doDeactivate( reason, disable );
+        obtainActivationReadLock( "deactivateInternal" );
+        try
+        {
+            doDeactivate( reason, disable );
+        }
+        finally 
+        {
+            releaseActivationReadLock( "deactivateInternal" );
+        }
         if ( isFactory() )
         {
             clear();
@@ -835,7 +898,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             {
                 log( LogService.LOG_DEBUG, "Component deactivation occuring on another thread", null );
             }
-            obtainWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
+            obtainStateLock( "AbstractComponentManager.State.doDeactivate.1" );
             try
             {
                 if ( m_activated )
@@ -852,7 +915,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             }
             finally
             {
-                releaseWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
+                releaseStateLock( "AbstractComponentManager.State.doDeactivate.1" );
             }
         }
         catch ( Throwable t )
