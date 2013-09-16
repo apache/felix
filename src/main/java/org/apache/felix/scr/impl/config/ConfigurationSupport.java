@@ -513,7 +513,7 @@ public class ConfigurationSupport implements ConfigurationListener
      *
      * @param ca Configuration Admin service
      * @param pid Pid for desired configuration
-     * @param bundle TODO
+     * @param bundle bundle of the component we are configuring (used in targeted pids)
      * @return configuration with the specified Pid
      */
     public Configuration findSingletonConfiguration(final ConfigurationAdmin ca, final String pid, Bundle bundle)

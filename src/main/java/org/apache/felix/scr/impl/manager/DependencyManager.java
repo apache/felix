@@ -91,7 +91,7 @@ public class DependencyManager<S, T> implements Reference
     /**
      * Constructor that receives several parameters.
      * @param dependency An object that contains data about the dependency
-     * @param index TODO
+     * @param index index of the dependency manager in the metadata
      */
     DependencyManager( AbstractComponentManager<S> componentManager, ReferenceMetadata dependency, int index )
     {
@@ -272,7 +272,7 @@ public class DependencyManager<S, T> implements Reference
         {
             boolean success = m_dependencyMetadata.isOptional() || !getTracker().isEmpty();
             AtomicInteger trackingCount = new AtomicInteger( );
-            getTracker().getTracked( true, trackingCount );   //TODO activate method??
+            getTracker().getTracked( true, trackingCount );
             return success;
         }
 
@@ -1395,7 +1395,7 @@ public class DependencyManager<S, T> implements Reference
     /**
      * initializes a dependency. This method binds all of the service
      * occurrences to the instance object
-     * @param edgeInfo TODO
+     * @param edgeInfo Edge info for the combination of this component instance and this dependency manager.
      *
      * @return true if the dependency is satisfied and at least the minimum
      *      number of services could be bound. Otherwise false is returned.
@@ -1457,7 +1457,8 @@ public class DependencyManager<S, T> implements Reference
     /**
      * Revoke the given bindings. This method cannot throw an exception since
      * it must try to complete all that it can
-     * @param edgeInfo TODO
+     * @param componentInstance instance we are unbinding from.
+     * @param edgeInfo EdgeInfo for the combination of this component instance and this dependency manager.
      */
     void close( S componentInstance, EdgeInfo edgeInfo )
     {
@@ -1534,10 +1535,10 @@ public class DependencyManager<S, T> implements Reference
      *
      *
      *
-     * @param componentInstance
+     * @param componentInstance instance we are binding to
      * @param refPair the service reference, service object tuple.
-     * @param trackingCount
-     * @param edgeInfo TODO
+     * @param trackingCount service event counter for this service.
+     * @param edgeInfo EdgeInfo for the combination of this instance and this dependency manager.
      * @return true if the service should be considered bound. If no bind
      *      method is found or the method call fails, <code>true</code> is
      *      returned. <code>false</code> is only returned if the service must
@@ -1587,9 +1588,9 @@ public class DependencyManager<S, T> implements Reference
     /**
      * Calls the updated method.
      *
-     * @param componentInstance
+     * @param componentInstance instance we are calling updated on.
      * @param refPair A service reference corresponding to the service whose service
-     * @param edgeInfo TODO
+     * @param edgeInfo EdgeInfo for the comibination of this instance and this dependency manager.
      */
     void invokeUpdatedMethod( S componentInstance, final RefPair<T> refPair, int trackingCount, EdgeInfo info )
     {
@@ -1669,10 +1670,10 @@ public class DependencyManager<S, T> implements Reference
      * to the component this method has no effect and just returns
      * <code>true</code>.
      *
-     * @param componentInstance
-     * @param refPair A service reference corresponding to the service that will be
-     * @param trackingCount
-     * @param info TODO
+     * @param componentInstance instance we are unbinding from
+     * @param refPair A service reference, service pair that will be unbound
+     * @param trackingCount service event count for this reference
+     * @param info EdgeInfo for the combination of this instance and this dependency manager
      */
     void invokeUnbindMethod( S componentInstance, final RefPair<T> refPair, int trackingCount, EdgeInfo info )
     {
@@ -1680,8 +1681,12 @@ public class DependencyManager<S, T> implements Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
-            //TODO needs sync on getTracker().tracked()
-            if (info.outOfRange( trackingCount ) )
+            boolean outOfRange;
+            synchronized ( m_tracker.tracked() )
+            {
+                outOfRange = info.outOfRange( trackingCount );
+            }
+            if ( outOfRange )
             {
                 //wait for unbinds to complete
                 if (info.getCloseLatch() != null)
@@ -1906,8 +1911,19 @@ public class DependencyManager<S, T> implements Reference
             {
                 m_componentManager.log( LogService.LOG_ERROR, "Invalid syntax in target property for dependency {0} to {1}", new Object[]
                         {getName(), target}, null );
-                // TODO this is an error, how do we recover?
-                return; //avoid an NPE
+                
+                //create a filter that will never be satisfied
+                filterString = "(component.id=-1)";
+                try
+                {
+                    m_targetFilter = bundleContext.createFilter( filterString );
+                }
+                catch ( InvalidSyntaxException e )
+                {
+                    //this should not happen
+                    return;
+                }
+
             }
         }
         else
