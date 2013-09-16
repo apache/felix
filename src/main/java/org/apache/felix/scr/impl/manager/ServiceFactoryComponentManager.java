@@ -88,6 +88,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
             log( LogService.LOG_DEBUG, "Unset implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
         }
         serviceContexts.clear();
+        clearServiceProperties();
     }
 
 

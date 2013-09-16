@@ -1680,6 +1680,7 @@ public class DependencyManager<S, T> implements Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
+            //TODO needs sync on getTracker().tracked()
             if (info.outOfRange( trackingCount ) )
             {
                 //wait for unbinds to complete
@@ -1885,7 +1886,13 @@ public class DependencyManager<S, T> implements Reference
         }
 
         final ServiceTracker<T, RefPair<T>> oldTracker = m_tracker;
-        SortedMap<ServiceReference<T>, RefPair<T>> refMap = unregisterServiceListener();
+        AtomicInteger trackingCount = new AtomicInteger();
+        SortedMap<ServiceReference<T>, RefPair<T>> refMap = unregisterServiceListener( trackingCount );
+        if ( trackingCount.get() != -1 )
+        {
+            //wait for service events to complete before processing initial set from new tracker.
+            m_componentManager.waitForTracked( trackingCount.get() );
+        }
         m_componentManager.log( LogService.LOG_DEBUG, "Setting target property for dependency {0} to {1}", new Object[]
                 {getName(), target}, null );
         BundleContext bundleContext = m_componentManager.getBundleContext();
@@ -1972,13 +1979,12 @@ public class DependencyManager<S, T> implements Reference
         return customizer;
     }
 
-    SortedMap<ServiceReference<T>, RefPair<T>> unregisterServiceListener()
+    SortedMap<ServiceReference<T>, RefPair<T>> unregisterServiceListener( AtomicInteger trackingCount )
     {
         SortedMap<ServiceReference<T>, RefPair<T>> refMap;
         ServiceTracker<T, RefPair<T>> tracker = m_tracker;
         if ( tracker != null )
         {
-            AtomicInteger trackingCount = new AtomicInteger( );
             refMap = tracker.close( trackingCount );
             m_tracker = null;
             m_componentManager.log( LogService.LOG_DEBUG, "unregistering service listener for dependency {0}", new Object[]
@@ -1989,6 +1995,7 @@ public class DependencyManager<S, T> implements Reference
             refMap = new TreeMap<ServiceReference<T>, RefPair<T>>(Collections.reverseOrder());
             m_componentManager.log( LogService.LOG_DEBUG, " No existing service listener to unregister for dependency {0}", new Object[]
                     {getName()}, null );
+            trackingCount.set( -1 );
         }
 //        m_registered = false;
         return refMap;

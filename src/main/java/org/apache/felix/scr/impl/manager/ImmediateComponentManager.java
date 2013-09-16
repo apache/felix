@@ -56,7 +56,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     private volatile ComponentContextImpl<S> m_componentContext;
 
     // the component holder responsible for managing this component
-    private ComponentHolder m_componentHolder;
+    private final ComponentHolder m_componentHolder;
 
     // optional properties provided in the ComponentFactory.newInstance method
     private Dictionary<String, Object> m_factoryProperties;
@@ -167,13 +167,17 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
         if ( m_componentContext != null )
         {
             m_useCount.set( 0 );
-            m_componentContext.setImplementationAccessible( false );
             disposeImplementationObject( m_componentContext, reason );
             m_componentContext = null;
             log( LogService.LOG_DEBUG, "Unset and deconfigured implementation object for component {0} in deleteComponent for reason {1}", new Object[] { getName(), REASONS[ reason ] },  null );
-            m_properties = null;
-            m_serviceProperties = null;
+            clearServiceProperties();
         }
+    }
+
+    void clearServiceProperties()
+    {
+        m_properties = null;
+        m_serviceProperties = null;
     }
 
 
@@ -324,6 +328,7 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
     protected void disposeImplementationObject( ComponentContextImpl<S> componentContext,
             int reason )
     {
+        componentContext.setImplementationAccessible( false );
         S implementationObject = componentContext.getImplementationObject( false );
 
         // 1. Call the deactivate method, if present
@@ -566,6 +571,9 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             // clear the current properties to force using the configuration data
             m_properties = null;
 
+            
+            //TODO wait for activation/deactivation to complete, then lock(?) or internal disable...
+            
             // unsatisfied component and non-ignored configuration may change targets
             // to satisfy references
             if ( getState() == STATE_UNSATISFIED
