@@ -78,7 +78,7 @@ public class ServiceFactoryComponentManager<S> extends ImmediateComponentManager
      */
     protected void deleteComponent( int reason )
     {
-        if ( !isWriteLocked() )
+        if ( !isStateLocked() )
         {
             throw new IllegalStateException( "need write lock (deleteComponent)" );
         }
