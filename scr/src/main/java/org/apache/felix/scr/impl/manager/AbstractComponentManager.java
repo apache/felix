@@ -264,6 +264,11 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
+    /**
+     * We effectively maintain the set of completely processed service event tracking counts.  This method waits for all events prior 
+     * to the parameter tracking count to complete, then returns.  See further documentation in EdgeInfo.
+     * @param trackingCount
+     */
     void waitForTracked( int trackingCount )
     {
         m_missingLock.lock();
@@ -785,7 +790,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             disposeInternal( reason );
             return;
         }
-        m_activated = false;
         log( LogService.LOG_DEBUG, "Deactivating component", null );
 
         // catch any problems from deleting the component to prevent the
@@ -821,7 +825,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         log( LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null );
         if ( m_activated )
         {
-            m_activated = false;
             doDeactivate( reason, true );
         }
         clear();
@@ -840,6 +843,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             obtainWriteLock( "AbstractComponentManager.State.doDeactivate.1" );
             try
             {
+                m_activated = false;
                 deleteComponent( reason );
                 deactivateDependencyManagers();
                 if ( disable )
@@ -1090,7 +1094,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         if ( m_activator != null )
         {
             m_activator.unregisterComponentId( this );
-//            m_activator = null;
         }
     }
 
@@ -1270,9 +1273,10 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     private void disableDependencyManagers()
     {
         log( LogService.LOG_DEBUG, "Disabling dependency managers", null);
+        AtomicInteger trackingCount = new AtomicInteger();
         for ( DependencyManager<S, ?> dm: getDependencyManagers() )
         {
-            dm.unregisterServiceListener();
+            dm.unregisterServiceListener( trackingCount );
         }
     }
 

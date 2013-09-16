@@ -20,6 +20,29 @@ package org.apache.felix.scr.impl.manager;
 
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * EdgeInfo holds information about the service event tracking counts for creating (open) and disposing (close) 
+ * implementation object instances per dependency manager.  These need to be maintained for each implementation object instance
+ * because each instance (for a service factory) will have different sets of service references available.  These need to be 
+ * maintained for each dependency manager because the open/close tracking counts are obtained when the set of current
+ * service references is obtained, using a lock internal to the service tracker.
+ * 
+ *
+ * The information in the open/close counts is used in the outOfRange method which determines if a service event tracking count 
+ * occurred before the "open" event (in which case it is reflected in the open set already and does not need to be processed separately)
+ * or after the "close" event (in which case it is reflected in the close set already).
+ * 
+ * The open latch is used to make sure that elements in the open set are completely processed before updated or unbind events
+ *  are processed
+ * The close latch is used to make sure that unbind events that are out of range wait for the close to complete before returning; 
+ * in this case the unbind is happening in the "close" thread rather than the service event thread, so we wait for the close to complete 
+ * so that when the service event returns the unbind will actually have been completed.
+ * 
+ * Related to this functionality is the missing tracking in AbstractComponentManager.  This is used on close of an instance to make 
+ * sure all service events occuring before close starts complete processing before the close takes action.
+ *
+ */
+
 class EdgeInfo
 {
     private int open = -1;
@@ -41,6 +64,7 @@ class EdgeInfo
     {
         this.openLatch = latch;
     }
+    
     public CountDownLatch getCloseLatch()
     {
         return closeLatch;
