@@ -186,19 +186,20 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
         int index = dep.getConstructorParameterIndex();
 
         if (callbacks == null && field == null  && index == -1) {
-            throw new ConfigurationException("A service requirement requires at least binding methods, " +
-            		"a field or a constructor parameter");
+            throw new ConfigurationException("A service dependency requires at least binding methods, " +
+            		"a field or a constructor parameter " + getDependencyIdentifier(dep));
         }
 
         for (int i = 0; callbacks != null && i < callbacks.length; i++) {
             MethodMetadata[] mets = manipulation.getMethods(callbacks[i].getMethodName());
             if (mets.length == 0) {
-                debug("A requirement callback " + callbacks[i].getMethodName() + " does not exist in the implementation class, will try the super classes");
+                debug("A dependency callback " + callbacks[i].getMethodName() + " does not exist in the " +
+                        "implementation class, will try the super classes " + getDependencyIdentifier(dep));
             } else {
                 if (mets[0].getMethodArguments().length > 2) {
                     throw new ConfigurationException("Requirement Callback : A requirement callback "
                             + callbacks[i].getMethodName()
-                            + " must have 0, 1 or 2 arguments");
+                            + " must have 0, 1 or 2 arguments " + getDependencyIdentifier(dep));
                 }
 
                 callbacks[i].setArgument(mets[0].getMethodArguments());
@@ -214,7 +215,9 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                            || mets[0].getMethodArguments()[1].equals(Dictionary.class.getName()) // callback with (service object, service properties in a dictionary)
                            || mets[0].getMethodArguments()[1].equals(Map.class.getName()))) { // callback with (service object, service properties in a map)
                         String message =
-                                "The requirement callback " + callbacks[i].getMethodName() + " must have a ServiceReference, a Dictionary or a Map as the second argument";
+                                "The requirement callback " + callbacks[i].getMethodName() + " must have a " +
+                                        "ServiceReference, a Dictionary or a Map as the second argument " +
+                                        getDependencyIdentifier(dep);
                         throw new ConfigurationException(message);
                     }
                     setSpecification(dep, mets[0].getMethodArguments()[0], false); // Just warn if a mismatch is discovered.
@@ -228,12 +231,13 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             if (meta == null) {
                 throw new ConfigurationException("Requirement Callback : A requirement field "
                         + field
-                        + " does not exist in the implementation class");
+                        + " does not exist in the implementation class " + getDependencyIdentifier(dep));
             }
             String type = meta.getFieldType();
             if (type.endsWith("[]")) {
                 if (dep.isProxy()) {
-                    info("Arrays cannot be used for proxied dependencies - Disabling the proxy mode");
+                    info("Arrays cannot be used for dependencies using proxies - Disabling the proxy mode " +
+                            getDependencyIdentifier(dep));
                     dep.setProxy(false);
                 }
                 // Set the dependency to multiple
@@ -245,7 +249,8 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             } else if (type.equals(Vector.class.getName())) {
                 dep.setType(VECTOR);
                 if (dep.isProxy()) {
-                    warn("Vectors cannot be used for proxied dependencies - Disabling the proxy mode");
+                    warn("Vectors cannot be used for dependencies using proxies - Disabling the proxy mode " +
+                            getDependencyIdentifier(dep));
                     dep.setProxy(false);
                 }
                 type = null;
@@ -256,7 +261,8 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                 if (dep.isAggregate()) {
                     throw new ConfigurationException("A required service is not correct : the field "
                             + meta.getFieldName()
-                            + " must be an array to support aggregate injections");
+                            + " must be an array or a collection to support aggregate injections " +
+                            getDependencyIdentifier(dep));
                 }
             }
             setSpecification(dep, type, true); // Throws an exception if the field type mismatch.
@@ -265,7 +271,8 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
         // Constructor parameter
         if (index != -1) {
         	if (! dep.isProxy()) {
-        		throw new ConfigurationException("Services injected into constructor must be proxied");
+        		throw new ConfigurationException("Services injected into constructor must use proxies " +
+                        getDependencyIdentifier(dep));
         	}
 
     		MethodMetadata[] cts = manipulation.getConstructors();
@@ -274,12 +281,14 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
     		if (cts.length > 0  && cts[0].getMethodArguments().length > index) {
         		String type = cts[0].getMethodArguments()[index];
         		if (type.endsWith("[]")) {
-                    throw new ConfigurationException("Services injected into constructor cannot be arrays");
+                    throw new ConfigurationException("Services injected into constructor cannot be arrays " +
+                            getDependencyIdentifier(dep));
                 } else if (type.equals(List.class.getName()) || type.equals(Collection.class.getName())) {
                     dep.setType(LIST);
                     type = null;
                 } else if (type.equals(Vector.class.getName())) {
-                	throw new ConfigurationException("Services injected into constructor cannot be Vectors");
+                	throw new ConfigurationException("Services injected into constructor cannot be Vectors " +
+                            getDependencyIdentifier(dep));
                 } else if (type.equals(Set.class.getName())) {
                     dep.setType(SET);
                     type = null;
@@ -287,34 +296,29 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                     if (dep.isAggregate()) {
                         throw new ConfigurationException("A required service is not correct : the constructor parameter "
                                 + index
-                                + " must be an aggregate type to support aggregate injections");
+                                + " must be an aggregate type to support aggregate injections " +
+                                getDependencyIdentifier(dep));
                     }
                 }
                 setSpecification(dep, type, true); // Throws an exception if the field type mismatch.
         	} else {
         		throw new ConfigurationException("Cannot determine the specification of the dependency " + index +
-        				", please use the specification attribute");
+        				", please use the specification attribute " + getDependencyIdentifier(dep));
         	}
         }
 
         // At this point we must have discovered the specification, it it's null, throw a ConfiguraitonException
         if (dep.getSpecification() == null) {
-            String id = dep.getId();
-            if (id == null) {
-                dep.getField();
-            }
-            if (id == null  && dep.getCallbacks() != null  && dep.getCallbacks().length > 0) {
-                id = dep.getCallbacks()[0].getMethodName();
-            }
-            throw new ConfigurationException("Cannot determine the targeted service specification for the dependency '" +
-                    id + "'");
+            String identifier = getDependencyIdentifier(dep);
+            throw new ConfigurationException("Cannot determine the targeted service specification for the dependency " +
+                    identifier);
         }
 
         // Disable proxy on scalar dependency targeting non-interface specification
         if (! dep.isAggregate()  && dep.isProxy()) {
         	if (! dep.getSpecification().isInterface()) {
         		warn("Proxies cannot be used on service dependency targeting non interface " +
-        				"service specification " + dep.getSpecification().getName());
+        				"service specification " + getDependencyIdentifier(dep));
         		dep.setProxy(false);
         	}
         }
@@ -327,6 +331,40 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
         // Check that all required info are set
         return dep.getSpecification() != null;
+    }
+
+    /**
+     * Builds a description of this dependency to help the user to identify it. IT's not related to the Dependency
+     * Description, it's just a string containing dependency information to spot it easily in the code.
+     * @param dep the dependency
+     * @return the identifier containing (if defined) the id, the specification, the field and the callback.
+     * @since 1.10.1
+     */
+    public static String getDependencyIdentifier(Dependency dep) {
+        StringBuilder identifier = new StringBuilder("{");
+        if (dep.getId() != null) {
+            identifier.append("id=").append(dep.getId());
+        }
+        if (dep.getField() != null) {
+            if (identifier.length() > 1) {
+                identifier.append(", ");
+            }
+            identifier.append("field=").append(dep.getField());
+        }
+        if (dep.getCallbacks() != null  && dep.getCallbacks().length > 0) {
+            if (identifier.length() > 1) {
+                identifier.append(", ");
+            }
+            identifier.append("method=").append(dep.getCallbacks()[0].getMethodName());
+        }
+        if (dep.getSpecification() != null) {
+            if (identifier.length() > 1) {
+                identifier.append(", ");
+            }
+            identifier.append("specification=").append(dep.getSpecification().getName());
+        }
+        identifier.append("}");
+        return identifier.toString();
     }
 
     /**
@@ -348,7 +386,8 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                 			id = Integer.toString(dep.getConstructorParameterIndex());
                 		}
                 	}
-                    throw new ConfigurationException("Cannot discover the required specification for " + id);
+                    throw new ConfigurationException("Cannot discover the required specification for " +
+                            getDependencyIdentifier(dep));
                 } else {
                     // If the specification is different, warn that we will override it.
                     info("Cannot discover the required specification for " + dep.getField());
@@ -362,7 +401,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                             + className
                             + "] and the specified (or already discovered)  service interface ["
                             + dep.getSpecification().getName()
-                            + "] are not the same");
+                            + "] are not the same " + getDependencyIdentifier(dep));
                     } else {
                         // If the specification is different, warn that we will override it.
                         warn("["
@@ -371,7 +410,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                             + className
                             + "] and the required service interface ["
                             + dep.getSpecification()
-                            + "] are not the same");
+                            + "] are not the same " + getDependencyIdentifier(dep));
                     }
                 }
 
@@ -380,7 +419,8 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                     dep.setSpecification(bundle.loadClass(className));
                 } catch (ClassNotFoundException e) {
                     throw new ConfigurationException("The required service interface (" + className
-                            + ") cannot be loaded from bundle " + bundle.getBundleId(), e);
+                            + ") cannot be loaded from bundle " + bundle.getBundleId() + " " +
+                            getDependencyIdentifier(dep), e);
                 }
             }
         }
