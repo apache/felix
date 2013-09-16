@@ -572,6 +572,17 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
             m_properties = null;
 
             
+            // reactivate the component to ensure it is provided with the
+            // configuration data
+            if ( ( getState() & ( STATE_DISPOSED | STATE_DISABLED ) ) != 0 )
+            {
+                // nothing to do for inactive components, leave this method
+                log( LogService.LOG_DEBUG, "Component can not be configured in state {0}", new Object[] { getState() }, null );
+                //m_internalEnabled is false, we don't need to worry about activation
+                updateTargets( getProperties() );
+                return;
+            }
+
             //TODO wait for activation/deactivation to complete, then lock(?) or internal disable...
             
             // unsatisfied component and non-ignored configuration may change targets
@@ -591,17 +602,6 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
                     m_internalEnabled = true;
                 }
                 activateInternal( getTrackingCount().get() );
-                return;
-            }
-
-            // reactivate the component to ensure it is provided with the
-            // configuration data
-            if ( ( getState() & ( STATE_DISPOSED | STATE_DISABLED ) ) != 0 )
-            {
-                // nothing to do for inactive components, leave this method
-                log( LogService.LOG_DEBUG, "Component can not be configured in state {0}", new Object[] { getState() }, null );
-                //m_internalEnabled is false, we don't need to worry about activation
-                updateTargets( getProperties() );
                 return;
             }
 
