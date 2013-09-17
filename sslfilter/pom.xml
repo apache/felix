@@ -31,6 +31,12 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/sslfilter</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/sslfilter</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/http/sslfilter/</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>

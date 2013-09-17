@@ -32,6 +32,12 @@
     <version>3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/http/</url>
+    </scm>
+
     <modules>
         <module>api</module>
         <module>base</module>

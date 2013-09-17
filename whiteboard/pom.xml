@@ -31,6 +31,12 @@
     <version>2.2.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/whiteboard</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/whiteboard</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/http/whiteboard/</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
