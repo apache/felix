@@ -21,8 +21,10 @@ package org.apache.felix.ipojo.runtime.core.test.components;
 
 import org.apache.felix.ipojo.annotations.*;
 import org.apache.felix.ipojo.runtime.core.test.services.CheckService;
+import org.apache.felix.ipojo.runtime.core.test.services.Enhanced;
 import org.apache.felix.ipojo.runtime.core.test.services.FooService;
 
+import java.util.Dictionary;
 import java.util.Map;
 import java.util.Properties;
 
@@ -33,21 +35,24 @@ import java.util.Properties;
 @Provides
 public class FooConsumer implements CheckService {
 
-    @Requires(id= "foo", policy = "dynamic-priority")
+    @Requires(id= "foo", policy = "dynamic-priority", proxy = false)
     private FooService foo;
 
     private Map<String, Object> props;
 
     @Override
     public boolean check() {
-        return foo != null;
+        return foo.foo();
     }
 
     @Override
-    public Properties getProps() {
+    public Dictionary getProps() {
         Properties properties =  new Properties();
         properties.put("props", props);
         properties.put("grade", foo.getGrade());
+        if (foo instanceof Enhanced) {
+            properties.put("enhanced", ((Enhanced) foo).enhance());
+        }
         return properties;
     }
 

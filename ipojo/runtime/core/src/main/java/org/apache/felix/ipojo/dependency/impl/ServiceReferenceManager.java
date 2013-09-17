@@ -20,6 +20,7 @@
 package org.apache.felix.ipojo.dependency.impl;
 
 import org.apache.felix.ipojo.Factory;
+import org.apache.felix.ipojo.dependency.interceptors.ServiceBindingInterceptor;
 import org.apache.felix.ipojo.dependency.interceptors.ServiceRankingInterceptor;
 import org.apache.felix.ipojo.dependency.interceptors.ServiceTrackingInterceptor;
 import org.apache.felix.ipojo.dependency.interceptors.TransformedServiceReference;
@@ -71,10 +72,20 @@ public class ServiceReferenceManager implements TrackerCustomizer {
      */
     private ServiceRankingInterceptor m_rankingInterceptor;
     /**
-     * Service interceptor tracker.
+     * Service Ranking Interceptor trackers.
      */
     private Tracker m_rankingInterceptorTracker;
+
+    /**
+     * Service Tracking Interceptor trackers.
+     */
     private Tracker m_trackingInterceptorTracker;
+
+    /**
+     * Service Binding Interceptor trackers.
+     */
+    private Tracker m_bindingInterceptorTracker;
+
     /**
      * The set of tracking interceptors.
      * TODO this set should be sorted according to the OSGi ranking policy.
@@ -82,6 +93,13 @@ public class ServiceReferenceManager implements TrackerCustomizer {
      */
     private LinkedList<ServiceTrackingInterceptor> m_trackingInterceptors = new
             LinkedList<ServiceTrackingInterceptor>();
+
+    /**
+     * The set of binding interceptors.
+     * TODO this set should be sorted according to the OSGi ranking policy.
+     */
+    private LinkedList<ServiceBindingInterceptor> m_bindingInterceptors = new
+            LinkedList<ServiceBindingInterceptor>();
 
     /**
      * Creates the service reference manager.
@@ -191,6 +209,42 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                     }
                 });
         m_rankingInterceptorTracker.open();
+
+        m_bindingInterceptorTracker = new Tracker(m_dependency.getBundleContext(),
+                ServiceBindingInterceptor.class.getName(),
+                new TrackerCustomizer() {
+
+                    public boolean addingService(ServiceReference reference) {
+                        return DependencyProperties.match(reference, m_dependency);
+                    }
+
+                    public void addedService(ServiceReference reference) {
+                        ServiceBindingInterceptor interceptor = (ServiceBindingInterceptor) m_bindingInterceptorTracker
+                                .getService(reference);
+                        if (interceptor != null) {
+                            addBindingInterceptor(interceptor);
+                        } else {
+                            m_dependency.getComponentInstance().getFactory().getLogger().log(Log.ERROR,
+                                    "Cannot retrieve the interceptor object from service reference " + reference
+                                            .getProperty(Constants.SERVICE_ID) + " - " + reference.getProperty
+                                            (Factory.INSTANCE_NAME_PROPERTY));
+                        }
+                    }
+
+                    public void modifiedService(ServiceReference reference, Object service) {
+                        // Not supported.
+                    }
+
+                    public void removedService(ServiceReference reference, Object service) {
+                        if (service != null && service instanceof ServiceBindingInterceptor &&
+                                m_bindingInterceptors.contains(service)
+                                ) {
+                            removeBindingInterceptor((ServiceBindingInterceptor) service);
+                        }
+                    }
+                }
+        );
+        m_bindingInterceptorTracker.open();
     }
 
     private void addTrackingInterceptor(ServiceTrackingInterceptor interceptor) {
@@ -218,6 +272,53 @@ public class ServiceReferenceManager implements TrackerCustomizer {
             m_dependency.releaseWriteLockIfHeld();
         }
         m_dependency.onChange(changeset);
+    }
+
+    private void addBindingInterceptor(ServiceBindingInterceptor interceptor) {
+        // A new interceptor arrives, open it.
+        // Binding interceptor cannot modify existing bindings.
+        try {
+            m_dependency.acquireWriteLockIfNotHeld();
+            m_bindingInterceptors.add(interceptor);
+            interceptor.open(m_dependency);
+        } finally {
+            m_dependency.releaseWriteLockIfHeld();
+        }
+    }
+
+    private void removeBindingInterceptor(ServiceBindingInterceptor interceptor) {
+        try {
+            m_dependency.acquireWriteLockIfNotHeld();
+            m_bindingInterceptors.remove(interceptor);
+            interceptor.close(m_dependency);
+        } finally {
+            m_dependency.releaseWriteLockIfHeld();
+        }
+    }
+
+    public Object weavingServiceBinding(DependencyModel.ServiceBindingHolder sbh) {
+        Object svc = sbh.service;
+        try {
+            m_dependency.acquireReadLockIfNotHeld();
+            for (ServiceBindingInterceptor interceptor : m_bindingInterceptors) {
+                // Interceptor are not allowed to return null.
+                svc = interceptor.getService(m_dependency, sbh.reference, svc);
+            }
+        } finally {
+            m_dependency.releaseReadLockIfHeld();
+        }
+        return svc;
+    }
+
+    public void unweavingServiceBinding(DependencyModel.ServiceBindingHolder sbh) {
+        try {
+            m_dependency.acquireReadLockIfNotHeld();
+            for (ServiceBindingInterceptor interceptor : m_bindingInterceptors) {
+                interceptor.ungetService(m_dependency, sbh.reference);
+            }
+        } finally {
+            m_dependency.releaseReadLockIfHeld();
+        }
     }
 
     private ChangeSet computeChangesInMatchingServices() {

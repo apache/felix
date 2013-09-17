@@ -697,7 +697,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                     } else {
                         //  Use a reflective construction to avoid class cast exception. This method allows setting the component type.
                         Object[] objs = (Object[]) Array.newInstance(getSpecification(), refs.length);
-                        for (int i = 0; refs != null && i < refs.length; i++) {
+                        for (int i = 0; i < refs.length; i++) {
                             ServiceReference ref = refs[i];
                             objs[i] = getService(ref);
                         }

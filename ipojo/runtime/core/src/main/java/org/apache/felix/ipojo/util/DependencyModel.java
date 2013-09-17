@@ -128,7 +128,7 @@ public abstract class DependencyModel {
      * This map stores service object, and so is able to handle
      * iPOJO custom policies.
      */
-    private Map<ServiceReference, Object> m_serviceObjects = new HashMap<ServiceReference, Object>();
+    private Map<ServiceReference, ServiceBindingHolder> m_serviceObjects = new HashMap<ServiceReference, ServiceBindingHolder>();
     /**
      * The current list of bound services.
      */
@@ -269,15 +269,16 @@ public abstract class DependencyModel {
      * The method is called while holding the exclusive lock.
      */
     private void ungetAllServices() {
-        for (Map.Entry<ServiceReference, Object> entry : m_serviceObjects.entrySet()) {
+        for (Map.Entry<ServiceReference, ServiceBindingHolder> entry : m_serviceObjects.entrySet()) {
             ServiceReference ref = entry.getKey();
-            Object svc = entry.getValue();
+            ServiceBindingHolder sbh = entry.getValue();
             if (m_tracker != null) {
                 m_tracker.ungetService(ref);
             }
-            if (svc instanceof IPOJOServiceFactory) {
-                ((IPOJOServiceFactory) svc).ungetService(m_instance, svc);
+            if (sbh.factory != null) {
+                sbh.factory.ungetService(m_instance, sbh.service);
             }
+            m_serviceReferenceManager.unweavingServiceBinding(sbh);
         }
         m_serviceObjects.clear();
     }
@@ -790,12 +791,12 @@ public abstract class DependencyModel {
             for (ServiceReference ref : arrivals) {
                 onServiceArrival(ref);
                 // Notify service binding to listeners
-                notifyListeners(DependencyEventType.BINDING, ref, m_serviceObjects.get(ref));
+                notifyListeners(DependencyEventType.BINDING, ref, m_serviceObjects.get(ref).service);
             }
             for (ServiceReference ref : departures) {
                 onServiceDeparture(ref);
                 // Notify service unbinding to listeners
-                notifyListeners(DependencyEventType.UNBINDING, ref, m_serviceObjects.get(ref));
+                notifyListeners(DependencyEventType.UNBINDING, ref, m_serviceObjects.get(ref).service);
             }
         } finally {
             releaseReadLockIfHeld();
@@ -912,6 +913,12 @@ public abstract class DependencyModel {
             return null;
         }
 
+        // If we already have the service object, just return it.
+        if (m_serviceObjects.containsKey(ref)) {
+            return m_serviceObjects.get(ref).service;
+        }
+
+        ServiceBindingHolder holder = null;
         Object svc = m_tracker.getService(ref);
         IPOJOServiceFactory factory = null;
 
@@ -919,20 +926,23 @@ public abstract class DependencyModel {
             factory = (IPOJOServiceFactory) svc;
             svc = factory.getService(m_instance);
         }
+        holder = new ServiceBindingHolder(ref, factory, svc);
+
+        svc = m_serviceReferenceManager.weavingServiceBinding(holder);
 
         if (store) {
             try {
                 acquireWriteLockIfNotHeld();
-                if (factory != null) {
-                    m_serviceObjects.put(ref, factory);
+                // The service object may have been modified by the interceptor, update the holder
+                if (svc != holder.service) {
+                    m_serviceObjects.put(ref, new ServiceBindingHolder(ref, factory, svc));
                 } else {
-                    m_serviceObjects.put(ref, svc);
+                    m_serviceObjects.put(ref, holder);
                 }
             } finally {
                 releaseWriteLockIfHeld();
             }
         }
-
         return svc;
     }
 
@@ -943,18 +953,21 @@ public abstract class DependencyModel {
      */
     public void ungetService(ServiceReference ref) {
         m_tracker.ungetService(ref);
-        Object obj;
+        ServiceBindingHolder sbh;
         try {
             acquireWriteLockIfNotHeld();
-            obj = m_serviceObjects.remove(ref);
+            sbh = m_serviceObjects.remove(ref);
         } finally {
             releaseWriteLockIfHeld();
         }
 
         // Call the callback outside the lock.
-        if (obj != null && obj instanceof IPOJOServiceFactory) {
-            ((IPOJOServiceFactory) obj).ungetService(m_instance, obj);
+        if (sbh != null && sbh.factory != null) {
+            sbh.factory.ungetService(m_instance, sbh.service);
         }
+
+        m_serviceReferenceManager.unweavingServiceBinding(sbh);
+
     }
 
     public ContextSourceManager getContextSourceManager() {
@@ -988,11 +1001,11 @@ public abstract class DependencyModel {
                         m_state = BROKEN;
 
                         // We are going to call callbacks, releasing the lock.
-                        Object svc = m_serviceObjects.get(ref);
+                        ServiceBindingHolder sbh = m_serviceObjects.get(ref);
                         releaseWriteLockIfHeld();
 
                         // Notify listeners
-                        notifyListeners(DependencyEventType.UNBINDING, ref, svc);
+                        notifyListeners(DependencyEventType.UNBINDING, ref, sbh.service);
                         notifyListeners(DependencyEventType.DEPARTURE, ref, null);
 
                         invalidate();  // This will invalidate the instance.
@@ -1072,7 +1085,7 @@ public abstract class DependencyModel {
             }
 
             // Before leaving the protected region, copy used services.
-            Map<ServiceReference, Object> services = new HashMap<ServiceReference, Object>(m_serviceObjects);
+            Map<ServiceReference, ServiceBindingHolder> services = new HashMap<ServiceReference, ServiceBindingHolder>(m_serviceObjects);
 
             // Leaving the locked region to invoke callbacks
             releaseWriteLockIfHeld();
@@ -1080,14 +1093,24 @@ public abstract class DependencyModel {
             for (ServiceReference ref : departures) {
                 onServiceDeparture(ref);
                 // Notify service unbinding to listeners
-                Object svc = services.get(ref);
-                notifyListeners(DependencyEventType.UNBINDING, ref, svc);
+                final ServiceBindingHolder sbh = services.get(ref);
+                if (sbh != null) {
+                    notifyListeners(DependencyEventType.UNBINDING, ref, sbh.service);
+                } else {
+                    notifyListeners(DependencyEventType.UNBINDING, ref, null);
+                }
+                // Unget the service reference.
+                ungetService(ref);
             }
             for (ServiceReference ref : arrivals) {
                 onServiceArrival(ref);
                 // Notify service binding to listeners
-                Object svc = services.get(ref);
-                notifyListeners(DependencyEventType.BINDING, ref, svc);
+                final ServiceBindingHolder sbh = services.get(ref);
+                if (sbh != null) {
+                    notifyListeners(DependencyEventType.BINDING, ref, sbh.service);
+                } else {
+                    notifyListeners(DependencyEventType.BINDING, ref, null);
+                }
             }
             // Do we have a modified service ?
             if (set.modified != null && m_boundServices.contains(set.modified)) {
@@ -1227,6 +1250,28 @@ public abstract class DependencyModel {
     public void cleanup() {
         synchronized (m_listeners) {
             m_listeners.clear();
+        }
+    }
+
+    /**
+     * Service binding structure.
+     */
+    public class ServiceBindingHolder {
+
+        public final Object service;
+        public final IPOJOServiceFactory factory;
+        public final ServiceReference reference;
+
+        private ServiceBindingHolder(ServiceReference reference, IPOJOServiceFactory factory, Object service) {
+            this.service = service;
+            this.factory = factory;
+            this.reference = reference;
+        }
+
+        private ServiceBindingHolder(ServiceReference reference, Object service) {
+            this.service = service;
+            this.factory = null;
+            this.reference = reference;
         }
     }
 }
