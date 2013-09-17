@@ -29,13 +29,13 @@
     <name>Apache Felix Http Reactor</name>
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.http</artifactId>
-    <version>3-SNAPSHOT</version>
+    <version>3</version>
     <packaging>pom</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-2.2.1</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-2.2.1</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http-2.2.1</url>
     </scm>
 
     <modules>
