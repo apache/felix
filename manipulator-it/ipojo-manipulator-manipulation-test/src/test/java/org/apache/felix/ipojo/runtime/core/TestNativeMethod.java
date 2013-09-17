@@ -116,7 +116,11 @@ public class TestNativeMethod extends BaseTest {
             }
         }
 
-        String clause = "";
+        // Depending on the the order, the probe bundle may already have detected requirements on components.
+        String clause = "" +
+                "org.apache.felix.ipojo.runtime.core.components, " +
+                "org.apache.felix.ipojo.runtime.core.services, " +
+                "org.apache.felix.ipojo.runtime.core.services.A123";
         for (String export : exports) {
             if (export.length() > 0) { export += ", "; }
             clause += export;
@@ -125,7 +129,7 @@ public class TestNativeMethod extends BaseTest {
         System.out.println("Exported packages : " + clause);
 
         InputStream inputStream = tested
-                .set(Constants.BUNDLE_SYMBOLICNAME, BaseTest.TEST_BUNDLE_SYMBOLIC_NAME)
+                .set(Constants.BUNDLE_SYMBOLICNAME, BaseTest.TEST_BUNDLE_SYMBOLIC_NAME + "-with-native")
                 .set(Constants.IMPORT_PACKAGE, "*")
                 .set(Constants.EXPORT_PACKAGE, clause)
                 .set(Constants.BUNDLE_NATIVECODE, NATIVE_CLAUSE)
