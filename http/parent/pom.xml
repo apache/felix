@@ -41,6 +41,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/parent</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/parent</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/http/parent/</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
