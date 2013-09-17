@@ -35,7 +35,7 @@
     <name>Descriptor Generator Implementation</name>
     <description>
         Provides the implementation to generate Declarative Services and Metatype
-        Service descriptors from Java 5 Annotations and/or JavaDoc tags.
+        Service descriptors from Java 5 Annotations.
     </description>
 
     <scm>
