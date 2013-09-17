@@ -16,17 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.felix.ipojo.runtime.core.test.services;
 
-import java.util.Dictionary;
+/**
+ * An interface added on the fly to the service object.
+ */
+public interface Enhanced {
 
-public interface CheckService {
-    
-    public static final String foo = "foo";
-	
-	public boolean check();
-	
-	public Dictionary getProps();
-
+    public String enhance();
 }

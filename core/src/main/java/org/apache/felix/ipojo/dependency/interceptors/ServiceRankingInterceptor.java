@@ -31,6 +31,8 @@ import java.util.List;
  *
  * This interceptors is called to compute the selected set of services from the matching set,
  * i.e. the set of services that matching the filter (actually accepted by the tracking interceptors).
+ *
+ * @since 1.10.1
  */
 public interface ServiceRankingInterceptor extends DependencyInterceptor {
 

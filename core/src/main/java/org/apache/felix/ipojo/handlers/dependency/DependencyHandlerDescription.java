@@ -18,9 +18,6 @@
  */
 package org.apache.felix.ipojo.handlers.dependency;
 
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.metadata.Attribute;
@@ -28,6 +25,8 @@ import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.util.DependencyModel;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+
+import java.util.List;
 
 /**
  * Dependency Handler Description.
@@ -40,26 +39,6 @@ public class DependencyHandlerDescription extends HandlerDescription {
      * Dependencies managed by the dependency handler.
      */
     private DependencyDescription[] m_dependencies = new DependencyDescription[0];
-    
-    // TODO Define the DependencyStateListener Interface (in ipojo utils)
-    
-    // TODO Add the list of listener.
-    
-    // TODO Add register listener method.
-    
-    // TODO Add unregister listener method.
-    
-    // TODO Implement the validate method.
-    
-    // TODO Implement the invalidate method.
-    
-    // TODO Implement the onServiceArrival method.
-    
-    // TODO Implement the onServiceDeparture method.
-    
-    // TODO Implement the onServiceBound method.
-    
-    // TODO Implement the onServiceUnbound method.
 
     /**
      * Creates the Dependency Handler description.
@@ -71,7 +50,6 @@ public class DependencyHandlerDescription extends HandlerDescription {
         m_dependencies = new DependencyDescription[deps.length];
         for (int i = 0; i < m_dependencies.length; i++) {
             m_dependencies[i] = new DependencyDescription(deps[i]);
-            //TODO Register callback there on the dependency model.
         }
     }
 

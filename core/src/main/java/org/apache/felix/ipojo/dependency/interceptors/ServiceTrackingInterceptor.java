@@ -31,7 +31,10 @@ import org.osgi.framework.ServiceReference;
  * a chain is created where all interceptor can influence the next one. If the dependency has a filter,
  * a tracking interceptor using this filter is the last interceptor of the chain.
  *
- * Obviously an interceptor can be plugged to several interceptors.
+ * Obviously an interceptor can be plugged to several dependencies. Conversely, several tracking interceptor can be
+ * plugged to one dependency.
+ *
+ * @since 1.10.1
  */
 public interface ServiceTrackingInterceptor extends DependencyInterceptor {
 
