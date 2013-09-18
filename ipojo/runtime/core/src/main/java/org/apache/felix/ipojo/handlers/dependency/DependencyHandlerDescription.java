@@ -20,6 +20,8 @@ package org.apache.felix.ipojo.handlers.dependency;
 
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.architecture.HandlerDescription;
+import org.apache.felix.ipojo.dependency.impl.ServiceReferenceManager;
+import org.apache.felix.ipojo.dependency.interceptors.ServiceTrackingInterceptor;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.util.DependencyModel;
@@ -27,6 +29,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Dependency Handler Description.
@@ -68,103 +71,138 @@ public class DependencyHandlerDescription extends HandlerDescription {
      */
     public Element getHandlerInfo() {
         Element deps = super.getHandlerInfo();
-        for (int i = 0; i < m_dependencies.length; i++) {
+        for (DependencyDescription dependency : m_dependencies) {
             String state = "resolved";
-            if (m_dependencies[i].getState() == DependencyModel.UNRESOLVED) {
+            if (dependency.getState() == DependencyModel.UNRESOLVED) {
                 state = "unresolved";
             }
-            if (m_dependencies[i].getState() == DependencyModel.BROKEN) {
+            if (dependency.getState() == DependencyModel.BROKEN) {
                 state = "broken";
             }
             Element dep = new Element("Requires", "");
-            dep.addAttribute(new Attribute("Specification", m_dependencies[i].getInterface()));
-            dep.addAttribute(new Attribute("Id", m_dependencies[i].getId()));
-            
-            if (m_dependencies[i].getFilter() != null) {
-                dep.addAttribute(new Attribute("Filter", m_dependencies[i].getFilter()));
+            dep.addAttribute(new Attribute("Specification", dependency.getInterface()));
+            dep.addAttribute(new Attribute("Id", dependency.getId()));
+
+            if (dependency.getFilter() != null) {
+                dep.addAttribute(new Attribute("Filter", dependency.getFilter()));
             }
-            
-            if (m_dependencies[i].isOptional()) {
+
+            if (dependency.isOptional()) {
                 dep.addAttribute(new Attribute("Optional", "true"));
-                if (m_dependencies[i].supportsNullable()) {
-                    dep.addAttribute(new Attribute("Nullable", "true"));    
+                if (dependency.supportsNullable()) {
+                    dep.addAttribute(new Attribute("Nullable", "true"));
                 }
-                if (m_dependencies[i].getDefaultImplementation() != null) {
-                    dep.addAttribute(new Attribute("Default-Implementation", m_dependencies[i].getDefaultImplementation()));
+                if (dependency.getDefaultImplementation() != null) {
+                    dep.addAttribute(new Attribute("Default-Implementation", dependency.getDefaultImplementation()));
                 }
             } else {
                 dep.addAttribute(new Attribute("Optional", "false"));
             }
 
-            if (m_dependencies[i].isMultiple()) {
+            if (dependency.isMultiple()) {
                 dep.addAttribute(new Attribute("Aggregate", "true"));
             } else {
                 dep.addAttribute(new Attribute("Aggregate", "false"));
             }
-            
-            if (m_dependencies[i].isProxy()) {
+
+            if (dependency.isProxy()) {
                 dep.addAttribute(new Attribute("Proxy", "true"));
             } else {
                 dep.addAttribute(new Attribute("Proxy", "false"));
             }
-            
+
             String policy = "dynamic";
-            if (m_dependencies[i].getPolicy() == DependencyModel.STATIC_BINDING_POLICY) {
+            if (dependency.getPolicy() == DependencyModel.STATIC_BINDING_POLICY) {
                 policy = "static";
-            } else if (m_dependencies[i].getPolicy() == DependencyModel.DYNAMIC_PRIORITY_BINDING_POLICY) {
+            } else if (dependency.getPolicy() == DependencyModel.DYNAMIC_PRIORITY_BINDING_POLICY) {
                 policy = "dynamic-priority";
             }
             dep.addAttribute(new Attribute("Binding-Policy", policy));
-            
-            if (m_dependencies[i].getComparator() != null) {
-                dep.addAttribute(new Attribute("Comparator", m_dependencies[i].getComparator()));
+
+            if (dependency.getComparator() != null) {
+                dep.addAttribute(new Attribute("Comparator", dependency.getComparator()));
             }
-            
+
             dep.addAttribute(new Attribute("State", state));
-            List<ServiceReference> set = m_dependencies[i].getUsedServices();
+            List<ServiceReference> set = dependency.getUsedServices();
             if (set != null) {
                 for (ServiceReference ref : set) {
                     Element use = new Element("Uses", "");
-                    use.addAttribute(new Attribute(Constants.SERVICE_ID, ref.getProperty(Constants.SERVICE_ID).toString()));
-                    String instance = (String) ref.getProperty(Factory.INSTANCE_NAME_PROPERTY);
-                    if (instance != null) {
-                        use.addAttribute(new Attribute(Factory.INSTANCE_NAME_PROPERTY, instance));
-                    }
+                    computeServiceReferenceDescription(ref, use);
                     dep.addElement(use);
                 }
             }
 
-            set = m_dependencies[i].getServiceReferences();
+            set = dependency.getServiceReferences();
             if (set != null) {
                 for (ServiceReference ref : set) {
                     Element use = new Element("Selected", "");
-                    use.addAttribute(new Attribute(Constants.SERVICE_ID, ref.getProperty(Constants.SERVICE_ID).toString()));
-                    String instance = (String) ref.getProperty(Factory.INSTANCE_NAME_PROPERTY);
-                    if (instance != null) {
-                        use.addAttribute(new Attribute(Factory.INSTANCE_NAME_PROPERTY, instance));
-                    }
+                    computeServiceReferenceDescription(ref, use);
                     dep.addElement(use);
                 }
             }
 
-            if (m_dependencies[i].getDependency() != null) {
-                set = m_dependencies[i].getDependency().getServiceReferenceManager().getMatchingServices();
-                if (set != null) {
-                    for (ServiceReference ref : set) {
-                        Element use = new Element("Matches", "");
-                        use.addAttribute(new Attribute(Constants.SERVICE_ID, ref.getProperty(Constants.SERVICE_ID).toString()));
-                        String instance = (String) ref.getProperty(Factory.INSTANCE_NAME_PROPERTY);
-                        if (instance != null) {
-                            use.addAttribute(new Attribute(Factory.INSTANCE_NAME_PROPERTY, instance));
-                        }
-                        dep.addElement(use);
-                    }
+            final ServiceReferenceManager serviceReferenceManager = dependency.getDependency()
+                    .getServiceReferenceManager();
+            if (serviceReferenceManager == null) {
+                // Exit here, cannot compute anything else.
+                deps.addElement(dep);
+                continue;
+            }
+
+            set = serviceReferenceManager.getMatchingServices();
+            if (set != null) {
+                for (ServiceReference ref : set) {
+                    Element use = new Element("Matches", "");
+                    computeServiceReferenceDescription(ref, use);
+                    dep.addElement(use);
                 }
+            }
+
+            // Add interceptors to the description
+            List<ServiceReference> interceptors = serviceReferenceManager.getTrackingInterceptorReferences();
+            for (ServiceReference ref : interceptors) {
+                Element itcp = new Element("ServiceTrackingInterceptor", "");
+                computeInterceptorDescription(ref, itcp);
+                dep.addElement(itcp);
+            }
+
+            ServiceReference ref = serviceReferenceManager.getRankingInterceptorReference();
+            if (ref != null) {
+                Element itcp = new Element("ServiceRankingInterceptor", "");
+                computeInterceptorDescription(ref, itcp);
+                dep.addElement(itcp);
+            }
+
+            interceptors = serviceReferenceManager.getBindingInterceptorReferences();
+            for (ServiceReference rf : interceptors) {
+                Element itcp = new Element("ServiceBindingInterceptor", "");
+                computeInterceptorDescription(rf, itcp);
+                dep.addElement(itcp);
             }
 
             deps.addElement(dep);
         }
         return deps;
+    }
+
+    private void computeServiceReferenceDescription(ServiceReference ref, Element use) {
+        use.addAttribute(new Attribute(Constants.SERVICE_ID, ref.getProperty(Constants.SERVICE_ID).toString()));
+        String instance = (String) ref.getProperty(Factory.INSTANCE_NAME_PROPERTY);
+        if (instance != null) {
+            use.addAttribute(new Attribute(Factory.INSTANCE_NAME_PROPERTY, instance));
+        }
+    }
+
+    private void computeInterceptorDescription(ServiceReference ref, Element itcp) {
+        itcp.addAttribute(new Attribute(Constants.SERVICE_ID, ref.getProperty(Constants.SERVICE_ID).toString()));
+        itcp.addAttribute(new Attribute("bundle.id", Long.toString(ref.getBundle().getBundleId())));
+        String instance = (String) ref.getProperty(Factory.INSTANCE_NAME_PROPERTY);
+        if (instance != null) {
+            itcp.addAttribute(new Attribute(Factory.INSTANCE_NAME_PROPERTY, instance));
+        }
+        itcp.addAttribute(new Attribute("target", ref.getProperty(ServiceTrackingInterceptor.TARGET_PROPERTY)
+                .toString()));
     }
 
 }

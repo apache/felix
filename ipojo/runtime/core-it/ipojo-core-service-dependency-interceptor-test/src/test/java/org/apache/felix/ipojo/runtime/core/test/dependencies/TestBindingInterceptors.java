@@ -174,4 +174,30 @@ public class TestBindingInterceptors extends Common {
         assertThat(check.getProps().get("enhanced")).isNotNull();
     }
 
+    @Test
+    public void testArchitecture() {
+        // Create the interceptor
+        Properties configuration = new Properties();
+        configuration.put("target", "(dependency.id=foo)");
+        ComponentInstance interceptor = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.test" +
+                ".interceptors.ProxyBindingInterceptor", configuration);
+
+        // Create the FooConsumer
+        ComponentInstance instance = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.test" +
+                ".components.FooConsumer");
+
+        osgiHelper.waitForService(CheckService.class.getName(),
+                "(instance.name=" + instance.getInstanceName() + ")",
+                1000, true);
+
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("servicebindinginterceptor");
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("target=\"(dependency.id=foo)\"");
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("instance.name=\"" + interceptor.getInstanceName() + "\"");
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("bundle.id=\"" + getTestBundle().getBundleId() + "\"");
+    }
+
 }

@@ -872,6 +872,70 @@ public class ServiceReferenceManager implements TrackerCustomizer {
         m_dependency.onChange(changeset);
     }
 
+    /**
+     * Gets the list of tracking interceptors attached to the current service dependency.
+     * @return the list of service references of the tracking interceptors participating to the resolution of the
+     * current service dependency. An empty list is returned is there are no participating interceptors.
+     * @since 1.10.2
+     */
+    public List<ServiceReference> getTrackingInterceptorReferences() {
+        try {
+            m_dependency.acquireReadLockIfNotHeld();
+            if (m_trackingInterceptorTracker != null) {
+                List<ServiceReference> refs = m_trackingInterceptorTracker.getUsedServiceReferences();
+                if (refs != null) {
+                    return refs;
+                }
+            }
+            return Collections.emptyList();
+        } finally {
+            m_dependency.releaseReadLockIfHeld();
+        }
+    }
+
+    /**
+     * Gets the list of binding interceptors attached to the current service dependency.
+     * @return the list of service references of the binding interceptors participating to the resolution of the
+     * current service dependency. An empty list is returned is there are no participating interceptors.
+     * @since 1.10.2
+     */
+    public List<ServiceReference> getBindingInterceptorReferences() {
+        try {
+            m_dependency.acquireReadLockIfNotHeld();
+            if (m_bindingInterceptorTracker != null) {
+                List<ServiceReference> refs = m_bindingInterceptorTracker.getUsedServiceReferences();
+                if (refs != null) {
+                    return refs;
+                }
+            }
+            return Collections.emptyList();
+        } finally {
+            m_dependency.releaseReadLockIfHeld();
+        }
+    }
+
+    /**
+     * Gets the service reference of the currently attached ranking interceptor. As only one ranking interceptor can
+     * be attached at a point on time, this is not a list but only one reference.
+     * @return the service reference of the ranking interceptor participating to the resolution of the current
+     * service dependency. {@code null} if no (external) ranking interceptor is currently attached.
+     * @since 1.10.2
+     */
+    public ServiceReference getRankingInterceptorReference() {
+        try {
+            m_dependency.acquireReadLockIfNotHeld();
+            if (m_rankingInterceptorTracker != null) {
+                List<ServiceReference> references = m_rankingInterceptorTracker.getUsedServiceReferences();
+                if (references != null  && ! references.isEmpty()) {
+                    return references.get(0);
+                }
+            }
+            return null;
+        } finally {
+            m_dependency.releaseReadLockIfHeld();
+        }
+    }
+
     private class RankingResult {
         final List<ServiceReference> departures;
         final List<ServiceReference> arrivals;
