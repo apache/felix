@@ -19,6 +19,7 @@
 package org.apache.felix.dm.runtime;
 
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 
 /**
  * Allows you to enqueue tasks from multiple threads and then execute
@@ -29,65 +30,62 @@ import java.util.LinkedList;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public final class SerialExecutor
-{
-    private final LinkedList<Runnable> m_workQueue = new LinkedList<Runnable>();
+public final class SerialExecutor {
+	private static final Runnable DUMMY_RUNNABLE = new Runnable() { public void run() {}; };
+    private final LinkedList m_workQueue = new LinkedList();
     private Runnable m_active;
-
+    
     /**
      * Enqueue a new task for later execution. This method is
      * thread-safe, so multiple threads can contribute tasks.
      * 
      * @param runnable the runnable containing the actual task
      */
-    public synchronized void enqueue(final Runnable runnable)
-    {
-        m_workQueue.addLast(new Runnable()
-        {
-            @SuppressWarnings("synthetic-access")
-            public void run()
-            {
-                try
-                {
-                    runnable.run();
-                }
-                finally
-                {
-                    scheduleNext();
-                }
-            }
-        });
+    public synchronized void enqueue(final Runnable runnable) {
+    	m_workQueue.addLast(new Runnable() {
+			public void run() {
+				try {
+					runnable.run();
+				}
+				finally {
+					scheduleNext();
+				}
+			}
+		});
     }
-
+    
     /**
      * Execute any pending tasks. This method is thread safe,
      * so multiple threads can try to execute the pending
      * tasks, but only the first will be used to actually do
      * so. Other threads will return immediately.
      */
-    public void execute()
-    {
-        Runnable active;
-        synchronized (this)
-        {
-            active = m_active;
-        }
-        if (active == null)
-        {
-            scheduleNext();
-        }
+    public void execute() {
+    	Runnable active;
+    	synchronized (this) {
+    		active = m_active;
+    		// for now just put some non-null value in there so we can never
+    		// get a race condition when two threads enter this section after
+    		// one another (causing sheduleNext() to be invoked twice below)
+    		m_active = DUMMY_RUNNABLE;
+    	}
+    	if (active == null) {
+    		scheduleNext();
+    	}
     }
 
-    private void scheduleNext()
-    {
-        Runnable active;
-        synchronized (this)
-        {
-            m_active = (m_workQueue.size() == 0) ? null : (Runnable) m_workQueue.removeFirst();
-            active = m_active;
-        }
-        if (active != null)
-        {
+    private void scheduleNext() {
+    	Runnable active;
+    	synchronized (this) {
+    		try {
+    			m_active = (Runnable) m_workQueue.removeFirst();
+    		}
+    		catch (NoSuchElementException e) {
+    			m_active = null;
+    		}
+    		active = m_active;
+    	}
+    	if (active != null) {
             active.run();
         }
     }
