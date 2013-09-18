@@ -353,6 +353,12 @@
                     <version>${knoperflerfish.version}</version>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <!-- must be after KF -->
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                    <version>4.3.1</version>
+                </dependency>
             </dependencies>
         </profile>
 
@@ -379,6 +385,12 @@
                     <artifactId>org.eclipse.osgi</artifactId>
                     <version>${equinox.version}</version>
                     <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <!-- must be after equinox -->
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                    <version>4.3.1</version>
                 </dependency>
             </dependencies>
         </profile>
