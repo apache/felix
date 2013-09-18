@@ -53,6 +53,7 @@ public class TestConsumingProviderUsingAriesBlueprint1_1_0 extends Common {
 
     @Test
     public void test() {
+        osgiHelper.waitForService(CheckService.class, null, 10000);
         CheckService checker = osgiHelper.getServiceObject(CheckService.class);
         assertThat(checker).isNotNull();
         assertThat(checker.data().get("result")).isEqualTo("hello john doe");
