@@ -30,6 +30,7 @@ import org.ops4j.pax.tinybundles.core.TinyBundle;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.Constants;
 import org.ow2.chameleon.testing.helpers.BaseTest;
+import org.ow2.chameleon.testing.helpers.FrameworkHelper;
 import org.ow2.chameleon.testing.tinybundles.ipojo.IPOJOStrategy;
 
 import java.io.*;
@@ -293,5 +294,9 @@ public abstract class Common extends BaseTest {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public boolean isEquinox() {
+        return FrameworkHelper.isEquinox(context)  || context.toString().contains("eclipse");
     }
 }
