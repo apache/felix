@@ -3,6 +3,7 @@ Trunk
 
 ** Bug
     * [FELIX-4050] Named dependencies are not injected if new dependencies are added at init phase.
+    * [FELIX-4233] Race condition in dependency manager runtime SerialExecutor.
 
 ** Improvement
     * [FELIX-3869] - Fragment support for DependencyManager-Component
