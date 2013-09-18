@@ -183,6 +183,35 @@ public class TestRankingServices extends Common {
         assertThat(consumer.getState()).isEqualTo(ComponentInstance.INVALID);
     }
 
+    @Test
+    public void testArchitecture() {
+        // Provider with grade 0 first
+        provider1 = provider(0);
+        provider2 = provider(1);
+
+        // Create the interceptor
+        Properties configuration = new Properties();
+        configuration.put("target", "(dependency.id=foo)");
+        ComponentInstance interceptor = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core" +
+                ".test.interceptors.FilterRankingInterceptor", configuration);
+
+        // Create the FooConsumer
+        ComponentInstance instance = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.test" +
+                ".components.FooConsumer");
+
+        // Check we are using provider 2
+        osgiHelper.waitForService(CheckService.class.getName(), null, 1000, true);
+
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("servicerankinginterceptor");
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("target=\"(dependency.id=foo)\"");
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("instance.name=\"" + interceptor.getInstanceName() + "\"");
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("bundle.id=\"" + getTestBundle().getBundleId() + "\"");
+    }
+
     private ComponentInstance provider(int i) {
         Dictionary<String, String> configuration = new Hashtable<String, String>();
         configuration.put("grade", Integer.toString(i));

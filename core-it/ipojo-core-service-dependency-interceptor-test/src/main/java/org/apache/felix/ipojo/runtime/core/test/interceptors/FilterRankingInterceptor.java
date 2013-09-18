@@ -64,7 +64,6 @@ public class FilterRankingInterceptor extends DefaultServiceRankingInterceptor i
         if (inverse) {
             Collections.reverse(references);
         }
-        System.out.println("Ref: " + references + " / " + matching);
         return references;
     }
 

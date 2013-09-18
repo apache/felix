@@ -20,6 +20,7 @@
 package org.apache.felix.ipojo.runtime.core.test.dependencies;
 
 import org.apache.felix.ipojo.ComponentInstance;
+import org.apache.felix.ipojo.runtime.core.test.services.CheckService;
 import org.apache.felix.ipojo.runtime.core.test.services.Setter;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,6 +101,32 @@ public class TestHidingServices extends Common {
 
         // The provider is now accepted
         assertThat(instance.getState()).isEqualTo(ComponentInstance.VALID);
+    }
+
+    @Test
+    public void testArchitecture() {
+        // Create the interceptor
+        Properties configuration = new Properties();
+        configuration.put("target", "(dependency.id=foo)");
+
+
+        // Create the FooConsumer
+        ComponentInstance instance = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.test" +
+                ".components.FooConsumer");
+
+        assertThat(instance.getState()).isEqualTo(ComponentInstance.VALID);
+
+        ComponentInstance interceptor = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.test" +
+                ".interceptors.HidingTrackingInterceptor", configuration);
+
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("servicetrackinginterceptor");
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("target=\"(dependency.id=foo)\"");
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("instance.name=\"" + interceptor.getInstanceName() + "\"");
+        assertThat(instance.getInstanceDescription().getDescription().toString()).contains
+                ("bundle.id=\"" + getTestBundle().getBundleId() + "\"");
     }
 
 
