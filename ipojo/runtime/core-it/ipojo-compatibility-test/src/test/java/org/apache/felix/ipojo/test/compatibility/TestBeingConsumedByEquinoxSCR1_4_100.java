@@ -43,6 +43,10 @@ public class TestBeingConsumedByEquinoxSCR1_4_100 extends Common {
 
     @Override
     public Option[] bundles() {
+        // We must not deploy the Equinox DS on Felix and KF
+        if (! isEquinox()) {
+            return new Option[0];
+        }
         return new Option[] {
                 bundle(DS_URL),
                 bundle(UTILS_URL),
