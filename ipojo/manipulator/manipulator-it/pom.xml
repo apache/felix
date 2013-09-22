@@ -35,12 +35,12 @@
         <!-- Tests are enabled only when the 'test' profile is activated  -->
         <skipTestExecution>true</skipTestExecution>
 
-        <exam.version>3.0.0</exam.version>
+        <exam.version>3.0.1</exam.version>
         <url.version>1.5.1</url.version>
 
         <felix.version>4.2.0</felix.version>
-        <equinox.version>3.8.1.v20120830-144521</equinox.version>
-        <knoperflerfish.version>5.3.3</knoperflerfish.version>
+        <equinox.version>3.9.0.v20130529-1710</equinox.version>
+        <knoperflerfish.version>6.0.2</knoperflerfish.version>
     </properties>
 
     <modules>
@@ -154,13 +154,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.framework</artifactId>
-            <version>${felix.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>0.9.6</version>
@@ -173,7 +166,6 @@
             <version>0.9.6</version>
             <scope>test</scope>
         </dependency>
-
 
         <dependency>
             <groupId>junit</groupId>
@@ -215,12 +207,36 @@
             <artifactId>org.apache.felix.ipojo</artifactId>
             <!-- To update before the release -->
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.compendium</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator.online</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.compendium</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.ipojo</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- End of tested version -->
@@ -243,12 +259,24 @@
             <artifactId>osgi-helpers</artifactId>
             <version>0.6.2-SNAPSHOT</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.log</artifactId>
             <version>1.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -256,9 +284,33 @@
             <artifactId>pax-url-wrap</artifactId>
             <version>1.5.2</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.easytesting</groupId>
+            <artifactId>fest-assert</artifactId>
+            <version>1.4</version>
+        </dependency>
     </dependencies>
 
     <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.compendium</artifactId>
+                    <version>4.3.0</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                    <version>4.3.1</version>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>knopflerfish</id>
             <activation>
@@ -284,6 +336,12 @@
                     <version>${knoperflerfish.version}</version>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <!-- must be after KF -->
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                    <version>4.3.1</version>
+                </dependency>
             </dependencies>
         </profile>
 
@@ -301,10 +359,21 @@
             </properties>
             <dependencies>
                 <dependency>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.compendium</artifactId>
+                    <version>4.3.0</version>
+                </dependency>
+                <dependency>
                     <groupId>org.eclipse.tycho</groupId>
                     <artifactId>org.eclipse.osgi</artifactId>
                     <version>${equinox.version}</version>
                     <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <!-- must be after equinox -->
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                    <version>4.3.1</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -326,7 +395,6 @@
                     <groupId>org.apache.felix</groupId>
                     <artifactId>org.apache.felix.framework</artifactId>
                     <version>${felix.version}</version>
-                    <scope>test</scope>
                 </dependency>
             </dependencies>
         </profile>

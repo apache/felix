@@ -72,6 +72,11 @@ public class TestNativeMethod extends BaseTest {
 
     @Test
     public void testComponentWithNativeMethod() {
+        if (isKnopflerfish()) {
+            System.out.println("Test not supported on knopflerfish");
+            return;
+        }
+
         ComponentInstance ci = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.components" +
                 ".nativ.NativeComponent");
 
