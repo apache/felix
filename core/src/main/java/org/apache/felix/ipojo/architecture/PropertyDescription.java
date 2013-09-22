@@ -132,6 +132,8 @@ public class PropertyDescription {
             Object value =  m_property.getValue();
             if (value == null) {
                 return "null";
+            } else if (value == Property.NO_VALUE) {
+                return Property.UNVALUED;
             } else {
                 return value.toString();
             }

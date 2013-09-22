@@ -46,6 +46,11 @@ public class Property implements FieldInterceptor, ConstructorInjector {
     public static final Object NO_VALUE = new Object();
 
     /**
+     * String value returned for property without values.
+     */
+    public static final String UNVALUED = "UNVALUED";
+
+    /**
      * The name of the property (field name if not set).
      * Cannot change once set.
      */
