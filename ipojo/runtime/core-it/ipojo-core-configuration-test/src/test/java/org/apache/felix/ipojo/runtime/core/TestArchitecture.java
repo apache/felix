@@ -20,18 +20,22 @@
 package org.apache.felix.ipojo.runtime.core;
 
 import org.apache.felix.ipojo.ComponentInstance;
+import org.apache.felix.ipojo.PrimitiveInstanceDescription;
 import org.apache.felix.ipojo.architecture.Architecture;
+import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.apache.felix.ipojo.handlers.configuration.ConfigurationHandlerDescription;
+import org.apache.felix.ipojo.runtime.core.services.CheckService;
+import org.apache.felix.ipojo.util.Property;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.ServiceReference;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import static junit.framework.Assert.*;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 
 public class TestArchitecture extends Common {
 
@@ -147,6 +151,85 @@ public class TestArchitecture extends Common {
         instance1.dispose();
         arch = ipojoHelper.getArchitectureByName(instanceName);
         assertNull(arch);
+    }
+
+    /**
+     * Checks the introspection possibilities before and after object creation.
+     * Especially check the 'unvalued' case.
+     */
+    @Test
+    public void testIntrospection() {
+        Dictionary<String, String> configuration = new Hashtable<String, String>();
+        configuration.put("p5", "v5i");
+        configuration.put("p7", "v7i");
+        configuration.put("p9", "v9i");
+
+        ComponentInstance instance = ipojoHelper.createComponentInstance(
+                "org.apache.felix.ipojo.runtime.core.components.arch.MyComponentToIntrospect",
+                configuration);
+
+        // We don't get the service object until we finished the pre-instantiation tests.
+        ServiceReference reference = osgiHelper.waitForService(CheckService.class.getName(),
+                "(instance.name=" + instance.getInstanceName() + ")", 1000);
+
+        assertNotNull(reference);
+
+        PropertyDescription[] properties = ((PrimitiveInstanceDescription) instance.getInstanceDescription())
+                .getProperties();
+
+        assertNotNull(properties);
+
+        // Check the properties.
+        assertEquals(getProperty(properties, "p1").getValue(), Property.UNVALUED);
+        assertEquals(getProperty(properties, "p2").getValue(), Property.UNVALUED);
+        assertEquals(getProperty(properties, "p3").getValue(), "v3"); // Default value
+        assertEquals(getProperty(properties, "p4").getValue(), "v4"); // Default value
+        assertEquals(getProperty(properties, "p5").getValue(), "v5i"); // Instance value
+        assertEquals(getProperty(properties, "p6").getValue(), Property.UNVALUED);
+        assertEquals(getProperty(properties, "p6").getValue(), Property.UNVALUED);
+        assertEquals(getProperty(properties, "p7").getValue(), "v7i"); // Instance value
+        assertEquals(getProperty(properties, "p8").getValue(), Property.UNVALUED);
+        assertEquals(getProperty(properties, "p9").getValue(), "v9i"); // Instance value
+
+        // Check the propagation
+        assertNull(reference.getProperty("p1"));
+        assertNull(reference.getProperty("p2"));
+        assertEquals(reference.getProperty("p3"), "v3");
+        assertEquals(reference.getProperty("p4"), "v4");
+        assertEquals(reference.getProperty("p5"), "v5i");
+        assertNull(reference.getProperty("p6"));
+        assertNull(reference.getProperty("p62"));
+        assertEquals(reference.getProperty("p7"), "v7i");
+        assertNull(reference.getProperty("p8"));
+        assertEquals(reference.getProperty("p9"), "v9i");
+
+        // Trigger instantiation
+        assertTrue(((CheckService) context.getService(reference)).check());
+
+        // Check new value.
+        assertEquals(getProperty(properties, "p1").getValue(), "v1");
+        assertEquals(getProperty(properties, "p2").getValue(), "v2");
+        assertEquals(getProperty(properties, "p3").getValue(), "v3"); // Default value
+        assertEquals(getProperty(properties, "p4").getValue(), "v42"); // Default value
+        assertEquals(getProperty(properties, "p5").getValue(), "v52"); // Field value
+        assertEquals(getProperty(properties, "p6").getValue(), Property.UNVALUED); // Specific value used for null
+        assertEquals(getProperty(properties, "p62").getValue(), "null"); // Specific value used for null
+        assertEquals(getProperty(properties, "p7").getValue(), "v7i"); // Instance value
+        assertEquals(getProperty(properties, "p8").getValue(), Property.UNVALUED);
+        assertEquals(getProperty(properties, "p9").getValue(), "v9i"); // Instance value
+
+        // New valued properties are not propagated.
+        // It avoids having fluctuation ins the service registrations
+        // To enable this propagation use @ServiceProperty
+    }
+
+    private PropertyDescription getProperty(PropertyDescription[] props, String name) {
+        for (PropertyDescription desc : props) {
+            if (desc.getName().equals(name)) {
+                return desc;
+            }
+        }
+        return null;
     }
 
 

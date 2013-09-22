@@ -354,7 +354,19 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                     m_toPropagate.put(prop.getName(), prop.getValue());
                 }
             }
-            reconfigure(m_toPropagate);
+
+            // We cannot use the reconfigure method directly, as there are no real changes.
+            Properties extra = reconfigureProperties(m_toPropagate);
+            propagate(extra, m_propagatedFromInstance);
+            m_propagatedFromInstance = extra;
+
+            if (getInstanceManager().getPojoObjects() != null) {
+                try {
+                    notifyUpdated(null);
+                } catch (Throwable e) {
+                    error("Cannot call the updated method : " + e.getMessage(), e);
+                }
+            }
         }
 
 
@@ -446,7 +458,6 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
                     || name.equals(MANAGED_SERVICE_PID)) {
                 continue;
             }
-
             // Do we have a property.
             Property p = getPropertyByName(name);
             if (p != null) {
@@ -623,7 +634,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
     /**
      * Handler createInstance method.
      * This method is override to allow delayed callback invocation.
-     * Invokes the updated method is needed.
+     * Invokes the updated method if needed.
      *
      * @param instance : the created object
      * @see org.apache.felix.ipojo.PrimitiveHandler#onCreation(Object)
