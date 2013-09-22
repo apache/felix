@@ -297,6 +297,11 @@ public abstract class Common extends BaseTest {
     }
 
     public boolean isEquinox() {
-        return FrameworkHelper.isEquinox(context)  || context.toString().contains("eclipse");
+        if (context != null) {
+            return FrameworkHelper.isEquinox(context)  || context.toString().contains("eclipse");
+        } else {
+            String pf = System.getProperty("pax.exam.framework");
+            return pf != null  && pf.equalsIgnoreCase("equinox");
+        }
     }
 }

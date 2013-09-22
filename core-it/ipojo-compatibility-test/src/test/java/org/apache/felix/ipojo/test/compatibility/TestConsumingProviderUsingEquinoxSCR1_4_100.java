@@ -44,6 +44,9 @@ public class TestConsumingProviderUsingEquinoxSCR1_4_100 extends Common {
 
     @Override
     public Option[] bundles() {
+        if (! isEquinox()) {
+            return new Option[0];
+        }
         return new Option[] {
                 bundle(DS_URL),
                 bundle(UTILS_URL),
