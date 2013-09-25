@@ -848,7 +848,7 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 pm = ( PersistenceManager[] ) pmList.toArray( new PersistenceManager[pmList.size()] );
             }
 
-            pmtCount = pm.length;
+            pmtCount = currentPmtCount;
             persistenceManagers = pm;
         }
 
