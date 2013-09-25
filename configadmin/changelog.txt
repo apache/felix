@@ -7,6 +7,8 @@ Changes from 1.6.0 to 1.8.0
     * [FELIX-3820] - Possible NPE in ConfigAdmin after shutting down when accessed by bad behaving bundles
     * [FELIX-3823] - ConfigAdmin should explicitely unregister services
     * [FELIX-4165] - FilePersistenceManager fails to rename configuration file
+    * [FELIX-4197] - [CM] Always check permission on Configuration.get/setBundleLocation
+    * [FELIX-4238] - Unnecessary re-initialization of PersistenceManagers in configadmin
 
 ** Improvement
     * [FELIX-4039] - Add Permissions file in ConfigAdmin bundle 
