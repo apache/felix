@@ -72,6 +72,11 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
     private String m_defaultImplementation;
 
     /**
+     * Exception attribute.
+     */
+    private String m_exception;
+
+    /**
      * Enable or Disable Nullable pattern.
      */
     private String m_nullable;
@@ -90,6 +95,11 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
      * Proxy attribute.
      */
     private String m_proxy;
+
+    /**
+     * Timeout attribute.
+     */
+    private String m_timeout;
 
     /**
      * Constructor.
@@ -128,6 +138,11 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
             m_defaultImplementation = type.getClassName();
             return;
         }
+        if (name.equals("exception")) {
+            Type type = Type.getType(value.toString());
+            m_exception = type.getClassName();
+            return;
+        }
         if (name.equals("specification")) {
             m_specification = value.toString();
             return;
@@ -147,6 +162,9 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
         }
         if (name.equals("proxy")) {
             m_proxy = value.toString();
+        }
+        if (name.equals("timeout")) {
+            m_timeout = value.toString();
         }
     }
 
@@ -183,6 +201,9 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
         if (m_defaultImplementation != null) {
             requires.addAttribute(new Attribute("default-implementation", m_defaultImplementation));
         }
+        if (m_exception != null) {
+            requires.addAttribute(new Attribute("exception", m_exception));
+        }
         if (m_policy != null) {
             requires.addAttribute(new Attribute("policy", m_policy));
         }
@@ -197,6 +218,9 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
         }
         if (m_proxy != null) {
             requires.addAttribute(new Attribute("proxy", m_proxy));
+        }
+        if (m_timeout != null) {
+            requires.addAttribute(new Attribute("timeout", m_timeout));
         }
 
         if (m_id != null) {

@@ -64,6 +64,13 @@ public @interface Requires {
     Class defaultimplementation() default Class.class;
 
     /**
+     * Set the exception to throw when the service is not available. This attribute can only be used for optional
+     * dependencies. It must be a subclass of {@link RuntimeException}.
+     * Default: no exception.
+     */
+    Class<? extends RuntimeException> exception() default RuntimeException.class;
+
+    /**
      * Set the binding policy.
      * Acceptable policy are dynamic, static and dynamic-priority.
      * Default: dynamic.
@@ -93,4 +100,13 @@ public @interface Requires {
      * Default: true
      */
     boolean proxy() default true;
+
+
+    /**
+     * Set the time to wait before applying the 'no service available' action.
+     * This attribute is only valid for optional dependencies.
+     * The time is set in milliseconds.
+     * Default: no timeout
+     */
+    int timeout() default -1;
 }
