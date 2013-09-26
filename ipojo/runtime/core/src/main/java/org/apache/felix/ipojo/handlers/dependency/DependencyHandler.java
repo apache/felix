@@ -453,6 +453,12 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             String opt = dependencyElement.getAttribute("optional");
             boolean optional = opt != null && opt.equalsIgnoreCase("true");
             String defaultImpl = dependencyElement.getAttribute("default-implementation");
+            String exception = dependencyElement.getAttribute("exception");
+            String to = dependencyElement.getAttribute("timeout");
+            int timeout = 0;
+            if (to != null) {
+                timeout = Integer.parseInt(to);
+            }
 
             String agg = dependencyElement.getAttribute("aggregate");
             boolean aggregate = agg != null && agg.equalsIgnoreCase("true");
@@ -477,7 +483,9 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             int policy = DependencyMetadataHelper.getPolicy(dependencyElement);
             Comparator cmp = DependencyMetadataHelper.getComparator(dependencyElement, getInstanceManager().getGlobalContext());
 
-            Dependency dep = new Dependency(this, field, spec, fil, optional, aggregate, nullable, isProxy, identity, context, policy, cmp, defaultImpl);
+            Dependency dep = new Dependency(this, field, spec, fil, optional, aggregate, nullable, isProxy, identity,
+                    context, policy, cmp, defaultImpl, exception);
+            dep.setTimeout(timeout);
 
             // Look for dependency callback :
             addCallbacksToDependency(dependencyElement, dep);

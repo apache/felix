@@ -299,6 +299,26 @@
                     </xs:annotation>
                 </xs:attribute>
 
+                <xs:attribute name="exception" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>Specifies the exception to throw for an optional service
+                            dependency. If no providers are found, iPOJO creates an instance of the
+                            exception (with either no parameter or a String parameter as constructor argument), and
+                            throws it. The given class name must extends RuntimeException.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+
+                <xs:attribute name="timeout" type="xs:int" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>Specifies the timeout after which the 'no service policy' is executed
+                            (nullable, null, empty collection, exception...). The value is the time in millisecond to
+                            wait. -1 is used to indicate an infinite wait, 0 executes the no service policy
+                            immediately.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+
                 <xs:attribute name="from" type="xs:string" use="optional">
                     <xs:annotation>
                         <xs:documentation>Specific service provider. The dependency can only be fulfilled by the
