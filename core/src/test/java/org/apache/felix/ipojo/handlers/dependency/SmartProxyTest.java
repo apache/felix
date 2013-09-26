@@ -63,7 +63,7 @@ public class SmartProxyTest extends TestCase {
         Mockito.when(handler.getLogger()).thenReturn(logger);
 
         Dependency dependency = new Dependency(handler, "a_field", ArrayList.class, null, false, false, false,
-                true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null);
+                true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null, null);
         dependency.start();
 
         // No service
@@ -73,7 +73,7 @@ public class SmartProxyTest extends TestCase {
 
         // Try with an Object.
         dependency = new Dependency(handler, "a_field", Object.class, null, false, false, false,
-                true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null);
+                true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null, null);
         dependency.start();
         // OK
         Assert.assertNull(dependency.onGet(new Object(), "a_field", null));
@@ -111,7 +111,7 @@ public class SmartProxyTest extends TestCase {
 
         // Try with java.List
         Dependency dependency = new Dependency(handler, "a_field", List.class, null, false, false, false,
-                true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null);
+                true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null, null);
         dependency.start();
 
         // OK
@@ -122,7 +122,7 @@ public class SmartProxyTest extends TestCase {
 
         // Try with javax.sql.CommonDataSource
         dependency = new Dependency(handler, "a_field", javax.sql.DataSource.class, null, false, false, false,
-                true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null);
+                true, "dep", context, Dependency.DYNAMIC_BINDING_POLICY, null, null, null);
         dependency.start();
         // OK
         Assert.assertNotNull(dependency.onGet(new Object(), "a_field", null));
