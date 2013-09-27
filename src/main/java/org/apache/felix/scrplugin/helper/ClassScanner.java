@@ -419,6 +419,10 @@ public class ClassScanner {
     public ClassDescription getDescription(final Class<?> clazz)
             throws SCRDescriptorException, SCRDescriptorFailureException {
         final String name = clazz.getName();
+        // do don't need to scan classes in the java. or javax. package namespace
+        if ( name.startsWith("java.") || name.startsWith("javax.") ) {
+            return null;
+        }
         ClassDescription result = this.allDescriptions.get(name);
         if ( result == null ) {
             // use scanner first
