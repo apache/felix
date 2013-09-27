@@ -201,6 +201,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
         options.setStrictMode(strictMode);
         options.setProperties(properties);
         options.setSpecVersion(SpecVersion.fromName(specVersion));
+        options.setIncremental(this.buildContext.isIncremental());
 
         if ( specVersion != null && options.getSpecVersion() == null ) {
             throw new MojoExecutionException("Unknown spec version specified: " + specVersion);
