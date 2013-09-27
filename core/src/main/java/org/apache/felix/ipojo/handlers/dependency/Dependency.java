@@ -203,17 +203,25 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      *
      * @see org.apache.felix.ipojo.util.DependencyModel#stop()
      */
-    public synchronized void stop() {
+    public void stop() {
+        acquireWriteLockIfNotHeld();
         m_isStarted = false;
         super.stop();
+        releaseWriteLockIfHeld();
+
     }
 
     public DependencyHandler getHandler() {
         return m_handler;
     }
 
-    public synchronized boolean isFrozen() {
-        return m_isFrozen;
+    public boolean isFrozen() {
+        try {
+            acquireReadLockIfNotHeld();
+            return m_isFrozen;
+        } finally {
+            releaseReadLockIfHeld();
+        }
     }
 
     /**
@@ -221,8 +229,13 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      *
      * @see org.apache.felix.ipojo.util.DependencyModel#unfreeze()
      */
-    public synchronized void unfreeze() {
-        m_isFrozen = false;
+    public void unfreeze() {
+        try {
+            acquireWriteLockIfNotHeld();
+            m_isFrozen = false;
+        } finally {
+            releaseWriteLockIfHeld();
+        }
     }
 
     /**
@@ -233,7 +246,8 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
     protected void onObjectCreation(Object pojo) {
 
         ServiceReference[] refs;
-        synchronized (this) {
+        try {
+            acquireWriteLockIfNotHeld();
             if (!m_isStarted) {
                 return;
             }
@@ -249,6 +263,8 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             }
 
             refs = getServiceReferences(); // Stack confinement.
+        } finally {
+            releaseWriteLockIfHeld();
         }
 
         // This is a pretty strange case, but we don't have any service.
@@ -262,14 +278,14 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         for (int j = 0; m_callbacks != null && j < m_callbacks.length; j++) { // The array is constant.
             if (m_callbacks[j].getMethodType() == DependencyCallback.BIND) {
                 if (isAggregate()) {
-                    for (int i = 0; i < refs.length; i++) {
-                        Object svc = getService(refs[i]);
+                    for (ServiceReference ref : refs) {
+                        Object svc = getService(ref);
                         if (svc != null) {
-                            invokeCallback(m_callbacks[j], refs[i], svc, pojo);
+                            invokeCallback(m_callbacks[j], ref, svc, pojo);
                         } else {
                             // The service left already, or the service object cannot be created.
                             // We consider it as a departure.
-                            m_serviceReferenceManager.removedService(refs[i], null);
+                            m_serviceReferenceManager.removedService(ref, null);
                         }
                     }
                 } else {
@@ -474,16 +490,14 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         }
 
         super.start();
-        // Once the dependency is started, access to fields must be synchronized.
-        synchronized (this) {
-            if (getBindingPolicy() == STATIC_BINDING_POLICY && m_handler.getInstanceManager().getPojoObjects() != null) {
-                m_isFrozen = true;
-            }
 
-            m_isStarted = true;
+        // Once the dependency is started, access to fields must be protected.
+        acquireWriteLockIfNotHeld();
+        if (getBindingPolicy() == STATIC_BINDING_POLICY && m_handler.getInstanceManager().getPojoObjects() != null) {
+            m_isFrozen = true;
         }
-
-
+        m_isStarted = true;
+        releaseWriteLockIfHeld();
     }
 
     protected DependencyCallback[] getCallbacks() {
@@ -500,6 +514,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
     }
 
     public String getId() {
+        // No synchronization required, the id is constant.
         return m_id;
     }
 
@@ -559,6 +574,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
 
     /**
      * Reset the thread local cache if used.
+     * For testing purpose only.
      */
     public void resetLocalCache() {
         if (m_usage != null) {
@@ -593,7 +609,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
     public Object getService() {
         // Check that we're in proxy mode.
         if (!m_isProxy) {
-            throw new IllegalStateException("The dependency is not a proxied dependency");
+            throw new IllegalStateException("The dependency has not enabled the `proxy` mode.");
         }
 
         Usage usage = (Usage) m_usage.get();
@@ -603,11 +619,11 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                 // So we initialize the usage.
                 createServiceObject(usage);
                 usage.inc(); // Start the caching, so set the stack level to 1
-                m_usage.set(usage);
+                m_usage.set(usage); // Required by Dalvik.
                 if (isAggregate()) {
                     Object obj = usage.m_object;
                     if (obj instanceof Set) {
-                        List list = new ArrayList();
+                        List<Object> list = new ArrayList<Object>();
                         list.addAll((Set) obj);
                         return list;
                     } else {
@@ -624,9 +640,8 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                     if (refs == null) {
                         return new ArrayList(0); // Create an empty list.
                     } else {
-                        List objs = new ArrayList(refs.length);
-                        for (int i = 0; refs != null && i < refs.length; i++) {
-                            ServiceReference ref = refs[i];
+                        List<Object> objs = new ArrayList<Object>(refs.length);
+                        for (ServiceReference ref : refs) {
                             objs.add(getService(ref));
                         }
                         return objs;
@@ -648,7 +663,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             if (isAggregate()) {
                 Object obj = usage.m_object;
                 if (obj instanceof Set) {
-                    List list = new ArrayList();
+                    List<Object> list = new ArrayList<Object>();
                     list.addAll((Set) obj);
                     return list;
                 } else {
@@ -679,7 +694,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         if (usage.m_stack == 0) { // uninitialized usage.
             createServiceObject(usage);
             usage.inc(); // Start the caching, so set the stack level to 1
-            m_usage.set(usage);
+            m_usage.set(usage); // Required by Dalvik
         }
         if (!m_isProxy) {
             return usage.m_object;
@@ -786,6 +801,8 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         // Begin to wait ...
         long enter = System.currentTimeMillis();
         boolean exhausted = false;
+
+        // We used a synchronized block here because we must hold the monitor lock during the 'wait'
         synchronized (this) {
             while (getServiceReference() == null && !exhausted) {
                 try {
