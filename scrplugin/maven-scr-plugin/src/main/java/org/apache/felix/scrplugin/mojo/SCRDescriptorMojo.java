@@ -89,7 +89,7 @@ public class SCRDescriptorMojo extends AbstractMojo {
             "1.9.0");
 
     /**
-     * @parameter expression="${project.build.directory}/scr-plugin-generated"
+     * @parameter expression="${project.build.directory}/classes"
      * @required
      * @readonly
      */
