@@ -43,6 +43,9 @@ public class Options {
     /** The output directory for the generated files. */
     private File outputDirectory;
 
+    /** Is this an incremental build? */
+    private boolean incremental = false;
+
     /**
      * @see #setGenerateAccessors(boolean)
      * @return Whether accessor methods should be generated.
@@ -156,5 +159,19 @@ public class Options {
      */
     public File getComponentDescriptorDirectory() {
         return new File(this.getOutputDirectory(), PARENT_NAME);
+    }
+
+    /**
+     * Is this an incremental build
+     */
+    public boolean isIncremental() {
+        return incremental;
+    }
+
+    /**
+     * Set whether this is an incremental build
+     */
+    public void setIncremental(final boolean incremental) {
+        this.incremental = incremental;
     }
 }
