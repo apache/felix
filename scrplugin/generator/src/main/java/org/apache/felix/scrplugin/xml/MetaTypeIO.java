@@ -174,7 +174,7 @@ public class MetaTypeIO {
 
             return fileNames;
         }
-        if (mtDir.exists()) {
+        if (mtDir.exists() && !options.isIncremental()) {
             for(final File f : mtDir.listFiles()) {
                 if ( f.isFile() ) {
                     logger.debug("Removing obsolete metatype file " + f);

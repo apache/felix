@@ -18,11 +18,9 @@
  */
 package org.apache.felix.scrplugin.xml;
 
-import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.Provider.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -210,7 +208,7 @@ public class ComponentDescriptorIO {
     }
 
     /**
-     * Write the xml for a {@link Component}.
+     * Write the xml for a Component
      *
      * @param component
      * @param contentHandler
@@ -266,7 +264,7 @@ public class ComponentDescriptorIO {
     }
 
     /**
-     * Write the xml for a {@link Implementation}.
+     * Write the xml for an Implementation.
      *
      * @param implementation
      * @param contentHandler
@@ -284,7 +282,7 @@ public class ComponentDescriptorIO {
     }
 
     /**
-     * Write the xml for a {@link Service}.
+     * Write the xml for a service.
      *
      * @param service
      * @param contentHandler
@@ -310,7 +308,7 @@ public class ComponentDescriptorIO {
     }
 
     /**
-     * Write the xml for a {@link Interface}.
+     * Write the xml for a interface
      *
      * @param interf
      * @param contentHandler
@@ -328,7 +326,7 @@ public class ComponentDescriptorIO {
     }
 
     /**
-     * Write the xml for a {@link Property}.
+     * Write the xml for a property.
      *
      * @param property
      * @param contentHandler
@@ -369,7 +367,7 @@ public class ComponentDescriptorIO {
     }
 
     /**
-     * Write the xml for a {@link Reference}.
+     * Write the xml for a Reference.
      *
      * @param reference
      * @param contentHandler
@@ -752,7 +750,7 @@ public class ComponentDescriptorIO {
         if (components.isEmpty()) {
             logger.debug("No Service Component Descriptors found in project.");
             // remove files if it exists
-            if ( descriptorDir.exists() ) {
+            if ( descriptorDir.exists() && !options.isIncremental()) {
                 for(final File f : descriptorDir.listFiles()) {
                     if ( f.isFile() ) {
                         logger.debug("Removing obsolete service descriptor " + f);
