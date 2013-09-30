@@ -24,5 +24,5 @@ package test.inner;
  */
 public interface Computation {
 
-    public String compute();
+    public String compute(String s);
 }

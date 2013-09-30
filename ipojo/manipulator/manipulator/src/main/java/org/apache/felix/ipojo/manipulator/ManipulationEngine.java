@@ -111,7 +111,6 @@ public class ManipulationEngine {
                 try {
                     byte[] out = manipulator.manipulate(bytecode);
                     // Call the visitor
-                    result.visitClassStructure(manipulator.getManipulationMetadata());
                     result.visitManipulatedResource(info.getResourcePath(), out);
                 } catch (IOException e) {
                     m_reporter.error("Cannot manipulate the class " + info.getClassName() + " : " + e.getMessage());
@@ -137,7 +136,9 @@ public class ManipulationEngine {
                     // discovered in the main class instead of re-parsing the inner class to find
                     // its own class version
                     try {
-                        InnerClassManipulator innerManipulator = new InnerClassManipulator(outerClassInternalName, manipulator.getFields().keySet());
+                        InnerClassManipulator innerManipulator = new InnerClassManipulator(inner,
+                                outerClassInternalName,
+                                manipulator);
                         byte[] manipulated = innerManipulator.manipulate(innerClassBytecode, manipulator.getClassVersion());
                         // Propagate manipulated resource
                         result.visitManipulatedResource(resourcePath, manipulated);
@@ -146,6 +147,9 @@ public class ManipulationEngine {
                         return;
                     }
                 }
+
+                // Compute manipulation metadata
+                result.visitClassStructure(manipulator.getManipulationMetadata());
 
                 // All resources have been manipulated for this component
                 result.visitEnd();

@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.manipulation;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +59,7 @@ public class ClassCheckerTestCase extends TestCase {
         assertNull(checker.getSuperClass());
 
         // Check inner classes
-        List<String> inner = checker.getInnerClasses();
+        Collection<String> inner = checker.getInnerClasses();
         assertTrue(inner.isEmpty());
 
         // Ensure fields are correctly filtered

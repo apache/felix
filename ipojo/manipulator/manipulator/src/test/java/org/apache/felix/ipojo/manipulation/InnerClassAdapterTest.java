@@ -22,7 +22,7 @@ package org.apache.felix.ipojo.manipulation;
 import junit.framework.Assert;
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.Pojo;
-import org.junit.Ignore;
+import org.apache.felix.ipojo.metadata.Element;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -55,7 +55,8 @@ public class InnerClassAdapterTest {
             byte[] innerClassBytecode = ManipulatorTest.getBytesFromFile(new File(baseClassDirectory + s + "" +
                     ".class"));
             String innerClassName = s.replace("/", ".");
-            InnerClassManipulator innerManipulator = new InnerClassManipulator(outerClassInternalName, manipulator.getFields().keySet());
+            InnerClassManipulator innerManipulator = new InnerClassManipulator(s, outerClassInternalName,
+                    manipulator);
             byte[] manipulated = innerManipulator.manipulate(innerClassBytecode, manipulator.getClassVersion());
             classloader.addInnerClass(innerClassName, manipulated);
         }
@@ -144,6 +145,98 @@ public class InnerClassAdapterTest {
         Method method = clazz.getMethod("doSomething", new Class[0]);
         String result = (String) method.invoke(pojo);
         assertEquals(result, "foofoofoofoo");
+    }
+
+    @Test
+    public void testRemanipulationOfInnerClasses() throws IOException, ClassNotFoundException, NoSuchMethodException,
+            IllegalAccessException, InvocationTargetException, InstantiationException {
+        Manipulator manipulator = new Manipulator();
+        String className = "test.inner.ComponentWithInnerClasses";
+
+        // Two manipulation of the outer class.
+        byte[] bytecode = manipulator.manipulate(ManipulatorTest.getBytesFromFile(new File
+                (baseClassDirectory + className.replace(".", "/") + ".class")));
+        bytecode = manipulator.manipulate(bytecode);
+
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader(className, bytecode);
+
+        // Manipulate all inner classes
+        for (String s : manipulator.getInnerClasses()) {
+            String outerClassInternalName = className.replace(".", "/");
+            byte[] innerClassBytecode = ManipulatorTest.getBytesFromFile(new File(baseClassDirectory + s + "" +
+                    ".class"));
+            String innerClassName = s.replace("/", ".");
+            InnerClassManipulator innerManipulator = new InnerClassManipulator(s, outerClassInternalName,
+                    manipulator);
+            // Two manipulation of all inner classes.
+            byte[] manipulated = innerManipulator.manipulate(innerClassBytecode, manipulator.getClassVersion());
+            manipulated = innerManipulator.manipulate(manipulated, manipulator.getClassVersion());
+            classloader.addInnerClass(innerClassName, manipulated);
+        }
+
+        Class clazz = classloader.findClass(className);
+        Assert.assertNotNull(clazz);
+        Assert.assertNotNull(manipulator.getManipulationMetadata());
+        Assert.assertFalse(manipulator.getInnerClasses().isEmpty());
+        // We should have found only 2 inner classes.
+        assertThat(manipulator.getInnerClasses().size()).isEqualTo(3);
+
+        // Check that all inner classes are manipulated.
+        InstanceManager im = Mockito.mock(InstanceManager.class);
+        Constructor constructor = clazz.getDeclaredConstructor(InstanceManager.class);
+        constructor.setAccessible(true);
+        Object pojo = constructor.newInstance(new Object[] {im});
+        Assert.assertNotNull(pojo);
+        Assert.assertTrue(pojo instanceof Pojo);
+        Method method = clazz.getMethod("doSomething", new Class[0]);
+        String result = (String) method.invoke(pojo);
+        assertEquals(result, "foofoofoofoo");
+    }
+
+    @Test
+    public void testThatManipulationMetadataContainsTheInnerClasses() throws IOException, ClassNotFoundException,
+            NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Manipulator manipulator = new Manipulator();
+        String className = "test.inner.ComponentWithInnerClasses";
+        manipulate(className, manipulator);
+
+        assertThat(manipulator.getInnerClasses().size()).isEqualTo(3);
+
+        Element manipulation = manipulator.getManipulationMetadata();
+        System.out.println(manipulation);
+        Element[] inners = manipulation.getElements("inner");
+        assertThat(inners.length).isEqualTo(3);
+
+        Element inner = getInnerClassMetadataByName(inners, "MyInnerWithANativeMethod");
+        assertThat(inner).isNotNull();
+        assertThat(getMethodByName(inner.getElements("method"), "foo")).isNotNull();
+
+        inner = getInnerClassMetadataByName(inners, "MyInnerClass");
+        assertThat(inner).isNotNull();
+        assertThat(getMethodByName(inner.getElements("method"), "foo")).isNotNull();
+
+        inner = getInnerClassMetadataByName(inners, "1");
+        assertThat(inner).isNotNull();
+        assertThat(getMethodByName(inner.getElements("method"), "compute")).isNotNull();
+
+    }
+
+    private static Element getInnerClassMetadataByName(Element[] inners, String name) {
+        for (Element element : inners) {
+            if (name.equals(element.getAttribute("name"))) {
+                return element;
+            }
+        }
+        return null;
+    }
+
+    private static Element getMethodByName(Element[] methods, String name) {
+        for (Element element : methods) {
+            if (name.equals(element.getAttribute("name"))) {
+                return element;
+            }
+        }
+        return null;
     }
 
 }

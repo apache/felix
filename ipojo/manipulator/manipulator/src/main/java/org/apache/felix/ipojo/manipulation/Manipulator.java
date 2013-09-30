@@ -19,18 +19,16 @@
 
 package org.apache.felix.ipojo.manipulation;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * iPOJO Byte code Manipulator.
@@ -59,14 +57,24 @@ public class Manipulator {
     private String m_superClass;
 
     /**
-     * List of owned inner classed.
+     * List of owned inner classes and internal methods.
      */
-    private List<String> m_inners;
+    private Map<String, List<MethodDescriptor>> m_inners;
 
     /**
      * Java byte code version.
      */
     private int m_version;
+
+    /**
+     * Was the class already manipulated.
+     */
+    private boolean m_alreadyManipulated;
+
+    /**
+     * The manipulated class name.
+     */
+    private String m_className;
 
     /**
      * Manipulate the given byte array.
@@ -84,6 +92,7 @@ public class Manipulator {
         is1.close();
 
         m_fields = ck.getFields(); // Get visited fields (contains only POJO fields)
+        m_className = ck.getClassName();
 
         // Get interfaces and super class.
         m_interfaces = ck.getInterfaces();
@@ -92,12 +101,15 @@ public class Manipulator {
         // Get the methods list
         m_methods = ck.getMethods();
 
-        m_inners = ck.getInnerClasses();
+        m_inners = ck.getInnerClassesAndMethods();
 
         m_version = ck.getClassVersion();
 
         ClassWriter finalWriter = null;
-        if (!ck.isAlreadyManipulated()) {
+
+        m_alreadyManipulated = ck.isAlreadyManipulated();
+
+        if (!m_alreadyManipulated) {
             // Manipulation ->
             // Add the _setComponentManager method
             // Instrument all fields
@@ -105,21 +117,33 @@ public class Manipulator {
             ClassReader cr0 = new ClassReader(is2);
             ClassWriter cw0 = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             //CheckClassAdapter ch = new CheckClassAdapter(cw0);
-            MethodCreator preprocess = new MethodCreator(cw0, m_fields, m_methods);
+            MethodCreator process = new MethodCreator(cw0, m_fields, m_methods);
             if (ck.getClassVersion() >= Opcodes.V1_6) {
-                cr0.accept(preprocess, ClassReader.EXPAND_FRAMES);
+                cr0.accept(process, ClassReader.EXPAND_FRAMES);
             } else {
-                cr0.accept(preprocess, 0);
+                cr0.accept(process, 0);
             }
             is2.close();
             finalWriter = cw0;
         }
         // The file is in the bundle
-        if (ck.isAlreadyManipulated()) {
+        if (m_alreadyManipulated) {
             return origin;
         } else {
             return finalWriter.toByteArray();
         }
+    }
+
+    /**
+     * Checks whether the class was already manipulated.
+     * @return {@code true} if the class was already manipulated, {@code false} otherwise
+     */
+    public boolean isAlreadyManipulated() {
+        return m_alreadyManipulated;
+    }
+
+    public static String toQualifiedName(String clazz) {
+        return clazz.replace("/", ".");
     }
 
     /**
@@ -129,45 +153,82 @@ public class Manipulator {
     public Element getManipulationMetadata() {
         Element elem = new Element("Manipulation", "");
 
+        elem.addAttribute(new Attribute("className", toQualifiedName(m_className)));
+
         if (m_superClass != null) {
             elem.addAttribute(new Attribute("super", m_superClass));
         }
 
-        for (int j = 0; j < m_interfaces.size(); j++) {
+        for (String m_interface : m_interfaces) {
             Element itf = new Element("Interface", "");
-            Attribute att = new Attribute("name", m_interfaces.get(j).toString());
+            Attribute att = new Attribute("name", m_interface);
             itf.addAttribute(att);
             elem.addElement(itf);
         }
 
-        for (Iterator<String> it = m_fields.keySet().iterator(); it.hasNext();) {
+        for (Map.Entry<String, String> f : m_fields.entrySet()) {
             Element field = new Element("Field", "");
-            String name = it.next();
-            String type = m_fields.get(name);
-            Attribute attName = new Attribute("name", name);
-            Attribute attType = new Attribute("type", type);
+            Attribute attName = new Attribute("name", f.getKey());
+            Attribute attType = new Attribute("type", f.getValue());
             field.addAttribute(attName);
             field.addAttribute(attType);
             elem.addElement(field);
         }
 
-        for (int j = 0; j < m_methods.size(); j++) {
-            MethodDescriptor method = (MethodDescriptor) m_methods.get(j);
+        for (MethodDescriptor method : m_methods) {
             elem.addElement(method.getElement());
         }
 
+        for (Map.Entry<String, List<MethodDescriptor>> inner : m_inners.entrySet()) {
+            Element element = new Element("Inner", "");
+            Attribute name = new Attribute("name", extractInnerClassName(toQualifiedName(inner.getKey())));
+            element.addAttribute(name);
+
+            for (MethodDescriptor method : inner.getValue()) {
+                element.addElement(method.getElement());
+            }
+            elem.addElement(element);
+        }
+
         return elem;
+    }
+
+    /**
+     * Extracts the inner class simple name from the qualified name. It extracts the part after the `$` character.
+     * @param clazz the qualified class name
+     * @return the simple inner class name
+     */
+    public static String extractInnerClassName(String clazz) {
+        if (!clazz.contains("$")) {
+            return clazz;
+        } else {
+            return clazz.substring(clazz.indexOf("$") +1);
+        }
     }
 
     public Map<String, String> getFields() {
         return m_fields;
     }
 
-    public List<String> getInnerClasses() {
-        return m_inners;
+    public Collection<String> getInnerClasses() {
+        return new ArrayList<String>(m_inners.keySet());
     }
 
     public int getClassVersion() {
         return m_version;
+    }
+
+    /**
+     * Adds a method to an inner class.
+     * @param name the inner class name
+     * @param md the method descriptor to add
+     */
+    public void addMethodToInnerClass(String name, MethodDescriptor md) {
+        List<MethodDescriptor> list = m_inners.get(name);
+        if (list == null) {
+            list = new ArrayList<MethodDescriptor>();
+            m_inners.put(name, list);
+        }
+        list.add(md);
     }
 }
