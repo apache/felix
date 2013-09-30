@@ -148,7 +148,10 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      */
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
         if (m_className.equals(outerName)  || outerName == null) { // Anonymous classes does not have an outer class.
-            m_inners.add(name);
+            // Do not include inner static class
+            if (! ((access & ACC_STATIC) == ACC_STATIC)) {
+                m_inners.add(name);
+            }
         }
     }
 
