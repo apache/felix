@@ -101,10 +101,10 @@ public class IssueLog {
     }
 
     private static class Entry {
-    	
-    	static final int LINE_NUMBER_UNKNOWN = 0; 
-    	static final int COLUMN_NUMBER_UNKNOWN = 0; 
-    	
+
+    	static final int LINE_NUMBER_UNKNOWN = 1;
+    	static final int COLUMN_NUMBER_UNKNOWN = 1;
+
         final String message;
         final String location;
         final int lineNumber;
@@ -120,8 +120,8 @@ public class IssueLog {
         	this.lineNumber = lineNumber;
         	this.columnNumber = columnNumber;
         }
-        
-        
+
+
         @Override
         public String toString() {
             return this.location + " [" + this.lineNumber+ "," + this.columnNumber+"] : " + this.message;
