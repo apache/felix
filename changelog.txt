@@ -2,6 +2,7 @@ Changes from 1.15.0 to 1.14.0
 -----------------------------
 ** Improvements
     * [FELIX-4241] - Change default output directory for SCR annotations to ${project.build.directory}/classes 
+    * [FELIX-4249] - Make the default error location 1,1 instead of 0,0
 ** Bug
     * [FELIX-4192] - SCR Generator fails with a NPE in case a class level Reference doesn't define a referenceInterface
     * [FELIX-4010] - SCR Plugin aborts when scanning a Java 8 class file
