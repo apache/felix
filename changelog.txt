@@ -1,5 +1,7 @@
 Changes from 1.8.2 to 1.8.0
 ---------------------------
+** Improvement
+    * [FELIX-4249] - Make the default error location 1,1 instead of 0,0
 ** Bug
     * [FELIX-4192] - SCR Generator fails with a NPE in case a class level Reference doesn't define a referenceInterface
     * [FELIX-4010] - SCR Plugin aborts when scanning a Java 8 class file
