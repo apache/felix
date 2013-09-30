@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.util;
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.IPOJOServiceFactory;
 import org.apache.felix.ipojo.dependency.impl.ServiceReferenceManager;
+import org.apache.felix.ipojo.handlers.dependency.DependencyCallback;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;

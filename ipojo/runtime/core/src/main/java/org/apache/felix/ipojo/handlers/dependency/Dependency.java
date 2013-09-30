@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.felix.ipojo.handlers.dependency;
 
 import org.apache.felix.ipojo.*;
@@ -80,10 +81,11 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      */
     private ServiceUsage m_usage;
     /**
-     * Type of the object to inject.
+     * Type of the object to inject in aggregate dependency. This value is used to determine what kind of object need
+     * to be injected for fields and constructor parameter for aggregate dependencies.
      * Cannot change once set.
      */
-    private int m_type;
+    private AggregateDependencyInjectionType m_type;
     /**
      * Nullable object.
      * Immutable once set.
@@ -107,6 +109,10 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * -1 if not used.
      */
     private int m_index = -1;
+
+    /**
+     * The dependency timeout.
+     */
     private int m_timeout;
 
     /**
@@ -599,6 +605,16 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         }
     }
 
+
+    /**
+     * Gets the list of callbacks attached to the current dependency.
+     * @return the array of dependency callback, {@code null} if no callbacks are attached to the current dependency.
+     */
+    public DependencyCallback[] getDependencyCallbacks() {
+        return m_callbacks;
+    }
+
+
     /**
      * Called by the proxy to get  service objects to delegate a method.
      * On aggregate dependencies, it returns a list.
@@ -690,7 +706,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
     public Object onGet(Object pojo, String fieldName, Object value) {
 
         // Initialize the thread local object is not already touched.
-        Usage usage = (Usage) m_usage.get();
+        Usage usage = m_usage.get();
         if (usage.m_stack == 0) { // uninitialized usage.
             createServiceObject(usage);
             usage.inc(); // Start the caching, so set the stack level to 1
@@ -737,59 +753,60 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
                 usage.m_object = getService(ref);
             }
         } else {
-            if (m_type == 0) { // Array
-                try {
+            switch(m_type) {
+                case ARRAY:
+                    try {
+                        if (refs == null) {
+                            usage.m_object = (Object[]) Array.newInstance(getSpecification(), 0); // Create an empty array.
+                        } else {
+                            //  Use a reflective construction to avoid class cast exception. This method allows setting the component type.
+                            Object[] objs = (Object[]) Array.newInstance(getSpecification(), refs.length);
+                            for (int i = 0; i < refs.length; i++) {
+                                ServiceReference ref = refs[i];
+                                objs[i] = getService(ref);
+                            }
+                            usage.m_object = objs;
+                        }
+                    } catch (ArrayStoreException e) {
+                        throw new RuntimeException("Cannot create the array - Check that the bundle can access the service interface", e);
+                    }
+                    break;
+                case LIST:
                     if (refs == null) {
-                        usage.m_object = (Object[]) Array.newInstance(getSpecification(), 0); // Create an empty array.
+                        usage.m_object = Collections.emptyList();
                     } else {
-                        //  Use a reflective construction to avoid class cast exception. This method allows setting the component type.
-                        Object[] objs = (Object[]) Array.newInstance(getSpecification(), refs.length);
-                        for (int i = 0; i < refs.length; i++) {
-                            ServiceReference ref = refs[i];
-                            objs[i] = getService(ref);
+                        // Use a list to store service objects
+                        List<Object> objs = new ArrayList<Object>(refs.length);
+                        for (ServiceReference ref : refs) {
+                            objs.add(getService(ref));
                         }
                         usage.m_object = objs;
                     }
-                } catch (ArrayStoreException e) {
-                    m_handler.error("Cannot create the array - Check that the bundle can access the service interface", e);
-                    throw new RuntimeException("Cannot create the array - Check that the bundle can access the service interface", e);
-                }
-            } else if (m_type == DependencyHandler.LIST) {
-                if (refs == null) {
-                    usage.m_object = new ArrayList(0); // Create an empty list.
-                } else {
-                    // Use a list to store service objects
-                    List objs = new ArrayList(refs.length);
-                    for (int i = 0; refs != null && i < refs.length; i++) {
-                        ServiceReference ref = refs[i];
-                        objs.add(getService(ref));
+                    break;
+                case SET:
+                    if (refs == null) {
+                        usage.m_object = Collections.emptySet();
+                    } else {
+                        // Use a vector to store service objects
+                        Set<Object> objs = new HashSet<Object>(refs.length);
+                        for (ServiceReference ref : refs) {
+                            objs.add(getService(ref));
+                        }
+                        usage.m_object = objs;
                     }
-                    usage.m_object = objs;
-                }
-            } else if (m_type == DependencyHandler.VECTOR) {
-                if (refs == null) {
-                    usage.m_object = new Vector(0); // Create an empty vector.
-                } else {
-                    // Use a vector to store service objects
-                    Vector objs = new Vector(refs.length);
-                    for (int i = 0; refs != null && i < refs.length; i++) {
-                        ServiceReference ref = refs[i];
-                        objs.add(getService(ref));
+                    break;
+                case VECTOR:
+                    if (refs == null) {
+                        usage.m_object = new Vector(0); // Create an empty vector.
+                    } else {
+                        // Use a vector to store service objects
+                        Vector<Object> objs = new Vector<Object>(refs.length);
+                        for (ServiceReference ref : refs) {
+                            objs.add(getService(ref));
+                        }
+                        usage.m_object = objs;
                     }
-                    usage.m_object = objs;
-                }
-            } else if (m_type == DependencyHandler.SET) {
-                if (refs == null) {
-                    usage.m_object = new HashSet(0); // Create an empty vector.
-                } else {
-                    // Use a vector to store service objects
-                    Set objs = new HashSet(refs.length);
-                    for (int i = 0; refs != null && i < refs.length; i++) {
-                        ServiceReference ref = refs[i];
-                        objs.add(getService(ref));
-                    }
-                    usage.m_object = objs;
-                }
+                    break;
             }
         }
     }
@@ -841,7 +858,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      */
     public void onEntry(Object pojo, Member method, Object[] args) {
         if (m_usage != null) {
-            Usage usage = (Usage) m_usage.get();
+            Usage usage = m_usage.get();
             usage.incComponentStack(); // Increment the number of component access.
             if (usage.m_stack > 0) {
                 usage.inc();
@@ -884,13 +901,14 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      */
     public void onFinally(Object pojo, Member method) {
         if (m_usage != null) {
-            Usage usage = (Usage) m_usage.get();
+            Usage usage = m_usage.get();
             usage.decComponentStack();
             if (usage.m_stack > 0) {
                 if (usage.dec()) {
                     // Exit the method flow => Release all objects
                     usage.clear();
-                    m_usage.set(usage); // Set the Thread local as value has been modified
+                    // Also remove the thread local object.
+                    m_usage.remove();
                 }
             }
         }
@@ -902,7 +920,9 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * @return true if the dependency is optional and supports nullable objects.
      */
     public boolean supportsNullable() {
-        return m_supportNullable;
+        return isOptional()
+                && ! isAggregate()
+                && m_supportNullable;
     }
 
     public String getDefaultImplementation() {
@@ -921,9 +941,9 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      * Set the type to inject.
      * This method set the dependency as aggregate.
      *
-     * @param type either list of vector
+     * @param type the type to inject.
      */
-    protected void setType(int type) {
+    protected void setAggregateType(AggregateDependencyInjectionType type) {
         setAggregate(true);
         m_type = type;
     }
@@ -974,11 +994,10 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         if (m_index == index && m_proxyObject != null) {
             if (isAggregate()) {
                 switch (m_type) {
-                    case DependencyHandler.LIST:
+                    case LIST:
                         return List.class;
-                    case DependencyHandler.SET:
+                    case SET:
                         return Set.class;
-                    //TODO We should also manage the Collection type.
                     default:
                         return null; // Should never happen, it was checked before.
                 }
@@ -988,6 +1007,18 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
         } else {
             return null;
         }
+    }
+
+    public String getException() {
+        return m_exception;
+    }
+
+    public int getTimeout() {
+        return m_timeout;
+    }
+
+    public AggregateDependencyInjectionType getAggregateType() {
+        return m_type;
     }
 
     /**
@@ -1173,7 +1204,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
             Class declaringClass = method.getDeclaringClass();
             if (declaringClass == Object.class) {
                 if (method.equals(m_hashCodeMethod)) {
-                    return new Integer(this.hashCode());
+                    return this.hashCode();
                 } else if (method.equals(m_equalsMethod)) {
                     return proxy == args[0] ? Boolean.TRUE : Boolean.FALSE;
                 } else if (method.equals(m_toStringMethod)) {

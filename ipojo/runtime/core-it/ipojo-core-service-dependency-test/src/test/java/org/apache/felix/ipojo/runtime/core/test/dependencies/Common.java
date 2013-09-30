@@ -19,10 +19,15 @@
 
 package org.apache.felix.ipojo.runtime.core.test.dependencies;
 
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.OptionUtils;
 import org.ow2.chameleon.testing.helpers.BaseTest;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.ops4j.pax.exam.CoreOptions.maven;
+import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 
 /**
  * Bootstrap the test from this project
@@ -34,6 +39,14 @@ public class Common extends BaseTest {
         return Arrays.asList(
                 "org.apache.felix.ipojo.runtime.core.test.components.inner"
         );
+    }
+
+    @Override
+    protected Option[] getCustomOptions() {
+        return new Option[] {
+                wrappedBundle(maven("org.easytesting", "fest-assert").versionAsInProject()),
+                wrappedBundle(maven("org.easytesting", "fest-util").versionAsInProject())
+        };
     }
 
 }

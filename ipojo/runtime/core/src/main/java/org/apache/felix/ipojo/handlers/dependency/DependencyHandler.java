@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.felix.ipojo.handlers.dependency;
 
 import java.util.*;
@@ -68,24 +69,6 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      * Proxy settings value: disabled.
      */
     public static final String PROXY_DISABLED = "disabled";
-
-    /**
-     * Dependency field type : Vector
-     * The dependency will be injected as a vector.
-     */
-    protected static final int VECTOR = 2;
-
-    /**
-     * Dependency Field Type : List.
-     * The dependency will be injected as a list.
-     */
-    protected static final int LIST = 1;
-
-    /**
-     * Dependency Field Type : Set.
-     * The dependency will be injected as a set.
-     */
-    protected static final int SET = 3;
 
     /**
      * List of dependencies of the component.
@@ -173,167 +156,6 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
     }
 
     /**
-     * Check if the dependency given is valid in the sense that metadata are consistent.
-     * @param dep : the dependency to check
-     * @param manipulation : the component-type manipulation metadata
-     * @return true if the dependency is valid
-     * @throws ConfigurationException : the checked dependency is not correct
-     */
-    private boolean checkDependency(Dependency dep, PojoMetadata manipulation) throws ConfigurationException {
-        // Check the internal type of dependency
-        String field = dep.getField();
-        DependencyCallback[] callbacks = dep.getCallbacks();
-        int index = dep.getConstructorParameterIndex();
-
-        if (callbacks == null && field == null  && index == -1) {
-            throw new ConfigurationException("A service dependency requires at least binding methods, " +
-            		"a field or a constructor parameter " + getDependencyIdentifier(dep));
-        }
-
-        for (int i = 0; callbacks != null && i < callbacks.length; i++) {
-            MethodMetadata[] mets = manipulation.getMethods(callbacks[i].getMethodName());
-            if (mets.length == 0) {
-                debug("A dependency callback " + callbacks[i].getMethodName() + " does not exist in the " +
-                        "implementation class, will try the super classes " + getDependencyIdentifier(dep));
-            } else {
-                if (mets[0].getMethodArguments().length > 2) {
-                    throw new ConfigurationException("Requirement Callback : A requirement callback "
-                            + callbacks[i].getMethodName()
-                            + " must have 0, 1 or 2 arguments " + getDependencyIdentifier(dep));
-                }
-
-                callbacks[i].setArgument(mets[0].getMethodArguments());
-
-                if (mets[0].getMethodArguments().length == 1) {
-                    if (!mets[0].getMethodArguments()[0].equals(ServiceReference.class.getName())) {
-                        // The callback receives the service object.
-                        setSpecification(dep, mets[0].getMethodArguments()[0], false); // Just warn if a mismatch is discovered.
-                    }
-                } else if (mets[0].getMethodArguments().length == 2) {
-                    // The callback receives service object, service reference. Check that the second argument is a service reference
-                    if (!(mets[0].getMethodArguments()[1].equals(ServiceReference.class.getName()) // callback with (service object, service reference)
-                           || mets[0].getMethodArguments()[1].equals(Dictionary.class.getName()) // callback with (service object, service properties in a dictionary)
-                           || mets[0].getMethodArguments()[1].equals(Map.class.getName()))) { // callback with (service object, service properties in a map)
-                        String message =
-                                "The requirement callback " + callbacks[i].getMethodName() + " must have a " +
-                                        "ServiceReference, a Dictionary or a Map as the second argument " +
-                                        getDependencyIdentifier(dep);
-                        throw new ConfigurationException(message);
-                    }
-                    setSpecification(dep, mets[0].getMethodArguments()[0], false); // Just warn if a mismatch is discovered.
-                }
-            }
-
-        }
-
-        if (field != null) {
-            FieldMetadata meta = manipulation.getField(field);
-            if (meta == null) {
-                throw new ConfigurationException("Requirement Callback : A requirement field "
-                        + field
-                        + " does not exist in the implementation class " + getDependencyIdentifier(dep));
-            }
-            String type = meta.getFieldType();
-            if (type.endsWith("[]")) {
-                if (dep.isProxy()) {
-                    info("Arrays cannot be used for dependencies using proxies - Disabling the proxy mode " +
-                            getDependencyIdentifier(dep));
-                    dep.setProxy(false);
-                }
-                // Set the dependency to multiple
-                dep.setAggregate(true);
-                type = type.substring(0, type.length() - 2);
-            } else if (type.equals(List.class.getName()) || type.equals(Collection.class.getName())) {
-                dep.setType(LIST);
-                type = null;
-            } else if (type.equals(Vector.class.getName())) {
-                dep.setType(VECTOR);
-                if (dep.isProxy()) {
-                    warn("Vectors cannot be used for dependencies using proxies - Disabling the proxy mode " +
-                            getDependencyIdentifier(dep));
-                    dep.setProxy(false);
-                }
-                type = null;
-            } else if (type.equals(Set.class.getName())) {
-                dep.setType(SET);
-                type = null;
-            } else {
-                if (dep.isAggregate()) {
-                    throw new ConfigurationException("A required service is not correct : the field "
-                            + meta.getFieldName()
-                            + " must be an array or a collection to support aggregate injections " +
-                            getDependencyIdentifier(dep));
-                }
-            }
-            setSpecification(dep, type, true); // Throws an exception if the field type mismatch.
-        }
-
-        // Constructor parameter
-        if (index != -1) {
-        	if (! dep.isProxy()) {
-        		throw new ConfigurationException("Services injected into constructor must use proxies " +
-                        getDependencyIdentifier(dep));
-        	}
-
-    		MethodMetadata[] cts = manipulation.getConstructors();
-    		// If we don't have a type, try to get the first constructor and get the type of the parameter
-    		// we the index 'index'.
-    		if (cts.length > 0  && cts[0].getMethodArguments().length > index) {
-        		String type = cts[0].getMethodArguments()[index];
-        		if (type.endsWith("[]")) {
-                    throw new ConfigurationException("Services injected into constructor cannot be arrays " +
-                            getDependencyIdentifier(dep));
-                } else if (type.equals(List.class.getName()) || type.equals(Collection.class.getName())) {
-                    dep.setType(LIST);
-                    type = null;
-                } else if (type.equals(Vector.class.getName())) {
-                	throw new ConfigurationException("Services injected into constructor cannot be Vectors " +
-                            getDependencyIdentifier(dep));
-                } else if (type.equals(Set.class.getName())) {
-                    dep.setType(SET);
-                    type = null;
-                } else {
-                    if (dep.isAggregate()) {
-                        throw new ConfigurationException("A required service is not correct : the constructor parameter "
-                                + index
-                                + " must be an aggregate type to support aggregate injections " +
-                                getDependencyIdentifier(dep));
-                    }
-                }
-                setSpecification(dep, type, true); // Throws an exception if the field type mismatch.
-        	} else {
-        		throw new ConfigurationException("Cannot determine the specification of the dependency " + index +
-        				", please use the specification attribute " + getDependencyIdentifier(dep));
-        	}
-        }
-
-        // At this point we must have discovered the specification, it it's null, throw a ConfiguraitonException
-        if (dep.getSpecification() == null) {
-            String identifier = getDependencyIdentifier(dep);
-            throw new ConfigurationException("Cannot determine the targeted service specification for the dependency " +
-                    identifier);
-        }
-
-        // Disable proxy on scalar dependency targeting non-interface specification
-        if (! dep.isAggregate()  && dep.isProxy()) {
-        	if (! dep.getSpecification().isInterface()) {
-        		warn("Proxies cannot be used on service dependency targeting non interface " +
-        				"service specification " + getDependencyIdentifier(dep));
-        		dep.setProxy(false);
-        	}
-        }
-
-        // Disables proxy on null (nullable=false)
-//        if (dep.isProxy()  && dep.isOptional() && ! dep.supportsNullable()) {
-//            dep.setProxy(false);
-//            warn("Optional Null Dependencies do not support proxying - Disable the proxy mode");
-//        }
-
-        // Check that all required info are set
-        return dep.getSpecification() != null;
-    }
-
-    /**
      * Builds a description of this dependency to help the user to identify it. IT's not related to the Dependency
      * Description, it's just a string containing dependency information to spot it easily in the code.
      * @param dep the dependency
@@ -365,65 +187,6 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
         }
         identifier.append("}");
         return identifier.toString();
-    }
-
-    /**
-     * Check if we have to set the dependency specification with the given class name.
-     * @param dep : dependency to check
-     * @param className : class name
-     * @param error : set to true to throw an error if the set dependency specification and the given specification are different.
-     * @throws ConfigurationException : the specification class cannot be loaded correctly
-     */
-    private void setSpecification(Dependency dep, String className, boolean error) throws ConfigurationException {
-        if (className == null) {
-            // No found type (list and vector)
-            if (dep.getSpecification() == null) {
-                if (error) {
-                	String id = dep.getId();
-                	if (id == null) {
-                		id = dep.getField();
-                		if (id == null) {
-                			id = Integer.toString(dep.getConstructorParameterIndex());
-                		}
-                	}
-                    throw new ConfigurationException("Cannot discover the required specification for " +
-                            getDependencyIdentifier(dep));
-                } else {
-                    // If the specification is different, warn that we will override it.
-                    info("Cannot discover the required specification for " + dep.getField());
-                }
-            }
-        } else { // In all other case, className is not null.
-            if (dep.getSpecification() == null || !dep.getSpecification().getName().equals(className)) {
-                if (dep.getSpecification() != null) {
-                    if (error) {
-                        throw new ConfigurationException("A required service is not correct : the discovered type ["
-                            + className
-                            + "] and the specified (or already discovered)  service interface ["
-                            + dep.getSpecification().getName()
-                            + "] are not the same " + getDependencyIdentifier(dep));
-                    } else {
-                        // If the specification is different, warn that we will override it.
-                        warn("["
-                            + getInstanceManager().getInstanceName()
-                            + "] The field type ["
-                            + className
-                            + "] and the required service interface ["
-                            + dep.getSpecification()
-                            + "] are not the same " + getDependencyIdentifier(dep));
-                    }
-                }
-
-                Bundle bundle = getInstanceManager().getContext().getBundle();
-                try {
-                    dep.setSpecification(bundle.loadClass(className));
-                } catch (ClassNotFoundException e) {
-                    throw new ConfigurationException("The required service interface (" + className
-                            + ") cannot be loaded from bundle " + bundle.getBundleId() + " " +
-                            getDependencyIdentifier(dep), e);
-                }
-            }
-        }
     }
 
     /**
@@ -497,14 +260,14 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             	dep.addConstructorInjection(index);
             }
 
-            // Check the dependency :
-            if (checkDependency(dep, manipulation)) {
-                m_dependencies.add(dep);
-                if (dep.getField() != null) {
-                    getInstanceManager().register(manipulation.getField(dep.getField()), dep);
-                    atLeastOneField = true;
-                }
+            // Check the dependency, throws an exception on error.
+            DependencyConfigurationChecker.ensure(dep, dependencyElement, manipulation);
+            m_dependencies.add(dep);
+            if (dep.getField() != null) {
+                getInstanceManager().register(manipulation.getField(dep.getField()), dep);
+                atLeastOneField = true;
             }
+
         }
 
         if (atLeastOneField) { // Does register only if we have fields
