@@ -197,61 +197,6 @@ public class ManipulatorTest extends TestCase {
 
     }
 
-    @Ignore("This test requires a classloader storing the inner class")
-    public void _testManipulatingTheInner() throws Exception {
-        Manipulator manipulator = new Manipulator();
-        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/PojoWithInner.class")));
-        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.PojoWithInner", clazz);
-        Class cl = classloader.findClass("test.PojoWithInner");
-        Assert.assertNotNull(cl);
-        Assert.assertNotNull(manipulator.getManipulationMetadata());
-        Assert.assertFalse(manipulator.getInnerClasses().isEmpty());
-
-
-        System.out.println(manipulator.getManipulationMetadata());
-
-        // The manipulation add stuff to the class.
-        Assert.assertTrue(clazz.length > getBytesFromFile(new File("target/test-classes/test/PojoWithInner.class")).length);
-
-
-        boolean found = false;
-        Constructor cst = null;
-        Constructor[] csts = cl.getDeclaredConstructors();
-        for (int i = 0; i < csts.length; i++) {
-            System.out.println(Arrays.asList(csts[i].getParameterTypes()));
-            if (csts[i].getParameterTypes().length == 1  &&
-                    csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
-                found = true;
-                cst = csts[i];
-            }
-        }
-        Assert.assertTrue(found);
-
-        // We still have the empty constructor
-        found = false;
-        csts = cl.getDeclaredConstructors();
-        for (int i = 0; i < csts.length; i++) {
-            System.out.println(Arrays.asList(csts[i].getParameterTypes()));
-            if (csts[i].getParameterTypes().length == 0) {
-                found = true;
-            }
-        }
-        Assert.assertTrue(found);
-
-        // Check the POJO interface
-        Assert.assertTrue(Arrays.asList(cl.getInterfaces()).contains(Pojo.class));
-
-        InstanceManager im = (InstanceManager) Mockito.mock(InstanceManager.class);
-        cst.setAccessible(true);
-        Object pojo = cst.newInstance(new Object[] {im});
-        Assert.assertNotNull(pojo);
-        Assert.assertTrue(pojo instanceof Pojo);
-
-        Method method = cl.getMethod("doSomething", new Class[0]);
-        Assert.assertTrue(((Boolean) method.invoke(pojo, new Object[0])).booleanValue());
-
-    }
-
     public void testManipulatingWithConstructorModification() throws Exception {
         Manipulator manipulator = new Manipulator();
         byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/Child.class")));

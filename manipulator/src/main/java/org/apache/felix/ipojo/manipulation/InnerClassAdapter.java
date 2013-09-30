@@ -19,16 +19,16 @@
 
 package org.apache.felix.ipojo.manipulation;
 
-import java.util.Set;
+import org.objectweb.asm.*;
 
-import org.objectweb.asm.ClassAdapter;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import java.util.Set;
 
 /**
  * Adapts a inner class in order to allow accessing outer class fields.
  * A manipulated inner class has access to the managed field of the outer class.
+ *
+ * Only non-static inner classes are manipulated, others are not.
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class InnerClassAdapter extends ClassAdapter implements Opcodes {
@@ -37,7 +37,6 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
      * Implementation class name.
      */
     private String m_outer;
-
     /**
      * List of fields of the implementation class.
      */
@@ -45,9 +44,10 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
 
     /**
      * Creates the inner class adapter.
-     * @param arg0 parent class visitor
+     *
+     * @param arg0       parent class visitor
      * @param outerClass outer class (implementation class)
-     * @param fields fields of the implementation class
+     * @param fields     fields of the implementation class
      */
     public InnerClassAdapter(ClassVisitor arg0, String outerClass, Set<String> fields) {
         super(arg0);
@@ -58,15 +58,29 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
     /**
      * Visits a method.
      * This methods create a code visitor manipulating outer class field accesses.
-     * @param access method visibility
-     * @param name method name
-     * @param desc method descriptor
-     * @param signature method signature
+     *
+     * @param access     method visibility
+     * @param name       method name
+     * @param desc       method descriptor
+     * @param signature  method signature
      * @param exceptions list of exceptions thrown by the method
      * @return a code adapter manipulating field accesses
      * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
      */
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+        // For non static and non constructor method, generate the wrapping method and move the method content within
+        // the manipulated method.
+
+        // Do nothing on static methods, should not happen in non-static inner classes.
+        if ((access & ACC_STATIC) == ACC_STATIC) {
+            return super.visitMethod(access, name, desc, signature, exceptions);
+        }
+
+        // Do nothing on native methods
+        if ((access & ACC_NATIVE) == ACC_NATIVE) {
+            return super.visitMethod(access, name, desc, signature, exceptions);
+        }
+
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
         return new MethodCodeAdapter(mv, m_outer, access, name, desc, m_fields);
     }
