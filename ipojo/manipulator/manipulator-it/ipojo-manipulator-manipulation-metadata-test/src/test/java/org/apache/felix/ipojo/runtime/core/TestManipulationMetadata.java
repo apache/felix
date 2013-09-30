@@ -25,11 +25,14 @@ import org.apache.felix.ipojo.parser.ParseException;
 import org.apache.felix.ipojo.parser.ParseUtils;
 import org.apache.felix.ipojo.runtime.core.services.BarService;
 import org.apache.felix.ipojo.runtime.core.services.FooService;
+import org.junit.Assert;
 import org.junit.Test;
 import org.ow2.chameleon.testing.helpers.BaseTest;
 
 import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.*;
+import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 /**
  * Check manipulation metadata written in the manifest.
@@ -198,6 +201,45 @@ public class TestManipulationMetadata extends BaseTest {
         assertEquals("Check args count", 2, ParseUtils.parseArrays("{java.lang.Object,java.lang.String}").length);
         assertEquals("Check return", method.getAttribute("return"), "java.lang.Object");
     }
+
+    @Test
+    public void testInnerClasses() {
+        String comp_name = "org.apache.felix.ipojo.runtime.core.components.ComponentWithInnerClasses";
+        Element manipulation = getManipulationForComponent(comp_name);
+        Element[] inners = manipulation.getElements("inner");
+        assertEquals(inners.length, 3);
+
+        Element inner = getInnerClassMetadataByName(inners, "MyInnerWithANativeMethod");
+        Assert.assertNotNull(inner);
+        Assert.assertNotNull(getMethodByName(inner.getElements("method"), "foo"));
+
+        inner = getInnerClassMetadataByName(inners, "MyInnerClass");
+        assertNotNull(inner);
+        assertNotNull(getMethodByName(inner.getElements("method"), "foo"));
+
+        inner = getInnerClassMetadataByName(inners, "1");
+        assertNotNull(inner);
+        assertNotNull(getMethodByName(inner.getElements("method"), "run"));
+    }
+
+    private static Element getInnerClassMetadataByName(Element[] inners, String name) {
+        for (Element element : inners) {
+            if (name.equals(element.getAttribute("name"))) {
+                return element;
+            }
+        }
+        return null;
+    }
+
+    private static Element getMethodByName(Element[] methods, String name) {
+        for (Element element : methods) {
+            if (name.equals(element.getAttribute("name"))) {
+                return element;
+            }
+        }
+        return null;
+    }
+
 
     private Element getManipulationForComponent(Element metadata, String comp_name) {
         Element[] comps = metadata.getElements("component");

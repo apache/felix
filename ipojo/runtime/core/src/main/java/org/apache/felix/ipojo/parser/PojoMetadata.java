@@ -21,6 +21,8 @@ package org.apache.felix.ipojo.parser;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.metadata.Element;
 
+import java.util.*;
+
 /**
  * Manipulation Metadata allows getting information about the implementation class
  * without using reflection such as implemented interfaces, super class,
@@ -44,12 +46,22 @@ public class PojoMetadata {
     /**
      * The list of methods.
      */
-    private MethodMetadata[] m_methods = new MethodMetadata[0];
+    private List<MethodMetadata> m_methods = new ArrayList<MethodMetadata>();
 
     /**
      * The Super class (if <code>null</code> for {@link Object}).
      */
     private String m_super;
+
+    /**
+     * The manipulated class name.
+     */
+    private String m_className;
+
+    /**
+     * The inner classes and their methods.
+     */
+    private Map<String, List<MethodMetadata>> m_innerClasses = new HashMap<String, List<MethodMetadata>>();
 
 
     /**
@@ -65,28 +77,79 @@ public class PojoMetadata {
             throw new ConfigurationException("The component " + metadata.getAttribute("classname") + " has no manipulation metadata");
         }
         Element manip = elems[0];
+        m_className = manip.getAttribute("classname");
         m_super = manip.getAttribute("super");
+
         Element[] fields = manip.getElements("field");
-        for (int i = 0; fields != null && i < fields.length; i++) {
-            FieldMetadata field = new FieldMetadata(fields[i]);
-            addField(field);
+        if (fields != null) {
+            for (Element field : fields) {
+                addField(new FieldMetadata(field));
+            }
         }
+
         Element[] methods = manip.getElements("method");
-        for (int i = 0; methods != null && i < methods.length; i++) {
-            MethodMetadata method = new MethodMetadata(methods[i]);
-            addMethod(method);
+        if (methods != null) {
+            for (Element method : methods) {
+                m_methods.add(new MethodMetadata(method));
+            }
         }
+
         Element[] itfs = manip.getElements("interface");
-        for (int i = 0; itfs != null && i < itfs.length; i++) {
-            addInterface(itfs[i].getAttribute("name"));
+        if (itfs != null) {
+            for (Element itf : itfs) {
+                addInterface(itf.getAttribute("name"));
+            }
+        }
+
+        Element[] inners = manip.getElements("inner");
+        if (inners != null) {
+            for (Element inner : inners) {
+                String name = inner.getAttribute("name");
+                List<MethodMetadata> list = m_innerClasses.get(name);
+                if (list == null) {
+                    list = new ArrayList<MethodMetadata>();
+                    m_innerClasses.put(name, list);
+                }
+                methods = inner.getElements("method");
+                if (methods != null) {
+                    for (Element m : methods) {
+                        list.add(new MethodMetadata(m));
+                    }
+                }
+            }
         }
     }
 
-    public MethodMetadata[] getMethods() { return m_methods; }
+    public MethodMetadata[] getMethods() { return m_methods.toArray(new MethodMetadata[m_methods.size()]); }
 
     public FieldMetadata[] getFields() { return m_fields; }
 
     public String[] getInterfaces() { return m_interfaces; }
+
+    public String getClassName() { return m_className; }
+
+    /**
+     * Gets the inner classes from the manipulated class
+     * @return the list of the inner class names.
+     */
+    public String[] getInnerClasses() {
+        Set<String> classes = m_innerClasses.keySet();
+        return classes.toArray(new String[classes.size()]);
+    }
+
+    /**
+     * Gets the methods from the given inner class.
+     * @param inner the inner class name
+     * @return the list of method, empty if none.
+     */
+    public MethodMetadata[] getMethodsFromInnerClass(String inner) {
+        List<MethodMetadata> methods = m_innerClasses.get(inner);
+        if (inner != null) {
+            return methods.toArray(new MethodMetadata[methods.size()]);
+        } else {
+            return new MethodMetadata[0];
+        }
+    }
 
     /**
      * Gets the field metadata for the given name.
@@ -137,8 +200,8 @@ public class PojoMetadata {
      * @return the method metadata object or <code>null</code> if not found
      */
     public MethodMetadata getMethod(String name) {
-        for (int i = 0; i < m_methods.length; i++) {
-            if (m_methods[i].getMethodName().equalsIgnoreCase(name)) { return m_methods[i]; }
+        for (MethodMetadata metadata : m_methods) {
+            if (metadata.getMethodName().equalsIgnoreCase(name)) { return metadata; }
         }
         return null;
     }
@@ -152,20 +215,13 @@ public class PojoMetadata {
      * @return the Method Metadata array or an empty array if not found
      */
     public MethodMetadata[] getMethods(String name) {
-        MethodMetadata[] mms = new MethodMetadata[0];
-        for (int i = 0; i < m_methods.length; i++) {
-            if (m_methods[i].getMethodName().equalsIgnoreCase(name)) {
-                if (mms.length > 0) {
-                    MethodMetadata[] newInstances = new MethodMetadata[mms.length + 1];
-                    System.arraycopy(mms, 0, newInstances, 0, mms.length);
-                    newInstances[mms.length] = m_methods[i];
-                    mms = newInstances;
-                } else {
-                    mms = new MethodMetadata[] { m_methods[i] };
-                }
+        List<MethodMetadata> list = new ArrayList<MethodMetadata>();
+        for (MethodMetadata metadata : m_methods) {
+            if (metadata.getMethodName().equalsIgnoreCase(name)) {
+                list.add(metadata);
             }
         }
-        return mms;
+        return list.toArray(new MethodMetadata[list.size()]);
     }
 
     /**
@@ -186,15 +242,15 @@ public class PojoMetadata {
      * @return the Method Metadata or <code>null</code> if not found
      */
     public MethodMetadata getMethod(String name, String[] types) {
-        for (int i = 0; i < m_methods.length; i++) {
-            if (m_methods[i].getMethodName().equalsIgnoreCase(name) && m_methods[i].getMethodArguments().length == types.length) {
+        for (MethodMetadata metadata : m_methods) {
+            if (metadata.getMethodName().equalsIgnoreCase(name) && metadata.getMethodArguments().length == types.length) {
                 int argIndex = 0;
                 for (; argIndex < types.length; argIndex++) {
-                    if (! types[argIndex].equals(m_methods[i].getMethodArguments()[argIndex])) {
+                    if (! types[argIndex].equals(metadata.getMethodArguments()[argIndex])) {
                         break;
                     }
                 }
-                if (argIndex == types.length) { return m_methods[i]; } // No mismatch detected.
+                if (argIndex == types.length) { return metadata; } // No mismatch detected.
             }
         }
         return null;
@@ -207,23 +263,6 @@ public class PojoMetadata {
      */
     public MethodMetadata getConstructor(String[] types) {
     	return getMethod("$init", types); // Constructors are named $init in the manipulation metadata
-    }
-
-     /**
-     * Adds a method to the list.
-     * This method is used during the creation of the {@link PojoMetadata}
-     * object.
-     * @param method the Method Metadata to add.
-     */
-    private void addMethod(MethodMetadata method) {
-        if (m_methods.length > 0) {
-            MethodMetadata[] newInstances = new MethodMetadata[m_methods.length + 1];
-            System.arraycopy(m_methods, 0, newInstances, 0, m_methods.length);
-            newInstances[m_methods.length] = method;
-            m_methods = newInstances;
-        } else {
-            m_methods = new MethodMetadata[] { method };
-        }
     }
 
      /**
