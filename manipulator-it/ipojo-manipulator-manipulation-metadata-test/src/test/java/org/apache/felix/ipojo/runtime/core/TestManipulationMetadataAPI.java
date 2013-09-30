@@ -28,7 +28,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.ow2.chameleon.testing.helpers.BaseTest;
 
+import java.util.Arrays;
+
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.*;
 
 public class TestManipulationMetadataAPI extends BaseTest {
@@ -98,6 +101,34 @@ public class TestManipulationMetadataAPI extends BaseTest {
 
         assertTrue("Check Foo Service implementation", manip.isInterfaceImplemented(FooService.class.getName()));
         assertTrue("Check Bar Service implementation", manip.isInterfaceImplemented(BarService.class.getName()));
+    }
+
+    @Test
+    public void testInnerClasses() {
+        String comp_name = "org.apache.felix.ipojo.runtime.core.components.ComponentWithInnerClasses";
+        PojoMetadata metadata = getManipulationMetadataForComponent(comp_name);
+        assertEquals(metadata.getInnerClasses().length, 3);
+        assertNotNull(metadata.getMethodsFromInnerClass("MyInnerWithANativeMethod"));
+        assertNotNull(
+                getMethodMetadata(metadata.getMethodsFromInnerClass("MyInnerWithANativeMethod"),
+                        "foo"));
+
+        assertNotNull(
+                getMethodMetadata(metadata.getMethodsFromInnerClass("MyInnerClass"),
+                        "foo"));
+
+        assertNotNull(
+                getMethodMetadata(metadata.getMethodsFromInnerClass("1"),
+                        "run"));
+    }
+
+    public static MethodMetadata getMethodMetadata(MethodMetadata[] methods, String name) {
+        for (MethodMetadata m : methods) {
+            if (m.getMethodName().equals(name)) {
+                return m;
+            }
+        }
+        return null;
     }
 
     @Test
@@ -274,7 +305,6 @@ public class TestManipulationMetadataAPI extends BaseTest {
         }
         return null;
     }
-
 
     private PojoMetadata getManipulationMetadataForComponent(String comp_name) {
         String header = (String) getTestBundle().getHeaders().get("iPOJO-Components");
