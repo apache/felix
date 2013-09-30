@@ -36,7 +36,7 @@ import java.util.Properties;
 @Provides
 public class ContextualFilterConsumer implements CheckService {
 
-    @Requires(nullable = false, id = "foo")
+    @Requires(id = "foo")
     private FooService foo;
 
     @Override

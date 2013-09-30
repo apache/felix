@@ -45,28 +45,28 @@ public class CheckServiceProvider extends CheckProviderParentClass implements Ch
 
     public Properties getProps() {
         Properties props = new Properties();
-        props.put("voidB", new Integer(simpleB));
-        props.put("objectB", new Integer(objectB));
-        props.put("refB", new Integer(refB));
-        props.put("bothB", new Integer(bothB));
-        props.put("voidU", new Integer(simpleU));
-        props.put("objectU", new Integer(objectU));
-        props.put("refU", new Integer(refU));
-        props.put("bothU", new Integer(bothU));
-        props.put("mapB", new Integer(mapB));
-        props.put("dictB", new Integer(dictB));
-        props.put("mapU", new Integer(mapU));
-        props.put("dictU", new Integer(dictU));
+        props.put("voidB", simpleB);
+        props.put("objectB", objectB);
+        props.put("refB", refB);
+        props.put("bothB", bothB);
+        props.put("voidU", simpleU);
+        props.put("objectU", objectU);
+        props.put("refU", refU);
+        props.put("bothU", bothU);
+        props.put("mapB", mapB);
+        props.put("dictB", dictB);
+        props.put("mapU", mapU);
+        props.put("dictU", dictU);
         if (fs != null) {
             // If nullable = false and proxy, a runtime exception may be launched here
             // catch the exception and add this to props.
             try {
                 props.put("exception", Boolean.FALSE); // Set exception to false for checking.
-                props.put("result", new Boolean(fs.foo()));
-                props.put("boolean", new Boolean(fs.getBoolean()));
-                props.put("int", new Integer(fs.getInt()));
-                props.put("long", new Long(fs.getLong()));
-                props.put("double", new Double(fs.getDouble()));
+                props.put("result", fs.foo());
+                props.put("boolean", fs.getBoolean());
+                props.put("int", fs.getInt());
+                props.put("long", fs.getLong());
+                props.put("double", fs.getDouble());
                 if(fs.getObject() != null) { props.put("object", fs.getObject()); }
             } catch (RuntimeException e) {
                 props.put("exception", Boolean.TRUE);
@@ -77,7 +77,7 @@ public class CheckServiceProvider extends CheckProviderParentClass implements Ch
         
         
         // Add modified
-        props.put("modified", new Integer(modified));
+        props.put("modified", modified);
         
         return props;
     }
@@ -95,7 +95,7 @@ public class CheckServiceProvider extends CheckProviderParentClass implements Ch
             System.err.println("Bind receive null !!! ");
             return;
         }
-        if(o != null && o instanceof FooService) { objectB++; }
+        objectB++;
     }
     
     protected void objectModify(FooService o) {
@@ -103,7 +103,7 @@ public class CheckServiceProvider extends CheckProviderParentClass implements Ch
             System.err.println("Bind receive null !!! [" + modified + "]");
             return;
         }
-        if(o != null && o instanceof FooService) { modified++; }
+        modified++;
     }
     
     public void refBind(ServiceReference sr) {
@@ -115,30 +115,30 @@ public class CheckServiceProvider extends CheckProviderParentClass implements Ch
     }
     
     public void bothBind(FooService o, ServiceReference sr) {
-        if(sr != null && o != null && o instanceof FooService) { bothB++; }
+        if(sr != null && o != null) { bothB++; }
     }
     
     public void bothModify(FooService o, ServiceReference sr) {
-        if(sr != null && o != null && o instanceof FooService) { modified++; }
+        if(sr != null && o != null) { modified++; }
     }
     
     protected void propertiesDictionaryBind(FooService o, Dictionary props) {
-        if(props != null && o != null && o instanceof FooService && props.size() > 0) { dictB++; }
+        if(props != null && o != null && props.size() > 0) { dictB++; }
         fs = o;
     }   
     
     protected void propertiesDictionaryModify(FooService o, Dictionary props) {
-        if(props != null && o != null && o instanceof FooService && props.size() > 0) { modified++; }
+        if(props != null && o != null && props.size() > 0) { modified++; }
         fs = o;
     }   
     
     protected void propertiesMapBind(FooService o, Map props) {
-        if(props != null && o != null && o instanceof FooService && props.size() > 0) { mapB++; }
+        if(props != null && o != null && props.size() > 0) { mapB++; }
         fs = o;
     } 
     
     protected void propertiesMapModify(FooService o, Map props) {
-        if(props != null && o != null && o instanceof FooService && props.size() > 0) { modified++; }
+        if(props != null && o != null && props.size() > 0) { modified++; }
         fs = o;
     } 
 

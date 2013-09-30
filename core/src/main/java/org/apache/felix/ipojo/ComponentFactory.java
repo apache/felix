@@ -187,7 +187,7 @@ public class ComponentFactory extends IPojoFactory implements TrackerCustomizer 
         } catch (Throwable e) { // All others exception are handled here.
             // As for the previous case, the instance is stopped.
             instance.stop();
-            m_logger.log(Logger.ERROR, e.getMessage(), e);
+            m_logger.log(Logger.INFO, "An error occurred when creating an instance of " + getFactoryName(), e);
             throw new ConfigurationException(e.getMessage(), e);
         }
 

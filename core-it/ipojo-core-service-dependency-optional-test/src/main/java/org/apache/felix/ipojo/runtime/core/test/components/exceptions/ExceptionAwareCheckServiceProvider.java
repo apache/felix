@@ -59,7 +59,7 @@ public class ExceptionAwareCheckServiceProvider implements CheckService {
             fs.foo();
             return true; // always return true, to detect the exception case.
         } catch (NoServiceException e) {
-            return true;
+            return false;
         }
     }
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,7 @@ package org.apache.felix.ipojo.handlers.dependency;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ServiceUsage extends ThreadLocal {
+public class ServiceUsage extends ThreadLocal<ServiceUsage.Usage> {
     
     /**
      * Structure contained in the Thread Local.
@@ -93,7 +93,7 @@ public class ServiceUsage extends ThreadLocal {
      * @return an empty Usage object.
      * @see java.lang.ThreadLocal#initialValue()
      */
-    public Object initialValue() {
+    public Usage initialValue() {
         return new Usage();
     }   
 

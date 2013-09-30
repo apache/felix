@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,20 +18,17 @@
  */
 package org.apache.felix.ipojo.handlers.dependency;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.felix.ipojo.util.Callback;
 import org.osgi.framework.ServiceReference;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * This class allwos the creation of callback when service dependency arrives or
  * disappear.
- * 
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DependencyCallback extends Callback {
@@ -40,44 +37,38 @@ public class DependencyCallback extends Callback {
      * Bind method (called when a service arrives).
      */
     public static final int BIND = 0;
-
     /**
      * Unbind method (called when a service disappears).
      */
     public static final int UNBIND = 1;
-    
     /**
      * Updated method (called when a service is modified).
      */
     public static final int MODIFIED = 2;
-
     /**
      * Is the method a bind method or an unbind method ?
      */
     private int m_methodType;
-    
     /**
      * Arguments of the callback.
      */
     private String[] m_argument;
-
     /**
      * Callback method name.
      */
     private String m_method;
-    
     /**
-     * Service Dependency. 
+     * Service Dependency.
      */
     private Dependency m_dependency;
 
     /**
      * Constructor.
-     * 
-     * @param dep : the dependency attached to this dependency callback
-     * @param method : the method to call
+     *
+     * @param dep        : the dependency attached to this dependency callback
+     * @param method     : the method to call
      * @param methodType : is the method to call a bind method or an unbind
-     * method
+     *                   method
      */
     public DependencyCallback(Dependency dep, String method, int methodType) {
         super(method, (String[]) null, false, dep.getHandler().getInstanceManager());
@@ -86,23 +77,23 @@ public class DependencyCallback extends Callback {
         m_method = method;
     }
 
-
     public int getMethodType() {
         return m_methodType;
     }
-    
+
     public String getMethodName() {
         return m_method;
     }
-    
+
     /**
      * Set the argument type (Empty or the class name).
+     *
      * @param arg : the array of argument types.
      */
     public void setArgument(String[] arg) {
         m_argument = arg;
     }
-    
+
     /**
      * Search the method object in the POJO by analyzing present method.
      * If not found in the pojo it tests the parent classes.
@@ -111,11 +102,11 @@ public class DependencyCallback extends Callback {
     protected void searchMethod() {
         if (m_argument != null) {
             Method[] methods = m_dependency.getHandler().getInstanceManager().getClazz().getDeclaredMethods();
-            for (int i = 0; i < methods.length; i++) {
+            for (Method method : methods) {
                 // First check the method name
-                if (methods[i].getName().equals(m_method)) {
+                if (method.getName().equals(m_method)) {
                     // Check arguments
-                    Class[] clazzes = methods[i].getParameterTypes();
+                    Class[] clazzes = method.getParameterTypes();
                     if (clazzes.length == m_argument.length) { // Test size to avoid useless loop // NOPMD
                         int argIndex = 0;
                         for (; argIndex < m_argument.length; argIndex++) {
@@ -124,8 +115,8 @@ public class DependencyCallback extends Callback {
                             }
                         }
                         if (argIndex == m_argument.length) { // If the array was completely read.
-                            m_methodObj = methods[i]; // It is the looked method.
-                            if (! m_methodObj.isAccessible()) { 
+                            m_methodObj = method; // It is the looked method.
+                            if (!m_methodObj.isAccessible()) {
                                 // If not accessible, try to set the accessibility.
                                 m_methodObj.setAccessible(true);
                             }
@@ -136,22 +127,24 @@ public class DependencyCallback extends Callback {
                 }
             }
         }
-        
+
         // Not found => Try parent method.
         searchParentMethod();
-        
+
         if (m_methodObj == null) {
             // If not found, stop the instance (fatal error)
-            m_dependency.getHandler().error("The method " + m_method + " cannot be called : method not found");
+            m_dependency.getHandler().error("The dependency callback method " + m_method + " cannot be invoked - " +
+                    "reason: the method is not defined in the component class (" + m_dependency.getHandler()
+                    .getInstanceManager().getClazz().getName() + ")");
             m_dependency.getHandler().getInstanceManager().stop();
         } else {
-            if (! m_methodObj.isAccessible()) { 
+            if (!m_methodObj.isAccessible()) {
                 // If not accessible, try to set the accessibility.
                 m_methodObj.setAccessible(true);
             }
         }
     }
-    
+
     /**
      * Introspect parent class to find the method.
      */
@@ -174,14 +167,14 @@ public class DependencyCallback extends Callback {
                         if (clazzes[0].getName().equals(ServiceReference.class.getName())) {
                             // Callback with a service reference.
                             m_methodObj = methods[i];
-                            m_argument = new String[] { ServiceReference.class.getName() };
+                            m_argument = new String[]{ServiceReference.class.getName()};
                             return;
                         }
                         // The callback receives a Service object
                         if (clazzes[0].getName().equals(m_dependency.getSpecification().getName())) {
                             // Callback with the service object.
                             m_methodObj = methods[i];
-                            m_argument = new String[] { m_dependency.getSpecification().getName() };
+                            m_argument = new String[]{m_dependency.getSpecification().getName()};
                             return;
                         }
                         break;
@@ -190,21 +183,21 @@ public class DependencyCallback extends Callback {
                         if (clazzes[0].getName().equals(m_dependency.getSpecification().getName()) && clazzes[1].getName().equals(ServiceReference.class.getName())) {
                             // Callback with two arguments.
                             m_methodObj = methods[i];
-                            m_argument = new String[] { m_dependency.getSpecification().getName(), ServiceReference.class.getName() };
+                            m_argument = new String[]{m_dependency.getSpecification().getName(), ServiceReference.class.getName()};
                             return;
                         }
                         // The callback receives the service object and the service properties (in a Map)
                         if (clazzes[0].getName().equals(m_dependency.getSpecification().getName()) && clazzes[1].getName().equals(Map.class.getName())) {
                             // Callback with two arguments.
                             m_methodObj = methods[i];
-                            m_argument = new String[] { m_dependency.getSpecification().getName(), Map.class.getName() };
+                            m_argument = new String[]{m_dependency.getSpecification().getName(), Map.class.getName()};
                             return;
                         }
                         // The callback receives the service object and the service properties (in a Dictionary)
                         if (clazzes[0].getName().equals(m_dependency.getSpecification().getName()) && clazzes[1].getName().equals(Dictionary.class.getName())) {
                             // Callback with two arguments.
                             m_methodObj = methods[i];
-                            m_argument = new String[] { m_dependency.getSpecification().getName(), Dictionary.class.getName() };
+                            m_argument = new String[]{m_dependency.getSpecification().getName(), Dictionary.class.getName()};
                             return;
                         }
                         break;
@@ -217,38 +210,38 @@ public class DependencyCallback extends Callback {
 
     /**
      * Call the callback method with a service reference.
-     * 
+     *
      * @param ref : the service reference to send to the method
      * @param obj : the service object
-     * @throws NoSuchMethodException : Method is not found in the class
+     * @throws NoSuchMethodException     : Method is not found in the class
      * @throws InvocationTargetException : The method is not static
-     * @throws IllegalAccessException : The method can not be invoked
+     * @throws IllegalAccessException    : The method can not be invoked
      */
     protected void call(ServiceReference ref, Object obj) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if (m_methodObj == null) {
             searchMethod();
         }
         switch (m_argument.length) {
-            case 0 :
+            case 0:
                 call(new Object[0]);
                 break;
-            case 1 : 
+            case 1:
                 if (m_argument[0].equals(ServiceReference.class.getName())) {
-                    call(new Object[] {ref});
+                    call(new Object[]{ref});
                 } else {
-                    call(new Object[] {obj});
+                    call(new Object[]{obj});
                 }
                 break;
-            case 2 :
+            case 2:
                 if (m_argument[1].equals(ServiceReference.class.getName())) {
-                    call(new Object[] {obj, ref});
+                    call(new Object[]{obj, ref});
                 } else if (m_argument[1].equals(Dictionary.class.getName())) {
-                    call(new Object[] {obj, getPropertiesInDictionary(ref)});
+                    call(new Object[]{obj, getPropertiesInDictionary(ref)});
                 } else {
-                    call(new Object[] {obj, getPropertiesInMap(ref)});
+                    call(new Object[]{obj, getPropertiesInMap(ref)});
                 }
                 break;
-            default : 
+            default:
                 break;
         }
     }
@@ -256,6 +249,7 @@ public class DependencyCallback extends Callback {
     /**
      * Creates a {@link Dictionary} containing service properties of the
      * given service reference.
+     *
      * @param ref the service reference
      * @return a {@link Dictionary} containing the service properties.
      */
@@ -267,10 +261,11 @@ public class DependencyCallback extends Callback {
         }
         return dict;
     }
-    
+
     /**
      * Creates a {@link Map} containing service properties of the
      * given service reference.
+     *
      * @param ref the service reference
      * @return a {@link Map} containing the service properties.
      */
@@ -283,15 +278,14 @@ public class DependencyCallback extends Callback {
         return map;
     }
 
-
     /**
      * Call the callback on the given instance with the given argument.
-     * 
+     *
      * @param instance : the instance on which call the callback
-     * @param ref : the service reference to send to the callback
-     * @param obj : the service object
-     * @throws NoSuchMethodException : the method is not found
-     * @throws IllegalAccessException : the method could not be called
+     * @param ref      : the service reference to send to the callback
+     * @param obj      : the service object
+     * @throws NoSuchMethodException     : the method is not found
+     * @throws IllegalAccessException    : the method could not be called
      * @throws InvocationTargetException : an error happens in the called method
      */
     protected void callOnInstance(Object instance, ServiceReference ref, Object obj) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -299,26 +293,26 @@ public class DependencyCallback extends Callback {
             searchMethod();
         }
         switch (m_argument.length) {
-            case 0 :
+            case 0:
                 call(instance, new Object[0]);
                 break;
-            case 1 : 
+            case 1:
                 if (m_argument[0].equals(ServiceReference.class.getName())) {
-                    call(instance, new Object[] {ref});
+                    call(instance, new Object[]{ref});
                 } else {
-                    call(instance, new Object[] {obj});
+                    call(instance, new Object[]{obj});
                 }
                 break;
-            case 2 :
+            case 2:
                 if (m_argument[1].equals(ServiceReference.class.getName())) {
-                    call(instance, new Object[] {obj, ref});
+                    call(instance, new Object[]{obj, ref});
                 } else if (m_argument[1].equals(Dictionary.class.getName())) {
-                    call(instance, new Object[] {obj, getPropertiesInDictionary(ref)});
+                    call(instance, new Object[]{obj, getPropertiesInDictionary(ref)});
                 } else {
-                    call(instance, new Object[] {obj, getPropertiesInMap(ref)});
+                    call(instance, new Object[]{obj, getPropertiesInMap(ref)});
                 }
                 break;
-            default : 
+            default:
                 break;
         }
     }
