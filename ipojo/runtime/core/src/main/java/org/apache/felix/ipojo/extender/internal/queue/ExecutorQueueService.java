@@ -25,6 +25,9 @@ import org.apache.felix.ipojo.extender.queue.Callback;
 import org.apache.felix.ipojo.extender.queue.JobInfo;
 import org.apache.felix.ipojo.extender.queue.QueueService;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.cm.ManagedService;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -32,7 +35,17 @@ import java.util.concurrent.*;
 /**
  * An asynchronous implementation of the queue service. This implementation relies on an executor service.
  */
-public class ExecutorQueueService extends AbstractService implements LifecycleQueueService {
+public class ExecutorQueueService extends AbstractService implements LifecycleQueueService, ManagedService {
+
+    /**
+     * Property name used to configure this ThreadPool's size (usable as System Property or ConfigAdmin property).
+     */
+    public static final String THREADPOOL_SIZE_PROPERTY = "org.apache.felix.ipojo.extender.ThreadPoolSize";
+
+    /**
+     * Service PID used to identify service with ConfigAdmin.
+     */
+    public static final String EXECUTOR_QUEUE_SERVICE_PID = "org.apache.felix.ipojo.extender.ExecutorQueueService";
 
     /**
      * The default thread pool size (3).
@@ -42,12 +55,22 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
     /**
      * The executor service.
      */
-    private final ExecutorService m_executorService;
+    private final ThreadPoolExecutor m_executorService;
 
     /**
      * The statistics populated by this queue service.
      */
     private final Statistic m_statistic = new Statistic();
+
+    /**
+     * Store service properties (used when updating their values)
+     */
+    private Hashtable<String, Object> m_properties;
+
+    /**
+     * Initial thread pool size.
+     */
+    private final int initialSize;
 
     /**
      * Creates the queue service using the default pool size.
@@ -65,7 +88,7 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
      * @param size          the thread pool size.
      */
     public ExecutorQueueService(BundleContext bundleContext, int size) {
-        this(bundleContext, Executors.newFixedThreadPool(size));
+        this(bundleContext, (ThreadPoolExecutor) Executors.newFixedThreadPool(size));
     }
 
     /**
@@ -76,7 +99,7 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
      * @param threadFactory the thread factory
      */
     public ExecutorQueueService(BundleContext bundleContext, int size, ThreadFactory threadFactory) {
-        this(bundleContext, Executors.newFixedThreadPool(size, threadFactory));
+        this(bundleContext, (ThreadPoolExecutor) Executors.newFixedThreadPool(size, threadFactory));
     }
 
 
@@ -87,9 +110,11 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
      * @param bundleContext   the bundle context
      * @param executorService the executor service we have to use
      */
-    private ExecutorQueueService(BundleContext bundleContext, ExecutorService executorService) {
+    private ExecutorQueueService(BundleContext bundleContext, ThreadPoolExecutor executorService) {
         super(bundleContext, QueueService.class);
         m_executorService = executorService;
+        initialSize = executorService.getCorePoolSize();
+        m_properties = getDefaultProperties();
     }
 
     /**
@@ -108,9 +133,15 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
 
     @Override
     protected Dictionary<String, ?> getServiceProperties() {
-        Hashtable<String, Object> properties = new Hashtable<String, Object>();
-        properties.put(QueueService.QUEUE_MODE_PROPERTY, QueueService.ASYNCHRONOUS_QUEUE_MODE);
-        return properties;
+        return m_properties;
+    }
+
+    private Hashtable<String, Object> getDefaultProperties() {
+        Hashtable<String, Object> initial = new Hashtable<String, Object>();
+        initial.put(Constants.SERVICE_PID, EXECUTOR_QUEUE_SERVICE_PID);
+        initial.put(QueueService.QUEUE_MODE_PROPERTY, QueueService.ASYNCHRONOUS_QUEUE_MODE);
+        initial.put(THREADPOOL_SIZE_PROPERTY, initialSize);
+        return initial;
     }
 
     public int getFinished() {
@@ -154,4 +185,56 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
         return submit(callable, "No description");
     }
 
+    public void updated(Dictionary properties) throws ConfigurationException {
+
+        // Default configuration
+        if (properties == null) {
+            properties = getDefaultProperties();
+        }
+
+        boolean changed = false;
+
+        // Try to read configuration
+        Object o = properties.get(THREADPOOL_SIZE_PROPERTY);
+        if (o != null) {
+            // Convert value
+            Integer newSize = getIntegerProperty(o, DEFAULT_QUEUE_SIZE);
+
+            if (newSize != m_executorService.getMaximumPoolSize()) {
+                // Apply configuration change
+                m_executorService.setCorePoolSize(newSize);
+                m_executorService.setMaximumPoolSize(newSize);
+                m_properties.put(THREADPOOL_SIZE_PROPERTY, newSize);
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            // Transfer unrecognized values in service properties as per spec. recommendation
+            for (Object key : Collections.list(properties.keys())) {
+                if (!THREADPOOL_SIZE_PROPERTY.equals(key)) {
+                    m_properties.put(key.toString(), properties.get(key));
+                }
+            }
+
+            // Update registration object
+            getRegistration().setProperties(m_properties);
+        }
+
+    }
+
+    private Integer getIntegerProperty(final Object value, final Integer defaultValue) throws ConfigurationException {
+        Integer newSize = null;
+        if (value instanceof Integer) {
+            newSize = (Integer) value;
+        } else {
+            // Try to convert the value
+            try {
+                newSize = Integer.parseInt(value.toString());
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+        return newSize;
+    }
 }

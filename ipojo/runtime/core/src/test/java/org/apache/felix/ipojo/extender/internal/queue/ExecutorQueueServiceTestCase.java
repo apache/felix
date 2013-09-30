@@ -22,9 +22,12 @@ package org.apache.felix.ipojo.extender.internal.queue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.concurrent.Future;
 
 import org.apache.felix.ipojo.extender.internal.queue.callable.SleepingCallable;
@@ -32,6 +35,8 @@ import org.apache.felix.ipojo.extender.internal.queue.callable.StringCallable;
 import org.apache.felix.ipojo.extender.queue.Callback;
 import org.apache.felix.ipojo.extender.queue.JobInfo;
 import org.apache.felix.ipojo.extender.queue.QueueService;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -53,6 +58,9 @@ public class ExecutorQueueServiceTestCase extends TestCase {
 
     @Mock
     private Callback<String> m_callback;
+
+    @Captor
+    private ArgumentCaptor<Dictionary<String, ?>> m_captor;
 
     @Override
     public void setUp() throws Exception {
@@ -114,6 +122,73 @@ public class ExecutorQueueServiceTestCase extends TestCase {
         queueService.stop();
     }
 
+    public void testConfigurationUpdate() throws Exception {
+        ExecutorQueueService queueService = new ExecutorQueueService(m_bundleContext, 1);
+
+        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(eq(QueueService.class.getName()),
+                                                                             eq(queueService),
+                                                                             any(Dictionary.class)))
+               .thenReturn(m_registration);
+
+        queueService.start();
+
+        verify(m_bundleContext).registerService(eq(QueueService.class.getName()), eq(queueService), m_captor.capture());
+
+        // Verify initial value is 1
+        Dictionary<String, ?> initial = m_captor.getValue();
+        assertEquals(1, initial.get(ExecutorQueueService.THREADPOOL_SIZE_PROPERTY));
+
+        Dictionary<String, Object> update = new Hashtable<String, Object>();
+        update.put(ExecutorQueueService.THREADPOOL_SIZE_PROPERTY, 3);
+        queueService.updated(update);
+
+        verify(m_registration).setProperties(m_captor.capture());
+        assertEquals(3, m_captor.getValue().get(ExecutorQueueService.THREADPOOL_SIZE_PROPERTY));
+    }
+
+    public void testManagedServiceUpdatedWithNull() throws Exception {
+        ExecutorQueueService queueService = new ExecutorQueueService(m_bundleContext, 1);
+
+        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(eq(QueueService.class.getName()),
+                                                                             eq(queueService),
+                                                                             any(Dictionary.class)))
+               .thenReturn(m_registration);
+
+        queueService.start();
+
+        verify(m_bundleContext).registerService(eq(QueueService.class.getName()), eq(queueService), m_captor.capture());
+
+        // Verify initial value is 1
+        Dictionary<String, ?> initial = m_captor.getValue();
+        assertEquals(1, initial.get(ExecutorQueueService.THREADPOOL_SIZE_PROPERTY));
+
+        // Change the value once and then apply a null configuration
+        // Service should use it's default configuration
+        Dictionary<String, Object> update = new Hashtable<String, Object>();
+        update.put(ExecutorQueueService.THREADPOOL_SIZE_PROPERTY, 3);
+        queueService.updated(update);
+        queueService.updated(null);
+
+        verify(m_registration, times(2)).setProperties(m_captor.capture());
+        assertEquals(1, m_captor.getValue().get(ExecutorQueueService.THREADPOOL_SIZE_PROPERTY));
+    }
+
+    public void testConfigurationUpdatedWithNoChanges() throws Exception {
+        ExecutorQueueService queueService = new ExecutorQueueService(m_bundleContext, 1);
+
+        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(eq(QueueService.class.getName()),
+                                                                             eq(queueService),
+                                                                             any(Dictionary.class)))
+               .thenReturn(m_registration);
+
+        queueService.start();
+
+        Dictionary<String, Object> update = new Hashtable<String, Object>();
+        update.put(ExecutorQueueService.THREADPOOL_SIZE_PROPERTY, 1);
+        queueService.updated(update);
+
+        verifyZeroInteractions(m_registration);
+    }
 }
 
 

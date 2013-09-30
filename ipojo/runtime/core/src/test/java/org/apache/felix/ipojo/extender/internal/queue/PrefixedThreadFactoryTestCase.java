@@ -26,8 +26,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.concurrent.ThreadFactory;
 
-import org.apache.felix.ipojo.extender.internal.queue.PrefixedThreadFactory;
-
 import junit.framework.TestCase;
 
 /**

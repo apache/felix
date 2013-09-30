@@ -19,11 +19,15 @@
 
 package org.apache.felix.ipojo.extender.internal;
 
+import java.util.concurrent.ThreadFactory;
+
 import org.apache.felix.ipojo.ConfigurationTracker;
 import org.apache.felix.ipojo.EventDispatcher;
 import org.apache.felix.ipojo.extender.internal.linker.DeclarationLinker;
 import org.apache.felix.ipojo.extender.internal.processor.*;
 import org.apache.felix.ipojo.extender.internal.queue.ExecutorQueueService;
+import org.apache.felix.ipojo.extender.internal.queue.GroupThreadFactory;
+import org.apache.felix.ipojo.extender.internal.queue.NamingThreadFactory;
 import org.apache.felix.ipojo.extender.internal.queue.PrefixedThreadFactory;
 import org.apache.felix.ipojo.extender.internal.queue.SynchronousQueueService;
 import org.apache.felix.ipojo.extender.internal.queue.pref.HeaderPreferenceSelection;
@@ -136,8 +140,17 @@ public class Extender implements BundleActivator {
                     Preference.SYNC,
                     m_logger);
         } else {
+            // Build a thread factory that will groups extender's thread together
+            ThreadFactory threadFactory = new GroupThreadFactory(new ThreadGroup("iPOJO Extender"));
+            threadFactory = new NamingThreadFactory(threadFactory);
+            threadFactory = new PrefixedThreadFactory(threadFactory, "[iPOJO] ");
+
+            // Create the queue services
             SynchronousQueueService sync = new SynchronousQueueService(context);
-            ExecutorQueueService async = new ExecutorQueueService(context, 1, new PrefixedThreadFactory("[iPOJO] "));
+            ExecutorQueueService async = new ExecutorQueueService(context,
+                                                                  Integer.getInteger(ExecutorQueueService.THREADPOOL_SIZE_PROPERTY,
+                                                                                     1), // default to 1 if no system property is set
+                                                                  threadFactory);
             m_queueService = new PreferenceQueueService(new HeaderPreferenceSelection(), sync, async);
 
             extensionBundleProcessor = new QueuingActivationProcessor(extensionBundleProcessor, m_queueService);
