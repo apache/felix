@@ -36,6 +36,12 @@ import org.objectweb.asm.Opcodes;
 public class InnerClassManipulator {
 
     /**
+     * The manipulator having manipulated the component class.
+     */
+    private final Manipulator m_manipulator;
+    private final String m_innerClassName;
+
+    /**
      * Outer class class name.
      */
     private String m_outer;
@@ -47,12 +53,14 @@ public class InnerClassManipulator {
 
     /**
      * Creates an inner class manipulator.
-     * @param classname : class name
-     * @param fields : fields
+     * @param outerclassName : class name
+     * @param manipulator : fields
      */
-    public InnerClassManipulator(String classname, Set<String> fields) {
-        m_outer = classname;
-        m_fields = fields;
+    public InnerClassManipulator(String innerClassName, String outerclassName, Manipulator manipulator) {
+        m_outer = outerclassName;
+        m_innerClassName = innerClassName;
+        m_fields = manipulator.getFields().keySet();
+        m_manipulator = manipulator;
     }
 
     /**
@@ -66,7 +74,7 @@ public class InnerClassManipulator {
 
         ClassReader cr = new ClassReader(is1);
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        InnerClassAdapter adapter = new InnerClassAdapter(cw, m_outer, m_fields);
+        InnerClassAdapter adapter = new InnerClassAdapter(m_innerClassName, cw, m_outer, m_fields, m_manipulator);
         if (version >= Opcodes.V1_6) {
             cr.accept(adapter, ClassReader.EXPAND_FRAMES);
         } else {

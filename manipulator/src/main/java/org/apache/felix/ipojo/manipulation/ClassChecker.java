@@ -19,10 +19,8 @@
 
 package org.apache.felix.ipojo.manipulation;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -72,7 +70,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     /**
      * List of visited inner class owned by the implementation class.
      */
-    private List<String> m_inners = new ArrayList<String>();
+    private Map<String, List<MethodDescriptor>> m_inners = new LinkedHashMap<String, List<MethodDescriptor>>();
 
     /**
      * <code>true</code> if the class supports annotations.
@@ -150,7 +148,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         if (m_className.equals(outerName)  || outerName == null) { // Anonymous classes does not have an outer class.
             // Do not include inner static class
             if (! ((access & ACC_STATIC) == ACC_STATIC)) {
-                m_inners.add(name);
+                m_inners.put(name, new ArrayList<MethodDescriptor>());
             }
         }
     }
@@ -237,17 +235,14 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         return null;
     }
 
-    private boolean isGeneratedConstructor(String name, String desc) {
+    public static boolean isGeneratedConstructor(String name, String desc) {
         return ("<init>".equals(name) && isFirstArgumentInstanceManager(desc));
     }
 
-    private boolean isFirstArgumentInstanceManager(String desc) {
+    public static boolean isFirstArgumentInstanceManager(String desc) {
         Type[] types = Type.getArgumentTypes(desc);
-        if (types != null && (types.length >= 1)) {
-            return Type.getType("Lorg/apache/felix/ipojo/InstanceManager;")
-                            .equals(types[0]);
-        }
-        return false;
+        return types != null && (types.length >= 1)
+                && Type.getType("Lorg/apache/felix/ipojo/InstanceManager;").equals(types[0]);
     }
 
     private boolean isGeneratedMethod(String name, String desc) {
@@ -315,8 +310,16 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         return m_superClass;
     }
 
-    public List<String> getInnerClasses() {
+    public Collection<String> getInnerClasses() {
+        return m_inners.keySet();
+    }
+
+    public Map<String, List<MethodDescriptor>> getInnerClassesAndMethods() {
         return m_inners;
+    }
+
+    public String getClassName() {
+        return m_className;
     }
 
     /**

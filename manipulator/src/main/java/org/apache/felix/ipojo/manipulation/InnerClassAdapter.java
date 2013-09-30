@@ -33,6 +33,8 @@ import java.util.Set;
  */
 public class InnerClassAdapter extends ClassAdapter implements Opcodes {
 
+    private final Manipulator m_manipulator;
+    private final String m_name;
     /**
      * Implementation class name.
      */
@@ -45,14 +47,19 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
     /**
      * Creates the inner class adapter.
      *
+     * @param name      the inner class name
      * @param arg0       parent class visitor
      * @param outerClass outer class (implementation class)
      * @param fields     fields of the implementation class
+     * @param manipulator the manipulator having manipulated the outer class.
      */
-    public InnerClassAdapter(ClassVisitor arg0, String outerClass, Set<String> fields) {
+    public InnerClassAdapter(String name, ClassVisitor arg0, String outerClass, Set<String> fields,
+                             Manipulator manipulator) {
         super(arg0);
+        m_name = name;
         m_outer = outerClass;
         m_fields = fields;
+        m_manipulator = manipulator;
     }
 
     /**
@@ -68,8 +75,9 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
      * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
      */
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        // For non static and non constructor method, generate the wrapping method and move the method content within
-        // the manipulated method.
+
+        final MethodDescriptor md = new MethodDescriptor(name, desc, (access & ACC_STATIC) == ACC_STATIC);
+        m_manipulator.addMethodToInnerClass(m_name, md);
 
         // Do nothing on static methods, should not happen in non-static inner classes.
         if ((access & ACC_STATIC) == ACC_STATIC) {
@@ -82,7 +90,12 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
         }
 
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        return new MethodCodeAdapter(mv, m_outer, access, name, desc, m_fields);
+        if (! m_manipulator.isAlreadyManipulated()) {
+            // Do not re-manipulate.
+            return new MethodCodeAdapter(mv, m_outer, access, name, desc, m_fields);
+        } else {
+            return mv;
+        }
     }
 
 

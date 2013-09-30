@@ -32,26 +32,25 @@ import org.objectweb.asm.tree.LocalVariableNode;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class MethodDescriptor {
-
     /**
      * Method name.
      */
-    private String m_name;
+    private final String m_name;
 
     /**
      * Returned type.
      */
-    private String m_returnType;
+    private final String m_returnType;
 
     /**
      * Argument types.
      */
-    private String[] m_arguments;
+    private final String[] m_arguments;
 
     /**
      * The descriptor of the method.
      */
-    private String m_desc;
+    private final String m_desc;
 
 
     /**

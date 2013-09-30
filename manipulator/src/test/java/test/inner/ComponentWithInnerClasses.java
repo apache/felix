@@ -32,17 +32,19 @@ public class ComponentWithInnerClasses{
         MyInnerClass inn = new MyInnerClass();
         Computation compute = new Computation() {
 
-            public String compute() {
+            public String compute(final String s) {
                 return "foo";
             }
         };
-        return nat.foo() + MyStaticInnerClass.foo() + inn.foo() + compute.compute();
+        return nat.foo() + MyStaticInnerClass.foo() + inn.foo() + compute.compute("");
     }
+
+    private String foo = "foo";
 
     private class MyInnerWithANativeMethod {
 
         public String foo() {
-            return "foo";
+            return ComponentWithInnerClasses.this.foo;
         }
 
         public native void baz();
@@ -64,7 +66,7 @@ public class ComponentWithInnerClasses{
 
     private class MyInnerClass {
         public String foo() {
-            return "foo";
+            return ComponentWithInnerClasses.this.foo;
         }
     }
 
