@@ -81,4 +81,8 @@ public abstract class AbstractService implements Lifecycle {
     protected Dictionary<String, ?> getServiceProperties() {
         return null;
     }
+
+    protected ServiceRegistration<?> getRegistration() {
+        return m_registration;
+    }
 }
