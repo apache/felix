@@ -19,23 +19,21 @@
 
 package org.apache.felix.ipojo.handlers.dependency;
 
-import java.util.*;
-
 import org.apache.felix.ipojo.*;
 import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.metadata.Element;
-import org.apache.felix.ipojo.parser.FieldMetadata;
 import org.apache.felix.ipojo.parser.MethodMetadata;
 import org.apache.felix.ipojo.parser.PojoMetadata;
 import org.apache.felix.ipojo.util.*;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
+
+import java.util.*;
 
 /**
  * The dependency handler manages a list of service dependencies.
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class DependencyHandler extends PrimitiveHandler implements DependencyStateListener {
@@ -44,54 +42,81 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
      * Proxy settings property.
      */
     public static final String PROXY_SETTINGS_PROPERTY = "ipojo.proxy";
-
     /**
      * Proxy type property.
      */
     public static final String PROXY_TYPE_PROPERTY = "ipojo.proxy.type";
-
     /**
      * Proxy type value: smart.
      */
     public static final String SMART_PROXY = "smart";
-
     /**
      * Proxy type value: dynamic-proxy.
      */
     public static final String DYNAMIC_PROXY = "dynamic-proxy";
-
     /**
      * Proxy settings value: enabled.
      */
     public static final String PROXY_ENABLED = "enabled";
-
     /**
      * Proxy settings value: disabled.
      */
     public static final String PROXY_DISABLED = "disabled";
-
     /**
      * List of dependencies of the component.
      */
     private final List<Dependency> m_dependencies = new ArrayList<Dependency>();
-
     /**
      * Is the handler started.
      */
     private boolean m_started;
-
     /**
      * The handler description.
      */
     private DependencyHandlerDescription m_description;
-
     /**
      * The instance configuration context source, updated once reconfiguration.
      */
     private InstanceConfigurationSource m_instanceConfigurationSource;
 
     /**
+     * Builds a description of this dependency to help the user to identify it. IT's not related to the Dependency
+     * Description, it's just a string containing dependency information to spot it easily in the code.
+     *
+     * @param dep the dependency
+     * @return the identifier containing (if defined) the id, the specification, the field and the callback.
+     * @since 1.10.1
+     */
+    public static String getDependencyIdentifier(Dependency dep) {
+        StringBuilder identifier = new StringBuilder("{");
+        if (dep.getId() != null) {
+            identifier.append("id=").append(dep.getId());
+        }
+        if (dep.getField() != null) {
+            if (identifier.length() > 1) {
+                identifier.append(", ");
+            }
+            identifier.append("field=").append(dep.getField());
+        }
+        if (dep.getCallbacks() != null && dep.getCallbacks().length > 0) {
+            if (identifier.length() > 1) {
+                identifier.append(", ");
+            }
+            identifier.append("method=").append(dep.getCallbacks()[0].getMethodName());
+        }
+        if (dep.getSpecification() != null) {
+            if (identifier.length() > 1) {
+                identifier.append(", ");
+            }
+            identifier.append("specification=").append(dep.getSpecification().getName());
+        }
+        identifier.append("}");
+        return identifier.toString();
+    }
+
+    /**
      * Get the list of managed dependency.
+     *
      * @return the dependency list
      */
     public Dependency[] getDependencies() {
@@ -100,6 +125,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
     /**
      * Validate method. This method is invoked by an AbstractServiceDependency when this dependency becomes RESOLVED.
+     *
      * @param dep : the dependency becoming RESOLVED.
      * @see org.apache.felix.ipojo.util.DependencyStateListener#validate(org.apache.felix.ipojo.util.DependencyModel)
      */
@@ -109,6 +135,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
     /**
      * Invalidate method. This method is invoked by an AbstractServiceDependency when this dependency becomes UNRESOLVED or BROKEN.
+     *
      * @param dep : the dependency becoming UNRESOLVED or BROKEN.
      * @see org.apache.felix.ipojo.util.DependencyStateListener#invalidate(org.apache.felix.ipojo.util.DependencyModel)
      */
@@ -156,43 +183,10 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
     }
 
     /**
-     * Builds a description of this dependency to help the user to identify it. IT's not related to the Dependency
-     * Description, it's just a string containing dependency information to spot it easily in the code.
-     * @param dep the dependency
-     * @return the identifier containing (if defined) the id, the specification, the field and the callback.
-     * @since 1.10.1
-     */
-    public static String getDependencyIdentifier(Dependency dep) {
-        StringBuilder identifier = new StringBuilder("{");
-        if (dep.getId() != null) {
-            identifier.append("id=").append(dep.getId());
-        }
-        if (dep.getField() != null) {
-            if (identifier.length() > 1) {
-                identifier.append(", ");
-            }
-            identifier.append("field=").append(dep.getField());
-        }
-        if (dep.getCallbacks() != null  && dep.getCallbacks().length > 0) {
-            if (identifier.length() > 1) {
-                identifier.append(", ");
-            }
-            identifier.append("method=").append(dep.getCallbacks()[0].getMethodName());
-        }
-        if (dep.getSpecification() != null) {
-            if (identifier.length() > 1) {
-                identifier.append(", ");
-            }
-            identifier.append("specification=").append(dep.getSpecification().getName());
-        }
-        identifier.append("}");
-        return identifier.toString();
-    }
-
-    /**
      * Configure the handler.
+     *
      * @param componentMetadata : the component type metadata
-     * @param configuration : the instance configuration
+     * @param configuration     : the instance configuration
      * @throws ConfigurationException : one dependency metadata is not correct.
      * @see org.apache.felix.ipojo.Handler#configure(org.apache.felix.ipojo.metadata.Element, java.util.Dictionary)
      */
@@ -256,8 +250,8 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             // Add the constructor parameter if needed
             String paramIndex = dependencyElement.getAttribute("constructor-parameter");
             if (paramIndex != null) {
-            	int index = Integer.parseInt(paramIndex);
-            	dep.addConstructorInjection(index);
+                int index = Integer.parseInt(paramIndex);
+                dep.addConstructorInjection(index);
             }
 
             // Check the dependency, throws an exception on error.
@@ -277,6 +271,19 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                     getInstanceManager().register(method, dep);
                 }
             }
+
+            // Also track the inner class methods
+            for (String inner : manipulation.getInnerClasses()) {
+                MethodMetadata[] meths = manipulation.getMethodsFromInnerClass(inner);
+                if (meths != null) {
+                    for (MethodMetadata method : meths) {
+                        for (Dependency dep : m_dependencies) {
+                            System.out.println("Registering " + method.getMethodName());
+                            getInstanceManager().register(method, inner, dep);
+                        }
+                    }
+                }
+            }
         }
 
         m_description = new DependencyHandlerDescription(this, getDependencies()); // Initialize the description.
@@ -286,6 +293,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
     /**
      * Add internal context source to all dependencies.
+     *
      * @param configuration the instance configuration to creates the instance configuration source
      */
     private void manageContextSources(Dictionary<String, Object> configuration) {
@@ -353,7 +361,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
             if (proxy.equals("false")) {
                 isProxy = false;
             } else if (proxy.equals("true")) {
-                if (! isProxy) { // The configuration overrides the system setting
+                if (!isProxy) { // The configuration overrides the system setting
                     warn("The configuration of a service dependency overrides the proxy mode");
                 }
                 isProxy = true;
@@ -446,39 +454,41 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
     }
 
     /**
-	 * Gets the requires filter configuration from the given object.
-	 * The given object must come from the instance configuration.
-	 * This method was made to fix FELIX-2688. It supports filter configuration using
-	 * an array:
-	 * <code>{"myFirstDep", "(property1=value1)", "mySecondDep", "(property2=value2)"});</code>
-	 * @param requiresFiltersValue the value contained in the instance
-	 * configuration.
-	 * @return the dictionary. If the object in already a dictionary, just returns it,
-	 * if it's an array, builds the dictionary.
-	 * @throws ConfigurationException the dictionary cannot be built
-	 */
-	private Dictionary getRequiresFilters(Object requiresFiltersValue)
-			throws ConfigurationException {
-		if (requiresFiltersValue != null
-				&& requiresFiltersValue.getClass().isArray()) {
-			String[] filtersArray = (String[]) requiresFiltersValue;
-			if (filtersArray.length % 2 != 0) {
-				throw new ConfigurationException(
-						"A requirement filter is invalid : "
-								+ requiresFiltersValue);
-			}
-			Dictionary<String, Object> requiresFilters = new Hashtable<String, Object>();
-			for (int i = 0; i < filtersArray.length; i += 2) {
-				requiresFilters.put(filtersArray[i], filtersArray[i + 1]);
-			}
-			return requiresFilters;
-		}
+     * Gets the requires filter configuration from the given object.
+     * The given object must come from the instance configuration.
+     * This method was made to fix FELIX-2688. It supports filter configuration using
+     * an array:
+     * <code>{"myFirstDep", "(property1=value1)", "mySecondDep", "(property2=value2)"});</code>
+     *
+     * @param requiresFiltersValue the value contained in the instance
+     *                             configuration.
+     * @return the dictionary. If the object in already a dictionary, just returns it,
+     *         if it's an array, builds the dictionary.
+     * @throws ConfigurationException the dictionary cannot be built
+     */
+    private Dictionary getRequiresFilters(Object requiresFiltersValue)
+            throws ConfigurationException {
+        if (requiresFiltersValue != null
+                && requiresFiltersValue.getClass().isArray()) {
+            String[] filtersArray = (String[]) requiresFiltersValue;
+            if (filtersArray.length % 2 != 0) {
+                throw new ConfigurationException(
+                        "A requirement filter is invalid : "
+                                + requiresFiltersValue);
+            }
+            Dictionary<String, Object> requiresFilters = new Hashtable<String, Object>();
+            for (int i = 0; i < filtersArray.length; i += 2) {
+                requiresFilters.put(filtersArray[i], filtersArray[i + 1]);
+            }
+            return requiresFilters;
+        }
 
-		return (Dictionary) requiresFiltersValue;
-	}
+        return (Dictionary) requiresFiltersValue;
+    }
 
     /**
      * Handler start method.
+     *
      * @see org.apache.felix.ipojo.Handler#start()
      */
     public void start() {
@@ -494,6 +504,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
     /**
      * Handler stop method.
+     *
      * @see org.apache.felix.ipojo.Handler#stop()
      */
     public void stop() {
@@ -505,6 +516,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
     /**
      * Handler createInstance method. This method is override to allow delayed callback invocation.
+     *
      * @param instance : the created object
      * @see org.apache.felix.ipojo.PrimitiveHandler#onCreation(Object)
      */
@@ -516,6 +528,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
     /**
      * Get the dependency handler description.
+     *
      * @return the dependency handler description.
      * @see org.apache.felix.ipojo.Handler#getDescription()
      */
@@ -525,6 +538,7 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
 
     /**
      * The instance is reconfigured.
+     *
      * @param configuration the new instance configuration.
      */
     @Override
