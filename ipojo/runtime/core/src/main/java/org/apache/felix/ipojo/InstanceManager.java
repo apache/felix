@@ -148,7 +148,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * The Map storing the Method objects by ids.
      * [id=>{@link Method}].
      */
-    private Map m_methods = new Hashtable();
+    private Map m_methods = new HashMap();
 
 
     /**
@@ -1068,6 +1068,38 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     }
 
     /**
+     * Registers a method interceptor on a methods from an inner class.
+     * A method interceptor will be notified of method entries, exits
+     * and errors. Note that handlers are method interceptors.
+     * @param method the field to monitor
+     * @param innerClass the inner class name
+     * @param interceptor the field interceptor object
+     */
+    public void register(MethodMetadata method, String innerClass, MethodInterceptor interceptor) {
+        if (m_methodRegistration == null) {
+            m_methodRegistration = new HashMap();
+            m_methodRegistration.put(innerClass + "___" + method.getMethodIdentifier(),
+                    new MethodInterceptor[] { interceptor });
+        } else {
+            MethodInterceptor[] list = (MethodInterceptor[]) m_methodRegistration.get(method.getMethodIdentifier());
+            if (list == null) {
+                m_methodRegistration.put(innerClass + "___" + method.getMethodIdentifier(),
+                        new MethodInterceptor[] { interceptor });
+            } else {
+                for (int j = 0; j < list.length; j++) {
+                    if (list[j] == interceptor) {
+                        return;
+                    }
+                }
+                MethodInterceptor[] newList = new MethodInterceptor[list.length + 1];
+                System.arraycopy(list, 0, newList, 0, list.length);
+                newList[list.length] = interceptor;
+                m_methodRegistration.put(innerClass + "___" + method.getMethodIdentifier(), newList);
+            }
+        }
+    }
+
+    /**
      * Registers a constructor injector.
      * The constructor injector will be called when a pojo object is going to be
      * created.
@@ -1154,8 +1186,11 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         if (m_methodRegistration == null) { // Immutable field.
             return;
         }
+
         MethodInterceptor[] list = (MethodInterceptor[]) m_methodRegistration.get(methodId);
         Member method = getMethodById(methodId);
+        // We can't find the member object of anonymous methods.
+
         // In case of a constructor, the method is null, and the list is null too.
         for (int i = 0; list != null && i < list.length; i++) {
             list[i].onEntry(pojo, method, args); // Outside a synchronized block.
@@ -1222,7 +1257,42 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     private Member getMethodById(String methodId) {
         // Used a synchronized map.
         Member member = (Member) m_methods.get(methodId);
-        if (member == null  && m_clazz != null) {
+        if (! m_methods.containsKey(methodId) && m_clazz != null) {
+            // Is it a inner class method
+            if (methodId.contains("___")) { // Mark to detect a inner class method.
+                String[] split = methodId.split("___");
+                if (split.length != 2) {
+                    m_logger.log(Logger.INFO, "A methodID cannot be associated with a method from the POJO class: " + methodId);
+                    return null;
+                } else {
+                    String innerClassName = split[0];
+                    methodId = split[1];
+
+                    // We can't find the member objects from anonymous methods, identified by their numeric name
+                    // Just escaping in this case.
+                    if (innerClassName.matches("-?\\d+")) {
+                        m_methods.put(methodId, null);
+                        return null;
+                    }
+
+                    for (Class c : m_clazz.getDeclaredClasses()) {
+                        if (innerClassName.equals(c.getSimpleName())) {
+                            Method[] mets = c.getDeclaredMethods();
+                            for (Method met : mets) {
+                                if (MethodMetadata.computeMethodId(met).equals(methodId)) {
+                                    // Store the new methodId
+                                    m_methods.put(methodId, met);
+                                    return met;
+                                }
+                            }
+                        }
+                        m_logger.log(Logger.INFO, "Cannot find the member associated to " + methodId + " - reason: " +
+                                "cannot find the class " + innerClassName + " declared in " + m_clazz.getName());
+                    }
+                }
+            }
+
+
             // First try on methods.
             Method[] mets = m_clazz.getDeclaredMethods();
             for (int i = 0; i < mets.length; i++) {

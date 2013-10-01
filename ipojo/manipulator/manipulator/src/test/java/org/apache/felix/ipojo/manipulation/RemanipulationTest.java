@@ -53,15 +53,16 @@ public class RemanipulationTest extends TestCase {
         Reporter reporter = mock(Reporter.class);
         // Step 1 - First collection and manipulation
         //1.1 Metadata collection
+        byte[] origin = ManipulatorTest.getBytesFromFile(new File("target/test-classes/test/PlentyOfAnnotations.class"));
         MiniStore store = new MiniStore()
                 .addClassToStore("test.PlentyOfAnnotations",
-                        ManipulatorTest.getBytesFromFile(new File("target/test-classes/test/PlentyOfAnnotations.class")));
+                        origin);
         AnnotationMetadataProvider provider = new AnnotationMetadataProvider(store, reporter);
         List<Element> originalMetadata = provider.getMetadatas();
         // 1.2 Manipulation
         Manipulator manipulator = new Manipulator();
-        byte[] clazz = manipulator.manipulate(
-                ManipulatorTest.getBytesFromFile(new File("target/test-classes/test/PlentyOfAnnotations.class")));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
         Element originalManipulationMetadata = manipulator.getManipulationMetadata();
         // 1.3 Check that the class is valid
         ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.PlentyOfAnnotations", clazz);
@@ -78,6 +79,7 @@ public class RemanipulationTest extends TestCase {
         List<Element> metadataAfterOneManipulation = provider.getMetadatas();
         // 2.2 Manipulation
         manipulator = new Manipulator();
+        manipulator.prepare(clazz);
         byte[] clazz2 = manipulator.manipulate(clazz);
         Element manipulationMetadataAfterSecondManipulation = manipulator.getManipulationMetadata();
         // 2.3 Check that the class is valid
@@ -95,6 +97,7 @@ public class RemanipulationTest extends TestCase {
         List<Element> metadataAfterTwoManipulation = provider.getMetadatas();
         // 3.2 Manipulation
         manipulator = new Manipulator();
+        manipulator.prepare(clazz2);
         byte[] clazz3 = manipulator.manipulate(clazz2);
         Element manipulationMetadataAfterThirdManipulation = manipulator.getManipulationMetadata();
         // 3.3 Check that the class is valid

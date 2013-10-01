@@ -124,7 +124,7 @@ public class TestNestedClasses extends BaseTest {
     public void testPublicInnerClass() {
         Map data = (Map) service.getProps().get("publicInner");
         assertNotNull("Check data existence", data);
-
+        System.out.println(data);
         assertEquals("Check public object", "publicObject", data.get("publicObject"));
         assertEquals("Check public int", new Integer(0), data.get("publicInt"));
         assertEquals("Check protected object", "protectedObject", data.get("protectedObject"));

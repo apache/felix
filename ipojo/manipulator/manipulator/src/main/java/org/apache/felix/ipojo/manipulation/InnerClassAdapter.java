@@ -20,7 +20,12 @@
 package org.apache.felix.ipojo.manipulation;
 
 import org.objectweb.asm.*;
+import org.objectweb.asm.commons.GeneratorAdapter;
+import org.objectweb.asm.tree.LocalVariableNode;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -33,8 +38,22 @@ import java.util.Set;
  */
 public class InnerClassAdapter extends ClassAdapter implements Opcodes {
 
+    /**
+     * The manipulator having manipulated the outer class.
+     * We add method descriptions to this manipulator.
+     */
     private final Manipulator m_manipulator;
+
+    /**
+     * The name of the inner class. This name is only define in the outer class.
+     */
     private final String m_name;
+
+    /**
+     * The ismple name of the class.
+     */
+    private final String m_simpleName;
+
     /**
      * Implementation class name.
      */
@@ -47,20 +66,21 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
     /**
      * Creates the inner class adapter.
      *
-     * @param name      the inner class name
+     * @param name      the inner class name (internal name)
      * @param arg0       parent class visitor
-     * @param outerClass outer class (implementation class)
-     * @param fields     fields of the implementation class
+     * @param outerClassName outer class (implementation class)
      * @param manipulator the manipulator having manipulated the outer class.
      */
-    public InnerClassAdapter(String name, ClassVisitor arg0, String outerClass, Set<String> fields,
+    public InnerClassAdapter(String name, ClassVisitor arg0, String outerClassName,
                              Manipulator manipulator) {
         super(arg0);
         m_name = name;
-        m_outer = outerClass;
-        m_fields = fields;
+        m_simpleName = m_name.substring(m_name.indexOf("$") + 1);
+        m_outer = outerClassName;
         m_manipulator = manipulator;
+        m_fields = manipulator.getFields().keySet();
     }
+
 
     /**
      * Visits a method.
@@ -75,10 +95,6 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
      * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
      */
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-
-        final MethodDescriptor md = new MethodDescriptor(name, desc, (access & ACC_STATIC) == ACC_STATIC);
-        m_manipulator.addMethodToInnerClass(m_name, md);
-
         // Do nothing on static methods, should not happen in non-static inner classes.
         if ((access & ACC_STATIC) == ACC_STATIC) {
             return super.visitMethod(access, name, desc, signature, exceptions);
@@ -89,14 +105,240 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
             return super.visitMethod(access, name, desc, signature, exceptions);
         }
 
-        MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+
+        // Do not re-manipulate.
         if (! m_manipulator.isAlreadyManipulated()) {
-            // Do not re-manipulate.
-            return new MethodCodeAdapter(mv, m_outer, access, name, desc, m_fields);
+
+            if (name.equals("<init>")) {
+                // We change the field access from the constructor, but we don't generate the wrapper.
+                MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+                return new MethodCodeAdapter(mv, m_outer, access, name, desc, m_fields);
+            }
+
+            // For all non constructor methods
+
+            MethodDescriptor md = getMethodDescriptor(name, desc);
+            if (md == null) {
+                generateMethodWrapper(access, name, desc, signature, exceptions, null, null,
+                        null);
+            } else {
+                generateMethodWrapper(access, name, desc, signature, exceptions,
+                        md.getArgumentLocalVariables(),
+                        md.getAnnotations(), md.getParameterAnnotations());
+            }
+
+            // The new name is the method name prefixed by the PREFIX.
+            MethodVisitor mv = super.visitMethod(access, MethodCreator.PREFIX + name, desc, signature,
+                    exceptions);
+            return new MethodCodeAdapter(mv, m_outer, access,  MethodCreator.PREFIX + name, desc, m_fields);
         } else {
-            return mv;
+            return super.visitMethod(access, name, desc, signature, exceptions);
         }
     }
 
+    private String getMethodFlagName(String name, String desc) {
+        return MethodCreator.METHOD_FLAG_PREFIX + getMethodId(name, desc);
+    }
+
+    private String getMethodId(String name, String desc) {
+        StringBuilder id = new StringBuilder(m_simpleName);
+        id.append("___"); // Separator
+        id.append(name);
+
+        Type[] args = Type.getArgumentTypes(desc);
+        for (Type type : args) {
+            String arg = type.getClassName();
+            if (arg.endsWith("[]")) {
+                // We have to replace all []
+                String acc = "";
+                while (arg.endsWith("[]")) {
+                    arg = arg.substring(0, arg.length() - 2);
+                    acc += "__";
+                }
+                id.append("$").append(arg.replace('.', '_')).append(acc);
+            } else {
+                id.append("$").append(arg.replace('.', '_'));
+            }
+        }
+        return id.toString();
+    }
+
+    /**
+     * Generate the method header of a POJO method.
+     * This method header encapsulate the POJO method call to
+     * signal entry exit and error to the container.
+     *
+     * The instance manager and flag are accessed using method calls.
+     * @param access : access flag.
+     * @param name : method name.
+     * @param desc : method descriptor.
+     * @param signature : method signature.
+     * @param exceptions : declared exceptions.
+     * @param localVariables : the local variable nodes.
+     * @param annotations : the annotations to move to this method.
+     * @param paramAnnotations : the parameter annotations to move to this method.
+     */
+    private void generateMethodWrapper(int access, String name, String desc, String signature, String[] exceptions,
+                                       List<LocalVariableNode> localVariables, List<ClassChecker.AnnotationDescriptor> annotations,
+                                       Map<Integer, List<ClassChecker.AnnotationDescriptor>> paramAnnotations) {
+        GeneratorAdapter mv = new GeneratorAdapter(cv.visitMethod(access, name, desc, signature, exceptions), access, name, desc);
+
+        // If we have variables, we wraps the code within labels. The `lifetime` of the variables are bound to those
+        // two variables.
+        boolean hasArgumentLabels = localVariables != null && !localVariables.isEmpty();
+        Label start = null;
+        if (hasArgumentLabels) {
+            start = new Label();
+            mv.visitLabel(start);
+        }
+
+        mv.visitCode();
+
+        Type returnType = Type.getReturnType(desc);
+
+        // Compute result and exception stack location
+        int result = -1;
+        int exception = -1;
+
+        //int arguments = mv.newLocal(Type.getType((new Object[0]).getClass()));
+
+        if (returnType.getSort() != Type.VOID) {
+            // The method returns something
+            result = mv.newLocal(returnType);
+            exception = mv.newLocal(Type.getType(Throwable.class));
+        } else {
+            exception = mv.newLocal(Type.getType(Throwable.class));
+        }
+
+        Label l0 = new Label();
+        Label l1 = new Label();
+        Label l2 = new Label();
+
+        mv.visitTryCatchBlock(l0, l1, l2, "java/lang/Throwable");
+
+        // Access the flag from the outer class
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitFieldInsn(GETFIELD, m_name, "this$0", "L" + m_outer + ";");
+        mv.visitFieldInsn(GETFIELD, m_outer, getMethodFlagName(name, desc), "Z");
+        mv.visitJumpInsn(IFNE, l0);
+
+        mv.visitVarInsn(ALOAD, 0);
+        mv.loadArgs();
+        mv.visitMethodInsn(INVOKESPECIAL, m_name, MethodCreator.PREFIX + name, desc);
+        mv.visitInsn(returnType.getOpcode(IRETURN));
+
+        // end of the non intercepted method invocation.
+
+        mv.visitLabel(l0);
+
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitFieldInsn(GETFIELD, m_name, "this$0", "L" + m_outer + ";");
+        mv.visitFieldInsn(GETFIELD, m_outer, MethodCreator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitLdcInsn(getMethodId(name, desc));
+        mv.loadArgArray();
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.ENTRY,
+                "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)V");
+
+        mv.visitVarInsn(ALOAD, 0);
+
+        // Do not allow argument modification : just reload arguments.
+        mv.loadArgs();
+        mv.visitMethodInsn(INVOKESPECIAL, m_name, MethodCreator.PREFIX + name, desc);
+
+        if (returnType.getSort() != Type.VOID) {
+            mv.visitVarInsn(returnType.getOpcode(ISTORE), result);
+        }
+
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitFieldInsn(GETFIELD, m_name, "this$0", "L" + m_outer + ";");
+        mv.visitFieldInsn(GETFIELD, m_outer, MethodCreator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitLdcInsn(getMethodId(name, desc));
+        if (returnType.getSort() != Type.VOID) {
+            mv.visitVarInsn(returnType.getOpcode(ILOAD), result);
+            mv.box(returnType);
+        } else {
+            mv.visitInsn(ACONST_NULL);
+        }
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.EXIT, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V");
+
+        mv.visitLabel(l1);
+        Label l7 = new Label();
+        mv.visitJumpInsn(GOTO, l7);
+        mv.visitLabel(l2);
+
+        mv.visitVarInsn(ASTORE, exception);
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitFieldInsn(GETFIELD, m_name, "this$0", "L" + m_outer + ";");
+        mv.visitFieldInsn(GETFIELD, m_outer, MethodCreator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitLdcInsn(getMethodId(name, desc));
+        mv.visitVarInsn(ALOAD, exception);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.ERROR, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Throwable;)V");
+        mv.visitVarInsn(ALOAD, exception);
+        mv.visitInsn(ATHROW);
+
+        mv.visitLabel(l7);
+        if (returnType.getSort() != Type.VOID) {
+            mv.visitVarInsn(returnType.getOpcode(ILOAD), result);
+        }
+        mv.visitInsn(returnType.getOpcode(IRETURN));
+
+        // If we had arguments, we mark the end of the lifetime.
+        Label end = null;
+        if (hasArgumentLabels) {
+            end = new Label();
+            mv.visitLabel(end);
+        }
+
+        // Move annotations
+        if (annotations != null) {
+            for (int i = 0; i < annotations.size(); i++) {
+                ClassChecker.AnnotationDescriptor ad = annotations.get(i);
+                ad.visitAnnotation(mv);
+            }
+        }
+
+        // Move parameter annotations
+        if (paramAnnotations != null  && ! paramAnnotations.isEmpty()) {
+            Iterator<Integer> ids = paramAnnotations.keySet().iterator();
+            while(ids.hasNext()) {
+                Integer id = ids.next();
+                List<ClassChecker.AnnotationDescriptor> ads = paramAnnotations.get(id);
+                for (int i = 0; i < ads.size(); i++) {
+                    ClassChecker.AnnotationDescriptor ad = ads.get(i);
+                    ad.visitParameterAnnotation(id, mv);
+                }
+            }
+        }
+
+        // Write the arguments name.
+        if (hasArgumentLabels) {
+            for (LocalVariableNode var : localVariables) {
+                mv.visitLocalVariable(var.name, var.desc, var.signature, start, end, var.index);
+            }
+        }
+
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+    }
+
+    /**
+     * Gets the method descriptor for the specified name and descriptor.
+     * The method descriptor is looked inside the
+     * {@link MethodCreator#m_visitedMethods}
+     * @param name the name of the method
+     * @param desc the descriptor of the method
+     * @return the method descriptor or <code>null</code> if not found.
+     */
+    private MethodDescriptor getMethodDescriptor(String name, String desc) {
+        for (MethodDescriptor md : m_manipulator.getMethodsFromInnerClass(m_name)) {
+            if (md.getName().equals(name) && md.getDescriptor().equals(desc)) {
+                return md;
+            }
+        }
+        return null;
+    }
 
 }

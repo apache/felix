@@ -45,6 +45,11 @@ public class InnerClasses implements CheckService {
     
     private static int staticint = 6;
 
+    /**
+     * A fake service.
+     */
+    private Runnable runnable;
+
     public boolean check() {
         return true;
     }

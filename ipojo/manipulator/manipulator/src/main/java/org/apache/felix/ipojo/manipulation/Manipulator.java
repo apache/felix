@@ -77,19 +77,18 @@ public class Manipulator {
     private String m_className;
 
     /**
-     * Manipulate the given byte array.
-     * @param origin : original class.
-     * @return the manipulated class, if the class is already manipulated, the original class.
-     * @throws IOException : if an error occurs during the manipulation.
+     * Checks the given bytecode, determines if the class was already manipulated, and collect the metadata about the
+     * class.
+     * @param origin the bytecode
      */
-    public byte[] manipulate(byte[] origin) throws IOException {
-        InputStream is1 = new ByteArrayInputStream(origin);
+    public void prepare(byte[] origin) throws IOException {
+        InputStream is = new ByteArrayInputStream(origin);
 
         // First check if the class is already manipulated :
-        ClassReader ckReader = new ClassReader(is1);
+        ClassReader ckReader = new ClassReader(is);
         ClassChecker ck = new ClassChecker();
         ckReader.accept(ck, ClassReader.SKIP_FRAMES);
-        is1.close();
+        is.close();
 
         m_fields = ck.getFields(); // Get visited fields (contains only POJO fields)
         m_className = ck.getClassName();
@@ -101,36 +100,37 @@ public class Manipulator {
         // Get the methods list
         m_methods = ck.getMethods();
 
+        // Methods are not yet collected, but the structure is ready.
         m_inners = ck.getInnerClassesAndMethods();
 
         m_version = ck.getClassVersion();
 
-        ClassWriter finalWriter = null;
-
         m_alreadyManipulated = ck.isAlreadyManipulated();
+    }
 
+    /**
+     * Manipulate the given byte array.
+     * @param origin : original class.
+     * @return the manipulated class, if the class is already manipulated, the original class.
+     * @throws IOException : if an error occurs during the manipulation.
+     */
+    public byte[] manipulate(byte[] origin) throws IOException {
+        ClassWriter finalWriter = null;
         if (!m_alreadyManipulated) {
-            // Manipulation ->
-            // Add the _setComponentManager method
-            // Instrument all fields
             InputStream is2 = new ByteArrayInputStream(origin);
             ClassReader cr0 = new ClassReader(is2);
             ClassWriter cw0 = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             //CheckClassAdapter ch = new CheckClassAdapter(cw0);
-            MethodCreator process = new MethodCreator(cw0, m_fields, m_methods);
-            if (ck.getClassVersion() >= Opcodes.V1_6) {
+            MethodCreator process = new MethodCreator(cw0, this);
+            if (m_version >= Opcodes.V1_6) {
                 cr0.accept(process, ClassReader.EXPAND_FRAMES);
             } else {
                 cr0.accept(process, 0);
             }
             is2.close();
-            finalWriter = cw0;
-        }
-        // The file is in the bundle
-        if (m_alreadyManipulated) {
-            return origin;
+            return cw0.toByteArray();
         } else {
-            return finalWriter.toByteArray();
+            return origin;
         }
     }
 
@@ -210,6 +210,10 @@ public class Manipulator {
         return m_fields;
     }
 
+    public List<MethodDescriptor> getMethods() {
+        return m_methods;
+    }
+
     public Collection<String> getInnerClasses() {
         return new ArrayList<String>(m_inners.keySet());
     }
@@ -230,5 +234,62 @@ public class Manipulator {
             m_inners.put(name, list);
         }
         list.add(md);
+    }
+
+    /**
+     * Analyzes the given inner class.
+     * @param inner the inner class name
+     * @param bytecode the bytecode of the inner class
+     */
+    public void prepareInnerClass(String inner, byte[] bytecode) throws IOException {
+        InputStream is = new ByteArrayInputStream(bytecode);
+        ClassReader ckReader = new ClassReader(is);
+        InnerClassChecker ck = new InnerClassChecker(inner, this);
+        ckReader.accept(ck, ClassReader.SKIP_FRAMES);
+        is.close();
+        // The metadata are collected during the visit.
+    }
+
+    /**
+     * Manipulates the inner class. If the outer class was already manipulated does not re-manipulate the inner class.
+     * We consider that the manipulation cycle of the outer and inner classes are the same.
+     * @param inner the inner class name
+     * @param bytecode input (i.e. original) class
+     * @return the manipulated class
+     * @throws IOException the class cannot be read correctly
+     */
+    public byte[] manipulateInnerClass(String inner, byte[] bytecode) throws IOException {
+        if (!m_alreadyManipulated) {
+            InputStream is1 = new ByteArrayInputStream(bytecode);
+
+            ClassReader cr = new ClassReader(is1);
+            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            InnerClassAdapter adapter = new InnerClassAdapter(inner, cw, m_className, this);
+            if (m_version >= Opcodes.V1_6) {
+                cr.accept(adapter, ClassReader.EXPAND_FRAMES);
+            } else {
+                cr.accept(adapter, 0);
+            }
+            is1.close();
+
+            return cw.toByteArray();
+        } else {
+            // Return the unchanged inner class
+            return bytecode;
+        }
+    }
+
+    public List<MethodDescriptor> getMethodsFromInnerClass(String innerClassInternalName) {
+        return m_inners.get(innerClassInternalName);
+    }
+
+    public Map<String, List<MethodDescriptor>> getInnerClassesAndMethods() {
+        // Transform the map to use the simple name of the inner classes.
+        Map<String, List<MethodDescriptor>> map = new HashMap<String, List<MethodDescriptor>>();
+        for (Map.Entry<String, List<MethodDescriptor>> entry : m_inners.entrySet()) {
+            String name = extractInnerClassName(toQualifiedName(entry.getKey()));
+            map.put(name, entry.getValue());
+        }
+        return map;
     }
 }

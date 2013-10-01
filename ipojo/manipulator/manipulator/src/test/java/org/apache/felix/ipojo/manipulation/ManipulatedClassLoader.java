@@ -19,6 +19,10 @@
 
 package org.apache.felix.ipojo.manipulation;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -68,5 +72,20 @@ public class ManipulatedClassLoader extends ClassLoader {
             return findClass(classname);
         }
         return super.loadClass(classname);
+    }
+
+    public static final File DUMP_BASEDIR = new File("target/dump");
+
+    public void dump() throws IOException {
+        File outer = new File(DUMP_BASEDIR, name.replace(".", "/") + ".class");
+        FileUtils.writeByteArrayToFile(outer, clazz);
+        for (String name : inner.keySet()) {
+            File file = new File(DUMP_BASEDIR, name.replace(".", "/") + ".class");
+            FileUtils.writeByteArrayToFile(file, inner.get(name));
+        }
+    }
+
+    public Map<String, byte[]> getAllInnerClasses() {
+        return inner;
     }
 }

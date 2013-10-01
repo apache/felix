@@ -31,6 +31,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.tree.LocalVariableNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /**
  * iPOJO Class Adapter.
@@ -67,17 +68,17 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     /**
      * onEntry method name.
      */
-    private static final  String ENTRY = "onEntry";
+    public static final  String ENTRY = "onEntry";
 
     /**
      * onExit method name.
      */
-    private static final  String EXIT = "onExit";
+    public static final  String EXIT = "onExit";
 
     /**
      * on Error method name.
      */
-    private static final  String ERROR = "onError";
+    public static final  String ERROR = "onError";
 
     /**
      * onGet method name.
@@ -88,6 +89,11 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * onSet method name.
      */
     private static final  String SET = "onSet";
+
+    /**
+     * The manipulator. It has already collected all the metadata about the class.
+     */
+    private final Manipulator m_manipulator;
 
     /**
      * Name of the current manipulated class.
@@ -134,13 +140,13 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     /**
      * Constructor.
      * @param arg0 : class visitor.
-     * @param fields : fields map detected during the previous class analysis.
-     * @param methods : the list of the detected method during the previous class analysis.
+     * @param manipulator : the manipulator having analyzed the class.
      */
-    public MethodCreator(ClassVisitor arg0, Map<String, String> fields, List<MethodDescriptor> methods) {
+    public MethodCreator(ClassVisitor arg0, Manipulator manipulator) {
         super(arg0);
-        m_fields = fields.keySet();
-        m_visitedMethods = methods;
+        m_manipulator = manipulator;
+        m_fields = manipulator.getFields().keySet();
+        m_visitedMethods = manipulator.getMethods();
     }
 
     /**
@@ -161,6 +167,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         m_superclass = superName;
         addPOJOInterface(version, access, name, signature, superName, interfaces);
         addIMField();
+        addFlagsForInnerClassMethods();
     }
 
     /**
@@ -223,9 +230,10 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                     md.getAnnotations(), md.getParameterAnnotations());
         }
 
+        // TODO Also add the method flags for inner class methods.
         String id = generateMethodFlag(name, desc);
         if (! m_methodFlags.contains(id)) {
-            FieldVisitor flagField = cv.visitField(Opcodes.ACC_PRIVATE, id, "Z", null, null);
+            FieldVisitor flagField = cv.visitField(0, id, "Z", null, null);
             flagField.visitEnd();
             m_methodFlags.add(id);
         }
@@ -243,8 +251,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * @return the method descriptor or <code>null</code> if not found.
      */
     private MethodDescriptor getMethodDescriptor(String name, String desc) {
-        for (int i = 0; i < m_visitedMethods.size(); i++) {
-            MethodDescriptor md = m_visitedMethods.get(i);
+        for (MethodDescriptor md : m_visitedMethods) {
             if (md.getName().equals(name) && md.getDescriptor().equals(desc)) {
                 return md;
             }
@@ -527,6 +534,10 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         return METHOD_FLAG_PREFIX + generateMethodId(name, desc);
     }
 
+    private String generateMethodFlagForMethodFromInnerClass(String name, String desc, String inner) {
+        return METHOD_FLAG_PREFIX + generateMethodIdForMethodFromInnerClass(name, desc, inner);
+    }
+
     /**
      * Generate the method id based on the given method name and method descriptor.
      * The method Id is unique for this method and serves to create the flag field (so
@@ -536,10 +547,10 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * @return  method ID
      */
     private String generateMethodId(String name, String desc) {
-        StringBuffer id = new StringBuffer(name);
+        StringBuilder id = new StringBuilder(name);
         Type[] args = Type.getArgumentTypes(desc);
-        for (int i = 0; i < args.length; i++) {
-            String arg = args[i].getClassName();
+        for (Type type : args) {
+            String arg = type.getClassName();
             if (arg.endsWith("[]")) {
                 // We have to replace all []
                 String acc = "";
@@ -547,9 +558,9 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                     arg = arg.substring(0, arg.length() - 2);
                     acc += "__";
                 }
-                id.append("$" + arg.replace('.', '_') + acc);
+                id.append("$").append(arg.replace('.', '_')).append(acc);
             } else {
-                id.append("$" + arg.replace('.', '_'));
+                id.append("$").append(arg.replace('.', '_'));
             }
         }
         if (!m_methods.contains(id.toString())) {
@@ -558,12 +569,59 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         return id.toString();
     }
 
+    private String generateMethodIdForMethodFromInnerClass(String name, String desc, String inner) {
+        StringBuilder id = new StringBuilder(inner);
+        id.append("___"); // Separator
+        id.append(name);
+
+        Type[] args = Type.getArgumentTypes(desc);
+        for (Type type : args) {
+            String arg = type.getClassName();
+            if (arg.endsWith("[]")) {
+                // We have to replace all []
+                String acc = "";
+                while (arg.endsWith("[]")) {
+                    arg = arg.substring(0, arg.length() - 2);
+                    acc += "__";
+                }
+                id.append("$").append(arg.replace('.', '_')).append(acc);
+            } else {
+                id.append("$").append(arg.replace('.', '_'));
+            }
+        }
+
+        if (!m_methods.contains(id.toString())) {
+            m_methods.add(id.toString());
+        }
+
+        return id.toString();
+    }
+
     /**
      * Add the instance manager field (__im).
      */
     private void addIMField() {
-        FieldVisitor fv = super.visitField(ACC_PRIVATE, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;", null, null);
+        FieldVisitor fv = super.visitField(0, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;", null, null);
         fv.visitEnd();
+    }
+
+    /**
+     * Add the boolean flag fields for methods from inner classes.
+     */
+    private void addFlagsForInnerClassMethods() {
+        for (Map.Entry<String, List<MethodDescriptor>> entry : m_manipulator.getInnerClassesAndMethods().entrySet()) {
+            for (MethodDescriptor descriptor : entry.getValue()) {
+                String id = generateMethodFlagForMethodFromInnerClass(
+                        descriptor.getName(),
+                        descriptor.getDescriptor(),
+                        entry.getKey());
+                if (! m_methodFlags.contains(id)) {
+                    FieldVisitor flagField = cv.visitField(0, id, "Z", null, null);
+                    flagField.visitEnd();
+                    m_methodFlags.add(id);
+                }
+            }
+        }
     }
 
     /**
