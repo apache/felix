@@ -62,8 +62,10 @@ public class Instance {
 
     public Dictionary<String, Object> configuration() {
         Hashtable<String, Object> configuration = new Hashtable<String, Object>();
-        for (Property property : this.configuration) {
-            configuration.put(property.name, property.value);
+        if (this.configuration != null) {
+            for (Property property : this.configuration) {
+                configuration.put(property.name, property.value);
+            }
         }
 
         if (name != null) {
