@@ -26,6 +26,7 @@ import org.apache.felix.ipojo.extender.queue.JobInfo;
 import org.apache.felix.ipojo.extender.queue.QueueService;
 import org.osgi.framework.BundleContext;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -35,7 +36,7 @@ import java.util.concurrent.*;
 /**
  * An implementation of the Lifecycle Queue Service for synchronous processing.
  */
-public class SynchronousQueueService extends AbstractService implements LifecycleQueueService {
+public class SynchronousQueueService extends AbstractQueueService implements LifecycleQueueService {
 
     private final Statistic m_statistic = new Statistic();
 
@@ -67,7 +68,7 @@ public class SynchronousQueueService extends AbstractService implements Lifecycl
     }
 
     public <T> Future<T> submit(Callable<T> callable, Callback<T> callback, String description) {
-        JobInfoCallable<T> exec = new JobInfoCallable<T>(m_statistic, callable, callback, description);
+        JobInfoCallable<T> exec = new JobInfoCallable<T>(this, m_statistic, callable, callback, description);
         try {
             return new ImmediateFuture<T>(exec.call());
         } catch (Exception e) {

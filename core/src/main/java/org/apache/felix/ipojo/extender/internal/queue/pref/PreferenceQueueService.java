@@ -22,6 +22,7 @@ package org.apache.felix.ipojo.extender.internal.queue.pref;
 import org.apache.felix.ipojo.extender.internal.LifecycleQueueService;
 import org.apache.felix.ipojo.extender.queue.Callback;
 import org.apache.felix.ipojo.extender.queue.JobInfo;
+import org.apache.felix.ipojo.extender.queue.QueueListener;
 import org.apache.felix.ipojo.extender.queue.QueueService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
@@ -157,5 +158,13 @@ public class PreferenceQueueService implements LifecycleQueueService {
 
     public <T> Future<T> submit(Callable<T> callable) {
         return submit(callable, "No description");
+    }
+
+    public void addQueueListener(final QueueListener listener) {
+        // Intentionally blank, not intended to have listeners
+    }
+
+    public void removeQueueListener(final QueueListener listener) {
+        // Intentionally blank, not intended to have listeners
     }
 }

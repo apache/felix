@@ -31,6 +31,11 @@ import java.util.concurrent.Callable;
 public class JobInfoCallable<T> implements Callable<T>, JobInfo {
 
     /**
+     * Notifier helper for {@link org.apache.felix.ipojo.extender.queue.QueueListener}.
+     */
+    private final QueueNotifier m_queueNotifier;
+
+    /**
      * The statistic object.
      */
     private final Statistic m_statistic;
@@ -68,20 +73,26 @@ public class JobInfoCallable<T> implements Callable<T>, JobInfo {
     /**
      * Creates the job info callable.
      *
+     * @param queueNotifier notifier for QueueListeners
      * @param statistic   the statistics that will be populated
      * @param delegate    the real job
      * @param callback    the callback notified when the job is completed
      * @param description the job description
      */
-    public JobInfoCallable(Statistic statistic,
+    public JobInfoCallable(QueueNotifier queueNotifier,
+                           Statistic statistic,
                            Callable<T> delegate,
                            Callback<T> callback,
                            String description) {
+        m_queueNotifier = queueNotifier;
         m_statistic = statistic;
         m_delegate = delegate;
         m_callback = callback;
         m_description = description;
         m_statistic.getWaiters().add(this);
+
+        // Assume that we will be enlisted in the next few cycles
+        m_queueNotifier.fireEnlistedJobInfo(this);
     }
 
     /**
@@ -96,20 +107,29 @@ public class JobInfoCallable<T> implements Callable<T>, JobInfo {
         startTime = System.currentTimeMillis();
         m_statistic.getCurrentsCounter().incrementAndGet();
         T result = null;
+        Exception exception = null;
         try {
+            m_queueNotifier.fireStartedJobInfo(this);
             result = m_delegate.call();
             return result;
         } catch (Exception e) {
+            m_queueNotifier.fireFailedJobInfo(this, e);
             if (m_callback != null) {
                 m_callback.error(this, e);
             }
+            exception = e;
             throw e;
         } finally {
             m_statistic.getCurrentsCounter().decrementAndGet();
             m_statistic.getFinishedCounter().incrementAndGet();
             endTime = System.currentTimeMillis();
-            if (m_callback != null) {
-                m_callback.success(this, result);
+
+            // Only exec success callbacks when no error occurred
+            if (exception == null) {
+                m_queueNotifier.fireExecutedJobInfo(this, result);
+                if (m_callback != null) {
+                    m_callback.success(this, result);
+                }
             }
         }
     }

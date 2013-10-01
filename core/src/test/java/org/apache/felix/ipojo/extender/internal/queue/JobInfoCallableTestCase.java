@@ -19,7 +19,15 @@
 
 package org.apache.felix.ipojo.extender.internal.queue;
 
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+
+import org.apache.felix.ipojo.extender.internal.queue.callable.ExceptionCallable;
 import org.apache.felix.ipojo.extender.internal.queue.callable.StringCallable;
+import org.mockito.InOrder;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.osgi.framework.BundleContext;
 
 import junit.framework.TestCase;
 
@@ -27,10 +35,19 @@ import junit.framework.TestCase;
  * Checks the job info callable.
  */
 public class JobInfoCallableTestCase extends TestCase {
+
+    @Mock
+    private QueueNotifier m_notifier;
+
+    @Override
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+    }
+
     public void testCall() throws Exception {
         Statistic stat = new Statistic();
         long mark = System.currentTimeMillis();
-        JobInfoCallable<String> info = new JobInfoCallable<String>(stat, new StringCallable(), null, null);
+        JobInfoCallable<String> info = new JobInfoCallable<String>(m_notifier, stat, new StringCallable(), null, null);
 
         // Before execution
         assertTrue(info.getEnlistmentTime() >= mark);
@@ -48,6 +65,32 @@ public class JobInfoCallableTestCase extends TestCase {
         assertTrue(stat.getWaiters().isEmpty());
         assertEquals(0, stat.getCurrentsCounter().get());
         assertEquals(1, stat.getFinishedCounter().get());
+
+        InOrder order = Mockito.inOrder(m_notifier);
+        order.verify(m_notifier).fireEnlistedJobInfo(info);
+        order.verify(m_notifier).fireStartedJobInfo(info);
+        order.verify(m_notifier).fireExecutedJobInfo(info, "hello");
+        verifyNoMoreInteractions(m_notifier);
+
+    }
+
+    public void testFailedCall() throws Exception {
+        Statistic stat = new Statistic();
+        Exception e = new Exception();
+        JobInfoCallable<String> info = new JobInfoCallable<String>(m_notifier, stat, new ExceptionCallable(e), null, null);
+
+        try {
+            info.call();
+        } catch (Exception e1) {
+            InOrder order = Mockito.inOrder(m_notifier);
+            order.verify(m_notifier).fireEnlistedJobInfo(info);
+            order.verify(m_notifier).fireStartedJobInfo(info);
+            order.verify(m_notifier).fireFailedJobInfo(info, e);
+            verifyNoMoreInteractions(m_notifier);
+            return;
+        }
+
+        fail("Should have throw an Exception");
 
     }
 }
