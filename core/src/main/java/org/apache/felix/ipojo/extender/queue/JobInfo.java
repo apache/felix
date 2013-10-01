@@ -55,7 +55,7 @@ public interface JobInfo {
     /**
      * Gets the execution duration.
      *
-     * @return the execution duration, {@literal -1} is this duration cannot be computed
+     * @return the execution duration, {@literal -1} if this duration cannot be computed
      */
     long getExecutionDuration();
 
