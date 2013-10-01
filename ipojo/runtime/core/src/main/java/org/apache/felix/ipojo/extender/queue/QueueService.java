@@ -111,8 +111,15 @@ public interface QueueService {
      */
     <T> Future<T> submit(Callable<T> callable);
 
+    /**
+     * Add a {@link QueueListener} that will be notified on events relative to this {@link QueueService}.
+     * @param listener added listener
+     */
+    void addQueueListener(QueueListener listener);
 
-    // TODO Add a way to add global callbacks
-    //<T> void addGlobalCallback(Callback<T> callback);
-    // <T> void removeGlobalCallback(Callback<T> callback);
+    /**
+     * Remove a {@link QueueListener} from this {@link QueueService}.
+     * @param listener removed listener
+     */
+    void removeQueueListener(QueueListener listener);
 }

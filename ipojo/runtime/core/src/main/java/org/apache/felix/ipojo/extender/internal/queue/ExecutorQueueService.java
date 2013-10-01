@@ -19,7 +19,6 @@
 
 package org.apache.felix.ipojo.extender.internal.queue;
 
-import org.apache.felix.ipojo.extender.internal.AbstractService;
 import org.apache.felix.ipojo.extender.internal.LifecycleQueueService;
 import org.apache.felix.ipojo.extender.queue.Callback;
 import org.apache.felix.ipojo.extender.queue.JobInfo;
@@ -36,7 +35,7 @@ import java.util.concurrent.*;
 /**
  * An asynchronous implementation of the queue service. This implementation relies on an executor service.
  */
-public class ExecutorQueueService extends AbstractService implements LifecycleQueueService, ManagedService {
+public class ExecutorQueueService extends AbstractQueueService implements LifecycleQueueService, ManagedService {
 
     /**
      * Property name used to configure this ThreadPool's size (usable as System Property or ConfigAdmin property).
@@ -183,7 +182,8 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
      * @return the reference on the submitted job
      */
     public <T> Future<T> submit(Callable<T> callable, Callback<T> callback, String description) {
-        return m_executorService.submit(new JobInfoCallable<T>(m_statistic, callable, callback, description));
+        JobInfoCallable<T> task = new JobInfoCallable<T>(this, m_statistic, callable, callback, description);
+        return m_executorService.submit(task);
     }
 
     public <T> Future<T> submit(Callable<T> callable, String description) {
