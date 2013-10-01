@@ -36,4 +36,16 @@ public class InstanceManager {
         return null;
     }
 
+    public void onEntry(Object pojo, String methodId, Object[] args) {
+
+    }
+
+    public void onExit(Object pojo, String methodId, Object[] args) {
+
+    }
+
+    public void onError(Object pojo, String methodId, Throwable error) {
+
+    }
+
 }

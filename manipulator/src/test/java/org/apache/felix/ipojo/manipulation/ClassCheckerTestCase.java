@@ -110,6 +110,7 @@ public class ClassCheckerTestCase extends TestCase {
 
     private byte[] manipulate(byte[] input) throws Exception {
         Manipulator manipulator = new Manipulator();
+        manipulator.prepare(input);
         return manipulator.manipulate(input);
     }
 

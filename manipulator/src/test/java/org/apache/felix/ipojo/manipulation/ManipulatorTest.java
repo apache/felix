@@ -39,7 +39,10 @@ public class ManipulatorTest extends TestCase {
 
     public void testClusterDaemon() throws Exception {
         Manipulator manipulator = new Manipulator();
-        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/ClusterDaemon.class")));
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/ClusterDaemon.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
+
         ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.ClusterDaemon", clazz);
 
         //Assert.assertNotNull(manipulator.getManipulationMetadata());
@@ -62,7 +65,9 @@ public class ManipulatorTest extends TestCase {
 
     public void testManipulatingTheSimplePojo() throws Exception {
         Manipulator manipulator = new Manipulator();
-        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/SimplePojo.class")));
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/SimplePojo.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
         ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.SimplePojo", clazz);
         Class cl = classloader.findClass("test.SimplePojo");
         Assert.assertNotNull(cl);
@@ -113,7 +118,10 @@ public class ManipulatorTest extends TestCase {
 
     public void testManipulatingTheNonSunPOJO() throws Exception {
         Manipulator manipulator = new Manipulator();
-        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/NonSunClass.class")));
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/NonSunClass.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
+
         ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.NonSunClass", clazz);
         Class cl = classloader.findClass("test.NonSunClass");
         Assert.assertNotNull(cl);
@@ -153,7 +161,10 @@ public class ManipulatorTest extends TestCase {
 
     public void testManipulatingChild() throws Exception {
         Manipulator manipulator = new Manipulator();
-        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/Child.class")));
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/Child.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
+
         ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.Child", clazz);
         Class cl = classloader.findClass("test.Child");
         Assert.assertNotNull(cl);
@@ -199,7 +210,9 @@ public class ManipulatorTest extends TestCase {
 
     public void testManipulatingWithConstructorModification() throws Exception {
         Manipulator manipulator = new Manipulator();
-        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/Child.class")));
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/Child.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
         ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.Child", clazz);
         Class cl = classloader.findClass("test.Child");
         Assert.assertNotNull(cl);
@@ -264,7 +277,9 @@ public class ManipulatorTest extends TestCase {
 
     public void testManipulatingWithNoValidConstructor() throws Exception {
         Manipulator manipulator = new Manipulator();
-        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/NoValidConstructor.class")));
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/NoValidConstructor.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
         ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.NoValidConstructor", clazz);
         Class cl = classloader.findClass("test.NoValidConstructor");
         Assert.assertNotNull(cl);
@@ -273,7 +288,7 @@ public class ManipulatorTest extends TestCase {
         System.out.println(manipulator.getManipulationMetadata());
 
         // The manipulation add stuff to the class.
-        Assert.assertTrue(clazz.length > getBytesFromFile(new File("target/test-classes/test/NoValidConstructor.class")).length);
+        Assert.assertTrue(clazz.length > origin.length);
 
 
         boolean found = false;
@@ -301,7 +316,9 @@ public class ManipulatorTest extends TestCase {
 
      public void testConstructor() throws Exception {
         Manipulator manipulator = new Manipulator();
-        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/ConstructorCheck.class")));
+         byte[] origin = getBytesFromFile(new File("target/test-classes/test/ConstructorCheck.class"));
+         manipulator.prepare(origin);
+         byte[] clazz = manipulator.manipulate(origin);
 
 //        File out = new File("target/ManipulatedConstructorCheck.class");
 //        FileOutputStream fos = new FileOutputStream(out);
@@ -328,8 +345,9 @@ public class ManipulatorTest extends TestCase {
      */
     public void testManipulatingDoubleArray() throws Exception {
         Manipulator manipulator = new Manipulator();
-        byte[] clazz = manipulator.manipulate(getBytesFromFile(new File("target/test-classes/test/DoubleArray.class")
-        ));
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/DoubleArray.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
         ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.DoubleArray", clazz);
         Class cl = classloader.findClass("test.DoubleArray");
         Assert.assertNotNull(cl);
@@ -339,7 +357,7 @@ public class ManipulatorTest extends TestCase {
         Assert.assertTrue(manipulator.getManipulationMetadata().toString().contains("arguments=\"{int[][]}\""));
 
         // The manipulation add stuff to the class.
-        Assert.assertTrue(clazz.length > getBytesFromFile(new File("target/test-classes/test/DoubleArray.class")).length);
+        Assert.assertTrue(clazz.length > origin.length);
 
 
         boolean found = false;

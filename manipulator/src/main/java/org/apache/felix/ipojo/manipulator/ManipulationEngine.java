@@ -19,12 +19,11 @@
 
 package org.apache.felix.ipojo.manipulator;
 
+import org.apache.felix.ipojo.manipulation.Manipulator;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.felix.ipojo.manipulation.InnerClassManipulator;
-import org.apache.felix.ipojo.manipulation.Manipulator;
 
 /**
  * A {@code ManipulationEngine} is responsible to drive the component's
@@ -106,8 +105,31 @@ public class ManipulationEngine {
             if (result != null) {
                 // Should always be the case
 
-                // Manipulate the original bytecode and store the modified one
+                // Manipulation preparation
                 Manipulator manipulator = new Manipulator();
+                try {
+                    manipulator.prepare(bytecode);
+                } catch (IOException e) {
+                    m_reporter.error("Cannot analyze the class " + info.getClassName() + " : " + e.getMessage());
+                    return;
+                }
+
+                // Inner class preparation
+                for (String inner : manipulator.getInnerClasses()) {
+                    // Get the bytecode and start manipulation
+                    String resourcePath = inner + ".class";
+                    String outerClassInternalName = info.getClassName().replace('.', '/');
+                    byte[] innerClassBytecode;
+                    try {
+                        innerClassBytecode = m_store.read(resourcePath);
+                        manipulator.prepareInnerClass(inner, innerClassBytecode);
+                    } catch (IOException e) {
+                        m_reporter.error("Cannot find or analyze inner class '" + resourcePath + "'");
+                        return;
+                    }
+                }
+
+                // Now manipulate the classes.
                 try {
                     byte[] out = manipulator.manipulate(bytecode);
                     // Call the visitor
@@ -116,7 +138,6 @@ public class ManipulationEngine {
                     m_reporter.error("Cannot manipulate the class " + info.getClassName() + " : " + e.getMessage());
                     return;
                 }
-
 
                 // Visit inner classes
                 for (String inner : manipulator.getInnerClasses()) {
@@ -136,10 +157,7 @@ public class ManipulationEngine {
                     // discovered in the main class instead of re-parsing the inner class to find
                     // its own class version
                     try {
-                        InnerClassManipulator innerManipulator = new InnerClassManipulator(inner,
-                                outerClassInternalName,
-                                manipulator);
-                        byte[] manipulated = innerManipulator.manipulate(innerClassBytecode, manipulator.getClassVersion());
+                        byte[] manipulated = manipulator.manipulateInnerClass(inner, innerClassBytecode);
                         // Propagate manipulated resource
                         result.visitManipulatedResource(resourcePath, manipulated);
                     } catch (IOException e) {

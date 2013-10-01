@@ -43,11 +43,7 @@ import aQute.service.reporter.Reporter;
 import junit.framework.TestCase;
 
 /**
- * Created with IntelliJ IDEA.
- * User: guillaume
- * Date: 04/01/13
- * Time: 15:33
- * To change this template use File | Settings | File Templates.
+ * Checks the Resource Store from the BND plugin.
  */
 public class BndJarResourceStoreTestCase extends TestCase {
     @Mock
@@ -161,12 +157,13 @@ public class BndJarResourceStoreTestCase extends TestCase {
 
         plugin.analyzeJar(analyzer);
 
-        assertContains("component { $classname=\"org.apache.felix.ipojo.bnd.EmptyComponent\" manipulation { method { $name=\"$init\" }}}",
+        assertContains("component { $classname=\"org.apache.felix.ipojo.bnd.EmptyComponent\" manipulation { $classname=\"org.apache.felix.ipojo.bnd.EmptyComponent\" method { $name=\"$init\" }}}",
                 analyzer.getProperty("IPOJO-Components"));
         verify(dot).putResource(eq(path), any(Resource.class));
     }
 
     private void assertContains(String expected, String actual) {
+        System.out.println("Actual: " + actual);
         assertTrue(actual.contains(expected));
     }
 

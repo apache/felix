@@ -39,6 +39,7 @@
 	
 	<!-- Nested & Inner classes -->
 	<component name="inners" classname="org.apache.felix.ipojo.runtime.core.components.InnerClasses">
+        <requires field="runnable" optional="true"/>
 		<provides>
 			<property field="privateObject"/>
 			<property field="privateInt"/>

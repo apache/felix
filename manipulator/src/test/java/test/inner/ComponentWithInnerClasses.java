@@ -39,12 +39,29 @@ public class ComponentWithInnerClasses{
         return nat.foo() + MyStaticInnerClass.foo() + inn.foo() + compute.compute("");
     }
 
+    private void doSomethingPrivately() {
+
+    }
+    private boolean flag;
+
+    boolean getFlag() {
+        return flag;
+    }
+
+    private String test = "";
+
     private String foo = "foo";
 
     private class MyInnerWithANativeMethod {
 
         public String foo() {
             return ComponentWithInnerClasses.this.foo;
+        }
+
+        public void bar() {
+            if (! getFlag()) {
+                test.charAt(0);
+            }
         }
 
         public native void baz();
