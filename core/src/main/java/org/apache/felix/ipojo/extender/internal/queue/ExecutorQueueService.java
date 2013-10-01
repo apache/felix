@@ -72,7 +72,6 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
      * Initial thread pool size.
      */
     private final int initialSize;
-    private ServiceRegistration<?> m_serviceRegistration;
 
     /**
      * Creates the queue service using the default pool size.
