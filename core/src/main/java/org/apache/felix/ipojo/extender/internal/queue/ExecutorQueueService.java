@@ -26,6 +26,7 @@ import org.apache.felix.ipojo.extender.queue.JobInfo;
 import org.apache.felix.ipojo.extender.queue.QueueService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
@@ -71,6 +72,7 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
      * Initial thread pool size.
      */
     private final int initialSize;
+    private ServiceRegistration<?> m_serviceRegistration;
 
     /**
      * Creates the queue service using the default pool size.
@@ -115,6 +117,14 @@ public class ExecutorQueueService extends AbstractService implements LifecycleQu
         m_executorService = executorService;
         initialSize = executorService.getCorePoolSize();
         m_properties = getDefaultProperties();
+    }
+
+    @Override
+    protected ServiceRegistration<?> registerService() {
+        // Register the instance under QueueService and ManagedService types
+        return getBundleContext().registerService(new String[] {QueueService.class.getName(), ManagedService.class.getName()},
+                                                  this,
+                                                  getServiceProperties());
     }
 
     /**

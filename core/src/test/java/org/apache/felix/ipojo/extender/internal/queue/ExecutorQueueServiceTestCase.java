@@ -70,11 +70,11 @@ public class ExecutorQueueServiceTestCase extends TestCase {
     public void testQueueServiceRegistration() throws Exception {
         ExecutorQueueService queueService = new ExecutorQueueService(m_bundleContext);
 
-        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(eq(QueueService.class.getName()), eq(queueService), any(Dictionary.class))).thenReturn(m_registration);
+        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(any(String[].class), eq(queueService), any(Dictionary.class))).thenReturn(m_registration);
 
         queueService.start();
 
-        verify(m_bundleContext).registerService(eq(QueueService.class.getName()), eq(queueService), any(Dictionary.class));
+        verify(m_bundleContext).registerService(any(String[].class), eq(queueService), any(Dictionary.class));
 
         queueService.stop();
 
@@ -125,14 +125,14 @@ public class ExecutorQueueServiceTestCase extends TestCase {
     public void testConfigurationUpdate() throws Exception {
         ExecutorQueueService queueService = new ExecutorQueueService(m_bundleContext, 1);
 
-        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(eq(QueueService.class.getName()),
+        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(any(String[].class),
                                                                              eq(queueService),
                                                                              any(Dictionary.class)))
                .thenReturn(m_registration);
 
         queueService.start();
 
-        verify(m_bundleContext).registerService(eq(QueueService.class.getName()), eq(queueService), m_captor.capture());
+        verify(m_bundleContext).registerService(any(String[].class), eq(queueService), m_captor.capture());
 
         // Verify initial value is 1
         Dictionary<String, ?> initial = m_captor.getValue();
@@ -149,14 +149,14 @@ public class ExecutorQueueServiceTestCase extends TestCase {
     public void testManagedServiceUpdatedWithNull() throws Exception {
         ExecutorQueueService queueService = new ExecutorQueueService(m_bundleContext, 1);
 
-        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(eq(QueueService.class.getName()),
+        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(any(String[].class),
                                                                              eq(queueService),
                                                                              any(Dictionary.class)))
                .thenReturn(m_registration);
 
         queueService.start();
 
-        verify(m_bundleContext).registerService(eq(QueueService.class.getName()), eq(queueService), m_captor.capture());
+        verify(m_bundleContext).registerService(any(String[].class), eq(queueService), m_captor.capture());
 
         // Verify initial value is 1
         Dictionary<String, ?> initial = m_captor.getValue();
@@ -176,7 +176,7 @@ public class ExecutorQueueServiceTestCase extends TestCase {
     public void testConfigurationUpdatedWithNoChanges() throws Exception {
         ExecutorQueueService queueService = new ExecutorQueueService(m_bundleContext, 1);
 
-        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(eq(QueueService.class.getName()),
+        Mockito.<ServiceRegistration<?>>when(m_bundleContext.registerService(any(String[].class),
                                                                              eq(queueService),
                                                                              any(Dictionary.class)))
                .thenReturn(m_registration);

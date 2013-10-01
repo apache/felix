@@ -62,7 +62,11 @@ public abstract class AbstractService implements Lifecycle {
      * On start, registers the service.
      */
     public void start() {
-        m_registration = m_bundleContext.registerService(m_type.getName(), this, getServiceProperties());
+        m_registration = registerService();
+    }
+
+    protected ServiceRegistration<?> registerService() {
+        return m_bundleContext.registerService(m_type.getName(), this, getServiceProperties());
     }
 
     /**
@@ -80,6 +84,10 @@ public abstract class AbstractService implements Lifecycle {
      */
     protected Dictionary<String, ?> getServiceProperties() {
         return null;
+    }
+
+    protected BundleContext getBundleContext() {
+        return m_bundleContext;
     }
 
     protected ServiceRegistration<?> getRegistration() {
