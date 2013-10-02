@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.extender.internal.queue;
 
 import org.apache.felix.ipojo.extender.internal.LifecycleQueueService;
 import org.apache.felix.ipojo.extender.queue.Callback;
+import org.apache.felix.ipojo.extender.queue.Job;
 import org.apache.felix.ipojo.extender.queue.JobInfo;
 import org.apache.felix.ipojo.extender.queue.QueueService;
 import org.osgi.framework.BundleContext;
@@ -181,16 +182,16 @@ public class ExecutorQueueService extends AbstractQueueService implements Lifecy
      * @param description a description of the job
      * @return the reference on the submitted job
      */
-    public <T> Future<T> submit(Callable<T> callable, Callback<T> callback, String description) {
+    public <T> Future<T> submit(Job<T> callable, Callback<T> callback, String description) {
         JobInfoCallable<T> task = new JobInfoCallable<T>(this, m_statistic, callable, callback, description);
         return m_executorService.submit(task);
     }
 
-    public <T> Future<T> submit(Callable<T> callable, String description) {
+    public <T> Future<T> submit(Job<T> callable, String description) {
         return submit(callable, null, description);
     }
 
-    public <T> Future<T> submit(Callable<T> callable) {
+    public <T> Future<T> submit(Job<T> callable) {
         return submit(callable, "No description");
     }
 

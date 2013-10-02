@@ -20,6 +20,7 @@
 package org.apache.felix.ipojo.extender.internal.queue;
 
 import org.apache.felix.ipojo.extender.queue.Callback;
+import org.apache.felix.ipojo.extender.queue.Job;
 import org.apache.felix.ipojo.extender.queue.JobInfo;
 
 import java.util.concurrent.Callable;
@@ -43,7 +44,7 @@ public class JobInfoCallable<T> implements Callable<T>, JobInfo {
     /**
      * The genuine job.
      */
-    private final Callable<T> m_delegate;
+    private final Job<T> m_delegate;
 
     /**
      * A callback notified when the job is processed.
@@ -81,7 +82,7 @@ public class JobInfoCallable<T> implements Callable<T>, JobInfo {
      */
     public JobInfoCallable(QueueNotifier queueNotifier,
                            Statistic statistic,
-                           Callable<T> delegate,
+                           Job<T> delegate,
                            Callback<T> callback,
                            String description) {
         m_queueNotifier = queueNotifier;
@@ -188,5 +189,9 @@ public class JobInfoCallable<T> implements Callable<T>, JobInfo {
      */
     public String getDescription() {
         return m_description;
+    }
+
+    public String getJobType() {
+        return m_delegate.getJobType();
     }
 }

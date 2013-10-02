@@ -24,6 +24,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import org.apache.felix.ipojo.extender.queue.Callback;
+import org.apache.felix.ipojo.extender.queue.Job;
 import org.apache.felix.ipojo.extender.queue.JobInfo;
 import org.apache.felix.ipojo.extender.queue.QueueListener;
 import org.apache.felix.ipojo.extender.queue.QueueService;
@@ -116,15 +117,15 @@ public class AbstractQueueServiceTestCase extends TestCase {
             return null;
         }
 
-        public <T> Future<T> submit(final Callable<T> callable, final Callback<T> callback, final String description) {
+        public <T> Future<T> submit(final Job<T> callable, final Callback<T> callback, final String description) {
             return null;
         }
 
-        public <T> Future<T> submit(final Callable<T> callable, final String description) {
+        public <T> Future<T> submit(final Job<T> callable, final String description) {
             return null;
         }
 
-        public <T> Future<T> submit(final Callable<T> callable) {
+        public <T> Future<T> submit(final Job<T> callable) {
             return null;
         }
     }

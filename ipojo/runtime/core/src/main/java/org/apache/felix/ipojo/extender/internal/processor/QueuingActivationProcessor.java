@@ -22,7 +22,7 @@ package org.apache.felix.ipojo.extender.internal.processor;
 import static java.lang.String.format;
 
 import org.apache.felix.ipojo.extender.internal.BundleProcessor;
-import org.apache.felix.ipojo.extender.internal.ReferenceableCallable;
+import org.apache.felix.ipojo.extender.internal.DefaultJob;
 import org.apache.felix.ipojo.extender.queue.QueueService;
 import org.osgi.framework.Bundle;
 
@@ -31,6 +31,12 @@ import org.osgi.framework.Bundle;
  * The submitted job relies on a delegated bundle processor.
  */
 public class QueuingActivationProcessor extends ForwardingBundleProcessor {
+
+    /**
+     * Identify the kind of job submitted to the QueueService.
+     */
+    public static final String BUNDLE_ACTIVATION_JOB_TYPE = "bundle.activation";
+
     /**
      * The wrapped bundle processor used by the job.
      */
@@ -65,7 +71,7 @@ public class QueuingActivationProcessor extends ForwardingBundleProcessor {
      */
     public void activate(final Bundle bundle) {
         m_queueService.submit(
-                new ReferenceableCallable<Boolean>(bundle) {
+                new DefaultJob<Boolean>(bundle, BUNDLE_ACTIVATION_JOB_TYPE) {
                     public Boolean call() throws Exception {
                         QueuingActivationProcessor.super.activate(bundle);
                         return true;

@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.concurrent.Callable;
 
+import org.apache.felix.ipojo.extender.internal.DefaultJob;
 import org.apache.felix.ipojo.extender.internal.LifecycleQueueService;
 import org.apache.felix.ipojo.extender.internal.queue.callable.StringCallable;
 import org.apache.felix.ipojo.extender.internal.queue.pref.Preference;
@@ -65,20 +66,14 @@ public class EnforcedQueueServiceTestCase extends TestCase {
     public void testNoEnforcement() throws Exception {
         when(m_selection.select(m_bundle)).thenReturn(Preference.DEFAULT);
         EnforcedQueueService queueService = new EnforcedQueueService(m_selection, delegate, Preference.ASYNC, m_log);
-        queueService.submit(new ReferenceCallable());
-        verifyZeroInteractions(m_log);
-    }
-
-    public void testNoEnforcementBecauseNoBundleReference() throws Exception {
-        EnforcedQueueService queueService = new EnforcedQueueService(m_selection, delegate, Preference.ASYNC, m_log);
-        queueService.submit(new StringCallable());
+        queueService.submit(new StringCallable(m_bundle));
         verifyZeroInteractions(m_log);
     }
 
     public void testIncompatibleEnforcement() throws Exception {
         when(m_selection.select(m_bundle)).thenReturn(Preference.SYNC);
         EnforcedQueueService queueService = new EnforcedQueueService(m_selection, delegate, Preference.ASYNC, m_log);
-        queueService.submit(new ReferenceCallable());
+        queueService.submit(new StringCallable(m_bundle));
 
         verify(m_log).log(eq(Log.WARNING), anyString());
     }
@@ -86,17 +81,8 @@ public class EnforcedQueueServiceTestCase extends TestCase {
     public void testCompatibleEnforcement() throws Exception {
         when(m_selection.select(m_bundle)).thenReturn(Preference.ASYNC);
         EnforcedQueueService queueService = new EnforcedQueueService(m_selection, delegate, Preference.ASYNC, m_log);
-        queueService.submit(new ReferenceCallable());
+        queueService.submit(new StringCallable(m_bundle));
         verifyZeroInteractions(m_log);
     }
 
-    private class ReferenceCallable implements Callable<String>, BundleReference {
-        public String call() throws Exception {
-            return "hello";
-        }
-
-        public Bundle getBundle() {
-            return m_bundle;
-        }
-    }
 }

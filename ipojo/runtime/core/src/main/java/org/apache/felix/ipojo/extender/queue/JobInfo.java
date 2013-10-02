@@ -65,4 +65,10 @@ public interface JobInfo {
      * @return the description
      */
     String getDescription();
+
+    /**
+     * Gets the job's type identifier. May be {@code null} if not provided.
+     * @return job type identifier
+     */
+    String getJobType();
 }

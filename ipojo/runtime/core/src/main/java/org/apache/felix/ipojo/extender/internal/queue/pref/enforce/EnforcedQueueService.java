@@ -23,6 +23,7 @@ import org.apache.felix.ipojo.extender.internal.LifecycleQueueService;
 import org.apache.felix.ipojo.extender.internal.queue.pref.Preference;
 import org.apache.felix.ipojo.extender.internal.queue.pref.PreferenceSelection;
 import org.apache.felix.ipojo.extender.queue.Callback;
+import org.apache.felix.ipojo.extender.queue.Job;
 import org.apache.felix.ipojo.util.Log;
 import org.apache.felix.ipojo.util.Logger;
 import org.osgi.framework.Bundle;
@@ -77,19 +78,19 @@ public class EnforcedQueueService extends ForwardingQueueService {
     }
 
     @Override
-    public <T> Future<T> submit(Callable<T> callable, Callback<T> callback, String description) {
+    public <T> Future<T> submit(Job<T> callable, Callback<T> callback, String description) {
         checkBundlePreference(callable);
         return super.submit(callable, callback, description);
     }
 
     @Override
-    public <T> Future<T> submit(Callable<T> callable, String description) {
+    public <T> Future<T> submit(Job<T> callable, String description) {
         checkBundlePreference(callable);
         return super.submit(callable, description);
     }
 
     @Override
-    public <T> Future<T> submit(Callable<T> callable) {
+    public <T> Future<T> submit(Job<T> callable) {
         checkBundlePreference(callable);
         return super.submit(callable);
     }
