@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.extender.internal.queue.pref;
 
 import org.apache.felix.ipojo.extender.internal.LifecycleQueueService;
 import org.apache.felix.ipojo.extender.queue.Callback;
+import org.apache.felix.ipojo.extender.queue.Job;
 import org.apache.felix.ipojo.extender.queue.JobInfo;
 import org.apache.felix.ipojo.extender.queue.QueueListener;
 import org.apache.felix.ipojo.extender.queue.QueueService;
@@ -130,14 +131,10 @@ public class PreferenceQueueService implements LifecycleQueueService {
      * @param description a description of the job
      * @return the reference of the submitted job
      */
-    public <T> Future<T> submit(Callable<T> callable, Callback<T> callback, String description) {
-        // Argghhh, how can I choose between the 2 QueueService ?
-        // I was expecting to have the source Bundle to make a decision
-        Preference preference = Preference.DEFAULT;
-        if (callable instanceof BundleReference) {
-            Bundle bundle = ((BundleReference) callable).getBundle();
-            preference = m_strategy.select(bundle);
-        }
+    public <T> Future<T> submit(Job<T> callable, Callback<T> callback, String description) {
+
+        Bundle bundle = callable.getBundle();
+        Preference preference = m_strategy.select(bundle);
 
         QueueService selected = m_defaultQueue;
         switch (preference) {
@@ -152,11 +149,11 @@ public class PreferenceQueueService implements LifecycleQueueService {
         return selected.submit(callable, callback, description);
     }
 
-    public <T> Future<T> submit(Callable<T> callable, String description) {
+    public <T> Future<T> submit(Job<T> callable, String description) {
         return submit(callable, null, description);
     }
 
-    public <T> Future<T> submit(Callable<T> callable) {
+    public <T> Future<T> submit(Job<T> callable) {
         return submit(callable, "No description");
     }
 

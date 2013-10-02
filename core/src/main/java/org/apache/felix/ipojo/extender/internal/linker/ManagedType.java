@@ -26,8 +26,8 @@ import org.apache.felix.ipojo.extender.ExtensionDeclaration;
 import org.apache.felix.ipojo.extender.InstanceDeclaration;
 import org.apache.felix.ipojo.extender.TypeDeclaration;
 import org.apache.felix.ipojo.extender.builder.FactoryBuilderException;
+import org.apache.felix.ipojo.extender.internal.DefaultJob;
 import org.apache.felix.ipojo.extender.internal.Lifecycle;
-import org.apache.felix.ipojo.extender.internal.ReferenceableCallable;
 import org.apache.felix.ipojo.extender.queue.QueueService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -45,6 +45,14 @@ import java.util.concurrent.Future;
  * the instance for each instance declaration targeting the managed factory.
  */
 public class ManagedType implements FactoryStateListener, Lifecycle {
+    /**
+     * Identify the factory creation job submitted to the QueueService.
+     */
+    public static final String FACTORY_CREATION_JOB_TYPE = "factory.creation";
+    /**
+     * Identify the instance startup job submitted to the QueueService.
+     */
+    public static final String INSTANCE_STARTUP_JOB_TYPE = "instance.startup";
     /**
      * The bundle context
      */
@@ -205,7 +213,7 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
         public Object addingService(ServiceReference reference) {
             final Object service = m_bundleContext.getService(reference);
             if (service instanceof ExtensionDeclaration) {
-                m_future = m_queueService.submit(new ReferenceableCallable<IPojoFactory>(reference.getBundle()) {
+                m_future = m_queueService.submit(new DefaultJob<IPojoFactory>(reference.getBundle(), FACTORY_CREATION_JOB_TYPE) {
 
                     /**
                      * The factory creation job.
@@ -295,7 +303,7 @@ public class ManagedType implements FactoryStateListener, Lifecycle {
                     }
                 }
 
-                return m_queueService.submit(new ReferenceableCallable<ComponentInstance>(reference.getBundle()) {
+                return m_queueService.submit(new DefaultJob<ComponentInstance>(reference.getBundle(), INSTANCE_STARTUP_JOB_TYPE) {
                     public ComponentInstance call() throws Exception {
                         try {
                             // Create the component's instance

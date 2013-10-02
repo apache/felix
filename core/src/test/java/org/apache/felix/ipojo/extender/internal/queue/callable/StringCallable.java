@@ -21,18 +21,39 @@ package org.apache.felix.ipojo.extender.internal.queue.callable;
 
 import java.util.concurrent.Callable;
 
+import org.apache.felix.ipojo.extender.queue.Job;
+import org.osgi.framework.Bundle;
+
 /**
 * A dummy job.
 */
-public class StringCallable implements Callable<String> {
+public class StringCallable extends EmptyJob<String> {
 
     private final String m_hello;
 
     public StringCallable() {
-        this("hello");
+        this((Bundle) null, "hello");
     }
 
-    public StringCallable(String hello) {
+    public StringCallable(String value) {
+        this((Bundle) null, value);
+    }
+
+    public StringCallable(String type, String value) {
+        this(null, type, value);
+    }
+
+    public StringCallable(Bundle bundle) {
+        this(bundle, "hello");
+    }
+
+    public StringCallable(Bundle bundle, String hello) {
+        super(bundle);
+        m_hello = hello;
+    }
+
+    public StringCallable(Bundle bundle, String type, String hello) {
+        super(bundle, type);
         m_hello = hello;
     }
 

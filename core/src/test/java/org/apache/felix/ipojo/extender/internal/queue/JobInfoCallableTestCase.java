@@ -93,4 +93,9 @@ public class JobInfoCallableTestCase extends TestCase {
         fail("Should have throw an Exception");
 
     }
+
+    public void testJobInfoType() throws Exception {
+        JobInfoCallable<String> info = new JobInfoCallable<String>(m_notifier, new Statistic(), new StringCallable("ipojo.testJobType", "hello"), null, null);
+        assertEquals("ipojo.testJobType", info.getJobType());
+    }
 }

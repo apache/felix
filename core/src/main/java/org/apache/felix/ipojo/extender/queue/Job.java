@@ -17,40 +17,20 @@
  * under the License.
  */
 
-package org.apache.felix.ipojo.extender.internal;
-
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleReference;
+package org.apache.felix.ipojo.extender.queue;
 
 import java.util.concurrent.Callable;
 
+import org.osgi.framework.BundleReference;
+
 /**
- * A callable object implementing Bundle Reference.
- * It makes the Bundle object accessible by the processing job.
- * This class is intended to be extended.
+ * Represents a task that can be executed by the {@link org.apache.felix.ipojo.extender.queue.QueueService}.
  */
-public abstract class ReferenceableCallable<T> implements Callable<T>, BundleReference {
-    /**
-     * The bundle object.
-     */
-    private final Bundle m_bundle;
+public interface Job<T> extends Callable<T>, BundleReference {
 
     /**
-     * Creates the ReferenceableCallable instance.
-     *
-     * @param bundle the associated bundle
+     * The {@code jobType} is used to describe what is this job about.
+     * @return the job type identifier
      */
-    protected ReferenceableCallable(Bundle bundle) {
-        m_bundle = bundle;
-    }
-
-    /**
-     * Gets the bundle object.
-     *
-     * @return the bundle
-     */
-    public Bundle getBundle() {
-        return m_bundle;
-    }
-
+    String getJobType();
 }

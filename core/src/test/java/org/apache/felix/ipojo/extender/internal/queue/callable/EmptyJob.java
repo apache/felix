@@ -19,20 +19,41 @@
 
 package org.apache.felix.ipojo.extender.internal.queue.callable;
 
-import java.util.concurrent.Callable;
+import org.apache.felix.ipojo.extender.queue.Job;
+import org.osgi.framework.Bundle;
 
 /**
-* A dummy job.
-*/
-public class ExceptionCallable extends EmptyJob<String> {
+ * User: guillaume
+ * Date: 01/10/13
+ * Time: 17:51
+ */
+public class EmptyJob<T> implements Job<T> {
 
-    private final Exception m_exception;
+    private final Bundle m_bundle;
+    private final String m_type;
 
-    public ExceptionCallable(Exception e) {
-        m_exception = e;
+    public EmptyJob() {
+        this(null);
     }
 
-    public String call() throws Exception {
-        throw m_exception;
+    public EmptyJob(final Bundle bundle) {
+        this(bundle, "test");
+    }
+
+    public EmptyJob(Bundle bundle, String type) {
+        m_bundle = bundle;
+        m_type = type;
+    }
+
+    public String getJobType() {
+        return m_type;
+    }
+
+    public Bundle getBundle() {
+        return m_bundle;
+    }
+
+    public T call() throws Exception {
+        return null;
     }
 }

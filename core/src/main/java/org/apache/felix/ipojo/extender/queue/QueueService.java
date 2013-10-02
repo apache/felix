@@ -92,7 +92,7 @@ public interface QueueService {
      * @param description a description of the job
      * @return the future object to retrieve the result
      */
-    <T> Future<T> submit(Callable<T> callable, Callback<T> callback, String description);
+    <T> Future<T> submit(Job<T> callable, Callback<T> callback, String description);
 
     /**
      * Submits a job to the queue service.
@@ -101,7 +101,7 @@ public interface QueueService {
      * @param description a description of the job
      * @return the future object to retrieve the result
      */
-    <T> Future<T> submit(Callable<T> callable, String description);
+    <T> Future<T> submit(Job<T> callable, String description);
 
     /**
      * Submits a job to the queue service.
@@ -109,7 +109,7 @@ public interface QueueService {
      * @param callable the job
      * @return the future object to retrieve the result
      */
-    <T> Future<T> submit(Callable<T> callable);
+    <T> Future<T> submit(Job<T> callable);
 
     /**
      * Add a {@link QueueListener} that will be notified on events relative to this {@link QueueService}.

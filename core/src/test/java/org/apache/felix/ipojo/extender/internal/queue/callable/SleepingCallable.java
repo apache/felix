@@ -24,7 +24,7 @@ import java.util.concurrent.Callable;
 /**
 * A dummy job taking some time to complete....
 */
-public class SleepingCallable implements Callable<String> {
+public class SleepingCallable extends EmptyJob<String> {
     private int m_time;
     private String m_value;
 

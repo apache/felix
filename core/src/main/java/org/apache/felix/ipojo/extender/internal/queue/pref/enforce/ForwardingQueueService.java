@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.extender.internal.queue.pref.enforce;
 
 import org.apache.felix.ipojo.extender.internal.LifecycleQueueService;
 import org.apache.felix.ipojo.extender.queue.Callback;
+import org.apache.felix.ipojo.extender.queue.Job;
 import org.apache.felix.ipojo.extender.queue.JobInfo;
 import org.apache.felix.ipojo.extender.queue.QueueListener;
 
@@ -59,15 +60,15 @@ public abstract class ForwardingQueueService implements LifecycleQueueService {
         return delegate().getWaitersInfo();
     }
 
-    public <T> Future<T> submit(Callable<T> callable, Callback<T> callback, String description) {
+    public <T> Future<T> submit(Job<T> callable, Callback<T> callback, String description) {
         return delegate().submit(callable, callback, description);
     }
 
-    public <T> Future<T> submit(Callable<T> callable, String description) {
+    public <T> Future<T> submit(Job<T> callable, String description) {
         return delegate().submit(callable, description);
     }
 
-    public <T> Future<T> submit(Callable<T> callable) {
+    public <T> Future<T> submit(Job<T> callable) {
         return delegate().submit(callable);
     }
 
