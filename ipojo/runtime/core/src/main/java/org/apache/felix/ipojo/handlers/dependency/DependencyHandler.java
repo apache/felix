@@ -278,7 +278,6 @@ public class DependencyHandler extends PrimitiveHandler implements DependencySta
                 if (meths != null) {
                     for (MethodMetadata method : meths) {
                         for (Dependency dep : m_dependencies) {
-                            System.out.println("Registering " + method.getMethodName());
                             getInstanceManager().register(method, inner, dep);
                         }
                     }
