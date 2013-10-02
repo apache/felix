@@ -40,8 +40,22 @@
         <module>core-it</module>
         <module>composite-it</module>
         <module>ipojo-gogo-commands</module>
-        <module>distributions/quickstart</module>
+        <module>karaf-feature</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>distributions</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>distributions/quickstart</module>
+                <module>distributions/ten-minutes-tutorial</module>
+                <module>distributions/maven-tutorial</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/ipojo/runtime</connection>
