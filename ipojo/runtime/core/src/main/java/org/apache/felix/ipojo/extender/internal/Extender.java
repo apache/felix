@@ -30,10 +30,12 @@ import org.apache.felix.ipojo.extender.internal.queue.GroupThreadFactory;
 import org.apache.felix.ipojo.extender.internal.queue.NamingThreadFactory;
 import org.apache.felix.ipojo.extender.internal.queue.PrefixedThreadFactory;
 import org.apache.felix.ipojo.extender.internal.queue.SynchronousQueueService;
+import org.apache.felix.ipojo.extender.internal.queue.debug.ReplayQueueEventProxy;
 import org.apache.felix.ipojo.extender.internal.queue.pref.HeaderPreferenceSelection;
 import org.apache.felix.ipojo.extender.internal.queue.pref.Preference;
 import org.apache.felix.ipojo.extender.internal.queue.pref.PreferenceQueueService;
 import org.apache.felix.ipojo.extender.internal.queue.pref.enforce.EnforcedQueueService;
+import org.apache.felix.ipojo.extender.queue.debug.QueueEventProxy;
 import org.apache.felix.ipojo.util.Logger;
 import org.osgi.framework.*;
 import org.osgi.util.tracker.BundleTracker;
@@ -43,6 +45,7 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
  * iPOJO main activator.
  */
 public class Extender implements BundleActivator {
+    public static final String BOOTSTRAP_QUEUE_DEBUG_PROPERTY = "org.apache.felix.ipojo.extender.BootstrapQueueDebug";
     /**
      * Enables the iPOJO internal dispatcher.
      * This internal dispatcher helps the OSGi framework to support large
@@ -130,6 +133,13 @@ public class Extender implements BundleActivator {
         // Initialize ConfigurationTracker
         ConfigurationTracker.initialize();
 
+        // Initialize the queue event proxy if wanted
+        ReplayQueueEventProxy proxy = null;
+        if (Boolean.getBoolean(BOOTSTRAP_QUEUE_DEBUG_PROPERTY)) {
+            proxy = new ReplayQueueEventProxy();
+            context.registerService(QueueEventProxy.class, proxy, null);
+        }
+
         BundleProcessor extensionBundleProcessor = new ExtensionBundleProcessor(m_logger);
         BundleProcessor componentsProcessor = new ComponentsBundleProcessor(m_logger);
         BundleProcessor configurationProcessor = new ConfigurationProcessor(m_logger);
@@ -139,6 +149,11 @@ public class Extender implements BundleActivator {
                     new SynchronousQueueService(context),
                     Preference.SYNC,
                     m_logger);
+
+            // If required, add the event proxy
+            if (proxy != null) {
+                m_queueService.addQueueListener(proxy);
+            }
         } else {
             // Build a thread factory that will groups extender's thread together
             ThreadFactory threadFactory = new GroupThreadFactory(new ThreadGroup("iPOJO Extender"));
@@ -156,6 +171,13 @@ public class Extender implements BundleActivator {
             extensionBundleProcessor = new QueuingActivationProcessor(extensionBundleProcessor, m_queueService);
             componentsProcessor = new QueuingActivationProcessor(componentsProcessor, m_queueService);
             configurationProcessor = new QueuingActivationProcessor(configurationProcessor, m_queueService);
+
+            // If required, add the event proxy to both real services
+            if (proxy != null) {
+                sync.addQueueListener(proxy);
+                async.addQueueListener(proxy);
+            }
+
         }
         m_queueService.start();
 

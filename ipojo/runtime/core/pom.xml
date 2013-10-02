@@ -161,6 +161,7 @@
                             version="${ipojo.package.version}";-split-package:=merge-first,
                             org.apache.felix.ipojo.extender.builder; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.extender.queue; version="${ipojo.package.version}",
+                            org.apache.felix.ipojo.extender.queue.debug; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.parser; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.util; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.handlers.dependency; version="${ipojo.package.version}",
