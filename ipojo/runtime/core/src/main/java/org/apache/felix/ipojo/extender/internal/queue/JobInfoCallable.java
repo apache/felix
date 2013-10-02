@@ -112,8 +112,10 @@ public class JobInfoCallable<T> implements Callable<T>, JobInfo {
         try {
             m_queueNotifier.fireStartedJobInfo(this);
             result = m_delegate.call();
+            endTime = System.currentTimeMillis();
             return result;
         } catch (Exception e) {
+            endTime = System.currentTimeMillis();
             m_queueNotifier.fireFailedJobInfo(this, e);
             if (m_callback != null) {
                 m_callback.error(this, e);
@@ -123,7 +125,6 @@ public class JobInfoCallable<T> implements Callable<T>, JobInfo {
         } finally {
             m_statistic.getCurrentsCounter().decrementAndGet();
             m_statistic.getFinishedCounter().incrementAndGet();
-            endTime = System.currentTimeMillis();
 
             // Only exec success callbacks when no error occurred
             if (exception == null) {
