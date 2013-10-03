@@ -87,14 +87,14 @@ public class TestDependencyPolicy extends Common {
 
 
     private Element getDependencyById(Element[] deps, String name) {
-        for (int i = 0; i < deps.length; i++) {
-            String na = deps[i].getAttribute("id");
-            String field = deps[i].getAttribute("field");
+        for (Element dep : deps) {
+            String na = dep.getAttribute("id");
+            String field = dep.getAttribute("field");
             if (na != null && na.equalsIgnoreCase(name)) {
-                return deps[i];
+                return dep;
             }
             if (field != null && field.equalsIgnoreCase(name)) {
-                return deps[i];
+                return dep;
             }
         }
         fail("Dependency  " + name + " not found");
