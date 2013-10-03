@@ -18,6 +18,8 @@
  */
 package org.apache.felix.ipojo;
 
+import static java.lang.String.format;
+
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.apache.felix.ipojo.extender.internal.Extender;
@@ -33,6 +35,7 @@ import org.osgi.service.cm.ManagedServiceFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This class defines common mechanisms of iPOJO component factories
@@ -136,7 +139,7 @@ public abstract class IPojoFactory implements Factory {
     /**
      * Generates a unique instance name if not provided by the configuration.
      */
-    private NameGenerator m_generator = new UniquenessNameGenerator(new SwitchNameGenerator());
+    private final NameGenerator m_generator = new RetryNameGenerator(new DefaultNameGenerator());
 
     /**
      * Creates an iPOJO Factory.
@@ -273,30 +276,36 @@ public abstract class IPojoFactory implements Factory {
         }
 
         // Find name in the configuration
-        String name;
-        if (configuration.get(Factory.INSTANCE_NAME_PROPERTY) == null && configuration.get("name") == null) {
-            // No name provided
-            name = null;
-        } else {
-            // Support both instance.name & name
-            name = (String) configuration.get(Factory.INSTANCE_NAME_PROPERTY);
-            if (name == null) {
-                name = (String) configuration.get("name");
-                getLogger().log(Logger.WARNING, "The 'name' (" + name + ") attribute, used as the instance name, is deprecated, please use the 'instance.name' attribute");
+        String name = findInstanceName(configuration);
+
+        // Execute name generation and verification in a synchronized block to ensure uniqueness
+        synchronized (INSTANCE_NAME) {
+            if (name != null) {
+                // Needs to ensure name uniqueness
+                if (INSTANCE_NAME.contains(name)) {
+                    // name already in use, try to append factory's version
+                    if (m_version != null) {
+                        name = name + "-" + m_version;
+                        if (INSTANCE_NAME.contains(name)) {
+                            // It's still not unique
+                            // We've done our best: throw an Exception
+                            throw new UnacceptableConfiguration(format("%s : Instance name (suffixed with factory's version) \"%s\" is already used", getFactoryName(), name));
+                        }
+                    } else {
+                        // No version provided: we cannot do more
+                        throw new UnacceptableConfiguration(format("%s : Instance name (provided by the instance) \"%s\" is already used", getFactoryName(), name));
+                    }
+                }
+            } else {
+                // Generated name is always unique, no verification required
+                name = m_generator.generate(this, INSTANCE_NAME);
             }
+
+            // Reserve name
+            INSTANCE_NAME.add(name);
         }
 
-
-        // Generate a unique name if required and verify uniqueness
-        // We extract the version from the configuration because it may help to compute a unique name by appending
-        // the version to the given name.
-        String version = (String) configuration.get(Factory.FACTORY_VERSION_PROPERTY);
-
-        // If the extracted version is null, we use the current factory version (as we were called)
-        if (version == null) {
-            version = m_version;
-        }
-        name = m_generator.generate(name, version);
+        // Update name in configuration
         configuration.put(Factory.INSTANCE_NAME_PROPERTY, name);
 
         // Here we are sure to be valid until the end of the method.
@@ -319,6 +328,22 @@ public abstract class IPojoFactory implements Factory {
         }
 
 
+    }
+
+    private String findInstanceName(final Dictionary configuration) {
+        String name;
+        if (configuration.get(Factory.INSTANCE_NAME_PROPERTY) == null && configuration.get("name") == null) {
+            // No name provided
+            name = null;
+        } else {
+            // Support both instance.name & name
+            name = (String) configuration.get(Factory.INSTANCE_NAME_PROPERTY);
+            if (name == null) {
+                name = (String) configuration.get("name");
+                getLogger().log(Logger.WARNING, "The 'name' (" + name + ") attribute, used as the instance name, is deprecated, please use the 'instance.name' attribute");
+            }
+        }
+        return name;
     }
 
     /**
@@ -1063,111 +1088,81 @@ public abstract class IPojoFactory implements Factory {
         }
     }
 
-    /**
-     * Generate a unique name for a component instance.
-     */
-    private interface NameGenerator {
-
-        /**
-         * @return a unique name.
-         * @param name The user provided name (may be null)
-         * @param version the factory version if set. Instances can specify the version of the factory they are bound
-         *                to. This parameter may be used to avoid name conflicts.
-         */
-        String generate(String name, String version) throws UnacceptableConfiguration;
-    }
 
     /**
      * This generator implements the default naming strategy.
      * The name is composed of the factory name suffixed with a unique number identifier (starting from 0).
      */
-    private class DefaultNameGenerator implements NameGenerator {
-        private long m_nextId = 0;
+    public static class DefaultNameGenerator implements NameGenerator {
 
-        /**
-         * This method has to be synchronized to ensure name uniqueness.
-         * @param name The user provided name (may be null)
-         * @param version ignored.
-         */
-        public synchronized String generate(String name, String version) throws UnacceptableConfiguration
-        {
-            // Note: This method is overridden by handlers to get the full name.
-            return IPojoFactory.this.getFactoryName() + "-" + m_nextId++;
+        private AtomicLong m_nextId = new AtomicLong();
+
+        public String generate(Factory factory, List<String> reserved) throws UnacceptableConfiguration {
+            StringBuilder sb = new StringBuilder();
+            sb.append(factory.getName());
+            if (factory.getVersion() != null) {
+                sb.append("/");
+                sb.append(factory.getVersion());
+            }
+            sb.append("-");
+            sb.append(m_nextId.getAndIncrement());
+            return sb.toString();
         }
     }
 
     /**
-     * This generator implements the naming strategy when client provides the instance name value.
+     * This generator implements a retry naming strategy.
+     * It uses a delegate {@link org.apache.felix.ipojo.IPojoFactory.NameGenerator}, and call it in sequence until an unused value is found.
      */
-    private static class UserProvidedNameGenerator implements NameGenerator {
+    public static class RetryNameGenerator implements NameGenerator {
+
+        private final NameGenerator m_delegate;
 
         /**
-         * @param name The user provided name (not null)
-         * @param  version ignored.
+         * Bound the loop to avoid Stack overflows
          */
-        public String generate(String name, String version) throws UnacceptableConfiguration
-        {
-            return name;
-        }
-    }
+        private long maximum = 8096;
 
-    /**
-     * This generator ensure that the returned name is globally unique.
-     */
-    private class UniquenessNameGenerator implements NameGenerator {
-
-        private NameGenerator delegate;
-
-        private UniquenessNameGenerator(NameGenerator delegate)
-        {
-            this.delegate = delegate;
+        public RetryNameGenerator(final NameGenerator delegate) {
+            m_delegate = delegate;
         }
 
-        /**
-         * This method has to be synchronized to ensure name uniqueness.
-         * @param name The user provided name (may be null)
-         */
-        public String generate(String name, String version) throws UnacceptableConfiguration
-        {
-            // Produce the name
-            String name2 = delegate.generate(name, version);
+        public void setMaximum(final long maximum) {
+            this.maximum = maximum;
+        }
 
-            // Needs to be in a synchronized block because we want to ensure that the name is unique
-            synchronized (INSTANCE_NAME) {
+        public String generate(final Factory factory, final List<String> reserved) throws UnacceptableConfiguration {
+            // Loop until we obtain a unique value (or counter overflow)
+            long counter = 0;
+            while (counter < maximum) {
+                String generated = m_delegate.generate(factory, reserved);
+                counter++;
                 // Verify uniqueness
-                if (INSTANCE_NAME.contains(name2)  && version != null) {
-                    // Named already used, try to append the version.
-                    name2 = name2 + "-" + version;
-                    if (INSTANCE_NAME.contains(name2)) {
-                        m_logger.log(Logger.ERROR, "The configuration is not acceptable : Name already used");
-                        throw new UnacceptableConfiguration(getFactoryName() + " : Name already used : " + name2);
-                    }
-                } else if (INSTANCE_NAME.contains(name2)) {
-                    m_logger.log(Logger.ERROR, "The configuration is not acceptable : Name already used");
-                    throw new UnacceptableConfiguration(getFactoryName() + " : Name already used : " + name2);
+                if (!reserved.contains(generated)) {
+                    return generated;
                 }
-                // reserve the name
-                INSTANCE_NAME.add(name2);
             }
-            return name2;
+
+            // Should never happen (except is NameGenerator composition is broken: like a delegate that
+            // never change its return value)
+            throw new UnacceptableConfiguration(format("Cannot generate unique instance name for factory %s/%s from bundle %d",
+                                                       factory.getName(),
+                                                       factory.getVersion(),
+                                                       factory.getBundleContext().getBundle().getBundleId()));
         }
     }
 
     /**
-     * This generator choose the right NameGenerator.
+     * Generate a unique name for a component instance.
      */
-    private class SwitchNameGenerator implements NameGenerator {
-        private NameGenerator computed = new DefaultNameGenerator();
-        private NameGenerator userProvided = new UserProvidedNameGenerator();
+    public static interface NameGenerator {
 
-        public String generate(String name, String version) throws UnacceptableConfiguration
-        {
-            if (name == null) {
-                return computed.generate(null, null);
-            }
-            return userProvided.generate(name, version);
-        }
+        /**
+         * @return a unique name.
+         * @param factory Factory called to create the instance
+         * @param reserved List of reserved (already used) instance names.
+         *                 This has to be used tp ensure generated name is unique among all other instances.
+         */
+        String generate(Factory factory, List<String> reserved) throws UnacceptableConfiguration;
     }
-
-
 }
