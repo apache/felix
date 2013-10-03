@@ -37,7 +37,7 @@
     </url>
 
     <properties>
-        <ipojo.import.packages>[1.8.0,2.0.0)</ipojo.import.packages>
+        <ipojo.import.packages>[1.11.0,2.0.0)</ipojo.import.packages>
         <ipojo.manipulator.version>${project.version}</ipojo.manipulator.version>
     </properties>
 
