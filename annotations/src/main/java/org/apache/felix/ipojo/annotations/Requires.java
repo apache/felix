@@ -75,13 +75,13 @@ public @interface Requires {
      * Acceptable policy are dynamic, static and dynamic-priority.
      * Default: dynamic.
      */
-    String policy() default "dynamic";
+    BindingPolicy policy() default BindingPolicy.DYNAMIC;
 
     /**
      * Set the comparator.
      * The indicated class must implement {@link Comparator}
      */
-    Class comparator() default Comparator.class;
+    Class<?extends Comparator> comparator() default Comparator.class;
 
     /**
      * Set the from attribute.
@@ -92,7 +92,7 @@ public @interface Requires {
      * Set the required service specification.
      * This attribute is required for Collection field.
      */
-    String specification() default "";
+    Class specification() default Object.class;
 
     /**
      * Set to true if the service dependency is injected

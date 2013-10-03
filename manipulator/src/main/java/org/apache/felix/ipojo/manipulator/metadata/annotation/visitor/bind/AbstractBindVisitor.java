@@ -20,6 +20,7 @@
 package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.bind;
 
 import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.RequiresVisitor;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
@@ -98,11 +99,18 @@ public abstract class AbstractBindVisitor extends EmptyVisitor implements Annota
             return;
         }
         if (name.equals("specification")) {
-            m_specification = value.toString();
+            // Detect whether it's an internal class name.
+            if (value.toString().startsWith("L")  && value.toString().endsWith(";")) {
+                Type type = Type.getType(value.toString());
+                m_specification = type.getClassName();
+            } else {
+                m_specification = value.toString();
+            }
             return;
         }
+        // Still used by component using the old version of the annotations.
         if (name.equals("policy")) {
-            m_policy = value.toString();
+            m_policy = RequiresVisitor.getPolicy(value.toString());
             return;
         }
         if (name.equals("id")) {
@@ -121,6 +129,13 @@ public abstract class AbstractBindVisitor extends EmptyVisitor implements Annota
             m_proxy = value.toString();
         }
 
+    }
+
+    @Override
+    public void visitEnum(String name, String desc, String value) {
+        if (name.equals("policy")) {
+            m_policy = RequiresVisitor.getPolicy(value.toString());
+        }
     }
 
     public void visitEnd() {

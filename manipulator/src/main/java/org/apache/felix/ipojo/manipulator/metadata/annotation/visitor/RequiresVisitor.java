@@ -129,8 +129,9 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
             m_nullable = value.toString();
             return;
         }
+        // Used by component using the pre 1.11 version of annotations.
         if (name.equals("policy")) {
-            m_policy = value.toString();
+            m_policy = getPolicy(value.toString());
             return;
         }
         if (name.equals("defaultimplementation")) {
@@ -144,7 +145,13 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
             return;
         }
         if (name.equals("specification")) {
-            m_specification = value.toString();
+            // Detect whether it's an internal class name.
+            if (value.toString().startsWith("L")  && value.toString().endsWith(";")) {
+                Type type = Type.getType(value.toString());
+                m_specification = type.getClassName();
+            } else {
+                m_specification = value.toString();
+            }
             return;
         }
         if (name.equals("id")) {
@@ -165,6 +172,13 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
         }
         if (name.equals("timeout")) {
             m_timeout = value.toString();
+        }
+    }
+
+    @Override
+    public void visitEnum(String name, String desc, String value) {
+        if (name.equals("policy")) {
+            m_policy = getPolicy(value.toString());
         }
     }
 
@@ -230,5 +244,24 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
         }
 
         workbench.getElements().put(requires, null);
+    }
+
+    /**
+     * Gets the iPOJO binding policy name from the given value.
+     * @param policy  the read policy
+     * @return the policy name
+     */
+    public static String getPolicy(String policy) {
+        if (policy.equalsIgnoreCase("static")) {
+            return "static";
+        }
+        if (policy.equalsIgnoreCase("dynamic")) {
+            return "dynamic";
+        }
+        // The _ is used in the annotation.
+        if (policy.equalsIgnoreCase("dynamic_priority")) {
+            return "dynamic-priority";
+        }
+        return policy;
     }
 }
