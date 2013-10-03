@@ -30,7 +30,7 @@
     <version>1.10.2-SNAPSHOT</version>
 
     <properties>
-        <ipojo.package.version>1.8.4</ipojo.package.version>
+        <ipojo.package.version>1.11.0</ipojo.package.version>
     </properties>
 
     <description>
