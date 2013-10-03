@@ -19,41 +19,38 @@
 
 package org.apache.felix.ipojo.runtime.core.test.components;
 
-import org.apache.felix.ipojo.annotations.Bind;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.*;
 import org.apache.felix.ipojo.runtime.core.test.services.FooService;
 
 @Component
 public class PolicyDependency {
 
-    @Requires(policy="static")
+    @Requires(policy= BindingPolicy.STATIC)
     public FooService fs;
     
-    @Requires(policy="dynamic-priority")
+    @Requires(policy=BindingPolicy.DYNAMIC_PRIORITY)
     public FooService fs2;
     
-    @Unbind(policy="static")
+    @Unbind(policy=BindingPolicy.STATIC)
     public void unbindBar() {    }
     @Bind
     public void bindBar() {    }
     
     @Unbind
     public void unbindBaz() {    }
-    @Bind(policy="static")
+    @Bind(policy=BindingPolicy.STATIC)
     public void bindBaz() {    }
    
-    @Requires(id="inv")
+    @Requires(id="inv", specification = FooService.class)
     public FooService fs2inv;
-    @Bind(id="inv", policy="static")
+    @Bind(id="inv", policy=BindingPolicy.STATIC)
     public void bindFS2Inv() {   }
     @Unbind(id="inv")
     public void unbindFS2Inv() {   }
     
-    @Unbind(policy="static", id="unbindonly")
+    @Unbind(policy=BindingPolicy.STATIC, id="unbindonly")
     public void unbind() {    }
     
-    @Bind(policy="static", id="bindonly")
+    @Bind(policy=BindingPolicy.STATIC, id="bindonly")
     public void bind() {    }
 }

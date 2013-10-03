@@ -35,7 +35,7 @@ import java.util.Properties;
 @Provides
 public class FooConsumer implements CheckService {
 
-    @Requires(id= "foo", policy = "dynamic-priority", proxy = false)
+    @Requires(id= "foo", policy = BindingPolicy.DYNAMIC_PRIORITY, proxy = false)
     private FooService foo;
 
     private Map<String, Object> props;
