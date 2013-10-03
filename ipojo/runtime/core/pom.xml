@@ -40,9 +40,12 @@
 
            1.10.0:
            * next minor version
+
+           1.11.0:
+           * several changes - annotations, enum, refactoring of the dependency handler
         -->
-        <ipojo.package.version>1.10.0</ipojo.package.version>
-        <ipojo.extender.version>1.10.0</ipojo.extender.version>
+        <ipojo.package.version>1.11.0</ipojo.package.version>
+        <ipojo.extender.version>1.11.0</ipojo.extender.version>
     </properties>
 
     <description>
