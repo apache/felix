@@ -81,6 +81,17 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
         m_fields = manipulator.getFields().keySet();
     }
 
+    @Override
+    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        // If version = 1.7, use 1.6 if the ipojo.downgrade.classes system property is either
+        // not set of set to true.
+        int theVersion = version;
+        String downgrade = System.getProperty("ipojo.downgrade.classes");
+        if ((downgrade == null  || "true".equals(downgrade))  && version == Opcodes.V1_7) {
+            theVersion = Opcodes.V1_6;
+        }
+        super.visit(theVersion, access, name, signature, superName, interfaces);
+    }
 
     /**
      * Visits a method.
