@@ -115,7 +115,6 @@ public class Manipulator {
      * @throws IOException : if an error occurs during the manipulation.
      */
     public byte[] manipulate(byte[] origin) throws IOException {
-        ClassWriter finalWriter = null;
         if (!m_alreadyManipulated) {
             InputStream is2 = new ByteArrayInputStream(origin);
             ClassReader cr0 = new ClassReader(is2);
