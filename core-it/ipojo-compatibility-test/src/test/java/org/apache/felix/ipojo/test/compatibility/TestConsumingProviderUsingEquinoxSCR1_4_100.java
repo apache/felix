@@ -22,6 +22,8 @@ package org.apache.felix.ipojo.test.compatibility;
 import org.apache.felix.ipojo.test.compatibility.service.CheckService;
 import org.junit.Test;
 import org.ops4j.pax.exam.Option;
+import org.osgi.framework.Bundle;
+import org.ow2.chameleon.testing.helpers.Dumps;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
@@ -61,7 +63,7 @@ public class TestConsumingProviderUsingEquinoxSCR1_4_100 extends Common {
             System.out.println("Test executed on Equinox only");
             return;
         }
-        CheckService checker = osgiHelper.getServiceObject(CheckService.class);
+        CheckService checker = osgiHelper.waitForService(CheckService.class, null, 1000);
         assertThat(checker).isNotNull();
         assertThat(checker.data().get("result")).isEqualTo("hello john doe");
     }
