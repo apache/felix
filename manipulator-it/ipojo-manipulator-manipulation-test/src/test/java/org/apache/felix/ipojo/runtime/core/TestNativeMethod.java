@@ -65,7 +65,7 @@ public class TestNativeMethod extends BaseTest {
 
     public boolean isKnopflerfish() {
         if (context != null) {
-            return isKnopflerfish();
+            return super.isKnopflerfish();
         } else {
             String pf = System.getProperty("pax.exam.framework");
             return pf != null  && pf.equalsIgnoreCase("knopflerfish");
