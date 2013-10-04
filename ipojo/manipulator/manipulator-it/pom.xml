@@ -117,6 +117,8 @@
                     <systemPropertyVariables>
                         <!-- TIME_FACTOR can be set from the command line with -DTIME_FACTOR=9-->
                         <TIME_FACTOR>${TIME_FACTOR}</TIME_FACTOR>
+                        <!-- Defined by the profiles -->
+                        <pax.exam.framework>${pax.exam.framework}</pax.exam.framework>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -298,6 +300,9 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <properties>
+                <pax.exam.framework>none</pax.exam.framework>
+            </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.osgi</groupId>
