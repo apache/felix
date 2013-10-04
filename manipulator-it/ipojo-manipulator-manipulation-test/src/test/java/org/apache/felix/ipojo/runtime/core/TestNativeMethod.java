@@ -63,8 +63,22 @@ public class TestNativeMethod extends BaseTest {
         return false;
     }
 
+    public boolean isKnopflerfish() {
+        if (context != null) {
+            return isKnopflerfish();
+        } else {
+            String pf = System.getProperty("pax.exam.framework");
+            return pf != null  && pf.equalsIgnoreCase("knopflerfish");
+        }
+    }
+
     @Override
     protected Option[] getCustomOptions() {
+        // The native bundle cannot be deployed on kf,
+        // just skip
+        if (isKnopflerfish()) {
+            return new Option[0];
+        }
         return new Option[] {
                 buildBundleWithNativeLibraries()
         };
