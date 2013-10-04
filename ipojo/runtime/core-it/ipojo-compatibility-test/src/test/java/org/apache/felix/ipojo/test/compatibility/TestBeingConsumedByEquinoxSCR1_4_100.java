@@ -61,7 +61,7 @@ public class TestBeingConsumedByEquinoxSCR1_4_100 extends Common {
             System.out.println("Test executed on Equinox only");
             return;
         }
-        CheckService checker = osgiHelper.getServiceObject(CheckService.class);
+        CheckService checker = osgiHelper.waitForService(CheckService.class, null, 1000);
         assertThat(checker).isNotNull();
         assertThat(checker.data().get("result")).isEqualTo("hello john doe");
     }

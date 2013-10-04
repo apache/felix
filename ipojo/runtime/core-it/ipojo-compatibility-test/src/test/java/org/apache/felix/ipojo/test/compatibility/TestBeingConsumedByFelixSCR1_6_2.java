@@ -50,7 +50,7 @@ public class TestBeingConsumedByFelixSCR1_6_2 extends Common {
 
     @Test
     public void test() {
-        CheckService checker = osgiHelper.getServiceObject(CheckService.class);
+        CheckService checker = osgiHelper.waitForService(CheckService.class, null, 1000);
         assertThat(checker).isNotNull();
         assertThat(checker.data().get("result")).isEqualTo("hello john doe");
     }
