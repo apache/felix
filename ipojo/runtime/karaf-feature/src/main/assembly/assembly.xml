@@ -39,6 +39,14 @@
         </fileSet>
 
         <fileSet>
+            <directory>${project.basedir}</directory>
+            <includes>
+                <include>changelog.txt</include>
+            </includes>
+            <outputDirectory/>
+        </fileSet>
+
+        <fileSet>
             <directory>${legal.files}</directory>
             <outputDirectory/>
         </fileSet>
