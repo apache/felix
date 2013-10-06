@@ -68,6 +68,9 @@ public class TestSimpleConfiguration extends Common {
 
     @Test
     public void testConfiguration() throws InterruptedException {
+        if (isKnopflerfish()) {
+            return; // Test disabled on KF
+        }
         TimeUtils.grace(1000);
         // Check configuration
         Assert.assertNotNull(osgiHelper.getServiceReference(FooService.class));
