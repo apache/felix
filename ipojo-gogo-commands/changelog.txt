@@ -1,3 +1,64 @@
+Changes from 1.10.1 to 1.11.0
+-----------------------------
+
+** Bug
+    * [FELIX-4115] - NPE in DependencyModel.getService() when @Bind method throws an exception
+    * [FELIX-4132] - @Modified not working on Equinox
+    * [FELIX-4138] - TypeDeclaration calls factory.dispose() even if it already has been disposed (externally)
+    * [FELIX-4139] - package conflict with ipojo-annotations and ipojo-runtime
+    * [FELIX-4164] - Instance / Component matching regression
+    * [FELIX-4172] - Updated method called twice at the bundle start
+    * [FELIX-4183] - Wrong Javadoc of TrackerCustomizer addingService method
+    * [FELIX-4199] - The filter based service tracking interceptor should always be created
+    * [FELIX-4200] - Only the last iPOJO Tracking interceptor is modifying the reference
+    * [FELIX-4204] - Service Dependencies with a callback without a type attribute must be rejected
+    * [FELIX-4207] - ipojo @Component with propagation set to true doesn't propagate properties
+    * [FELIX-4218] - NPE with field annotated with both @Property and @ServiceProperty
+    * [FELIX-4236] - Unvalued properties should be part of the instance's architecture
+    * [FELIX-4247] - Memory leak with ServiceUsage and inner class (Listener style)
+    * [FELIX-4248] - ServiceUsage ThreadLocal removal
+    * [FELIX-4250] - Specification deduction broken when the method does not start with the 'bind' prefix
+    * [FELIX-4251] - The @Bind annotation should use Class instead of String
+    * [FELIX-4261] - NPE when an instance is declared without a configuration using the @ConfigurationTracker
+    * [FELIX-4268] - Duplicated name errors always happen when there are 2 factories with the same name
+
+** Improvement
+    * [FELIX-4143] - Improve @Configuration management performances
+    * [FELIX-4216] - Allow @Property without name in constructors
+    * [FELIX-4228] - Improve dependency identification in log messages and exceptions
+    * [FELIX-4232] - Service Dependency Interceptors should be part of the instance architecture
+    * [FELIX-4252] - Make Extender's ThreadPool size configurable
+    * [FELIX-4262] - QueueServices should be observable
+    * [FELIX-4263] - iPOJO Core should use ranged imports
+    * [FELIX-4264] - JobInfo should provide a way to identify the kind of task
+
+** New Feature
+    * [FELIX-4146] - Add getInstances and getInstanceNames in the Factory interface
+    * [FELIX-4147] - Add getProvidedService in ProvidedServiceDescription and allow external service management
+    * [FELIX-4215] - Extend manipulation metadata with argument names
+    * [FELIX-4231] - Provide service binding interceptors
+    * [FELIX-4265] - Provides a recorder for startup events
+    * [FELIX-4267] - Define Apache Karaf features for iPOJO
+
+** Task
+    * [FELIX-3925] - Merge the temporal dependency handler within the service dependency handler
+    * [FELIX-4133] - Add distribution creation in the iPOJO runtime build
+    * [FELIX-4134] - Move integration-tests to the reactor
+    * [FELIX-4136] - Document service dependency interceptors
+    * [FELIX-4151] - Fix mistakes in the javadoc tags
+    * [FELIX-4156] - Fix versions of maven plugins
+    * [FELIX-4217] - Ensure compatibility between Aries Blueprint and iPOJO
+    * [FELIX-4245] - Deadlock in Dependency
+    * [FELIX-4270] - Bump iPOJO package version to 1.11.0
+
+** Sub-task
+    * [FELIX-4239] - Extend service dependency documentation with the 'exception' attribute.
+    * [FELIX-4240] - Support the 'exception' attribute in service dependencies
+    * [FELIX-4242] - Support the 'timeout' attribute in service dependencies
+    * [FELIX-4243] - Define the dependency configuration matrix and improve error detection
+    * [FELIX-4244] - Extend the service dependency documentation with the timeout attribute
+    * [FELIX-4257] - Allow the dependency handler to track the entry and exit of inner class methods
+
 Changes from 1.1.0 to 1.10.1
 -----------------------------
 
