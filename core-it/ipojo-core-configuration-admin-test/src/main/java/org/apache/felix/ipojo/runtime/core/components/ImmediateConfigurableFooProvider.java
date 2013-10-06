@@ -43,6 +43,7 @@ public class ImmediateConfigurableFooProvider implements FooService {
 
     @Updated
     public void updated(Dictionary conf) {
+        System.out.println("Updating component with " + conf);
         this.configuration = conf;
         this.count++;
     }
