@@ -57,10 +57,11 @@ public class TestNativeMethod extends BaseTest {
 
     /**
      * We don't deploy the test bundle, a specific one will be built.
+     * On KF we still deploy the bundle as the probe bundles needs the components and services.
      */
     @Override
     public boolean deployTestBundle() {
-        return false;
+        return isKnopflerfish();
     }
 
     public boolean isKnopflerfish() {
