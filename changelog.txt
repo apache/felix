@@ -1,3 +1,29 @@
+Changes from the 1.10.1 to 1.11.0
+---------------------------------
+
+** Bug
+    * [FELIX-4021] - maven-ipojo-plugin fails on WAR packaging
+    * [FELIX-4169] - bnd ipojo plugin adds components description to MANIFEST when they are already therein
+    * [FELIX-4219] - Variables named not stored in bytecode for constructors during manipulation
+    * [FELIX-4247] - Memory leak with ServiceUsage and inner class (Listener style)
+
+** Improvement
+    * [FELIX-4112] - Add meta annotations for handler description
+    * [FELIX-4269] - Introduce an enumeration to configure binding policy from the annotation
+
+** Task
+    * [FELIX-4134] - Move integration-tests to the reactor
+    * [FELIX-4151] - Fix mistakes in the javadoc tags
+    * [FELIX-4155] - Update bnd-ipojo-plugin for bndlib 2.x
+    * [FELIX-4156] - Fix versions of maven plugins
+    * [FELIX-4270] - Bump iPOJO package version to 1.11.0
+
+** Sub-task
+    * [FELIX-4253] - Add methods from inner classes in the metadata collected during the manipulation
+    * [FELIX-4254] - Specify the method id of methods from inner class
+    * [FELIX-4255] - Extend the inner class manipulation to allow method interception
+    * [FELIX-4256] - Avoid manipulation native and static methods from inner classes
+
 Changes from the 1.10.0 to 1.10.1
 ---------------------------------
 
