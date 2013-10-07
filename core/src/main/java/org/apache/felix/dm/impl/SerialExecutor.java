@@ -19,7 +19,6 @@
 package org.apache.felix.dm.impl;
 
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
 
 /**
  * Allows you to enqueue tasks from multiple threads and then execute
