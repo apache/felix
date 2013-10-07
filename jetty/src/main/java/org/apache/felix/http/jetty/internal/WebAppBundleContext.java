@@ -16,17 +16,17 @@
  */
 package org.apache.felix.http.jetty.internal;
 
-import org.eclipse.jetty.util.URIUtil;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.resource.URLResource;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.osgi.framework.Bundle;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
+
+import org.eclipse.jetty.util.URIUtil;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.URLResource;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.osgi.framework.Bundle;
 
 class WebAppBundleContext extends WebAppContext
 {
@@ -42,8 +42,8 @@ class WebAppBundleContext extends WebAppContext
                 if (bundle.getState() == Bundle.ACTIVE) {
                     try {
                         return bundle.loadClass(s);
-                    } catch (ClassNotFoundException e) {
                     }
+                    catch (ClassNotFoundException e) {}
                 }
                 return super.findClass(s);
             }
@@ -61,7 +61,7 @@ class WebAppBundleContext extends WebAppContext
             }
 
             @Override
-            @SuppressWarnings({"unchecked"})
+            @SuppressWarnings({ "unchecked" })
             protected Enumeration<URL> findResources(String name) throws IOException {
                 // Don't try to load resources from the bundle when it is not active
                 if (bundle.getState() == Bundle.ACTIVE) {
@@ -93,7 +93,7 @@ class WebAppBundleContext extends WebAppContext
         }
 
         @Override
-        public synchronized void release()
+        public synchronized void close()
         {
             if (this._in != null) {
                 // Do not close this input stream: it would invalidate
@@ -102,7 +102,7 @@ class WebAppBundleContext extends WebAppContext
                 // "Inflater has been closed"
                 this._in = null;
             }
-            super.release();
+            super.close();
         }
 
         @Override

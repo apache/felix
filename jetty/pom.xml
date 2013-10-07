@@ -38,7 +38,7 @@
     </scm>
     
     <properties>
-    	<jetty.version>7.6.12.v20130726</jetty.version>
+    	<jetty.version>9.0.5.v20130815</jetty.version>
     </properties>
 
     <build>
