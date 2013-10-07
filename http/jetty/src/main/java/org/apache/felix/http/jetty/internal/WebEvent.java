@@ -16,12 +16,12 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import org.osgi.framework.Bundle;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
-
-import java.util.Dictionary;
-import java.util.Hashtable;
 
 public abstract class WebEvent
 {
@@ -65,9 +65,9 @@ public abstract class WebEvent
     }
 
     static Event FAILED(Bundle webAppBundle, Bundle extenderBundle, Throwable exception,
-                        String collision, Long collisionBundles)
+        String collision, Long collisionBundles)
     {
-        Dictionary<String,Object> props = createBaseProperties(webAppBundle, extenderBundle);
+        Dictionary<String, Object> props = createBaseProperties(webAppBundle, extenderBundle);
         if (exception != null) {
             props.put(EXCEPTION, exception);
         }
@@ -80,7 +80,7 @@ public abstract class WebEvent
         return new Event(TOPIC_FAILED, props);
     }
 
-    private static Dictionary<String,Object> createBaseProperties(Bundle webAppBundle, Bundle extenderBundle)
+    private static Dictionary<String, Object> createBaseProperties(Bundle webAppBundle, Bundle extenderBundle)
     {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(EventConstants.BUNDLE_SYMBOLICNAME, webAppBundle.getSymbolicName());

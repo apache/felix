@@ -60,7 +60,7 @@ public final class JettyConfig
 
     /** Felix specific property to control whether to enable HTTPS. */
     private static final String FELIX_HTTPS_ENABLE = "org.apache.felix.https.enable";
-    private static final String OSCAR_HTTPS_ENABLE   = "org.ungoverned.osgi.bundle.https.enable";
+    private static final String OSCAR_HTTPS_ENABLE = "org.ungoverned.osgi.bundle.https.enable";
 
     /** Felix specific property to control whether to enable HTTP. */
     private static final String FELIX_HTTP_ENABLE = "org.apache.felix.http.enable";
@@ -75,10 +75,10 @@ public final class JettyConfig
     private static final String FELIX_HTTPS_CLIENT_CERT = "org.apache.felix.https.clientcertificate";
 
     /** Felix specific property to control whether Jetty uses NIO or not for HTTP. Valid values are "true", "false". Default is true */
-    public static final String  FELIX_HTTP_NIO = "org.apache.felix.http.nio";
+    public static final String FELIX_HTTP_NIO = "org.apache.felix.http.nio";
 
     /** Felix specific property to control whether Jetty uses NIO or not for HTTPS. Valid values are "true", "false". Default is the value of org.apache.felix.http.nio */
-    public static final String  FELIX_HTTPS_NIO = "org.apache.felix.https.nio";
+    public static final String FELIX_HTTPS_NIO = "org.apache.felix.https.nio";
 
     /** Felix specific property to configure the session timeout in minutes (same session-timout in web.xml). Default is servlet container specific */
     public static final String FELIX_SESSION_TIMEOUT = "org.apache.felix.http.session.timeout";
@@ -146,8 +146,7 @@ public final class JettyConfig
     }
 
     /**
-     * Returns <code>true</code> if HTTP is configured to be used (
-     * {@link #FELIX_HTTP_ENABLE}) and
+     * Returns <code>true</code> if HTTP is configured to be used ( {@link #FELIX_HTTP_ENABLE}) and
      * the configured HTTP port ({@link #HTTP_PORT}) is higher than zero.
      */
     public boolean isUseHttp()
@@ -155,14 +154,14 @@ public final class JettyConfig
         return this.useHttp && getHttpPort() > 0;
     }
 
+    @Deprecated
     public boolean isUseHttpNio()
     {
         return this.useHttpNio;
     }
 
     /**
-     * Returns <code>true</code> if HTTPS is configured to be used (
-     * {@link #FELIX_HTTPS_ENABLE}) and
+     * Returns <code>true</code> if HTTPS is configured to be used ( {@link #FELIX_HTTPS_ENABLE}) and
      * the configured HTTP port ({@link #HTTPS_PORT}) is higher than zero.
      */
     public boolean isUseHttps()
@@ -170,6 +169,7 @@ public final class JettyConfig
         return this.useHttps && getHttpsPort() > 0;
     }
 
+    @Deprecated
     public boolean isUseHttpsNio()
     {
         return this.useHttpsNio;
@@ -277,8 +277,10 @@ public final class JettyConfig
         this.httpTimeout = getIntProperty(props, HTTP_TIMEOUT, 60000);
         this.keystore = getProperty(props, FELIX_KEYSTORE, this.context.getProperty(OSCAR_KEYSTORE));
         this.password = getProperty(props, FELIX_KEYSTORE_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_PASSWORD));
-        this.keyPassword = getProperty(props, FELIX_KEYSTORE_KEY_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_KEY_PASSWORD));
-        this.useHttps = getBooleanProperty(props, FELIX_HTTPS_ENABLE, getBooleanProperty(props, OSCAR_HTTPS_ENABLE, false));
+        this.keyPassword =
+            getProperty(props, FELIX_KEYSTORE_KEY_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_KEY_PASSWORD));
+        this.useHttps =
+            getBooleanProperty(props, FELIX_HTTPS_ENABLE, getBooleanProperty(props, OSCAR_HTTPS_ENABLE, false));
         this.useHttp = getBooleanProperty(props, FELIX_HTTP_ENABLE, true);
         this.truststore = getProperty(props, FELIX_TRUSTSTORE, null);
         this.trustPassword = getProperty(props, FELIX_TRUSTSTORE_PASSWORD, null);
@@ -327,7 +329,8 @@ public final class JettyConfig
     {
         try {
             return Integer.parseInt(getProperty(props, name, null));
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return defValue;
         }
     }
@@ -342,7 +345,7 @@ public final class JettyConfig
         if (value instanceof String)
         {
             return new String[]
-                { (String) value };
+            { (String) value };
         }
         else if (value instanceof String[])
         {
@@ -428,7 +431,8 @@ public final class JettyConfig
     {
         try {
             return Integer.parseInt(getProperty(name, null));
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return defValue;
         }
     }
