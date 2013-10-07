@@ -104,7 +104,7 @@ public class BndJarResourceStore implements ResourceStore {
         Set<Clazz> manipulable = new HashSet<Clazz>();
         for (Clazz clazz : classes) {
 
-            // If it is i the main jar, simply use it
+            // If it is in the main jar, simply use it
             if (m_analyzer.getJar().getResource(clazz.getAbsolutePath()) != null) {
                 manipulable.add(clazz);
                 continue;
