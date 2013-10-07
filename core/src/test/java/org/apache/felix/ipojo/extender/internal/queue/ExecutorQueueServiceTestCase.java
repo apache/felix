@@ -100,7 +100,12 @@ public class ExecutorQueueServiceTestCase extends TestCase {
         ExecutorQueueService queueService = new ExecutorQueueService(m_bundleContext, 2);
         queueService.start();
 
-        // We create 4 job, so that we have the 2 first execution while the 2 others are waiting
+        // Ensure we start at 0
+        assertEquals(0, queueService.getWaiters());
+        assertEquals(0, queueService.getCurrents());
+        assertEquals(0, queueService.getFinished());
+
+        // We create 4 job, so that we have the 2 first executed while the 2 others are waiting
         Future<String> one = queueService.submit(new SleepingCallable(50, "1"), m_callback, "First");
         Future<String> two = queueService.submit(new SleepingCallable(50, "2"), m_callback, "Second");
         Future<String> three = queueService.submit(new SleepingCallable(50, "3"), m_callback, "Third");
@@ -109,11 +114,17 @@ public class ExecutorQueueServiceTestCase extends TestCase {
         // Wait for callable to finish
         one.get();
         two.get();
-        assertEquals(2, queueService.getFinished());
-        assertEquals(2, queueService.getCurrents());
+
+        // Minimal assertion (do not test exact values)
+        assertTrue(queueService.getCurrents() > 0);
+        assertTrue(queueService.getFinished() > 0);
 
         three.get();
         four.get();
+
+        // Note: we cannot assert statistics reliably during the jobs execution: since when one
+        // is finished, another queued one will be executed in a row...
+        // So we have to wait until the end of all executions and hope for the best.
 
         assertEquals(4, queueService.getFinished());
         assertEquals(0, queueService.getCurrents());
