@@ -105,7 +105,8 @@ public final class ServletContextImpl
         if (res != null) {
             try {
                 return res.openStream();
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 // Do nothing
             }
         }
@@ -207,20 +208,17 @@ public final class ServletContextImpl
         }
     }
 
-    @SuppressWarnings("deprecation")
     public Servlet getServlet(String name)
         throws ServletException
     {
         return null;
     }
 
-    @SuppressWarnings("deprecation")
     public Enumeration getServlets()
     {
         return Collections.enumeration(Collections.emptyList());
     }
 
-    @SuppressWarnings("deprecation")
     public Enumeration getServletNames()
     {
         return Collections.enumeration(Collections.emptyList());
