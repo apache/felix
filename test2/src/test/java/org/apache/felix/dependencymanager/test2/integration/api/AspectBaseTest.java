@@ -16,11 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test;
-
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
+package org.apache.felix.dependencymanager.test2.integration.api;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,32 +24,21 @@ import java.util.Properties;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.BundleContext;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
-@RunWith(JUnit4TestRunner.class)
-public class AspectBaseTest extends Base {
-    @Configuration
-    public static Option[] configuration() {
-        return options(
-            provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
-            )
-        );
-    }
-    
+@RunWith(PaxExam.class)
+public class AspectBaseTest extends TestBase {    
     @Test
-    public void testSingleAspect(BundleContext context) {
+    public void testSingleAspect() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -96,7 +81,7 @@ public class AspectBaseTest extends Base {
     }
     
     @Test
-    public void testSingleAspectThatAlreadyExisted(BundleContext context) {
+    public void testSingleAspectThatAlreadyExisted() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -137,7 +122,7 @@ public class AspectBaseTest extends Base {
     }
 
     @Test
-    public void testMultipleAspects(BundleContext context) {
+    public void testMultipleAspects() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
