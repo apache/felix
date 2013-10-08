@@ -103,24 +103,24 @@ public class TestManipulationMetadataAPI extends BaseTest {
         assertTrue("Check Bar Service implementation", manip.isInterfaceImplemented(BarService.class.getName()));
     }
 
-    @Test
-    public void testInnerClasses() {
-        String comp_name = "org.apache.felix.ipojo.runtime.core.components.ComponentWithInnerClasses";
-        PojoMetadata metadata = getManipulationMetadataForComponent(comp_name);
-        assertEquals(metadata.getInnerClasses().length, 3);
-        assertNotNull(metadata.getMethodsFromInnerClass("MyInnerWithANativeMethod"));
-        assertNotNull(
-                getMethodMetadata(metadata.getMethodsFromInnerClass("MyInnerWithANativeMethod"),
-                        "foo"));
-
-        assertNotNull(
-                getMethodMetadata(metadata.getMethodsFromInnerClass("MyInnerClass"),
-                        "foo"));
-
-        assertNotNull(
-                getMethodMetadata(metadata.getMethodsFromInnerClass("1"),
-                        "run"));
-    }
+//    @Test
+//    public void testInnerClasses() {
+//        String comp_name = "org.apache.felix.ipojo.runtime.core.components.ComponentWithInnerClasses";
+//        PojoMetadata metadata = getManipulationMetadataForComponent(comp_name);
+//        assertEquals(metadata.getInnerClasses().length, 3);
+//        assertNotNull(metadata.getMethodsFromInnerClass("MyInnerWithANativeMethod"));
+//        assertNotNull(
+//                getMethodMetadata(metadata.getMethodsFromInnerClass("MyInnerWithANativeMethod"),
+//                        "foo"));
+//
+//        assertNotNull(
+//                getMethodMetadata(metadata.getMethodsFromInnerClass("MyInnerClass"),
+//                        "foo"));
+//
+//        assertNotNull(
+//                getMethodMetadata(metadata.getMethodsFromInnerClass("1"),
+//                        "run"));
+//    }
 
     public static MethodMetadata getMethodMetadata(MethodMetadata[] methods, String name) {
         for (MethodMetadata m : methods) {
