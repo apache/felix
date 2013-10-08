@@ -25,11 +25,10 @@ import org.apache.felix.ipojo.runtime.core.services.FooService;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
-import org.ow2.chameleon.testing.helpers.Dumps;
 
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
-import java.util.Properties;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
@@ -43,7 +42,7 @@ public class TestPropagation extends Common {
 
     @Test
     public void testPropagationFromConfigurationAdminWhenCreatingTheInstance() throws IOException {
-        Properties props = new Properties();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put("message", "message");
         props.put("propagated", "propagated");
         props.put(".private", "wow");

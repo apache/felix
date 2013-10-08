@@ -28,6 +28,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
@@ -234,7 +235,7 @@ public class TestStaticPropsReconfiguration extends Common {
         ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class);
         Configuration configuration = admin.getConfiguration("FooProvider-1", "?");
 
-        Properties reconf = new Properties();
+        Dictionary<String, Object> reconf = new Hashtable<String, Object>();
         reconf.put("int", 5);
         reconf.put("long", (long) 43);
         reconf.put("string", "toto");
@@ -308,7 +309,7 @@ public class TestStaticPropsReconfiguration extends Common {
         Configuration configuration = admin.getConfiguration("FooProvider-2", "?");
 
         // Reconfiguration
-        Properties reconf = new Properties();
+        Dictionary<String, Object> reconf = new Hashtable<String, Object>();
         reconf.put("int", 5);
         reconf.put("long", (long) 43);
         reconf.put("string", "toto");

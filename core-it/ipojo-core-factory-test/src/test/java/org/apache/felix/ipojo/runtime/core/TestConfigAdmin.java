@@ -25,6 +25,8 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Properties;
 
 import static org.junit.Assert.*;
@@ -42,7 +44,7 @@ public class TestConfigAdmin extends Common {
         ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class, null);
         Configuration conf = admin.createFactoryConfiguration("Factories-FooProviderType-2", "?");
 
-        Properties p = new Properties();
+        Dictionary<String, Object> p = new Hashtable<String, Object>();
         p.put("int", 3);
         p.put("long", (long) 42);
         p.put("string", "absdir");
@@ -72,7 +74,7 @@ public class TestConfigAdmin extends Common {
         ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class, null);
         Configuration conf = admin.createFactoryConfiguration("Factories-FooProviderType-2", "?");
 
-        Properties p = new Properties();
+        Dictionary<String, Object> p = new Hashtable<String, Object>();
         p.put("int", "3");
         p.put("long", "42");
         p.put("string", "absdir");
@@ -102,7 +104,7 @@ public class TestConfigAdmin extends Common {
         ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class, null);
         Configuration conf = admin.createFactoryConfiguration("Factories-FooProviderType-2", "?");
 
-        Properties p = new Properties();
+        Dictionary<String, Object> p = new Hashtable<String, Object>();
         p.put("int", 3);
         p.put("long", (long) 42);
         p.put("string", "absdir");
@@ -141,7 +143,7 @@ public class TestConfigAdmin extends Common {
         ConfigurationAdmin admin = osgiHelper.getServiceObject(ConfigurationAdmin.class, null);
         Configuration conf = admin.createFactoryConfiguration("Factories-FooProviderType-2", "?");
 
-        Properties p = new Properties();
+        Dictionary<String, Object> p = new Hashtable<String, Object>();
         p.put("int", "3");
         p.put("long", "42");
         p.put("string", "absdir");
