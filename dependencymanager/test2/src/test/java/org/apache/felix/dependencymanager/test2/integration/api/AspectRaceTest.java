@@ -26,8 +26,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-
 import junit.framework.Assert;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
@@ -37,7 +35,6 @@ import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
@@ -48,9 +45,6 @@ public class AspectRaceTest extends TestBase {
 	volatile DependencyManager _dm;
 	final static int SERVICES = 3;
 	final static int ASPECTS_PER_SERVICE = 10;
-
-	@Inject
-	private static volatile BundleContext _bctx;
 
 	@Test
 	public void testConcurrentAspects() {
@@ -66,7 +60,7 @@ public class AspectRaceTest extends TestBase {
 			// We create a Controller which is injected with some S services,
 			// and each S services has some aspects (SAspect).
 
-			_dm = new DependencyManager(_bctx);
+			_dm = new DependencyManager(context);
 			Controller controller = new Controller();
 			Component c = _dm
 					.createComponent()
@@ -237,7 +231,7 @@ public class AspectRaceTest extends TestBase {
 						"could not unregister services and aspects timely");
 			}
 
-			if (_bctx.getServiceReference(S.class.getName()) != null) {
+			if (context.getServiceReference(S.class.getName()) != null) {
 				error("could not unregister some services or aspects !");
 			}
 			debug("unregistered all aspects and services concurrently");
