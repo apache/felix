@@ -30,7 +30,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.felix.ipojo.features</artifactId>
-    <version>1.11.0</version>
+    <version>1.11.1-SNAPSHOT</version>
 
     <name>Apache Felix iPOJO Karaf Features</name>
     <description>Apache Karaf Features to provision Apache Felix iPOJO</description>
@@ -123,10 +123,4 @@
             </plugin>
         </plugins>
     </build>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.11.0/org.apache.felix.ipojo.features</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.11.0/org.apache.felix.ipojo.features</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.runtime-project-1.11.0/org.apache.felix.ipojo.features</url>
-  </scm>
 </project>
