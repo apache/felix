@@ -18,9 +18,7 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -35,7 +33,7 @@
 
     <name>Apache Felix iPOJO - Distribution - Quickstart</name>
     <artifactId>org.apache.felix.ipojo.distribution.quickstart</artifactId>
-    <version>1.10.2-SNAPSHOT</version>
+    <version>1.11.0</version>
 
     <properties>
         <!-- Felix version -->
@@ -143,4 +141,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.11.0/felix-parent-2.1/org.apache.felix.ipojo.distribution.quickstart</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.11.0/felix-parent-2.1/org.apache.felix.ipojo.distribution.quickstart</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.runtime-project-1.11.0/felix-parent-2.1/org.apache.felix.ipojo.distribution.quickstart</url>
+  </scm>
 </project>

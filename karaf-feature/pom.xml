@@ -18,9 +18,7 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
         <groupId>org.apache.felix</groupId>
@@ -32,7 +30,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.felix.ipojo.features</artifactId>
-    <version>1.10.2-SNAPSHOT</version>
+    <version>1.11.0</version>
 
     <name>Apache Felix iPOJO Karaf Features</name>
     <description>Apache Karaf Features to provision Apache Felix iPOJO</description>
@@ -125,4 +123,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.11.0/org.apache.felix.ipojo.features</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.11.0/org.apache.felix.ipojo.features</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.runtime-project-1.11.0/org.apache.felix.ipojo.features</url>
+  </scm>
 </project>
