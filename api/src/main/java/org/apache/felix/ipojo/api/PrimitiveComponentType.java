@@ -461,9 +461,17 @@ public class PrimitiveComponentType extends ComponentType {
         Manipulator manipulator = new Manipulator();
         try {
             byte[] array = getClassByteArray();
-            byte[] newclazz = manipulator.manipulate(array);
+
+            // Step 1 - preparation
+            manipulator.prepare(array);
+
+            byte[] newclazz = new byte[0];
+            if (!manipulator.isAlreadyManipulated()) {
+                // Step 2 - manipulation
+                newclazz = manipulator.manipulate(array);
+            }
             m_manipulation = manipulator.getManipulationMetadata();
-            m_alreadyManipulated = newclazz.length == array.length;
+            m_alreadyManipulated = manipulator.isAlreadyManipulated();
             return newclazz;
         } catch (IOException e) {
             throw new IllegalStateException("An exception occurs during implementation class manipulation", e);

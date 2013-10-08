@@ -108,7 +108,7 @@ public class ConfigurationHandlerDescription extends HandlerDescription {
      * Gets a property by name.
      * @param name the property name
      * @return the property description with the given name, {@code null} if there is no property with the given name.
-     * @since 1.10.2
+     * @since 1.11.0
      */
     public PropertyDescription getPropertyByName(String name) {
         for (PropertyDescription desc :m_properties) {

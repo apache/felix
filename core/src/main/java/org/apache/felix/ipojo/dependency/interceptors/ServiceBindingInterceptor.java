@@ -34,7 +34,7 @@ import org.osgi.framework.ServiceReference;
  *
  * Obviously an interceptor can be plugged to several dependencies.
  *
- * @since 1.10.2
+ * @since 1.11.0
  */
 public interface ServiceBindingInterceptor extends DependencyInterceptor {
 
