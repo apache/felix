@@ -209,8 +209,9 @@ public abstract class IPojoFactory implements Factory {
      * Computes the required handler list.
      * Each sub-type must override this method.
      * @return the required handler list
+     * @throws ConfigurationException when the list of handler cannot be computed.
      */
-    public abstract List<RequiredHandler> getRequiredHandlerList();
+    public abstract List<RequiredHandler> getRequiredHandlerList() throws ConfigurationException;
 
     /**
      * Creates an instance.
@@ -701,7 +702,11 @@ public abstract class IPojoFactory implements Factory {
     public void restart() {
     	// Call sub-class to get the list of required handlers.
         m_requiredHandlers.clear();
-        m_requiredHandlers.addAll(getRequiredHandlerList());
+        try {
+            m_requiredHandlers.addAll(getRequiredHandlerList());
+        } catch (ConfigurationException e) {
+            // Swallow the exception.
+        }
     }
 
     /**
