@@ -67,7 +67,7 @@ public class MethodMetadata {
 
     /**
      * The argument names if there were contained in the manifest.
-     * @since 1.10.2
+     * @since 1.11.0
      */
     private final String[] m_names;
 

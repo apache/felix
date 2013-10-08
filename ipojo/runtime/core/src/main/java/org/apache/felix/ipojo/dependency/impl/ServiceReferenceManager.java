@@ -876,7 +876,7 @@ public class ServiceReferenceManager implements TrackerCustomizer {
      * Gets the list of tracking interceptors attached to the current service dependency.
      * @return the list of service references of the tracking interceptors participating to the resolution of the
      * current service dependency. An empty list is returned is there are no participating interceptors.
-     * @since 1.10.2
+     * @since 1.11.0
      */
     public List<ServiceReference> getTrackingInterceptorReferences() {
         try {
@@ -897,7 +897,7 @@ public class ServiceReferenceManager implements TrackerCustomizer {
      * Gets the list of binding interceptors attached to the current service dependency.
      * @return the list of service references of the binding interceptors participating to the resolution of the
      * current service dependency. An empty list is returned is there are no participating interceptors.
-     * @since 1.10.2
+     * @since 1.11.0
      */
     public List<ServiceReference> getBindingInterceptorReferences() {
         try {
@@ -919,7 +919,7 @@ public class ServiceReferenceManager implements TrackerCustomizer {
      * be attached at a point on time, this is not a list but only one reference.
      * @return the service reference of the ranking interceptor participating to the resolution of the current
      * service dependency. {@code null} if no (external) ranking interceptor is currently attached.
-     * @since 1.10.2
+     * @since 1.11.0
      */
     public ServiceReference getRankingInterceptorReference() {
         try {

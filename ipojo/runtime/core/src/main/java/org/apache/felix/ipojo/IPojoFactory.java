@@ -397,7 +397,7 @@ public abstract class IPojoFactory implements Factory {
      * Gets the list of instances created by the factory. The instances must be still alive.
      *
      * @return the list of created (and living) instances
-     * @since 1.10.2
+     * @since 1.11.0
      */
     public List<ComponentInstance> getInstances() {
         // m_componentInstances is a concurrent hashmap, we can create retrieve values directly.
@@ -408,7 +408,7 @@ public abstract class IPojoFactory implements Factory {
      * Gets the list of the names of the instances created by the factory. The instances must be still alive.
      *
      * @return the list of the names of created (and living) instances
-     * @since 1.10.2
+     * @since 1.11.0
      */
     public List<String> getInstancesNames() {
         // m_componentInstances is a concurrent hashmap, we can create retrieve values directly.

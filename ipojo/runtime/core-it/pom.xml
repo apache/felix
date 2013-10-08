@@ -43,7 +43,7 @@
         <equinox.version>3.9.0.v20130529-1710</equinox.version>
         <knoperflerfish.version>6.0.2</knoperflerfish.version>
 
-        <manipulator.version>1.10.2-SNAPSHOT</manipulator.version>
+        <manipulator.version>1.11.0</manipulator.version>
     </properties>
 
     <modules>
@@ -241,7 +241,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>1.10.2-SNAPSHOT</version>
+            <version>${manipulator.version}</version>
         </dependency>
 
         <dependency>

@@ -190,7 +190,7 @@ public interface Factory {
      * Gets the list of instances created by the factory. The instances must be still alive.
      *
      * @return the list of created (and living) instances
-     * @since 1.10.2
+     * @since 1.11.0
      */
     List<ComponentInstance> getInstances();
 
@@ -198,7 +198,7 @@ public interface Factory {
      * Gets the list of the names of the instances created by the factory. The instances must be still alive.
      *
      * @return the list of the names of created (and living) instances
-     * @since 1.10.2
+     * @since 1.11.0
      */
     List<String> getInstancesNames();
 

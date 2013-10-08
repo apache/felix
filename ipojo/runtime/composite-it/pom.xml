@@ -40,7 +40,7 @@
         <equinox.version>3.8.1.v20120830-144521</equinox.version>
         <knoperflerfish.version>5.3.3</knoperflerfish.version>
 
-        <manipulator.version>1.10.0</manipulator.version>
+        <manipulator.version>1.10.1</manipulator.version>
     </properties>
 
     <modules>
@@ -217,7 +217,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-            <version>1.10.0</version>
+            <version>1.11.0</version>
         </dependency>
 
         <dependency>
