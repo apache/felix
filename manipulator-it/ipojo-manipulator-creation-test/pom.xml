@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.ipojo.manipulator.manipulator-it</artifactId>
-        <version>1.11.0</version>
+        <version>1.11.1-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
