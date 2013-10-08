@@ -208,7 +208,8 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
             <!-- To update before the release -->
-            <version>${project.version}</version>
+            <!--<version>${project.version}</version>-->
+            <version>1.10.2-20131008.120048-41</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.osgi</groupId>
@@ -259,7 +260,7 @@
         <dependency>
             <groupId>org.ow2.chameleon.testing</groupId>
             <artifactId>osgi-helpers</artifactId>
-            <version>0.6.2-SNAPSHOT</version>
+            <version>0.6.1</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
