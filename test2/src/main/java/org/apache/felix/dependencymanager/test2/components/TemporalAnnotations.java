@@ -16,60 +16,49 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test.bundle.annotation.temporal;
+package org.apache.felix.dependencymanager.test2.components;
 
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
-import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
 /**
- * Service using an annotated Temporal Service dependendency.
+ * Service using an annotated Temporal Service dependency.
  */
 @Component(provides = {})
-public class TemporalTest implements Runnable
-{
+public class TemporalAnnotations implements Runnable {
     Thread m_thread;
 
-    @ServiceDependency
-    Sequencer m_sequencer;
+    @ServiceDependency(filter = "(name=temporal.annotations)")
+    volatile Ensure m_sequencer;
 
     @ServiceDependency(timeout = 1000L, filter = "(test=temporal)")
-    Runnable m_service;
-
+    volatile Runnable m_service;
+        
     @Start
-    protected void start()
-    {
+    protected void start() {
         m_thread = new Thread(this);
         m_thread.start();
     }
 
     @Stop
-    protected void stop()
-    {
+    protected void stop() {
         m_thread.interrupt();
-        try
-        {
+        try {
             m_thread.join();
-        }
-        catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
         }
     }
 
-    public void run()
-    {
+    public void run() {
         m_service.run();
         m_sequencer.waitForStep(2, 15000);
-        m_service.run(); // we should block here
+        m_service.run(); // we should block here      
         m_sequencer.waitForStep(4, 15000);
-        try
-        {
+        try {
             m_service.run(); // should raise IllegalStateException
-        }
-        catch (IllegalStateException e)
-        {
+        } catch (IllegalStateException e) {
             m_sequencer.step(5);
         }
     }
