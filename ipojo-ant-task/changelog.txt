@@ -3,7 +3,6 @@ Changes from the 1.10.1 to 1.11.0
 
 ** Bug
     * [FELIX-4021] - maven-ipojo-plugin fails on WAR packaging
-    * [FELIX-4169] - bnd ipojo plugin adds components description to MANIFEST when they are already therein
     * [FELIX-4219] - Variables named not stored in bytecode for constructors during manipulation
     * [FELIX-4247] - Memory leak with ServiceUsage and inner class (Listener style)
 
