@@ -52,6 +52,10 @@ import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 
 public abstract class TestBase implements LogService, FrameworkListener {
     public static final String OSGI_SPEC_VERSION = "4.2.0";
@@ -86,6 +90,10 @@ public abstract class TestBase implements LogService, FrameworkListener {
             throw new IllegalArgumentException("Cannot read from bundle file " + bundleFileName
                     + " specified in the " + BUNDLE_JAR_SYS_PROP + " system property");
         }
+        
+        // Reduce pax exam log level.
+        Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.WARN);
 
         final Option[] base = options(
                 workingDirectory("target/paxexam/"),
