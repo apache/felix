@@ -50,7 +50,7 @@ public class AspectRaceTest extends TestBase {
 	public void testConcurrentAspects() {
 		try {
 			warn("starting aspect race test");
-			int cores = Runtime.getRuntime().availableProcessors();
+			int cores = 10; // Runtime.getRuntime().availableProcessors();
 			// Used to inject S services
 			_serviceExec = Executors.newFixedThreadPool(cores);
 			// Used to inject S Aspects
@@ -306,7 +306,7 @@ public class AspectRaceTest extends TestBase {
 			debug("swap: " + previous + "," + current);
 			synchronized (this) {
 				if (!_services.remove(previous)) {
-					error("swap: unknow previous counter: " + previous);
+					error("swap: unknow previous service: " + previous);
 				}
 				_services.add(current);
 			}
