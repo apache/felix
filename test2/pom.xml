@@ -194,6 +194,10 @@
 								<exclude>**/components/*</exclude>
 							</excludes>
 							<includes>
+								<!-- By default, all integration tests are run. For running a specific test, 
+								     you can specify a given test below: for example:
+								     <include>**/integration/**/AspectBaseTest.java</include>
+								-->
 								<include>**/integration/**/*</include>
 							</includes>
 						</configuration>
