@@ -78,9 +78,6 @@ public abstract class BaseIntegrationTest {
             url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.framework.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
             url("link:classpath:META-INF/links/org.apache.geronimo.specs.atinject.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
-//            mavenBundle("org.osgi", "org.osgi.core").version("4.2.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.osgi", "org.osgi.compendium").version("4.2.0").startLevel(START_LEVEL_SYSTEM_BUNDLES),
-            mavenBundle("org.apache.felix", "org.apache.felix.log").version("1.0.1").startLevel(START_LEVEL_SYSTEM_BUNDLES),
             mavenBundle("org.apache.felix", ORG_APACHE_FELIX_USERADMIN).versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
             mavenBundle("org.apache.felix", ORG_APACHE_FELIX_USERADMIN_FILESTORE).versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
             

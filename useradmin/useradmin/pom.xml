@@ -72,10 +72,13 @@
 						</Bundle-SymbolicName>
 						<Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
 						<Import-Package>
-						     org.osgi.service.useradmin; version="[1.1,1.2)",
-						     *
+							org.osgi.framework;version="[1.5,2.0)",
+						    org.osgi.service.useradmin; version="[1.1,1.2)",
+						    org.osgi.service.event; version="[1.0,2)"; resolution:=optional,
+						    *
 						</Import-Package>
 						<Export-Package>
+					        org.osgi.service.useradmin; version="1.1",
 							${project.artifactId}; version="1.0.0"
 						</Export-Package>
 						<Private-Package>
