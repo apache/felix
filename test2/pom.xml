@@ -198,7 +198,7 @@
 								     you can specify a given test below: for example:
 								     <include>**/integration/**/AspectBaseTest.java</include>
 								-->
-								<include>**/integration/**/*</include>
+								<include>**/integration/**/*.java</include>
 							</includes>
 						</configuration>
 					</execution>
