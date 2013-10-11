@@ -1051,38 +1051,43 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		    if (list == null) {
 		        return;
 		    }
-		    Map highestRankedServiceMap = new HashMap(); // <Long, RankedService>
-		    for (int i = 0; i < list.length; i++) {
-		    	ServiceReference sr = (ServiceReference) list[i];
-		    	if (sr != null) {
-			    	Long serviceId = ServiceUtil.getServiceIdAsLong(sr);
-			    	int ranking = ServiceUtil.getRanking(sr);
-			    	
-			    	RankedService rs = (RankedService) highestRankedServiceMap.get(serviceId);
-			    	if (rs == null) {
-			    	    // the service did not exist yet in our map
-			    	    highestRankedServiceMap.put(serviceId, new RankedService(ranking, sr));
+		    if (m_trackAllAspects) {
+		    	// not hiding aspects
+		    	super.setInitial(list);
+		    } else { 
+			    Map highestRankedServiceMap = new HashMap(); // <Long, RankedService>
+			    for (int i = 0; i < list.length; i++) {
+			    	ServiceReference sr = (ServiceReference) list[i];
+			    	if (sr != null) {
+				    	Long serviceId = ServiceUtil.getServiceIdAsLong(sr);
+				    	int ranking = ServiceUtil.getRanking(sr);
+				    	
+				    	RankedService rs = (RankedService) highestRankedServiceMap.get(serviceId);
+				    	if (rs == null) {
+				    	    // the service did not exist yet in our map
+				    	    highestRankedServiceMap.put(serviceId, new RankedService(ranking, sr));
+				    	}
+				    	else if (ranking > rs.getRanking()) {
+	                        // the service replaces a lower ranked one
+				    	    hide(rs.getServiceReference());
+				    	    rs.update(ranking, sr);
+				    	}
+				    	else {
+	                        // the service does NOT replace a lower ranked one
+				    	    hide(sr);
+				    	}
 			    	}
-			    	else if (ranking > rs.getRanking()) {
-                        // the service replaces a lower ranked one
-			    	    hide(rs.getServiceReference());
-			    	    rs.update(ranking, sr);
-			    	}
-			    	else {
-                        // the service does NOT replace a lower ranked one
-			    	    hide(sr);
-			    	}
-		    	}
-		    }
-		    if (highestRankedServiceMap.size() > 0) {
-		        Object[] result = new Object[highestRankedServiceMap.size()];
-		        int index = 0;
-		        for(Iterator it = highestRankedServiceMap.entrySet().iterator(); it.hasNext(); ) {
-		        	Entry entry = (Entry) it.next();
-		        	result[index] = ((RankedService)entry.getValue()).getServiceReference();
-		        	index++;
-		        }
-		        super.setInitial(result);	    	
+			    }
+			    if (highestRankedServiceMap.size() > 0) {
+			        Object[] result = new Object[highestRankedServiceMap.size()];
+			        int index = 0;
+			        for(Iterator it = highestRankedServiceMap.entrySet().iterator(); it.hasNext(); ) {
+			        	Entry entry = (Entry) it.next();
+			        	result[index] = ((RankedService)entry.getValue()).getServiceReference();
+			        	index++;
+			        }
+			        super.setInitial(result);	    	
+			    }
 		    }
 		}
 
