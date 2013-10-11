@@ -102,13 +102,18 @@ public abstract class TestBase implements LogService, FrameworkListener {
                 systemTimeout(5000),
                 cleanCaches(true),
                 junitBundles(),
+                mavenBundle("org.osgi", "org.osgi.compendium", "5.0.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.8"),
+                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.6.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.shell", "1.4.2"),
+                mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin", "0.9.0").start(false),
                 mavenBundle("org.ops4j.pax.tinybundles", "tinybundles", "1.0.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager",
                         "3.1.1-SNAPSHOT"),
+                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.shell",
+                        "3.0.2-SNAPSHOT"),
                 mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.runtime",
                         "3.1.1-SNAPSHOT"),
-                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.6.0"),
-                mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.8"),
                 bundle(bundleFile.toURI().toString()));
         final Option option = (paxRunnerVmOption != null) ? vmOption(paxRunnerVmOption) : null;
         return OptionUtils.combine(base, option);
