@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test;
+package org.apache.felix.dependencymanager.test2.integration.api;
 
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -38,22 +38,14 @@ import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-@RunWith(JUnit4TestRunner.class)
-public class AdapterWithAspectCallbacksTest extends Base {
-    @Configuration
-    public static Option[] configuration() {
-        return options(
-            provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
-            ) // ,
-//          new VMOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
-//          new TimeoutOption(0)
-        );
-    }
-    
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
+
+@RunWith(PaxExam.class)
+public class AdapterWithAspectCallbacksTest extends TestBase {
     @Test
-    public void testAdapterWithAspectMultipleTimes(BundleContext context) {
+    public void testAdapterWithAspectMultipleTimes() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -115,6 +107,7 @@ public class AdapterWithAspectCallbacksTest extends Base {
         e.waitForStep(count * 3, 15000);
         m.remove(aspect2);
         e.step(count * 3 + 1);
+        m.clear();
     }
         
     static interface OriginalService {
