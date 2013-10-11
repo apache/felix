@@ -48,7 +48,7 @@ import org.osgi.framework.ServiceReference;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Logger implements ServiceListener {
-	private static final String LOG_SINGLE_CONTEXT = "org.apache.felix.dm.singleContextLog";
+	private static final String LOG_SINGLE_CONTEXT = "org.apache.felix.dependencymanager.singleContextLog";
     public static final int LOG_ERROR = 1;
     public static final int LOG_WARNING = 2;
     public static final int LOG_INFO = 3;
