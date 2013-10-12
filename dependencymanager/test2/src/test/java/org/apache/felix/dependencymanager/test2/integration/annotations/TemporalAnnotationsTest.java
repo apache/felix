@@ -38,7 +38,7 @@ public class TemporalAnnotationsTest extends TestBase
     public void testTemporalServiceDependency()
     {
         Ensure ensure = new Ensure();
-        ServiceRegistration<?> ensureReg = register(ensure, "temporal.annotations");                       
+        ServiceRegistration ensureReg = register(ensure, "temporal.annotations");                       
         Dictionary props = new Hashtable() {{ put("test", "temporal"); }};
         Runnable r = Ensure.createRunnableStep(ensure, 1);             
         ServiceRegistration sr = context.registerService(Runnable.class.getName(), r, props);
