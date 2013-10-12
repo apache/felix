@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test;
+package org.apache.felix.dependencymanager.test2.integration.api;
 
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -32,22 +32,15 @@ import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-@RunWith(JUnit4TestRunner.class)
-public class AdapterWithAspectTest extends Base {
-    @Configuration
-    public static Option[] configuration() {
-        return options(
-            provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
-            ) // ,
-//          new VMOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
-//          new TimeoutOption(0)
-        );
-    }
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
+
+@RunWith(PaxExam.class)
+public class AdapterWithAspectTest extends TestBase {
     
     @Test
-    public void testAdapterWithAspectMultipleTimes(BundleContext context) {
+    public void testAdapterWithAspectMultipleTimes() {
         // TODO this test is broken, it assumes that the order in which listeners are added to the BundleContext will also
         // be the order in which they're invoked (which from a spec point of view is not true)
         

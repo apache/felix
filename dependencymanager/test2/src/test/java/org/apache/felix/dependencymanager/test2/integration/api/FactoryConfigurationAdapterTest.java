@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test;
+package org.apache.felix.dependencymanager.test2.integration.api;
 
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -24,6 +24,7 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
@@ -38,25 +39,17 @@ import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 
-@RunWith(JUnit4TestRunner.class)
-public class FactoryConfigurationAdapterTest extends Base
+@RunWith(PaxExam.class)
+public class FactoryConfigurationAdapterTest extends TestBase
 {
     private static Ensure m_ensure;
     
-    @Configuration
-    public static Option[] configuration() {
-        return options(
-            provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.8"),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
-            )
-        );
-    }    
-    
     @Test
-    public void testFactoryConfigurationAdapter(BundleContext context) {
+    public void testFactoryConfigurationAdapter() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         m_ensure = new Ensure();
@@ -111,6 +104,7 @@ public class FactoryConfigurationAdapterTest extends Base
         // Remove the configuration
         m.remove(s1); // The stop method will remove the configuration
         m_ensure.waitForStep(16, 10000);
+        m.clear();
     }
 
     public static class ConfigurationCreator {
@@ -130,7 +124,7 @@ public class FactoryConfigurationAdapterTest extends Base
             try {
                 m_ensure.step(1);
                 m_conf = m_ca.createFactoryConfiguration(m_factoryPid, null);
-                Properties props = new Properties();
+                Hashtable props = new Hashtable();
                 props.put(m_key, m_value);
                 m_conf.update(props);
             }
@@ -140,7 +134,7 @@ public class FactoryConfigurationAdapterTest extends Base
         }
         
         public void update(String key, String val) {
-            Properties props = new Properties();
+            Hashtable props = new Hashtable();
             props.put(key, val);
             try {
                 m_conf.update(props);
