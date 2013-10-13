@@ -73,7 +73,7 @@ public class AspectRaceTest extends TestBase {
 
 			_dm.add(c);
 
-			for (int loop = 1; loop <= 10000; loop++) {
+			for (int loop = 1; loop <= 3000; loop++) {
 				// Perform concurrent injections of "S" service and S aspects
 				// into the Controller component;
 				Factory f = new Factory();
@@ -100,6 +100,7 @@ public class AspectRaceTest extends TestBase {
 		} finally {
 			shutdown(_serviceExec);
 			shutdown(_aspectExec);
+			_dm.clear();
 		}
 	}
 
