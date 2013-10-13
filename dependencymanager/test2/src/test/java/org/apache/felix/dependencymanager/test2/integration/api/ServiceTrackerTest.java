@@ -16,42 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test;
+package org.apache.felix.dependencymanager.test2.integration.api;
 
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
-
-import java.util.Properties;
+import java.util.Hashtable;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceUtil;
 import org.apache.felix.dm.tracker.ServiceTracker;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.BundleContext;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
-@RunWith(JUnit4TestRunner.class)
-public class ServiceTrackerTest extends Base {
-    @Configuration
-    public static Option[] configuration() {
-        return options(
-            provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
-            )
-        );
-    }    
-
+@RunWith(PaxExam.class)
+public class ServiceTrackerTest extends TestBase {
     @Test
-    public void testPlainServiceTracker(BundleContext context) {
+    public void testPlainServiceTracker() {
         ServiceTracker st = new ServiceTracker(context, ServiceInterface.class.getName(), null);
         st.open();
         ServiceRegistration sr = context.registerService(ServiceInterface.class.getName(), new ServiceProvider(), null);
@@ -62,7 +46,7 @@ public class ServiceTrackerTest extends Base {
     }
     
     @Test
-    public void testAspectServiceTracker(BundleContext context) {
+    public void testAspectServiceTracker() {
         ServiceTracker st = new ServiceTracker(context, ServiceInterface.class.getName(), null);
         st.open();
 
@@ -71,12 +55,12 @@ public class ServiceTrackerTest extends Base {
         
         final long sid = ServiceUtil.getServiceId(sr.getReference());
         ServiceRegistration asr = context.registerService(ServiceInterface.class.getName(), new ServiceProvider(),
-            new Properties() {{ put(DependencyManager.ASPECT, sid); put(Constants.SERVICE_RANKING, 10); }});
+            new Hashtable() {{ put(DependencyManager.ASPECT, sid); put(Constants.SERVICE_RANKING, 10); }});
         Assert.assertEquals("There should be one service that matches the tracker", 1, st.getServices().length);
         Assert.assertEquals("Service ranking should be 10", Integer.valueOf(10), (Integer) st.getServiceReference().getProperty(Constants.SERVICE_RANKING));
 
         ServiceRegistration asr2 = context.registerService(ServiceInterface.class.getName(), new ServiceProvider(),
-            new Properties() {{ put(DependencyManager.ASPECT, sid); put(Constants.SERVICE_RANKING, 20); }});
+            new Hashtable() {{ put(DependencyManager.ASPECT, sid); put(Constants.SERVICE_RANKING, 20); }});
         Assert.assertEquals("There should be one service that matches the tracker", 1, st.getServices().length);
         Assert.assertEquals("Service ranking should be 20", Integer.valueOf(20), (Integer) st.getServiceReference().getProperty(Constants.SERVICE_RANKING));
         
@@ -95,14 +79,14 @@ public class ServiceTrackerTest extends Base {
     }
     
     @Test
-    public void testExistingAspectServiceTracker(BundleContext context) {
+    public void testExistingAspectServiceTracker() {
         ServiceTracker st = new ServiceTracker(context, ServiceInterface.class.getName(), null);
         ServiceRegistration sr = context.registerService(ServiceInterface.class.getName(), new ServiceProvider(), null);
         final long sid = ServiceUtil.getServiceId(sr.getReference());
         ServiceRegistration asr = context.registerService(ServiceInterface.class.getName(), new ServiceProvider(),
-            new Properties() {{ put(DependencyManager.ASPECT, sid); put(Constants.SERVICE_RANKING, 10); }});
+            new Hashtable() {{ put(DependencyManager.ASPECT, sid); put(Constants.SERVICE_RANKING, 10); }});
         ServiceRegistration asr2 = context.registerService(ServiceInterface.class.getName(), new ServiceProvider(),
-            new Properties() {{ put(DependencyManager.ASPECT, sid); put(Constants.SERVICE_RANKING, 20); }});
+            new Hashtable() {{ put(DependencyManager.ASPECT, sid); put(Constants.SERVICE_RANKING, 20); }});
 
         st.open();
         Assert.assertEquals("There should be one service that matches the tracker", 1, st.getServices().length);

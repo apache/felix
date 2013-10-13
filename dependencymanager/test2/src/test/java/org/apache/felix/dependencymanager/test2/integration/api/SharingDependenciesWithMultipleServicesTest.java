@@ -16,16 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test;
-
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
+package org.apache.felix.dependencymanager.test2.integration.api;
 
 import java.net.URL;
 import java.util.Dictionary;
-import java.util.Properties;
+import java.util.Hashtable;
 
+import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.apache.felix.dm.BundleDependency;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ConfigurationDependency;
@@ -36,9 +34,7 @@ import org.apache.felix.dm.ResourceUtil;
 import org.apache.felix.dm.ServiceDependency;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
@@ -47,21 +43,10 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
-@RunWith(JUnit4TestRunner.class)
-public class SharingDependenciesWithMultipleServicesTest extends Base {
-    @Configuration
-    public static Option[] configuration() {
-        return options(
-            provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject(),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.8")
-            )
-        );
-    }    
-    
+@RunWith(PaxExam.class)
+public class SharingDependenciesWithMultipleServicesTest extends TestBase {
     @Test
-    public void testShareServiceDependencyWithMultipleServices(BundleContext context) {
+    public void testShareServiceDependencyWithMultipleServices() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -82,7 +67,7 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
     }
     
     @Test
-    public void testShareConfigurationDependencyWithMultipleServices(BundleContext context) {
+    public void testShareConfigurationDependencyWithMultipleServices() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -109,7 +94,7 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
     }
     
     @Test
-    public void testShareBundleDependencyWithMultipleServices(BundleContext context) {
+    public void testShareBundleDependencyWithMultipleServices() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -127,7 +112,7 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
     }
     
     @Test
-    public void testShareResourceDependencyWithMultipleServices(BundleContext context) throws Exception {
+    public void testShareResourceDependencyWithMultipleServices() throws Exception {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -206,7 +191,7 @@ public class SharingDependenciesWithMultipleServicesTest extends Base {
         public void init() {
             try {
                 org.osgi.service.cm.Configuration conf = m_configAdmin.getConfiguration("test", null);
-                conf.update(new Properties() {{ put("testkey", "testvalue"); }} );
+                conf.update(new Hashtable() {{ put("testkey", "testvalue"); }} );
                 m_ensure.step(1);
             }
             catch (Exception e) {

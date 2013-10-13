@@ -16,49 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test;
-
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
+package org.apache.felix.dependencymanager.test2.integration.api;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.shell.ShellService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 
-@RunWith(JUnit4TestRunner.class)
-public class FELIX2955_ShellCommandTest extends Base {
+@RunWith(PaxExam.class)
+public class FELIX2955_ShellCommandTest extends TestBase {
     private long m_testBundleId;
     private Bundle m_deploymentAdmin;
 
-    @Configuration
-    public static Option[] configuration() {
-        return options(
-            provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.configadmin").version("1.2.4"),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.shell").version("1.4.2"),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.deploymentadmin").version("0.9.0").start(false),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject(),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager.shell").versionAsInProject()
-            )
-        );
-    }    
-    
     @Test
-    public void testShellCommands(BundleContext context) throws Throwable {
+    public void testShellCommands() throws Throwable {
         m_testBundleId = context.getBundle().getBundleId();
         for (Bundle b : context.getBundles()) {
             if (b.getSymbolicName().equals("org.apache.felix.deploymentadmin")) {
@@ -113,20 +94,20 @@ public class FELIX2955_ShellCommandTest extends Base {
             Thread t = new Thread("Shell Client") {
                 public void run() {
                     m_ensure.step(1);
-                    execute("dm",
+                    execute("dm " + m_testBundleId,
                         "[" + m_testBundleId + "] pax-exam-probe\n" +
                         "  ShellClient registered\n" +
                         "    org.apache.felix.shell.ShellService service required available\n", 
                         "");
                     m_ensure.step(2);
                     // see if there's anything that's not available
-                    execute("dm notavail",
+                    execute("dm notavail " + m_testBundleId,
                         "", 
                         "");
                     m_ensure.step(3);
                     // check again, now there should be something missing
                     m_ensure.waitForStep(4, 5000);
-                    execute("dm notavail",
+                    execute("dm notavail " + m_testBundleId,
                         "[" + m_testBundleId + "] pax-exam-probe\n" + 
                         "  Object unregistered\n" + 
                         "    java.lang.Object service required unavailable\n", 
@@ -134,7 +115,7 @@ public class FELIX2955_ShellCommandTest extends Base {
                     m_ensure.step(5);
                     m_ensure.waitForStep(6, 5000);
                     // this next step actually triggers the bug in FELIX-2955
-                    execute("dm notavail",
+                    execute("dm notavail " + m_testBundleId,
                         "", 
                         "");
                     m_ensure.step(7);
@@ -152,8 +133,9 @@ public class FELIX2955_ShellCommandTest extends Base {
             try {
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
                 ByteArrayOutputStream error = new ByteArrayOutputStream();
-                m_shell.executeCommand(command, new PrintStream(output), new PrintStream(error));
-                Assert.assertEquals(expectedOutput, output.toString());
+                m_shell.executeCommand(command, new PrintStream(output), new PrintStream(error)); 
+                // In pax-exam 3.0.0, we have to work around something like "[25] PAXEXAM-PROBE-3f88597d-4bc5-4bf4-affb-74db4e453e71 ..." 
+                Assert.assertEquals(expectedOutput, output.toString().replaceAll("PAXEXAM-PROBE.*", "pax-exam-probe"));
                 Assert.assertEquals(expectedError, error.toString());
             }
             catch (Throwable throwable) {
