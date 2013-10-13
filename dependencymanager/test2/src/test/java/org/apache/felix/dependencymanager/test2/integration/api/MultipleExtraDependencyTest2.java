@@ -16,41 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test;
-
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
+package org.apache.felix.dependencymanager.test2.integration.api;
 
 import java.util.Hashtable;
 
+import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.BundleContext;
+import org.ops4j.pax.exam.junit.PaxExam;
+
 
 /**
  * Tests for extra dependencies which are declared from service's init method.
  */
-@RunWith(JUnit4TestRunner.class)
-public class MultipleExtraDependencyTest2 extends Base {
-    @Configuration
-    public static Option[] configuration() {
-        return options(
-            provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
-            )
-        );
-    }    
-    
+@RunWith(PaxExam.class)
+public class MultipleExtraDependencyTest2 extends TestBase {
     @Test
-    public void testMultipleExtraDependencies(BundleContext context)
+    public void testMultipleExtraDependencies()
     {
         DependencyManager m = new DependencyManager(context);
         Ensure e = new Ensure();
@@ -96,6 +82,7 @@ public class MultipleExtraDependencyTest2 extends Base {
         
         // And check if the test.annotation bundle has been deactivated orderly
         e.waitForStep(11, 10000);
+        m.clear();
     }
     
     public interface Sequencer
