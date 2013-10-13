@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test.bundle.annotation.extraproperties;
+package org.apache.felix.dependencymanager.test2.components;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,65 +26,57 @@ import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
-import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
 /**
  * This test validates that an adapter Service may specify some extra service properties
  * from it's start callback
  */
-public class ExtraAspectServiceProperties
-{
-    public interface Provider
-    {
+public class ExtraAspectServiceProperties {
+    public interface Provider {
     }
-    
-    @Component(properties={@Property(name="foo", value="bar")})
-    public static class ProviderImpl implements Provider
-    {
+
+    @Component(properties = {@Property(name = "foo", value = "bar")})
+    public static class ProviderImpl implements Provider {
     }
-    
-    @AspectService(ranking=10, properties={@Property(name="foo2", value="bar2")})
-    public static class ProviderAspectImpl implements Provider
-    {        
+
+    @AspectService(ranking = 10, properties = {@Property(name = "foo2", value = "bar2")})
+    public static class ProviderAspectImpl implements Provider {
         @Start
-        Map<String, String> start()
-        {
-            return new HashMap<String, String>() {{ put("foo3", "aspect"); }};
+        Map<String, String> start() {
+            return new HashMap<String, String>() {
+                {
+                    put("foo3", "aspect");
+                }
+            };
         }
     }
-    
-    @Component
-    public static class Consumer
-    {
-        @ServiceDependency(filter="(test=ExtraAspectServiceProperties)")
-        Sequencer m_sequencer;
 
-        private Map m_properties;
+    @Component
+    public static class Consumer {
+        @ServiceDependency(filter = "(name=testExtraAspectServiceProperties)")
+        volatile Ensure m_sequencer;
+
+        private volatile Map m_properties;
 
         @ServiceDependency
-        void bind(Map properties, Provider provider)
-        {
+        void bind(Map properties, Provider provider) {
             m_properties = properties;
         }
-        
+
         @Start
-        void start() 
-        {
+        void start() {
             System.out.println("provider aspect service properties: " + m_properties);
-            if ("bar".equals(m_properties.get("foo"))) 
-            {
+            if ("bar".equals(m_properties.get("foo"))) {
                 m_sequencer.step(1);
             }
-            
-            if ("bar2".equals(m_properties.get("foo2"))) 
-            {
+
+            if ("bar2".equals(m_properties.get("foo2"))) {
                 m_sequencer.step(2);
-            }         
-            
-            if ("aspect".equals(m_properties.get("foo3"))) 
-            {
+            }
+
+            if ("aspect".equals(m_properties.get("foo3"))) {
                 m_sequencer.step(3);
-            }            
+            }
         }
     }
 }

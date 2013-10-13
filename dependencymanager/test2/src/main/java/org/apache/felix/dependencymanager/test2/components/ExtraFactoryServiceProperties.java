@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test.bundle.annotation.extraproperties;
+package org.apache.felix.dependencymanager.test2.components;
 
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -28,67 +28,62 @@ import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
-import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
-public class ExtraFactoryServiceProperties
-{
-    public interface Provider
-    {
+public class ExtraFactoryServiceProperties {
+    public interface Provider {
     }
 
-    @Component(properties={@Property(name="foo", value="bar")}, factorySet="MyFactory")
-    public static class ProviderImpl implements Provider
-    {
+    @Component(properties = {@Property(name = "foo", value = "bar")}, factorySet = "MyFactory")
+    public static class ProviderImpl implements Provider {
         @Start
-        Map<String, String> start()
-        {
-            return new HashMap<String, String>() {{ put("foo2", "bar2"); }};
+        Map<String, String> start() {
+            return new HashMap<String, String>() {
+                {
+                    put("foo2", "bar2");
+                }
+            };
         }
     }
-    
+
     @Component
-    public static class ProviderImplFactory
-    {
+    public static class ProviderImplFactory {
         @ServiceDependency
-        Set<Dictionary> m_factory;
-        
+        volatile Set<Dictionary> m_factory;
+
         @Start
-        void start()
-        {
-            m_factory.add(new Hashtable() {{ put("foo3", "bar3"); }});
+        void start() {
+            m_factory.add(new Hashtable() {
+                {
+                    put("foo3", "bar3");
+                }
+            });
         }
     }
-    
+
     @Component
-    public static class Consumer
-    {
-        @ServiceDependency(filter="(test=ExtraFactoryServiceProperties)")
-        Sequencer m_sequencer;
-        
-        private Map m_properties;
-        
+    public static class Consumer {
+        @ServiceDependency(filter = "(name=testExtraFactoryServiceProperties)")
+        volatile Ensure m_sequencer;
+
+        private volatile Map m_properties;
+
         @ServiceDependency
-        void bindProvider(Map properties, Provider m_provider)
-        {
+        void bindProvider(Map properties, Provider m_provider) {
             m_properties = properties;
         }
-        
+
         @Start
-        void start() 
-        {
+        void start() {
             System.out.println("provider service properties: " + m_properties);
-            if ("bar".equals(m_properties.get("foo"))) 
-            {
+            if ("bar".equals(m_properties.get("foo"))) {
                 m_sequencer.step(1);
             }
-            
-            if ("bar2".equals(m_properties.get("foo2"))) 
-            {
+
+            if ("bar2".equals(m_properties.get("foo2"))) {
                 m_sequencer.step(2);
             }
-            
-            if ("bar3".equals(m_properties.get("foo3"))) 
-            {
+
+            if ("bar3".equals(m_properties.get("foo3"))) {
                 m_sequencer.step(3);
             }
         }
