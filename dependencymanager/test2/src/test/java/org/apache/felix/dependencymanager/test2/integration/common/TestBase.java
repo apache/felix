@@ -107,12 +107,9 @@ public abstract class TestBase implements LogService, FrameworkListener {
                 mavenBundle("org.apache.felix", "org.apache.felix.shell", "1.4.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin", "0.9.0").start(false),
                 mavenBundle("org.ops4j.pax.tinybundles", "tinybundles", "1.0.0"),
-                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager",
-                        "3.1.1-SNAPSHOT"),
-                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.shell",
-                        "3.0.2-SNAPSHOT"),
-                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.runtime",
-                        "3.1.1-SNAPSHOT"),
+                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager","3.1.1-SNAPSHOT"),
+                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.shell", "3.0.2-SNAPSHOT"),
+                mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.runtime", "3.1.1-SNAPSHOT"),
                 bundle(bundleFile.toURI().toString()));
         final Option option = (paxRunnerVmOption != null) ? vmOption(paxRunnerVmOption) : null;
         return OptionUtils.combine(base, option);
@@ -300,26 +297,26 @@ public abstract class TestBase implements LogService, FrameworkListener {
     }
 
     protected void warn(String msg) {
-        log(LogService.LOG_WARNING, "[" + Thread.currentThread().getName() + "] " + msg);
+        log(LogService.LOG_WARNING, msg);
     }
 
     protected void info(String msg) {
-        log(LogService.LOG_INFO, "[" + Thread.currentThread().getName() + "] " + msg);
+        log(LogService.LOG_INFO, msg);
     }
 
     protected void debug(String msg) {
-        log(LogService.LOG_DEBUG, "[" + Thread.currentThread().getName() + "] " + msg);
+        log(LogService.LOG_DEBUG, msg);
     }
 
     protected void error(String msg) {
-        log(LogService.LOG_ERROR, "[" + Thread.currentThread().getName() + "] " + msg);
+        log(LogService.LOG_ERROR, msg);
     }
 
     protected void error(String msg, Throwable err) {
-        log(LogService.LOG_ERROR, "[" + Thread.currentThread().getName() + "] " + msg, err);
+        log(LogService.LOG_ERROR, msg, err);
     }
 
     protected void error(Throwable err) {
-        log(LogService.LOG_ERROR, "[" + Thread.currentThread().getName() + "] error:", err);
+        log(LogService.LOG_ERROR, "error", err);
     }
 }
