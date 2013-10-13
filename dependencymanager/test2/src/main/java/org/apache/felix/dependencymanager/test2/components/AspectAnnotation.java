@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test.bundle.annotation.aspect;
+package org.apache.felix.dependencymanager.test2.components;
 
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.annotation.api.AspectService;
@@ -26,122 +26,107 @@ import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Stop;
-import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-public class AspectChainTest
-{
-    public interface ServiceInterface
-    {
+public class AspectAnnotation {
+    public interface ServiceInterface {
         public void invoke(Runnable run);
     }
 
     @Component
-    public static class ServiceProvider implements ServiceInterface
-    {
-        @ServiceDependency(filter="(name=AspectChainTest.ServiceProvider)")
-        protected Sequencer m_sequencer;
+    public static class ServiceProvider implements ServiceInterface {
+        @ServiceDependency(filter = "(name=AspectChainTest.ServiceProvider)")
+        protected volatile Ensure m_sequencer;
         // Injected by reflection.
-        protected ServiceRegistration m_sr;
-               
+        protected volatile ServiceRegistration m_sr;
+
         @Init
         void init() {
             System.out.println("ServiceProvider.init");
         }
-        
+
         @Destroy
         void destroy() {
             System.out.println("ServiceProvider.destroy");
         }
 
-        public void invoke(Runnable run)
-        {
+        public void invoke(Runnable run) {
             run.run();
             m_sequencer.step(6);
         }
     }
-    
+
     @AspectService(ranking = 20)
-    public static class ServiceAspect2 implements ServiceInterface
-    {
-        @ServiceDependency(filter="(name=AspectChainTest.ServiceAspect2)")
-        protected Sequencer m_sequencer;
+    public static class ServiceAspect2 implements ServiceInterface {
+        @ServiceDependency(filter = "(name=AspectChainTest.ServiceAspect2)")
+        protected volatile Ensure m_sequencer;
         // Injected by reflection.
         private volatile ServiceInterface m_parentService;
 
         // Check auto config injections
         @Inject
-        BundleContext m_bc;
+        volatile BundleContext  m_bc;
         BundleContext m_bcNotInjected;
-        
+
         @Inject
-        DependencyManager m_dm;
+        volatile DependencyManager  m_dm;
         DependencyManager m_dmNotInjected;
-        
+
         @Inject
-        org.apache.felix.dm.Component m_component;
+        volatile org.apache.felix.dm.Component  m_component;
         org.apache.felix.dm.Component m_componentNotInjected;
 
         @Init
         void init() {
             System.out.println("ServiceAspect2.init");
         }
-        
+
         @Destroy
         void destroy() {
             System.out.println("ServiceAspect2.destroy");
         }
-        
-        public void invoke(Runnable run)
-        {
+
+        public void invoke(Runnable run) {
             checkInjectedFields();
             m_sequencer.step(3);
             m_parentService.invoke(run);
         }
-        
-        private void checkInjectedFields()
-        {
-            if (m_bc == null)
-            {
+
+        private void checkInjectedFields() {
+            if (m_bc == null) {
                 m_sequencer.throwable(new Exception("Bundle Context not injected"));
                 return;
             }
-            if (m_bcNotInjected != null)
-            {
+            if (m_bcNotInjected != null) {
                 m_sequencer.throwable(new Exception("Bundle Context must not be injected"));
                 return;
             }
 
-            if (m_dm == null)
-            {
+            if (m_dm == null) {
                 m_sequencer.throwable(new Exception("DependencyManager not injected"));
                 return;
             }
-            if (m_dmNotInjected != null)
-            {
+            if (m_dmNotInjected != null) {
                 m_sequencer.throwable(new Exception("DependencyManager must not be injected"));
                 return;
             }
 
-            if (m_component == null)
-            {
+            if (m_component == null) {
                 m_sequencer.throwable(new Exception("Component not injected"));
                 return;
             }
-            if (m_componentNotInjected != null)
-            {
+            if (m_componentNotInjected != null) {
                 m_sequencer.throwable(new Exception("Component must not be injected"));
                 return;
             }
         }
     }
 
-    @AspectService(ranking = 30, added="add")
-    public static class ServiceAspect3 implements ServiceInterface
-    {
-        @ServiceDependency(filter="(name=AspectChainTest.ServiceAspect3)")
-        protected Sequencer m_sequencer;
+    @AspectService(ranking = 30, added = "add")
+    public static class ServiceAspect3 implements ServiceInterface {
+        @ServiceDependency(filter = "(name=AspectChainTest.ServiceAspect3)")
+        protected volatile Ensure m_sequencer;
         // Injected using add callback.
         private volatile ServiceInterface m_parentService;
 
@@ -149,29 +134,26 @@ public class AspectChainTest
         void init() {
             System.out.println("ServiceAspect3.init");
         }
-        
+
         @Destroy
         void destroy() {
             System.out.println("ServiceAspect3.destroy");
         }
 
-        void add(ServiceInterface si)
-        {
+        void add(ServiceInterface si) {
             m_parentService = si;
         }
-        
-        public void invoke(Runnable run)
-        {
+
+        public void invoke(Runnable run) {
             m_sequencer.step(2);
             m_parentService.invoke(run);
         }
     }
 
-    @AspectService(ranking = 10, added="added", removed="removed")
-    public static class ServiceAspect1 implements ServiceInterface
-    {
-        @ServiceDependency(filter="(name=AspectChainTest.ServiceAspect1)")
-        protected Sequencer m_sequencer;
+    @AspectService(ranking = 10, added = "added", removed = "removed")
+    public static class ServiceAspect1 implements ServiceInterface {
+        @ServiceDependency(filter = "(name=AspectChainTest.ServiceAspect1)")
+        protected volatile Ensure m_sequencer;
         // Injected by reflection.
         private volatile ServiceInterface m_parentService;
 
@@ -179,40 +161,35 @@ public class AspectChainTest
         void init() {
             System.out.println("ServiceAspect1.init");
         }
-        
+
         @Destroy
         void destroy() {
             System.out.println("ServiceAspect1.destroy");
         }
 
-        void added(ServiceInterface si)
-        {
+        void added(ServiceInterface si) {
             m_parentService = si;
         }
-                
+
         @Stop
-        void stop()
-        {
+        void stop() {
             m_sequencer.step(7);
         }
-        
-        void removed(ServiceInterface si)
-        {
+
+        void removed(ServiceInterface si) {
             m_sequencer.step(8);
         }
-        
-        public void invoke(Runnable run)
-        {
+
+        public void invoke(Runnable run) {
             m_sequencer.step(4);
             m_parentService.invoke(run);
         }
     }
 
     @Component
-    public static class ServiceConsumer implements Runnable
-    {
+    public static class ServiceConsumer implements Runnable {
         @ServiceDependency(filter = "(name=AspectChainTest.ServiceConsumer)")
-        protected Sequencer m_sequencer;
+        protected volatile Ensure m_sequencer;
 
         @ServiceDependency
         private volatile ServiceInterface m_service;
@@ -220,34 +197,26 @@ public class AspectChainTest
         private Thread m_thread;
 
         @Init
-        public void init()
-        {
+        public void init() {
             m_thread = new Thread(this, "ServiceConsumer");
             m_thread.start();
         }
 
-        public void run()
-        {
+        public void run() {
             m_sequencer.waitForStep(1, 2000);
-            m_service.invoke(new Runnable()
-            {
-                public void run()
-                {
+            m_service.invoke(new Runnable() {
+                public void run() {
                     m_sequencer.step(5);
                 }
             });
         }
-        
+
         @Destroy
-        void destroy()
-        {
+        void destroy() {
             m_thread.interrupt();
-            try
-            {
+            try {
                 m_thread.join();
-            }
-            catch (InterruptedException e)
-            {
+            } catch (InterruptedException e) {
             }
         }
     }
