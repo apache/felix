@@ -16,39 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test;
+package org.apache.felix.dependencymanager.test2.integration.api;
 
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
 import junit.framework.Assert;
 
+import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentStateListener;
 import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.BundleContext;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
-@RunWith(JUnit4TestRunner.class)
-public class ComponentLifeCycleTest extends Base {
-    @Configuration
-    public static Option[] configuration() {
-        return options(
-            provision(
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").version(Base.OSGI_SPEC_VERSION),
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.dependencymanager").versionAsInProject()
-            )
-        );
-    }    
-    
+@RunWith(PaxExam.class)
+public class ComponentLifeCycleTest extends TestBase {
     @Test
-    public void testComponentLifeCycleCallbacks(BundleContext context) {
+    public void testComponentLifeCycleCallbacks() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -84,7 +70,7 @@ public class ComponentLifeCycleTest extends Base {
     }
 
     @Test
-    public void testCustomComponentLifeCycleCallbacks(BundleContext context) {
+    public void testCustomComponentLifeCycleCallbacks() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -123,7 +109,7 @@ public class ComponentLifeCycleTest extends Base {
     
     
     @Test
-    public void testComponentStateListingLifeCycle(BundleContext context) {
+    public void testComponentStateListingLifeCycle() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -205,7 +191,7 @@ public class ComponentLifeCycleTest extends Base {
     
 
     @Test
-    public void testDynamicComponentStateListingLifeCycle(BundleContext context) {
+    public void testDynamicComponentStateListingLifeCycle() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
@@ -281,7 +267,7 @@ public class ComponentLifeCycleTest extends Base {
     
     
     @Test
-    public void testDynamicComponentStateListingLifeCycle2(BundleContext context) {
+    public void testDynamicComponentStateListingLifeCycle2() {
         
         // TODO this test still fails (starting is not invoked...)
         
