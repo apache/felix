@@ -19,6 +19,10 @@
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.components.ExtraAdapterServiceProperties;
+import org.apache.felix.dependencymanager.test2.components.ExtraAspectServiceProperties;
+import org.apache.felix.dependencymanager.test2.components.ExtraFactoryServiceProperties;
+import org.apache.felix.dependencymanager.test2.components.ExtraServiceProperties;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,7 +40,7 @@ public class ExtraServicePropertiesTest extends TestBase {
     @Test
     public void testExtraServiceProperties() {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, "testExtraServiceProperties");
+        ServiceRegistration sr = register(e, ExtraServiceProperties.ENSURE);
         e.waitForStep(2, 10000);
         sr.unregister();
     }
@@ -47,7 +51,7 @@ public class ExtraServicePropertiesTest extends TestBase {
     @Test
     public void testExtraFactoryServiceProperties() {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, "testExtraFactoryServiceProperties");
+        ServiceRegistration sr = register(e, ExtraFactoryServiceProperties.ENSURE);
         e.waitForStep(3, 10000);
         sr.unregister();
     }
@@ -58,7 +62,7 @@ public class ExtraServicePropertiesTest extends TestBase {
     @Test
     public void testExtraAdapterServiceProperties() {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, "testExtraAdapterServiceProperties");
+        ServiceRegistration sr = register(e, ExtraAdapterServiceProperties.ENSURE);
         e.waitForStep(3, 10000);
         sr.unregister();
     }
@@ -69,7 +73,7 @@ public class ExtraServicePropertiesTest extends TestBase {
     @Test
     public void testExtraAspectServiceProperties() {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, "testExtraAspectServiceProperties");
+        ServiceRegistration sr = register(e, ExtraAspectServiceProperties.ENSURE);
         e.waitForStep(3, 10000);
         sr.unregister();
     }

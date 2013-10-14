@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test.bundle.annotation.publisher;
+package org.apache.felix.dependencymanager.test2.components;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -36,7 +36,6 @@ import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
-import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
@@ -44,94 +43,76 @@ import org.osgi.framework.InvalidSyntaxException;
 /**
  * Test a ResourceAdapterService which provides its interface using a @ServiceLifecycle.
  */
-public class ResourceAdapterServiceTestWithPublisher
-{
-    public interface Provider
-    {
+public class ResourceAdapterServiceTestWithPublisher {
+    public static final String ENSURE = "ResourceAdapterServiceTestWithPublisher";
+
+    public interface Provider {
     }
 
     @Component
-    public static class Consumer
-    {
-        @ServiceDependency(filter="(name=ResourceAdapterServiceTestWithPublisher)")
-        Sequencer m_sequencer;
-        
-        @ServiceDependency(required=false, removed = "unbind")
-        void bind(Map properties, Provider provider)
-        {
+    public static class Consumer {
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
+        volatile Ensure m_sequencer;
+
+        @ServiceDependency(required = false, removed = "unbind")
+        void bind(Map properties, Provider provider) {
             m_sequencer.step(1);
             // check ProviderImpl properties
-            if ("bar".equals(properties.get("foo")))
-            {
+            if ("bar".equals(properties.get("foo"))) {
                 m_sequencer.step(2);
             }
             // check extra ProviderImpl properties (returned by start method)
-            if ("bar2".equals(properties.get("foo2")))
-            {
+            if ("bar2".equals(properties.get("foo2"))) {
                 m_sequencer.step(3);
             }
             // check properties propagated by the resource adapter
-            if ("/path/to/test1.txt".equals(properties.get(ResourceHandler.PATH)))
-            { 
+            if ("/path/to/test1.txt".equals(properties.get(ResourceHandler.PATH))) {
                 m_sequencer.step(4);
             }
-            if ("localhost".equals(properties.get(ResourceHandler.HOST)))
-            {
+            if ("localhost".equals(properties.get(ResourceHandler.HOST))) {
                 m_sequencer.step(5);
             }
         }
 
-        void unbind(Provider provider)
-        {
+        void unbind(Provider provider) {
             m_sequencer.step(6);
         }
     }
-    
+
     @Component
-    public static class ResourceProvider
-    {
+    public static class ResourceProvider {
         @Inject
         private volatile BundleContext m_context;
         private final Map m_handlers = new HashMap();
         private URL[] m_resources;
-        
+
         public ResourceProvider() throws Exception {
-            m_resources = new URL[] {
-                new URL("file://localhost/path/to/test1.txt"),
-                new URL("file://localhost/path/to/test2.txt"),
-                new URL("file://localhost/path/to/README.doc")
-                };
+            m_resources = new URL[]{new URL("file://localhost/path/to/test1.txt"),
+                    new URL("file://localhost/path/to/test2.txt"), new URL("file://localhost/path/to/README.doc")};
         }
-        
+
         /**
          * Handles a new Resource consumer
          * @param serviceProperties
          * @param handler
          */
-        @ServiceDependency(removed = "remove", required=false)
-        public void add(Map serviceProperties, ResourceHandler handler)
-        {        
+        @ServiceDependency(removed = "remove", required = false)
+        public void add(Map serviceProperties, ResourceHandler handler) {
             String filterString = (String) serviceProperties.get("filter");
             Filter filter = null;
             if (filterString != null) {
-                try
-                {
+                try {
                     filter = m_context.createFilter(filterString);
-                }
-                catch (InvalidSyntaxException e)
-                {
+                } catch (InvalidSyntaxException e) {
                     Assert.fail("Could not create filter for resource handler: " + e);
                     return;
                 }
             }
-            synchronized (m_handlers)
-            {
+            synchronized (m_handlers) {
                 m_handlers.put(handler, filter);
             }
-            for (int i = 0; i < m_resources.length; i++)
-            {
-                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i])))
-                {
+            for (int i = 0; i < m_resources.length; i++) {
+                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
                     handler.added(m_resources[i]);
                 }
             }
@@ -141,22 +122,17 @@ public class ResourceAdapterServiceTestWithPublisher
          * Remove a Resource consumer.bar
          * @param handler
          */
-        public void remove(ResourceHandler handler)
-        {
+        public void remove(ResourceHandler handler) {
             Filter filter;
-            synchronized (m_handlers)
-            {
+            synchronized (m_handlers) {
                 filter = (Filter) m_handlers.remove(handler);
             }
             removeResources(handler, filter);
         }
 
-        private void removeResources(ResourceHandler handler, Filter filter)
-        {
-            for (int i = 0; i < m_resources.length; i++)
-            {
-                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i])))
-                {
+        private void removeResources(ResourceHandler handler, Filter filter) {
+            for (int i = 0; i < m_resources.length; i++) {
+                if (filter == null || filter.match(ResourceUtil.createProperties(m_resources[i]))) {
                     handler.removed(m_resources[i]);
                 }
             }
@@ -167,52 +143,48 @@ public class ResourceAdapterServiceTestWithPublisher
          * provide our Resources anymore.
          */
         @Destroy
-        public void destroy()
-        {
+        public void destroy() {
             Entry[] handlers;
-            synchronized (m_handlers)
-            {
+            synchronized (m_handlers) {
                 handlers = (Entry[]) m_handlers.entrySet().toArray(new Entry[m_handlers.size()]);
             }
-            for (int i = 0; i < handlers.length; i++)
-            {
+            for (int i = 0; i < handlers.length; i++) {
                 removeResources((ResourceHandler) handlers[i].getKey(), (Filter) handlers[i].getValue());
             }
         }
     }
-    
-    @ResourceAdapterService(filter = "(&(path=/path/to/test1.txt)(host=localhost))", 
-                            properties = {@Property(name="foo", value="bar")},
-                            propagate = true)
-    public static class ProviderImpl implements Provider
-    {
+
+    @ResourceAdapterService(filter = "(&(path=/path/to/test1.txt)(host=localhost))", properties = {@Property(name = "foo", value = "bar")}, propagate = true)
+    public static class ProviderImpl implements Provider {
         @LifecycleController
-        Runnable m_publisher; // injected and used to register our service
-        
-        @LifecycleController(start=false)
-        Runnable m_unpublisher; // injected and used to unregister our service
-        
-        @ServiceDependency(filter="(name=ResourceAdapterServiceTestWithPublisher)")
-        Sequencer m_sequencer;
-  
+        volatile Runnable m_publisher; // injected and used to register our service
+
+        @LifecycleController(start = false)
+        volatile Runnable m_unpublisher; // injected and used to unregister our service
+
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
+        volatile Ensure m_sequencer;
+
         // Injected by reflection
-        URL m_resource;
+        volatile URL m_resource;
 
         @Init
-        void init()
-        {
+        void init() {
             // register service in 1 second
             Utils.schedule(m_publisher, 1000);
             // unregister the service in 2 seconds
             Utils.schedule(m_unpublisher, 2000);
         }
-        
+
         @Start
-        Map start()
-        {
+        Map start() {
             // Add some extra service properties ... they will be appended to the one we have defined
             // in the @Service annotation.
-            return new HashMap() {{ put("foo2", "bar2"); }};
+            return new HashMap() {
+                {
+                    put("foo2", "bar2");
+                }
+            };
         }
     }
 }
