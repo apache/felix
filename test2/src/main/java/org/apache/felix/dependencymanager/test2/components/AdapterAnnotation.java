@@ -67,10 +67,12 @@ public class AdapterAnnotation {
 
     @AdapterService(adapteeService = S1.class, properties = {@Property(name = "adapter", value = "true")})
     public static class S1ToS3AdapterAutoConfig implements S3 {
+        public static final String ENSURE = "AdapterAnnotation.autoConfig";
+        
         // This is the adapted service
         protected volatile S1 m_s1;
 
-        @ServiceDependency(filter = "(name=adapter.autoConfig)")
+        @ServiceDependency(filter = "(name=" + ENSURE  + ")")
         protected volatile Ensure m_sequencer;
 
         // Check auto config injections
@@ -124,10 +126,11 @@ public class AdapterAnnotation {
 
     @AdapterService(adapteeService = S1.class, properties = {@Property(name = "adapter", value = "true")}, field = "m_s1")
     public static class S1ToS3AdapterAutoConfigField implements S3 {
+        public final static String ENSURE = "AdapterAnnotation.autoConfig.field";
         // This is the adapted service
         protected volatile S1 m_s1;
 
-        @ServiceDependency(filter = "(name=adapter.autoConfig.field)")
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         protected volatile Ensure m_sequencer;
 
         public void run3() {
@@ -138,10 +141,11 @@ public class AdapterAnnotation {
 
     @AdapterService(adapteeService = S1.class, properties = {@Property(name = "adapter", value = "true")}, added = "bind", removed = "removed")
     public static class S1ToS3AdapterCallback implements S3 {
+        public final static String ENSURE = "AdapterAnnotation.callback";
         // This is the adapted service
         protected Object m_s1;
 
-        @ServiceDependency(filter = "(name=adapter.callback)")
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         protected Ensure m_sequencer;
 
         void bind(S1 s1) {
@@ -164,7 +168,9 @@ public class AdapterAnnotation {
 
     @Component(properties = {@Property(name = "param1", value = "value1")})
     public static class S1Impl implements S1 {
-        @ServiceDependency
+        public final static String ENSURE = "AdapterAnnotation.S1Impl";
+
+        @ServiceDependency(filter="(name=" + ENSURE + ")")
         protected Ensure m_sequencer;
 
         @ServiceDependency
@@ -178,7 +184,9 @@ public class AdapterAnnotation {
 
     @Component
     public static class S2Impl implements S2 {
-        @ServiceDependency
+        public final static String ENSURE = "AdapterAnnotation.S2Impl";
+
+        @ServiceDependency(filter="(name=" + ENSURE + ")")
         protected Ensure m_sequencer;
 
         public void run2() {
