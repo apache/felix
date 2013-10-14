@@ -31,6 +31,8 @@ import org.apache.felix.dm.annotation.api.Start;
  * from it's start callback
  */
 public class ExtraServiceProperties {
+    public final static String ENSURE = "ExtraServiceProperties";
+    
     public interface Provider {
     }
 
@@ -48,7 +50,7 @@ public class ExtraServiceProperties {
 
     @Component
     public static class Consumer {
-        @ServiceDependency(filter = "(name=testExtraServiceProperties)")
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         volatile Ensure m_sequencer;
 
         private volatile Map m_properties;

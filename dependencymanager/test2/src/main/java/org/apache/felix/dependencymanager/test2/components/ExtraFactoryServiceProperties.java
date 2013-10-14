@@ -30,10 +30,13 @@ import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
 
 public class ExtraFactoryServiceProperties {
+    public final static String FACTORYSET = "ExtraFactoryServiceProperties.FACTORYSET";
+    public final static String ENSURE = "ExtraFactoryServiceProperties";
+
     public interface Provider {
     }
 
-    @Component(properties = {@Property(name = "foo", value = "bar")}, factorySet = "MyFactory")
+    @Component(properties = {@Property(name = "foo", value = "bar")}, factorySet = FACTORYSET)
     public static class ProviderImpl implements Provider {
         @Start
         Map<String, String> start() {
@@ -47,7 +50,7 @@ public class ExtraFactoryServiceProperties {
 
     @Component
     public static class ProviderImplFactory {
-        @ServiceDependency
+        @ServiceDependency(filter = "(" + Component.FACTORY_NAME + "=" + FACTORYSET + ")")
         volatile Set<Dictionary> m_factory;
 
         @Start
@@ -62,7 +65,7 @@ public class ExtraFactoryServiceProperties {
 
     @Component
     public static class Consumer {
-        @ServiceDependency(filter = "(name=testExtraFactoryServiceProperties)")
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         volatile Ensure m_sequencer;
 
         private volatile Map m_properties;
