@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.dm.test.bundle.annotation.propagate;
+package org.apache.felix.dependencymanager.test2.components;
 
 import java.util.Map;
 
@@ -24,25 +24,23 @@ import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.Property;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
-import org.apache.felix.dm.test.bundle.annotation.sequencer.Sequencer;
 
 /**
  * Verifies ServiceDependencyservice properties propagation.
  */
-public class ServiceDependencyPropagateTest
-{
+public class PropagateAnnotation {
     @Component
     public static class Consumer {
-        private Map m_producerProps;
+        private volatile Map m_producerProps;
 
         @ServiceDependency
         void bind(Map props, Producer producer) {
             m_producerProps = props;
         }
-        
-        @ServiceDependency(filter="(name=ServiceDependencyPropagateTest)")
-        Sequencer m_sequencer;
-        
+
+        @ServiceDependency(filter = "(name=test.PropagateAnnotationTest)")
+        volatile Ensure m_sequencer;
+
         @Start
         void start() {
             m_sequencer.step(1);
@@ -54,15 +52,14 @@ public class ServiceDependencyPropagateTest
             }
         }
     }
-    
-    @Component(provides={Producer.class}, properties={@Property(name="foo", value="bar")})
-    public static class Producer {
-        @ServiceDependency(propagate=true)
-        Producer2 m_producer;
-    }
-    
 
-    @Component(provides={Producer2.class}, properties={@Property(name="foo2", value="bar2")})
+    @Component(provides = {Producer.class}, properties = {@Property(name = "foo", value = "bar")})
+    public static class Producer {
+        @ServiceDependency(propagate = true)
+        volatile Producer2 m_producer;
+    }
+
+    @Component(provides = {Producer2.class}, properties = {@Property(name = "foo2", value = "bar2")})
     public static class Producer2 {
     }
 }
