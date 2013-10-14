@@ -19,6 +19,7 @@
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.components.Felix4050;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +36,7 @@ public class Felix4050Test extends TestBase {
     @Test
     public void testFelix4050() {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, "test.Felix4050");
+        ServiceRegistration sr = register(e, Felix4050.ENSURE);
         // wait for S to be started
         e.waitForStep(3, 10000);
         // remove our sequencer: this will stop S

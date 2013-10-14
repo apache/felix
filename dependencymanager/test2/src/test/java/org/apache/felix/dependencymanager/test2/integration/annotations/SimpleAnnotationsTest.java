@@ -20,6 +20,8 @@ package org.apache.felix.dependencymanager.test2.integration.annotations;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
 import org.apache.felix.dependencymanager.test2.components.SimpleAnnotations;
+import org.apache.felix.dependencymanager.test2.components.SimpleAnnotations.Consumer;
+import org.apache.felix.dependencymanager.test2.components.SimpleAnnotations.Producer;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,9 +38,9 @@ public class SimpleAnnotationsTest extends TestBase
 	public void testSimpleAnnotations() throws Throwable
     {
 	    Ensure e = new Ensure();
-		ServiceRegistration er = register(e, "simple.annotations.producer");        
+		ServiceRegistration er = register(e, Producer.ENSURE);        
         e.waitForStep(3, 10000); // Producer registered
-        ServiceRegistration er2 = register(e, "simple.annotations.consumer"); 
+        ServiceRegistration er2 = register(e, Consumer.ENSURE); 
 
         er2.unregister(); // stop consumer
         er.unregister(); // stop provider

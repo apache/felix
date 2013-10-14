@@ -22,6 +22,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.components.TemporalAnnotations;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,7 +39,7 @@ public class TemporalAnnotationsTest extends TestBase
     public void testTemporalServiceDependency()
     {
         Ensure ensure = new Ensure();
-        ServiceRegistration ensureReg = register(ensure, "temporal.annotations");                       
+        ServiceRegistration ensureReg = register(ensure, TemporalAnnotations.ENSURE);                       
         Dictionary props = new Hashtable() {{ put("test", "temporal"); }};
         Runnable r = Ensure.createRunnableStep(ensure, 1);             
         ServiceRegistration sr = context.registerService(Runnable.class.getName(), r, props);

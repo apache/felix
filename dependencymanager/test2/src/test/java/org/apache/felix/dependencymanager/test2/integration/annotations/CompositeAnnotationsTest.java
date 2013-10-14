@@ -19,6 +19,9 @@
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.components.CompositeAnnotations.C1;
+import org.apache.felix.dependencymanager.test2.components.CompositeAnnotations.Dependency1;
+import org.apache.felix.dependencymanager.test2.components.CompositeAnnotations.Dependency2;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,9 +36,9 @@ public class CompositeAnnotationsTest extends TestBase {
     @Test
     public void testComposite() {
         Ensure e = new Ensure();
-        ServiceRegistration sr1 = register(e, "test.compositeAnnotation.c1");
-        ServiceRegistration sr2 = register(e, "test.compositeAnnotation.dependency1");
-        ServiceRegistration sr3 = register(e, "test.compositeAnnotation.dependency2");
+        ServiceRegistration sr1 = register(e, C1.ENSURE);
+        ServiceRegistration sr2 = register(e, Dependency1.ENSURE);
+        ServiceRegistration sr3 = register(e, Dependency2.ENSURE);
         e.waitForStep(4, 10000);
         stopTestComponentsBundle();
         e.waitForStep(12, 10000);

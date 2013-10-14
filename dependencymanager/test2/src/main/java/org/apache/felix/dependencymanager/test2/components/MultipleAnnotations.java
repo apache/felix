@@ -26,6 +26,8 @@ import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.annotation.api.Stop;
 
 public class MultipleAnnotations {
+    public final static String ENSURE = "MultipleAnnotations";
+    
     public static class Composite {
         void bind(Ensure seq) {
             seq.step(2);
@@ -34,7 +36,7 @@ public class MultipleAnnotations {
 
     @Component
     public static class ServiceConsumer {
-        @ServiceDependency(filter="(name=test.MultipleAnnotationsTest)")
+        @ServiceDependency(filter="(name=" + ENSURE + ")")
         volatile Ensure m_sequencer;
 
         @ServiceDependency(filter = "(foo=bar)")
@@ -58,7 +60,7 @@ public class MultipleAnnotations {
 
     @Component(properties = {@Property(name = "foo", value = "bar")})
     public static class ServiceProvider implements ServiceInterface {
-        @ServiceDependency(filter="(name=test.MultipleAnnotationsTest)")
+        @ServiceDependency(filter="(name=" + ENSURE + ")")
         volatile Ensure m_sequencer;
 
         volatile ServiceProvider2 m_serviceProvider2;
@@ -100,7 +102,7 @@ public class MultipleAnnotations {
         @ServiceDependency(required = false, filter = "(foo=bar)") // NullObject
         volatile Runnable m_runnable;
 
-        @ServiceDependency(service = Ensure.class, filter="(name=test.MultipleAnnotationsTest)")
+        @ServiceDependency(service = Ensure.class, filter="(name=" + ENSURE + ")")
         void bind(Ensure seq) {
             m_sequencer = seq;
             m_sequencer.step(1);

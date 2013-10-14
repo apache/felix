@@ -29,6 +29,8 @@ import org.apache.felix.dm.annotation.api.Start;
  * Verifies ServiceDependencyservice properties propagation.
  */
 public class PropagateAnnotation {
+    public final static String ENSURE = "PropagateAnnotation";
+    
     @Component
     public static class Consumer {
         private volatile Map m_producerProps;
@@ -38,7 +40,7 @@ public class PropagateAnnotation {
             m_producerProps = props;
         }
 
-        @ServiceDependency(filter = "(name=test.PropagateAnnotationTest)")
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         volatile Ensure m_sequencer;
 
         @Start

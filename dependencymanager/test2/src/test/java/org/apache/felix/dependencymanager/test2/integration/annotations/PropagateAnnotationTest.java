@@ -19,6 +19,7 @@
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.components.PropagateAnnotation;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +34,7 @@ public class PropagateAnnotationTest extends TestBase {
     @Test
     public void testServiceDependencyPropagate() {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, "test.PropagateAnnotationTest");
+        ServiceRegistration sr = register(e, PropagateAnnotation.ENSURE);
         e.waitForStep(3, 10000);
         sr.unregister();
     }
