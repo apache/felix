@@ -18,6 +18,11 @@
 */
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
+import org.apache.felix.dependencymanager.test2.components.AdapterAnnotation.S1Impl;
+import org.apache.felix.dependencymanager.test2.components.AdapterAnnotation.S1ToS3AdapterAutoConfig;
+import org.apache.felix.dependencymanager.test2.components.AdapterAnnotation.S1ToS3AdapterAutoConfigField;
+import org.apache.felix.dependencymanager.test2.components.AdapterAnnotation.S1ToS3AdapterCallback;
+import org.apache.felix.dependencymanager.test2.components.AdapterAnnotation.S2Impl;
 import org.apache.felix.dependencymanager.test2.components.Ensure;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
@@ -37,10 +42,14 @@ public class AdapterAnnotationTest extends TestBase {
     @Test
     public void testAnnotatedAdapterAutoConfig() throws Throwable {
         Ensure e = new Ensure();
-        ServiceRegistration er = register(e, "adapter.autoConfig");
+        ServiceRegistration sr1 = register(e, S1ToS3AdapterAutoConfig.ENSURE);
+        ServiceRegistration sr2 = register(e, S1Impl.ENSURE);
+        ServiceRegistration sr3 = register(e, S2Impl.ENSURE);
         e.waitForStep(3, 10000);
         e.ensure();
-        er.unregister();
+        sr1.unregister();
+        sr2.unregister();
+        sr3.unregister();
     }
 
     /**
@@ -49,10 +58,14 @@ public class AdapterAnnotationTest extends TestBase {
     @Test
     public void testAnnotatedAdapterAutoConfigField() throws Throwable {
         Ensure e = new Ensure();
-        ServiceRegistration er = register(e, "adapter.autoConfig.field");
+        ServiceRegistration sr1 = register(e, S1ToS3AdapterAutoConfigField.ENSURE);
+        ServiceRegistration sr2 = register(e, S1Impl.ENSURE);
+        ServiceRegistration sr3 = register(e, S2Impl.ENSURE);
         e.waitForStep(3, 10000);
         e.ensure();
-        er.unregister();
+        sr1.unregister();
+        sr2.unregister();
+        sr3.unregister();
     }
 
     /**
@@ -61,9 +74,13 @@ public class AdapterAnnotationTest extends TestBase {
     @Test
     public void testAnnotatedAdapterCallback() {
         Ensure e = new Ensure();
-        ServiceRegistration er = register(e, "adapter.callback");
+        ServiceRegistration sr1 = register(e, S1ToS3AdapterCallback.ENSURE);
+        ServiceRegistration sr2 = register(e, S1Impl.ENSURE);
+        ServiceRegistration sr3 = register(e, S2Impl.ENSURE);
         e.waitForStep(2, 10000);
-        er.unregister();
+        sr1.unregister();
         e.waitForStep(4, 10000);
+        sr2.unregister();
+        sr3.unregister();
     }
 }
