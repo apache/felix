@@ -36,7 +36,9 @@ public class AspectAnnotation {
 
     @Component
     public static class ServiceProvider implements ServiceInterface {
-        @ServiceDependency(filter = "(name=AspectChainTest.ServiceProvider)")
+        public final static String ENSURE = "AspectAnnotation.ServiceProvider";
+        
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         protected volatile Ensure m_sequencer;
         // Injected by reflection.
         protected volatile ServiceRegistration m_sr;
@@ -59,7 +61,9 @@ public class AspectAnnotation {
 
     @AspectService(ranking = 20)
     public static class ServiceAspect2 implements ServiceInterface {
-        @ServiceDependency(filter = "(name=AspectChainTest.ServiceAspect2)")
+        public final static String ENSURE = "AspectAnnotation.ServiceAspect2";
+
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         protected volatile Ensure m_sequencer;
         // Injected by reflection.
         private volatile ServiceInterface m_parentService;
@@ -125,7 +129,9 @@ public class AspectAnnotation {
 
     @AspectService(ranking = 30, added = "add")
     public static class ServiceAspect3 implements ServiceInterface {
-        @ServiceDependency(filter = "(name=AspectChainTest.ServiceAspect3)")
+        public final static String ENSURE = "AspectAnnotation.ServiceAspect3";
+
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         protected volatile Ensure m_sequencer;
         // Injected using add callback.
         private volatile ServiceInterface m_parentService;
@@ -152,7 +158,9 @@ public class AspectAnnotation {
 
     @AspectService(ranking = 10, added = "added", removed = "removed")
     public static class ServiceAspect1 implements ServiceInterface {
-        @ServiceDependency(filter = "(name=AspectChainTest.ServiceAspect1)")
+        public final static String ENSURE = "AspectAnnotation.ServiceAspect1";
+        
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         protected volatile Ensure m_sequencer;
         // Injected by reflection.
         private volatile ServiceInterface m_parentService;
@@ -188,7 +196,9 @@ public class AspectAnnotation {
 
     @Component
     public static class ServiceConsumer implements Runnable {
-        @ServiceDependency(filter = "(name=AspectChainTest.ServiceConsumer)")
+        public final static String ENSURE = "AspectAnnotation.ServiceConsumer";
+
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         protected volatile Ensure m_sequencer;
 
         @ServiceDependency
