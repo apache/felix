@@ -230,7 +230,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
                         }
                         catch (Exception ex)
                         {
-                            new RuntimeException(ex.getMessage());
+                            throw new RuntimeException(ex.getMessage());
                         }
                     }
                 }
