@@ -81,9 +81,13 @@ public abstract class TestBase implements LogService, FrameworkListener {
     protected BundleContext context;
 
     protected ServiceRegistration logService;
+    
+    protected boolean startComponents() {
+        return false; 
+    }
 
     @Configuration
-    public static Option[] configuration() {
+    public Option[] configuration() {
         final String bundleFileName = System.getProperty(BUNDLE_JAR_SYS_PROP, BUNDLE_JAR_DEFAULT);
         final File bundleFile = new File(bundleFileName);
         if (!bundleFile.canRead()) {
@@ -110,7 +114,7 @@ public abstract class TestBase implements LogService, FrameworkListener {
                 mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager","3.1.1-SNAPSHOT"),
                 mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.shell", "3.0.2-SNAPSHOT"),
                 mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.runtime", "3.1.1-SNAPSHOT"),
-                bundle(bundleFile.toURI().toString()));
+                bundle(bundleFile.toURI().toString()).start(startComponents()));
         final Option option = (paxRunnerVmOption != null) ? vmOption(paxRunnerVmOption) : null;
         return OptionUtils.combine(base, option);
     }

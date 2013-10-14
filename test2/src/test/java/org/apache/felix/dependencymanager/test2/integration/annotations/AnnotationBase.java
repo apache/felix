@@ -18,30 +18,10 @@
  */
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
-import org.apache.felix.dependencymanager.test2.components.Ensure;
-import org.apache.felix.dependencymanager.test2.components.Felix4050;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.PaxExam;
-import org.osgi.framework.ServiceRegistration;
 
-/**
- * Test for FELIX-4050 issue: It validates that component state calculation does not mess up
- * when an @Init method adds an available dependency using the API, and also returns a Map for
- * configuring a named dependency.
- */
-@RunWith(PaxExam.class)
-public class Felix4050Test extends AnnotationBase {
-    @Test
-    public void testFelix4050() {
-        Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, Felix4050.ENSURE);
-        // wait for S to be started
-        e.waitForStep(3, 10000);
-        // remove our sequencer: this will stop S
-        sr.unregister();
-        // ensure that S is stopped and destroyed
-        e.waitForStep(5, 10000);
+public class AnnotationBase extends TestBase {
+    protected boolean startComponents() {
+        return true;
     }
 }

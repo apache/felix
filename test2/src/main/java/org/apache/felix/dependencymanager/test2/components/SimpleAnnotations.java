@@ -38,7 +38,7 @@ public class SimpleAnnotations {
      * Provides a <code>Runnable</code> service, which is required by the
      * {@link Consumer} class.
      */
-    @Component(properties = {@Property(name = "foo", value = "bar")})
+    @Component(properties = {@Property(name = "foo", value = "bar"), @Property(name="type", value="SimpleAnnotations")})
     public static class Producer implements Runnable {
         public final static String ENSURE = "SimpleAnnotations.Producer";
         
@@ -111,7 +111,7 @@ public class SimpleAnnotations {
         @ServiceDependency
         volatile LogService _logService;
 
-        @ServiceDependency
+        @ServiceDependency(filter="(type=SimpleAnnotations)")
         volatile Runnable _runnable;
 
         @ServiceDependency(filter = "(name=" + ENSURE + ")")

@@ -32,7 +32,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
-public class PublisherAnnotationTest extends TestBase {
+public class PublisherAnnotationTest extends AnnotationBase {
     /**
      * A Service that just registers/unregisters its service, using the @ServiceLifecycle annotation.
      */

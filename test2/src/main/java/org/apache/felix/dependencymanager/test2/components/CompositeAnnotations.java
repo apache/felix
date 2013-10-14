@@ -35,6 +35,9 @@ import org.osgi.framework.ServiceRegistration;
 public class CompositeAnnotations {
     public interface C1Service {
     }
+    
+    public interface Dependency extends Runnable {        
+    }
 
     /**
      * This service is also composed of the Component object.
@@ -48,7 +51,7 @@ public class CompositeAnnotations {
 
         /* This dependency filter will be configured from our init method */
         @ServiceDependency(name = "D")
-        public volatile Runnable m_runnable;
+        public volatile Dependency m_runnable;
 
         /* Object used to check that methods are called in the proper sequence */
         @ServiceDependency(filter = "(name=" + ENSURE + ")")
@@ -120,7 +123,7 @@ public class CompositeAnnotations {
         private volatile Ensure m_sequencer;
 
         // Injected dependency (from CompositeService)
-        public volatile Runnable m_runnable;
+        public volatile Dependency m_runnable;
 
         // lifecycle callback (same method as the one from CompositeService)
         void init() {
@@ -152,7 +155,7 @@ public class CompositeAnnotations {
     }
 
     @Component(properties = @Property(name = "foo", value = "bar1"))
-    public static class Dependency1 implements Runnable {
+    public static class Dependency1 implements Dependency {
         public final static String ENSURE = "CompositeAnnotations.Dependency1";
 
         @ServiceDependency(filter = "(name=" + ENSURE + ")")
@@ -169,7 +172,7 @@ public class CompositeAnnotations {
     }
 
     @Component(properties = @Property(name = "foo", value = "bar2"))
-    public static class Dependency2 implements Runnable {
+    public static class Dependency2 implements Dependency {
         public final static String ENSURE = "CompositeAnnotations.Dependency2";
 
         @ServiceDependency(filter = "(name=" + ENSURE + ")")

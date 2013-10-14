@@ -32,7 +32,7 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Ensure that a Provider can be injected into a Consumer, using simple DM annotations.
  */
 @RunWith(PaxExam.class)
-public class SimpleAnnotationsTest extends TestBase
+public class SimpleAnnotationsTest extends AnnotationBase
 {    
 	@Test
 	public void testSimpleAnnotations() throws Throwable
