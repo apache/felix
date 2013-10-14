@@ -19,6 +19,11 @@
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.components.AspectAnnotation.ServiceAspect1;
+import org.apache.felix.dependencymanager.test2.components.AspectAnnotation.ServiceAspect2;
+import org.apache.felix.dependencymanager.test2.components.AspectAnnotation.ServiceAspect3;
+import org.apache.felix.dependencymanager.test2.components.AspectAnnotation.ServiceConsumer;
+import org.apache.felix.dependencymanager.test2.components.AspectAnnotation.ServiceProvider;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,15 +39,15 @@ public class AspectAnnotationTest extends TestBase {
     public void testAspectChain() throws Throwable {
         Ensure e = new Ensure();
         // Activate service consumer
-        ServiceRegistration scSequencer = register(e, "AspectChainTest.ServiceConsumer");
+        ServiceRegistration scSequencer = register(e, ServiceConsumer.ENSURE);
         // Activate service provider
-        ServiceRegistration spSequencer = register(e, "AspectChainTest.ServiceProvider");
+        ServiceRegistration spSequencer = register(e, ServiceProvider.ENSURE);
         // Activate service aspect 2
-        ServiceRegistration sa2Sequencer = register(e, "AspectChainTest.ServiceAspect2");
+        ServiceRegistration sa2Sequencer = register(e, ServiceAspect2.ENSURE);
         // Activate service aspect 3
-        ServiceRegistration sa3Sequencer = register(e, "AspectChainTest.ServiceAspect3");
+        ServiceRegistration sa3Sequencer = register(e, ServiceAspect3.ENSURE);
         // Activate service aspect 1
-        ServiceRegistration sa1Sequencer = register(e, "AspectChainTest.ServiceAspect1");
+        ServiceRegistration sa1Sequencer = register(e, ServiceAspect1.ENSURE);
 
         e.step();
         e.waitForStep(6, 10000);
