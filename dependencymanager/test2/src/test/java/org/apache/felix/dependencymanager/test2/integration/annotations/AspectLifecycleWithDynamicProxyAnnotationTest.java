@@ -18,6 +18,8 @@
 */
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
+import org.apache.felix.dependencymanager.test2.components.AspectLifecycleWithDynamicProxyAnnotation.ServiceProvider;
+import org.apache.felix.dependencymanager.test2.components.AspectLifecycleWithDynamicProxyAnnotation.ServiceProviderAspect;
 import org.apache.felix.dependencymanager.test2.components.Ensure;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
@@ -35,11 +37,11 @@ public class AspectLifecycleWithDynamicProxyAnnotationTest extends TestBase {
     public void testAnnotatedAspect() {
         Ensure e = new Ensure();
         // Provide the Sequencer server to the ServiceProvider service
-        ServiceRegistration sr1 = register(e, "aspectLifecycle.dynamicProxy.ServiceProvider");
+        ServiceRegistration sr1 = register(e, ServiceProvider.ENSURE);
         // Check if the ServiceProvider has been injected in the AspectTest service.
         e.waitForStep(1, 10000);
         // Provide the Sequencer server to the ServiceProviderAspect service
-        ServiceRegistration sr2 = register(e, "aspectLifecycle.dynamicProxy.ServiceProviderAspect");
+        ServiceRegistration sr2 = register(e, ServiceProviderAspect.ENSURE);
         // Check if the AspectTest has been injected with the aspect
         e.waitForStep(3, 10000);
         // Remove the ServiceProviderAspect service
