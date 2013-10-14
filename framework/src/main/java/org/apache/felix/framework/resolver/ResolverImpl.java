@@ -1588,8 +1588,6 @@ public class ResolverImpl implements Resolver
                     allCandidates);
             }
 
-            Map<String, Object> attrs = new HashMap(1);
-            attrs.put(BundleRevision.PACKAGE_NAMESPACE, pkgName);
             packageWires.add(
                 new ResolverWireImpl(
                     revision,
