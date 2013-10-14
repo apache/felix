@@ -81,6 +81,9 @@ public class ResourceAdapterServiceTestWithPublisher {
 
     @Component
     public static class ResourceProvider {
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
+        volatile Ensure m_sequencer;
+
         @Inject
         private volatile BundleContext m_context;
         private final Map m_handlers = new HashMap();
