@@ -36,6 +36,8 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 public class Felix4050 {
+    public final static String ENSURE = "Felix4050";
+    
     @Component(provides = {A.class})
     public static class A {
 
@@ -56,7 +58,7 @@ public class Felix4050 {
         @Inject
         volatile BundleContext _ctx;
 
-        @ServiceDependency(filter = "(name=test.Felix4050)")
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         volatile Ensure m_sequencer;
 
         @Start
@@ -90,7 +92,7 @@ public class Felix4050 {
 
     @Component
     public static class S {
-        @ServiceDependency(filter = "(name=test.Felix4050)")
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         volatile Ensure m_sequencer;
 
         @Inject

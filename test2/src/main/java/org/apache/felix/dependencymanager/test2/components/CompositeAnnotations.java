@@ -41,6 +41,8 @@ public class CompositeAnnotations {
      */
     @Component
     public static class C1 implements C1Service {
+        public final static String ENSURE = "CompositeAnnotations.C1";
+        
         /* We are composed of this object, which will also be injected with our dependencies */
         private final C2 m_c2 = new C2();
 
@@ -49,7 +51,7 @@ public class CompositeAnnotations {
         public volatile Runnable m_runnable;
 
         /* Object used to check that methods are called in the proper sequence */
-        @ServiceDependency(filter = "(name=test.compositeAnnotation.c1)")
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         private volatile Ensure m_sequencer;
 
         /**
@@ -151,7 +153,9 @@ public class CompositeAnnotations {
 
     @Component(properties = @Property(name = "foo", value = "bar1"))
     public static class Dependency1 implements Runnable {
-        @ServiceDependency(filter = "(name=test.compositeAnnotation.dependency1)")
+        public final static String ENSURE = "CompositeAnnotations.Dependency1";
+
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         volatile Ensure m_sequencer;
 
         @Start
@@ -166,7 +170,9 @@ public class CompositeAnnotations {
 
     @Component(properties = @Property(name = "foo", value = "bar2"))
     public static class Dependency2 implements Runnable {
-        @ServiceDependency(filter = "(name=test.compositeAnnotation.dependency2)")
+        public final static String ENSURE = "CompositeAnnotations.Dependency2";
+
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         volatile Ensure m_sequencer;
 
         @Start

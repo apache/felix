@@ -40,7 +40,9 @@ public class SimpleAnnotations {
      */
     @Component(properties = {@Property(name = "foo", value = "bar")})
     public static class Producer implements Runnable {
-        @ServiceDependency(filter = "(name=simple.annotations.producer)")
+        public final static String ENSURE = "SimpleAnnotations.Producer";
+        
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         volatile Ensure _ensure;
 
         @ServiceDependency
@@ -104,13 +106,15 @@ public class SimpleAnnotations {
      */
     @Component
     public static class Consumer {
+        public final static String ENSURE = "SimpleAnnotations.Consumer";
+        
         @ServiceDependency
         volatile LogService _logService;
 
         @ServiceDependency
         volatile Runnable _runnable;
 
-        @ServiceDependency(filter = "(name=simple.annotations.consumer)")
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         volatile Ensure _ensure;
 
         @Inject

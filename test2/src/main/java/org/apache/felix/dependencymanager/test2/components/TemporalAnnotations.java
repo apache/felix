@@ -28,9 +28,10 @@ import org.apache.felix.dm.annotation.api.Stop;
  */
 @Component(provides = {})
 public class TemporalAnnotations implements Runnable {
+    public final static String ENSURE = "TemporalAnnotations";
     Thread m_thread;
 
-    @ServiceDependency(filter = "(name=temporal.annotations)")
+    @ServiceDependency(filter = "(name=" + ENSURE + ")")
     volatile Ensure m_sequencer;
 
     @ServiceDependency(timeout = 1000L, filter = "(test=temporal)")

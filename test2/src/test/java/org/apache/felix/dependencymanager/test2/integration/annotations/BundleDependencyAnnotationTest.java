@@ -18,6 +18,7 @@
 */
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
+import org.apache.felix.dependencymanager.test2.components.BundleDependencyAnnotation;
 import org.apache.felix.dependencymanager.test2.components.Ensure;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
@@ -36,7 +37,7 @@ public class BundleDependencyAnnotationTest extends TestBase {
     @Test
     public void testBundleDependencyAnnotation() {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, "bundleDependencyTest.consumer");        
+        ServiceRegistration sr = register(e, BundleDependencyAnnotation.ENSURE_CONSUMER);        
         e.waitForStep(1, 10000);
         stopTestComponentsBundle();
         e.waitForStep(2, 10000);
@@ -50,7 +51,7 @@ public class BundleDependencyAnnotationTest extends TestBase {
     @Test
     public void testBundleAdapterServiceAnnotation() throws Throwable {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, "bundleDependencyTest.adapter");        
+        ServiceRegistration sr = register(e, BundleDependencyAnnotation.ENSURE_ADAPTER);        
         e.waitForStep(3, 10000);
         e.ensure();
         sr.unregister();

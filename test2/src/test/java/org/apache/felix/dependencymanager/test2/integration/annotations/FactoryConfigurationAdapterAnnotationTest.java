@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import junit.framework.Assert;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.components.FactoryConfigurationAdapterAnnotation.ServiceProvider;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,7 +41,7 @@ public class FactoryConfigurationAdapterAnnotationTest extends TestBase {
     @Test
     public void testFactoryConfigurationAdapterAnnotation() throws Throwable {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, "test.FactoryConfigurationAdapterAnnotationTest");
+        ServiceRegistration sr = register(e, ServiceProvider.ENSURE);
         ConfigurationAdmin cm = (ConfigurationAdmin) context.getService(context
                 .getServiceReference(ConfigurationAdmin.class.getName()));
         try {

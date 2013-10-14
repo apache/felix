@@ -19,6 +19,7 @@
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.components.MultipleAnnotations;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +34,7 @@ public class MultipleAnnotationsTest extends TestBase {
     @Test
     public void testMultipleAnnotations() {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, "test.MultipleAnnotationsTest");
+        ServiceRegistration sr = register(e, MultipleAnnotations.ENSURE);
         e.waitForStep(7, 10000);
         stopTestComponentsBundle();
         // And check if the test.annotation bundle has been deactivated orderly

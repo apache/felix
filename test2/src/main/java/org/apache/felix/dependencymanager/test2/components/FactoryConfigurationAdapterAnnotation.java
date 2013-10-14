@@ -68,7 +68,9 @@ public class FactoryConfigurationAdapterAnnotation {
      */
     @FactoryConfigurationAdapterService(factoryPid = "FactoryPidTest", properties = {@Property(name = "foo", value = "bar")}, propagate = true)
     public static class ServiceProvider implements ServiceInterface {
-        @ServiceDependency(filter="(name=test.FactoryConfigurationAdapterAnnotationTest)")
+        public final static String ENSURE = "FactoryConfigurationAdapterAnnotation.ServiceProvider";
+        
+        @ServiceDependency(filter="(name=" + ENSURE + ")")
         private volatile Ensure m_sequencer;
 
         private volatile boolean m_started;

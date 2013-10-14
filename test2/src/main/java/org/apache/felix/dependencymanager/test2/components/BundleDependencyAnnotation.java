@@ -31,6 +31,9 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 public class BundleDependencyAnnotation {
+    public static final String ENSURE_CONSUMER = "BundleDependencyAnnotation.consumer";
+    public static final String ENSURE_ADAPTER = "BundleDependencyAnnotation.adapter";
+
     public interface ServiceInterface extends Runnable {
     }
 
@@ -42,7 +45,7 @@ public class BundleDependencyAnnotation {
         protected volatile boolean m_added;
         protected volatile boolean m_removed;
 
-        @ServiceDependency(filter = "(name=bundleDependencyTest.consumer)")
+        @ServiceDependency(filter = "(name=" + ENSURE_CONSUMER + ")")
         private volatile Ensure m_sequencer;
 
         @BundleDependency(required = false, removed = "removed", filter = "(Bundle-SymbolicName=org.apache.felix.dependencymanager)")
@@ -79,7 +82,7 @@ public class BundleDependencyAnnotation {
      */
     @Component
     public static class ServiceConsumer {
-        @ServiceDependency(filter = "(name=bundleDependencyTest.adapter)")
+        @ServiceDependency(filter = "(name=" + ENSURE_ADAPTER + ")")
         volatile Ensure m_sequencer;
 
         @ServiceDependency
@@ -102,7 +105,7 @@ public class BundleDependencyAnnotation {
         protected volatile Bundle m_bundle;
 
         // Our Sequencer required dependency
-        @ServiceDependency(filter = "(name=bundleDependencyTest.adapter)")
+        @ServiceDependency(filter = "(name=" + ENSURE_ADAPTER + ")")
         volatile Ensure m_sequencer;
 
         // Check auto config injections
