@@ -44,7 +44,9 @@ public class AspectLifecycleAnnotation {
 
     @Component
     public static class ServiceProvider implements ServiceInterface {
-        @ServiceDependency(filter = "(name=aspectLifecycle.ServiceProvider)")
+        public final static String ENSURE = "AspectLifecycleAnnotation.ServiceProvider";
+        
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         protected volatile Ensure m_sequencer;
 
         public void run() {
@@ -54,10 +56,12 @@ public class AspectLifecycleAnnotation {
 
     @AspectService(ranking = 10)
     public static class ServiceProviderAspect implements ServiceInterface {
+        public final static String ENSURE = "AspectLifecycleAnnotation.ServiceProviderAspect";
+
         protected volatile boolean m_initCalled;
         protected volatile Ensure m_sequencer;
 
-        @ServiceDependency(filter = "(name=aspectLifecycle.ServiceProviderAspect)")
+        @ServiceDependency(filter = "(name=" + ENSURE + ")")
         protected void bind(Ensure sequencer) {
             m_sequencer = sequencer;
             m_sequencer.step(2);
