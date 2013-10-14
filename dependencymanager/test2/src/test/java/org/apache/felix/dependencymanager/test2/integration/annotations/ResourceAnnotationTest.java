@@ -30,7 +30,7 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify Bundle Dependency annotations usage.
  */
 @RunWith(PaxExam.class)
-public class ResourceAnnotationTest extends TestBase {
+public class ResourceAnnotationTest extends AnnotationBase {
     /**
      * Tests a simple ResourceConsumer
      * @param context

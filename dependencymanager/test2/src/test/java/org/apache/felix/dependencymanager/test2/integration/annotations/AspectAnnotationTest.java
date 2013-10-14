@@ -34,7 +34,7 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify Aspect Annotations usage.
  */
 @RunWith(PaxExam.class)
-public class AspectAnnotationTest extends TestBase {
+public class AspectAnnotationTest extends AnnotationBase {
     @Test
     public void testAspectChain() throws Throwable {
         Ensure e = new Ensure();

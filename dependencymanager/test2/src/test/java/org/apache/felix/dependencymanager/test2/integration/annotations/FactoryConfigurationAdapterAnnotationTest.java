@@ -37,7 +37,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * is created from Config Admin.
  */
 @RunWith(PaxExam.class)
-public class FactoryConfigurationAdapterAnnotationTest extends TestBase {
+public class FactoryConfigurationAdapterAnnotationTest extends AnnotationBase {
     @Test
     public void testFactoryConfigurationAdapterAnnotation() throws Throwable {
         Ensure e = new Ensure();

@@ -30,7 +30,7 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify that dependency "propagate" option is properly propagating properties to provided service.
  */
 @RunWith(PaxExam.class)
-public class PropagateAnnotationTest extends TestBase {
+public class PropagateAnnotationTest extends AnnotationBase {
     @Test
     public void testServiceDependencyPropagate() {
         Ensure e = new Ensure();

@@ -32,7 +32,7 @@ import org.osgi.framework.ServiceRegistration;
  * (init/start/stop/destroy methods).
  */
 @RunWith(PaxExam.class)
-public class AspectLifecycleAnnotationTest extends TestBase {
+public class AspectLifecycleAnnotationTest extends AnnotationBase {
     @Test
     public void testAnnotatedAspect() {
         Ensure e = new Ensure();

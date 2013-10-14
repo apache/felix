@@ -33,7 +33,7 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify Temporal Service dependency Annotations usage.
  */
 @RunWith(PaxExam.class)
-public class TemporalAnnotationsTest extends TestBase
+public class TemporalAnnotationsTest extends AnnotationBase
 {
     @Test
     public void testTemporalServiceDependency()

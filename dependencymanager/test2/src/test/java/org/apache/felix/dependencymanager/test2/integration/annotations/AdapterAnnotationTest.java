@@ -34,7 +34,7 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify Aspect Annotations usage.
  */
 @RunWith(PaxExam.class)
-public class AdapterAnnotationTest extends TestBase {
+public class AdapterAnnotationTest extends AnnotationBase {
     /**
      * Check if an adapter gets injected with its adaptee using default auto config mode.
      * @throws Throwable 

@@ -30,7 +30,7 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify complex Annotation usage.
  */
 @RunWith(PaxExam.class)
-public class MultipleAnnotationsTest extends TestBase {
+public class MultipleAnnotationsTest extends AnnotationBase {
     @Test
     public void testMultipleAnnotations() {
         Ensure e = new Ensure();

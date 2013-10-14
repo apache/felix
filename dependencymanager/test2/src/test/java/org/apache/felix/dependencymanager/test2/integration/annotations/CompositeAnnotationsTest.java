@@ -32,7 +32,7 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify Composite annotated services.
  */
 @RunWith(PaxExam.class)
-public class CompositeAnnotationsTest extends TestBase {
+public class CompositeAnnotationsTest extends AnnotationBase {
     @Test
     public void testComposite() {
         Ensure e = new Ensure();

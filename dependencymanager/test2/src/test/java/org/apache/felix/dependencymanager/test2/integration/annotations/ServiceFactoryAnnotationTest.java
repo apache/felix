@@ -34,7 +34,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
-public class ServiceFactoryAnnotationTest extends TestBase {
+public class ServiceFactoryAnnotationTest extends AnnotationBase {
     private final Ensure m_ensure = new Ensure();
     @Test
     public void testServiceFactory() {
