@@ -18,10 +18,10 @@
 */
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
-import org.apache.felix.dependencymanager.test2.components.Ensure;
 import org.apache.felix.dependencymanager.test2.components.CompositeAnnotations.C1;
 import org.apache.felix.dependencymanager.test2.components.CompositeAnnotations.Dependency1;
 import org.apache.felix.dependencymanager.test2.components.CompositeAnnotations.Dependency2;
+import org.apache.felix.dependencymanager.test2.components.Ensure;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,7 +32,11 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify Composite annotated services.
  */
 @RunWith(PaxExam.class)
-public class CompositeAnnotationsTest extends AnnotationBase {
+public class CompositeAnnotationsTest extends TestBase {
+    public CompositeAnnotationsTest() {
+        super(true /* start test components bundle */);
+    }
+
     @Test
     public void testComposite() {
         Ensure e = new Ensure();

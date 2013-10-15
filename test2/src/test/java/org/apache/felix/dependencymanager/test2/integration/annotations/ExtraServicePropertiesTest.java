@@ -33,7 +33,11 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify the a Service may provide its service properties dynamically from its start method.
  */
 @RunWith(PaxExam.class)
-public class ExtraServicePropertiesTest extends AnnotationBase {
+public class ExtraServicePropertiesTest extends TestBase {
+    public ExtraServicePropertiesTest() {
+        super(true /* start test components bundle */);
+    }
+
     /**
      * Tests if a Service can provide its service properties from its start method.
      */

@@ -34,7 +34,11 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
-public class ServiceFactoryAnnotationTest extends AnnotationBase {
+public class ServiceFactoryAnnotationTest extends TestBase {
+    public ServiceFactoryAnnotationTest() {
+        super(true /* start test components bundle */);
+    }
+
     private final Ensure m_ensure = new Ensure();
     @Test
     public void testServiceFactory() {
@@ -45,7 +49,8 @@ public class ServiceFactoryAnnotationTest extends AnnotationBase {
         m.add(m.createComponent()
                 .setImplementation(this)
                 .add(m.createServiceDependency()
-                        .setService(Set.class, "(" + Component.FACTORY_NAME + "=" + ServiceFactoryAnnotation.FACTORY + ")")
+                        .setService(Set.class,
+                                "(" + Component.FACTORY_NAME + "=" + ServiceFactoryAnnotation.FACTORY + ")")
                         .setRequired(true).setCallbacks("bindFactory", null)));
 
         // Check if the test.annotation components have been initialized orderly
@@ -59,7 +64,7 @@ public class ServiceFactoryAnnotationTest extends AnnotationBase {
         Hashtable conf = new Hashtable();
         conf.put("instance.id", "instance");
         conf.put(".private.param", "private");
-        Assert.assertTrue(factory.add(conf));        
+        Assert.assertTrue(factory.add(conf));
         m_ensure.waitForStep(4, 5000);
 
         // update the service instance

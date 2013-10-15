@@ -18,12 +18,12 @@
 */
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
-import org.apache.felix.dependencymanager.test2.components.Ensure;
 import org.apache.felix.dependencymanager.test2.components.AspectAnnotation.ServiceAspect1;
 import org.apache.felix.dependencymanager.test2.components.AspectAnnotation.ServiceAspect2;
 import org.apache.felix.dependencymanager.test2.components.AspectAnnotation.ServiceAspect3;
 import org.apache.felix.dependencymanager.test2.components.AspectAnnotation.ServiceConsumer;
 import org.apache.felix.dependencymanager.test2.components.AspectAnnotation.ServiceProvider;
+import org.apache.felix.dependencymanager.test2.components.Ensure;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,7 +34,11 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify Aspect Annotations usage.
  */
 @RunWith(PaxExam.class)
-public class AspectAnnotationTest extends AnnotationBase {
+public class AspectAnnotationTest extends TestBase {
+    public AspectAnnotationTest() {
+        super(true /* start test components bundle */);
+    }
+
     @Test
     public void testAspectChain() throws Throwable {
         Ensure e = new Ensure();
@@ -57,7 +61,7 @@ public class AspectAnnotationTest extends AnnotationBase {
         // Make sure that service aspect 1 has been called in ts removed and stop callbacks 
         e.waitForStep(8, 10000);
         e.ensure();
-        
+
         scSequencer.unregister();
         sa1Sequencer.unregister();
         sa2Sequencer.unregister();

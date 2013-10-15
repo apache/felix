@@ -19,7 +19,6 @@
 package org.apache.felix.dependencymanager.test2.integration.annotations;
 
 import org.apache.felix.dependencymanager.test2.components.Ensure;
-import org.apache.felix.dependencymanager.test2.components.SimpleAnnotations;
 import org.apache.felix.dependencymanager.test2.components.SimpleAnnotations.Consumer;
 import org.apache.felix.dependencymanager.test2.components.SimpleAnnotations.Producer;
 import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
@@ -32,15 +31,17 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Ensure that a Provider can be injected into a Consumer, using simple DM annotations.
  */
 @RunWith(PaxExam.class)
-public class SimpleAnnotationsTest extends AnnotationBase
-{    
-	@Test
-	public void testSimpleAnnotations() throws Throwable
-    {
-	    Ensure e = new Ensure();
-		ServiceRegistration er = register(e, Producer.ENSURE);        
+public class SimpleAnnotationsTest extends TestBase {
+    public SimpleAnnotationsTest() {
+        super(true /* start test components bundle */);
+    }
+
+    @Test
+    public void testSimpleAnnotations() throws Throwable {
+        Ensure e = new Ensure();
+        ServiceRegistration er = register(e, Producer.ENSURE);
         e.waitForStep(3, 10000); // Producer registered
-        ServiceRegistration er2 = register(e, Consumer.ENSURE); 
+        ServiceRegistration er2 = register(e, Consumer.ENSURE);
 
         er2.unregister(); // stop consumer
         er.unregister(); // stop provider
@@ -49,5 +50,5 @@ public class SimpleAnnotationsTest extends AnnotationBase
         e.waitForStep(10, 10000);
         e.ensure();
         stopTestComponentsBundle();
-    }        
+    }
 }

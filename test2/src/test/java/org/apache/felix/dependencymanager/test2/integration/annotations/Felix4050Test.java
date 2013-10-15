@@ -32,7 +32,11 @@ import org.osgi.framework.ServiceRegistration;
  * configuring a named dependency.
  */
 @RunWith(PaxExam.class)
-public class Felix4050Test extends AnnotationBase {
+public class Felix4050Test extends TestBase {
+    public Felix4050Test() {
+        super(true /* start test components bundle */);
+    }
+
     @Test
     public void testFelix4050() {
         Ensure e = new Ensure();
