@@ -24,11 +24,11 @@
 		<relativePath>../../pom/pom.xml</relativePath>
 	</parent>
 
-	<artifactId>org.apache.felix.dependencymanager.test2</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<artifactId>org.apache.felix.dependencymanager.test</artifactId>
+	<version>3.0.1-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 
-	<name>Apache Felix Dependency Manager Integration Tests 2</name>
+	<name>Apache Felix Dependency Manager Integration Tests</name>
 
 	<properties>
 		<bundle.build.name>
@@ -146,8 +146,8 @@
 				<configuration>
 					<instructions>
 						<Bundle-Name>Apache Felix Dependency Manager Annotations Tests</Bundle-Name>
-						<Bundle-SymbolicName>org.apache.felix.dependencymanager.test2.components</Bundle-SymbolicName>
-						<Export-Package>org.apache.felix.dependencymanager.test2.components</Export-Package>
+						<Bundle-SymbolicName>org.apache.felix.dependencymanager.test.components</Bundle-SymbolicName>
+						<Export-Package>org.apache.felix.dm.test.components</Export-Package>
 					</instructions>
 				</configuration>
 			</plugin>
@@ -161,7 +161,7 @@
 				</configuration>
 			</plugin>
 			
-			<!-- DM annotation plugin used to parse annotations from org.apache.felix.dependencymanager.test2.components artifact -->
+			<!-- DM annotation plugin used to parse annotations from org.apache.felix.dm.test.components artifact -->
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>org.apache.felix.dependencymanager.annotation</artifactId>
