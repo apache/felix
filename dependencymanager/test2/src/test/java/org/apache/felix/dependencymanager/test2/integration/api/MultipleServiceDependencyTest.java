@@ -18,25 +18,16 @@
  */
 package org.apache.felix.dependencymanager.test2.integration.api;
 
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
-
 import java.util.Properties;
 
+import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.apache.felix.dependencymanager.test2.components.Ensure;
-import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
+import org.osgi.framework.Constants;
 
 @RunWith(PaxExam.class)
 public class MultipleServiceDependencyTest extends TestBase {

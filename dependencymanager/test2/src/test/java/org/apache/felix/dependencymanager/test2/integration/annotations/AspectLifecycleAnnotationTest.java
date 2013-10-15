@@ -32,16 +32,20 @@ import org.osgi.framework.ServiceRegistration;
  * (init/start/stop/destroy methods).
  */
 @RunWith(PaxExam.class)
-public class AspectLifecycleAnnotationTest extends AnnotationBase {
+public class AspectLifecycleAnnotationTest extends TestBase {
+    public AspectLifecycleAnnotationTest() {
+        super(true /* start test components bundle */);
+    }
+
     @Test
     public void testAnnotatedAspect() {
         Ensure e = new Ensure();
         // Provide the Sequencer server to the ServiceProvider service
-        ServiceRegistration sr1 = register(e, ServiceProvider.ENSURE);                
+        ServiceRegistration sr1 = register(e, ServiceProvider.ENSURE);
         // Check if the ServiceProvider has been injected in the AspectTest service.
         e.waitForStep(1, 10000);
         // Provide the Sequencer server to the ServiceProviderAspect service
-        ServiceRegistration sr2 = register(e, ServiceProviderAspect.ENSURE);        
+        ServiceRegistration sr2 = register(e, ServiceProviderAspect.ENSURE);
         // Check if the AspectTest has been injected with the aspect
         e.waitForStep(3, 10000);
         // Stop the ServiceProviderAspect service.

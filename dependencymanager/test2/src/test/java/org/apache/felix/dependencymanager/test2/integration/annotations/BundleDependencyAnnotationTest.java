@@ -30,14 +30,18 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify Bundle Dependency annotations usage.
  */
 @RunWith(PaxExam.class)
-public class BundleDependencyAnnotationTest extends AnnotationBase {
+public class BundleDependencyAnnotationTest extends TestBase {
+    public BundleDependencyAnnotationTest() {
+        super(true /* start test components bundle */);
+    }
+
     /**
      * Tests a simple Consumer, which has a BundleDependency over the dependency manager bundle.
      */
     @Test
     public void testBundleDependencyAnnotation() {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, BundleDependencyAnnotation.ENSURE_CONSUMER);        
+        ServiceRegistration sr = register(e, BundleDependencyAnnotation.ENSURE_CONSUMER);
         e.waitForStep(1, 10000);
         stopTestComponentsBundle();
         e.waitForStep(2, 10000);
@@ -51,7 +55,7 @@ public class BundleDependencyAnnotationTest extends AnnotationBase {
     @Test
     public void testBundleAdapterServiceAnnotation() throws Throwable {
         Ensure e = new Ensure();
-        ServiceRegistration sr = register(e, BundleDependencyAnnotation.ENSURE_ADAPTER);        
+        ServiceRegistration sr = register(e, BundleDependencyAnnotation.ENSURE_ADAPTER);
         e.waitForStep(3, 10000);
         e.ensure();
         sr.unregister();

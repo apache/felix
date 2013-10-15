@@ -63,7 +63,7 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         m.add(sp);
         m.add(sc);
         m.add(sequencer);
-        
+
         // Check if the test.annotation components have been initialized orderly
         e.waitForStep(7, 10000);
         
@@ -93,7 +93,7 @@ public class MultipleExtraDependencyTest2 extends TestBase {
     }
     
     public static class SequencerImpl implements Sequencer {
-        Ensure m_ensure;
+        final Ensure m_ensure;
         
         public SequencerImpl(Ensure e)
         {
@@ -124,7 +124,7 @@ public class MultipleExtraDependencyTest2 extends TestBase {
     public static class ServiceConsumer {
         volatile Sequencer m_sequencer;
         volatile ServiceInterface m_service;
-        ServiceDependency m_d1, m_d2;
+        volatile ServiceDependency m_d1, m_d2;
 
         public void init(Component s) {
             DependencyManager m = s.getDependencyManager();
@@ -141,8 +141,6 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         }
         
         void start() {
-            m_d1.setInstanceBound(false);
-            m_d2.setInstanceBound(false);
             m_sequencer.step(6);
             m_service.doService();
         }
@@ -154,9 +152,9 @@ public class MultipleExtraDependencyTest2 extends TestBase {
     
     public static class ServiceProvider implements ServiceInterface
     {
-        Sequencer m_sequencer;
-        ServiceProvider2 m_serviceProvider2;
-        ServiceDependency m_d1, m_d2;
+        volatile Sequencer m_sequencer;
+        volatile ServiceProvider2 m_serviceProvider2;
+        volatile ServiceDependency m_d1, m_d2;
 
         public void init(Component s)
         {
@@ -180,8 +178,6 @@ public class MultipleExtraDependencyTest2 extends TestBase {
 
         void start()
         {
-            m_d1.setInstanceBound(false);
-            m_d2.setInstanceBound(false);
             m_serviceProvider2.step(4);
             m_sequencer.step(5);
         }
@@ -204,10 +200,10 @@ public class MultipleExtraDependencyTest2 extends TestBase {
 
     public static class ServiceProvider2
     {
-        Composite m_composite = new Composite();
-        Sequencer m_sequencer;
-        Runnable m_runnable;
-        ServiceDependency m_d1, m_d2;
+        final Composite m_composite = new Composite();
+        volatile Sequencer m_sequencer;
+        volatile Runnable m_runnable;
+        volatile ServiceDependency m_d1, m_d2;
 
         public void init(Component s)
         {
@@ -226,14 +222,13 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         
         void bind(Sequencer seq)
         {
+            System.out.println("ServiceProvider2.bind(" + seq + ")");
             m_sequencer = seq;
             m_sequencer.step(1);
         }
 
         void start()
         {
-            m_d1.setInstanceBound(false);
-            m_d2.setInstanceBound(false);
             m_sequencer.step(3);
             m_runnable.run(); // NullObject
         }

@@ -33,15 +33,21 @@ import org.osgi.framework.ServiceRegistration;
  * Use case: Verify Temporal Service dependency Annotations usage.
  */
 @RunWith(PaxExam.class)
-public class TemporalAnnotationsTest extends AnnotationBase
-{
+public class TemporalAnnotationsTest extends TestBase {
+    public TemporalAnnotationsTest() {
+        super(true /* start test components bundle */);
+    }
+
     @Test
-    public void testTemporalServiceDependency()
-    {
+    public void testTemporalServiceDependency() {
         Ensure ensure = new Ensure();
-        ServiceRegistration ensureReg = register(ensure, TemporalAnnotations.ENSURE);                       
-        Dictionary props = new Hashtable() {{ put("test", "temporal"); }};
-        Runnable r = Ensure.createRunnableStep(ensure, 1);             
+        ServiceRegistration ensureReg = register(ensure, TemporalAnnotations.ENSURE);
+        Dictionary props = new Hashtable() {
+            {
+                put("test", "temporal");
+            }
+        };
+        Runnable r = Ensure.createRunnableStep(ensure, 1);
         ServiceRegistration sr = context.registerService(Runnable.class.getName(), r, props);
         ensure.waitForStep(1, 15000);
         System.out.println("unregistering R");

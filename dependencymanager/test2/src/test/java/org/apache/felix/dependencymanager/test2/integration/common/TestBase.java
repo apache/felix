@@ -53,7 +53,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 import org.slf4j.LoggerFactory;
-import ch.qos.logback.classic.Level;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
@@ -82,10 +82,17 @@ public abstract class TestBase implements LogService, FrameworkListener {
 
     protected ServiceRegistration logService;
     
-    protected boolean startComponents() {
-        return false; 
+    // Flag used to check if our test components (src/main/java/**/*) bundle must be started
+    private final boolean m_startTestComponentsBundle;
+    
+    public TestBase() {
+        this(false);
     }
-
+    
+    public TestBase(boolean startTestComponentsBundle) {
+        m_startTestComponentsBundle = startTestComponentsBundle;
+    }
+ 
     @Configuration
     public Option[] configuration() {
         final String bundleFileName = System.getProperty(BUNDLE_JAR_SYS_PROP, BUNDLE_JAR_DEFAULT);
@@ -114,7 +121,7 @@ public abstract class TestBase implements LogService, FrameworkListener {
                 mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager","3.1.1-SNAPSHOT"),
                 mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.shell", "3.0.2-SNAPSHOT"),
                 mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager.runtime", "3.1.1-SNAPSHOT"),
-                bundle(bundleFile.toURI().toString()).start(startComponents()));
+                bundle(bundleFile.toURI().toString()).start(m_startTestComponentsBundle));
         final Option option = (paxRunnerVmOption != null) ? vmOption(paxRunnerVmOption) : null;
         return OptionUtils.combine(base, option);
     }

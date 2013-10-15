@@ -20,26 +20,17 @@ package org.apache.felix.dependencymanager.test2.integration.api;
 //import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartupFor;
 //import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.vmOption;
 
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
 import junit.framework.Assert;
 
+import org.apache.felix.dependencymanager.test2.components.Ensure;
+import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.osgi.framework.BundleContext;
-import org.osgi.util.tracker.ServiceTracker;
-
-
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.apache.felix.dependencymanager.test2.components.Ensure;
-import org.apache.felix.dependencymanager.test2.integration.common.TestBase;
+import org.osgi.util.tracker.ServiceTracker;
 
 @RunWith(PaxExam.class)
 public class ServiceDependencyComponentLifeCycleTest extends TestBase {
