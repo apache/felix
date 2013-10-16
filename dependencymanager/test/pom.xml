@@ -78,13 +78,21 @@
 		</dependency>
 
 		<!-- Integration Testing with Pax Exam -->
+		<!-- 
 		<dependency>
 			<groupId>org.ops4j.pax.exam</groupId>
 			<artifactId>pax-exam-container-native</artifactId>
 			<version>${exam.version}</version>
 			<scope>test</scope>
 		</dependency>
-
+ 		-->
+ 		<dependency>
+  		  <groupId>org.ops4j.pax.exam</groupId>
+    		<artifactId>pax-exam-container-forked</artifactId>
+    		<version>${exam.version}</version>
+    		<scope>test</scope>
+		</dependency>
+ 
 		<dependency>
 			<groupId>org.ops4j.pax.exam</groupId>
 			<artifactId>pax-exam-junit4</artifactId>
@@ -116,14 +124,14 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
-			<version>0.9.20</version>
+			<version>0.9.29</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>0.9.20</version>
+			<version>0.9.29</version>
 			<scope>test</scope>
 		</dependency>
 
