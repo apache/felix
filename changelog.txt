@@ -17,6 +17,34 @@ Changes from 1.6.2 to 1.8
     * [FELIX-3890] - [DS] We might try to unbind a service we couldn't get and didn't bind
     * [FELIX-3891] - [DS] synchronization around registerService can create deadlocks
     * [FELIX-3902] - [DS] Single dynamic mandatory reference problem on target filter update
+    * [FELIX-3915] - [DS] Timing hole between ComponentHolder initial config and registration
+    * [FELIX-3952] - [DS] service events can go missing resulting in hang
+    * [FELIX-3967] - [DS] NPE in DependencyManager$AbstractCustomizer.isSatisfied
+    * [FELIX-3971] - [DS] SingleDynamicCustomizer doesn't respond correctly to configuration update events. 
+    * [FELIX-3975] - [DS] Give ParseException cause to move out of the stone age
+    * [FELIX-3991] - [DS] component deactivation may not complete properly with enough threads
+    * [FELIX-4000] - [DS] ConcurrentModificationException in AbstractComponentManager iterating through m_dependencyManagers
+    * [FELIX-4004] - [DS] ConcurrentModificationException in DependencyManager.open(
+    * [FELIX-4006] - [DS] While disposing a component, it's possible to unbind a reference that wasn't bound.
+    * [FELIX-4011] - [DS] code refactoring/simplification
+    * [FELIX-4020] - [DS] A reference being unregistered between checking for references available and actual binding may get bound anyway
+    * [FELIX-4031] - [DS] Respond better to InterruptedException
+    * [FELIX-4055] - [DS] Component instance unset but remains in Active state
+    * [FELIX-4057] - [DS] Use Findbugs, and fix located problems
+    * [FELIX-4069] - [DS] ConcurrentModificationException in ServiceFactoryComponentManager
+    * [FELIX-4070] - [DS] Reduce or eliminate use of States in command pattern
+    * [FELIX-4088] - [DS] NPE from SCR service unregistration
+    * [FELIX-4090] - [DS] ActivateMethod.ACTIVATE_TYPES_DS11 and ACTIVATE_TYPES_DS10 should be static final
+    * [FELIX-4166] - [DS] Removing required dependency before component is created leaves service registered
+    * [FELIX-4171] - [DS] possible DependencyManager NPE during cleanup after failure to activate a component
+    * [FELIX-4188] - [DS] If a bundle is stopped while the SCR extender is being stopped, the callback for the STOPPING event returns before full deactivation
+    * [FELIX-4189] - [DS] DS should not hold any lock while calling bundleContext#getService
+    * [FELIX-4223] - [DS] DependencyManager filter should be set up in enable, not activate, to avoid race conditions
+    * [FELIX-4224] - [DS] Dependency manager can be active but not have m_bindMethods set
+
+** Task
+    * [FELIX-3584] - [DS] Handle new LOCATION_CHANGED event
+    * [FELIX-3651] - [DS] Properly support configuration location binding and targeted pids
 
 Changes from 1.6.0 to 1.6.2
 ---------------------------
