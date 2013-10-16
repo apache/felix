@@ -18,7 +18,9 @@
  */
 package org.apache.felix.dm.test.integration.api;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
@@ -159,16 +161,18 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         public void init(Component c)
         {
             DependencyManager m = c.getDependencyManager();
-            c.add(m_d1 = m.createServiceDependency()
-                  .setService(Sequencer.class)
-                  .setRequired(true)
-                  .setInstanceBound(true)
-                  .setAutoConfig("m_sequencer"));
-            c.add(m_d2 = m.createServiceDependency()
-                  .setService(ServiceProvider2.class)
-                  .setRequired(true)
-                  .setInstanceBound(true)
-                  .setCallbacks("bind", "unbind"));
+            List<ServiceDependency> l = new ArrayList<ServiceDependency>();
+            l.add(m_d1 = m.createServiceDependency()
+                    .setService(Sequencer.class)
+                    .setRequired(true)
+                    .setInstanceBound(true)
+                    .setAutoConfig("m_sequencer"));
+            l.add(m_d2 = m.createServiceDependency()
+                    .setService(ServiceProvider2.class)
+                    .setRequired(true)
+                    .setInstanceBound(true)
+                    .setCallbacks("bind", "unbind"));
+            c.add(l);
         }
         
         void bind(ServiceProvider2 provider2)
@@ -178,6 +182,8 @@ public class MultipleExtraDependencyTest2 extends TestBase {
 
         void start()
         {
+            m_d1.setInstanceBound(false);
+            m_d2.setInstanceBound(false);
             m_serviceProvider2.step(4);
             m_sequencer.step(5);
         }
@@ -209,16 +215,19 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         {
             System.out.println("ServiceProvider2.init");
             DependencyManager m = c.getDependencyManager();
-            c.add(m_d1 = m.createServiceDependency()
+            List<ServiceDependency> l = new ArrayList<ServiceDependency>();
+            
+            l.add(m_d1 = m.createServiceDependency()
                   .setService(Runnable.class, "(foo=bar)")
                   .setRequired(false)
                   .setInstanceBound(true)
                   .setAutoConfig("m_runnable"));
-            c.add(m_d2 = m.createServiceDependency()
+            l.add(m_d2 = m.createServiceDependency()
                   .setService(Sequencer.class)
                   .setRequired(true)
                   .setInstanceBound(true)
                   .setCallbacks("bind", null));
+            c.add(l);
         }
         
         void bind(Sequencer seq)
@@ -231,6 +240,8 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         void start()
         {
             System.out.println("ServiceProvider2.start: m_runnable=" + m_runnable + ", m_sequencer = " + m_sequencer);
+            m_d1.setInstanceBound(false);
+            m_d2.setInstanceBound(false);
             m_sequencer.step(3);
             m_runnable.run(); // NullObject
         }
