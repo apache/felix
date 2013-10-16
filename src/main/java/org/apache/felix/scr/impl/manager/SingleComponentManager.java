@@ -46,7 +46,7 @@ import org.osgi.service.log.LogService;
  * The default ComponentManager. Objects of this class are responsible for managing
  * implementation object's lifecycle.
  */
-public class ImmediateComponentManager<S> extends AbstractComponentManager<S> implements ServiceFactory<S>
+public class SingleComponentManager<S> extends AbstractComponentManager<S> implements ServiceFactory<S>
 {
 
     // keep the using bundles as reference "counters" for instance deactivation
@@ -85,13 +85,13 @@ public class ImmediateComponentManager<S> extends AbstractComponentManager<S> im
      * @param metadata
      * @param componentMethods
      */
-    public ImmediateComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
+    public SingleComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
             ComponentMetadata metadata, ComponentMethods componentMethods )
     {
         this(activator, componentHolder, metadata, componentMethods, false);
     }
     
-    public ImmediateComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
+    public SingleComponentManager( BundleComponentActivator activator, ComponentHolder componentHolder,
             ComponentMetadata metadata, ComponentMethods componentMethods, boolean factoryInstance )
     {
         super( activator, metadata, componentMethods, factoryInstance );

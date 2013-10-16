@@ -35,7 +35,7 @@ import org.apache.felix.scr.Component;
 import org.apache.felix.scr.ScrService;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ConfigurationSupport;
-import org.apache.felix.scr.impl.config.ImmediateComponentHolder;
+import org.apache.felix.scr.impl.config.ConfigurableComponentHolder;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
 import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
 import org.apache.felix.scr.impl.manager.ConfigurationComponentFactoryImpl;
@@ -555,7 +555,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
         }
         else
         {
-            holder = new ImmediateComponentHolder(activator, metadata);
+            holder = new ConfigurableComponentHolder(activator, metadata);
         }
 
         return holder;

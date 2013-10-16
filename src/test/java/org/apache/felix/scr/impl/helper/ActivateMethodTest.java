@@ -25,7 +25,7 @@ import java.util.Hashtable;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
+import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.instances.AcceptMethod;
 import org.apache.felix.scr.impl.metadata.instances.BaseObject;
@@ -270,7 +270,7 @@ public class ActivateMethodTest extends TestCase
                 return true;
             }
         };
-        ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata, new ComponentMethods() );
+        SingleComponentManager icm = new SingleComponentManager( null, null, metadata, new ComponentMethods() );
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), true, false );
         am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), null, icm );
         Method m = get(am, "m_method");
@@ -298,7 +298,7 @@ public class ActivateMethodTest extends TestCase
                 return true;
             }
         };
-        ImmediateComponentManager icm = new ImmediateComponentManager( null, null, metadata, new ComponentMethods() );
+        SingleComponentManager icm = new SingleComponentManager( null, null, metadata, new ComponentMethods() );
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), true, false );
         am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), null, icm );
         assertNull( get( am, "m_method" ) );

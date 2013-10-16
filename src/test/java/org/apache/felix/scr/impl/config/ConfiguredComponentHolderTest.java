@@ -29,7 +29,7 @@ import junit.framework.TestCase;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
-import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
+import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.XmlHandler;
 
@@ -45,7 +45,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         final TestingConfiguredComponentHolder holder = new TestingConfiguredComponentHolder( cm );
 
         // assert single component and no map
-        final ImmediateComponentManager cmgr = getSingleManager( holder );
+        final SingleComponentManager cmgr = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgr );
         assertNull( "Expect no component manager list", getComponentManagers( holder ) );
 
@@ -62,7 +62,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         final TestingConfiguredComponentHolder holder = new TestingConfiguredComponentHolder( cm );
 
         // assert single component and no map
-        final ImmediateComponentManager cmgr = getSingleManager( holder );
+        final SingleComponentManager cmgr = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgr );
         assertNull( "Expect no component manager list", getComponentManagers( holder ) );
 
@@ -75,7 +75,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationUpdated( name, config, 0, new TargetedPID(name) );
 
         // assert single component and no map
-        final ImmediateComponentManager cmgrAfterConfig = getSingleManager( holder );
+        final SingleComponentManager cmgrAfterConfig = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgrAfterConfig );
         assertNull( "Expect no component manager list", getComponentManagers( holder ) );
 
@@ -88,7 +88,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationDeleted( name );
 
         // assert single component and no map
-        final ImmediateComponentManager cmgrAfterUnconfig = getSingleManager( holder );
+        final SingleComponentManager cmgrAfterUnconfig = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgrAfterUnconfig );
         assertNull( "Expect no component manager list", getComponentManagers( holder ) );
 
@@ -105,7 +105,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         final TestingConfiguredComponentHolder holder = new TestingConfiguredComponentHolder( cm );
 
         // assert single component and no map
-        final ImmediateComponentManager cmgr = getSingleManager( holder );
+        final SingleComponentManager cmgr = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgr );
         assertNull( "Expect no component manager list", getComponentManagers( holder ) );
 
@@ -119,8 +119,8 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationUpdated( pid1, config1, 0, new TargetedPID(name) );
 
         // assert single component and single-entry map
-        final ImmediateComponentManager cmgrAfterConfig = getSingleManager( holder );
-        final ImmediateComponentManager[] cmgrsAfterConfig = getComponentManagers( holder );
+        final SingleComponentManager cmgrAfterConfig = getSingleManager( holder );
+        final SingleComponentManager[] cmgrsAfterConfig = getComponentManagers( holder );
         assertNotNull( "Expect single component manager", cmgrAfterConfig );
         assertNotNull( "Expect component manager list", cmgrsAfterConfig );
         assertEquals( "Expect one component manager in list", 1, cmgrsAfterConfig.length );
@@ -132,8 +132,8 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationUpdated( pid2, config2, 1, new TargetedPID(name) );
 
         // assert single component and single-entry map
-        final ImmediateComponentManager cmgrAfterConfig2 = getSingleManager( holder );
-        final ImmediateComponentManager[] cmgrsAfterConfig2 = getComponentManagers( holder );
+        final SingleComponentManager cmgrAfterConfig2 = getSingleManager( holder );
+        final SingleComponentManager[] cmgrsAfterConfig2 = getComponentManagers( holder );
         assertNotNull( "Expect single component manager", cmgrAfterConfig2 );
         assertNotNull( "Expect component manager list", cmgrsAfterConfig2 );
         assertEquals( "Expect two component manager in list", 2, cmgrsAfterConfig2.length );
@@ -142,8 +142,8 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationDeleted( pid2 );
 
         // assert single component and single-entry map
-        final ImmediateComponentManager cmgrAfterUnConfig2 = getSingleManager( holder );
-        final ImmediateComponentManager[] cmgrsAfterUnConfig2 = getComponentManagers( holder );
+        final SingleComponentManager cmgrAfterUnConfig2 = getSingleManager( holder );
+        final SingleComponentManager[] cmgrsAfterUnConfig2 = getComponentManagers( holder );
         assertNotNull( "Expect single component manager", cmgrAfterUnConfig2 );
         assertNotNull( "Expect component manager list", cmgrsAfterUnConfig2 );
         assertEquals( "Expect one component manager in list", 1, cmgrsAfterUnConfig2.length );
@@ -153,8 +153,8 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationDeleted( pid1 );
 
         // assert single component and single-entry map
-        final ImmediateComponentManager cmgrAfterConfigUnconfig = getSingleManager( holder );
-        final ImmediateComponentManager[] cmgrsAfterConfigUnconfig = getComponentManagers( holder );
+        final SingleComponentManager cmgrAfterConfigUnconfig = getSingleManager( holder );
+        final SingleComponentManager[] cmgrsAfterConfigUnconfig = getComponentManagers( holder );
         assertNotNull( "Expect single component manager", cmgrAfterConfigUnconfig );
         assertNotNull( "Expect component manager list", cmgrsAfterConfigUnconfig );
         assertEquals( "Expect one component manager in list", 1, cmgrsAfterConfigUnconfig.length );
@@ -163,8 +163,8 @@ public class ConfiguredComponentHolderTest extends TestCase
         holder.configurationDeleted( pid2 );
 
         // assert single component and single-entry map
-        final ImmediateComponentManager cmgrAfterAllUnconfig = getSingleManager( holder );
-        final ImmediateComponentManager[] cmgrsAfterAllUnconfig = getComponentManagers( holder );
+        final SingleComponentManager cmgrAfterAllUnconfig = getSingleManager( holder );
+        final SingleComponentManager[] cmgrsAfterAllUnconfig = getComponentManagers( holder );
         assertNotNull( "Expect single component manager", cmgrAfterAllUnconfig );
         assertNull( "Expect no component manager list", cmgrsAfterAllUnconfig );
 
@@ -180,13 +180,13 @@ public class ConfiguredComponentHolderTest extends TestCase
     }
 
 
-    private static ImmediateComponentManager getSingleManager( ImmediateComponentHolder holder )
+    private static SingleComponentManager getSingleManager( ConfigurableComponentHolder holder )
     {
         try
         {
-            final Field f = ImmediateComponentHolder.class.getDeclaredField( "m_singleComponent" );
+            final Field f = ConfigurableComponentHolder.class.getDeclaredField( "m_singleComponent" );
             f.setAccessible( true );
-            return ( ImmediateComponentManager ) f.get( holder );
+            return ( SingleComponentManager ) f.get( holder );
         }
         catch ( Throwable t )
         {
@@ -196,14 +196,14 @@ public class ConfiguredComponentHolderTest extends TestCase
     }
 
 
-    private static ImmediateComponentManager[] getComponentManagers( ImmediateComponentHolder holder )
+    private static SingleComponentManager[] getComponentManagers( ConfigurableComponentHolder holder )
     {
         try
         {
-            final Method m = ImmediateComponentHolder.class.getDeclaredMethod( "getComponentManagers", new Class[]
+            final Method m = ConfigurableComponentHolder.class.getDeclaredMethod( "getComponentManagers", new Class[]
                 { Boolean.TYPE } );
             m.setAccessible( true );
-            return ( ImmediateComponentManager[] ) m.invoke( holder, new Object[]
+            return ( SingleComponentManager[] ) m.invoke( holder, new Object[]
                 { Boolean.FALSE } );
         }
         catch ( Throwable t )
@@ -213,7 +213,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         }
     }
 
-    private static class TestingConfiguredComponentHolder extends ImmediateComponentHolder
+    private static class TestingConfiguredComponentHolder extends ConfigurableComponentHolder
     {
         TestingConfiguredComponentHolder( ComponentMetadata metadata )
         {
@@ -221,13 +221,13 @@ public class ConfiguredComponentHolderTest extends TestCase
         }
 
 
-        protected ImmediateComponentManager createComponentManager()
+        protected SingleComponentManager createComponentManager()
         {
             return new MockImmediateComponentManager( getActivator(), this, getComponentMetadata() );
         }
     }
 
-    private static class MockImmediateComponentManager extends ImmediateComponentManager
+    private static class MockImmediateComponentManager extends SingleComponentManager
     {
 
         private Dictionary m_configuration;

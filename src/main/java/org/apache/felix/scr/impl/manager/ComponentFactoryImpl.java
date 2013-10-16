@@ -70,7 +70,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      * entry is the same as the entry's key.
      * This is an IdentityHashMap for speed, thus not a Set.
      */
-    private final Map<ImmediateComponentManager<S>, ImmediateComponentManager<S>> m_componentInstances;
+    private final Map<SingleComponentManager<S>, SingleComponentManager<S>> m_componentInstances;
 
     /**
      * The configuration for the component factory. This configuration is
@@ -96,7 +96,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
         super( activator, metadata, new ComponentMethods() );
-        m_componentInstances = new IdentityHashMap<ImmediateComponentManager<S>, ImmediateComponentManager<S>>();
+        m_componentInstances = new IdentityHashMap<SingleComponentManager<S>, SingleComponentManager<S>>();
         m_configuration = new Hashtable<String, Object>();
     }
 
@@ -112,7 +112,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     */
     public ComponentInstance newInstance( Dictionary<String, ?> dictionary )
     {
-        final ImmediateComponentManager<S> cm = createComponentManager();
+        final SingleComponentManager<S> cm = createComponentManager();
         log( LogService.LOG_DEBUG, "Creating new instance from component factory {0} with configuration {1}",
                 new Object[] {getComponentMetadata().getName(), dictionary}, null );
 
@@ -476,7 +476,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public void disposed( ImmediateComponentManager component )
+    public void disposed( SingleComponentManager component )
     {
         synchronized ( m_componentInstances )
         {
@@ -489,18 +489,18 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
 
     /**
-     * Creates an {@link ImmediateComponentManager} instance with the
+     * Creates an {@link SingleComponentManager} instance with the
      * {@link BundleComponentActivator} and {@link ComponentMetadata} of this
      * instance. The component manager is kept in the internal set of created
      * components. The component is neither configured nor enabled.
      */
-    private ImmediateComponentManager<S> createComponentManager()
+    private SingleComponentManager<S> createComponentManager()
     {
         return new ComponentFactoryNewInstance<S>( getActivator(), this, getComponentMetadata(), getComponentMethods() );
     }
 
 
-    protected void getComponentManagers( Map<?, ImmediateComponentManager<S>> componentMap, List<AbstractComponentManager<S>> componentManagers )
+    protected void getComponentManagers( Map<?, SingleComponentManager<S>> componentMap, List<AbstractComponentManager<S>> componentManagers )
     {
         if ( componentMap != null )
         {
@@ -511,7 +511,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         }
     }
 
-    static class ComponentFactoryNewInstance<S> extends ImmediateComponentManager<S> {
+    static class ComponentFactoryNewInstance<S> extends SingleComponentManager<S> {
 
         public ComponentFactoryNewInstance( BundleComponentActivator activator, ComponentHolder componentHolder,
                 ComponentMetadata metadata, ComponentMethods componentMethods )
