@@ -156,15 +156,15 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         volatile ServiceProvider2 m_serviceProvider2;
         volatile ServiceDependency m_d1, m_d2;
 
-        public void init(Component s)
+        public void init(Component c)
         {
-            DependencyManager m = s.getDependencyManager();
-            s.add(m_d1 = m.createServiceDependency()
+            DependencyManager m = c.getDependencyManager();
+            c.add(m_d1 = m.createServiceDependency()
                   .setService(Sequencer.class)
                   .setRequired(true)
                   .setInstanceBound(true)
                   .setAutoConfig("m_sequencer"));
-            s.add(m_d2 = m.createServiceDependency()
+            c.add(m_d2 = m.createServiceDependency()
                   .setService(ServiceProvider2.class)
                   .setRequired(true)
                   .setInstanceBound(true)
@@ -205,15 +205,16 @@ public class MultipleExtraDependencyTest2 extends TestBase {
         volatile Runnable m_runnable;
         volatile ServiceDependency m_d1, m_d2;
 
-        public void init(Component s)
+        public void init(Component c)
         {
-            DependencyManager m = s.getDependencyManager();
-            s.add(m_d1 = m.createServiceDependency()
+            System.out.println("ServiceProvider2.init");
+            DependencyManager m = c.getDependencyManager();
+            c.add(m_d1 = m.createServiceDependency()
                   .setService(Runnable.class, "(foo=bar)")
                   .setRequired(false)
                   .setInstanceBound(true)
                   .setAutoConfig("m_runnable"));
-            s.add(m_d2 = m.createServiceDependency()
+            c.add(m_d2 = m.createServiceDependency()
                   .setService(Sequencer.class)
                   .setRequired(true)
                   .setInstanceBound(true)
@@ -229,6 +230,7 @@ public class MultipleExtraDependencyTest2 extends TestBase {
 
         void start()
         {
+            System.out.println("ServiceProvider2.start: m_runnable=" + m_runnable + ", m_sequencer = " + m_sequencer);
             m_sequencer.step(3);
             m_runnable.run(); // NullObject
         }

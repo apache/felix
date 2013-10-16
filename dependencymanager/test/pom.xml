@@ -146,7 +146,7 @@
 				<configuration>
 					<instructions>
 						<Bundle-Name>Apache Felix Dependency Manager Annotations Tests</Bundle-Name>
-						<Bundle-SymbolicName>org.apache.felix.dependencymanager.test.components</Bundle-SymbolicName>
+						<Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
 						<Export-Package>org.apache.felix.dm.test.components</Export-Package>
 					</instructions>
 				</configuration>
@@ -195,6 +195,10 @@
 									<name>project.bundle.file</name>
 									<value>${bundle.file.name}</value>
 								</property>
+								<property>
+									<name>project.bundle.symbolicName</name>
+									<value>${pom.artifactId}</value>
+								</property>								
 							</systemProperties>
 							<excludes>
 								<exclude>**/components/*</exclude>

@@ -44,7 +44,7 @@ public class CompositeAnnotationsTest extends TestBase {
         ServiceRegistration sr2 = register(e, Dependency1.ENSURE);
         ServiceRegistration sr3 = register(e, Dependency2.ENSURE);
         e.waitForStep(4, 10000);
-        stopTestComponentsBundle();
+        stopTestBundle();
         e.waitForStep(12, 10000);
         sr3.unregister();
         sr2.unregister();
