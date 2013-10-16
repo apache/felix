@@ -79,9 +79,6 @@ public abstract class TestBase implements LogService, FrameworkListener {
     // The default symbolic name for our test bundle
     protected static final String TESTBUNDLE_SN_DEF = "org.apache.felix.dependencymanager.test";
 
-    // The JVM option to set to enable remote debugging
-    protected static final String DEBUG_VM_OPTION = "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005";
-
     // The package exported by our test bundle, which we import from all integration tests.
     private static final String TESTBUNDLE_PACKAGE = "org.apache.felix.dm.test.components";
 
