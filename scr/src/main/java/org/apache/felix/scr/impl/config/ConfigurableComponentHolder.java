@@ -30,8 +30,7 @@ import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
-import org.apache.felix.scr.impl.manager.DelayedComponentManager;
-import org.apache.felix.scr.impl.manager.ImmediateComponentManager;
+import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.service.component.ComponentConstants;
@@ -39,14 +38,9 @@ import org.osgi.service.log.LogService;
 
 
 /**
- * The <code>ConfiguredComponentHolder</code> class is a
- * {@link ComponentHolder} for one or more components instances configured by
- * singleton or factory configuration objects received from the Configuration
- * Admin service.
- * <p>
- * This holder is used only for components configured (optionally or required)
- * by the Configuration Admin service. It is not used for components declared
- * as ignoring configuration or if no Configuration Admin service is available.
+ * The <code>ImmediateComponentHolder</code> class is a
+ * {@link ComponentHolder} for automatically configured components instances 
+ * that may or may not be configured through Config Admin.
  * <p>
  * The holder copes with three situations:
  * <ul>
@@ -59,7 +53,7 @@ import org.osgi.service.log.LogService;
  * <code>service.factoryPid</code> equals the component name.</li>
  * </ul>
  */
-public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogger
+public class ConfigurableComponentHolder<S> implements ComponentHolder, SimpleLogger
 {
 
     /**
@@ -78,7 +72,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
      * The values are the {@link ImmediateComponentManager<S> component instances}
      * created on behalf of the configurations.
      */
-    private final Map<String, ImmediateComponentManager<S>> m_components;
+    private final Map<String, SingleComponentManager<S>> m_components;
 
     /**
      * The special component used if there is no configuration or a singleton
@@ -96,7 +90,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
      * by this field is also contained in the map</li>
      * <ul>
      */
-    private ImmediateComponentManager<S> m_singleComponent;
+    private SingleComponentManager<S> m_singleComponent;
 
     /**
      * Whether components have already been enabled by calling the
@@ -108,44 +102,33 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
     private volatile boolean m_enabled;
     private final ComponentMethods m_componentMethods;    
 
-    public ImmediateComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
+    public ConfigurableComponentHolder( final BundleComponentActivator activator, final ComponentMetadata metadata )
     {
         this.m_activator = activator;
         this.m_componentMetadata = metadata;
-        this.m_components = new HashMap<String, ImmediateComponentManager<S>>();
+        this.m_components = new HashMap<String, SingleComponentManager<S>>();
         this.m_componentMethods = new ComponentMethods();
         this.m_singleComponent = createComponentManager();
         this.m_enabled = false;
     }
 
-    protected ImmediateComponentManager<S> createComponentManager()
+    protected SingleComponentManager<S> createComponentManager()
     {
 
-        ImmediateComponentManager<S> manager;
+        SingleComponentManager<S> manager;
         if ( m_componentMetadata.isFactory() )
         {
             throw new IllegalArgumentException( "Cannot create component factory for " + m_componentMetadata.getName() );
         }
-        else if ( m_componentMetadata.isImmediate() )
+        else if ( m_componentMetadata.getServiceMetadata() != null && m_componentMetadata.getServiceMetadata().isServiceFactory() )
         {
-            manager = new ImmediateComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
+            manager = new ServiceFactoryComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
         }
-        else if ( m_componentMetadata.getServiceMetadata() != null )
-        {
-            if ( m_componentMetadata.getServiceMetadata().isServiceFactory() )
-            {
-                manager = new ServiceFactoryComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
-            }
-            else
-            {
-                manager = new DelayedComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
-            }
-        }
+
         else
         {
-            // if we get here, which is not expected after all, we fail
-            throw new IllegalArgumentException( "Cannot create a component manager for "
-                + m_componentMetadata.getName() );
+            //immediate or delayed
+            manager = new SingleComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
         }
 
         return manager;
@@ -190,7 +173,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
                 new Object[] {pid}, null);
 
         // component to deconfigure or dispose of
-        final ImmediateComponentManager icm;
+        final SingleComponentManager icm;
         boolean deconfigure = false;
 
         synchronized ( m_components )
@@ -275,7 +258,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
                 new Object[] {pid, props}, null);
 
         // component to update or create
-        final ImmediateComponentManager icm;
+        final SingleComponentManager icm;
         final String message;
         final boolean enable;
         Object[] notEnabledArguments = null;
@@ -298,7 +281,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
             }
             else
             {
-                final ImmediateComponentManager existingIcm = m_components.get( pid );
+                final SingleComponentManager existingIcm = m_components.get( pid );
                 if ( existingIcm != null )
                 {
                     // factory configuration updated for existing component instance
@@ -363,7 +346,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
     public synchronized long getChangeCount( String pid)
     {
         
-        ImmediateComponentManager icm =  pid.equals( getComponentMetadata().getConfigurationPid())? 
+        SingleComponentManager icm =  pid.equals( getComponentMetadata().getConfigurationPid())? 
                 m_singleComponent: m_components.get( pid );
         return icm == null? -1: icm.getChangeCount();
     }
@@ -380,17 +363,17 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
 
     public void enableComponents( final boolean async )
     {
-        ImmediateComponentManager[] cms;
+        SingleComponentManager[] cms;
         synchronized ( m_components )
         {
             m_enabled = true;
             cms = getComponentManagers( false );
             if ( cms == null )
             {
-                cms = new ImmediateComponentManager[] { m_singleComponent };
+                cms = new SingleComponentManager[] { m_singleComponent };
             }
         }
-        for ( ImmediateComponentManager cm : cms )
+        for ( SingleComponentManager cm : cms )
         {
             cm.enable( async );
         }
@@ -399,7 +382,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
 
     public void disableComponents( final boolean async )
     {
-        ImmediateComponentManager[] cms;
+        SingleComponentManager[] cms;
         synchronized ( m_components )
         {
             m_enabled = false;
@@ -407,10 +390,10 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
             cms = getComponentManagers( false );
             if ( cms == null )
             {
-                cms = new ImmediateComponentManager[] { m_singleComponent };
+                cms = new SingleComponentManager[] { m_singleComponent };
             }
         }
-        for ( ImmediateComponentManager cm : cms )
+        for ( SingleComponentManager cm : cms )
         {
             cm.disable( async );
         }
@@ -419,28 +402,28 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
 
     public void disposeComponents( final int reason )
     {
-        ImmediateComponentManager[] cms;
+        SingleComponentManager[] cms;
         synchronized ( m_components )
         {
             // FELIX-1733: get a copy of the single component and clear
             // the field to prevent recreation in disposed(ICM)
-            final ImmediateComponentManager singleComponent = m_singleComponent;
+            final SingleComponentManager singleComponent = m_singleComponent;
             m_singleComponent = null;
 
             cms = getComponentManagers( true );
             if ( cms == null )
             {
-                cms = new ImmediateComponentManager[] { singleComponent };
+                cms = new SingleComponentManager[] { singleComponent };
             }
         }
-        for ( ImmediateComponentManager cm : cms )
+        for ( SingleComponentManager cm : cms )
         {
             cm.dispose( reason );
         }
     }
 
 
-    public void disposed( ImmediateComponentManager component )
+    public void disposed( SingleComponentManager component )
     {
         // ensure the component is removed from the components map
         synchronized ( m_components )
@@ -490,12 +473,12 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
      */
    public boolean equals(Object object)
     {
-        if (!(object instanceof ImmediateComponentHolder))
+        if (!(object instanceof ConfigurableComponentHolder))
         {
             return false;
         }
 
-        ImmediateComponentHolder other = (ImmediateComponentHolder) object;
+        ConfigurableComponentHolder other = (ConfigurableComponentHolder) object;
         return m_activator == other.m_activator
                 && getName().equals(other.getName());
     }
@@ -529,7 +512,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
      * from the map. If there are no components in the map, <code>null</code>
      * is returned.
      */
-    private ImmediateComponentManager[] getComponentManagers( final boolean clear )
+    private SingleComponentManager[] getComponentManagers( final boolean clear )
     {
         // fast exit if there is no component in the map
         if ( m_components.isEmpty() )
@@ -537,7 +520,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
             return null;
         }
 
-        final ImmediateComponentManager[] cm = new ImmediateComponentManager[m_components.size()];
+        final SingleComponentManager[] cm = new SingleComponentManager[m_components.size()];
         m_components.values().toArray( cm );
 
         if ( clear )
@@ -572,7 +555,7 @@ public class ImmediateComponentHolder<S> implements ComponentHolder, SimpleLogge
 
     public TargetedPID getConfigurationTargetedPID(TargetedPID pid)
     {
-        ImmediateComponentManager icm = null;
+        SingleComponentManager icm = null;
         synchronized (m_components)
         {
             if ( pid.getServicePid().equals( m_componentMetadata.getConfigurationPid() )) {

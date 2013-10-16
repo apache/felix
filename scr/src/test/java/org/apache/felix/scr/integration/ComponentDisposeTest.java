@@ -149,7 +149,7 @@ public class ComponentDisposeTest extends ComponentTestBase
             final Field m_componentManager = getField( ccImpl, "m_componentManager" );
             final Object acm = m_componentManager.get( ctx );
 
-            final Class<?> cmImpl = getType( acm, "ImmediateComponentManager" );
+            final Class<?> cmImpl = getType( acm, "SingleComponentManager" );
             final Field m_componentHolder = getField( cmImpl, "m_componentHolder" );
             return m_componentHolder.get( acm );
         }
