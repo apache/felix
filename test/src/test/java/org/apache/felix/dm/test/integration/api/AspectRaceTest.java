@@ -86,11 +86,11 @@ public class AspectRaceTest extends TestBase {
 
 				if ((loop) % 100 == 0) {
 					warn("Performed " + loop + " tests.");
-				}
-			}
+				}				
 
-			if (super.errorsLogged()) {
-				Assert.assertFalse("Test failed.", false);
+	            if (super.errorsLogged()) {
+	                throw new IllegalStateException("Race test interrupted (some error occured, see previous logs)");
+	            }
 			}
 		}
 

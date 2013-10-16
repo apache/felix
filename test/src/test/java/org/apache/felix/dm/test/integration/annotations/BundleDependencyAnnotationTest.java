@@ -43,7 +43,7 @@ public class BundleDependencyAnnotationTest extends TestBase {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, BundleDependencyAnnotation.ENSURE_CONSUMER);
         e.waitForStep(1, 10000);
-        stopTestComponentsBundle();
+        stopTestBundle();
         e.waitForStep(2, 10000);
         sr.unregister();
     }

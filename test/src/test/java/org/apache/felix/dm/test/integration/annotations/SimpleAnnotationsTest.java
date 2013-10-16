@@ -49,6 +49,6 @@ public class SimpleAnnotationsTest extends TestBase {
         // And check if components have been deactivated orderly.
         e.waitForStep(10, 10000);
         e.ensure();
-        stopTestComponentsBundle();
+        stopTestBundle();
     }
 }

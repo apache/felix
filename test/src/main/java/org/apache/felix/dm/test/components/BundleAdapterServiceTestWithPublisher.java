@@ -59,8 +59,7 @@ public class BundleAdapterServiceTestWithPublisher {
             if ("org.apache.felix.dependencymanager".equals(properties.get("Bundle-SymbolicName"))) {
                 m_sequencer.step(4);
             } else {
-                Thread.dumpStack();
-                System.out.println(properties);
+                System.out.println("Consumer.bind: properties=" + properties);
             }
         }
 

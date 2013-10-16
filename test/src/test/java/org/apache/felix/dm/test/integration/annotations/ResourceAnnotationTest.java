@@ -44,7 +44,7 @@ public class ResourceAnnotationTest extends TestBase {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, ResourceAnnotation.ENSURE_RESOURCE);
         ServiceRegistration sr2 = register(e, ResourceAnnotation.ENSURE_PROVIDER);
-        stopTestComponentsBundle();
+        stopTestBundle();
         e.waitForStep(1, 10000);
         sr.unregister();
         sr2.unregister();
@@ -58,7 +58,7 @@ public class ResourceAnnotationTest extends TestBase {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, ResourceAnnotation.ENSURE_FIELD);
         ServiceRegistration sr2 = register(e, ResourceAnnotation.ENSURE_PROVIDER);
-        stopTestComponentsBundle();
+        stopTestBundle();
         e.waitForStep(1, 10000);
         sr.unregister();
         sr2.unregister();
@@ -73,7 +73,7 @@ public class ResourceAnnotationTest extends TestBase {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, ResourceAnnotation.ENSURE_ADAPTER);
         ServiceRegistration sr2 = register(e, ResourceAnnotation.ENSURE_PROVIDER);
-        stopTestComponentsBundle();
+        stopTestBundle();
         e.waitForStep(2, 10000);
         e.ensure();
         sr.unregister();

@@ -40,7 +40,7 @@ public class MultipleAnnotationsTest extends TestBase {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, MultipleAnnotations.ENSURE);
         e.waitForStep(7, 10000);
-        stopTestComponentsBundle();
+        stopTestBundle();
         // And check if the test.annotation bundle has been deactivated orderly
         e.waitForStep(11, 10000);
         sr.unregister();
