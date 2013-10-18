@@ -18,6 +18,15 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.regex.Pattern;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
@@ -30,11 +39,59 @@ class SslFilterRequest extends HttpServletRequestWrapper
     // The HTTP scheme prefix in an URL
     private static final String HTTP_SCHEME_PREFIX = "http://";
 
+    // pattern to convert the header to a PEM certificate for parsing
+    // by replacing spaces with line breaks
+    private static Pattern HEADER_TO_CERT = Pattern.compile("(?! CERTIFICATE)(?= ) ");
+
+    // character encoding for the client certificate header
+    private static final String UTF_8 = "UTF-8";
+
+    /**
+     * If there is an SSL certificate associated with the request, it must be
+     * exposed by the servlet container to the servlet programmer as an array of
+     * objects of type java.security.cert.X509Certificate and accessible via a
+     * ServletRequest attribute of javax.servlet.request.X509Certificate.
+     * <p>
+     * The order of this array is defined as being in ascending order of trust.
+     * The first certificate in the chain is the one set by the client, the next
+     * is the one used to authenticate the first, and so on.
+     */
+    private static final String ATTR_SSL_CERTIFICATE = "javax.servlet.request.X509Certificate";
+
     private String requestURL;
 
-    SslFilterRequest(HttpServletRequest request)
+    SslFilterRequest(final HttpServletRequest request, final String clientCertHeader)
     {
         super(request);
+
+        if (clientCertHeader != null && clientCertHeader.length() > 0)
+        {
+
+            final String clientCert = HEADER_TO_CERT.matcher(clientCertHeader).replaceAll("\n");
+
+            try
+            {
+                InputStream instream = new ByteArrayInputStream(clientCert.getBytes(UTF_8));
+                CertificateFactory fac = CertificateFactory.getInstance("X.509");
+                @SuppressWarnings("unchecked")
+                Collection<X509Certificate> certs = (Collection<X509Certificate>) fac.generateCertificates(instream);
+                request.setAttribute(ATTR_SSL_CERTIFICATE, certs.toArray(new X509Certificate[certs.size()]));
+            }
+            catch (CertificateException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            catch (UnsupportedEncodingException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
+    void done() {
+        getRequest().removeAttribute(ATTR_SSL_CERTIFICATE);
     }
 
     public String getScheme()
@@ -63,5 +120,9 @@ class SslFilterRequest extends HttpServletRequestWrapper
         }
 
         return new StringBuffer(this.requestURL);
+    }
+
+    private final void provideCertificate(final HttpServletRequest request) throws UnsupportedEncodingException
+    {
     }
 }

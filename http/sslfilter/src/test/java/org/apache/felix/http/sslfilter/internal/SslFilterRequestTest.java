@@ -34,7 +34,7 @@ public class SslFilterRequestTest
     public void test_isSecure()
     {
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
-        SslFilterRequest sreq = new SslFilterRequest(req);
+        SslFilterRequest sreq = new SslFilterRequest(req, null);
 
         when(req.isSecure()).thenReturn(false);
         TestCase.assertFalse(req.isSecure());
@@ -51,7 +51,7 @@ public class SslFilterRequestTest
     public void test_getScheme()
     {
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
-        SslFilterRequest sreq = new SslFilterRequest(req);
+        SslFilterRequest sreq = new SslFilterRequest(req, null);
 
         when(req.getScheme()).thenReturn("http");
         TestCase.assertEquals("http", req.getScheme());
@@ -68,7 +68,7 @@ public class SslFilterRequestTest
     public void test_getRequestURL()
     {
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
-        SslFilterRequest sreq = new SslFilterRequest(req);
+        SslFilterRequest sreq = new SslFilterRequest(req, null);
 
         when(req.getRequestURL()).thenReturn(new StringBuffer("http://some/page"));
         TestCase.assertEquals("http://some/page", req.getRequestURL().toString());

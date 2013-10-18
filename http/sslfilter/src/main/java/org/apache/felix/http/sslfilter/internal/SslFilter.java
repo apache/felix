@@ -19,7 +19,6 @@
 package org.apache.felix.http.sslfilter.internal;
 
 import java.io.IOException;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -37,6 +36,9 @@ public class SslFilter implements Filter
     // value indicating an SSL endpoint proxy
     private static final String X_FORWARD_SSL_VALUE = "on";
 
+    // request header indicating an SSL client certificate (if available)
+    private static final String X_FORWARD_SSL_CERTIFICATE_HEADER = "X-Forwarded-SSL-Certificate";
+
     public void init(FilterConfig config)
     {
     }
@@ -44,15 +46,25 @@ public class SslFilter implements Filter
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException,
         ServletException
     {
-
         HttpServletRequest httpReq = (HttpServletRequest) req;
-
         if (X_FORWARD_SSL_VALUE.equalsIgnoreCase(httpReq.getHeader(X_FORWARD_SSL_HEADER)))
         {
-            httpReq = new SslFilterRequest(httpReq);
+            httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(X_FORWARD_SSL_CERTIFICATE_HEADER));
         }
 
-        chain.doFilter(httpReq, res);
+        // forward the request making sure any certificate is removed
+        // again after the request processing gets back here
+        try
+        {
+            chain.doFilter(httpReq, res);
+        }
+        finally
+        {
+            if (httpReq instanceof SslFilterRequest)
+            {
+                ((SslFilterRequest) httpReq).done();
+            }
+        }
     }
 
     public void destroy()
