@@ -31,6 +31,7 @@ import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.osgi.framework.Constants;
 import org.osgi.service.log.LogService;
 
 /**
@@ -62,6 +63,21 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
     public ConfigurationComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
         super( activator, metadata );
+    }
+
+
+    @Override
+    public Dictionary<String, Object> getServiceProperties()
+    {
+        Dictionary<String, Object> props = super.getServiceProperties();
+        // also register with the factory PID
+        props.put( Constants.SERVICE_PID, getComponentMetadata().getConfigurationPid() );
+
+        // descriptive service properties
+        props.put( Constants.SERVICE_DESCRIPTION, "Configurable (nonstandard) Factory Component "
+            + getComponentMetadata().getName() );
+        
+        return props;
     }
 
 
