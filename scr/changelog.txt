@@ -2,6 +2,7 @@ Changes from 1.6.2 to 1.8
 ---------------------------
 
 ** Bug
+    * [FELIX-3536] (minor additional work) - Consider putting the non-spec ComponentFactory behavior in a separate class
     * [FELIX-3708] - [DS] use java 5
     * [FELIX-3729] - [DS] Track dependencies by imitating ServiceTracker and keeping a list of actual service references all the time
     * [FELIX-3738] - [DS] ComponentInstance.getServices(String refName) is implemented wrong for 0..1 and 1..1 refs
