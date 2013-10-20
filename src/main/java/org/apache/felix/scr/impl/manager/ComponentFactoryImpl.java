@@ -248,12 +248,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         props.put( ComponentConstants.COMPONENT_NAME, getComponentMetadata().getName() );
         props.put( ComponentConstants.COMPONENT_FACTORY, getComponentMetadata().getFactoryIdentifier() );
 
-        // also register with the factory PID
-        props.put( Constants.SERVICE_PID, getComponentMetadata().getName() );
-
-        // descriptive service properties
-        props.put( Constants.SERVICE_DESCRIPTION, "ManagedServiceFactory for Factory Component"
-            + getComponentMetadata().getName() );
         props.put( Constants.SERVICE_VENDOR, "The Apache Software Foundation" );
 
         return props;
