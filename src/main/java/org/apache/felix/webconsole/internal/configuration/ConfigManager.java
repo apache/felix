@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -213,8 +214,13 @@ public class ConfigManager extends SimpleWebConsolePlugin implements OsgiManager
     protected void doGet( HttpServletRequest request, HttpServletResponse response )
     throws ServletException, IOException
     {
-        // let's check for a JSON request
+        // check for "post" requests from previous versions
+        if ( "true".equals(request.getParameter("post")) ) {
+            this.doPost(request, response);
+            return;
+        }
         final String info = request.getPathInfo();
+        // let's check for a JSON request
         if ( info.endsWith( ".json" ) ) //$NON-NLS-1$
         {
             response.setContentType( "application/json" ); //$NON-NLS-1$
