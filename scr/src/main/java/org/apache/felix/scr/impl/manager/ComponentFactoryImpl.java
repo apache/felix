@@ -129,7 +129,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         if ( instance == null || instance.getInstance() == null )
         {
             // activation failed, clean up component manager
-            cm.disposeInternal( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+            cm.dispose( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
             throw new ComponentException( "Failed activating component" );
         }
 
@@ -313,7 +313,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             if ( ( getState() & STATE_DISPOSED ) == 0 && getComponentMetadata().isConfigurationRequired() )
             {
                 log( LogService.LOG_DEBUG, "Deactivating component factory (required configuration has gone)", null );
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, getTrackingCount().get() );
+                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, false );
             }
         }
         else
@@ -381,7 +381,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
                 {
                     log( LogService.LOG_DEBUG,
                             "Component Factory target filters not satisfied anymore: deactivating", null );
-                    deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, getTrackingCount().get() );
+                    deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
                     return false;
                 }
             }

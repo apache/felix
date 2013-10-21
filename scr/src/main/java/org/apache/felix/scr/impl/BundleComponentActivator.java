@@ -54,25 +54,25 @@ import org.osgi.util.tracker.ServiceTracker;
 public class BundleComponentActivator implements Logger
 {
     // global component registration
-    private ComponentRegistry m_componentRegistry;
+    private final ComponentRegistry m_componentRegistry;
 
     // The bundle context owning the registered component
-    private BundleContext m_context = null;
+    private final BundleContext m_context;
 
     // This is a list of component instance managers that belong to a particular bundle
     private List<ComponentHolder> m_managers = new ArrayList<ComponentHolder>();
 
     // The Configuration Admin tracker providing configuration for components
-    private ServiceTracker m_logService;
+    private final ServiceTracker m_logService;
 
     // thread acting upon configurations
-    private ComponentActorThread m_componentActor;
+    private final ComponentActorThread m_componentActor;
 
     // true as long as the dispose method is not called
     private boolean m_active;
 
     // the configuration
-    private ScrConfiguration m_configuration;
+    private final ScrConfiguration m_configuration;
 
 
     /**
@@ -316,14 +316,15 @@ public class BundleComponentActivator implements Logger
     */
     void dispose( int reason )
     {
-        if ( m_context == null )
+        synchronized ( this )
         {
-            return;
+            if ( !m_active )
+            {
+                return;
+            }
+            // mark instance inactive (no more component activations)
+            m_active = false;
         }
-
-        // mark instance inactive (no more component activations)
-        m_active = false;
-
         log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] will destroy {1} instances", new Object[]
             { m_context.getBundle().getBundleId(), m_managers.size() }, null, null, null );
 
@@ -351,14 +352,8 @@ public class BundleComponentActivator implements Logger
         log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] STOPPED", new Object[]
             {m_context.getBundle().getBundleId()}, null, null, null );
 
-        if (m_logService != null) {
-            m_logService.close();
-            m_logService = null;
-        }
+        m_logService.close();
 
-        m_componentActor = null;
-        m_componentRegistry = null;
-        m_context = null;
     }
 
 
