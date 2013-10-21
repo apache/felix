@@ -34,12 +34,12 @@ var editorMessage = false;
 function configure(pid, create) {
 	var uri = pluginRoot + '/' + pid;
 	// we have to add a cache killer for IE8
-	var postUri = uri + '?';
+	var postUri = uri + '?post=true&';
 	if ( create ) {
 		postUri += param.create + '=1&';
 	}
 	postUri = postUri + 'ts='+new Date().getMilliseconds();
-	$.post(postUri, null, displayConfigForm, 'json');
+	$.get(postUri, null, displayConfigForm, 'json');
 }
 
 function displayConfigForm(obj) {
