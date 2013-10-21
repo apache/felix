@@ -513,7 +513,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             enableLatch = enableLatchWait();
             if ( !async )
             {
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, m_trackingCount.get() );
+                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, false );
             }
             disableInternal();
         }
@@ -538,7 +538,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
                 {
                     try
                     {
-                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, m_trackingCount.get() );
+                        deactivateInternal( ComponentConstants.DEACTIVATION_REASON_DISABLED, true, false );
                     }
                     finally
                     {
@@ -572,8 +572,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     public void dispose( int reason )
     {
-        m_disposed = true;
-        disposeInternal( reason );
+        deactivateInternal( reason, true, true );
     }
     
     <T> void registerMissingDependency( DependencyManager<S, T> dm, ServiceReference<T> ref, int trackingCount)
@@ -834,16 +833,22 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
     }
 
-    final void deactivateInternal( int reason, boolean disable, int trackingCount )
+    /**
+     * Handles deactivating, disabling, and disposing a component manager. Deactivating a factory instance
+     * always disables and disposes it.  Deactivating a factory disposes it.
+     * @param reason reason for action
+     * @param disable whether to also disable the manager
+     * @param dispose whether to also dispose of the manager
+     */
+    final void deactivateInternal( int reason, boolean disable, boolean dispose )
     {
-        if ( m_disposed )
+        synchronized ( this )
         {
-            return;
-        }
-        if ( m_factoryInstance )
-        {
-            disposeInternal( reason );
-            return;
+            if ( m_disposed )
+            {
+                return;
+            }
+            m_disposed = dispose;
         }
         log( LogService.LOG_DEBUG, "Deactivating component", null );
 
@@ -852,45 +857,20 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         obtainActivationReadLock( "deactivateInternal" );
         try
         {
-            doDeactivate( reason, disable );
+            doDeactivate( reason, disable || m_factoryInstance );
         }
         finally 
         {
             releaseActivationReadLock( "deactivateInternal" );
         }
-        if ( isFactory() )
+        if ( isFactory() || m_factoryInstance || dispose )
         {
+            log( LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null );
             clear();
         }
     }
 
-    final void disableInternal()
-    {
-        m_internalEnabled = false;
-        if ( m_disposed )
-        {
-            throw new IllegalStateException( "Cannot disable a disposed component " + getName() );
-        }
-        unregisterComponentId();
-    }
-
-    /**
-     * Disposes off this component deactivating and disabling it first as
-     * required. After disposing off the component, it may not be used anymore.
-     * <p>
-     * This method unlike the other state change methods immediately takes
-     * action and disposes the component. The reason for this is, that this
-     * method has to actually complete before other actions like bundle stopping
-     * may continue.
-     */
-    final void disposeInternal( int reason )
-    {
-        log( LogService.LOG_DEBUG, "Disposing component (reason: " + reason + ")", null );
-        doDeactivate( reason, true );
-        clear();
-    }
-         
-    final void doDeactivate( int reason, boolean disable )
+    private void doDeactivate( int reason, boolean disable )
     {
         try
         {
@@ -922,6 +902,16 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         {
             log( LogService.LOG_WARNING, "Component deactivation threw an exception", t );
         }
+    }
+
+    final void disableInternal()
+    {
+        m_internalEnabled = false;
+        if ( m_disposed )
+        {
+            throw new IllegalStateException( "Cannot disable a disposed component " + getName() );
+        }
+        unregisterComponentId();
     }
 
     final ServiceReference<S> getServiceReference()

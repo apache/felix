@@ -587,7 +587,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             if ( configuration == null && getComponentMetadata().isConfigurationRequired() )
             {
                 //deactivate and remove service listeners
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, getTrackingCount().get() );
+                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, false );
                 //do not reset targets as that will reinstall the service listeners which may activate the component.
                 //when a configuration arrives the properties will get set based on the new configuration.
                 return;
@@ -619,7 +619,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     //     called through ConfigurationListener API which itself is
                     //     called asynchronously by the Configuration Admin Service
                     releaseActivationWriteeLock( "reconfigure.modified.1" );;
-                    deactivateInternal( reason, false, getTrackingCount().get() );
+                    deactivateInternal( reason, false, false );
                     obtainActivationWriteLock( "reconfigure.deactivate.activate" );
                     try
                     {
