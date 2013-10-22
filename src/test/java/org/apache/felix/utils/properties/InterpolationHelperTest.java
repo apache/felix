@@ -31,21 +31,30 @@ public class InterpolationHelperTest extends TestCase {
 
     public void testBasicSubstitution()
     {
+        System.clearProperty("value2");
         System.setProperty("value1", "sub_value1");
-        Hashtable props = new Hashtable();
-        props.put("key0", "value0");
-        props.put("key1", "${value1}");
-        props.put("key2", "${value2}");
-
-        for (Enumeration e = props.keys(); e.hasMoreElements();)
+        try
         {
-            String name = (String) e.nextElement();
-            props.put(name, InterpolationHelper.substVars((String) props.get(name), name, null, props, context));
-        }
+            Hashtable props = new Hashtable();
+            props.put("key0", "value0");
+            props.put("key1", "${value1}");
+            props.put("key2", "${value2}");
 
-        assertEquals("value0", props.get("key0"));
-        assertEquals("sub_value1", props.get("key1"));
-        assertEquals("", props.get("key2"));
+            for (Enumeration e = props.keys(); e.hasMoreElements();)
+            {
+                String name = (String) e.nextElement();
+                props.put(name, InterpolationHelper.substVars((String) props.get(name), name, null, props, context));
+            }
+
+            assertEquals("value0", props.get("key0"));
+            assertEquals("sub_value1", props.get("key1"));
+            assertEquals("", props.get("key2"));
+        }
+        finally
+        {
+            System.clearProperty("value1");
+            System.clearProperty("value2");
+        }
 
     }
 
@@ -53,26 +62,34 @@ public class InterpolationHelperTest extends TestCase {
     {
         System.setProperty("value1", "sub_value1");
         System.setProperty("value2", "sub_value2");
-        context.setProperty("value3", "context_value1");
-        context.setProperty("value2", "context_value2");
-
-        Hashtable props = new Hashtable();
-        props.put("key0", "value0");
-        props.put("key1", "${value1}");
-        props.put("key2", "${value2}");
-        props.put("key3", "${value3}");
-
-        for (Enumeration e = props.keys(); e.hasMoreElements();)
+        try
         {
-            String name = (String) e.nextElement();
-            props.put(name,
-                    InterpolationHelper.substVars((String) props.get(name), name, null, props, context));
-        }
+            context.setProperty("value3", "context_value1");
+            context.setProperty("value2", "context_value2");
 
-        assertEquals("value0", props.get("key0"));
-        assertEquals("sub_value1", props.get("key1"));
-        assertEquals("context_value2", props.get("key2"));
-        assertEquals("context_value1", props.get("key3"));
+            Hashtable props = new Hashtable();
+            props.put("key0", "value0");
+            props.put("key1", "${value1}");
+            props.put("key2", "${value2}");
+            props.put("key3", "${value3}");
+
+            for (Enumeration e = props.keys(); e.hasMoreElements();)
+            {
+                String name = (String) e.nextElement();
+                props.put(name,
+                        InterpolationHelper.substVars((String) props.get(name), name, null, props, context));
+            }
+
+            assertEquals("value0", props.get("key0"));
+            assertEquals("sub_value1", props.get("key1"));
+            assertEquals("context_value2", props.get("key2"));
+            assertEquals("context_value1", props.get("key3"));
+        }
+        finally
+        {
+            System.clearProperty("value1");
+            System.clearProperty("value2");
+        }
 
     }
 
