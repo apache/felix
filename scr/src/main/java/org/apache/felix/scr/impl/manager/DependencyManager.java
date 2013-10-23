@@ -1402,23 +1402,6 @@ public class DependencyManager<S, T> implements Reference
      */
     boolean open( S componentInstance, EdgeInfo edgeInfo )
     {
-        // If no references were received, we have to check if the dependency
-        // is optional, if it is not then the dependency is invalid
-        if ( !isSatisfied() )
-        {
-            m_componentManager.log( LogService.LOG_DEBUG,
-                "For dependency {0}, no longer satisfied, bind fails",
-                new Object[]{ getName() }, null );
-            return false;
-        }
-
-        // if no bind method is configured or if this is a delayed component,
-        // we have nothing to do and just signal success
-        if ( componentInstance == null || m_dependencyMetadata.getBind() == null )
-        {
-            return true;
-        }
-
         // assume success to begin with: if the dependency is optional,
         // we don't care, whether we can bind a service. Otherwise, we
         // require at least one service to be bound, thus we require
