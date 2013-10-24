@@ -354,10 +354,20 @@ public class AD extends OptionalAttributes
 
         int length = listString.length();
         boolean escaped = false;
-
+        int spaceCount = 0;
+        boolean start = true;
         for (int i = 0; i < length; i++)
         {
             char ch = listString.charAt(i);
+            final boolean isWhitespace = Character.isWhitespace(ch);
+            if ( start )
+            {
+                if ( isWhitespace )
+                {
+                    continue;
+                }
+                start = false;
+            }
             if (ch == '\\')
             {
                 if (!escaped)
@@ -373,23 +383,33 @@ public class AD extends OptionalAttributes
                     // unescaped comma, this is a string delimiter...
                     strings.add(sb.toString());
                     sb.setLength(0);
+                    start = true;
+                    spaceCount = 0;
                     continue;
                 }
-            }
-            else if (ch == ' ')
+            } else if ( ch == ' ')
             {
-                // we should ignore spaces normally, unless they are escaped...
-                if (!escaped)
+                // space is only ignored at beginning and end but not if escaped
+                if (!escaped )
                 {
+                    spaceCount++;
                     continue;
                 }
             }
-            else if (Character.isWhitespace(ch))
+            else if (isWhitespace )
             {
                 // Other whitespaces are ignored...
                 continue;
             }
 
+            if ( spaceCount > 0)
+            {
+                for(int m = 0; m<spaceCount; m++)
+                {
+                    sb.append(" ");
+                }
+                spaceCount = 0;
+            }
             sb.append(ch);
             escaped = false;
         }

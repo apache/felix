@@ -120,6 +120,18 @@ public class ADTest extends TestCase
         assertEquals(value1, list[1]);
     }
 
+    public void testSpaces()
+    {
+        String value = "Hello World";
+        String listString = BLANK + value + BLANK + "," + BLANK + value + BLANK + "," +value;
+        String[] list = AD.splitList(listString);
+        assertNotNull(list);
+        assertEquals(3, list.length);
+        assertEquals(value, list[0]);
+        assertEquals(value, list[1]);
+        assertEquals(value, list[2]);
+    }
+
     public void testStandardSample()
     {
         String value0 = "a,b";
