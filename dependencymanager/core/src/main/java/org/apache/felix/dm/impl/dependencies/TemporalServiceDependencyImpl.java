@@ -40,6 +40,9 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
     // Framework bundle (we use it to detect if the framework is stopping)
     private final Bundle m_frameworkBundle;
 
+    // The service proxy, which blocks when service is not available.
+    private Object m_serviceInstance;
+
     /**
      * Creates a new Temporal Service Dependency.
      * 
@@ -78,6 +81,7 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
      * @return this service dependency
      * @throws IllegalArgumentException if the "required" parameter is not true.
      */
+    //@Override
     public ServiceDependency setRequired(boolean required) {
         if (! required) {
             throw new IllegalArgumentException("A Temporal Service dependency can't be optional");
@@ -89,6 +93,7 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
     /**
      * The ServiceTracker calls us here in order to inform about a service arrival.
      */
+    //@Override
     public synchronized void addedService(ServiceReference ref, Object service) {
         // Update our service cache, using the tracker. We do this because the
         // just added service might not be the service with the highest rank ...
@@ -112,6 +117,7 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
     /**
      * The ServiceTracker calls us here when a tracked service properties are modified.
      */
+    //@Override
     public void modifiedService(ServiceReference ref, Object service) {
         // We don't care.
     }
@@ -119,6 +125,7 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
     /**
      * The ServiceTracker calls us here when a tracked service is lost.
      */
+    //@Override
     public synchronized void removedService(ServiceReference ref, Object service) {
         // If we detect that the fwk is stopping, we behave as our superclass. That is:
         // the lost dependency has to trigger our service deactivation, since the fwk is stopping
@@ -144,10 +151,12 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
     /**
      * @returns our dependency instance. Unlike in ServiceDependency, we always returns our proxy.
      */
-    public synchronized Object getService() {
+    //@Override
+    protected synchronized Object getService() {
         return m_serviceInstance;
     }
 
+    //@Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Object service = m_cachedService;
         if (service == null) {
