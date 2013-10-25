@@ -28,7 +28,7 @@ import org.apache.felix.dm.impl.Logger;
  */
 public abstract class DependencyBase implements Dependency, DependencyActivation {
     private boolean m_isRequired;
-    private boolean m_isInstanceBound;
+    private volatile boolean m_isInstanceBound;
     protected final Logger m_logger;
     protected volatile boolean m_isStarted;
 
