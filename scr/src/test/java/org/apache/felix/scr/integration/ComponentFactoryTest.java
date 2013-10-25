@@ -39,6 +39,7 @@ import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.ComponentInstance;
+import org.osgi.service.log.LogService;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -568,6 +569,60 @@ public class ComponentFactoryTest extends ComponentTestBase
 
         //make sure it's unsatisfied (service is no longer available)
         TestCase.assertEquals( Component.STATE_UNSATISFIED, referringComponent.getState() );
+    }
+
+    @Test
+    public void test_component_factory_with_target_filters() throws InvalidSyntaxException
+    {
+        final String componentfactory = "factory.component.reference.targetfilter";
+        final Component component = findComponentByName( componentfactory );
+
+        TestCase.assertNotNull( component );
+        TestCase.assertFalse( component.isDefaultEnabled() );
+
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+
+        component.enable();
+        delay();
+
+        SimpleServiceImpl s1 = SimpleServiceImpl.create(bundleContext, "service1");
+        SimpleServiceImpl s2 = SimpleServiceImpl.create(bundleContext, "service2");
+
+        // supply configuration now and ensure active
+        configure( componentfactory );
+        delay();        
+
+        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+        
+        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
+        TestCase.assertNotNull( refs );
+        TestCase.assertEquals( 1, refs.length );
+        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
+        TestCase.assertNotNull( factory );
+
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
+        props.put("ref.target", "(value=service2)");
+        final ComponentInstance instance = factory.newInstance( props );
+        TestCase.assertNotNull( instance );
+
+        TestCase.assertNotNull( instance.getInstance() );
+        TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
+        TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
+
+        log.log(LogService.LOG_WARNING, "Bound Services: " +  SimpleComponent.INSTANCE.m_multiRef);
+        TestCase.assertFalse( SimpleComponent.INSTANCE.m_multiRef.contains( s1 ) );
+        TestCase.assertTrue( SimpleComponent.INSTANCE.m_multiRef.contains( s2 ) );
+
+        instance.dispose();
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+        TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
+        
+        s2.drop();
+        s1.drop();
     }
 
 }
