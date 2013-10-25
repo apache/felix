@@ -374,7 +374,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
                 log( LogService.LOG_INFO, "Verifying if Active Component Factory is still satisfied", null );
 
                 // First update target filters.
-                super.updateTargets( getProperties() );
+                updateTargets( getProperties() );
 
                 // Next, verify dependencies
                 if ( !verifyDependencyManagers() )
@@ -392,6 +392,8 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             {
                 // try to activate our component factory, if all dependnecies are satisfied
                 log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
+                // First update target filters.
+                updateTargets( getProperties() );
                 activateInternal( getTrackingCount().get() );
             }
         }

@@ -78,4 +78,20 @@
         />
     </scr:component>
 
+    <!-- Component Factory Instance, requiring configuration + 1 specific Reference -->
+    <scr:component name="factory.component.reference.targetfilter"
+        enabled="false"
+        configuration-policy="require"
+        factory="factory.component.reference.targetfilter" >
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent" />
+        <reference
+            name="ref"
+            interface="org.apache.felix.scr.integration.components.SimpleService"
+            cardinality="1..1"
+            policy="dynamic"
+            bind="bindSimpleService"
+            unbind="unbindSimpleService"
+        />
+    </scr:component>
+
 </components>
