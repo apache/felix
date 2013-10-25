@@ -98,9 +98,6 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
         // wait until the changed callback is invoked
         e.waitForStep(2, 5000);
         
-        System.out.println("Sleeping");
-        e.waitForStep(3, 5000);
-        e.waitForStep(4, 5000);
         System.out.println("Done!");
      }
     
@@ -250,7 +247,6 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
     static class ComponentStateListenerImpl implements ComponentStateListener {
     	
     	private final Ensure m_ensure;
-    	int startcount = 0;
     	
     	public ComponentStateListenerImpl(Ensure e) {
     		this.m_ensure = e;
@@ -262,10 +258,6 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
 
 		public void starting(Component c) {
 			System.out.println("starting");
-			if (startcount == 1) {
-				m_ensure.step(4);
-			}
-			startcount++;
 		}
 
 		public void stopped(Component c) {
@@ -274,7 +266,6 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
 
 		public void stopping(Component c) {
 			System.out.println("stopping");
-			m_ensure.step(3);
 		}
     }
 }
