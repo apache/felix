@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -65,24 +66,24 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     private String m_callbackStart;
     private String m_callbackStop;
     private String m_callbackDestroy;
-    private Object m_serviceName;
-    private Object m_implementation;
-    private Object m_callbackInstance;
+    private volatile Object m_serviceName;
+    private volatile Object m_implementation;
+    private volatile Object m_callbackInstance;
 
     // configuration (dynamic, but does not affect state)
-    private Dictionary m_serviceProperties;
+    private volatile Dictionary m_serviceProperties;
 
     // configuration (dynamic, and affects state)
-    private ArrayList m_dependencies = new ArrayList();
+    private final ArrayList m_dependencies = new ArrayList();
 
     // runtime state (calculated from dependencies)
     private State m_state;
 
     // runtime state (changes because of state changes)
-    private Object m_serviceInstance;
+    private volatile Object m_serviceInstance;
     private volatile ServiceRegistration m_registration;
-    private boolean m_isBound;
-    private boolean m_isInstantiated;
+    private volatile boolean m_isBound;
+    private volatile boolean m_isInstantiated;
 
     // service state listeners
     private final List m_stateListeners = new ArrayList();
@@ -91,19 +92,19 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     private final SerialExecutor m_executor = new SerialExecutor();
 
     // instance factory
-	private Object m_instanceFactory;
-	private String m_instanceFactoryCreateMethod;
+	private volatile Object m_instanceFactory;
+	private volatile String m_instanceFactoryCreateMethod;
 
 	// composition manager
-	private Object m_compositionManager;
-	private String m_compositionManagerGetMethod;
-	private Object m_compositionManagerInstance;
+	private volatile Object m_compositionManager;
+	private volatile String m_compositionManagerGetMethod;
+	private volatile Object m_compositionManagerInstance;
 	
 	// internal logging
     private final Logger m_logger;
     
-    private Map m_autoConfig = new HashMap();
-    private Map m_autoConfigInstance = new HashMap();
+    private final Map m_autoConfig = new HashMap();
+    private final Map m_autoConfigInstance = new HashMap();
     
     private boolean m_isStarted = false;
 
