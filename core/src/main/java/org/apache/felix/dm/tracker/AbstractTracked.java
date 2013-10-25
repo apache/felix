@@ -17,9 +17,9 @@ package org.apache.felix.dm.tracker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Abstract class to track items. If a Tracker is reused (closed then reopened),
@@ -38,11 +38,12 @@ abstract class AbstractTracked {
 	private static final boolean		DEBUG	= false;
 
 	/**
-	 * Map of tracked items to customized objects.
+	 * Ordered Map of tracked items to customized objects. An ordered map is used to
+	 * provide a predictable order in the getTracked() method.
 	 * 
 	 * @GuardedBy this
 	 */
-	private Map			tracked;
+	private LinkedHashMap			tracked;
 
 	/**
 	 * Modification count. This field is initialized to zero and incremented by
@@ -99,14 +100,14 @@ abstract class AbstractTracked {
 	 * AbstractTracked constructor.
 	 */
 	AbstractTracked() {
-	    this.tracked = new HashMap();
+	    this.tracked = new LinkedHashMap();
 	    trackingCount = 0;
 	    adding = new ArrayList(6);
 	    initial = new LinkedList();
 	    closed = false;
 	}
 	
-	void setTracked(HashMap map) {
+	void setTracked(LinkedHashMap map) {
 	    this.tracked = map;
 	}
 

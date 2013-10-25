@@ -20,6 +20,7 @@ import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -1356,7 +1357,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			customizer.removedService((ServiceReference) item, object);
 		}
 		
-		class HashMapCache extends HashMap {
+		class HashMapCache extends LinkedHashMap {
 		    public Object put(Object key, Object value) {
 		        addHighestTrackedCache((ServiceReference) key);
 		        return super.put(key, value);
