@@ -61,7 +61,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @param manager the dependency manager
      * @throws Exception if the destruction fails
      */
-    public abstract void destroy(BundleContext context, DependencyManager manager) throws Exception;
+    public void destroy(BundleContext context, DependencyManager manager) throws Exception { }
 
     /**
      * Start method of the bundle activator. Initializes the dependency manager
