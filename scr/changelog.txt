@@ -44,6 +44,7 @@ Changes from 1.6.2 to 1.8
     * [FELIX-4224] - [DS] Dependency manager can be active but not have m_bindMethods set
     * [FELIX-4287] - [DS] NPE when calling ComponentInstance.dispose after bundle shut down
     * [FELIX-4290] - [DS] Issue with factory components with required configuration
+    * [FELIX-4293] - [DS] logic error in handling configuration LOCATION_CHANGED event
 
 ** Task
     * [FELIX-3584] - [DS] Handle new LOCATION_CHANGED event
