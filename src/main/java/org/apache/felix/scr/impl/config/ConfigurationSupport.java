@@ -315,6 +315,11 @@ public class ConfigurationSupport implements ConfigurationListener
                         //this sets the location to this component's bundle if not already set.  OK here
                         //since it used to be set to this bundle, ok to reset it
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, componentHolder, bundleContext );
+                        if (configInfo.getProps() == null)
+                        {
+                            throw new IllegalStateException("Existing Configuration with pid " + pid + 
+                                    " has had its properties set to null and location changed.  We expected a delete event first.");
+                        }
                         //this config was used on this component.  Does it still match?
                         if (!checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ))
                         {
@@ -333,6 +338,11 @@ public class ConfigurationSupport implements ConfigurationListener
                         //this sets the location to this component's bundle if not already set.  OK here
                         //because if it is set to this bundle we will use it.
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, componentHolder, bundleContext );
+                        if (configInfo.getProps() == null)
+                        {
+                            //location has been changed before any properties are set.  We don't care.  Wait for an updated event with the properties
+                            break;
+                        }
                         //this component was not configured with this config.  Should it be now?
                         if ( checkBundleLocation( configInfo.getBundleLocation(), bundleContext.getBundle() ) )
                         {
