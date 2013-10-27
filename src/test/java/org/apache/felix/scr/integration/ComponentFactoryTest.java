@@ -35,6 +35,7 @@ import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.component.ComponentFactory;
@@ -54,7 +55,6 @@ public class ComponentFactoryTest extends ComponentTestBase
         // uncomment to enable debugging of this test class
 //        paxRunnerVmOption = DEBUG_VM_OPTION;
     }
-
 
     @Test
     public void test_component_factory() throws InvalidSyntaxException
@@ -622,6 +622,49 @@ public class ComponentFactoryTest extends ComponentTestBase
         TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
         
         s2.drop();
+        s1.drop();
+    }
+    
+    @Test
+    public void test_component_factory_set_bundle_location_null() throws Exception
+    {
+        final String componentfactory = "factory.component.reference.targetfilter";
+        final Component component = findComponentByName( componentfactory );
+
+        TestCase.assertNotNull( component );
+        TestCase.assertFalse( component.isDefaultEnabled() );
+
+        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+
+        component.enable();
+        delay();
+
+        SimpleServiceImpl s1 = SimpleServiceImpl.create(bundleContext, "service1");
+
+        ConfigurationAdmin ca = getConfigurationAdmin();
+        org.osgi.service.cm.Configuration config = ca.getConfiguration( componentfactory, null );
+        config.setBundleLocation( null );
+        delay();
+        if ( isAtLeastR5() )
+        {
+            //check that ConfigurationSupport got a Location changed event and set the bundle location
+            TestCase.assertNotNull( config.getBundleLocation() );
+        } 
+        // supply configuration now and ensure active
+        configure( componentfactory );
+        delay();        
+
+        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        TestCase.assertNull( SimpleComponent.INSTANCE );
+        
+        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
+        TestCase.assertNotNull( refs );
+        TestCase.assertEquals( 1, refs.length );
+        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
+        TestCase.assertNotNull( factory );
+        
         s1.drop();
     }
 
