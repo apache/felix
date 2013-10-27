@@ -39,6 +39,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -581,6 +582,23 @@ public abstract class ComponentTestBase
                     out.println();
                 }
             }
+        }
+    }
+    
+    protected boolean isAtLeastR5() 
+    {
+        try
+        {
+            Method m = org.osgi.service.cm.Configuration.class.getDeclaredMethod( "getChangeCount");
+            return true;
+        }
+        catch ( SecurityException e )
+        {
+            throw new RuntimeException(e);
+        }
+        catch ( NoSuchMethodException e )
+        {
+            return false;
         }
     }
 
