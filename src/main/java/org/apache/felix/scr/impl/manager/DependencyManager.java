@@ -1409,12 +1409,12 @@ public class DependencyManager<S, T> implements Reference
         boolean success = m_dependencyMetadata.isOptional();
         AtomicInteger trackingCount =  new AtomicInteger( );
         Collection<RefPair<T>> refs;
-        CountDownLatch openLatch = new CountDownLatch(1);
+        CountDownLatch openLatch;
         synchronized ( m_tracker.tracked() )
         {
             refs = m_customizer.getRefs( trackingCount );
             edgeInfo.setOpen( trackingCount.get() );
-            edgeInfo.setOpenLatch( openLatch );
+            openLatch = edgeInfo.getOpenLatch( );
         }
         m_componentManager.log( LogService.LOG_DEBUG,
             "For dependency {0}, optional: {1}; to bind: {2}",
@@ -1423,7 +1423,7 @@ public class DependencyManager<S, T> implements Reference
         {
             if ( !refPair.isFailed() )
             {
-                if ( !invokeBindMethod( componentInstance, refPair, trackingCount.get(), edgeInfo ) )
+                if ( !doInvokeBindMethod( componentInstance, refPair ) )
                 {
                     m_componentManager.log( LogService.LOG_DEBUG,
                             "For dependency {0}, failed to invoke bind method on object {1}",
@@ -1451,12 +1451,12 @@ public class DependencyManager<S, T> implements Reference
 
         AtomicInteger trackingCount = new AtomicInteger();
         Collection<RefPair<T>> refPairs;
-        CountDownLatch latch = new CountDownLatch( 1 );
+        CountDownLatch latch;
         synchronized ( m_tracker.tracked() )
         {
             refPairs = m_customizer.getRefs( trackingCount );
             edgeInfo.setClose( trackingCount.get() );
-            edgeInfo.setCloseLatch( latch );
+            latch = edgeInfo.getCloseLatch( );
         }
 
         m_componentManager.log( LogService.LOG_DEBUG,
@@ -1534,6 +1534,7 @@ public class DependencyManager<S, T> implements Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
+            info.waitForOpen( m_componentManager, getName(), "invokeBindMethod" );
             synchronized ( m_tracker.tracked() )
             {
                 if (info.outOfRange( trackingCount ) )
@@ -1542,20 +1543,8 @@ public class DependencyManager<S, T> implements Reference
                     return true;
                 }
             }
-            MethodResult result = m_bindMethods.getBind().invoke( componentInstance, refPair, MethodResult.VOID, m_componentManager );
-            if ( result == null )
-            {
-                return false;
-            }
-            m_componentManager.setServiceProperties( result );
-            return true;
+            return doInvokeBindMethod( componentInstance, refPair );
 
-            // Concurrency Issue: The component instance still exists but
-            // but the defined bind method field is null, fail binding
-//            m_componentManager.log( LogService.LOG_INFO,
-//                    "DependencyManager : Component instance present, but DependencyManager shut down (no bind method)",
-//                    null );
-//            return false;
         }
         else
         {
@@ -1565,6 +1554,17 @@ public class DependencyManager<S, T> implements Reference
 
             return true;
         }
+    }
+
+    private boolean doInvokeBindMethod(S componentInstance, RefPair refPair)
+    {
+        MethodResult result = m_bindMethods.getBind().invoke( componentInstance, refPair, MethodResult.VOID, m_componentManager );
+        if ( result == null )
+        {
+            return false;
+        }
+        m_componentManager.setServiceProperties( result );
+        return true;
     }
 
 
@@ -1585,6 +1585,7 @@ public class DependencyManager<S, T> implements Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
+            info.waitForOpen( m_componentManager, getName(), "invokeUpdatedMethod" );
             synchronized ( m_tracker.tracked() )
             {
                 if (info.outOfRange( trackingCount ) )
@@ -1592,34 +1593,6 @@ public class DependencyManager<S, T> implements Reference
                     //ignore events after close started or we will have duplicate unbinds.
                     return;
                 }
-            }
-            try
-            {
-                if (!info.getOpenLatch().await( getLockTimeout(), TimeUnit.MILLISECONDS ))
-                {
-                    m_componentManager.log( LogService.LOG_ERROR,
-                            "DependencyManager : invokeUpdatedMethod : timeout on open latch {0}",  new Object[] {getName()}, null );
-                    m_componentManager.dumpThreads();
-                }
-            }
-            catch ( InterruptedException e )
-            {
-                try
-                {
-                    if (!info.getOpenLatch().await( getLockTimeout(), TimeUnit.MILLISECONDS ))
-                    {
-                        m_componentManager.log( LogService.LOG_ERROR,
-                                "DependencyManager : invokeUpdatedMethod : timeout on open latch {0}",  new Object[] {getName()}, null );
-                        m_componentManager.dumpThreads();
-                    }
-                }
-                catch ( InterruptedException e1 )
-                {
-                    m_componentManager.log( LogService.LOG_ERROR,
-                            "DependencyManager : invokeUpdatedMethod : Interrupted twice on open latch {0}",  new Object[] {getName()}, null );
-                    Thread.currentThread().interrupt();
-                }
-                Thread.currentThread().interrupt();
             }
             if ( !getServiceObject( m_bindMethods.getUpdated(), refPair ))
             {
@@ -1664,61 +1637,22 @@ public class DependencyManager<S, T> implements Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
+            info.waitForOpen( m_componentManager, getName(), "invokeUnbindMethod" );
             boolean outOfRange;
             synchronized ( m_tracker.tracked() )
             {
-                outOfRange = info.outOfRange( trackingCount );
+                if (info.beforeRange( trackingCount ))
+                {
+                    return;
+                }
+                outOfRange = info.afterRange( trackingCount );
             }
             if ( outOfRange )
             {
                 //wait for unbinds to complete
-                if (info.getCloseLatch() != null)
-                {
-                    try
-                    {
-                        if (!info.getCloseLatch().await( getLockTimeout(), TimeUnit.MILLISECONDS ) )
-                        {
-                            m_componentManager.log( LogService.LOG_ERROR,
-                                    "DependencyManager : invokeUnbindMethod : timeout on close latch {0}",  new Object[] {getName()}, null );
-                            m_componentManager.dumpThreads();
-                        }
-                    }
-                    catch ( InterruptedException e )
-                    {
-                        try
-                        {
-                            if (!info.getCloseLatch().await( getLockTimeout(), TimeUnit.MILLISECONDS ) )
-                            {
-                                m_componentManager.log( LogService.LOG_ERROR,
-                                        "DependencyManager : invokeUnbindMethod : timeout on close latch {0}",  new Object[] {getName()}, null );
-                                m_componentManager.dumpThreads();
-                            }
-                        }
-                        catch ( InterruptedException e1 )
-                        {
-                            m_componentManager.log( LogService.LOG_ERROR,
-                                    "DependencyManager : invokeUnbindMethod : Interrupted twice on close latch {0}",  new Object[] {getName()}, null );
-                        }
-                        Thread.currentThread().interrupt();
-                    }
-                }
+                info.waitForClose( m_componentManager, getName(), "invokeUnbindMethod" );
                 //ignore events after close started or we will have duplicate unbinds.
                 return;
-            }
-            try
-            {
-                if (!info.getOpenLatch().await( getLockTimeout(), TimeUnit.MILLISECONDS ))
-                {
-                    m_componentManager.log( LogService.LOG_WARNING,
-                            "DependencyManager : invokeUnbindMethod : timeout on open latch {0}",  new Object[] {getName()}, null );
-                    m_componentManager.dumpThreads();
-                }
-            }
-            catch ( InterruptedException e )
-            {
-                Thread.currentThread().interrupt();
-                m_componentManager.dumpThreads();
-                //ignore
             }
 
             if ( !getServiceObject( m_bindMethods.getUnbind(), refPair ))
