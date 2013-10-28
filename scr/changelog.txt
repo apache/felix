@@ -45,6 +45,7 @@ Changes from 1.6.2 to 1.8
     * [FELIX-4287] - [DS] NPE when calling ComponentInstance.dispose after bundle shut down
     * [FELIX-4290] - [DS] Issue with factory components with required configuration
     * [FELIX-4293] - [DS] logic error in handling configuration LOCATION_CHANGED event
+    * [FELIX-4297] - [DS] timing hole in opening a dependency manager
 
 ** Task
     * [FELIX-3584] - [DS] Handle new LOCATION_CHANGED event

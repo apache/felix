@@ -60,6 +60,10 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         m_usingBundle = usingBundle;
         m_implementationObject = implementationObject;
         edgeInfos = new EdgeInfo[componentManager.getComponentMetadata().getDependencies().size()];
+        for (int i = 0; i< edgeInfos.length; i++)
+        {
+            edgeInfos[i] = new EdgeInfo();
+        }
     }
     
     void setImplementationAccessible(boolean implementationAccessible)
@@ -74,16 +78,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
     EdgeInfo getEdgeInfo(DependencyManager<S, ?> dm)
     {
         int index = dm.getIndex();
-        if (edgeInfos[index] == null)
-        {
-            edgeInfos[index] = new EdgeInfo();
-        }
         return edgeInfos[index];
-    }
-
-    void clearEdgeInfos()
-    {
-        Arrays.fill( edgeInfos, null );
     }
 
     protected SingleComponentManager<S> getComponentManager()
