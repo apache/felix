@@ -266,34 +266,47 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
         // 4. Bind the target services
 
+        DependencyManager<S, ?> failedDm = null;
         for ( DependencyManager<S, ?> dm: getDependencyManagers())
         {
-            // if a dependency turned unresolved since the validation check,
-            // creating the instance fails here, so we deactivate and return
-            // null.
-            boolean open = dm.open( implementationObject, componentContext.getEdgeInfo( dm ) );
-            if ( !open )
+            if ( failedDm == null )
             {
-                log( LogService.LOG_ERROR, "Cannot create component instance due to failure to bind reference {0}",
-                        new Object[]
-                                {dm.getName()}, null );
-
-                // make sure, we keep no bindings. Only close the dm's we opened.
-                boolean skip = true;
-                for ( DependencyManager md: getReversedDependencyManagers() )
+                // if a dependency turned unresolved since the validation check,
+                // creating the instance fails here, so we deactivate and return
+                // null.
+                boolean open = dm.open( implementationObject, componentContext.getEdgeInfo( dm ) );
+                if ( !open )
                 {
-                    if ( skip && dm == md ) {
-                        skip = false;
-                    }
-                    if ( !skip )
-                    {
-                        md.close( implementationObject, componentContext.getEdgeInfo( md ) );
-                    }
-                }
+                    log( LogService.LOG_ERROR, "Cannot create component instance due to failure to bind reference {0}",
+                            new Object[] { dm.getName() }, null );
 
-                setter.resetImplementationObject( implementationObject );
-                return null;
+                    failedDm = dm;
+
+                }
             }
+            else
+            {
+                componentContext.getEdgeInfo( dm ).ignore();
+            }
+        }
+        if (failedDm != null)
+        {
+            // make sure, we keep no bindings. Only close the dm's we opened.
+            boolean skip = true;
+            for ( DependencyManager md: getReversedDependencyManagers() )
+            {
+                if ( skip && failedDm == md )
+                {
+                    skip = false;
+                }
+                if ( !skip )
+                {
+                    md.close( implementationObject, componentContext.getEdgeInfo( md ) );
+                }
+            }
+            setter.resetImplementationObject( implementationObject );
+            return null;
+
         }
 
         // 5. Call the activate method, if present
