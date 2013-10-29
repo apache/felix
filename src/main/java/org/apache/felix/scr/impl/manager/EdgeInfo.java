@@ -121,6 +121,14 @@ class EdgeInfo
     {
         this.open = open;
     }
+    
+    public void ignore()
+    {
+        open = Integer.MAX_VALUE;
+        close = Integer.MAX_VALUE - 1;
+        openLatch.countDown();
+        closeLatch.countDown();
+    }
 
     public boolean outOfRange( int trackingCount )
     {
