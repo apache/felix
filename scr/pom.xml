@@ -70,7 +70,7 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
-        <felix.ca.version>1.0.10</felix.ca.version>
+        <felix.ca.version>1.8.0</felix.ca.version>
     </properties>
     
     
@@ -182,6 +182,12 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>0.9.29</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.configadmin</artifactId>
+            <version>1.8.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -495,11 +501,11 @@
             </dependencies>
         </profile>
         <profile>
-            <!--  use to test with R5 ca, change count, targetetPids -->
-            <!--  remember you need to specify all profiles using this, e.g. -PcaR5,felix -->
-            <id>caR5</id>
+            <!--  use to test with R4 ca, without change count, targetetPids, location changed event -->
+            <!--  remember you need to specify all profiles using this, e.g. -PcaR4,felix -->
+            <id>caR4</id>
             <properties>
-                <felix.ca.version>1.6.1-SNAPSHOT</felix.ca.version>
+                <felix.ca.version>1.0.10</felix.ca.version>
             </properties>
         </profile>
     </profiles>
