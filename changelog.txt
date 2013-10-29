@@ -50,6 +50,7 @@ Changes from 1.6.2 to 1.8
 ** Task
     * [FELIX-3584] - [DS] Handle new LOCATION_CHANGED event
     * [FELIX-3651] - [DS] Properly support configuration location binding and targeted pids
+    * [FELIX-4298] - [DS] Run tests against R5 config admin and require specifying profile for R4
 
 Changes from 1.6.0 to 1.6.2
 ---------------------------
