@@ -1534,7 +1534,6 @@ public class DependencyManager<S, T> implements Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
-            info.waitForOpen( m_componentManager, getName(), "invokeBindMethod" );
             synchronized ( m_tracker.tracked() )
             {
                 if (info.outOfRange( trackingCount ) )
@@ -1543,6 +1542,7 @@ public class DependencyManager<S, T> implements Reference
                     return true;
                 }
             }
+            //edgeInfo open has been set, so binding has started.
             return doInvokeBindMethod( componentInstance, refPair );
 
         }
@@ -1585,7 +1585,6 @@ public class DependencyManager<S, T> implements Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
-            info.waitForOpen( m_componentManager, getName(), "invokeUpdatedMethod" );
             synchronized ( m_tracker.tracked() )
             {
                 if (info.outOfRange( trackingCount ) )
@@ -1594,6 +1593,7 @@ public class DependencyManager<S, T> implements Reference
                     return;
                 }
             }
+            info.waitForOpen( m_componentManager, getName(), "invokeUpdatedMethod" );
             if ( !getServiceObject( m_bindMethods.getUpdated(), refPair ))
             {
                 m_componentManager.log( LogService.LOG_WARNING,
@@ -1637,14 +1637,18 @@ public class DependencyManager<S, T> implements Reference
         // null. This is valid for both immediate and delayed components
         if ( componentInstance != null )
         {
-            info.waitForOpen( m_componentManager, getName(), "invokeUnbindMethod" );
-            boolean outOfRange;
             synchronized ( m_tracker.tracked() )
             {
                 if (info.beforeRange( trackingCount ))
                 {
+                    //never bound
                     return;
                 }
+            }
+            info.waitForOpen( m_componentManager, getName(), "invokeUnbindMethod" );
+            boolean outOfRange;
+            synchronized ( m_tracker.tracked() )
+            {
                 outOfRange = info.afterRange( trackingCount );
             }
             if ( outOfRange )

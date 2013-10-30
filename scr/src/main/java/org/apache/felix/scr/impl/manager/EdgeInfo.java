@@ -130,19 +130,25 @@ class EdgeInfo
         closeLatch.countDown();
     }
 
+    /**
+     * Returns whether the tracking count is before the open count or after the close count (if set)
+     * This must be called from within a block synchronized on m_tracker.tracked().
+     * Setting open occurs in a synchronized block as well, to the tracker's current tracking count.
+     * Therefore if this outOfRange call finds open == -1 then open will be set to a tracking count 
+     * at least as high as the argument tracking count.
+     * @param trackingCount tracking count from tracker to compare with range
+     * @return true if open not set, tracking count before open, or close set and tracking count after close.
+     */
     public boolean outOfRange( int trackingCount )
     {
-        return (open != -1 && trackingCount < open)
-            || (close != -1 && trackingCount > close);
+        return open == -1 
+                || trackingCount < open
+                || (close != -1 && trackingCount > close);
     }
     
     public boolean beforeRange( int trackingCount )
     {
-        if (open == -1) 
-        {
-            throw new IllegalStateException("beforeRange called before open range set");
-        }
-        return trackingCount < open;
+        return open == -1 || trackingCount < open;
     }
     
     public boolean afterRange( int trackingCount )

@@ -1063,8 +1063,10 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         }
         catch ( ClassNotFoundException e )
         {
-            log( LogService.LOG_ERROR, "Could not load implementation object class", e );
-            throw new IllegalStateException("Could not load implementation object class");
+            log( LogService.LOG_ERROR, "Could not load implementation object class {0}", 
+                    new Object[] {getComponentMetadata().getImplementationClassName()}, e );
+            throw new IllegalStateException("Could not load implementation object class "
+                    + getComponentMetadata().getImplementationClassName());
         }
         m_componentMethods.initComponentMethods( m_componentMetadata, implementationObjectClass );
 
