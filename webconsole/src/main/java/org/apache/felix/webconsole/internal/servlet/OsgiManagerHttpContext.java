@@ -20,7 +20,6 @@ package org.apache.felix.webconsole.internal.servlet;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -46,7 +45,7 @@ final class OsgiManagerHttpContext implements HttpContext
 
     private final String username;
 
-    private final String password;
+    private final Password password;
 
     private final String realm;
 
@@ -56,7 +55,7 @@ final class OsgiManagerHttpContext implements HttpContext
     {
         this.tracker = tracker;
         this.username = username;
-        this.password = password;
+        this.password = new Password(password);
         this.realm = realm;
         this.base = httpService.createDefaultHttpContext();
     }
@@ -124,13 +123,11 @@ final class OsgiManagerHttpContext implements HttpContext
                 {
                     try
                     {
-                        String srcString = base64Decode( authInfo );
-                        int i = srcString.indexOf( ':' );
-                        String username = srcString.substring( 0, i );
-                        String password = srcString.substring( i + 1 );
+                        byte[][] userPass = base64Decode( authInfo );
+                        final String username = toString( userPass[0] );
 
                         // authenticate
-                        if ( authenticate( provider, username, password ) )
+                        if ( authenticate( provider, username, userPass[1] ) )
                         {
                             // as per the spec, set attributes
                             request.setAttribute( HttpContext.AUTHENTICATION_TYPE, HttpServletRequest.BASIC_AUTH );
@@ -189,27 +186,47 @@ final class OsgiManagerHttpContext implements HttpContext
     }
 
 
-    private static String base64Decode( String srcString )
+    private static byte[][] base64Decode( String srcString )
     {
         byte[] transformed = Base64.decodeBase64( srcString );
+        for ( int i = 0; i < transformed.length; i++ )
+        {
+            if ( transformed[i] == ':' )
+            {
+                byte[] user = new byte[i];
+                byte[] pass = new byte[transformed.length - i - 1];
+                System.arraycopy( transformed, 0, user, 0, user.length );
+                System.arraycopy( transformed, i + 1, pass, 0, pass.length );
+                return new byte[][]
+                    { user, pass };
+            }
+        }
+
+        return new byte[][]
+            { transformed, new byte[0] };
+    }
+
+
+    private static String toString( final byte[] src )
+    {
         try
         {
-            return new String( transformed, "ISO-8859-1" );
+            return new String( src, "ISO-8859-1" );
         }
         catch ( UnsupportedEncodingException uee )
         {
-            return new String( transformed );
+            return new String( src );
         }
     }
 
 
-    private boolean authenticate( Object provider, String username, String password )
+    private boolean authenticate( Object provider, String username, byte[] password )
     {
         if ( provider != null )
         {
-            return ( ( WebConsoleSecurityProvider ) provider ).authenticate( username, password ) != null;
+            return ( ( WebConsoleSecurityProvider ) provider ).authenticate( username, toString( password ) ) != null;
         }
-        if ( this.username.equals( username ) && this.password.equals( password ) )
+        if ( this.username.equals( username ) && this.password.matches( password ) )
         {
             return true;
         }

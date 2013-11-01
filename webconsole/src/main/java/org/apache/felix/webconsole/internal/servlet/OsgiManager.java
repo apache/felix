@@ -159,7 +159,7 @@ public class OsgiManager extends GenericServlet
 
     static final String DEFAULT_USER_NAME = "admin"; //$NON-NLS-1$
 
-    static final String DEFAULT_PASSWORD = "admin"; //$NON-NLS-1$
+    static final String DEFAULT_PASSWORD = "{sha-256}jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg="; //$NON-NLS-1$
 
     static final String DEFAULT_CATEGORY = "Main"; //$NON-NLS-1$
 
