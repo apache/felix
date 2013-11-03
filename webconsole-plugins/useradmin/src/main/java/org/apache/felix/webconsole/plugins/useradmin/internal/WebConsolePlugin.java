@@ -42,6 +42,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     private static final String LABEL = "users"; //$NON-NLS-1$
     private static final String TITLE = "%role.pluginTitle"; //$NON-NLS-1$
+    private static final String CATEGORY = "OSGi"; //$NON-NLS-1$
     private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" }; //$NON-NLS-1$ //$NON-NLS-2$
 
     private final UserAdmin userAdmin;
@@ -57,6 +58,12 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
         // load templates
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
+    }
+
+
+    public String getCategory()
+    {
+        return CATEGORY;
     }
 
     /**
