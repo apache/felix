@@ -58,6 +58,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
     private static final String LABEL = "depfinder"; //$NON-NLS-1$
     private static final String TITLE = "%pluginTitle"; //$NON-NLS-1$
+    private static final String CATEGORY = "OSGi"; //$NON-NLS-1$
     private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" }; //$NON-NLS-1$ //$NON-NLS-2$
 
     private static final Comparator/*<ExportedPackage>*/EXPORT_PACKAGE_COMPARATOR = new ExportedPackageComparator();
@@ -79,6 +80,13 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
     }
 
+    
+    public String getCategory()
+    {
+        return CATEGORY;
+    }
+
+    
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(HttpServletRequest, HttpServletResponse)
      */
