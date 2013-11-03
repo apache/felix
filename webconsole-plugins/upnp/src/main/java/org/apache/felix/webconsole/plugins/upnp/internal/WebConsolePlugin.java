@@ -34,6 +34,7 @@ public class WebConsolePlugin extends SimpleWebConsolePlugin
 
     private static final String LABEL = "upnp";
     private static final String TITLE = "%pluginTitle";
+    private static final String CATEGORY = "OSGi";
     private static final String CSS[] = { "/" + LABEL + "/res/upnp.css", //
             "/" + LABEL + "/res/jquery-treeview-1.4/jquery.treeview.css", //
     };
@@ -46,7 +47,7 @@ public class WebConsolePlugin extends SimpleWebConsolePlugin
 
     /**
      * Creates new plugin
-     * 
+     *
      * @param tracker the UPnP Device tracker
      */
     public WebConsolePlugin(ServiceTracker tracker)
@@ -56,6 +57,12 @@ public class WebConsolePlugin extends SimpleWebConsolePlugin
 
         // load templates
         TEMPLATE = readTemplateFile("/res/upnp.html");
+    }
+
+
+    public String getCategory()
+    {
+        return CATEGORY;
     }
 
     /**
