@@ -35,10 +35,11 @@ import org.apache.felix.webconsole.WebConsoleUtil;
  * This class provides a plugin for rendering the available OSGi Bundle Repositories
  * and the resources they provide.
  */
-class WebConsolePlugin extends SimpleWebConsolePlugin 
+class WebConsolePlugin extends SimpleWebConsolePlugin
 {
     private static final String LABEL = "obr"; //$NON-NLS-1$
     private static final String TITLE = "%obr.pluginTitle"; //$NON-NLS-1$
+    private static final String CATEGORY = "OSGi"; //$NON-NLS-1$
     private static final String CSS[] = { "/" + LABEL + "/res/plugin.css" }; //$NON-NLS-1$ //$NON-NLS-2$
 
     // templates
@@ -56,6 +57,12 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
 
         // load templates
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
+    }
+
+
+    public String getCategory()
+    {
+        return CATEGORY;
     }
 
 
@@ -216,7 +223,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 {
                     String k = ( String ) e.nextElement();
                     String v = request.getParameter( k );
-                    if ( v != null && v.length() > 0 
+                    if ( v != null && v.length() > 0
                         && !"details".equals( k )  //$NON-NLS-1$
                         && !"deploy".equals( k ) //$NON-NLS-1$
                         && !"deploystart".equals( k )  //$NON-NLS-1$
