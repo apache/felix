@@ -47,6 +47,7 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
 
     public static final String NAME = "sc";
     private static final String TITLE = "%script.title";
+    private static final String CATEGORY = "Web Console";
     private static final String[] CSS = { "/res/ui/codemirror/lib/codemirror.css",
             "/res/ui/script-console.css" };
     private final String TEMPLATE;
@@ -70,6 +71,12 @@ class ScriptConsolePlugin extends SimpleWebConsolePlugin
 
         registration = getBundleContext().registerService(Servlet.class.getName(), this,
             props);
+    }
+
+
+    public String getCategory()
+    {
+        return CATEGORY;
     }
 
     @SuppressWarnings("unchecked")
