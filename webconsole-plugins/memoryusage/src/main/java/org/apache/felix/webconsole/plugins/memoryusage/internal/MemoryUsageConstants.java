@@ -38,6 +38,12 @@ final class MemoryUsageConstants
     static final String LABEL = "memoryusage";
 
     /**
+     * The category under which the Memory Usage Web Console Plugin
+     * is listed.
+     */
+    static final String CATEGORY = "Web Console";
+
+    /**
      * The name of the property providing the filesystem location where the
      * memory dumps should be placed. If this location is relative it is located
      * inside the bundle private data area.
