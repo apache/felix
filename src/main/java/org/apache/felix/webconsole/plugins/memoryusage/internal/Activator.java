@@ -50,6 +50,7 @@ public class Activator implements BundleActivator
         // install Web Console plugin
         Dictionary<String, Object> pluginProps = new Hashtable<String, Object>();
         pluginProps.put("felix.webconsole.label", MemoryUsageConstants.LABEL);
+        pluginProps.put("felix.webconsole.category", MemoryUsageConstants.CATEGORY);
         new AbstractServiceFactory(bundleContext, pluginProps, "javax.servlet.Servlet",
             "org.apache.felix.webconsole.ConfigurationPrinter")
         {
