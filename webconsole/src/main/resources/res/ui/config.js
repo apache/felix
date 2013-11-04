@@ -405,7 +405,7 @@ function configConfirm(/* String */ message, /* String */ title, /* String */ lo
 function deleteConfig(/* String */ configId, /* String */ bundleLocation)
 {
     if ( configConfirm(i18n.del_ask, configId, bundleLocation) ) {
-	$.post(pluginRoot + '/' + configId + '?' + param.apply + '=1&' + param.dele + '=1', null, function() {
+	$.post(pluginRoot + '/' + configId, param.apply + '=1&' + param.dele + '=1', null, function() {
 	    document.location.href = pluginRoot;
 	}, 'json');
 	return true;
@@ -416,7 +416,7 @@ function deleteConfig(/* String */ configId, /* String */ bundleLocation)
 function unbindConfig(/* String */ configId, /* String */ bundleLocation)
 {
     if ( configConfirm(i18n.unbind_ask, configId, bundleLocation) ) {
-	$.post(pluginRoot + '/' + configId + '?' + param.unbind + '=1', null, function() {
+	$.post(pluginRoot + '/' + configId, param.unbind + '=1', null, function() {
 	    document.location.href = pluginRoot + '/' + configId;
 	}, 'json');
 	return true;
@@ -513,7 +513,7 @@ $(document).ready(function() {
 	    	unbindConfig($(this).attr('__pid'), $(this).attr('__location'));
 	}
 	_buttons[i18n.save] = function() {
-		$.post(pluginRoot + '/' + $(this).attr('__pid') + '?' + $(this).find('form').serialize(), function() {
+		$.post(pluginRoot + '/' + $(this).attr('__pid'), $(this).find('form').serialize(), function() {
 			// reload on success - prevents AJAX errors - see FELIX-3116
 			document.location.href = pluginRoot; 
 		});
