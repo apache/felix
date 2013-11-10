@@ -287,7 +287,7 @@ public final class JettyConfig
         this.useHttpsNio = getBooleanProperty(props, FELIX_HTTPS_NIO, this.useHttpNio);
         this.registerMBeans = getBooleanProperty(props, FELIX_HTTP_MBEANS, false);
         this.sessionTimeout = getIntProperty(props, FELIX_SESSION_TIMEOUT, 0);
-        this.requestBufferSize = getIntProperty(FELIX_JETTY_REQUEST_BUFFER_SIZE, 8 * 014);
+        this.requestBufferSize = getIntProperty(FELIX_JETTY_REQUEST_BUFFER_SIZE, 8 * 1024);
         this.responseBufferSize = getIntProperty(FELIX_JETTY_RESPONSE_BUFFER_SIZE, 24 * 1024);
         this.contextPath = validateContextPath(getProperty(props, FELIX_HTTP_CONTEXT_PATH, null));
         this.pathExclusions = getStringArrayProperty(props, FELIX_HTTP_PATH_EXCLUSIONS, new String[] { "/system" });
