@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Bundle</name>
     <artifactId>org.apache.felix.http.bundle</artifactId>
-    <version>2.3.0-SNAPSHOT</version>
+    <version>2.2.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
@@ -48,13 +48,13 @@
                             org.apache.felix.http.bundle.internal.CombinedActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.http.api;version=${project.version};-split-package:=merge-first,
+                            org.apache.felix.http.api;version${http.api.version};-split-package:=merge-first,
                             org.apache.felix.http.cometd;version=${project.version};-split-package:=merge-first,
-                            org.osgi.service.http;version=1.2.0;-split-package:=merge-first,
-                            org.cometd.bayeux;version=2.4.2;-split-package:=merge-first,
-                            org.cometd.bayeux.client;version=2.4.2;-split-package:=merge-first,
-                            org.cometd.bayeux.server;version=2.4.2;-split-package:=merge-first,
-                            javax.servlet.*;version=2.5;-split-package:=merge-first
+                            org.osgi.service.http;version=${http.service.version};-split-package:=merge-first,
+                            org.cometd.bayeux;version=${cometd.version};-split-package:=merge-first,
+                            org.cometd.bayeux.client;version=${cometd.version};-split-package:=merge-first,
+                            org.cometd.bayeux.server;version=${cometd.version};-split-package:=merge-first,
+                            javax.servlet.*;version=${servlet.version};-split-package:=merge-first
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*;-split-package:=merge-first,
@@ -97,25 +97,24 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>${pom.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.bridge</artifactId>
-            <version>${pom.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${pom.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.cometd</artifactId>
-            <version>${pom.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${pom.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.jetty</artifactId>
-            <version>${pom.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${pom.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.whiteboard</artifactId>
-            <version>${pom.version}</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
-
 </project>

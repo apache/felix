@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Samples - Bridge</name>
     <artifactId>org.apache.felix.http.samples.bridge</artifactId>
-    <version>2.3.0-SNAPSHOT</version>
+    <version>2.2.2-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <scm>
@@ -119,29 +119,29 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>1.8.1</version>
+            <version>4.2.1</version>
         </dependency>
         <dependency>
-            <groupId>${pom.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.proxy</artifactId>
-            <version>${pom.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${pom.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.bridge</artifactId>
-            <version>${pom.version}</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>${pom.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.http.samples.filter</artifactId>
-            <version>${pom.version}</version>            
+            <version>${project.version}</version>            
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>${pom.groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
-            <version>1.2.8</version>
+            <version>4.2.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
