@@ -28,6 +28,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 public class MBeanServerTracker extends ServiceTracker
 {
+
     private final Server server;
 
     public MBeanServerTracker(final BundleContext context, final Server server)
@@ -41,7 +42,7 @@ public class MBeanServerTracker extends ServiceTracker
     {
         MBeanServer server = (MBeanServer) super.addingService(reference);
         MBeanContainer mBeanContainer = new MBeanContainer(server);
-        this.server.addBean(mBeanContainer);
+        this.server.getContainer().addEventListener(mBeanContainer);
         return mBeanContainer;
     }
 
@@ -49,7 +50,7 @@ public class MBeanServerTracker extends ServiceTracker
     public void removedService(ServiceReference reference, Object service)
     {
         MBeanContainer mBeanContainer = (MBeanContainer) service;
-        this.server.removeBean(mBeanContainer);
+        this.server.getContainer().removeEventListener(mBeanContainer);
         super.removedService(reference, mBeanContainer.getMBeanServer());
     }
 }
