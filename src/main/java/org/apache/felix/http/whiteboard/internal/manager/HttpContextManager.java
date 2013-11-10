@@ -96,7 +96,6 @@ public final class HttpContextManager
         // no context yet, put the mapping on hold
         if (holder == null)
         {
-
             // care for default context if no context ID
             if (ExtenderManager.isEmpty(contextId))
             {
@@ -111,13 +110,22 @@ public final class HttpContextManager
                 orphaned = new HashSet<AbstractMapping>();
                 this.orphanMappings.put(contextId, orphaned);
             }
-            SystemLogger.debug("Holding off mapping with unregistered context with id [" + contextId + "]");
+            if (contextId != null)
+            {
+                // Only log something when an actual context ID is used. Should solve FELIX-4307...
+                SystemLogger.debug("Holding off mapping with unregistered context with id [" + contextId + "]");
+            }
             orphaned.add(mapping);
             return null;
         }
 
         // otherwise use the context
-        SystemLogger.debug("Reusing context with id [" + contextId + "]");
+        if (contextId != null)
+        {
+            // Only log something when an actual context ID is used. Should solve FELIX-4307...
+            SystemLogger.debug("Reusing context with id [" + contextId + "]");
+        }
+
         holder.addMapping(mapping);
         return holder.getContext();
     }
