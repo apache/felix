@@ -16,25 +16,21 @@
  */
 package org.apache.felix.http.cometd.internal;
 
-import org.apache.felix.http.base.internal.AbstractHttpActivator;
+import org.apache.felix.http.base.internal.AbstractActivator;
 
-public final class CometdActivator
-    extends AbstractHttpActivator
+public final class CometdActivator extends AbstractActivator
 {
-    private CometdServiceImpl cometd;
+    private volatile CometdServiceImpl cometd;
 
-    protected void doStart()
-        throws Exception
+    protected void doStart() throws Exception
     {
-        super.doStart();
         this.cometd = new CometdServiceImpl(getBundleContext());
         this.cometd.start();
     }
 
-    protected void doStop()
-        throws Exception
+    protected void doStop() throws Exception
     {
         this.cometd.stop();
-        super.doStop();
+        this.cometd = null;
     }
 }
