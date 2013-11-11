@@ -60,7 +60,7 @@ public final class JettyConfig
 
     /** Felix specific property to control whether to enable HTTPS. */
     private static final String FELIX_HTTPS_ENABLE = "org.apache.felix.https.enable";
-    private static final String OSCAR_HTTPS_ENABLE   = "org.ungoverned.osgi.bundle.https.enable";
+    private static final String OSCAR_HTTPS_ENABLE = "org.ungoverned.osgi.bundle.https.enable";
 
     /** Felix specific property to control whether to enable HTTP. */
     private static final String FELIX_HTTP_ENABLE = "org.apache.felix.http.enable";
@@ -75,10 +75,10 @@ public final class JettyConfig
     private static final String FELIX_HTTPS_CLIENT_CERT = "org.apache.felix.https.clientcertificate";
 
     /** Felix specific property to control whether Jetty uses NIO or not for HTTP. Valid values are "true", "false". Default is true */
-    public static final String  FELIX_HTTP_NIO = "org.apache.felix.http.nio";
+    public static final String FELIX_HTTP_NIO = "org.apache.felix.http.nio";
 
     /** Felix specific property to control whether Jetty uses NIO or not for HTTPS. Valid values are "true", "false". Default is the value of org.apache.felix.http.nio */
-    public static final String  FELIX_HTTPS_NIO = "org.apache.felix.https.nio";
+    public static final String FELIX_HTTPS_NIO = "org.apache.felix.https.nio";
 
     /** Felix specific property to configure the session timeout in minutes (same session-timout in web.xml). Default is servlet container specific */
     public static final String FELIX_SESSION_TIMEOUT = "org.apache.felix.http.session.timeout";
@@ -266,7 +266,8 @@ public final class JettyConfig
 
     public void update(Dictionary props)
     {
-        if (props == null) {
+        if (props == null)
+        {
             props = new Properties();
         }
 
@@ -325,9 +326,12 @@ public final class JettyConfig
 
     private int getIntProperty(Dictionary props, String name, int defValue)
     {
-        try {
+        try
+        {
             return Integer.parseInt(getProperty(props, name, null));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return defValue;
         }
     }
@@ -341,8 +345,7 @@ public final class JettyConfig
         }
         if (value instanceof String)
         {
-            return new String[]
-                { (String) value };
+            return new String[] { (String) value };
         }
         else if (value instanceof String[])
         {
@@ -393,7 +396,8 @@ public final class JettyConfig
      * configuration or the bundle context. If neither property is defined
      * return the defValue.
      */
-    public String getProperty(String name, String defValue) {
+    public String getProperty(String name, String defValue)
+    {
         Object value = this.genericProperties.get(name);
         if (value == null)
         {
@@ -426,9 +430,12 @@ public final class JettyConfig
      */
     public int getIntProperty(String name, int defValue)
     {
-        try {
+        try
+        {
             return Integer.parseInt(getProperty(name, null));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return defValue;
         }
     }
