@@ -16,6 +16,8 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,6 +26,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Properties;
 
+import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.BundleContext;
 
 public final class JettyConfig
@@ -177,12 +180,12 @@ public final class JettyConfig
 
     public int getHttpPort()
     {
-        return getIntProperty(HTTP_PORT, 8080);
+        return determinePort(String.valueOf(getProperty(HTTP_PORT)), 8080);
     }
 
     public int getHttpsPort()
     {
-        return getIntProperty(HTTPS_PORT, 8443);
+        return determinePort(String.valueOf(getProperty(HTTPS_PORT)), 8443);
     }
 
     public int getHttpTimeout()
@@ -197,14 +200,7 @@ public final class JettyConfig
      */
     public int getIntProperty(String name, int defValue)
     {
-        try
-        {
-            return Integer.parseInt(getProperty(name, null));
-        }
-        catch (Exception e)
-        {
-            return defValue;
-        }
+        return parseInt(getProperty(name, null), defValue);
     }
 
     public String getKeyPassword()
@@ -212,14 +208,14 @@ public final class JettyConfig
         return getProperty(FELIX_KEYSTORE_KEY_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_KEY_PASSWORD));
     }
 
-    public String getKeystoreType()
-    {
-        return getProperty(FELIX_KEYSTORE_TYPE, KeyStore.getDefaultType());
-    }
-
     public String getKeystore()
     {
         return getProperty(FELIX_KEYSTORE, this.context.getProperty(OSCAR_KEYSTORE));
+    }
+
+    public String getKeystoreType()
+    {
+        return getProperty(FELIX_KEYSTORE_TYPE, KeyStore.getDefaultType());
     }
 
     public String getPassword()
@@ -239,13 +235,7 @@ public final class JettyConfig
      */
     public String getProperty(String name, String defValue)
     {
-        Dictionary conf = this.config;
-        Object value = (conf != null) ? conf.get(name) : null;
-        if (value == null)
-        {
-            value = this.context.getProperty(name);
-        }
-
+        Object value = getProperty(name);
         return value != null ? String.valueOf(value) : defValue;
     }
 
@@ -363,7 +353,126 @@ public final class JettyConfig
         return false;
     }
 
-    private String[] getStringArrayProperty(String name, String[] defValue)
+    private void closeSilently(ServerSocket resource)
+    {
+        if (resource != null)
+        {
+            try
+            {
+                resource.close();
+            }
+            catch (IOException e)
+            {
+                // Ignore...
+            }
+        }
+    }
+
+    /**
+     * Determine the appropriate port to use. <code>portProp</code> is based
+     * "version range" as described in OSGi Core Spec v4.2 3.2.6. It can use the
+     * following forms:
+     * <dl>
+     * <dd>8000 | 8000</dd>
+     * <dd>[8000,9000] | 8000 &lt;= port &lt;= 9000</dd>
+     * <dd>[8000,9000) | 8000 &lt;= port &lt; 9000</dd>
+     * <dd>(8000,9000] | 8000 &lt; port &lt;= 9000</dd>
+     * <dd>(8000,9000) | 8000 &lt; port &lt; 9000</dd>
+     * <dd>[,9000) | 1 &lt; port &lt; 9000</dd>
+     * <dd>[8000,) | 8000 &lt;= port &lt; 65534</dd>
+     * </dl>
+     * 
+     * @param portProp
+     *            The port property value to parse.
+     * @return The port determined to be usable. -1 if failed to find a port.
+     */
+    private int determinePort(String portProp, int dflt)
+    {
+        // Default cases include null/empty range pattern or pattern == *.
+        if (portProp == null || "".equals(portProp.trim()))
+        {
+            return dflt;
+        }
+
+        // asking for random port, so let ServerSocket handle it and return the answer
+        portProp = portProp.trim();
+        if ("*".equals(portProp))
+        {
+            ServerSocket ss = null;
+            try
+            {
+                ss = new ServerSocket(0);
+                return ss.getLocalPort();
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+            finally
+            {
+                closeSilently(ss);
+            }
+        }
+        else
+        {
+            // check that the port property is a version range as described in
+            // OSGi Core Spec v4.2 3.2.6.
+            // deviations from the spec are limited to:
+            // * start, end of interval defaults to 1, 65535, respectively, if missing.
+            char startsWith = portProp.charAt(0);
+            char endsWith = portProp.charAt(portProp.length() - 1);
+            String interval = portProp.substring(1, portProp.length() - 1);
+
+            int minPort = 1;
+            int maxPort = 65535;
+
+            int comma = interval.indexOf(',');
+            if (comma >= 0 && (startsWith == '[' || startsWith == '(') && (endsWith == ']' || endsWith == ')'))
+            {
+                // check if the comma is first (start port in range is missing)
+                int start = (comma == 0) ? minPort : parseInt(interval.substring(0, comma), minPort);
+                // check if the comma is last (end port in range is missing)
+                int end = (comma == interval.length() - 1) ? maxPort : parseInt(interval.substring(comma + 1), maxPort);
+                // check for exclusive notation
+                if (startsWith == '(')
+                {
+                    start++;
+                }
+                if (endsWith == ')')
+                {
+                    end--;
+                }
+                // find a port in the requested range
+                int port = start - 1;
+                for (int i = start; port < start && i <= end; i++)
+                {
+                    ServerSocket ss = null;
+                    try
+                    {
+                        ss = new ServerSocket(i);
+                        port = ss.getLocalPort();
+                    }
+                    catch (IOException e)
+                    {
+                        SystemLogger.debug("Unable to bind to port: " + port + " | " + portProp);
+                    }
+                    finally
+                    {
+                        closeSilently(ss);
+                    }
+                }
+
+                return (port < start) ? dflt : port;
+            }
+            else
+            {
+                // We don't recognize the pattern as special, so try to parse it to an int
+                return parseInt(portProp, dflt);
+            }
+        }
+    }
+
+    private Object getProperty(String name)
     {
         Dictionary conf = this.config;
         Object value = (conf != null) ? conf.get(name) : null;
@@ -371,6 +480,12 @@ public final class JettyConfig
         {
             value = this.context.getProperty(name);
         }
+        return value;
+    }
+
+    private String[] getStringArrayProperty(String name, String[] defValue)
+    {
+        Object value = getProperty(name);
         if (value instanceof String)
         {
             return new String[] { (String) value };
@@ -395,6 +510,18 @@ public final class JettyConfig
         else
         {
             return defValue;
+        }
+    }
+
+    private int parseInt(String value, int dflt)
+    {
+        try
+        {
+            return Integer.parseInt(value);
+        }
+        catch (NumberFormatException e)
+        {
+            return dflt;
         }
     }
 }
