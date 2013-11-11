@@ -16,6 +16,7 @@
  */
 package org.apache.felix.http.jetty.internal;
 
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
@@ -55,6 +56,9 @@ public final class JettyConfig
     private static final String FELIX_KEYSTORE_KEY_PASSWORD = "org.apache.felix.https.keystore.key.password";
     private static final String OSCAR_KEYSTORE_KEY_PASSWORD = "org.ungoverned.osgi.bundle.https.key.password";
 
+    /** Felix specific property to override the type of keystore (JKS). */
+    private static final String FELIX_KEYSTORE_TYPE = "org.apache.felix.https.keystore.type";
+
     /** Felix specific property to control whether to enable HTTPS. */
     private static final String FELIX_HTTPS_ENABLE = "org.apache.felix.https.enable";
     private static final String OSCAR_HTTPS_ENABLE = "org.ungoverned.osgi.bundle.https.enable";
@@ -67,6 +71,9 @@ public final class JettyConfig
 
     /** Felix specific property to override the truststore password. */
     private static final String FELIX_TRUSTSTORE_PASSWORD = "org.apache.felix.https.truststore.password";
+
+    /** Felix specific property to override the type of truststore (JKS). */
+    private static final String FELIX_TRUSTSTORE_TYPE = "org.apache.felix.https.truststore.type";
 
     /** Felix specific property to control whether to want or require HTTPS client certificates. Valid values are "none", "wants", "needs". Default is "none". */
     private static final String FELIX_HTTPS_CLIENT_CERT = "org.apache.felix.https.clientcertificate";
@@ -205,6 +212,11 @@ public final class JettyConfig
         return getProperty(FELIX_KEYSTORE_KEY_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_KEY_PASSWORD));
     }
 
+    public String getKeystoreType()
+    {
+        return getProperty(FELIX_KEYSTORE_TYPE, KeyStore.getDefaultType());
+    }
+
     public String getKeystore()
     {
         return getProperty(FELIX_KEYSTORE, this.context.getProperty(OSCAR_KEYSTORE));
@@ -264,6 +276,11 @@ public final class JettyConfig
     public String getTruststore()
     {
         return getProperty(FELIX_TRUSTSTORE, null);
+    }
+
+    public String getTruststoreType()
+    {
+        return getProperty(FELIX_TRUSTSTORE_TYPE, KeyStore.getDefaultType());
     }
 
     public boolean isDebug()
