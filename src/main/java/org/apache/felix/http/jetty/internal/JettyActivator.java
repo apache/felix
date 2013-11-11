@@ -18,22 +18,18 @@ package org.apache.felix.http.jetty.internal;
 
 import org.apache.felix.http.base.internal.AbstractHttpActivator;
 
-public final class JettyActivator
-    extends AbstractHttpActivator
+public final class JettyActivator extends AbstractHttpActivator
 {
     private JettyService jetty;
 
-    protected void doStart()
-        throws Exception
+    protected void doStart() throws Exception
     {
         super.doStart();
-        this.jetty = new JettyService(getBundleContext(), getDispatcherServlet(), getEventDispatcher(),
-            getHttpServiceController());
+        this.jetty = new JettyService(getBundleContext(), getDispatcherServlet(), getEventDispatcher(), getHttpServiceController());
         this.jetty.start();
     }
 
-    protected void doStop()
-        throws Exception
+    protected void doStop() throws Exception
     {
         this.jetty.stop();
         super.doStop();

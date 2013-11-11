@@ -64,23 +64,25 @@ public abstract class WebEvent
         return new Event(TOPIC_UNDEPLOYED, createBaseProperties(webAppBundle, extenderBundle));
     }
 
-    static Event FAILED(Bundle webAppBundle, Bundle extenderBundle, Throwable exception,
-                        String collision, Long collisionBundles)
+    static Event FAILED(Bundle webAppBundle, Bundle extenderBundle, Throwable exception, String collision, Long collisionBundles)
     {
-        Dictionary<String,Object> props = createBaseProperties(webAppBundle, extenderBundle);
-        if (exception != null) {
+        Dictionary<String, Object> props = createBaseProperties(webAppBundle, extenderBundle);
+        if (exception != null)
+        {
             props.put(EXCEPTION, exception);
         }
-        if (collision != null) {
+        if (collision != null)
+        {
             props.put(COLLISION, collision);
         }
-        if (collisionBundles != null) {
+        if (collisionBundles != null)
+        {
             props.put(COLLISION_BUNDLES, collisionBundles);
         }
         return new Event(TOPIC_FAILED, props);
     }
 
-    private static Dictionary<String,Object> createBaseProperties(Bundle webAppBundle, Bundle extenderBundle)
+    private static Dictionary<String, Object> createBaseProperties(Bundle webAppBundle, Bundle extenderBundle)
     {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(EventConstants.BUNDLE_SYMBOLICNAME, webAppBundle.getSymbolicName());
