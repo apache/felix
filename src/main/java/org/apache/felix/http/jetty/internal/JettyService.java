@@ -68,9 +68,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import javax.servlet.ServletContext;
 
-public final class JettyService
-        extends AbstractLifeCycle.AbstractLifeCycleListener
-        implements BundleTrackerCustomizer, ServiceTrackerCustomizer
+public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListener implements BundleTrackerCustomizer, ServiceTrackerCustomizer
 {
     /** PID for configuration of the HTTP service. */
     private static final String PID = "org.apache.felix.http";
@@ -100,8 +98,7 @@ public final class JettyService
     private EventAdmin eventAdmin;
     private Map<String, Deployment> deployments = new LinkedHashMap<String, Deployment>();
 
-    public JettyService(BundleContext context, DispatcherServlet dispatcher, EventDispatcher eventDispatcher,
-        HttpServiceController controller)
+    public JettyService(BundleContext context, DispatcherServlet dispatcher, EventDispatcher eventDispatcher, HttpServiceController controller)
     {
         this.context = context;
         this.config = new JettyConfig(this.context);
@@ -110,25 +107,26 @@ public final class JettyService
         this.controller = controller;
     }
 
-    public void start()
-        throws Exception
+    public void start() throws Exception
     {
         Properties props = new Properties();
         props.put(Constants.SERVICE_PID, PID);
-        this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService",
-            new JettyManagedService(this), props);
+        this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService", new JettyManagedService(this), props);
 
-        this.executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
-           public Thread newThread(Runnable runnable)
-           {
+        this.executor = Executors.newSingleThreadExecutor(new ThreadFactory()
+        {
+            public Thread newThread(Runnable runnable)
+            {
                 Thread t = new Thread(runnable);
                 t.setName("Jetty HTTP Service");
                 return t;
             }
         });
-        this.executor.submit(new JettyOperation() {
+        this.executor.submit(new JettyOperation()
+        {
             @Override
-            protected void doExecute() throws Exception {
+            protected void doExecute() throws Exception
+            {
                 startJetty();
             }
         });
@@ -140,25 +138,30 @@ public final class JettyService
         this.bundleTracker.open();
     }
 
-    public void stop()
-        throws Exception
+    public void stop() throws Exception
     {
-        if (this.executor != null && !this.executor.isShutdown()) {
-            this.executor.submit(new JettyOperation() {
+        if (this.executor != null && !this.executor.isShutdown())
+        {
+            this.executor.submit(new JettyOperation()
+            {
                 @Override
-                protected void doExecute() throws Exception {
+                protected void doExecute() throws Exception
+                {
                     stopJetty();
                 }
             });
             this.executor.shutdown();
         }
-        if (this.configServiceReg != null) {
+        if (this.configServiceReg != null)
+        {
             this.configServiceReg.unregister();
         }
-        if (this.bundleTracker != null) {
+        if (this.bundleTracker != null)
+        {
             this.bundleTracker.close();
         }
-        if (this.serviceTracker != null) {
+        if (this.serviceTracker != null)
+        {
             this.serviceTracker.close();
         }
     }
@@ -175,10 +178,13 @@ public final class JettyService
     {
         this.config.update(props);
 
-        if (this.executor != null  && !this.executor.isShutdown()) {
-            this.executor.submit(new JettyOperation() {
+        if (this.executor != null && !this.executor.isShutdown())
+        {
+            this.executor.submit(new JettyOperation()
+            {
                 @Override
-                protected void doExecute() throws Exception {
+                protected void doExecute() throws Exception
+                {
                     stopJetty();
                     startJetty();
                 }
@@ -188,9 +194,12 @@ public final class JettyService
 
     private void startJetty()
     {
-        try {
+        try
+        {
             initializeJetty();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             SystemLogger.error("Exception while initializing Jetty.", e);
         }
     }
@@ -217,12 +226,11 @@ public final class JettyService
         }
     }
 
-    private void initializeJetty()
-        throws Exception
+    private void initializeJetty() throws Exception
     {
         if (this.config.isUseHttp() || this.config.isUseHttps())
         {
-            StringBuffer message = new StringBuffer("Started jetty ").append(Server.getVersion()).append(" at port(s)");
+            StringBuffer message = new StringBuffer("Started jetty ").append(getJettyVersion()).append(" at port(s)");
             HashLoginService realm = new HashLoginService("OSGi HTTP Service Realm");
             this.server = new Server();
             this.server.addLifeCycleListener(this);
@@ -246,8 +254,7 @@ public final class JettyService
 
             this.parent = new ContextHandlerCollection();
 
-            ServletContextHandler context = new ServletContextHandler(this.parent,
-                    this.config.getContextPath(), ServletContextHandler.SESSIONS);
+            ServletContextHandler context = new ServletContextHandler(this.parent, this.config.getContextPath(), ServletContextHandler.SESSIONS);
 
             message.append(" on context path ").append(this.config.getContextPath());
             configureSessionManager(context);
@@ -274,19 +281,28 @@ public final class JettyService
         publishServiceProperties();
     }
 
-    private void initializeHttp()
-        throws Exception
+    private String getJettyVersion()
     {
-        Connector connector = this.config.isUseHttpNio()
-                ? new SelectChannelConnector()
-                : new SocketConnector();
+        // FELIX-4311: report the real version of Jetty...
+        Dictionary headers = this.context.getBundle().getHeaders();
+        String version = (String) headers.get("X-Jetty-Version");
+        if (version == null)
+        {
+            version = Server.getVersion();
+        }
+        return version;
+    }
+
+    private void initializeHttp() throws Exception
+    {
+        Connector connector = this.config.isUseHttpNio() ? new SelectChannelConnector() : new SocketConnector();
         connector.setPort(this.config.getHttpPort());
         configureConnector(connector);
         this.server.addConnector(connector);
     }
 
-    private void initializeHttps()
-        throws Exception
+    @SuppressWarnings("deprecation")
+    private void initializeHttps() throws Exception
     {
         // this massive code duplication is caused by the SslSelectChannelConnector
         // and the SslSocketConnector not have a common API to setup security
@@ -417,16 +433,16 @@ public final class JettyService
         }
 
         String address = ia.getHostAddress().trim().toLowerCase();
-        if ( ia instanceof Inet6Address )
+        if (ia instanceof Inet6Address)
         {
             // skip link-local
-            if ( address.startsWith("fe80:0:0:0:") )
+            if (address.startsWith("fe80:0:0:0:"))
             {
                 return null;
             }
             address = "[" + address + "]";
         }
-        else if ( ! ( ia instanceof Inet4Address ) )
+        else if (!(ia instanceof Inet4Address))
         {
             return null;
         }
@@ -439,14 +455,14 @@ public final class JettyService
         final StringBuilder sb = new StringBuilder();
         sb.append("http");
         int defaultPort = 80;
-        if ( listener instanceof SslConnector )
+        if (listener instanceof SslConnector)
         {
             sb.append('s');
             defaultPort = 443;
         }
         sb.append("://");
         sb.append(hostname);
-        if ( listener.getPort() != defaultPort )
+        if (listener.getPort() != defaultPort)
         {
             sb.append(':');
             sb.append(String.valueOf(listener.getPort()));
@@ -480,23 +496,23 @@ public final class JettyService
         final List<String> endpoints = new ArrayList<String>();
 
         final Connector[] connectors = this.server.getConnectors();
-        if ( connectors != null )
+        if (connectors != null)
         {
-            for(int i=0 ; i < connectors.length; i++)
+            for (int i = 0; i < connectors.length; i++)
             {
                 final Connector connector = connectors[i];
 
-                if ( connector.getHost() == null )
+                if (connector.getHost() == null)
                 {
                     try
                     {
                         final List<NetworkInterface> interfaces = new ArrayList<NetworkInterface>();
                         final List<NetworkInterface> loopBackInterfaces = new ArrayList<NetworkInterface>();
                         final Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
-                        while ( nis.hasMoreElements() )
+                        while (nis.hasMoreElements())
                         {
                             final NetworkInterface ni = nis.nextElement();
-                            if ( ni.isLoopback() )
+                            if (ni.isLoopback())
                             {
                                 loopBackInterfaces.add(ni);
                             }
@@ -524,7 +540,7 @@ public final class JettyService
                 else
                 {
                     final String endpoint = this.getEndpoint(connector, connector.getHost());
-                    if ( endpoint != null )
+                    if (endpoint != null)
                     {
                         endpoints.add(endpoint);
                     }
@@ -540,31 +556,27 @@ public final class JettyService
 
         // check existing deployments
         Deployment deployment = this.deployments.get(contextPath);
-        if (deployment != null) {
-            SystemLogger.warning(String.format(
-                    "Web application bundle %s has context path %s which is already registered",
-                    bundle.getSymbolicName(), contextPath), null);
-            postEvent(WebEvent.FAILED(bundle, this.context.getBundle(), null, contextPath,
-                    deployment.getBundle().getBundleId()));
+        if (deployment != null)
+        {
+            SystemLogger.warning(String.format("Web application bundle %s has context path %s which is already registered", bundle.getSymbolicName(), contextPath), null);
+            postEvent(WebEvent.FAILED(bundle, this.context.getBundle(), null, contextPath, deployment.getBundle().getBundleId()));
             return null;
         }
 
         // check context path belonging to Http Service implementation
-        if (contextPath.equals("/")) {
-            SystemLogger.warning(String.format(
-                    "Web application bundle %s has context path %s which is reserved",
-                    bundle.getSymbolicName(), contextPath), null);
-            postEvent(WebEvent.FAILED(bundle, this.context.getBundle(), null, contextPath,
-                    this.context.getBundle().getBundleId()));
+        if (contextPath.equals("/"))
+        {
+            SystemLogger.warning(String.format("Web application bundle %s has context path %s which is reserved", bundle.getSymbolicName(), contextPath), null);
+            postEvent(WebEvent.FAILED(bundle, this.context.getBundle(), null, contextPath, this.context.getBundle().getBundleId()));
             return null;
         }
 
         // check against excluded paths
-        for (String path : this.config.getPathExclusions()) {
-            if (contextPath.startsWith(path)) {
-                SystemLogger.warning(String.format(
-                        "Web application bundle %s has context path %s which clashes with excluded path prefix %s",
-                        bundle.getSymbolicName(), contextPath, path), null);
+        for (String path : this.config.getPathExclusions())
+        {
+            if (contextPath.startsWith(path))
+            {
+                SystemLogger.warning(String.format("Web application bundle %s has context path %s which clashes with excluded path prefix %s", bundle.getSymbolicName(), contextPath, path), null);
                 postEvent(WebEvent.FAILED(bundle, this.context.getBundle(), null, path, null));
                 return null;
             }
@@ -580,14 +592,18 @@ public final class JettyService
 
     public void deploy(final Deployment deployment, final WebAppBundleContext context)
     {
-        if (this.executor != null  && !this.executor.isShutdown()) {
-            this.executor.submit(new JettyOperation() {
+        if (this.executor != null && !this.executor.isShutdown())
+        {
+            this.executor.submit(new JettyOperation()
+            {
                 @Override
-                protected void doExecute() {
+                protected void doExecute()
+                {
                     final Bundle webAppBundle = deployment.getBundle();
                     final Bundle extenderBundle = JettyService.this.context.getBundle();
 
-                    try {
+                    try
+                    {
                         JettyService.this.parent.addHandler(context);
                         context.start();
 
@@ -595,13 +611,14 @@ public final class JettyService
                         props.put(WEB_SYMBOLIC_NAME, webAppBundle.getSymbolicName());
                         props.put(WEB_VERSION, webAppBundle.getVersion());
                         props.put(WEB_CONTEXT_PATH, deployment.getContextPath());
-                        deployment.setRegistration(webAppBundle.getBundleContext().registerService(
-                                ServletContext.class.getName(), context.getServletContext(), props));
+                        deployment.setRegistration(webAppBundle.getBundleContext().registerService(ServletContext.class.getName(), context.getServletContext(), props));
 
                         context.getServletContext().setAttribute(OSGI_BUNDLE_CONTEXT, webAppBundle.getBundleContext());
 
                         postEvent(WebEvent.DEPLOYED(webAppBundle, extenderBundle));
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         SystemLogger.error(String.format("Deploying web application bundle %s failed.", webAppBundle.getSymbolicName()), e);
                         postEvent(WebEvent.FAILED(webAppBundle, extenderBundle, e, null, null));
                         deployment.setContext(null);
@@ -614,27 +631,36 @@ public final class JettyService
 
     public void undeploy(final Deployment deployment, final WebAppBundleContext context)
     {
-        if (this.executor != null  && !this.executor.isShutdown()) {
-            this.executor.submit(new JettyOperation(){
+        if (this.executor != null && !this.executor.isShutdown())
+        {
+            this.executor.submit(new JettyOperation()
+            {
                 @Override
-                protected void doExecute() {
+                protected void doExecute()
+                {
                     final Bundle webAppBundle = deployment.getBundle();
                     final Bundle extenderBundle = JettyService.this.context.getBundle();
 
-                    try {
+                    try
+                    {
                         postEvent(WebEvent.UNDEPLOYING(webAppBundle, extenderBundle));
 
                         context.getServletContext().removeAttribute(OSGI_BUNDLE_CONTEXT);
 
                         ServiceRegistration registration = deployment.getRegistration();
-                        if (registration != null) {
+                        if (registration != null)
+                        {
                             registration.unregister();
                         }
                         deployment.setRegistration(null);
                         context.stop();
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         SystemLogger.error(String.format("Undeploying web application bundle %s failed.", webAppBundle.getSymbolicName()), e);
-                    } finally {
+                    }
+                    finally
+                    {
                         postEvent(WebEvent.UNDEPLOYED(webAppBundle, extenderBundle));
                     }
                 }
@@ -655,11 +681,12 @@ public final class JettyService
 
     private Object detectWebAppBundle(Bundle bundle)
     {
-        if (bundle.getState() == Bundle.ACTIVE || (bundle.getState() == Bundle.STARTING &&
-                "Lazy".equals(bundle.getHeaders().get(HEADER_ACTIVATION_POLICY)))) {
+        if (bundle.getState() == Bundle.ACTIVE || (bundle.getState() == Bundle.STARTING && "Lazy".equals(bundle.getHeaders().get(HEADER_ACTIVATION_POLICY))))
+        {
 
             String contextPath = (String) bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
-            if (contextPath != null) {
+            if (contextPath != null)
+            {
                 return startWebAppBundle(bundle, contextPath);
             }
         }
@@ -669,12 +696,14 @@ public final class JettyService
     public void removedBundle(Bundle bundle, BundleEvent event, Object object)
     {
         String contextPath = (String) bundle.getHeaders().get(HEADER_WEB_CONTEXT_PATH);
-        if (contextPath == null) {
+        if (contextPath == null)
+        {
             return;
         }
 
         Deployment deployment = this.deployments.remove(contextPath);
-        if (deployment != null && deployment.getContext() != null) {
+        if (deployment != null && deployment.getContext() != null)
+        {
             // remove registration, since bundle is already stopping
             deployment.setRegistration(null);
             undeploy(deployment, deployment.getContext());
@@ -701,18 +730,20 @@ public final class JettyService
 
     private void postEvent(Event event)
     {
-        if (this.eventAdmin != null) {
+        if (this.eventAdmin != null)
+        {
             this.eventAdmin.postEvent(event);
         }
     }
 
     public void lifeCycleStarted(LifeCycle event)
     {
-        for (Deployment deployment : this.deployments.values()) {
-            if (deployment.getContext() == null) {
+        for (Deployment deployment : this.deployments.values())
+        {
+            if (deployment.getContext() == null)
+            {
                 postEvent(WebEvent.DEPLOYING(deployment.getBundle(), this.context.getBundle()));
-                WebAppBundleContext context = new WebAppBundleContext(deployment.getContextPath(),
-                        deployment.getBundle(), this.getClass().getClassLoader());
+                WebAppBundleContext context = new WebAppBundleContext(deployment.getContextPath(), deployment.getBundle(), this.getClass().getClassLoader());
                 deploy(deployment, context);
             }
         }
@@ -720,8 +751,10 @@ public final class JettyService
 
     public void lifeCycleStopping(LifeCycle event)
     {
-        for (Deployment deployment : this.deployments.values()) {
-            if (deployment.getContext() != null) {
+        for (Deployment deployment : this.deployments.values())
+        {
+            if (deployment.getContext() != null)
+            {
                 undeploy(deployment, deployment.getContext());
             }
         }
@@ -784,11 +817,14 @@ public final class JettyService
         {
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-            try {
+            try
+            {
                 Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
                 doExecute();
                 return null;
-            } finally {
+            }
+            finally
+            {
                 Thread.currentThread().setContextClassLoader(cl);
             }
         }
