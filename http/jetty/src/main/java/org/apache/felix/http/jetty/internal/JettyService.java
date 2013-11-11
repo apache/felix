@@ -59,6 +59,7 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.BundleTracker;
@@ -85,18 +86,19 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     private final JettyConfig config;
     private final BundleContext context;
+    private final DispatcherServlet dispatcher;
+    private final HttpServiceController controller;
+    private final Map<String, Deployment> deployments;
+    private final ExecutorService executor;
+
     private ServiceRegistration configServiceReg;
-    private ExecutorService executor;
     private Server server;
     private ContextHandlerCollection parent;
-    private DispatcherServlet dispatcher;
     private EventDispatcher eventDispatcher;
-    private final HttpServiceController controller;
     private MBeanServerTracker mbeanServerTracker;
     private BundleTracker bundleTracker;
     private ServiceTracker serviceTracker;
     private EventAdmin eventAdmin;
-    private Map<String, Deployment> deployments = new LinkedHashMap<String, Deployment>();
 
     public JettyService(BundleContext context, DispatcherServlet dispatcher, EventDispatcher eventDispatcher, HttpServiceController controller)
     {
@@ -105,14 +107,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         this.dispatcher = dispatcher;
         this.eventDispatcher = eventDispatcher;
         this.controller = controller;
-    }
-
-    public void start() throws Exception
-    {
-        Properties props = new Properties();
-        props.put(Constants.SERVICE_PID, PID);
-        this.configServiceReg = this.context.registerService("org.osgi.service.cm.ManagedService", new JettyManagedService(this), props);
-
+        this.deployments = new LinkedHashMap<String, Deployment>();
         this.executor = Executors.newSingleThreadExecutor(new ThreadFactory()
         {
             public Thread newThread(Runnable runnable)
@@ -122,6 +117,10 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 return t;
             }
         });
+    }
+
+    public void start() throws Exception
+    {
         this.executor.submit(new JettyOperation()
         {
             @Override
@@ -130,6 +129,10 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                 startJetty();
             }
         });
+
+        Properties props = new Properties();
+        props.put(Constants.SERVICE_PID, PID);
+        this.configServiceReg = this.context.registerService(ManagedService.class.getName(), new JettyManagedService(this), props);
 
         this.serviceTracker = new ServiceTracker(this.context, EventAdmin.class.getName(), this);
         this.serviceTracker.open();
@@ -140,7 +143,23 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     public void stop() throws Exception
     {
-        if (this.executor != null && !this.executor.isShutdown())
+        if (this.configServiceReg != null)
+        {
+            this.configServiceReg.unregister();
+            this.configServiceReg = null;
+        }
+        if (this.bundleTracker != null)
+        {
+            this.bundleTracker.close();
+            this.bundleTracker = null;
+        }
+        if (this.serviceTracker != null)
+        {
+            this.serviceTracker.close();
+            this.serviceTracker = null;
+        }
+
+        if (isExecutorServiceAvailable())
         {
             this.executor.submit(new JettyOperation()
             {
@@ -150,36 +169,32 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                     stopJetty();
                 }
             });
+
             this.executor.shutdown();
-        }
-        if (this.configServiceReg != null)
-        {
-            this.configServiceReg.unregister();
-        }
-        if (this.bundleTracker != null)
-        {
-            this.bundleTracker.close();
-        }
-        if (this.serviceTracker != null)
-        {
-            this.serviceTracker.close();
         }
     }
 
     private void publishServiceProperties()
     {
         Hashtable<String, Object> props = new Hashtable<String, Object>();
+        // Add some important configuration properties...
         this.config.setServiceProperties(props);
-        this.addEndpointProperties(props, null);
+        addEndpointProperties(props, null);
+
+        // propagate the new service properties to the actual HTTP service...
         this.controller.setProperties(props);
     }
 
     public void updated(Dictionary props)
     {
-        this.config.update(props);
-
-        if (this.executor != null && !this.executor.isShutdown())
+        if (isExecutorServiceAvailable())
         {
+            if (!this.config.update(props))
+            {
+                // Nothing changed in our configuration, let's not needlessly restart Jetty...
+                return;
+            }
+
             this.executor.submit(new JettyOperation()
             {
                 @Override
@@ -592,7 +607,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     public void deploy(final Deployment deployment, final WebAppBundleContext context)
     {
-        if (this.executor != null && !this.executor.isShutdown())
+        if (isExecutorServiceAvailable())
         {
             this.executor.submit(new JettyOperation()
             {
@@ -631,7 +646,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     public void undeploy(final Deployment deployment, final WebAppBundleContext context)
     {
-        if (this.executor != null && !this.executor.isShutdown())
+        if (isExecutorServiceAvailable())
         {
             this.executor.submit(new JettyOperation()
             {
@@ -830,5 +845,13 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         }
 
         protected abstract void doExecute() throws Exception;
+    }
+
+    /**
+     * @return <code>true</code> if there is a valid executor service available, <code>false</code> otherwise.
+     */
+    private boolean isExecutorServiceAvailable()
+    {
+        return this.executor != null && !this.executor.isShutdown();
     }
 }
