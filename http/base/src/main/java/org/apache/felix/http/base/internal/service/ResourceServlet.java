@@ -16,19 +16,19 @@
  */
 package org.apache.felix.http.base.internal.service;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-public final class ResourceServlet 
-    extends HttpServlet
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public final class ResourceServlet extends HttpServlet
 {
     private final String path;
 
@@ -38,44 +38,52 @@ public final class ResourceServlet
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res)
-        throws ServletException, IOException
+    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
         String target = req.getPathInfo();
-        if (target == null) {
+        if (target == null)
+        {
             target = "";
         }
 
-        if (!target.startsWith("/")) {
+        if (!target.startsWith("/"))
+        {
             target += "/" + target;
         }
 
         String resName = this.path + target;
         URL url = getServletContext().getResource(resName);
-        
-        if (url == null) {
+
+        if (url == null)
+        {
             res.sendError(HttpServletResponse.SC_NOT_FOUND);
-        } else {
+        }
+        else
+        {
             handle(req, res, url, resName);
         }
     }
 
-    private void handle(HttpServletRequest req, HttpServletResponse res, URL url, String resName)
-        throws IOException
+    private void handle(HttpServletRequest req, HttpServletResponse res, URL url, String resName) throws IOException
     {
         String contentType = getServletContext().getMimeType(resName);
-        if (contentType != null) {
+        if (contentType != null)
+        {
             res.setContentType(contentType);
         }
 
-        long lastModified  = getLastModified(url);
-        if (lastModified != 0) {
+        long lastModified = getLastModified(url);
+        if (lastModified != 0)
+        {
             res.setDateHeader("Last-Modified", lastModified);
         }
 
-        if (!resourceModified(lastModified, req.getDateHeader("If-Modified-Since"))) {
+        if (!resourceModified(lastModified, req.getDateHeader("If-Modified-Since")))
+        {
             res.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-        } else {
+        }
+        else
+        {
             copyResource(url, res);
         }
     }
@@ -84,19 +92,24 @@ public final class ResourceServlet
     {
         long lastModified = 0;
 
-        try {
+        try
+        {
             URLConnection conn = url.openConnection();
             lastModified = conn.getLastModified();
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             // Do nothing
         }
 
-        if (lastModified == 0) {
+        if (lastModified == 0)
+        {
             String filepath = url.getPath();
-            if (filepath != null) {
+            if (filepath != null)
+            {
                 File f = new File(filepath);
-                if (f.exists()) {
+                if (f.exists())
+                {
                     lastModified = f.lastModified();
                 }
             }
@@ -113,34 +126,68 @@ public final class ResourceServlet
         return resTimestamp == 0 || modSince == -1 || resTimestamp > modSince;
     }
 
-    private void copyResource(URL url, HttpServletResponse res)
-        throws IOException
+    private void copyResource(URL url, HttpServletResponse res) throws IOException
     {
+        URLConnection conn = null;
         OutputStream os = null;
         InputStream is = null;
 
-        try {
-            os = res.getOutputStream();
-            is = url.openStream();
+        try
+        {
+            conn = url.openConnection();
 
-            int len = 0;
+            is = conn.getInputStream();
+            os = res.getOutputStream();
+            // FELIX-3987 content length should be set *before* any streaming is done 
+            // as headers should be written before the content is actually written...
+            int len = getContentLength(conn);
+            if (len >= 0)
+            {
+                res.setContentLength(len);
+            }
+
             byte[] buf = new byte[1024];
             int n;
 
-            while ((n = is.read(buf, 0, buf.length)) >= 0) {
-                os.write( buf, 0, n );
-                len += n;
+            while ((n = is.read(buf, 0, buf.length)) >= 0)
+            {
+                os.write(buf, 0, n);
             }
-
-            res.setContentLength(len);
-        } finally {
-            if (is != null) {
+        }
+        finally
+        {
+            if (is != null)
+            {
                 is.close();
             }
 
-            if (os != null) {
+            if (os != null)
+            {
                 os.close();
             }
         }
+    }
+
+    private int getContentLength(URLConnection conn)
+    {
+        int length = -1;
+
+        length = conn.getContentLength();
+        if (length < 0)
+        {
+            // Unknown, try whether it is a file, and if so, use the file 
+            // API to get the length of the content...
+            String path = conn.getURL().getPath();
+            if (path != null)
+            {
+                File f = new File(path);
+                // In case more than 2GB is streamed 
+                if (f.length() < Integer.MAX_VALUE)
+                {
+                    length = (int) f.length();
+                }
+            }
+        }
+        return length;
     }
 }
