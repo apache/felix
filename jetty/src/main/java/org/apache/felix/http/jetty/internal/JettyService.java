@@ -245,7 +245,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     {
         if (this.config.isUseHttp() || this.config.isUseHttps())
         {
-            StringBuffer message = new StringBuffer("Started jetty ").append(getJettyVersion()).append(" at port(s)");
+            StringBuffer message = new StringBuffer("Started Jetty ").append(getJettyVersion()).append(" at port(s)");
             HashLoginService realm = new HashLoginService("OSGi HTTP Service Realm");
             this.server = new Server();
             this.server.addLifeCycleListener(this);
@@ -311,120 +311,74 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private void initializeHttp() throws Exception
     {
         Connector connector = this.config.isUseHttpNio() ? new SelectChannelConnector() : new SocketConnector();
-        connector.setPort(this.config.getHttpPort());
-        configureConnector(connector);
+        configureConnector(connector, this.config.getHttpPort());
+        this.server.addConnector(connector);
+    }
+
+    private void initializeHttps() throws Exception
+    {
+        SslConnector connector = this.config.isUseHttpsNio() ? new SslSelectChannelConnector() : new SslSocketConnector();
+        configureConnector(connector, this.config.getHttpsPort());
+        configureSslConnector(connector);
         this.server.addConnector(connector);
     }
 
     @SuppressWarnings("deprecation")
-    private void initializeHttps() throws Exception
+    private void configureSslConnector(final SslConnector connector)
     {
-        // this massive code duplication is caused by the SslSelectChannelConnector
-        // and the SslSocketConnector not have a common API to setup security
-        // stuff
-        Connector connector;
-        if (this.config.isUseHttpsNio())
+        if (this.config.getKeystoreType() != null)
         {
-            SslSelectChannelConnector sslConnector = new SslSelectChannelConnector();
-
-            if (this.config.getKeystore() != null)
-            {
-                sslConnector.setKeystore(this.config.getKeystore());
-            }
-
-            if (this.config.getPassword() != null)
-            {
-                System.setProperty(SslSelectChannelConnector.PASSWORD_PROPERTY, this.config.getPassword());
-                sslConnector.setPassword(this.config.getPassword());
-            }
-
-            if (this.config.getKeyPassword() != null)
-            {
-                System.setProperty(SslSelectChannelConnector.KEYPASSWORD_PROPERTY, this.config.getKeyPassword());
-                sslConnector.setKeyPassword(this.config.getKeyPassword());
-            }
-
-            if (this.config.getTruststore() != null)
-            {
-                sslConnector.setTruststore(this.config.getTruststore());
-            }
-
-            if (this.config.getTrustPassword() != null)
-            {
-                sslConnector.setTrustPassword(this.config.getTrustPassword());
-            }
-
-            if ("wants".equals(this.config.getClientcert()))
-            {
-                sslConnector.setWantClientAuth(true);
-            }
-            else if ("needs".equals(this.config.getClientcert()))
-            {
-                sslConnector.setNeedClientAuth(true);
-            }
-
-            connector = sslConnector;
-        }
-        else
-        {
-            SslSocketConnector sslConnector = new SslSocketConnector();
-
-            if (this.config.getKeystore() != null)
-            {
-                sslConnector.setKeystore(this.config.getKeystore());
-            }
-
-            if (this.config.getPassword() != null)
-            {
-                System.setProperty(SslSelectChannelConnector.PASSWORD_PROPERTY, this.config.getPassword());
-                sslConnector.setPassword(this.config.getPassword());
-            }
-
-            if (this.config.getKeyPassword() != null)
-            {
-                System.setProperty(SslSelectChannelConnector.KEYPASSWORD_PROPERTY, this.config.getKeyPassword());
-                sslConnector.setKeyPassword(this.config.getKeyPassword());
-            }
-
-            if (this.config.getTruststore() != null)
-            {
-                sslConnector.setTruststore(this.config.getTruststore());
-            }
-
-            if (this.config.getTrustPassword() != null)
-            {
-                sslConnector.setTrustPassword(this.config.getTrustPassword());
-            }
-
-            if ("wants".equals(this.config.getClientcert()))
-            {
-                sslConnector.setWantClientAuth(true);
-            }
-            else if ("needs".equals(this.config.getClientcert()))
-            {
-                sslConnector.setNeedClientAuth(true);
-            }
-
-            connector = sslConnector;
+            connector.setKeystoreType(this.config.getKeystoreType());
         }
 
-        connector.setPort(this.config.getHttpsPort());
-        configureConnector(connector);
+        if (this.config.getKeystore() != null)
+        {
+            connector.setKeystore(this.config.getKeystore());
+        }
 
-        this.server.addConnector(connector);
+        if (this.config.getPassword() != null)
+        {
+            connector.setPassword(this.config.getPassword());
+        }
+
+        if (this.config.getKeyPassword() != null)
+        {
+            connector.setKeyPassword(this.config.getKeyPassword());
+        }
+
+        if (this.config.getTruststoreType() != null)
+        {
+            connector.setTruststoreType(this.config.getTruststoreType());
+        }
+
+        if (this.config.getTruststore() != null)
+        {
+            connector.setTruststore(this.config.getTruststore());
+        }
+
+        if (this.config.getTrustPassword() != null)
+        {
+            connector.setTrustPassword(this.config.getTrustPassword());
+        }
+
+        if ("wants".equalsIgnoreCase(this.config.getClientcert()))
+        {
+            connector.setWantClientAuth(true);
+        }
+        else if ("needs".equalsIgnoreCase(this.config.getClientcert()))
+        {
+            connector.setNeedClientAuth(true);
+        }
     }
 
-    private void configureConnector(final Connector connector)
+    private void configureConnector(final Connector connector, int port)
     {
         connector.setMaxIdleTime(this.config.getHttpTimeout());
         connector.setRequestBufferSize(this.config.getRequestBufferSize());
         connector.setResponseBufferSize(this.config.getResponseBufferSize());
+        connector.setPort(port);
         connector.setHost(this.config.getHost());
         connector.setStatsOn(this.config.isRegisterMBeans());
-
-        // connector.setLowResourceMaxIdleTime(ms);
-        // connector.setRequestBufferSize(requestBufferSize);
-        // connector.setResponseBufferSize(responseBufferSize);
     }
 
     private void configureSessionManager(final ServletContextHandler context)
