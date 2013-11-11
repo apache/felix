@@ -19,11 +19,8 @@ package org.apache.felix.http.jetty.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Properties;
 
 import org.osgi.framework.BundleContext;
@@ -83,13 +80,13 @@ public final class JettyConfig
     /** Felix specific property to configure the session timeout in minutes (same session-timout in web.xml). Default is servlet container specific */
     public static final String FELIX_SESSION_TIMEOUT = "org.apache.felix.http.session.timeout";
 
-    /** Felix speicific property to configure the request buffer size. Default is 16KB (instead of Jetty's default of 4KB) */
+    /** Felix specific property to configure the request buffer size. Default is 16KB (instead of Jetty's default of 4KB) */
     public static final String FELIX_JETTY_HEADER_BUFFER_SIZE = "org.apache.felix.http.jetty.headerBufferSize";
 
-    /** Felix speicific property to configure the request buffer size. Default is 8KB */
+    /** Felix specific property to configure the request buffer size. Default is 8KB */
     public static final String FELIX_JETTY_REQUEST_BUFFER_SIZE = "org.apache.felix.http.jetty.requestBufferSize";
 
-    /** Felix speicific property to configure the request buffer size. Default is 24KB */
+    /** Felix specific property to configure the request buffer size. Default is 24KB */
     public static final String FELIX_JETTY_RESPONSE_BUFFER_SIZE = "org.apache.felix.http.jetty.responseBufferSize";
 
     /** Felix specific property to enable Jetty MBeans. Valid values are "true", "false". Default is false */
@@ -101,28 +98,28 @@ public final class JettyConfig
     /** Felix specific property to set the list of path exclusions for Web Application Bundles */
     public static final String FELIX_HTTP_PATH_EXCLUSIONS = "org.apache.felix.http.path_exclusions";
 
+    private static String validateContextPath(String ctxPath)
+    {
+        // undefined, empty, or root context path
+        if (ctxPath == null || ctxPath.length() == 0 || "/".equals(ctxPath))
+        {
+            return "/";
+        }
+
+        // ensure leading but no trailing slash
+        if (!ctxPath.startsWith("/"))
+        {
+            ctxPath = "/".concat(ctxPath);
+        }
+        while (ctxPath.endsWith("/"))
+        {
+            ctxPath = ctxPath.substring(0, ctxPath.length() - 1);
+        }
+
+        return ctxPath;
+    }
+
     private final BundleContext context;
-    private boolean debug;
-    private String host;
-    private int httpPort;
-    private int httpsPort;
-    private int httpTimeout;
-    private String keystore;
-    private String password;
-    private String keyPassword;
-    private boolean useHttps;
-    private String truststore;
-    private String trustPassword;
-    private boolean useHttp;
-    private String clientcert;
-    private boolean useHttpNio;
-    private boolean useHttpsNio;
-    private boolean registerMBeans;
-    private int sessionTimeout;
-    private int requestBufferSize;
-    private int responseBufferSize;
-    private String contextPath;
-    private String[] pathExclusions;
 
     /**
      * Properties from the configuration not matching any of the
@@ -132,7 +129,7 @@ public final class JettyConfig
      * This map is indexed by String objects (the property names) and
      * the values are just objects as provided by the configuration.
      */
-    private Map genericProperties = new HashMap();
+    private volatile Dictionary config;
 
     public JettyConfig(BundleContext context)
     {
@@ -140,9 +137,143 @@ public final class JettyConfig
         reset();
     }
 
+    /**
+     * Returns the named generic configuration property from the
+     * configuration or the bundle context. If neither property is defined
+     * return the defValue.
+     */
+    public boolean getBooleanProperty(String name, boolean defValue)
+    {
+        String value = getProperty(name, null);
+        if (value != null)
+        {
+            return "true".equalsIgnoreCase(value) || "yes".equalsIgnoreCase(value);
+        }
+
+        return defValue;
+    }
+
+    public String getClientcert()
+    {
+        return getProperty(FELIX_HTTPS_CLIENT_CERT, "none");
+    }
+
+    public String getContextPath()
+    {
+        return validateContextPath(getProperty(FELIX_HTTP_CONTEXT_PATH, null));
+    }
+
+    public String getHost()
+    {
+        return getProperty(FELIX_HOST, null);
+    }
+
+    public int getHttpPort()
+    {
+        return getIntProperty(HTTP_PORT, 8080);
+    }
+
+    public int getHttpsPort()
+    {
+        return getIntProperty(HTTPS_PORT, 8443);
+    }
+
+    public int getHttpTimeout()
+    {
+        return getIntProperty(HTTP_TIMEOUT, 60000);
+    }
+
+    /**
+     * Returns the named generic configuration property from the
+     * configuration or the bundle context. If neither property is defined
+     * return the defValue.
+     */
+    public int getIntProperty(String name, int defValue)
+    {
+        try
+        {
+            return Integer.parseInt(getProperty(name, null));
+        }
+        catch (Exception e)
+        {
+            return defValue;
+        }
+    }
+
+    public String getKeyPassword()
+    {
+        return getProperty(FELIX_KEYSTORE_KEY_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_KEY_PASSWORD));
+    }
+
+    public String getKeystore()
+    {
+        return getProperty(FELIX_KEYSTORE, this.context.getProperty(OSCAR_KEYSTORE));
+    }
+
+    public String getPassword()
+    {
+        return getProperty(FELIX_KEYSTORE_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_PASSWORD));
+    }
+
+    public String[] getPathExclusions()
+    {
+        return getStringArrayProperty(FELIX_HTTP_PATH_EXCLUSIONS, new String[] { "/system" });
+    }
+
+    /**
+     * Returns the named generic configuration property from the
+     * configuration or the bundle context. If neither property is defined
+     * return the defValue.
+     */
+    public String getProperty(String name, String defValue)
+    {
+        Dictionary conf = this.config;
+        Object value = (conf != null) ? conf.get(name) : null;
+        if (value == null)
+        {
+            value = this.context.getProperty(name);
+        }
+
+        return value != null ? String.valueOf(value) : defValue;
+    }
+
+    public int getRequestBufferSize()
+    {
+        return getIntProperty(FELIX_JETTY_REQUEST_BUFFER_SIZE, 8 * 1024);
+    }
+
+    public int getResponseBufferSize()
+    {
+        return getIntProperty(FELIX_JETTY_RESPONSE_BUFFER_SIZE, 24 * 1024);
+    }
+
+    /**
+     * Returns the configured session timeout in minutes or zero if not
+     * configured.
+     */
+    public int getSessionTimeout()
+    {
+        return getIntProperty(FELIX_SESSION_TIMEOUT, 0);
+    }
+
+    public String getTrustPassword()
+    {
+        return getProperty(FELIX_TRUSTSTORE_PASSWORD, null);
+    }
+
+    public String getTruststore()
+    {
+        return getProperty(FELIX_TRUSTSTORE, null);
+    }
+
     public boolean isDebug()
     {
-        return this.debug;
+        return getBooleanProperty(FELIX_HTTP_DEBUG, getBooleanProperty(HTTP_DEBUG, false));
+    }
+
+    public boolean isRegisterMBeans()
+    {
+        return getBooleanProperty(FELIX_HTTP_MBEANS, false);
     }
 
     /**
@@ -152,12 +283,13 @@ public final class JettyConfig
      */
     public boolean isUseHttp()
     {
-        return this.useHttp && getHttpPort() > 0;
+        boolean useHttp = getBooleanProperty(FELIX_HTTP_ENABLE, true);
+        return useHttp && getHttpPort() > 0;
     }
 
     public boolean isUseHttpNio()
     {
-        return this.useHttpNio;
+        return getBooleanProperty(FELIX_HTTP_NIO, true);
     }
 
     /**
@@ -167,96 +299,13 @@ public final class JettyConfig
      */
     public boolean isUseHttps()
     {
-        return this.useHttps && getHttpsPort() > 0;
+        boolean useHttps = getBooleanProperty(FELIX_HTTPS_ENABLE, getBooleanProperty(OSCAR_HTTPS_ENABLE, false));
+        return useHttps && getHttpsPort() > 0;
     }
 
     public boolean isUseHttpsNio()
     {
-        return this.useHttpsNio;
-    }
-
-    public boolean isRegisterMBeans()
-    {
-        return this.registerMBeans;
-    }
-
-    public String getHost()
-    {
-        return this.host;
-    }
-
-    public int getHttpPort()
-    {
-        return this.httpPort;
-    }
-
-    public int getHttpsPort()
-    {
-        return this.httpsPort;
-    }
-
-    public int getHttpTimeout()
-    {
-        return this.httpTimeout;
-    }
-
-    public String getKeystore()
-    {
-        return this.keystore;
-    }
-
-    public String getPassword()
-    {
-        return this.password;
-    }
-
-    public String getTruststore()
-    {
-        return this.truststore;
-    }
-
-    public String getTrustPassword()
-    {
-        return this.trustPassword;
-    }
-
-    public String getKeyPassword()
-    {
-        return this.keyPassword;
-    }
-
-    public String getClientcert()
-    {
-        return this.clientcert;
-    }
-
-    /**
-     * Returns the configured session timeout in minutes or zero if not
-     * configured.
-     */
-    public int getSessionTimeout()
-    {
-        return this.sessionTimeout;
-    }
-
-    public int getRequestBufferSize()
-    {
-        return this.requestBufferSize;
-    }
-
-    public int getResponseBufferSize()
-    {
-        return this.responseBufferSize;
-    }
-
-    public String getContextPath()
-    {
-        return contextPath;
-    }
-
-    public String[] getPathExclusions()
-    {
-        return this.pathExclusions;
+        return getBooleanProperty(FELIX_HTTPS_NIO, isUseHttpNio());
     }
 
     public void reset()
@@ -264,81 +313,43 @@ public final class JettyConfig
         update(null);
     }
 
-    public void update(Dictionary props)
+    public void setServiceProperties(Hashtable<String, Object> props)
+    {
+        props.put(HTTP_PORT, Integer.toString(getHttpPort()));
+        props.put(HTTPS_PORT, Integer.toString(getHttpsPort()));
+        props.put(FELIX_HTTP_ENABLE, Boolean.toString(isUseHttp()));
+        props.put(FELIX_HTTPS_ENABLE, Boolean.toString(isUseHttps()));
+    }
+
+    /**
+     * Updates this configuration with the given dictionary.
+     * 
+     * @param props the dictionary with the new configuration values, can be <code>null</code> to reset this configuration to its defaults.
+     * @return <code>true</code> if the configuration was updated due to a changed value, or <code>false</code> if no change was found.
+     */
+    public boolean update(Dictionary props)
     {
         if (props == null)
         {
             props = new Properties();
         }
 
-        this.debug = getBooleanProperty(props, FELIX_HTTP_DEBUG, getBooleanProperty(props, HTTP_DEBUG, false));
-        this.host = getProperty(props, FELIX_HOST, null);
-        this.httpPort = getIntProperty(props, HTTP_PORT, 8080);
-        this.httpsPort = getIntProperty(props, HTTPS_PORT, 8443);
-        this.httpTimeout = getIntProperty(props, HTTP_TIMEOUT, 60000);
-        this.keystore = getProperty(props, FELIX_KEYSTORE, this.context.getProperty(OSCAR_KEYSTORE));
-        this.password = getProperty(props, FELIX_KEYSTORE_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_PASSWORD));
-        this.keyPassword = getProperty(props, FELIX_KEYSTORE_KEY_PASSWORD, this.context.getProperty(OSCAR_KEYSTORE_KEY_PASSWORD));
-        this.useHttps = getBooleanProperty(props, FELIX_HTTPS_ENABLE, getBooleanProperty(props, OSCAR_HTTPS_ENABLE, false));
-        this.useHttp = getBooleanProperty(props, FELIX_HTTP_ENABLE, true);
-        this.truststore = getProperty(props, FELIX_TRUSTSTORE, null);
-        this.trustPassword = getProperty(props, FELIX_TRUSTSTORE_PASSWORD, null);
-        this.clientcert = getProperty(props, FELIX_HTTPS_CLIENT_CERT, "none");
-        this.useHttpNio = getBooleanProperty(props, FELIX_HTTP_NIO, true);
-        this.useHttpsNio = getBooleanProperty(props, FELIX_HTTPS_NIO, this.useHttpNio);
-        this.registerMBeans = getBooleanProperty(props, FELIX_HTTP_MBEANS, false);
-        this.sessionTimeout = getIntProperty(props, FELIX_SESSION_TIMEOUT, 0);
-        this.requestBufferSize = getIntProperty(FELIX_JETTY_REQUEST_BUFFER_SIZE, 8 * 1024);
-        this.responseBufferSize = getIntProperty(FELIX_JETTY_RESPONSE_BUFFER_SIZE, 24 * 1024);
-        this.contextPath = validateContextPath(getProperty(props, FELIX_HTTP_CONTEXT_PATH, null));
-        this.pathExclusions = getStringArrayProperty(props, FELIX_HTTP_PATH_EXCLUSIONS, new String[] { "/system" });
-
-        // copy rest of the properties
-        Enumeration keys = props.keys();
-        while (keys.hasMoreElements())
+        // FELIX-4312 Check whether there's something changed in our configuration... 
+        Dictionary currentConfig = this.config;
+        if (currentConfig == null || !props.equals(currentConfig))
         {
-            Object key = keys.nextElement();
-            this.genericProperties.put(key, props.get(key));
+            this.config = props;
+
+            return true;
         }
+
+        return false;
     }
 
-    private String getProperty(Dictionary props, String name, String defValue)
+    private String[] getStringArrayProperty(String name, String[] defValue)
     {
-        Object value = props.remove(name);
-        if (value == null)
-        {
-            value = this.context.getProperty(name);
-        }
-
-        return value != null ? String.valueOf(value) : defValue;
-    }
-
-    private boolean getBooleanProperty(Dictionary props, String name, boolean defValue)
-    {
-        String value = getProperty(props, name, null);
-        if (value != null)
-        {
-            return (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes"));
-        }
-
-        return defValue;
-    }
-
-    private int getIntProperty(Dictionary props, String name, int defValue)
-    {
-        try
-        {
-            return Integer.parseInt(getProperty(props, name, null));
-        }
-        catch (Exception e)
-        {
-            return defValue;
-        }
-    }
-
-    private String[] getStringArrayProperty(Dictionary props, String name, String[] defValue)
-    {
-        Object value = props.remove(name);
+        Dictionary conf = this.config;
+        Object value = (conf != null) ? conf.get(name) : null;
         if (value == null)
         {
             value = this.context.getProperty(name);
@@ -368,83 +379,5 @@ public final class JettyConfig
         {
             return defValue;
         }
-    }
-
-    private static String validateContextPath(String ctxPath)
-    {
-        // undefined, empty, or root context path
-        if (ctxPath == null || ctxPath.length() == 0 || "/".equals(ctxPath))
-        {
-            return "/";
-        }
-
-        // ensure leading but no trailing slash
-        if (!ctxPath.startsWith("/"))
-        {
-            ctxPath = "/".concat(ctxPath);
-        }
-        while (ctxPath.endsWith("/"))
-        {
-            ctxPath = ctxPath.substring(0, ctxPath.length() - 1);
-        }
-
-        return ctxPath;
-    }
-
-    /**
-     * Returns the named generic configuration property from the
-     * configuration or the bundle context. If neither property is defined
-     * return the defValue.
-     */
-    public String getProperty(String name, String defValue)
-    {
-        Object value = this.genericProperties.get(name);
-        if (value == null)
-        {
-            value = this.context.getProperty(name);
-        }
-
-        return value != null ? String.valueOf(value) : defValue;
-    }
-
-    /**
-     * Returns the named generic configuration property from the
-     * configuration or the bundle context. If neither property is defined
-     * return the defValue.
-     */
-    public boolean getBooleanProperty(String name, boolean defValue)
-    {
-        String value = getProperty(name, null);
-        if (value != null)
-        {
-            return (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes"));
-        }
-
-        return defValue;
-    }
-
-    /**
-     * Returns the named generic configuration property from the
-     * configuration or the bundle context. If neither property is defined
-     * return the defValue.
-     */
-    public int getIntProperty(String name, int defValue)
-    {
-        try
-        {
-            return Integer.parseInt(getProperty(name, null));
-        }
-        catch (Exception e)
-        {
-            return defValue;
-        }
-    }
-
-    public void setServiceProperties(Hashtable<String, Object> props)
-    {
-        props.put(HTTP_PORT, String.valueOf(this.httpPort));
-        props.put(HTTPS_PORT, String.valueOf(this.httpsPort));
-        props.put(FELIX_HTTP_ENABLE, String.valueOf(this.useHttp));
-        props.put(FELIX_HTTPS_ENABLE, String.valueOf(this.useHttps));
     }
 }
