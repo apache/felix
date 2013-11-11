@@ -21,8 +21,7 @@ import java.text.MessageFormat;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.eclipse.jetty.util.log.Logger;
 
-public final class JettyLogger
-    implements Logger
+public final class JettyLogger implements Logger
 {
     private final String name;
     private boolean debugEnabled;
@@ -54,57 +53,71 @@ public final class JettyLogger
         this.debugEnabled = enabled;
     }
 
-	public void debug(Throwable throwable) {
-		if (this.debugEnabled) {
-			SystemLogger.debug(throwable.getMessage());
-		}
-		
-	}
+    public void debug(Throwable throwable)
+    {
+        if (this.debugEnabled)
+        {
+            SystemLogger.debug(throwable.getMessage());
+        }
 
-	public void debug(String msg, Object... args) {
-		if (this.debugEnabled) {
-			SystemLogger.debug(MessageFormat.format(msg, args));
-		}
-	}
+    }
 
-	public void debug(String msg, Throwable throwable) {
-		if (this.debugEnabled) {
-			SystemLogger.debug(msg + ": " + throwable.getMessage());
-		}
-	}
+    public void debug(String msg, Object... args)
+    {
+        if (this.debugEnabled)
+        {
+            SystemLogger.debug(MessageFormat.format(msg, args));
+        }
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void debug(String msg, Throwable throwable)
+    {
+        if (this.debugEnabled)
+        {
+            SystemLogger.debug(msg + ": " + throwable.getMessage());
+        }
+    }
 
-	public void ignore(Throwable throwable) {
-		
-	}
+    public String getName()
+    {
+        return name;
+    }
 
-	public void info(Throwable throwable) {
-		SystemLogger.info(throwable.getMessage());
-	}
+    public void ignore(Throwable throwable)
+    {
 
-	public void info(String msg, Object... args) {
-		SystemLogger.info(MessageFormat.format(msg, args));
-		
-	}
+    }
 
-	public void info(String msg, Throwable throwable) {
-		SystemLogger.info(msg + ": " + throwable.getMessage());
-	}
+    public void info(Throwable throwable)
+    {
+        SystemLogger.info(throwable.getMessage());
+    }
 
-	public void warn(Throwable throwable) {
-		SystemLogger.warning(null, throwable);
-	}
+    public void info(String msg, Object... args)
+    {
+        SystemLogger.info(MessageFormat.format(msg, args));
 
-	public void warn(String msg, Object... args) {
-		SystemLogger.warning(MessageFormat.format(msg, args), null);
-		
-	}
+    }
 
-	public void warn(String msg, Throwable throwable) {
-		SystemLogger.warning(msg, throwable);
-	}
+    public void info(String msg, Throwable throwable)
+    {
+        SystemLogger.info(msg + ": " + throwable.getMessage());
+    }
+
+    public void warn(Throwable throwable)
+    {
+        SystemLogger.warning(null, throwable);
+    }
+
+    public void warn(String msg, Object... args)
+    {
+        SystemLogger.warning(MessageFormat.format(msg, args), null);
+
+    }
+
+    public void warn(String msg, Throwable throwable)
+    {
+        SystemLogger.warning(msg, throwable);
+    }
 
 }
