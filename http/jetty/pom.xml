@@ -48,6 +48,9 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
+                    	<X-Jetty-Version>
+                    		${jetty.version}
+                    	</X-Jetty-Version>
                         <Bundle-Activator>
                             org.apache.felix.http.jetty.internal.JettyActivator
                         </Bundle-Activator>
