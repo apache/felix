@@ -23,9 +23,11 @@ import java.io.PrintStream;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.impl.config.ScrConfiguration;
-import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.utils.extender.AbstractExtender;
 import org.apache.felix.utils.extender.Extension;
 import org.osgi.framework.Bundle;
@@ -162,18 +164,36 @@ public class Activator extends AbstractExtender
     @Override
     protected Extension doCreateExtension(final Bundle bundle) throws Exception
     {
-        return new Extension()
-        {
-            public void start() throws Exception
-            {
-                loadComponents( bundle );
-            }
+        return new ScrExtension(bundle);
+    }
 
-            public void destroy() throws Exception
-            {
-                disposeComponents( bundle );
+    protected class ScrExtension implements Extension {
+
+        private final Bundle bundle;
+        private final CountDownLatch started;
+
+        public ScrExtension(Bundle bundle) {
+            this.bundle = bundle;
+            this.started = new CountDownLatch(1);
+        }
+
+        public void start() {
+            try {
+                loadComponents( ScrExtension.this.bundle );
+            } finally {
+                started.countDown();
             }
-        };
+        }
+
+        public void destroy() {
+            try {
+                this.started.await(60, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                log( LogService.LOG_WARNING, m_context.getBundle(), "The wait for bundle {0}/{1} being started before destruction has been interrupted.",
+                        new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, e );
+            }
+            disposeComponents( this.bundle );
+        }
     }
 
     /**
