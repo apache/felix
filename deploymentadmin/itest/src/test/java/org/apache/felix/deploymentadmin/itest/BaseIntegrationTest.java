@@ -220,7 +220,17 @@ public abstract class BaseIntegrationTest extends TestCase {
     }
 
     protected URL getTestBundle(String baseName) throws MalformedURLException {
-        File f = new File(m_testBundleBasePath, String.format("%1$s/target/org.apache.felix.deploymentadmin.test.%1$s-1.0.0.jar", baseName));
+    	return getTestBundle(baseName, "1.0.0");
+    }
+    protected URL getTestBundle(String baseName, String version) throws MalformedURLException {
+    	return getTestBundle(baseName, baseName, version);
+    }
+
+    protected URL getTestBundle(String artifactName, String baseName, String version) throws MalformedURLException {
+    	if (version == null) {
+    		version = "0.0.0";
+    	}
+        File f = new File(m_testBundleBasePath, String.format("%1$s/target/org.apache.felix.deploymentadmin.test.%2$s-%3$s.jar", artifactName, baseName, version));
         assertTrue("No such bundle: " + f, f.exists() && f.isFile());
         return f.toURI().toURL();
     }

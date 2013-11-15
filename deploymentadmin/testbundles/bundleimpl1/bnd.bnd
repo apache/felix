@@ -1,0 +1,4 @@
+Bundle-Version: 1.0.0
+Bundle-SymbolicName: testbundles.bundleimpl
+Import-Package: org.apache.felix.deploymentadmin.test.bundleapi;version="[1.0.0,2.0.0)"
+Private-Package: org.apache.felix.deploymentadmin.test.bundleimpl

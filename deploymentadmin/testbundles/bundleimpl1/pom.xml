@@ -14,41 +14,38 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.apache.felix</groupId>
-		<artifactId>felix-parent</artifactId>
-		<version>1.2.0</version>
-		<relativePath>../../pom/pom.xml</relativePath>
+		<artifactId>org.apache.felix.deploymentadmin.testbundles</artifactId>
+		<version>1</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<properties>
-		<osgi.version>4.2.0</osgi.version>
-	</properties>
-	<name>Apache Felix DeploymentAdmin Test Bundles</name>
-	<artifactId>org.apache.felix.deploymentadmin.testbundles</artifactId>
-	<version>1</version>
-	<packaging>pom</packaging>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.osgi</groupId>
-				<artifactId>org.osgi.core</artifactId>
-				<version>${osgi.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.osgi</groupId>
-				<artifactId>org.osgi.compendium</artifactId>
-				<version>${osgi.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-	<modules>
-		<module>bundle1</module>
-		<module>bundle2</module>
-		<module>bundle3</module>
-		<module>fragment1</module>
-		<module>rp1</module>
-		<module>rp2</module>
-		<module>bundleapi1</module>
-		<module>bundleapi2</module>
-		<module>bundleimpl1</module>
-		<module>bundleimpl2</module>
-	</modules>
+	<name>Apache Felix DeploymentAdmin Impl Bundle 1</name>
+	<version>1.0.0</version>
+	<artifactId>org.apache.felix.deploymentadmin.test.bundleimpl</artifactId>
+	<packaging>bundle</packaging>
+	<dependencies>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.deploymentadmin.test.bundleapi</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>2.3.4</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<_include>bnd.bnd</_include>
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

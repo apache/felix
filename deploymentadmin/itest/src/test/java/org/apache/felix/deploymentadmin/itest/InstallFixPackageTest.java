@@ -546,4 +546,38 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         // The bundle installed in another deployment package should still remain...
         assertBundleExists(getSymbolicName("bundle1"), "1.0.0");
     }
+    
+    @Test
+    public void testInstallAndUpdateImplementationBundleWithSeparateAPIBundle_FELIX4184() throws Exception {
+    	String value = System.getProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle");
+    	System.setProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", "false");
+    	// first, install a deployment package with implementation and api bundles in version 1.0.0
+
+    	DeploymentPackageBuilder dpBuilder = createDeploymentPackageBuilder("a", "1.0.0");
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")));
+
+        DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        assertNotNull("No deployment package returned?!", dp1);
+
+        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+
+        // then, install a fix package with implementation and api bundles in version 2.0.0
+        dpBuilder = createDeploymentPackageBuilder("a", "2.0.0").setFixPackage("[1.0.0,2.0.0]");
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl2", "bundleimpl", "2.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi", "2.0.0")));
+
+        DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        assertNotNull("No deployment package returned?!", dp2);
+
+        awaitRefreshPackagesEvent();
+
+        assertBundleExists(getSymbolicName("bundleimpl"), "2.0.0");
+        assertBundleExists(getSymbolicName("bundleapi"), "2.0.0");
+        assertBundleNotExists(getSymbolicName("bundleimpl"), "1.0.0");
+        assertBundleNotExists(getSymbolicName("bundleapi"), "1.0.0");
+        if (value != null) {
+        	System.setProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", value);
+        }
+    }
 }
