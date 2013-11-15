@@ -56,11 +56,10 @@ public class AutoConfResourceProcessorTest extends TestCase {
     public void testSimpleSession() throws Exception {
         AutoConfResourceProcessor p = new AutoConfResourceProcessor();
         Utils.configureObject(p, LogService.class);
-        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
-            public DependencyManager getDependencyManager() {
-                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
-            }
-        }));
+        Utils.configureObject(p, DependencyManager.class, new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class)) {
+        	public void remove(Component service) {
+        	}
+        });
         File tempDir = File.createTempFile("persistence", "dir");
         tempDir.delete();
         tempDir.mkdirs();
@@ -70,6 +69,11 @@ public class AutoConfResourceProcessorTest extends TestCase {
         Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
         Session s = new Session();
         p.begin(s);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
+            public DependencyManager getDependencyManager() {
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
+            }
+        }));
         p.process("a", new ByteArrayInputStream("<MetaData />".getBytes()));
         p.process("b", new ByteArrayInputStream("<MetaData />".getBytes()));
         p.prepare();
@@ -82,11 +86,10 @@ public class AutoConfResourceProcessorTest extends TestCase {
     public void testSimpleInstallAndUninstallSession() throws Throwable {
         AutoConfResourceProcessor p = new AutoConfResourceProcessor();
         Utils.configureObject(p, LogService.class);
-        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
-            public DependencyManager getDependencyManager() {
-                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
-            }
-        }));
+        Utils.configureObject(p, DependencyManager.class, new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class)) {
+        	public void remove(Component service) {
+        	}
+        });
         Logger logger = new Logger();
         Utils.configureObject(p, LogService.class, logger);
         File tempDir = File.createTempFile("persistence", "dir");
@@ -98,6 +101,11 @@ public class AutoConfResourceProcessorTest extends TestCase {
         Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
         Session s = new Session();
         p.begin(s);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
+            public DependencyManager getDependencyManager() {
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
+            }
+        }));
         p.process("a", new ByteArrayInputStream("<MetaData />".getBytes()));
         p.prepare();
         p.commit();
@@ -118,11 +126,10 @@ public class AutoConfResourceProcessorTest extends TestCase {
         AutoConfResourceProcessor p = new AutoConfResourceProcessor();
         Logger logger = new Logger();
         Utils.configureObject(p, LogService.class, logger);
-        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
-            public DependencyManager getDependencyManager() {
-                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
-            }
-        }));
+        Utils.configureObject(p, DependencyManager.class, new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class)) {
+        	public void remove(Component service) {
+        	}
+        });
         File tempDir = File.createTempFile("persistence", "dir");
         tempDir.delete();
         tempDir.mkdirs();
@@ -132,6 +139,11 @@ public class AutoConfResourceProcessorTest extends TestCase {
         Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
         Session s = new Session();
         p.begin(s);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
+            public DependencyManager getDependencyManager() {
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
+            }
+        }));
         String config =
             "<MetaData xmlns:metatype='http://www.osgi.org/xmlns/metatype/v1.0.0'>\n" + 
             "  <OCD name='ocd' id='ocd'>\n" + 
@@ -179,12 +191,7 @@ public class AutoConfResourceProcessorTest extends TestCase {
         AutoConfResourceProcessor p = new AutoConfResourceProcessor();
         Logger logger = new Logger();
         Utils.configureObject(p, LogService.class, logger);
-        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
-            public DependencyManager getDependencyManager() {
-                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
-            }
-        }));
-        Utils.configureObject(p, BundleContext.class, Utils.createMockObjectAdapter(BundleContext.class, new Object() {
+        BundleContext mockBC = (BundleContext) Utils.createMockObjectAdapter(BundleContext.class, new Object() {
             public Filter createFilter(String condition) {
                 return (Filter) Utils.createMockObjectAdapter(Filter.class, new Object() {
                     public boolean match(ServiceReference ref) {
@@ -194,9 +201,16 @@ public class AutoConfResourceProcessorTest extends TestCase {
                         }
                         return false;
                     }
+                    public void remove(Component service) {
+                    }
                 });
             }
-        }));
+        });
+		Utils.configureObject(p, BundleContext.class, mockBC);
+        Utils.configureObject(p, DependencyManager.class, new DependencyManager(mockBC) {
+        	public void remove(Component service) {
+        	}
+        });
         File tempDir = File.createTempFile("persistence", "dir");
         tempDir.delete();
         tempDir.mkdirs();
@@ -206,6 +220,11 @@ public class AutoConfResourceProcessorTest extends TestCase {
         Utils.configureObject(p, PersistencyManager.class, new PersistencyManager(tempDir));
         Session s = new Session();
         p.begin(s);
+        Utils.configureObject(p, Component.class, Utils.createMockObjectAdapter(Component.class, new Object() {
+            public DependencyManager getDependencyManager() {
+                return new DependencyManager((BundleContext) Utils.createNullObject(BundleContext.class));
+            }
+        }));
         String config =
             "<MetaData xmlns:metatype='http://www.osgi.org/xmlns/metatype/v1.0.0' filter='(id=42)'>\n" + 
             "  <OCD name='ocd' id='ocd'>\n" + 
