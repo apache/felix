@@ -88,7 +88,7 @@
                         <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                         <Private-Package>org.apache.felix.deployment.rp.autoconf, org.apache.felix.metatype, org.apache.felix.metatype.internal.l10n, org.apache.felix.metatype.internal, org.kxml2.io;-split-package:=merge-first, org.xmlpull.v1;-split-package:=merge-first, org.osgi.service.metatype;-split-package:=merge-first</Private-Package>
                         <Import-Package>org.apache.felix.dm,org.osgi.service.deploymentadmin,org.osgi.service.deploymentadmin.spi,org.osgi.service.event,org.osgi.service.log,*</Import-Package>
-                        <Export-Package>org.osgi.service.deploymentadmin.spi;version="1.0"</Export-Package>
+                        <Export-Package>org.osgi.service.deploymentadmin.spi;version="1.0",org.osgi.service.metatype;version="1.2"</Export-Package>
                         <DeploymentPackage-Customizer>true</DeploymentPackage-Customizer>
                         <Deployment-ProvidesResourceProcessor>org.osgi.deployment.rp.autoconf</Deployment-ProvidesResourceProcessor>
                     </instructions>
