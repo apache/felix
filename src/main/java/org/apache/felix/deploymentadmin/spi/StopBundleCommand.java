@@ -85,7 +85,7 @@ public class StopBundleCommand extends Command {
     private boolean omitBundleStop(DeploymentSessionImpl session, String symbolicName) {
     	boolean result = false;
 		BundleInfoImpl sourceBundleInfo = session.getSourceAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
-		BundleInfoImpl targetBundleInfo = session.getSourceAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
+		BundleInfoImpl targetBundleInfo = session.getTargetAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
 		boolean fixPackageMissing = sourceBundleInfo != null  && sourceBundleInfo.isMissing();
 		boolean sameVersion = (targetBundleInfo != null && sourceBundleInfo != null && targetBundleInfo.getVersion().equals(sourceBundleInfo.getVersion()));
 		if (fixPackageMissing || sameVersion) {
