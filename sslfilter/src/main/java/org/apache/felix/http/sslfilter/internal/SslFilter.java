@@ -19,6 +19,8 @@
 package org.apache.felix.http.sslfilter.internal;
 
 import java.io.IOException;
+import java.security.cert.CertificateException;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -27,9 +29,10 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import org.osgi.service.log.LogService;
+
 public class SslFilter implements Filter
 {
-
     // request header indicating an SSL endpoint proxy
     private static final String X_FORWARD_SSL_HEADER = "X-Forwarded-SSL";
 
@@ -41,15 +44,23 @@ public class SslFilter implements Filter
 
     public void init(FilterConfig config)
     {
+        // No explicit initialization needed...
     }
 
-    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException,
-        ServletException
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException
     {
         HttpServletRequest httpReq = (HttpServletRequest) req;
         if (X_FORWARD_SSL_VALUE.equalsIgnoreCase(httpReq.getHeader(X_FORWARD_SSL_HEADER)))
         {
-            httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(X_FORWARD_SSL_CERTIFICATE_HEADER));
+            try
+            {
+                // In case this fails, we fall back to the original HTTP request, which is better than nothing...
+                httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(X_FORWARD_SSL_CERTIFICATE_HEADER));
+            }
+            catch (CertificateException e)
+            {
+                SystemLogger.log(LogService.LOG_WARNING, "Failed to create SSL filter request! Problem parsing client certificates?! Client certificate will *not* be forwarded...", e);
+            }
         }
 
         // forward the request making sure any certificate is removed
@@ -69,6 +80,6 @@ public class SslFilter implements Filter
 
     public void destroy()
     {
+        // No explicit destroy needed...
     }
-
 }

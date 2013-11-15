@@ -20,24 +20,28 @@ package org.apache.felix.http.sslfilter.internal;
 
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 
 import org.apache.felix.http.api.ExtHttpService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
+/**
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public class HttpServiceTracker extends ServiceTracker
 {
-
-    private final HashMap /* ServiceReference, SslFilter */filters;
+    private final Map<ServiceReference, SslFilter> filters;
 
     public HttpServiceTracker(BundleContext context)
     {
         super(context, ExtHttpService.class.getName(), null);
 
-        this.filters = new HashMap();
+        this.filters = new HashMap<ServiceReference, SslFilter>();
     }
 
     public Object addingService(ServiceReference reference)
@@ -49,11 +53,14 @@ public class HttpServiceTracker extends ServiceTracker
             try
             {
                 service.registerFilter(filter, ".*", new Hashtable(), 0, null);
+
                 this.filters.put(reference, filter);
+
+                SystemLogger.log(LogService.LOG_DEBUG, "SSL filter registered...");
             }
             catch (ServletException e)
             {
-                // TODO: log
+                SystemLogger.log(LogService.LOG_WARNING, "Failed to register SSL filter!", e);
             }
         }
 
@@ -66,6 +73,8 @@ public class HttpServiceTracker extends ServiceTracker
         if (filter != null)
         {
             ((ExtHttpService) service).unregisterFilter(filter);
+
+            SystemLogger.log(LogService.LOG_DEBUG, "SSL filter unregistered...");
         }
 
         super.removedService(reference, service);

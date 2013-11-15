@@ -18,66 +18,67 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import javax.servlet.http.HttpServletRequest;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 
 public class SslFilterRequestTest
 {
-
     @Test
-    public void test_isSecure()
+    public void test_isSecure() throws Exception
     {
-        HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
+        HttpServletRequest req = mock(HttpServletRequest.class);
         SslFilterRequest sreq = new SslFilterRequest(req, null);
 
         when(req.isSecure()).thenReturn(false);
-        TestCase.assertFalse(req.isSecure());
-        TestCase.assertTrue(sreq.isSecure());
-        TestCase.assertFalse(req.isSecure());
+        assertFalse(req.isSecure());
+        assertTrue(sreq.isSecure());
+        assertFalse(req.isSecure());
 
         when(req.isSecure()).thenReturn(true);
-        TestCase.assertTrue(req.isSecure());
-        TestCase.assertTrue(sreq.isSecure());
-        TestCase.assertTrue(req.isSecure());
+        assertTrue(req.isSecure());
+        assertTrue(sreq.isSecure());
+        assertTrue(req.isSecure());
     }
 
     @Test
-    public void test_getScheme()
+    public void test_getScheme() throws Exception
     {
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         SslFilterRequest sreq = new SslFilterRequest(req, null);
 
         when(req.getScheme()).thenReturn("http");
-        TestCase.assertEquals("http", req.getScheme());
-        TestCase.assertEquals("https", sreq.getScheme());
-        TestCase.assertEquals("http", req.getScheme());
+        assertEquals("http", req.getScheme());
+        assertEquals("https", sreq.getScheme());
+        assertEquals("http", req.getScheme());
 
         when(req.getScheme()).thenReturn("https");
-        TestCase.assertEquals("https", req.getScheme());
-        TestCase.assertEquals("https", sreq.getScheme());
-        TestCase.assertEquals("https", req.getScheme());
+        assertEquals("https", req.getScheme());
+        assertEquals("https", sreq.getScheme());
+        assertEquals("https", req.getScheme());
     }
 
     @Test
-    public void test_getRequestURL()
+    public void test_getRequestURL() throws Exception
     {
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         SslFilterRequest sreq = new SslFilterRequest(req, null);
 
         when(req.getRequestURL()).thenReturn(new StringBuffer("http://some/page"));
-        TestCase.assertEquals("http://some/page", req.getRequestURL().toString());
-        TestCase.assertEquals("https://some/page", sreq.getRequestURL().toString());
-        TestCase.assertEquals("http://some/page", req.getRequestURL().toString());
+        assertEquals("http://some/page", req.getRequestURL().toString());
+        assertEquals("https://some/page", sreq.getRequestURL().toString());
+        assertEquals("http://some/page", req.getRequestURL().toString());
 
         when(req.getRequestURL()).thenReturn(new StringBuffer("https://some/page"));
-        TestCase.assertEquals("https://some/page", req.getRequestURL().toString());
-        TestCase.assertEquals("https://some/page", sreq.getRequestURL().toString());
-        TestCase.assertEquals("https://some/page", req.getRequestURL().toString());
+        assertEquals("https://some/page", req.getRequestURL().toString());
+        assertEquals("https://some/page", sreq.getRequestURL().toString());
+        assertEquals("https://some/page", req.getRequestURL().toString());
     }
 }

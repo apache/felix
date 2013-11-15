@@ -23,22 +23,29 @@ import org.osgi.framework.BundleContext;
 
 public class SslFilterActivator implements BundleActivator
 {
-
-    private HttpServiceTracker tracker;
+    private HttpServiceTracker httpTracker;
+    private LogServiceTracker logTracker;
 
     public void start(BundleContext context)
     {
-        this.tracker = new HttpServiceTracker(context);
-        this.tracker.open();
+        this.logTracker = new LogServiceTracker(context);
+        this.logTracker.open();
+
+        this.httpTracker = new HttpServiceTracker(context);
+        this.httpTracker.open();
     }
 
     public void stop(BundleContext context)
     {
-        if (this.tracker != null)
+        if (this.httpTracker != null)
         {
-            this.tracker.close();
-            this.tracker = null;
+            this.httpTracker.close();
+            this.httpTracker = null;
+        }
+        if (this.logTracker != null)
+        {
+            this.logTracker.close();
+            this.logTracker = null;
         }
     }
-
 }
