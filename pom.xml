@@ -71,7 +71,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <MyCustomHeader>(someKey=someValue)</MyCustomHeader>
                         <Bundle-SymbolicName>org.apache.felix.deploymentadmin</Bundle-SymbolicName>
                         <Bundle-Activator>org.apache.felix.deploymentadmin.Activator</Bundle-Activator>
                         <Bundle-Name>Apache Felix Deployment Admin</Bundle-Name>
