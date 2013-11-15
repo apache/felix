@@ -32,7 +32,6 @@ import javax.servlet.http.HttpServletRequestWrapper;
 
 class SslFilterRequest extends HttpServletRequestWrapper
 {
-
     // The HTTPS scheme name
     private static final String HTTPS_SCHEME = "https";
 
@@ -56,41 +55,38 @@ class SslFilterRequest extends HttpServletRequestWrapper
      * The first certificate in the chain is the one set by the client, the next
      * is the one used to authenticate the first, and so on.
      */
-    private static final String ATTR_SSL_CERTIFICATE = "javax.servlet.request.X509Certificate";
+    protected static final String ATTR_SSL_CERTIFICATE = "javax.servlet.request.X509Certificate";
 
     private String requestURL;
 
-    SslFilterRequest(final HttpServletRequest request, final String clientCertHeader)
+    @SuppressWarnings("unchecked")
+    SslFilterRequest(HttpServletRequest request, String clientCertHeader) throws CertificateException
     {
         super(request);
 
         if (clientCertHeader != null && clientCertHeader.length() > 0)
         {
-
             final String clientCert = HEADER_TO_CERT.matcher(clientCertHeader).replaceAll("\n");
 
             try
             {
-                InputStream instream = new ByteArrayInputStream(clientCert.getBytes(UTF_8));
                 CertificateFactory fac = CertificateFactory.getInstance("X.509");
-                @SuppressWarnings("unchecked")
+
+                InputStream instream = new ByteArrayInputStream(clientCert.getBytes(UTF_8));
+
                 Collection<X509Certificate> certs = (Collection<X509Certificate>) fac.generateCertificates(instream);
                 request.setAttribute(ATTR_SSL_CERTIFICATE, certs.toArray(new X509Certificate[certs.size()]));
             }
-            catch (CertificateException e)
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
             catch (UnsupportedEncodingException e)
             {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                // Any JRE should support UTF-8...
+                throw new InternalError("UTF-8 not supported?!");
             }
         }
     }
 
-    void done() {
+    void done()
+    {
         getRequest().removeAttribute(ATTR_SSL_CERTIFICATE);
     }
 
@@ -120,9 +116,5 @@ class SslFilterRequest extends HttpServletRequestWrapper
         }
 
         return new StringBuffer(this.requestURL);
-    }
-
-    private final void provideCertificate(final HttpServletRequest request) throws UnsupportedEncodingException
-    {
     }
 }
