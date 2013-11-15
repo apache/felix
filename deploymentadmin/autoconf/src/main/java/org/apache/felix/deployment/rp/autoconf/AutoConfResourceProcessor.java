@@ -31,13 +31,12 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 
-import org.apache.felix.deploymentadmin.Constants;
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
-import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.metatype.Attribute;
 import org.apache.felix.metatype.Designate;
 import org.apache.felix.metatype.MetaData;
@@ -54,13 +53,13 @@ import org.osgi.service.deploymentadmin.spi.DeploymentSession;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
 import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.AttributeDefinition;
 import org.osgi.service.metatype.MetaTypeInformation;
 import org.osgi.service.metatype.MetaTypeService;
 import org.osgi.service.metatype.ObjectClassDefinition;
-import org.xmlpull.v1.XmlPullParserException;
 
 public class AutoConfResourceProcessor implements ResourceProcessor, EventHandler {
     private static final String LOCATION_PREFIX = "osgi-dp:";
@@ -71,7 +70,9 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
 	private volatile ConfigurationAdmin m_configAdmin;
 	private volatile MetaTypeService m_metaService;
 	private volatile BundleContext m_bc;
-	private volatile Component m_component;
+    private volatile DependencyManager m_dm;
+    
+	private Component m_component;
 	
 	private final Object LOCK = new Object(); // protects the members below
 
@@ -80,8 +81,6 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
 	private final Map m_toBeDeleted = new HashMap();
 	
 	private PersistencyManager m_persistencyManager;
-
-    private ServiceDependency m_configurationAdminDependency;
 
 	public void start() throws IOException {
 		File root = m_bc.getDataFile("");
@@ -100,7 +99,7 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
             if (session == null) {
                 throw new IllegalArgumentException("Trying to begin new deployment session with a null session.");
             }
-            if (m_toBeInstalled.size() > 0 || m_toBeDeleted.size() > 0 || m_configurationAdminTasks.size() > 0 || m_postCommitTasks.size() > 0) {
+            if (m_toBeInstalled.size() > 0 || m_toBeDeleted.size() > 0 || m_configurationAdminTasks.size() > 0 || m_postCommitTasks.size() > 0 || m_component != null) {
                 throw new IllegalStateException("State not reset correctly at start of session.");
             }
             m_session = session;
@@ -289,12 +288,20 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
 
     public synchronized void commit() {
         m_log.log(LogService.LOG_DEBUG, "commit");
-        DependencyManager dm = m_component.getDependencyManager();
-        m_configurationAdminDependency = dm.createServiceDependency()
-            .setService(ConfigurationAdmin.class)
-            .setCallbacks("addConfigurationAdmin", null)
-            .setRequired(false);
-        m_component.add(m_configurationAdminDependency);
+
+        Dictionary properties = new Properties();
+        properties.put(EventConstants.EVENT_TOPIC, org.apache.felix.deploymentadmin.Constants.EVENTTOPIC_COMPLETE);
+        m_component = m_dm.createComponent()
+            .setInterface(EventHandler.class.getName(), properties)
+            .setImplementation(this)
+            .setCallbacks(null, null, null, null)
+            .setAutoConfig(Component.class, false)
+            .add(m_dm.createServiceDependency()
+                .setService(ConfigurationAdmin.class)
+                .setCallbacks("addConfigurationAdmin", null)
+                .setRequired(false));
+        m_dm.add(m_component);
+
         m_log.log(LogService.LOG_DEBUG, "commit done");
     }
     
@@ -327,7 +334,6 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     
     public void postcommit() {
         m_log.log(LogService.LOG_DEBUG, "post commit");
-        m_component.remove(m_configurationAdminDependency);
         Iterator iterator = m_postCommitTasks.iterator();
         while (iterator.hasNext()) {
             PostCommitTask task = (PostCommitTask) iterator.next();
@@ -343,6 +349,10 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     }
 
     private void endSession() {
+        if (m_component != null) {
+        	m_dm.remove(m_component);
+            m_component = null;
+        }
         m_toBeInstalled.clear();
         m_toBeDeleted.clear();
         m_postCommitTasks.clear();
@@ -507,51 +517,51 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     		for (int i = 0; i < content.length; i++) {
     			String value = content[i];
     			switch (type) {
-    			case AttributeDefinition.BOOLEAN:
-    				typedContent = (typedContent == null) ? new Boolean[content.length] : typedContent;
-    				typedContent[i] = Boolean.valueOf(value);	
-    				break;
-    			case AttributeDefinition.BYTE:
-    				typedContent = (typedContent == null) ? new Byte[content.length] : typedContent;
-    				typedContent[i] = Byte.valueOf(value);
-    				break;
-    			case AttributeDefinition.CHARACTER:
-    				typedContent = (typedContent == null) ? new Character[content.length] : typedContent;
-    				char[] charArray = value.toCharArray();
-    				if (charArray.length == 1) {
-    					typedContent[i] = new Character(charArray[0]);
-    				}
-    				else {
-    					return null;
-    				}
-    				break;
-    			case AttributeDefinition.DOUBLE:
-    				typedContent = (typedContent == null) ? new Double[content.length] : typedContent;
-    				typedContent[i] = Double.valueOf(value);
-    				break;
-    			case AttributeDefinition.FLOAT:
-    				typedContent = (typedContent == null) ? new Float[content.length] : typedContent;
-    				typedContent[i] = Float.valueOf(value);
-    				break;
-    			case AttributeDefinition.INTEGER:
-    				typedContent = (typedContent == null) ? new Integer[content.length] : typedContent;
-    				typedContent[i] = Integer.valueOf(value);
-    				break;
-    			case AttributeDefinition.LONG:
-    				typedContent = (typedContent == null) ? new Long[content.length] : typedContent;
-    				typedContent[i] = Long.valueOf(value);
-    				break;
-    			case AttributeDefinition.SHORT:
-    				typedContent = (typedContent == null) ? new Short[content.length] : typedContent;
-    				typedContent[i] = Short.valueOf(value);
-    				break;
-    			case AttributeDefinition.STRING:
-    				typedContent = (typedContent == null) ? new String[content.length] : typedContent;
-    				typedContent[i] = value;
-    				break;
-    			default:
-    				// unsupported type
-    				return null;
+	    			case AttributeDefinition.BOOLEAN:
+	    				typedContent = (typedContent == null) ? new Boolean[content.length] : typedContent;
+	    				typedContent[i] = Boolean.valueOf(value);	
+	    				break;
+	    			case AttributeDefinition.BYTE:
+	    				typedContent = (typedContent == null) ? new Byte[content.length] : typedContent;
+	    				typedContent[i] = Byte.valueOf(value);
+	    				break;
+	    			case AttributeDefinition.CHARACTER:
+	    				typedContent = (typedContent == null) ? new Character[content.length] : typedContent;
+	    				char[] charArray = value.toCharArray();
+	    				if (charArray.length == 1) {
+	    					typedContent[i] = new Character(charArray[0]);
+	    				}
+	    				else {
+	    					return null;
+	    				}
+	    				break;
+	    			case AttributeDefinition.DOUBLE:
+	    				typedContent = (typedContent == null) ? new Double[content.length] : typedContent;
+	    				typedContent[i] = Double.valueOf(value);
+	    				break;
+	    			case AttributeDefinition.FLOAT:
+	    				typedContent = (typedContent == null) ? new Float[content.length] : typedContent;
+	    				typedContent[i] = Float.valueOf(value);
+	    				break;
+	    			case AttributeDefinition.INTEGER:
+	    				typedContent = (typedContent == null) ? new Integer[content.length] : typedContent;
+	    				typedContent[i] = Integer.valueOf(value);
+	    				break;
+	    			case AttributeDefinition.LONG:
+	    				typedContent = (typedContent == null) ? new Long[content.length] : typedContent;
+	    				typedContent[i] = Long.valueOf(value);
+	    				break;
+	    			case AttributeDefinition.SHORT:
+	    				typedContent = (typedContent == null) ? new Short[content.length] : typedContent;
+	    				typedContent[i] = Short.valueOf(value);
+	    				break;
+	    			case AttributeDefinition.STRING:
+	    				typedContent = (typedContent == null) ? new String[content.length] : typedContent;
+	    				typedContent[i] = value;
+	    				break;
+	    			default:
+	    				// unsupported type
+	    				return null;
     			}
     		}
     	}
@@ -596,14 +606,8 @@ public class AutoConfResourceProcessor implements ResourceProcessor, EventHandle
     }
 
     public void handleEvent(Event event) {
-        Boolean result = (Boolean) event.getProperty(Constants.EVENTPROPERTY_SUCCESSFUL);
-        // check if successful
-        if (result.booleanValue()) {
-            postcommit();
-        }
-        else {
-            postcommit();
-        }
+    	// regardless of the outcome, we simply invoke postcommit
+    	postcommit();
     }
 }
 
