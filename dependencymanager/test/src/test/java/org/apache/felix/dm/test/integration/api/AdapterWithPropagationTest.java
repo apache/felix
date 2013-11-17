@@ -41,6 +41,8 @@ import org.ops4j.pax.exam.junit.PaxExam;
  * S3 depends on S2
  * 
  * So, when S1Impl service properties are changed, S1Adapter shall propagate the changed properties to S3.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @RunWith(PaxExam.class)
 public class AdapterWithPropagationTest extends TestBase {
@@ -83,12 +85,12 @@ public class AdapterWithPropagationTest extends TestBase {
             m_ensure = e;
         }
                         
-        public void add(Map properties, S2 s1a) {
+        public void add(Map properties, S2 s2) {
             Assert.assertTrue("bar".equals(properties.get("foo")));
             m_ensure.step(3);
         }
         
-        public void change(Map properties, S2 runnable) {
+        public void change(Map properties, S2 s2) {
             Assert.assertTrue("bar2".equals(properties.get("foo")));
             m_ensure.step(5);
         }
