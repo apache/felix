@@ -1,0 +1,23 @@
+Initial Release 0.0.2
+---------------------
+
+** Bug
+    * [FELIX-3985] - ConfigSpiOsgi should be registered by default
+    * [FELIX-3998] - Updating JAAS config leads to registration of duplicate LoginModules
+
+** Improvement
+    * [FELIX-3983] - Use inlined Sling commons PropertiesUtil for reading config values
+    * [FELIX-3984] - Use default application/realm name of 'other' if none specified
+
+** New Feature
+    * [FELIX-3705] - Bundle to simplify JAAS usage in OSGi
+
+** Task
+    * [FELIX-3935] - Add testcases for validating the JAAS Feature implementation
+    * [FELIX-3980] - Add documentation related to usage of Felix JAAS Bundle
+    * [FELIX-3981] - Create a sample project for demonstrating Felix JAAS main features
+    * [FELIX-3989] - Add support for determining code coverage with integration testcases
+    * [FELIX-4318] - prepare for initial release of JAAS Bundle
+
+
+
