@@ -21,9 +21,12 @@ package org.apache.felix.jaas;
 
 import javax.security.auth.spi.LoginModule;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * A factory for creating {@link LoginModule} instances.
  */
+@ConsumerType
 public interface LoginModuleFactory
 {
     /**
