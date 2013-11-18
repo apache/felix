@@ -19,6 +19,7 @@
 package org.apache.felix.dm.test.integration.common;
 
 import static org.ops4j.pax.exam.CoreOptions.bundle;
+import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackages;
 import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -139,6 +140,7 @@ public abstract class TestBase implements LogService, FrameworkListener {
                 systemTimeout(15000),                
                 cleanCaches(true),
                 junitBundles(),
+                bootDelegationPackages("org.netbeans.*"), // For jvisualvm
                 mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.8"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.6.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.shell", "1.4.2"),
