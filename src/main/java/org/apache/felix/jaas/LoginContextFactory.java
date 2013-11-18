@@ -24,6 +24,8 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import aQute.bnd.annotation.ProviderType;
+
 
 /**
  * A factory for creating {@link LoginContext} instances.
@@ -32,6 +34,7 @@ import javax.security.auth.login.LoginException;
  * locating the {@link javax.security.auth.login.Configuration} instance and switching of Thread's context
  * classloader.
  */
+@ProviderType
 public interface LoginContextFactory
 {
     /**
