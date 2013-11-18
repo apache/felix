@@ -44,13 +44,13 @@ public class AspectRaceTest extends TestBase {
 	volatile ExecutorService _aspectExec;
 	volatile DependencyManager _dm;
 	final static int SERVICES = 3;
-	final static int ASPECTS_PER_SERVICE = 10;
+	final static int ASPECTS_PER_SERVICE = 5;
 
 	@Test
 	public void testConcurrentAspects() {
 		try {
 			warn("starting aspect race test");
-			int cores = 10; // Runtime.getRuntime().availableProcessors();
+			int cores = Math.max(4, Runtime.getRuntime().availableProcessors());
 			// Used to inject S services
 			_serviceExec = Executors.newFixedThreadPool(cores);
 			// Used to inject S Aspects
