@@ -45,14 +45,26 @@ import org.osgi.framework.ServiceRegistration;
  */
 @RunWith(PaxExam.class)
 public class AspectWithPropagationTest extends TestBase {
-    private final static int ASPECTS = 2;
+    private final static int ASPECTS = 3;
     private final Set<Integer> _randoms = new HashSet<Integer>();
     private final Random _rnd = new Random();
     private static Ensure m_invokeStep;
     private static Ensure m_changeStep;
     
+    /**
+     * This test does the following:
+     * 
+     * - Create S service
+     * - Create some S Aspects
+     * - Create a Client, depending on S (actually, on the top-level S aspect)
+     * - Client has a "change" callack in order to track S service properties modifications.
+     * - First, invoke Client.invoke(): all S aspects, and finally original S service must be invoked orderly.
+     * - Modify S original service properties, and check if all aspects, and the client has been orderly called in their "change" callback.
+     * - Modify the First lowest ranked aspect (rank=1), and check if all aspects, and client have been orderly called in their "change" callback.
+     */
     @Test
     public void testAspectsWithPropagation() {
+        System.out.println("----------- Running testAspectsWithPropagation ...");
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         m_invokeStep = new Ensure(); 
@@ -155,13 +167,118 @@ public class AspectWithPropagationTest extends TestBase {
         m.clear();
     }    
     
-    private void checkServiceProperties(Dictionary check, Dictionary properties) {
+    /**
+     * This test does the following:
+     * 
+     * - Create S service
+     * - Create some S Aspects
+     * - Create S2 Adapter, which adapts S to S2
+     * - Create Client2, which depends on S2. Client2 listens to S2 property change events.
+     * - Now, invoke Client2.invoke(): all S aspects, and finally original S service must be invoked orderly.
+     * - Modify S original service properties, and check if all aspects, S2 Adapter, and Client2 have been orderly called in their "change" callback.
+     */
+    @Test
+    public void testAdapterWithAspectsAndPropagation() {
+        System.out.println("----------- Running testAdapterWithAspectsAndPropagation ...");
+
+        DependencyManager m = new DependencyManager(context);
+        m_invokeStep = new Ensure(); 
+        
+        // Create our original "S" service.
+        Dictionary props = new Hashtable();
+        props.put("foo", "bar");
+        Component s = m.createComponent()
+                .setImplementation(new SImpl())
+                .setInterface(S.class.getName(), props);
+        
+        // Create some "S" aspects
+        Component[] aspects = new Component[ASPECTS];
+        for (int rank = 1; rank <= ASPECTS; rank ++) {
+            aspects[rank-1] = m.createAspectService(S.class, null, rank, "add", "change", "remove", "swap")
+                    .setImplementation(new A("A" + rank, rank));
+            props = new Hashtable();
+            props.put("a" + rank, "v" + rank);
+            aspects[rank-1].setServiceProperties(props);
+        } 
+        
+        // Create S2 adapter (which adapts S1 to S2 interface)
+        Component adapter = m.createAdapterService(S.class, null, "add", "change", "remove", "swap")
+                .setInterface(S2.class.getName(), null)
+                .setImplementation(new S2Impl());
+        
+        // Create Client2, which depends on "S2" service.
+        Client2 client2Impl;
+        Component client2 = m.createComponent()
+                .setImplementation((client2Impl = new Client2()))
+                .add(m.createServiceDependency()
+                     .setService(S2.class)
+                     .setRequired(true)
+                     .setDebug("client")                     
+                     .setCallbacks("add", "change", null));
+              
+        // Register client2
+        m.add(client2);
+        
+        // Register S2 adapter
+        m.add(adapter);
+        
+        // Randomly register aspects, original service
+        boolean originalServiceAdded = false;
+        for (int i = 0; i < ASPECTS; i ++) {
+            int index = getRandomAspect();
+            m.add(aspects[index]);
+            if (_rnd.nextBoolean()) {
+                m.add(s);
+                originalServiceAdded = true;
+            }
+        }
+        if (! originalServiceAdded) {
+            m.add(s);
+        }
+             
+        // Now invoke client2, which orderly calls all S1 aspects, then S1Impl, and finally S2 service
+        System.out.println("-------------------------- Invoking client2.");
+        client2Impl.invoke2();
+        m_invokeStep.waitForStep(ASPECTS+2, 5000);
+        
+        // Now, change original service "S" properties: this will orderly trigger "change" callbacks on aspects, S2Impl, and Client2.
+        System.out.println("-------------------------- Modifying original service properties.");
+        m_changeStep = new Ensure();
+        props = new Hashtable();
+        props.put("foo", "barModified");
+        s.setServiceProperties(props);
+        
+        // Check if aspects and Client2 have been orderly called in their "changed" callback
+        m_changeStep.waitForStep(ASPECTS+2, 5000);
+        
+        // Check if modified "foo" original service property has been propagated to Client2
+        Hashtable check = new Hashtable();
+        check.put("foo", "barModified");
+        for (int i = 1; i <= ASPECTS; i ++) {
+            check.put("a" + i, "v" + i);
+        }            
+        checkServiceProperties(check, client2Impl.getServiceProperties());
+        
+        // Clear all components.
+        m.clear();
+    }    
+    
+   private void checkServiceProperties(Dictionary check, Dictionary properties) {
         Enumeration e = check.keys();
         while (e.hasMoreElements()) {
             Object key = e.nextElement();
             Object val = check.get(key);                     
             Assert.assertEquals(val, properties.get(key));
         }        
+    }
+    
+    private int getRandomAspect() {
+        int index = 0;  
+        do {
+            index = _rnd.nextInt(ASPECTS);            
+        } while (_randoms.contains(new Integer(index)));
+        _randoms.add(new Integer(index));
+        return index;
     }
 
     // S Service
@@ -278,12 +395,78 @@ public class AspectWithPropagationTest extends TestBase {
         }
     }
     
-    private int getRandomAspect() {
-        int index = 0;  
-        do {
-            index = _rnd.nextInt(ASPECTS);            
-        } while (_randoms.contains(new Integer(index)));
-        _randoms.add(new Integer(index));
-        return index;
+    // S2 Service
+    public static interface S2 {
+        public void invoke2();
+    }
+
+    // S2 impl, which adapts S1 interface to S2 interface
+    static class S2Impl implements S2 {
+        private volatile S m_s; // we shall see top-level aspect on S service
+        
+        public void add(ServiceReference ref, S s) {
+            System.out.println("+++ S2Impl.add: " + s + "/" + ServiceUtil.toString(ref));
+            m_s = s;
+        }
+              
+        public void swap(ServiceReference oldSRef, S oldS, ServiceReference newSRef, S newS) {
+            System.out.println("+++ S2Impl.swap: new=" + newS + ", props=" + ServiceUtil.toString(newSRef));
+            m_s = newS;
+        }
+
+        public void change(ServiceReference properties, S s) {
+            System.out.println("+++ S2Impl.change: s=" + s + ", props=" + ServiceUtil.toString(properties));
+            if (m_changeStep != null) {
+                m_changeStep.step(ASPECTS+1);
+            }
+        }
+        
+        public void remove(ServiceReference props, S s) {
+            System.out.println("+++ S2Impl.remove: " + s + ", props=" + ServiceUtil.toString(props));
+        }
+        
+        public void invoke2() {
+            m_s.invoke();
+            m_invokeStep.step(ASPECTS + 2); // All aspects, and S1Impl have been invoked
+        }
+
+        public String toString() {
+            return "S2";
+        }        
+    }
+    
+    // Client2 depending on S2.
+    static class Client2 {
+        private volatile S2 m_s2;
+        private volatile ServiceReference m_s2Ref;
+
+        public Dictionary getServiceProperties() {
+            Dictionary props = new Hashtable();
+            for (String key : m_s2Ref.getPropertyKeys()) {
+                props.put(key, m_s2Ref.getProperty(key));
+            }
+            return props;
+        }
+
+        public void invoke2() {
+            m_s2.invoke2();           
+        }
+
+        public String toString() {
+            return "Client2";
+        }  
+                
+        public void add(ServiceReference ref, S2 s2) {
+            System.out.println("+++ Client2.add: " + s2 + "/" + ServiceUtil.toString(ref));
+            m_s2 = s2;
+            m_s2Ref = ref;
+        }
+
+        public void change(ServiceReference props, S2 s2) {   
+            System.out.println("+++ Client2.change: s2=" + s2 + ", props=" + ServiceUtil.toString(props));
+            if (m_changeStep != null) {
+                m_changeStep.step(ASPECTS + 2); // S1Impl, all aspects, and S2 adapters have been changed before us.
+            }
+        }
     }
 }
