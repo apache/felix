@@ -983,15 +983,17 @@ public class DependencyManager<S, T> implements Reference
 
         public void close()
         {
+            RefPair<T> ref;
             synchronized ( getTracker().tracked() )
             {
-                if ( refPair != null )
-                {
-                    ungetService( refPair );
-                }
+                ref = refPair;
                 refPair = null;
-                getTracker().deactivate();
             }
+            if ( ref != null )
+            {
+                ungetService( ref );
+            }
+            getTracker().deactivate();
         }
 
         public Collection<RefPair<T>> getRefs( AtomicInteger trackingCount )
