@@ -261,6 +261,17 @@
                         </Private-Package>
                         <Import-Package>
                             <!--
+                                Configuration Admin is optional and dynamic, but allow eager
+                                wiring by importing it
+                            -->
+                            org.osgi.service.cm;version="[1.2,2)";resolution:=optional,
+
+                            <!--
+                                Metatype import is optional and dynamic, but allow eager
+                                wiring by importing it
+                            -->
+                            org.osgi.service.metatype;version="[1.1,2)";resolution:=optional,
+                            <!--
                                 optional import for Gogo annotations 
                             -->
                             org.apache.felix.service.command;resolution:=optional,
