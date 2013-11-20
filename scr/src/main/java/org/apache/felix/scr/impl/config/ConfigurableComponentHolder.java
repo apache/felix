@@ -343,20 +343,22 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder, SimpleLo
         return created;
     }
 
-    public synchronized long getChangeCount( String pid)
+    public long getChangeCount( String pid)
     {
-        
-        SingleComponentManager icm =  pid.equals( getComponentMetadata().getConfigurationPid())? 
-                m_singleComponent: m_components.get( pid );
-        return icm == null? -1: icm.getChangeCount();
+
+        synchronized ( m_components )
+        {
+            SingleComponentManager<S> icm =  pid.equals( getComponentMetadata().getConfigurationPid())? 
+                    m_singleComponent: m_components.get( pid );
+            return icm == null? -1: icm.getChangeCount();
+        }
     }
 
     public Component[] getComponents()
     {
         synchronized ( m_components )
         {
-            Component[] components = getComponentManagers( false );
-            return ( components != null ) ? components : new Component[] { m_singleComponent };
+            return getComponentManagers( false );
         }
     }
 
@@ -368,10 +370,6 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder, SimpleLo
         {
             m_enabled = true;
             cms = getComponentManagers( false );
-            if ( cms == null )
-            {
-                cms = new SingleComponentManager[] { m_singleComponent };
-            }
         }
         for ( SingleComponentManager cm : cms )
         {
@@ -388,10 +386,6 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder, SimpleLo
             m_enabled = false;
 
             cms = getComponentManagers( false );
-            if ( cms == null )
-            {
-                cms = new SingleComponentManager[] { m_singleComponent };
-            }
         }
         for ( SingleComponentManager cm : cms )
         {
@@ -405,16 +399,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder, SimpleLo
         SingleComponentManager[] cms;
         synchronized ( m_components )
         {
-            // FELIX-1733: get a copy of the single component and clear
-            // the field to prevent recreation in disposed(ICM)
-            final SingleComponentManager singleComponent = m_singleComponent;
-            m_singleComponent = null;
-
             cms = getComponentManagers( true );
-            if ( cms == null )
-            {
-                cms = new SingleComponentManager[] { singleComponent };
-            }
         }
         for ( SingleComponentManager cm : cms )
         {
@@ -508,27 +493,39 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder, SimpleLo
     //---------- internal
 
     /**
-     * Returns all components from the map, optionally also removing them
-     * from the map. If there are no components in the map, <code>null</code>
-     * is returned.
+     * Returns all component managers from the map and the single component manager, optionally also removing them
+     * from the map. If there are no component managers, <code>null</code>
+     * is returned.  Must be called synchronized on m_components.
+     * 
+     * @param clear If true, clear the map and the single component manager.
      */
-    private SingleComponentManager[] getComponentManagers( final boolean clear )
-    {
-        // fast exit if there is no component in the map
-        if ( m_components.isEmpty() )
-        {
-            return null;
-        }
+   private SingleComponentManager<S>[] getComponentManagers( final boolean clear )
+   {
+       SingleComponentManager<S>[] cm;
+       if ( m_components.isEmpty() )
+       {
+           if ( m_singleComponent != null)
+           {
+               cm = new SingleComponentManager[] {m_singleComponent};
+           }
+           else 
+           {
+               cm = null;
+           }
+       }
 
-        final SingleComponentManager[] cm = new SingleComponentManager[m_components.size()];
-        m_components.values().toArray( cm );
-
-        if ( clear )
-        {
-            m_components.clear();
-        }
-        return cm;
-    }
+       else
+       {
+           cm = new SingleComponentManager[m_components.size()];
+           m_components.values().toArray( cm );
+       }
+       if ( clear )
+       {
+           m_components.clear();
+           m_singleComponent = null;
+       }
+       return cm;
+   }
 
     public boolean isLogEnabled( int level )
     {
