@@ -63,10 +63,14 @@ public class ScrConfiguration
     public static final String PROP_DELAYED_KEEP_INSTANCES = "ds.delayed.keepInstances";
 
     public static final String PROP_INFO_SERVICE = "ds.info.service";
-    
+
     public static final String PROP_LOCK_TIMEOUT = "ds.lock.timeout.milliseconds";
-    
+
+    public static final String PROP_STOP_TIMEOUT = "ds.stop.timeout.milliseconds";
+
     public static final long DEFAULT_LOCK_TIMEOUT_MILLISECONDS = 5000;
+
+    public static final long DEFAULT_STOP_TIMEOUT_MILLISECONDS = 60000;
     
     public static final String PROP_LOGLEVEL = "ds.loglevel";
 
@@ -91,6 +95,8 @@ public class ScrConfiguration
     private boolean infoAsService;
     
     private long lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
+
+    private long stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
 
     private BundleContext bundleContext;
 
@@ -146,6 +152,7 @@ public class ScrConfiguration
                 keepInstances = false;
                 infoAsService = false;
                 lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
+                stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
             }
             else
             {
@@ -154,6 +161,7 @@ public class ScrConfiguration
                 keepInstances = getDefaultKeepInstances();
                 infoAsService = getDefaultInfoAsService();
                 lockTimeout = getDefaultLockTimeout();
+                stopTimeout = getDefaultStopTimeout();
             }
         }
         else
@@ -164,6 +172,8 @@ public class ScrConfiguration
             infoAsService = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_INFO_SERVICE) ) );
             Long timeout = ( Long ) config.get( PROP_LOCK_TIMEOUT );
             lockTimeout = timeout == null? DEFAULT_LOCK_TIMEOUT_MILLISECONDS: timeout;
+            timeout = ( Long ) config.get( PROP_STOP_TIMEOUT );
+            stopTimeout = timeout == null? DEFAULT_STOP_TIMEOUT_MILLISECONDS: timeout;
         }
         if ( scrCommand != null )
         {
@@ -202,6 +212,11 @@ public class ScrConfiguration
         return lockTimeout;
     }
 
+    public long stopTimeout()
+    {
+        return stopTimeout;
+    }
+
     private boolean getDefaultFactoryEnabled()
     {
         return VALUE_TRUE.equals( bundleContext.getProperty( PROP_FACTORY_ENABLED ) );
@@ -230,6 +245,16 @@ public class ScrConfiguration
         if ( val == null)
         {
             return DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
+        }
+        return Long.parseLong( val );
+    }
+
+    private long getDefaultStopTimeout()
+    {
+        String val = bundleContext.getProperty( PROP_STOP_TIMEOUT);
+        if ( val == null)
+        {
+            return DEFAULT_STOP_TIMEOUT_MILLISECONDS;
         }
         return Long.parseLong( val );
     }

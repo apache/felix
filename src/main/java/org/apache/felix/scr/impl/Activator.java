@@ -24,7 +24,6 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.impl.config.ScrConfiguration;
@@ -187,7 +186,7 @@ public class Activator extends AbstractExtender
 
         public void destroy() {
             try {
-                this.started.await(60, TimeUnit.SECONDS);
+                this.started.await(m_configuration.stopTimeout(), TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 log( LogService.LOG_WARNING, m_context.getBundle(), "The wait for bundle {0}/{1} being started before destruction has been interrupted.",
                         new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, e );
