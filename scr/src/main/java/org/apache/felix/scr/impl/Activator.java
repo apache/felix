@@ -56,6 +56,9 @@ public class Activator extends AbstractExtender
     // this bundle's context
     private static BundleContext m_context;
 
+    // this bundle
+    private static Bundle m_bundle;
+
     // the log service to log messages to
     private static volatile ServiceTracker m_logService;
 
@@ -85,6 +88,7 @@ public class Activator extends AbstractExtender
     public void start( BundleContext context ) throws Exception
     {
         m_context = context;
+        m_bundle = context.getBundle();
         super.start(context);
     }
 
@@ -101,8 +105,8 @@ public class Activator extends AbstractExtender
         m_configuration.start( m_context );
 
         // log SCR startup
-        log( LogService.LOG_INFO, m_context.getBundle(), " Version = {0}",
-            new Object[] {m_context.getBundle().getHeaders().get( Constants.BUNDLE_VERSION )}, null );
+        log( LogService.LOG_INFO, m_bundle, " Version = {0}",
+            new Object[] {m_bundle.getHeaders().get( Constants.BUNDLE_VERSION )}, null );
 
         // create and start the component actor
         m_componentActor = new ComponentActorThread();
@@ -188,7 +192,7 @@ public class Activator extends AbstractExtender
             try {
                 this.started.await(m_configuration.stopTimeout(), TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
-                log( LogService.LOG_WARNING, m_context.getBundle(), "The wait for bundle {0}/{1} being started before destruction has been interrupted.",
+                log( LogService.LOG_WARNING, m_bundle, "The wait for bundle {0}/{1} being started before destruction has been interrupted.",
                         new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, e );
             }
             disposeComponents( this.bundle );
@@ -216,7 +220,7 @@ public class Activator extends AbstractExtender
         BundleContext context = bundle.getBundleContext();
         if ( context == null )
         {
-            log( LogService.LOG_ERROR, m_context.getBundle(), "Cannot get BundleContext of bundle {0}/{1}",
+            log( LogService.LOG_ERROR, m_bundle, "Cannot get BundleContext of bundle {0}/{1}",
                 new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, null );
             return;
         }
@@ -244,7 +248,7 @@ public class Activator extends AbstractExtender
         // terminate if already loaded (or currently being loaded)
         if ( loaded )
         {
-            log( LogService.LOG_DEBUG, m_context.getBundle(), "Components for bundle {0}/{1} already loaded. Nothing to do.",
+            log( LogService.LOG_DEBUG, m_bundle, "Components for bundle {0}/{1} already loaded. Nothing to do.",
                 new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, null );
             return;
         }
@@ -273,14 +277,14 @@ public class Activator extends AbstractExtender
             {
                 log(
                     LogService.LOG_DEBUG,
-                    m_context.getBundle(),
+                    m_bundle,
                     "Bundle {0}/{1} has been stopped while trying to activate its components. Trying again when the bundles gets started again.",
                 new Object[] {bundle.getSymbolicName(), bundle.getBundleId()},
                     e );
             }
             else
             {
-                log( LogService.LOG_ERROR, m_context.getBundle(), "Error while loading components of bundle {0}/{1}",
+                log( LogService.LOG_ERROR, m_bundle, "Error while loading components of bundle {0}/{1}",
                 new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, e );
             }
         }
@@ -310,7 +314,7 @@ public class Activator extends AbstractExtender
             }
             catch ( Exception e )
             {
-                log( LogService.LOG_ERROR, m_context.getBundle(), "Error while disposing components of bundle {0}/{1}",
+                log( LogService.LOG_ERROR, m_bundle, "Error while disposing components of bundle {0}/{1}",
                     new Object[] {bundle.getSymbolicName(), bundle.getBundleId()}, e );
             }
         }
@@ -328,7 +332,7 @@ public class Activator extends AbstractExtender
 
     @Override
     protected void error(String msg, Throwable t) {
-        log( LogService.LOG_DEBUG, m_context.getBundle(), msg, t );
+        log( LogService.LOG_DEBUG, m_bundle, msg, t );
     }
 
     public static void log( int level, Bundle bundle, String pattern, Object[] arguments, Throwable ex )
