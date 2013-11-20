@@ -807,6 +807,24 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         obtainActivationReadLock( "activateInternal" );
         try
         {
+            // Double check conditions now that we have obtained the lock
+            if ( m_disposed )
+            {
+                log( LogService.LOG_DEBUG, "ActivateInternal: disposed",
+                        null );
+                return;
+            }
+            if ( m_activated ) {
+                log( LogService.LOG_DEBUG, "ActivateInternal: already activated",
+                        null );
+                return;
+            }
+            if ( !isEnabled() )
+            {
+                log( LogService.LOG_DEBUG, "Component is not enabled; not activating component",
+                        null );
+                return;
+            }
             // Before creating the implementation object, we are going to
             // test if all the mandatory dependencies are satisfied
             if ( !verifyDependencyManagers() )
