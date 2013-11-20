@@ -47,7 +47,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         // assert single component and no map
         final SingleComponentManager cmgr = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgr );
-        assertNull( "Expect no component manager list", getComponentManagers( holder ) );
+        assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).length);
 
         // assert no configuration of single component
         assertFalse( "Expect no configuration", cmgr.hasConfiguration() );
@@ -64,7 +64,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         // assert single component and no map
         final SingleComponentManager cmgr = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgr );
-        assertNull( "Expect no component manager list", getComponentManagers( holder ) );
+        assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).length);
 
         // assert no configuration of single component
         assertFalse( "Expect no configuration", cmgr.hasConfiguration() );
@@ -77,7 +77,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         // assert single component and no map
         final SingleComponentManager cmgrAfterConfig = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgrAfterConfig );
-        assertNull( "Expect no component manager list", getComponentManagers( holder ) );
+        assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).length);
 
         // assert configuration of single component
         assertTrue( "Expect configuration after updating it", cmgrAfterConfig.hasConfiguration() );
@@ -90,7 +90,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         // assert single component and no map
         final SingleComponentManager cmgrAfterUnconfig = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgrAfterUnconfig );
-        assertNull( "Expect no component manager list", getComponentManagers( holder ) );
+        assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).length);
 
         // assert no configuration of single component
         assertFalse( "Expect no configuration", cmgrAfterUnconfig.hasConfiguration() );
@@ -107,7 +107,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         // assert single component and no map
         final SingleComponentManager cmgr = getSingleManager( holder );
         assertNotNull( "Expect single component manager", cmgr );
-        assertNull( "Expect no component manager list", getComponentManagers( holder ) );
+        assertEquals( "Expect no other component manager list", 1, getComponentManagers( holder ).length);
 
         // assert no configuration of single component
         assertFalse( "Expect no configuration", cmgr.hasConfiguration() );
@@ -166,7 +166,7 @@ public class ConfiguredComponentHolderTest extends TestCase
         final SingleComponentManager cmgrAfterAllUnconfig = getSingleManager( holder );
         final SingleComponentManager[] cmgrsAfterAllUnconfig = getComponentManagers( holder );
         assertNotNull( "Expect single component manager", cmgrAfterAllUnconfig );
-        assertNull( "Expect no component manager list", cmgrsAfterAllUnconfig );
+        assertEquals( "Expect no component manager list", 1, cmgrsAfterAllUnconfig.length );
 
     }
 

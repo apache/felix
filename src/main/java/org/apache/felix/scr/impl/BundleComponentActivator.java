@@ -29,6 +29,9 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.scr.impl.config.ComponentHolder;
 import org.apache.felix.scr.impl.config.ScrConfiguration;
@@ -69,7 +72,8 @@ public class BundleComponentActivator implements Logger
     private final ComponentActorThread m_componentActor;
 
     // true as long as the dispose method is not called
-    private boolean m_active;
+    private final AtomicBoolean m_active = new AtomicBoolean(true);
+    private final CountDownLatch m_closeLatch = new CountDownLatch(1);
 
     // the configuration
     private final ScrConfiguration m_configuration;
@@ -93,9 +97,6 @@ public class BundleComponentActivator implements Logger
         m_componentRegistry = componentRegistry;
         m_componentActor = componentActor;
         m_context = context;
-
-        // mark this instance active
-        m_active = true;
 
         // have the LogService handy (if available)
         m_logService = new ServiceTracker( context, Activator.LOGSERVICE_CLASS, null );
@@ -316,43 +317,49 @@ public class BundleComponentActivator implements Logger
     */
     void dispose( int reason )
     {
-        synchronized ( this )
+        if ( m_active.compareAndSet( true, false ))
         {
-            if ( !m_active )
-            {
-                return;
-            }
-            // mark instance inactive (no more component activations)
-            m_active = false;
-        }
-        log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] will destroy {1} instances", new Object[]
-            { m_context.getBundle().getBundleId(), m_managers.size() }, null, null, null );
+            log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] will destroy {1} instances", new Object[]
+                    { m_context.getBundle().getBundleId(), m_managers.size() }, null, null, null );
 
-        while ( m_managers.size() != 0 )
+            while ( m_managers.size() != 0 )
+            {
+                ComponentHolder holder = m_managers.get( 0 );
+                try
+                {
+                    m_managers.remove( holder );
+                    holder.disposeComponents( reason );
+                }
+                catch ( Exception e )
+                {
+                    log( LogService.LOG_ERROR, "BundleComponentActivator : Exception invalidating", holder
+                            .getComponentMetadata(), null, e );
+                }
+                finally
+                {
+                    m_componentRegistry.unregisterComponentHolder( m_context.getBundle(), holder.getComponentMetadata()
+                            .getName() );
+                }
+
+            }
+
+            log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] STOPPED", new Object[]
+                    {m_context.getBundle().getBundleId()}, null, null, null );
+
+            m_logService.close();
+            m_closeLatch.countDown();
+        }
+        else 
         {
-            ComponentHolder holder = m_managers.get( 0 );
             try
             {
-                m_managers.remove( holder );
-                holder.disposeComponents( reason );
+                m_closeLatch.await(m_configuration.lockTimeout(), TimeUnit.MILLISECONDS);
             }
-            catch ( Exception e )
+            catch ( InterruptedException e )
             {
-                log( LogService.LOG_ERROR, "BundleComponentActivator : Exception invalidating", holder
-                    .getComponentMetadata(), null, e );
+                //ignore interruption during concurrent shutdown.
             }
-            finally
-            {
-                m_componentRegistry.unregisterComponentHolder( m_context.getBundle(), holder.getComponentMetadata()
-                    .getName() );
-            }
-
         }
-
-        log( LogService.LOG_DEBUG, "BundleComponentActivator : Bundle [{0}] STOPPED", new Object[]
-            {m_context.getBundle().getBundleId()}, null, null, null );
-
-        m_logService.close();
 
     }
 
@@ -366,7 +373,7 @@ public class BundleComponentActivator implements Logger
      */
     public boolean isActive()
     {
-        return m_active;
+        return m_active.get();
     }
 
 
