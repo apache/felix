@@ -20,8 +20,10 @@ package org.apache.felix.dm.test.integration.api;
 
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -113,12 +115,13 @@ public class AspectWithPropagationTest extends TestBase {
             m.add(s);
         }
               
-        // All set, check if client has inherited from all aspect properties + original service properties
-        Dictionary check = new Hashtable();
+        // All set, check if client has inherited from top level aspect properties + original service properties
+        Map check = new HashMap();
         check.put("foo", "bar");
-        for (int i = 1; i <= ASPECTS; i ++) {
-            check.put("a" + i, "v" + i);
-        }            
+        for (int i = 1; i < (ASPECTS - 1); i ++) {
+            check.put("a" + i, null); // we must not inherit from lower ranks, only from the top-level aspect.
+        }
+        check.put("a" + ASPECTS, "v" + ASPECTS);
         checkServiceProperties(check, clientImpl.getServiceProperties());
 
         // Now invoke client, which orderly calls all aspects in the chain, and finally the original service "S".
@@ -137,33 +140,139 @@ public class AspectWithPropagationTest extends TestBase {
         m_changeStep.waitForStep(ASPECTS+1, 5000);
         
         // Check if modified "foo" original service property has been propagated
-        check = new Hashtable();
+        check = new HashMap();
         check.put("foo", "barModified");
-        for (int i = 1; i <= ASPECTS; i ++) {
-            check.put("a" + i, "v" + i);
-        }            
+        for (int i = 1; i < (ASPECTS - 1); i ++) {
+            check.put("a" + i, null); // we must not inherit from lower ranks, only from the top-level aspect.
+        }
+        check.put("a" + ASPECTS, "v" + ASPECTS); // we only see top-level aspect service properties
         checkServiceProperties(check, clientImpl.getServiceProperties());
         
-        // Now, change the lower ranked aspect: it must propagate to all upper aspects, as well as to the client
-        System.out.println("-------------------------- Modifying First aspect service properties.");
+        // Now, change the top-level ranked aspect: it must propagate to all upper aspects, as well as to the client
+        System.out.println("-------------------------- Modifying top-level aspect service properties.");
 
         m_changeStep = new Ensure();
-        m_changeStep.step(1); // skip the first lower-ranked aspect, only upper aspects (rank >= 2) will be changed.
+        for (int i = 1; i <= ASPECTS; i ++) {
+            m_changeStep.step(i); // only client has to be changed.
+        }
         props = new Hashtable();
-        props.put("a1", "v1Modified");
-        aspects[0].setServiceProperties(props); // That triggers change callbacks for upper aspects (with rank >= 2)
-        m_changeStep.waitForStep(ASPECTS+1, 5000); // check if Aspects with rank > 1 and the clients have been changed.
+        props.put("a" + ASPECTS, "v" + ASPECTS + "-Modified");
+        aspects[ASPECTS-1].setServiceProperties(props); // That triggers change callbacks for upper aspects (with rank >= 2)
+        m_changeStep.waitForStep(ASPECTS+1, 5000); // check if client have been changed.
         
-        // Check if first aspect service properties have been propagated up to the client.
-        check = new Hashtable();
+        // Check if top level aspect service properties have been propagated up to the client.
+        check = new HashMap();
         check.put("foo", "barModified");
-        check.put("a1", "v1Modified");
-        for (int i = 2; i <= ASPECTS; i ++) {
-            check.put("a" + i, "v" + i);
-        }        
+        for (int i = 1; i < (ASPECTS - 1); i ++) {
+            check.put("a" + i, null); // we must not inherit from lower ranks, only from the top-level aspect.
+        }
+        check.put("a" + ASPECTS, "v" + ASPECTS + "-Modified");
         checkServiceProperties(check, clientImpl.getServiceProperties());
 
         // Clear all components.
+        m_changeStep = null;
+        m.clear();
+    }    
+    
+    /**
+     * This test does the following:
+     * 
+     * - Create S service
+     * - Create some S Aspects without any callbacks (add/change/remove/swap)
+     * - Create a Client, depending on S (actually, on the top-level S aspect)
+     * - Client has a "change" callack in order to track S service properties modifications.
+     * - First, invoke Client.invoke(): all S aspects, and finally original S service must be invoked orderly.
+     * - Modify S original service properties, and check if the client has been called in its "change" callback.
+     */
+    @Test
+    public void testAspectsWithPropagationAndNoCallbacks() {
+        System.out.println("----------- Running testAspectsWithPropagation ...");
+        DependencyManager m = new DependencyManager(context);
+        // helper class that ensures certain steps get executed in sequence
+        m_invokeStep = new Ensure(); 
+        
+        // Create our original "S" service.
+        Dictionary props = new Hashtable();
+        props.put("foo", "bar");
+        Component s = m.createComponent()
+                .setImplementation(new SImpl())
+                .setInterface(S.class.getName(), props);
+        
+        // Create an aspect aware client, depending on "S" service.
+        Client clientImpl;
+        Component client = m.createComponent()
+                .setImplementation((clientImpl = new Client()))
+                .add(m.createServiceDependency()
+                     .setService(S.class)
+                     .setRequired(true)
+                     .setDebug("client")
+                     .setCallbacks("add", "change", "remove"));
+
+        // Create some "S" aspects
+        Component[] aspects = new Component[ASPECTS];
+        for (int rank = 1; rank <= ASPECTS; rank ++) {
+            aspects[rank-1] = m.createAspectService(S.class, null, rank)
+                    .setImplementation(new A("A" + rank, rank));
+            props = new Hashtable();
+            props.put("a" + rank, "v" + rank);
+            aspects[rank-1].setServiceProperties(props);
+        }                                    
+              
+        // Register client
+        m.add(client);
+        
+        // Randomly register aspects and original service
+        boolean originalServiceAdded = false;
+        for (int i = 0; i < ASPECTS; i ++) {
+            int index = getRandomAspect();
+            m.add(aspects[index]);
+            if (_rnd.nextBoolean()) {
+                m.add(s);
+                originalServiceAdded = true;
+            }
+        }
+        if (! originalServiceAdded) {
+            m.add(s);
+        }
+              
+        // All set, check if client has inherited from top level aspect properties + original service properties
+        Map check = new HashMap();
+        check.put("foo", "bar");
+        for (int i = 1; i < (ASPECTS - 1); i ++) {
+            check.put("a" + i, null); // we must not inherit from lower ranks, only from the top-level aspect.
+        }
+        check.put("a" + ASPECTS, "v" + ASPECTS);
+        checkServiceProperties(check, clientImpl.getServiceProperties());
+
+        // Now invoke client, which orderly calls all aspects in the chain, and finally the original service "S".
+        System.out.println("-------------------------- Invoking client.");
+        clientImpl.invoke();
+        m_invokeStep.waitForStep(ASPECTS+1, 5000);
+        
+        // Now, change original service "S" properties: this will orderly trigger "change" callbacks on aspects, and on client. 
+        System.out.println("-------------------------- Modifying original service properties.");
+        m_changeStep = new Ensure();
+        for (int i = 1; i <= ASPECTS; i ++) {
+            m_changeStep.step(i); // skip aspects, which have no "change" callbacks.
+        }
+        props = new Hashtable();
+        props.put("foo", "barModified");
+        s.setServiceProperties(props);
+        
+        // Check if aspects and client have been orderly called in their "changed" callback
+        m_changeStep.waitForStep(ASPECTS+1, 5000);
+        
+        // Check if modified "foo" original service property has been propagated
+        check = new HashMap();
+        check.put("foo", "barModified");
+        for (int i = 1; i < (ASPECTS - 1); i ++) {
+            check.put("a" + i, null); // we must not inherit from lower ranks, only from the top-level aspect.
+        }
+        check.put("a" + ASPECTS, "v" + ASPECTS); // we only see top-level aspect service properties
+        checkServiceProperties(check, clientImpl.getServiceProperties());
+        
+        // Clear all components.
+        m_changeStep = null;
         m.clear();
     }    
     
@@ -252,24 +361,28 @@ public class AspectWithPropagationTest extends TestBase {
         m_changeStep.waitForStep(ASPECTS+2, 5000);
         
         // Check if modified "foo" original service property has been propagated to Client2
-        Hashtable check = new Hashtable();
+        Map check = new HashMap();
         check.put("foo", "barModified");
-        for (int i = 1; i <= ASPECTS; i ++) {
-            check.put("a" + i, "v" + i);
-        }            
+        for (int i = 1; i < (ASPECTS - 1); i ++) {
+            check.put("a" + i, null); // we must not inherit from lower ranks, only from the top-level aspect.
+        }
+        check.put("a" + ASPECTS, "v" + ASPECTS);
         checkServiceProperties(check, client2Impl.getServiceProperties());
         
         // Clear all components.
+        m_changeStep = null;
         m.clear();
     }    
     
-   private void checkServiceProperties(Dictionary check, Dictionary properties) {
-        Enumeration e = check.keys();
-        while (e.hasMoreElements()) {
-            Object key = e.nextElement();
-            Object val = check.get(key);                     
-            Assert.assertEquals(val, properties.get(key));
-        }        
+   private void checkServiceProperties(Map<?, ?> check, Dictionary properties) {
+        for (Object key : check.keySet()) {
+            Object val = check.get(key);   
+            if (val == null) {
+                Assert.assertNull(properties.get(key));
+            } else {
+                Assert.assertEquals(val, properties.get(key));
+            }
+        }
     }
     
     private int getRandomAspect() {
@@ -377,7 +490,7 @@ public class AspectWithPropagationTest extends TestBase {
         }
               
         public void swap(ServiceReference oldSRef, S oldS, ServiceReference newSRef, S newS) {
-            System.out.println("+++ Client.swap: new=" + newS + ", props=" + ServiceUtil.toString(newSRef));
+            System.out.println("+++ Client.swap: m_s = " + m_s + ", old=" + oldS + ", oldProps=" + ServiceUtil.toString(oldSRef) + ", new=" + newS + ", props=" + ServiceUtil.toString(newSRef));
             Assert.assertTrue(m_s == oldS);
             m_s = newS;
             m_sRef = newSRef;
