@@ -374,6 +374,107 @@ public class AspectWithPropagationTest extends TestBase {
         m.clear();
     }    
     
+    /**
+     * This test does the following:
+     * 
+     * - Create S service
+     * - Create some S Aspects without any callbacks (add/change/remove)
+     * - Create S2 Adapter, which adapts S to S2 (but does not have any add/change/remove callbacks)
+     * - Create Client2, which depends on S2. Client2 listens to S2 property change events.
+     * - Now, invoke Client2.invoke(): all S aspects, and finally original S service must be invoked orderly.
+     * - Modify S original service properties, and check if all aspects, S2 Adapter, and Client2 have been orderly called in their "change" callback.
+     */
+    @Test
+    public void testAdapterWithAspectsAndPropagationNoCallbacks() {
+        System.out.println("----------- Running testAdapterWithAspectsAndPropagationNoCallbacks ...");
+
+        DependencyManager m = new DependencyManager(context);
+        m_invokeStep = new Ensure(); 
+        
+        // Create our original "S" service.
+        Dictionary props = new Hashtable();
+        props.put("foo", "bar");
+        Component s = m.createComponent()
+                .setImplementation(new SImpl())
+                .setInterface(S.class.getName(), props);
+        
+        // Create some "S" aspects
+        Component[] aspects = new Component[ASPECTS];
+        for (int rank = 1; rank <= ASPECTS; rank ++) {
+            aspects[rank-1] = m.createAspectService(S.class, null, rank)
+                    .setImplementation(new A("A" + rank, rank));
+            props = new Hashtable();
+            props.put("a" + rank, "v" + rank);
+            aspects[rank-1].setServiceProperties(props);
+        } 
+        
+        // Create S2 adapter (which adapts S1 to S2 interface)
+        Component adapter = m.createAdapterService(S.class, null)
+                .setInterface(S2.class.getName(), null)
+                .setImplementation(new S2Impl());
+        
+        // Create Client2, which depends on "S2" service.
+        Client2 client2Impl;
+        Component client2 = m.createComponent()
+                .setImplementation((client2Impl = new Client2()))
+                .add(m.createServiceDependency()
+                     .setService(S2.class)
+                     .setRequired(true)
+                     .setDebug("client")                     
+                     .setCallbacks("add", "change", "remove"));
+              
+        // Register client2
+        m.add(client2);
+        
+        // Register S2 adapter
+        m.add(adapter);
+        
+        // Randomly register aspects, original service
+        boolean originalServiceAdded = false;
+        for (int i = 0; i < ASPECTS; i ++) {
+            int index = getRandomAspect();
+            m.add(aspects[index]);
+            if (_rnd.nextBoolean()) {
+                m.add(s);
+                originalServiceAdded = true;
+            }
+        }
+        if (! originalServiceAdded) {
+            m.add(s);
+        }
+             
+        // Now invoke client2, which orderly calls all S1 aspects, then S1Impl, and finally S2 service
+        System.out.println("-------------------------- Invoking client2.");
+        client2Impl.invoke2();
+        m_invokeStep.waitForStep(ASPECTS+2, 5000);
+        
+        // Now, change original service "S" properties: this will orderly trigger "change" callbacks on aspects, S2Impl, and Client2.
+        System.out.println("-------------------------- Modifying original service properties.");
+        m_changeStep = new Ensure();
+        for (int i = 1; i <= ASPECTS+1; i ++) {
+            m_changeStep.step(i); // skip all aspects and the adapter
+        }
+        props = new Hashtable();
+        props.put("foo", "barModified");
+        s.setServiceProperties(props);
+        
+        // Check if Client2 has been called in its "changed" callback
+        m_changeStep.waitForStep(ASPECTS+2, 5000);
+        
+        // Check if modified "foo" original service property has been propagated to Client2
+        Map check = new HashMap();
+        check.put("foo", "barModified");
+        for (int i = 1; i < (ASPECTS - 1); i ++) {
+            check.put("a" + i, null); // we must not inherit from lower ranks, only from the top-level aspect.
+        }
+        check.put("a" + ASPECTS, "v" + ASPECTS);
+        checkServiceProperties(check, client2Impl.getServiceProperties());
+        
+        // Clear all components.
+        m_changeStep = null;
+        m.clear();
+    }    
+    
    private void checkServiceProperties(Map<?, ?> check, Dictionary properties) {
         for (Object key : check.keySet()) {
             Object val = check.get(key);   
