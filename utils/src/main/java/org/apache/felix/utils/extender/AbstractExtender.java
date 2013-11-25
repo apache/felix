@@ -116,7 +116,6 @@ public abstract class AbstractExtender implements BundleActivator, BundleTracker
 
     public void stop(BundleContext context) throws Exception {
         stopping = true;
-        this.context.removeBundleListener(this);
         while (!extensions.isEmpty()) {
             Collection<Bundle> toDestroy = chooseBundlesToDestroy(extensions.keySet());
             if (toDestroy == null || toDestroy.isEmpty()) {
