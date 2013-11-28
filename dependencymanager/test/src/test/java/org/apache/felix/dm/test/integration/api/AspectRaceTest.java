@@ -40,9 +40,9 @@ import org.osgi.framework.ServiceReference;
 
 @RunWith(PaxExam.class)
 public class AspectRaceTest extends TestBase {
-	volatile ExecutorService _serviceExec;
-	volatile ExecutorService _aspectExec;
-	volatile DependencyManager _dm;
+	volatile ExecutorService m_serviceExec;
+	volatile ExecutorService m_aspectExec;
+	volatile DependencyManager m_dm;
 	final static int SERVICES = 3;
 	final static int ASPECTS_PER_SERVICE = 10;
 
@@ -52,26 +52,26 @@ public class AspectRaceTest extends TestBase {
 			warn("starting aspect race test");
 			int cores = Math.max(4, Runtime.getRuntime().availableProcessors());
 			// Used to inject S services
-			_serviceExec = Executors.newFixedThreadPool(cores);
+			m_serviceExec = Executors.newFixedThreadPool(cores);
 			// Used to inject S Aspects
-			_aspectExec = Executors.newFixedThreadPool(cores);
+			m_aspectExec = Executors.newFixedThreadPool(cores);
 
 			// Setup test components using dependency manager.
 			// We create a Controller which is injected with some S services,
 			// and each S services has some aspects (SAspect).
 
-			_dm = new DependencyManager(context);
+			m_dm = new DependencyManager(context);
 			Controller controller = new Controller();
-			Component c = _dm
+			Component c = m_dm
 					.createComponent()
 					.setImplementation(controller)
 					.setInterface(Controller.class.getName(), null)
 					.setComposition("getComposition")
-					.add(_dm.createServiceDependency().setService(S.class)
+					.add(m_dm.createServiceDependency().setService(S.class)
 							.setCallbacks("bind", null, "unbind", "swap")
 							.setRequired(true));
 
-			_dm.add(c);
+			m_dm.add(c);
 
 			for (int loop = 1; loop <= 3000; loop++) {
 				// Perform concurrent injections of "S" service and S aspects
@@ -98,9 +98,9 @@ public class AspectRaceTest extends TestBase {
 			error("Test failed", t);
 			Assert.fail("Test failed: " + t.getMessage());
 		} finally {
-			shutdown(_serviceExec);
-			shutdown(_aspectExec);
-			_dm.clear();
+			shutdown(m_serviceExec);
+			shutdown(m_aspectExec);
+			m_dm.clear();
 		}
 	}
 
@@ -117,46 +117,46 @@ public class AspectRaceTest extends TestBase {
 	}
 
 	public static class SImpl implements S {
-		final int _step;
+		final int m_step;
 
 		SImpl(int step) {
-			_step = step;
+			m_step = step;
 		}
 
 		public void invoke(Ensure e) {
-			e.step(_step);
+			e.step(m_step);
 		}
 
 		public String toString() {
-			return "SImpl[" + _step + "]";
+			return "SImpl[" + m_step + "]";
 		}
 	}
 
 	public static class SAspect implements S {
-		volatile S _next;
-		final int _rank;
-		final int _step;
+		volatile S m_next;
+		final int m_rank;
+		final int m_step;
 
 		SAspect(int rank) {
-			_rank = rank;
-			_step = ASPECTS_PER_SERVICE - rank + 1;
+			m_rank = rank;
+			m_step = ASPECTS_PER_SERVICE - rank + 1;
 		}
 
 		public void added(S s) {
-			_next = s;
+			m_next = s;
 		}
 
 		public void swap(S oldS, S newS) {
-			_next = newS;
+			m_next = newS;
 		}
 
 		public void invoke(Ensure e) {
-			e.step(_step);
-			_next.invoke(e);
+			e.step(m_step);
+			m_next.invoke(e);
 		}
 
 		public String toString() {
-			return "SAspect[" + _rank + ", " + _step + "]";
+			return "SAspect[" + m_rank + ", " + m_step + "]";
 		}
 	}
 
@@ -170,17 +170,17 @@ public class AspectRaceTest extends TestBase {
 
 			for (int i = 1; i <= SERVICES; i++) {
 				final int serviceId = i;
-				_serviceExec.execute(new Runnable() {
+				m_serviceExec.execute(new Runnable() {
 					public void run() {
 						try {
-							Component c = _dm.createComponent();
+							Component c = m_dm.createComponent();
 							Hashtable<String, String> props = new Hashtable<String, String>();
 							props.put("id", String.valueOf(serviceId));
 							c.setInterface(S.class.getName(), props)
 									.setImplementation(
 											new SImpl(ASPECTS_PER_SERVICE + 1));
 							m_services.add(c);
-							_dm.add(c);
+							m_dm.add(c);
 							latch.countDown();
 						} catch (Throwable e) {
 							error(e);
@@ -190,17 +190,17 @@ public class AspectRaceTest extends TestBase {
 
 				for (int j = 1; j <= ASPECTS_PER_SERVICE; j++) {
 					final int rank = j;
-					_aspectExec.execute(new Runnable() {
+					m_aspectExec.execute(new Runnable() {
 						public void run() {
 							try {
 								SAspect sa = new SAspect(rank);
-								Component aspect = _dm.createAspectService(
+								Component aspect = m_dm.createAspectService(
 										S.class, "(id=" + serviceId + ")",
 										rank, "added", null, null, "swap")
 										.setImplementation(sa);
 								debug("adding aspect " + sa);
 								m_aspects.add(aspect);
-								_dm.add(aspect);
+								m_dm.add(aspect);
 								latch.countDown();
 							} catch (Throwable e) {
 								error(e);
@@ -245,11 +245,11 @@ public class AspectRaceTest extends TestBase {
 
 			while ((c = m_aspects.poll()) != null) {
 				final Component c$ = c;
-				_serviceExec.execute(new Runnable() {
+				m_serviceExec.execute(new Runnable() {
 					public void run() {
 						try {
 							debug("removing service " + c$);
-							_dm.remove(c$);
+							m_dm.remove(c$);
 							latch.countDown();
 						} catch (Throwable e) {
 							error(e);
@@ -266,11 +266,11 @@ public class AspectRaceTest extends TestBase {
 
 			while ((c = m_services.poll()) != null) {
 				final Component c$ = c;
-				_serviceExec.execute(new Runnable() {
+				m_serviceExec.execute(new Runnable() {
 					public void run() {
 						try {
 							debug("removing service " + c$);
-							_dm.remove(c$);
+							m_dm.remove(c$);
 							latch.countDown();
 						} catch (Throwable e) {
 							error(e);
@@ -285,7 +285,7 @@ public class AspectRaceTest extends TestBase {
 
 	public class Controller {
 		final Composition m_compo = new Composition();
-		final HashSet<S> _services = new HashSet<S>();
+		final HashSet<S> m_services = new HashSet<S>();
 
 		Object[] getComposition() {
 			return new Object[] { this, m_compo };
@@ -299,30 +299,30 @@ public class AspectRaceTest extends TestBase {
 			}
 			debug("bind " + s);
 			synchronized (this) {
-				_services.add(s);
+				m_services.add(s);
 			}
 		}
 
 		void swap(S previous, S current) {
 			debug("swap: " + previous + "," + current);
 			synchronized (this) {
-				if (!_services.remove(previous)) {
+				if (!m_services.remove(previous)) {
 					error("swap: unknow previous service: " + previous);
 				}
-				_services.add(current);
+				m_services.add(current);
 			}
 		}
 
 		void unbind(S a) {
 			debug("unbind " + a);
 			synchronized (this) {
-				_services.remove(a);
+				m_services.remove(a);
 			}
 		}
 
 		void check() {
 			synchronized (this) {
-				for (S s : _services) {
+				for (S s : m_services) {
 					debug("checking service: " + s + " ...");
 					Ensure ensure = new Ensure(false);
 					s.invoke(ensure);
