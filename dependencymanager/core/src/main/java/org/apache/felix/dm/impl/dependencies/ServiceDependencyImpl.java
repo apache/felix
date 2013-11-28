@@ -89,7 +89,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     /**
      * Executor used to ensure proper synchronization without holding locks. 
      */
-    private final BlockingSerialExecutor _serial = new BlockingSerialExecutor();
+    private final BlockingSerialExecutor m_serial = new BlockingSerialExecutor();
 
     // ----------------------- Inner classes --------------------------------------------------------------
 
@@ -275,20 +275,20 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     //@Override
     public void start(final DependencyService service) {
-        _serial.execute(new Runnable() {
+        m_serial.execute(new Runnable() {
             public void run() {
                 // this code is executed exclusively and without holding any locks
-                _start(service);
+                doStart(service);
             }
         });
     }
 
     //@Override
     public void stop(final DependencyService service) {
-        _serial.execute(new Runnable() {
+        m_serial.execute(new Runnable() {
             public void run() {
                 // this code is executed exclusively and without holding any locks
-                _stop(service);
+                doStop(service);
             }
         });
     }
@@ -305,50 +305,50 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     //@Override
     public void addedService(final ServiceReference ref, final Object service) {
-        _serial.execute(new Runnable() {
+        m_serial.execute(new Runnable() {
             public void run() {
                 // this code is executed exclusively and without holding any locks
-                _addedService(ref, service);
+                doAddedService(ref, service);
             }
         });
     }
 
     //@Override
     public void modifiedService(final ServiceReference ref, final Object service) {
-        _serial.execute(new Runnable() {
+        m_serial.execute(new Runnable() {
             public void run() {
                 // this code is executed exclusively and without holding any locks
-                _modifiedService(ref, service);
+                doModifiedService(ref, service);
             }
         });
     }
 
     //@Override
     public void removedService(final ServiceReference ref, final Object service) {
-        _serial.execute(new Runnable() {
+        m_serial.execute(new Runnable() {
             public void run() {
                 // this code is executed exclusively and without holding any locks
-                _removedService(ref, service);
+                doRemovedService(ref, service);
             }
         });
     }
 
     //@Override
     public void invokeAdded(final DependencyService service) {
-        _serial.execute(new Runnable() {
+        m_serial.execute(new Runnable() {
             public void run() {
                 // this code is executed exclusively and without holding any locks
-                _invokeAdded(service);
+                doInvokeAdded(service);
             }
         });
     }
 
     //@Override
     public void invokeRemoved(final DependencyService service) {
-        _serial.execute(new Runnable() {
+        m_serial.execute(new Runnable() {
             public void run() {
                 // this code is executed exclusively and without holding any locks
-                _invokeRemoved(service);
+                doInvokeRemoved(service);
             }
         });
     }
@@ -721,7 +721,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     // --------------------------------------- Private methods --------------------------------------------
 
-    private void _start(DependencyService service) {
+    private void doStart(DependencyService service) {
         boolean needsStarting = false;
         synchronized (this) {
             m_services.add(service);
@@ -756,7 +756,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
     }
 
-    private void _stop(DependencyService service) {
+    private void doStop(DependencyService service) {
         boolean needsStopping = false;
         synchronized (this) {
             if (m_services.size() == 1 && m_services.contains(service)) {
@@ -774,7 +774,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
     }
 
-    private void _addedService(ServiceReference ref, Object service) {
+    private void doAddedService(ServiceReference ref, Object service) {
         if (m_debug) {
             m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] addedservice: " + ref);
         }
@@ -829,7 +829,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
     }
 
-    private void _modifiedService(ServiceReference ref, Object service) {
+    private void doModifiedService(ServiceReference ref, Object service) {
         Object[] services;
         synchronized (this) {
             services = m_services.toArray();
@@ -843,7 +843,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
     }
 
-    private void _removedService(ServiceReference ref, Object service) {
+    private void doRemovedService(ServiceReference ref, Object service) {
         if (m_debug) {
             m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] removedservice: " + ref + ", rank: " + ref.getProperty("service.ranking"));
         }
@@ -875,7 +875,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     }
 
-    private void _invokeAdded(DependencyService service) {
+    private void doInvokeAdded(DependencyService service) {
         if (m_debug) {
             m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke added due to configure. (component is activated)");
         }
@@ -889,7 +889,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
     }
 
-    private void _invokeRemoved(DependencyService service) {
+    private void doInvokeRemoved(DependencyService service) {
         if (m_debug) {
             m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke removed due to unconfigure. (component is destroyed)");
         }
