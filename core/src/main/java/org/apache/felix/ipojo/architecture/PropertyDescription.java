@@ -189,13 +189,26 @@ public class PropertyDescription {
         if (m_value == null) {
             return null;
         }
-        
+
         Class type = null;
         try {
             type = Property.computeType(m_type, context);
             return Property.create(type, m_value);
         } catch (ConfigurationException e) {
             return m_value; // Cannot create the object.
+        }
+    }
+
+    /**
+     * Gets the current value of the property as object.
+     * @return the current value
+     * @since 1.11.1
+     */
+    public Object getCurrentValue() {
+        if (m_property == null) {
+            return m_value;
+        } else {
+            return m_property.getValue();
         }
     }
 
