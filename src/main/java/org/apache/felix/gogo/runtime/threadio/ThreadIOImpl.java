@@ -116,7 +116,17 @@ public class ThreadIOImpl implements ThreadIO
         assert out != null;
         assert err != null;
         checkIO(); // derek
-        Marker marker = new Marker(in, out, err, current.get());
+        Marker prev = current();
+        if (in == this.in) {
+            in = prev.getIn();
+        }
+        if (out == this.out) {
+            out = prev.getOut();
+        }
+        if (err == this.err) {
+            err = prev.getErr();
+        }
+        Marker marker = new Marker(in, out, err, prev);
         this.current.set(marker);
     }
 }
