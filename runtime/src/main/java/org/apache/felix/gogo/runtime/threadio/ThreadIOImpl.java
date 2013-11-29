@@ -28,10 +28,19 @@ import java.util.logging.Logger;
 public class ThreadIOImpl implements ThreadIO
 {
     static private final Logger log = Logger.getLogger(ThreadIOImpl.class.getName());
-    ThreadPrintStream err = new ThreadPrintStream(System.err);
-    ThreadPrintStream out = new ThreadPrintStream(System.out);
-    ThreadInputStream in = new ThreadInputStream(System.in);
-    ThreadLocal<Marker> current = new InheritableThreadLocal<Marker>();
+
+    final Marker defaultMarker = new Marker(System.in, System.out, System.err, null);
+    final ThreadPrintStream err = new ThreadPrintStream(this, System.err, true);
+    final ThreadPrintStream out = new ThreadPrintStream(this, System.out, false);
+    final ThreadInputStream in = new ThreadInputStream(this, System.in);
+    final ThreadLocal<Marker> current = new InheritableThreadLocal<Marker>()
+    {
+        @Override
+        protected Marker initialValue()
+        {
+            return defaultMarker;
+        }
+    };
 
     public void start()
     {
@@ -46,9 +55,9 @@ public class ThreadIOImpl implements ThreadIO
 
     public void stop()
     {
-        System.setErr(err.dflt);
-        System.setOut(out.dflt);
-        System.setIn(in.dflt);
+        System.setErr(defaultMarker.err);
+        System.setOut(defaultMarker.out);
+        System.setIn(defaultMarker.in);
     }
 
     private void checkIO()
@@ -72,6 +81,20 @@ public class ThreadIOImpl implements ThreadIO
         }
     }
 
+    Marker current()
+    {
+        Marker m = current.get();
+        if (m.deactivated)
+        {
+            while (m.deactivated)
+            {
+                m = m.previous;
+            }
+            current.set(m);
+        }
+        return m;
+    }
+
     public void close()
     {
         checkIO(); // derek
@@ -80,18 +103,10 @@ public class ThreadIOImpl implements ThreadIO
         {
             throw new IllegalStateException("No thread io active");
         }
-
-        Marker previous = top.previous;
-        if (previous == null)
+        if (top != defaultMarker)
         {
-            in.end();
-            out.end();
-            err.end();
-        }
-        else
-        {
-            this.current.set(previous);
-            previous.activate();
+            top.deactivate();
+            this.current.set(top.previous);
         }
     }
 
@@ -101,8 +116,7 @@ public class ThreadIOImpl implements ThreadIO
         assert out != null;
         assert err != null;
         checkIO(); // derek
-        Marker marker = new Marker(this, in, out, err, current.get());
+        Marker marker = new Marker(in, out, err, current.get());
         this.current.set(marker);
-        marker.activate();
     }
 }

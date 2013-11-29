@@ -23,26 +23,41 @@ import java.io.PrintStream;
 
 public class Marker
 {
-    Marker previous;
+    final Marker previous;
     InputStream in;
     PrintStream out;
     PrintStream err;
-    ThreadIOImpl parent;
+    volatile boolean deactivated;
 
-    public Marker(ThreadIOImpl parent, InputStream in, PrintStream out, PrintStream err, Marker previous)
+    public Marker(InputStream in, PrintStream out, PrintStream err, Marker previous)
     {
         this.previous = previous;
-        this.parent = parent;
         this.in = in;
         this.out = out;
         this.err = err;
     }
 
-    Marker activate()
+    public InputStream getIn()
     {
-        parent.in.setStream(in);
-        parent.out.setStream(out);
-        parent.err.setStream(err);
-        return previous;
+        return deactivated ? previous.getIn() : in;
+    }
+
+    public PrintStream getOut()
+    {
+        return deactivated ? previous.getOut() : out;
+    }
+
+    public PrintStream getErr()
+    {
+        return deactivated ? previous.getErr() : err;
+    }
+
+    void deactivate()
+    {
+        deactivated = true;
+        // Set to null for garbage collection
+        in = null;
+        out = null;
+        err = null;
     }
 }

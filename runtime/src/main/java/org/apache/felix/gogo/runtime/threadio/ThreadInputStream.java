@@ -23,39 +23,19 @@ import java.io.InputStream;
 
 public class ThreadInputStream extends InputStream
 {
-    ThreadLocal<InputStream> map = new InheritableThreadLocal<InputStream>();
-    InputStream dflt;
+    final InputStream dflt;
+    final ThreadIOImpl io;
 
-    public ThreadInputStream(InputStream in)
+    public ThreadInputStream(ThreadIOImpl threadIO, InputStream in)
     {
+        io = threadIO;
         dflt = in;
     }
 
     private InputStream getCurrent()
     {
-        InputStream in = map.get();
-        if (in != null)
-        {
-            return in;
-        }
-        return dflt;
-    }
-
-    public void setStream(InputStream in)
-    {
-        if (in != dflt && in != this)
-        {
-            map.set(in);
-        }
-        else
-        {
-            map.remove();
-        }
-    }
-
-    public void end()
-    {
-        map.remove();
+        Marker marker = io.current();
+        return marker.getIn();
     }
 
     /**
