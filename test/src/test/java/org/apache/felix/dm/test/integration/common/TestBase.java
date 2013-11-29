@@ -198,8 +198,6 @@ public abstract class TestBase implements LogService, FrameworkListener {
      * 
      * @param symbolicName
      *            the symbolic name of the bundle to be stopped.
-     * @param context
-     *            the context used to lookup all installed bundles.
      */
     protected void stopBundle(String symbolicName) {
         // Stop the test.annotation bundle
@@ -217,6 +215,21 @@ public abstract class TestBase implements LogService, FrameworkListener {
         if (!found) {
             throw new IllegalStateException("bundle " + symbolicName + " not found");
         }
+    }
+
+    /**
+     * Helper method used to get a given bundle.
+     * 
+     * @param symbolicName
+     *            the symbolic name of the bundle to get.
+     */
+    protected Bundle getBundle(String symbolicName) {
+        for (Bundle b : context.getBundles()) {
+            if (b.getSymbolicName().equals(symbolicName)) {
+                return b;
+            }
+        }
+        throw new IllegalStateException("bundle " + symbolicName + " not found");
     }
 
     /**
