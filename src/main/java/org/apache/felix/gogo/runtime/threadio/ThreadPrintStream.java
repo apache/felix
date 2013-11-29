@@ -25,40 +25,22 @@ import java.util.Locale;
 
 public class ThreadPrintStream extends PrintStream
 {
-    PrintStream dflt;
-    ThreadLocal<PrintStream> map = new InheritableThreadLocal<PrintStream>();
+    final PrintStream dflt;
+    final ThreadIOImpl io;
+    final boolean errorStream;
 
-    public ThreadPrintStream(PrintStream out)
+    public ThreadPrintStream(ThreadIOImpl threadIO, PrintStream out, boolean error)
     {
         super(out);
         dflt = out;
+        io = threadIO;
+        errorStream = error;
     }
 
     public PrintStream getCurrent()
     {
-        PrintStream out = map.get();
-        if (out != null)
-        {
-            return out;
-        }
-        return dflt;
-    }
-
-    public void setStream(PrintStream out)
-    {
-        if (out != dflt && out != this)
-        {
-            map.set(out);
-        }
-        else
-        {
-            map.remove();
-        }
-    }
-
-    public void end()
-    {
-        map.remove();
+        Marker marker = io.current();
+        return errorStream ? marker.getErr() : marker.getOut();
     }
 
     /**
