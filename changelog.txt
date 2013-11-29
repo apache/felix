@@ -2,6 +2,7 @@ Release 3.1.1:
 --------------
 
 FELIX-3910: Race conditions in DependencyManager
+FELIX-4334: ServiceDependency properties change callback issue
 FELIX-4285: Remove abstract modifier from DependencyActivatorBase.destroy()
 
 Release 3.1.0
