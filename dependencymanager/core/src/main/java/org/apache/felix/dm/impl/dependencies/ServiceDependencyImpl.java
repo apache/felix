@@ -837,7 +837,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         for (int i = 0; i < services.length; i++) {
             DependencyService ds = (DependencyService) services[i];
             ds.dependencyChanged(this);
-            if (ds.isRegistered()) {
+            if (ds.isInstantiated()) {
                 invokeChanged(ds, ref, service);
             }
         }
