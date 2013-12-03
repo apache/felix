@@ -22,19 +22,19 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>2</version>
+        <version>3-SNAPSHOT</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Samples - Whiteboard</name>
     <artifactId>org.apache.felix.http.samples.whiteboard</artifactId>
-    <version>2.2.2</version>
+    <version>2.2.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-4/samples/whiteboard</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-4/samples/whiteboard</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http-4/samples/whiteboard</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/samples/whiteboard</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/samples/whiteboard</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/http/samples/whiteboard/</url>
     </scm>
 
     <build>
