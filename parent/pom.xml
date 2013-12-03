@@ -30,7 +30,7 @@
     <name>Apache Felix Http Parent POM</name>
     <groupId>org.apache.felix</groupId>
     <artifactId>org.apache.felix.http.parent</artifactId>
-    <version>2-SNAPSHOT</version>
+    <version>2</version>
     <packaging>pom</packaging>
 
     <prerequisites>
@@ -48,9 +48,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/parent</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/parent</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/parent/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-4/parent</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-4/parent</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http-4/parent</url>
     </scm>
 
     <build>

@@ -22,19 +22,19 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>2-SNAPSHOT</version>
+        <version>2</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Bundle</name>
     <artifactId>org.apache.felix.http.bundle</artifactId>
-    <version>2.2.2-SNAPSHOT</version>
+    <version>2.2.2</version>
     <packaging>jar</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/bundle</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/bundle</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/bundle/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-4/bundle</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-4/bundle</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http-4/bundle</url>
     </scm>
 
     <build>

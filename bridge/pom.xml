@@ -22,19 +22,19 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>2-SNAPSHOT</version>
+        <version>2</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Bridge</name>
     <artifactId>org.apache.felix.http.bridge</artifactId>
-    <version>2.2.2-SNAPSHOT</version>
+    <version>2.2.2</version>
     <packaging>jar</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/bridge</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/bridge</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/bridge/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-4/bridge</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-4/bridge</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http-4/bridge</url>
     </scm>
 
     <build>

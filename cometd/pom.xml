@@ -22,19 +22,19 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.http.parent</artifactId>
-        <version>2-SNAPSHOT</version>
+        <version>2</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Http Cometd</name>
     <artifactId>org.apache.felix.http.cometd</artifactId>
-    <version>2.2.2-SNAPSHOT</version>
+    <version>2.2.2</version>
     <packaging>jar</packaging>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/cometd</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/cometd</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/http/cometd/</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-4/cometd</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.http-4/cometd</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.http-4/cometd</url>
     </scm>
 
     <build>
