@@ -30,7 +30,7 @@
     </properties>
     <packaging>bundle</packaging>
     <name>Apache Felix AutoConf Resource Processor</name>
-    <version>0.1.6-SNAPSHOT</version>
+    <version>0.1.5-SNAPSHOT</version>
     <artifactId>org.apache.felix.deployment.rp.autoconf</artifactId>
     <dependencies>
         <dependency>
