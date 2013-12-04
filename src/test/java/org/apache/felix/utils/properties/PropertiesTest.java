@@ -22,6 +22,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
@@ -118,6 +119,22 @@ public class PropertiesTest extends TestCase {
         assertEquals("11", "   j", props2.getProperty("j"));
         assertEquals("12", "   c", props2.getProperty("space"));
         assertEquals("13", "\\", props2.getProperty("dblbackslash"));
+        assertEquals(props1, props2);
+    }
+
+    public void testConfigInterpolation() throws IOException
+    {
+        String config = "a=$\\\\\\\\{var}\n" +
+                "ab=${a}b\n" +
+                "abc=${ab}c";
+
+        java.util.Properties props1 = new java.util.Properties();
+        props1.load(new StringReader(config));
+        InterpolationHelper.performSubstitution((Map) props1);
+
+        org.apache.felix.utils.properties.Properties props2 = new org.apache.felix.utils.properties.Properties();
+        props2.load(new StringReader(config));
+
         assertEquals(props1, props2);
     }
 

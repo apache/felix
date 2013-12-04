@@ -75,10 +75,11 @@ public class InterpolationHelper {
      */
     public static void performSubstitution(Map<String,String> properties, SubstitutionCallback callback)
     {
+        Map<String, String> org = new HashMap<String, String>(properties);
         for (String name : properties.keySet())
         {
             String value = properties.get(name);
-            properties.put(name, substVars(value, name, null, properties, callback));
+            properties.put(name, substVars(value, name, null, org, callback));
         }
     }
 
