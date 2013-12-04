@@ -54,6 +54,73 @@ public class PropertiesTest extends TestCase {
         properties.load(this.getClass().getClassLoader().getResourceAsStream(TEST_PROPERTIES_FILE));
     }
 
+    public void testSpaces() throws Exception {
+        String config = "\n" +
+                        "\n" +
+                        "    \n" +
+                        "                \n" +
+                        "   \\ \\r \\n \\t \\f\n" +
+                        "   \n" +
+                        "                                                \n" +
+                        "! dshfjklahfjkldashgjl;as\n" +
+                        "     #jdfagdfjagkdjfghksdajfd\n" +
+                        "     \n" +
+                        "!!properties\n" +
+                        "\n" +
+                        "a=a\n" +
+                        "b bb as,dn   \n" +
+                        "c\\r\\ \\t\\nu =:: cu\n" +
+                        "bu= b\\\n" +
+                        "                u\n" +
+                        "d=d\\r\\ne=e\n" +
+                        "f   :f\\\n" +
+                        "f\\\n" +
+                        "                        f\n" +
+                        "g               g\n" +
+                        "h\\u0020h\n" +
+                        "\\   i=i\n" +
+                        "j=\\   j\n" +
+                        "space=\\   c\n" +
+                        "\n" +
+                        "dblbackslash=\\\\\n" +
+                        "                        \n";
+
+        java.util.Properties props1 = new java.util.Properties();
+        props1.load(new StringReader(config));
+
+        org.apache.felix.utils.properties.Properties props2 = new org.apache.felix.utils.properties.Properties();
+        props2.load(new StringReader(config));
+
+        assertEquals("1", "\n \t \f", props1.getProperty(" \r"));
+        assertEquals("2", "a", props1.getProperty("a"));
+        assertEquals("3", "bb as,dn   ", props1.getProperty("b"));
+        assertEquals("4", ":: cu", props1.getProperty("c\r \t\nu"));
+        assertEquals("5", "bu", props1.getProperty("bu"));
+        assertEquals("6", "d\r\ne=e", props1.getProperty("d"));
+        assertEquals("7", "fff", props1.getProperty("f"));
+        assertEquals("8", "g", props1.getProperty("g"));
+        assertEquals("9", "", props1.getProperty("h h"));
+        assertEquals("10", "i=i", props1.getProperty(" "));
+        assertEquals("11", "   j", props1.getProperty("j"));
+        assertEquals("12", "   c", props1.getProperty("space"));
+        assertEquals("13", "\\", props1.getProperty("dblbackslash"));
+
+        assertEquals("1", "\n \t \f", props2.getProperty(" \r"));
+        assertEquals("2", "a", props2.getProperty("a"));
+        assertEquals("3", "bb as,dn   ", props2.getProperty("b"));
+        assertEquals("4", ":: cu", props2.getProperty("c\r \t\nu"));
+        assertEquals("5", "bu", props2.getProperty("bu"));
+        assertEquals("6", "d\r\ne=e", props2.getProperty("d"));
+        assertEquals("7", "fff", props2.getProperty("f"));
+        assertEquals("8", "g", props2.getProperty("g"));
+        assertEquals("9", "", props2.getProperty("h h"));
+        assertEquals("10", "i=i", props2.getProperty(" "));
+        assertEquals("11", "   j", props2.getProperty("j"));
+        assertEquals("12", "   c", props2.getProperty("space"));
+        assertEquals("13", "\\", props2.getProperty("dblbackslash"));
+        assertEquals(props1, props2);
+    }
+
     /**
      * <p>
      * Test getting property.

@@ -755,7 +755,10 @@ public class Properties extends AbstractMap<String, String> {
                 }
 
                 valueLines.add(line);
-                line = line.trim();
+                while (line.length() > 0 && contains(WHITE_SPACE, line.charAt(0)))
+                {
+                    line = line.substring(1, line.length());
+                }
 
                 if (checkCombineLines(line))
                 {
@@ -880,7 +883,8 @@ public class Properties extends AbstractMap<String, String> {
             // 0: key parsing
             // 1: antislash found while parsing the key
             // 2: separator crossing
-            // 3: value parsing
+            // 3: white spaces
+            // 4: value parsing
             int state = 0;
 
             for (int pos = 0; pos < line.length(); pos++)
@@ -946,19 +950,36 @@ public class Properties extends AbstractMap<String, String> {
                             value.append(c);
 
                             // switch to the value parsing state
-                            state = 3;
+                            state = 4;
                         }
 
                         break;
 
                     case 3:
+                        if (contains(WHITE_SPACE, c))
+                        {
+                            // do nothing, eat all white spaces
+                            state = 3;
+                        }
+                        else
+                        {
+                            // any other character indicates we encoutered the beginning of the value
+                            value.append(c);
+
+                            // switch to the value parsing state
+                            state = 4;
+                        }
+
+                        break;
+
+                    case 4:
                         value.append(c);
                         break;
                 }
             }
 
-            result[0] = key.toString().trim();
-            result[1] = value.toString().trim();
+            result[0] = key.toString();
+            result[1] = value.toString();
 
             return result;
         }
