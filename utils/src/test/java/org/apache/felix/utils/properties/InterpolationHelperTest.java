@@ -20,6 +20,7 @@ import junit.framework.TestCase;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 
 public class InterpolationHelperTest extends TestCase {
 
@@ -124,6 +125,23 @@ public class InterpolationHelperTest extends TestCase {
         assertEquals("${a}", InterpolationHelper.substVars("$\\{a${#}\\}", "b", null, new Hashtable(), context));
         assertEquals("${a}", InterpolationHelper.substVars("$\\{a\\}${#}", "b", null, new Hashtable(), context));
         assertEquals("${a}", InterpolationHelper.substVars("$\\{a\\}", "b", null, new Hashtable(), context));
+    }
+
+    public void testSubstitutionOrder()
+    {
+        LinkedHashMap<String, String> map1 = new LinkedHashMap<String, String>();
+        map1.put("a", "$\\\\{var}");
+        map1.put("abc", "${ab}c");
+        map1.put("ab", "${a}b");
+        InterpolationHelper.performSubstitution(map1);
+
+        LinkedHashMap<String, String> map2 = new LinkedHashMap<String, String>();
+        map2.put("a", "$\\\\{var}");
+        map2.put("ab", "${a}b");
+        map2.put("abc", "${ab}c");
+        InterpolationHelper.performSubstitution(map2);
+
+        assertEquals(map1, map2);
     }
 
 }
