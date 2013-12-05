@@ -422,7 +422,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
             public Object addingService(ServiceReference serviceReference)
             {
                 ConfigurationAdmin cm = (ConfigurationAdmin) super.addingService(serviceReference);
-                configInstaller = new ConfigInstaller(context, cm, fileInstall);
+                configInstaller = new ConfigInstaller(this.context, cm, fileInstall);
                 configInstaller.init();
                 return cm;
             }
