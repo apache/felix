@@ -146,6 +146,16 @@ public class InterpolationHelper {
                                    SubstitutionCallback callback)
             throws IllegalArgumentException
     {
+        return unescape(doSubstVars(val, currentKey, cycleMap, configProps, callback));
+    }
+
+    private static String doSubstVars(String val,
+                                   String currentKey,
+                                   Map<String,String> cycleMap,
+                                   Map<String,String> configProps,
+                                   SubstitutionCallback callback)
+            throws IllegalArgumentException
+    {
         if (cycleMap == null)
         {
             cycleMap = new HashMap<String,String>();
@@ -187,7 +197,7 @@ public class InterpolationHelper {
         // return the existing value.
         if ((startDelim < 0) || (stopDelim < 0))
         {
-            return unescape(val);
+            return val;
         }
 
         // At this point, we have found a variable placeholder so
@@ -236,10 +246,7 @@ public class InterpolationHelper {
 
         // Now perform substitution again, since there could still
         // be substitutions to make.
-        val = substVars(val, currentKey, cycleMap, configProps, callback);
-
-        // Remove escape characters preceding {, } and \
-        val = unescape(val);
+        val = doSubstVars(val, currentKey, cycleMap, configProps, callback);
 
         // Return the value.
         return val;
