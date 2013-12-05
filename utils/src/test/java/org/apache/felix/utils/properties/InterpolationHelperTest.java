@@ -144,4 +144,17 @@ public class InterpolationHelperTest extends TestCase {
         assertEquals(map1, map2);
     }
 
+    public void testMultipleEscapes()
+    {
+        LinkedHashMap<String, String> map1 = new LinkedHashMap<String, String>();
+        map1.put("a", "$\\\\{var}");
+        map1.put("abc", "${ab}c");
+        map1.put("ab", "${a}b");
+        InterpolationHelper.performSubstitution(map1);
+
+        assertEquals("$\\{var}", map1.get("a"));
+        assertEquals("$\\{var}b", map1.get("ab"));
+        assertEquals("$\\{var}bc", map1.get("abc"));
+    }
+
 }
