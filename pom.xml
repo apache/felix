@@ -20,12 +20,12 @@
   <parent>
     <groupId>org.apache.felix</groupId>
     <artifactId>felix-parent</artifactId>
-    <version>2</version>
+    <version>2.1</version>
     <relativePath>../pom/pom.xml</relativePath>
   </parent>
 	
   <modelVersion>4.0.0</modelVersion>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <name>Apache Felix File Install</name>
   <description>A utility to automatically install bundles from a directory.</description>
   <url>http://felix.apache.org/site/apache-felix-file-install.html</url>
@@ -53,29 +53,12 @@
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.configadmin</artifactId>
       <version>1.2.8</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.utils</artifactId>
       <version>1.5.0-SNAPSHOT</version>
-      <scope>provided</scope>
     </dependency>
-      <!-- sources -->
-      <dependency>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>org.apache.felix.configadmin</artifactId>
-          <version>1.2.8</version>
-          <classifier>sources</classifier>
-          <optional>true</optional>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>org.apache.felix.utils</artifactId>
-          <version>1.2.0</version>
-          <classifier>sources</classifier>
-          <optional>true</optional>
-      </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -108,20 +91,31 @@
             </Bundle-DocURL>
             <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
             <Embed-Dependency>
-                org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*",
-                org.apache.felix.utils;inline="org/apache/felix/utils/collections/DictionaryAsMap*.*"
+                org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.class",
+                org.apache.felix.utils;inline="org/apache/felix/utils/collections/DictionaryAsMap*.class"
             </Embed-Dependency>
           </instructions>
         </configuration>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>
         <executions>
           <execution>
             <id>attach-sources</id>
+            <phase>prepare-package</phase>
             <goals>
-              <goal>jar</goal>
+              <goal>jar-no-fork</goal>
             </goals>
           </execution>
         </executions>
@@ -129,6 +123,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
+        <version>2.2</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -153,6 +148,9 @@
                   <artifact>org.apache.felix:org.apache.felix.utils</artifact>
                   <includes>
                     <include>**/DictionaryAsMap.*</include>
+                    <include>org/apache/felix/utils/manifest/**</include>
+                    <include>org/apache/felix/utils/properties/**</include>
+                    <include>org/apache/felix/utils/version/**</include>
                   </includes>
                 </filter>
               </filters>
