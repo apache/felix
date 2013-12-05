@@ -1862,7 +1862,7 @@ public class DependencyManager<S, T> implements Reference
 
         m_customizer.setPreviousRefMap( refMap );
         boolean initialActive = oldTracker != null && oldTracker.isActive();
-        m_componentManager.log( LogService.LOG_INFO, "New service tracker for {0}, initial active: {1}, previous references: {2}", new Object[]
+        m_componentManager.log( LogService.LOG_DEBUG, "New service tracker for {0}, initial active: {1}, previous references: {2}", new Object[]
                 {getName(), initialActive, refMap}, null );
         ServiceTracker<T, RefPair<T>> tracker = new ServiceTracker<T, RefPair<T>>( bundleContext, m_targetFilter, m_customizer, initialActive );
         m_customizer.setTracker( tracker );
