@@ -350,7 +350,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         }
         if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
         {
-            log( LogService.LOG_INFO, "Configuration PID updated for Component Factory", null );
+            log( LogService.LOG_DEBUG, "Configuration PID updated for Component Factory", null );
 
             // Ignore the configuration if our policy is 'ignore'
             if ( getComponentMetadata().isConfigurationIgnored() )
@@ -364,14 +364,14 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             // We are now configured from config admin.
             m_hasConfiguration = true;
 
-            log( LogService.LOG_INFO, "Current ComponentFactory state={0}", new Object[]
+            log( LogService.LOG_DEBUG, "Current ComponentFactory state={0}", new Object[]
                     {getState()}, null );
 
             // If we are active, but if some config target filters don't match anymore
             // any required references, then deactivate.
             if ( getState() == STATE_FACTORY )
             {
-                log( LogService.LOG_INFO, "Verifying if Active Component Factory is still satisfied", null );
+                log( LogService.LOG_DEBUG, "Verifying if Active Component Factory is still satisfied", null );
 
                 // First update target filters.
                 updateTargets( getProperties() );

@@ -116,16 +116,14 @@ public class ServiceFactoryComponentManager<S> extends SingleComponentManager<S>
         {
             if ( !collectDependencies() )
             {
-                log(
-                        LogService.LOG_INFO,
+                log( LogService.LOG_DEBUG,
                         "getService (ServiceFactory) did not win collecting dependencies, try creating object anyway.",
                         null );
 
             }
             else
             {
-                log(
-                        LogService.LOG_DEBUG,
+                log( LogService.LOG_DEBUG,
                         "getService (ServiceFactory) won collecting dependencies, proceed to creating object.",
                         null );
 
