@@ -1311,7 +1311,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
                         Clause path = clauses[0];
                         for (Iterator it = bundles.iterator(); it.hasNext();) {
                             Bundle hostBundle = (Bundle) it.next();
-                            if (hostBundle.getSymbolicName().equals(path.getName())) {
+                            if (hostBundle.getSymbolicName() != null &&
+                                    hostBundle.getSymbolicName().equals(path.getName())) {
                                 String ver = path.getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE);
                                 if (ver != null) {
                                     VersionRange v = VersionRange.parseVersionRange(ver);
