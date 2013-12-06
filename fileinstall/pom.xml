@@ -63,6 +63,14 @@
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <version>2.1.0</version>
@@ -81,6 +89,9 @@
             <Import-Package>
                 org.osgi.service.log;resolution:=optional,
                 org.osgi.service.cm;resolution:=optional,
+                !org.apache.felix.fileinstall,
+                !org.apache.felix.cm.file,
+                !org.apache.felix.utils.*,
                 *
             </Import-Package>
             <Bundle-Activator>org.apache.felix.fileinstall.internal.FileInstall</Bundle-Activator>
@@ -147,7 +158,7 @@
                 <filter>
                   <artifact>org.apache.felix:org.apache.felix.utils</artifact>
                   <includes>
-                    <include>**/DictionaryAsMap.*</include>
+                    <include>**/DictionaryAsMap*.*</include>
                     <include>org/apache/felix/utils/manifest/**</include>
                     <include>org/apache/felix/utils/properties/**</include>
                     <include>org/apache/felix/utils/version/**</include>
