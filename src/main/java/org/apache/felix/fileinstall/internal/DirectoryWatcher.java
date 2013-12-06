@@ -337,10 +337,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         if (bundleEvent.getType() == BundleEvent.UNINSTALLED)
         {
-            for (Iterator it = currentManagedArtifacts.entrySet().iterator(); it.hasNext();)
+            for (Iterator it = getArtifacts().iterator(); it.hasNext();)
             {
-                Map.Entry entry = (Map.Entry) it.next();
-                Artifact artifact = (Artifact) entry.getValue();
+                Artifact artifact = (Artifact) it.next();
                 if (artifact.getBundleId() == bundleEvent.getBundle().getBundleId())
                 {
                     log(Logger.LOG_DEBUG, "Bundle " + bundleEvent.getBundle().getBundleId()
@@ -370,7 +369,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         {
             File file = (File) it.next();
             boolean exists = file.exists();
-            Artifact artifact = (Artifact) currentManagedArtifacts.get(file);
+            Artifact artifact = getArtifact(file);
             // File has been deleted
             if (!exists)
             {
@@ -787,7 +786,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         this.context.removeBundleListener(this);
         interrupt();
-        for (Iterator iter = currentManagedArtifacts.values().iterator(); iter.hasNext();)
+        for (Iterator iter = getArtifacts().iterator(); iter.hasNext();)
         {
             Artifact artifact = (Artifact) iter.next();
             deleteTransformedFile(artifact);
@@ -853,7 +852,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 artifact.setChecksum(Util.loadChecksum(bundles[i], context));
                 artifact.setListener(null);
                 artifact.setPath(new File(path));
-                currentManagedArtifacts.put(new File(path), artifact);
+                setArtifact(new File(path), artifact);
                 checksums.put(new File(path), new Long(artifact.getChecksum()));
             }
         }
@@ -988,7 +987,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 artifact.setBundleId(bundle.getBundleId());
             }
             installationFailures.remove(path);
-            currentManagedArtifacts.put(path, artifact);
+            setArtifact(path, artifact);
             log(Logger.LOG_INFO, "Installed " + path, null);
         }
         catch (Exception e)
@@ -1071,7 +1070,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 artifact.setListener(findListener(path, FileInstall.getListeners()));
             }
             // Forget this artifact
-            currentManagedArtifacts.remove(path);
+            removeArtifact(path);
             // Delete transformed file
             deleteTransformedFile(artifact);
             // if the listener is an installer, uninstall the artifact
@@ -1205,7 +1204,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     private void startAllBundles()
     {
         List bundles = new ArrayList();
-        for (Iterator it = currentManagedArtifacts.values().iterator(); it.hasNext();)
+        for (Iterator it = getArtifacts().iterator(); it.hasNext();)
         {
             Artifact artifact = (Artifact) it.next();
             if (artifact.getBundleId() > 0)
@@ -1282,7 +1281,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         // Go through managed bundles
         else if (SCOPE_MANAGED.equals(scope)) {
             Set bundles = new HashSet();
-            for (Iterator it = currentManagedArtifacts.values().iterator(); it.hasNext();) {
+            for (Iterator it = getArtifacts().iterator(); it.hasNext();) {
                 Artifact artifact = (Artifact) it.next();
                 if (artifact.getBundleId() > 0) {
                     Bundle bundle = context.getBundle(artifact.getBundleId());
@@ -1418,7 +1417,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         if (updateWithListeners)
         {
-            for (Iterator it = currentManagedArtifacts.values().iterator(); it.hasNext(); )
+            for (Iterator it = getArtifacts().iterator(); it.hasNext(); )
             {
                 Artifact artifact = (Artifact) it.next();
                 if (artifact.getListener() == null && artifact.getBundleId() > 0)
@@ -1446,7 +1445,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     public void removeListener(ArtifactListener listener)
     {
-        for (Iterator it = currentManagedArtifacts.values().iterator(); it.hasNext(); )
+        for (Iterator it = getArtifacts().iterator(); it.hasNext(); )
         {
             Artifact artifact = (Artifact) it.next();
             if (artifact.getListener() == listener)
@@ -1457,6 +1456,38 @@ public class DirectoryWatcher extends Thread implements BundleListener
         synchronized (this)
         {
             this.notifyAll();
+        }
+    }
+
+    private Artifact getArtifact(File file)
+    {
+        synchronized (currentManagedArtifacts)
+        {
+            return (Artifact) currentManagedArtifacts.get(file);
+        }
+    }
+
+    private List getArtifacts()
+    {
+        synchronized (currentManagedArtifacts)
+        {
+            return new ArrayList(currentManagedArtifacts.values());
+        }
+    }
+
+    private void setArtifact(File file, Artifact artifact)
+    {
+        synchronized (currentManagedArtifacts)
+        {
+            currentManagedArtifacts.put(file, artifact);
+        }
+    }
+
+    private void removeArtifact(File file)
+    {
+        synchronized (currentManagedArtifacts)
+        {
+            currentManagedArtifacts.remove(file);
         }
     }
 
