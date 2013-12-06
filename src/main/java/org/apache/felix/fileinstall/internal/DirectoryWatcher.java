@@ -103,6 +103,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String START_LEVEL = "felix.fileinstall.start.level";
     public final static String ACTIVE_LEVEL = "felix.fileinstall.active.level";
     public final static String UPDATE_WITH_LISTENERS = "felix.fileinstall.bundles.updateWithListeners";
+    public final static String OPTIONAL_SCOPE = "felix.fileinstall.optionalImportRefreshScope";
+    public final static String FRAGMENT_SCOPE = "felix.fileinstall.fragmentRefreshScope";
+
+    public final static String SCOPE_NONE = "none";
+    public final static String SCOPE_MANAGED = "managed";
+    public final static String SCOPE_ALL = "all";
 
     static final SecureRandom random = new SecureRandom();
 
@@ -123,6 +129,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
     int startLevel;
     int activeLevel;
     boolean updateWithListeners;
+    String fragmentScope;
+    String optionalScope;
 
     // Map of all installed artifacts
     Map/* <File, Artifact> */ currentManagedArtifacts = new HashMap/* <File, Artifact> */();
@@ -159,6 +167,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
         startLevel = getInt(properties, START_LEVEL, 0);    // by default, do not touch start level
         activeLevel = getInt(properties, ACTIVE_LEVEL, 0);    // by default, always scan
         updateWithListeners = getBoolean(properties, UPDATE_WITH_LISTENERS, false); // Do not update bundles when listeners are updated
+        fragmentScope = (String) properties.get(FRAGMENT_SCOPE);
+        optionalScope = (String) properties.get(OPTIONAL_SCOPE);
         this.context.addBundleListener(this);
 
         FilenameFilter flt;
@@ -1257,8 +1267,33 @@ public class DirectoryWatcher extends Thread implements BundleListener
         return false;
     }
 
+    protected Set getScopedBundles(String scope) {
+        // No bundles to check
+        if (SCOPE_NONE.equals(scope)) {
+            return new HashSet();
+        }
+        // Go through managed bundles
+        else if (SCOPE_MANAGED.equals(scope)) {
+            Set bundles = new HashSet();
+            for (Iterator it = currentManagedArtifacts.values().iterator(); it.hasNext();) {
+                Artifact artifact = (Artifact) it.next();
+                if (artifact.getBundleId() > 0) {
+                    Bundle bundle = context.getBundle(artifact.getBundleId());
+                    if (bundle != null) {
+                        bundles.add(bundle);
+                    }
+                }
+            }
+            return bundles;
+        // Go through all bundles
+        } else {
+            return new HashSet(Arrays.asList(context.getBundles()));
+        }
+    }
+
     protected void findBundlesWithFragmentsToRefresh(Set toRefresh) {
         Set fragments = new HashSet();
+        Set bundles = getScopedBundles(fragmentScope);
         for (Iterator iterator = toRefresh.iterator(); iterator.hasNext();) {
             Bundle b = (Bundle) iterator.next();
             if (b.getState() != Bundle.UNINSTALLED) {
@@ -1267,9 +1302,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     Clause[] clauses = Parser.parseHeader(hostHeader);
                     if (clauses != null && clauses.length > 0) {
                         Clause path = clauses[0];
-                        Bundle[] bundles = context.getBundles();
-                        for (int i = 0; i < bundles.length; i++) {
-                            Bundle hostBundle = bundles[i];
+                        for (Iterator it = bundles.iterator(); it.hasNext();) {
+                            Bundle hostBundle = (Bundle) it.next();
                             if (hostBundle.getSymbolicName().equals(path.getName())) {
                                 String ver = path.getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE);
                                 if (ver != null) {
@@ -1290,8 +1324,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
     }
 
     protected void findBundlesWithOptionalPackagesToRefresh(Set toRefresh) {
+        Set bundles = getScopedBundles(optionalScope);
         // First pass: include all bundles contained in these features
-        Set bundles = new HashSet(Arrays.asList(context.getBundles()));
         bundles.removeAll(toRefresh);
         if (bundles.isEmpty()) {
             return;
