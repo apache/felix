@@ -231,7 +231,14 @@ public class DirectoryWatcher extends Thread implements BundleListener
             Set/*<File>*/ files = scanner.scan(true);
             if (files != null)
             {
-                process(files);
+                try
+                {
+                    process(files);
+                }
+                catch (InterruptedException e)
+                {
+                    throw new RuntimeException(e);
+                }
             }
         }
         super.start();
@@ -345,7 +352,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         }
     }
 
-    private void process(Set files)
+    private void process(Set files) throws InterruptedException
     {
         List/*<ArtifactListener>*/ listeners = FileInstall.getListeners();
         List/*<Artifact>*/ deleted = new ArrayList/*<Artifact>*/();
@@ -685,7 +692,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     /**
      * Convenience to refresh the packages
      */
-    void refresh(Bundle[] bundles)
+    void refresh(Bundle[] bundles) throws InterruptedException
     {
         FileInstall.refresh(bundles);
     }

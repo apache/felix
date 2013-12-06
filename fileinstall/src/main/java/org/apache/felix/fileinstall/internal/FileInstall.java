@@ -306,18 +306,14 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
     /**
      * Convenience to refresh the packages
      */
-    static void refresh(Bundle[] bundles)
+    static void refresh(Bundle[] bundles) throws InterruptedException
     {
         PackageAdmin padmin = getPackageAdmin();
         if (padmin != null)
         {
             synchronized (refreshLock) {
                 padmin.refreshPackages(bundles);
-                try {
-                    refreshLock.wait(30000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                refreshLock.wait(30000);
             }
         }
     }
