@@ -141,22 +141,21 @@ public class IPOJOURLHandler
         // Pojoization
         Pojoization pojoizator = new Pojoization();
         File out = new File(m_temp, bundle.getName() + "-ipojo.jar");
-        System.out.println("Pojoization " + bundle.exists() + " - " + metadata.exists());
         try {
             pojoizator.pojoization(bundle, out, metadata);
         } catch (Exception e) {
             if (!pojoizator.getErrors().isEmpty()) {
-                throw new IOException("Errors occured during the manipulation : " + pojoizator.getErrors());
+                throw new IOException("Errors occurred during the manipulation : " + pojoizator.getErrors());
             }
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
 
         if (!pojoizator.getErrors().isEmpty()) {
-            throw new IOException("Errors occured during the manipulation : " + pojoizator.getErrors());
+            throw new IOException("Errors occurred during the manipulation : " + pojoizator.getErrors());
         }
         if (!pojoizator.getWarnings().isEmpty()) {
-            System.err.println("Warnings occured during the manipulation : " + pojoizator.getWarnings());
+            System.err.println("Warnings occurred during the manipulation : " + pojoizator.getWarnings());
         }
 
         System.out.println("Manipulation done : " + out.exists());
