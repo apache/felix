@@ -70,6 +70,8 @@ public class RootGenericVisitor extends GenericVisitor {
         }
     }
 
+
+
     /**
      * End of the visit.
      * All attribute were visited, we can update collectors data.
@@ -84,7 +86,7 @@ public class RootGenericVisitor extends GenericVisitor {
         } else {
             // No ID provided, generate a new one from the element's namespace (aka handler's namespace)
             m_id = element.getNameSpace();
-            if (!workbench.getIds().containsKey(m_id) && isClassType()) {
+            if (m_id != null  && !workbench.getIds().containsKey(m_id) && isClassType()) {
                 // No Elements were already registered under that namespace
                 workbench.getIds().put(m_id, element);
             } else {

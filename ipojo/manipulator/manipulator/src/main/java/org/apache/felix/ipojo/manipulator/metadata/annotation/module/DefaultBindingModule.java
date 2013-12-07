@@ -19,24 +19,7 @@
 
 package org.apache.felix.ipojo.manipulator.metadata.annotation.module;
 
-import org.apache.felix.ipojo.annotations.Bind;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Controller;
-import org.apache.felix.ipojo.annotations.Handler;
-import org.apache.felix.ipojo.annotations.HandlerDeclaration;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Modified;
-import org.apache.felix.ipojo.annotations.PostRegistration;
-import org.apache.felix.ipojo.annotations.PostUnregistration;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceController;
-import org.apache.felix.ipojo.annotations.ServiceProperty;
-import org.apache.felix.ipojo.annotations.Unbind;
-import org.apache.felix.ipojo.annotations.Updated;
-import org.apache.felix.ipojo.annotations.Validate;
+import org.apache.felix.ipojo.annotations.*;
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.ComponentVisitor;
@@ -56,6 +39,8 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.UpdatedVis
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.bind.Action;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.bind.MethodBindVisitor;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.bind.ParameterBindVisitor;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.GenericVisitor;
+import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.GenericVisitorFactory;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Elements;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Names;
 import org.apache.felix.ipojo.manipulator.spi.AbsBindingModule;
@@ -285,6 +270,8 @@ public class DefaultBindingModule extends AbsBindingModule {
                         return new PostRegistrationVisitor(context.getWorkbench(), node.name);
                     }
                 });
+
+        bind(Context.class).to(new GenericVisitorFactory("context", ""));
     }
 
     private DocumentBuilder m_builder;

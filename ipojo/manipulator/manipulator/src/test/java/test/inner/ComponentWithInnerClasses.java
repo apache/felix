@@ -81,6 +81,7 @@ public class ComponentWithInnerClasses{
         public native void baz();
     }
 
+
     private class MyInnerClass {
         public String foo() {
             return ComponentWithInnerClasses.this.foo;

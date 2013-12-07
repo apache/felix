@@ -170,9 +170,6 @@ public class InnerClassAdapterTest {
 
         ManipulatedClassLoader classloader = manipulate(className, manipulator);
 
-
-
-
         Class cl = classloader.findClass(className);
         Assert.assertNotNull(cl);
         Assert.assertNotNull(manipulator.getManipulationMetadata());
@@ -320,6 +317,31 @@ public class InnerClassAdapterTest {
 
         flag = "__M" + "1" + "___" + "compute" + "$java_lang_String";
         assertThat(clazz.getDeclaredField(flag)).isNotNull();
+    }
+
+    @Test
+    public void testThatStaticInnerClassesAreNotManipulated() throws Exception {
+        Manipulator manipulator = new Manipulator();
+        String className = "test.inner.ComponentWithInnerClasses";
+        ManipulatedClassLoader classLoader = manipulate(className, manipulator);
+
+        Class clazz = classLoader.findClass(className);
+        Class inner = findInnerClass(clazz.getClasses(), "MyStaticInnerClass");
+        assertThat(inner).isNotNull();
+        Method bar = inner.getMethod("bar");
+        Object o = inner.newInstance();
+        bar.setAccessible(true);
+        assertThat(bar).isNotNull();
+        assertThat((String) bar.invoke(o)).isEqualTo("bar");
+    }
+
+    private Class findInnerClass(Class[] classes, String name) {
+        for (Class clazz : classes) {
+            if (clazz.getName().contains(name)) {
+                return clazz;
+            }
+        }
+        return null;
     }
 
 }
