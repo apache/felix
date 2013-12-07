@@ -27,6 +27,7 @@ import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.architecture.InstanceDescription;
 import org.apache.felix.ipojo.test.online.components.Consumer;
 import org.apache.felix.ipojo.test.online.components.MyProvider;
+import org.apache.felix.ipojo.test.online.components.MyProviderWithAnnotations;
 import org.apache.felix.ipojo.test.online.services.Hello;
 import org.junit.After;
 import org.junit.Assert;
@@ -39,7 +40,6 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
-import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.*;
 import org.osgi.service.url.URLStreamHandlerService;
@@ -53,7 +53,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import static org.ops4j.pax.exam.CoreOptions.*;
-import static org.ops4j.pax.exam.MavenUtils.asInProject;
 
 
 @RunWith(PaxExam.class)
@@ -98,6 +97,7 @@ public class OnlineManipulatorTest {
                 systemProperty("providerWithMetadata").value(providerWithMetadata),
                 systemProperty("providerWithMetadataInMetaInf").value(providerWithMetadataInMetaInf),
                 systemProperty("providerWithoutMetadata").value(providerWithoutMetadata),
+                systemProperty("providerUsingAnnotations").value(providerUsingAnnotation()),
                 systemProperty("consumerWithMetadata").value(consumerWithMetadata),
                 systemProperty("consumerWithoutMetadata").value(consumerWithoutMetadata),
 
@@ -181,6 +181,21 @@ public class OnlineManipulatorTest {
         bundle.start();
 
         assertBundle("Provider");
+        helper.waitForService(Hello.class.getName(), null, 5000);
+        assertValidity();
+        Assert.assertNotNull(context.getServiceReference(Hello.class.getName()));
+
+        bundle.uninstall();
+    }
+
+    @Test
+    public void installProviderUsingAnnotations() throws BundleException, InvalidSyntaxException, IOException {
+        String url = context.getProperty("providerUsingAnnotations");
+        Assert.assertNotNull(url);
+        Bundle bundle = context.installBundle("ipojo:" + url);
+        bundle.start();
+
+        assertBundle("Provider-with-annotations");
         helper.waitForService(Hello.class.getName(), null, 5000);
         assertValidity();
         Assert.assertNotNull(context.getServiceReference(Hello.class.getName()));
@@ -299,6 +314,27 @@ public class OnlineManipulatorTest {
         String url = out.toURI().toURL().toExternalForm();
 
         return url + "!" + OnlineManipulatorTest.class.getClassLoader().getResource("provider.xml");
+    }
+
+    /**
+     * Gets a provider bundle which does not contain the metadata file and using annotations.
+     *
+     * @return the url of the bundle without metadata
+     * @throws java.io.IOException
+     */
+    public static String providerUsingAnnotation() throws IOException {
+        InputStream is = TinyBundles.bundle()
+                //.addResource("metadata.xml", this.getClass().getClassLoader().getResource("provider.xml"))
+                .add(MyProviderWithAnnotations.class)
+                .set(Constants.BUNDLE_SYMBOLICNAME, "Provider-with-annotations")
+                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
+                .build();
+
+        File out = getTemporaryFile("providerUsingAnnotations");
+        StreamUtils.copyStream(is, new FileOutputStream(out), true);
+        String url = out.toURI().toURL().toExternalForm();
+
+        return url;
     }
 
     /**
