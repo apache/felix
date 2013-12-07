@@ -50,9 +50,9 @@ public @interface Component {
 
     /**
      * Enable / Disable the architecture exposition.
-     * Default : false
+     * Default : true
      */
-    boolean architecture() default false;
+    boolean architecture() default true;
 
     /**
      * Set if the component is immediate.
@@ -62,7 +62,7 @@ public @interface Component {
 
     /**
      * Set if the component must propagate received configuration to provided services.
-     * default: false
+     * default: true
      */
     boolean propagation() default true;
 
