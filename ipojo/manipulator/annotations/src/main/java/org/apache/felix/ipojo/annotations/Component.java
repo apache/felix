@@ -64,7 +64,7 @@ public @interface Component {
      * Set if the component must propagate received configuration to provided services.
      * default: false
      */
-    boolean propagation() default false;
+    boolean propagation() default true;
 
     /**
      * Set the Managed Service PID.
