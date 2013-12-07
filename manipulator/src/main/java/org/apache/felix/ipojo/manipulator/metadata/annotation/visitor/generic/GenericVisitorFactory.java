@@ -43,6 +43,7 @@ public class GenericVisitorFactory implements AnnotationVisitorFactory {
 
     // Need to build a new Element instance for each created visitor
     public AnnotationVisitor newAnnotationVisitor(BindingContext context) {
+        System.out.println("Create annotation visitor for " + context.getNode());
         if (context.getNode() instanceof ClassNode) {
             return new TypeGenericVisitor(context.getWorkbench(),
                                           new Element(m_name, m_namespace));

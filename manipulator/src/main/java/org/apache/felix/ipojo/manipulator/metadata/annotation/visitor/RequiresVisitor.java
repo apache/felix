@@ -178,7 +178,7 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
     @Override
     public void visitEnum(String name, String desc, String value) {
         if (name.equals("policy")) {
-            m_policy = getPolicy(value.toString());
+            m_policy = getPolicy(value);
         }
     }
 
