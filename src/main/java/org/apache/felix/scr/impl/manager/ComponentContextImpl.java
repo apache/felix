@@ -96,22 +96,46 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     public Object locateService( String name )
     {
-        DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
-        return ( dm != null ) ? dm.getService() : null;
+        m_componentManager.reconfigureReadLock();
+        try
+        {
+            DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
+            return ( dm != null ) ? dm.getService() : null;
+        }
+        finally
+        {
+            m_componentManager.reconfigureReadUnlock();
+        }
     }
 
 
     public Object locateService( String name, ServiceReference ref )
     {
-        DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
-        return ( dm != null ) ? dm.getService( ref ) : null;
+        m_componentManager.reconfigureReadLock();
+        try
+        {
+            DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
+            return ( dm != null ) ? dm.getService( ref ) : null;
+        }
+        finally
+        {
+            m_componentManager.reconfigureReadUnlock();
+        }
     }
 
 
     public Object[] locateServices( String name )
     {
-        DependencyManager dm = m_componentManager.getDependencyManager( name );
-        return ( dm != null ) ? dm.getServices() : null;
+        m_componentManager.reconfigureReadLock();
+        try
+        {
+            DependencyManager dm = m_componentManager.getDependencyManager( name );
+            return ( dm != null ) ? dm.getServices() : null;
+        }
+        finally
+        {
+            m_componentManager.reconfigureReadUnlock();
+        }
     }
 
 
