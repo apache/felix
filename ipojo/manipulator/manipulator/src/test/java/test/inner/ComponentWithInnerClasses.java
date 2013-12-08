@@ -21,6 +21,8 @@ package test.inner;
 
 import org.apache.felix.ipojo.annotations.Component;
 
+import java.util.concurrent.Callable;
+
 /**
  * A component containing inner classes.
  */
@@ -42,6 +44,7 @@ public class ComponentWithInnerClasses{
     private void doSomethingPrivately() {
 
     }
+
     private boolean flag;
 
     boolean getFlag() {
@@ -51,6 +54,16 @@ public class ComponentWithInnerClasses{
     private String test = "";
 
     private String foo = "foo";
+
+    public static final Callable<Integer> callable = new Callable<Integer>() {
+        public Integer call() {
+            return 1;
+        }
+    };
+
+    public static int call() throws Exception {
+        return callable.call();
+    }
 
     private class MyInnerWithANativeMethod {
 

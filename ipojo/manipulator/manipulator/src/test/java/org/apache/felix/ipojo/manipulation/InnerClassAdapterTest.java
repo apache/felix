@@ -29,9 +29,11 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.concurrent.Callable;
 
 import static junit.framework.Assert.assertEquals;
 import static org.fest.assertions.Assertions.assertThat;
@@ -334,6 +336,18 @@ public class InnerClassAdapterTest {
         assertThat(bar).isNotNull();
         assertThat((String) bar.invoke(o)).isEqualTo("bar");
     }
+
+//    @Test
+//    public void testThatAnonymousClassDeclaredInStaticFieldsAreNotManipulated() throws Exception {
+//        Manipulator manipulator = new Manipulator();
+//        String className = "test.inner.ComponentWithInnerClasses";
+//        ManipulatedClassLoader classLoader = manipulate(className, manipulator);
+//
+//        Class clazz = classLoader.findClass(className);
+//        Method method = clazz.getMethod("call");
+//        assertThat(method).isNotNull();
+//        assertThat(method.invoke(null)).isEqualTo(1);
+//    }
 
     private Class findInnerClass(Class[] classes, String name) {
         for (Class clazz : classes) {
