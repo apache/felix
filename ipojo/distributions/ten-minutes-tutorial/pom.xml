@@ -26,11 +26,10 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.ipojo.distributions</artifactId>
-        <version>1.9.0-SNAPSHOT</version>
+        <version>1.10.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>ten-minutes-tutorial</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
 
     <description>This project builds the 10 minutes tutorial package</description>
 
@@ -247,5 +246,5 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    
+
 </project>
