@@ -167,6 +167,11 @@ public class TestNestedClasses extends BaseTest {
     }
 
     @Test
+    public void testAnonymousClassDeclaredInStaticField() {
+        assertEquals(service.getProps().get("call"), 1);
+    }
+
+    @Test
     public void testPackageStaticInnerClass() {
         Map data = (Map) service.getProps().get("packageStaticInner");
         assertNotNull("Check data existence", data);
@@ -212,8 +217,8 @@ public class TestNestedClasses extends BaseTest {
         assertEquals("Check private int", new Integer(3), data.get("privateInt"));
         assertEquals("Check non-managed object", "not-managed", data.get("nonObject"));
         assertEquals("Check non-managed int", new Integer(5), data.get("nonInt"));
-
     }
+
 
     @Override
     protected List<String> getExtraExports() {
