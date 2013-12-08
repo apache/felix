@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -101,9 +102,19 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
     
     private final ReentrantLock m_stateLock;
 
-    protected volatile boolean m_enabled;
-    protected final AtomicReference< CountDownLatch> m_enabledLatchRef = new AtomicReference<CountDownLatch>( new CountDownLatch(0) );
+    /**
+     * This latch prevents concurrent enable, disable, and reconfigure.  Since the enable and disable operations may use 
+     * two threads and the initiating thread does not wait for the operation to complete, we can't use a regular lock.
+     */
+    private final AtomicReference< CountDownLatch> m_enabledLatchRef = new AtomicReference<CountDownLatch>( new CountDownLatch(0) );
 
+    /**
+     * This ReadWriteLock prevents locateService calls from the ComponentContext from occurring while target filters are 
+     * being changed during reconfigure, when the set of bound services is unclear.
+     */
+    private final ReadWriteLock m_reconfigureLock = new ReentrantReadWriteLock();
+    
+    protected volatile boolean m_enabled;
     protected volatile boolean m_internalEnabled;
     
     protected volatile boolean m_disposed;
@@ -489,6 +500,24 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return newEnabledLatch;  
     }
 
+    void reconfigureWriteLock() {
+        obtainLock(m_reconfigureLock.writeLock(), "AbstractComponentManager.ReconfigureLock.WriteLock");
+    }
+    
+    void reconfigureWriteUnlock() 
+    {
+        m_reconfigureLock.writeLock().unlock();
+    }
+    
+    void reconfigureReadLock() {
+        obtainLock(m_reconfigureLock.readLock(), "AbstractComponentManager.ReconfigureLock.ReadLock");
+    }
+    
+    void reconfigureReadUnlock() 
+    {
+        m_reconfigureLock.readLock().unlock();
+    }
+    
     /**
      * Disables this component and - if active - first deactivates it. The
      * component may be reenabled by calling the {@link #enable()} method.

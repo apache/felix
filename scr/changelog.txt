@@ -1,3 +1,20 @@
+Changes from 1.8 to 1.8.2
+---------------------------
+
+** Bug
+    * [FELIX-4309] - SCR leaves some components in DISABLED state
+    * [FELIX-4313] - Bad synchronization in scr where a lock is held while ungetting a service
+    * [FELIX-4322] - [DS] Prevent activation attempts until all dependency managers are set up with trackers
+    * [FELIX-4323] - [DS] ScrService.getComponents may return a null array element
+    * [FELIX-4325] - [DS] Synchronization issue when activating component
+    * [FELIX-4326] - Possible Invalid BundleContext exception when shutting down the extender
+    * [FELIX-4348] - [DS] locateService calls race with component reconfiguration
+
+** Improvement
+    * [FELIX-4316] - Packages imported dynamically should also be imported statically with an optional flag
+    * [FELIX-4317] - SCR implementation should avoid using bundleContext.getBundle()
+    * [FELIX-4343] - [DS] rationalize log levels
+
 Changes from 1.6.2 to 1.8
 ---------------------------
 

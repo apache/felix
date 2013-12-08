@@ -547,108 +547,115 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      */
     public void reconfigure( Dictionary<String, Object> configuration, long changeCount, TargetedPID targetedPID )
     {
-        CountDownLatch enableLatch = null;
+        CountDownLatch enableLatch = enableLatchWait();
         try
         {
-            enableLatch = enableLatchWait();
-            if ( targetedPID == null || !targetedPID.equals( m_targetedPID ) )
-            {
-                m_targetedPID = targetedPID;
-                m_changeCount = -1;
-            }
-            if ( configuration != null )
-            {
-                if ( changeCount <= m_changeCount )
-                {
-                    log( LogService.LOG_DEBUG,
-                            "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
-                            new Object[] { getConfigurationPid(), m_changeCount, changeCount }, null );
-                    return;
-                }
-                m_changeCount = changeCount;
-            }
-            else 
-            {
-                m_changeCount = -1;
-            }
-            // nothing to do if there is no configuration (see FELIX-714)
-            if ( configuration == null && m_configurationProperties == null )
-            {
-                log( LogService.LOG_DEBUG, "No configuration provided (or deleted), nothing to do", null );
-                return;
-            }
-
-            // store the properties
-            m_configurationProperties = configuration;
-
-            // clear the current properties to force using the configuration data
-            m_properties = null;
-
-            
-            // reactivate the component to ensure it is provided with the
-            // configuration data
-            if ( m_disposed || !m_internalEnabled )
-            {
-                // nothing to do for inactive components, leave this method
-                log( LogService.LOG_DEBUG, "Component can not be activated due to configuration in state {0}", new Object[] { getState() }, null );
-                //enabling the component will set the target properties, do nothing now.
-                return;
-            }
-
-            // if the configuration has been deleted but configuration is required
-            // this component must be deactivated
-            if ( configuration == null && getComponentMetadata().isConfigurationRequired() )
-            {
-                //deactivate and remove service listeners
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, false );
-                //do not reset targets as that will reinstall the service listeners which may activate the component.
-                //when a configuration arrives the properties will get set based on the new configuration.
-                return;
-            }
-
-            // unsatisfied component and non-ignored configuration may change targets
-            // to satisfy references
-            obtainActivationWriteLock( "reconfigure" );
+            reconfigureWriteLock();
             try
             {
-                if ( getState() == STATE_UNSATISFIED
-                        && !getComponentMetadata().isConfigurationIgnored() )
+                if ( targetedPID == null || !targetedPID.equals( m_targetedPID ) )
                 {
-                    log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
-                    updateTargets( getProperties() );
-                    releaseActivationWriteeLock( "reconfigure.unsatisfied" );
-                    activateInternal( getTrackingCount().get() );
+                    m_targetedPID = targetedPID;
+                    m_changeCount = -1;
+                }
+                if ( configuration != null )
+                {
+                    if ( changeCount <= m_changeCount )
+                    {
+                        log( LogService.LOG_DEBUG,
+                                "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
+                                new Object[] { getConfigurationPid(), m_changeCount, changeCount }, null );
+                        return;
+                    }
+                    m_changeCount = changeCount;
+                }
+                else 
+                {
+                    m_changeCount = -1;
+                }
+                // nothing to do if there is no configuration (see FELIX-714)
+                if ( configuration == null && m_configurationProperties == null )
+                {
+                    log( LogService.LOG_DEBUG, "No configuration provided (or deleted), nothing to do", null );
                     return;
                 }
 
-                if ( !modify() )
-                {
-                    // SCR 112.7.1 - deactivate if configuration is deleted or no modified method declared
-                    log( LogService.LOG_DEBUG, "Deactivating and Activating to reconfigure from configuration", null );
-                    int reason = ( configuration == null ) ? ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED
-                            : ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_MODIFIED;
+                // store the properties
+                m_configurationProperties = configuration;
 
-                    // FELIX-2368: cycle component immediately, reconfigure() is
-                    //     called through ConfigurationListener API which itself is
-                    //     called asynchronously by the Configuration Admin Service
-                    releaseActivationWriteeLock( "reconfigure.modified.1" );;
-                    deactivateInternal( reason, false, false );
-                    obtainActivationWriteLock( "reconfigure.deactivate.activate" );
-                    try
+                // clear the current properties to force using the configuration data
+                m_properties = null;
+
+
+                // reactivate the component to ensure it is provided with the
+                // configuration data
+                if ( m_disposed || !m_internalEnabled )
+                {
+                    // nothing to do for inactive components, leave this method
+                    log( LogService.LOG_DEBUG, "Component can not be activated due to configuration in state {0}", new Object[] { getState() }, null );
+                    //enabling the component will set the target properties, do nothing now.
+                    return;
+                }
+
+                // if the configuration has been deleted but configuration is required
+                // this component must be deactivated
+                if ( configuration == null && getComponentMetadata().isConfigurationRequired() )
+                {
+                    //deactivate and remove service listeners
+                    deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, false );
+                    //do not reset targets as that will reinstall the service listeners which may activate the component.
+                    //when a configuration arrives the properties will get set based on the new configuration.
+                    return;
+                }
+
+                // unsatisfied component and non-ignored configuration may change targets
+                // to satisfy references
+                obtainActivationWriteLock( "reconfigure" );
+                try
+                {
+                    if ( getState() == STATE_UNSATISFIED
+                            && !getComponentMetadata().isConfigurationIgnored() )
                     {
+                        log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
                         updateTargets( getProperties() );
+                        releaseActivationWriteeLock( "reconfigure.unsatisfied" );
+                        activateInternal( getTrackingCount().get() );
+                        return;
                     }
-                    finally
+
+                    if ( !modify() )
                     {
-                        releaseActivationWriteeLock( "reconfigure.deactivate.activate" );;
+                        // SCR 112.7.1 - deactivate if configuration is deleted or no modified method declared
+                        log( LogService.LOG_DEBUG, "Deactivating and Activating to reconfigure from configuration", null );
+                        int reason = ( configuration == null ) ? ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED
+                                : ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_MODIFIED;
+
+                        // FELIX-2368: cycle component immediately, reconfigure() is
+                        //     called through ConfigurationListener API which itself is
+                        //     called asynchronously by the Configuration Admin Service
+                        releaseActivationWriteeLock( "reconfigure.modified.1" );;
+                        deactivateInternal( reason, false, false );
+                        obtainActivationWriteLock( "reconfigure.deactivate.activate" );
+                        try
+                        {
+                            updateTargets( getProperties() );
+                        }
+                        finally
+                        {
+                            releaseActivationWriteeLock( "reconfigure.deactivate.activate" );;
+                        }
+                        activateInternal( getTrackingCount().get() );
                     }
-                    activateInternal( getTrackingCount().get() );
+                }
+                finally
+                {
+                    //used if modify succeeds or if there's an exception.
+                    releaseActivationWriteeLock( "reconfigure.end" );;
                 }
             }
             finally
             {
-                //used if modify succeeds or if there's an exception.
-                releaseActivationWriteeLock( "reconfigure.end" );;
+                reconfigureWriteUnlock();
             }
         }
         finally
