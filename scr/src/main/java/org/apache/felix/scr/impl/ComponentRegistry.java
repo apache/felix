@@ -660,7 +660,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
         }
     }
 
-    public void missingServicePresent( final ServiceReference serviceReference, ComponentActorThread actor )
+    public synchronized void missingServicePresent( final ServiceReference serviceReference, ComponentActorThread actor )
     {
         final List<Entry> dependencyManagers = m_missingDependencies.remove( serviceReference );
         if ( dependencyManagers != null )
