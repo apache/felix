@@ -33,6 +33,7 @@ public class RefPair<T>
     private AtomicReference<T> serviceObjectRef = new AtomicReference<T>();
 
     private boolean failed;
+    private volatile boolean deleted;
 
     public RefPair( ServiceReference<T> ref )
     {
@@ -74,6 +75,15 @@ public class RefPair<T>
         return failed;
     }
 
+    public boolean isDeleted()
+    {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted)
+    {
+        this.deleted = deleted;
+    }
 
     @Override
     public String toString()
