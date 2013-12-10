@@ -20,6 +20,8 @@ package org.apache.felix.framework.capabilityset;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -367,6 +369,7 @@ public void dump()
     }
 
     private static final Class<?>[] STRING_CLASS = new Class[] { String.class };
+    private static final String VALUE_OF_METHOD_NAME = "valueOf";
 
     private static boolean compare(Object lhs, Object rhsUnknown, int op)
     {
@@ -374,7 +377,7 @@ public void dump()
         {
             return false;
         }
-        
+
         // If this is a PRESENT operation, then just return true immediately
         // since we wouldn't be here if the attribute wasn't present.
         if (op == SimpleFilter.PRESENT)
@@ -569,9 +572,24 @@ public void dump()
                 {
                     rhsString = rhsString.trim();
                 }
-                Constructor ctor = m_secureAction.getConstructor(lhs.getClass(), STRING_CLASS);
-                m_secureAction.setAccesssible(ctor);
-                rhs = ctor.newInstance(new Object[] { rhsString });
+
+                try {
+                    // Try to find a suitable static valueOf method
+                    Method valueOfMethod = m_secureAction.getDeclaredMethod(lhs.getClass(), VALUE_OF_METHOD_NAME, STRING_CLASS);
+                    if (valueOfMethod.getReturnType().isAssignableFrom(lhs.getClass()) &&
+                        ((valueOfMethod.getModifiers() & Modifier.STATIC) > 0)) {
+                        m_secureAction.setAccesssible(valueOfMethod);
+                        rhs = valueOfMethod.invoke(null, new Object[] { rhsString });
+                    }
+                } catch (Exception ex) {
+                    // Static valueOf fails, try the next conversion mechanism
+                }
+
+                if (rhs == null) {
+                    Constructor ctor = m_secureAction.getConstructor(lhs.getClass(), STRING_CLASS);
+                    m_secureAction.setAccesssible(ctor);
+                    rhs = ctor.newInstance(new Object[] { rhsString });
+                }
             }
         }
         catch (Exception ex)
