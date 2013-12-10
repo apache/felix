@@ -1044,7 +1044,11 @@ class BundleImpl implements Bundle, BundleRevisions
     public synchronized <A> A adapt(Class<A> type)
     {
         checkAdapt(type);
-        if (type == BundleStartLevel.class)
+        if (type == BundleContext.class)
+        {
+            return (A) m_context;
+        }
+        else if (type == BundleStartLevel.class)
         {
             return (A) getFramework().adapt(FrameworkStartLevelImpl.class)
                 .createBundleStartLevel(this);
