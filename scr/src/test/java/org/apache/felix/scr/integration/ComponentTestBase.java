@@ -254,13 +254,17 @@ public abstract class ComponentTestBase
 
     protected static void delay()
     {
+        delay(300);
+    }
+
+    protected static void delay(int millis)
+    {
         try
         {
-            Thread.sleep( 300 );
+            Thread.sleep(millis);
         }
-        catch ( InterruptedException ie )
+        catch (InterruptedException ie)
         {
-            // dont care
         }
     }
 

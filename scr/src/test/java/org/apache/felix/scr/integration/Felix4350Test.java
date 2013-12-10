@@ -45,44 +45,35 @@ public class Felix4350Test extends ComponentTestBase
         // uncomment to enable debugging of this test class
 //                paxRunnerVmOption = DEBUG_VM_OPTION;
         descriptorFile = "/integration_test_FELIX_4350.xml";
-        restrictedLogging = true;
         //comment to get debug logging if the test fails.
 //        DS_LOGLEVEL = "warn";
     }
 
-    @Inject
-    protected BundleContext bundleContext;
-
     @Test
-    @Ignore
     public void test_unbind_while_activating_single_static()
     {
         doTest("SingleStatic");
     }
 
     @Test
-    @Ignore
     public void test_unbind_while_activating_single_dynamic()
     {
         doTest("SingleDynamic");
     }
 
     @Test
-    @Ignore
     public void test_unbind_while_activating_multiple_dynamic()
     {
         doTest("MultipleDynamic");
     }
 
     @Test
-    @Ignore
     public void test_unbind_while_activating_multiple_static_greedy()
     {
         doTest("MultipleStaticGreedy");
     }
 
     @Test
-    @Ignore
     public void test_unbind_while_activating_multiple_static_reluctant()
     {
         doTest("MultipleStaticReluctant");
@@ -124,17 +115,6 @@ public class Felix4350Test extends ComponentTestBase
 
         ComponentInstance mainCompInst = main.getComponentInstance();
         TestCase.assertNull(mainCompInst);
-    }
-
-    protected static void delay(int millis)
-    {
-        try
-        {
-            Thread.sleep(millis);
-        }
-        catch (InterruptedException ie)
-        {
-        }
     }
 
 }

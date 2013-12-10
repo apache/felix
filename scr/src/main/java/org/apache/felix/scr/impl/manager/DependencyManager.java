@@ -263,6 +263,7 @@ public class DependencyManager<S, T> implements Reference
 
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
+            refPair.setDeleted( true );
             if ( !isOptional() )
             {
                 if (getTracker().isEmpty())
@@ -351,6 +352,7 @@ public class DependencyManager<S, T> implements Reference
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleDynamic removed {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
+            refPair.setDeleted( true );
             boolean unbind = isOptional() || !getTracker().isEmpty();
             if ( unbind )
             {
@@ -469,6 +471,7 @@ public class DependencyManager<S, T> implements Reference
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticGreedy removed {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
+            refPair.setDeleted( true );
             tracked( trackingCount );
             if ( isActive() )
             {
@@ -566,6 +569,7 @@ public class DependencyManager<S, T> implements Reference
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} MultipleStaticReluctant removed {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
+            refPair.setDeleted( true );
             tracked( trackingCount );
             Collection<RefPair<T>> refs = this.refs.get();
             if ( isActive() && refs != null )
@@ -737,6 +741,7 @@ public class DependencyManager<S, T> implements Reference
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleDynamic removed {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
+            refPair.setDeleted( true );
             boolean deactivate = false;
             boolean untracked = true;
             RefPair<T> oldRefPair = null;
@@ -937,6 +942,10 @@ public class DependencyManager<S, T> implements Reference
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
+            if ( refPair != null ) //TODO needs investigation
+            {
+                refPair.setDeleted( true );
+            }
             this.trackingCount = trackingCount;
             tracked( trackingCount );
             boolean reactivate;
@@ -1427,7 +1436,7 @@ public class DependencyManager<S, T> implements Reference
             new Object[]{ getName(), success, refs }, null );
         for ( RefPair<T> refPair : refs )
         {
-            if ( !refPair.isFailed() )
+            if ( !refPair.isDeleted() && !refPair.isFailed() )
             {
                 if ( !doInvokeBindMethod( componentInstance, refPair ) )
                 {
