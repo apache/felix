@@ -93,7 +93,6 @@ public class EventDispatcherTest extends TestCase
             public void serviceChanged(ServiceEvent arg0)
             {
                 fired.add(this);
-                System.out.println("*** sl1");
             }
         };
         ed.addListener(b1.getBundleContext(), ServiceListener.class, sl1, null);
@@ -103,7 +102,6 @@ public class EventDispatcherTest extends TestCase
             public void serviceChanged(ServiceEvent arg0)
             {
                 fired.add(this);
-                System.out.println("*** sl2");
             }
         };
         ed.addListener(b2.getBundleContext(), ServiceListener.class, sl2, null);
@@ -113,13 +111,12 @@ public class EventDispatcherTest extends TestCase
             public void serviceChanged(ServiceEvent arg0)
             {
                 fired.add(this);
-                System.out.println("*** sl3");
             }
         };
         ed.addListener(b3.getBundleContext(), ServiceListener.class, sl3, null);
 
         // --- make the invocation
-        ServiceReference sr = (ServiceReference) EasyMock.createNiceMock(ServiceReference.class);
+        ServiceReference sr = EasyMock.createNiceMock(ServiceReference.class);
         EasyMock.expect(sr.getProperty(Constants.OBJECTCLASS)).andReturn(new String[]
             {
                 "java.lang.String"
@@ -139,7 +136,7 @@ public class EventDispatcherTest extends TestCase
 
         assertEquals("Precondition failed", 0, fired.size());
 
-        Framework framework = (Framework) EasyMock.createNiceMock(Framework.class);
+        Framework framework = EasyMock.createNiceMock(Framework.class);
         EasyMock.replay(new Object[]
             {
                 framework
@@ -156,8 +153,8 @@ public class EventDispatcherTest extends TestCase
 
     private Bundle getMockBundle()
     {
-        BundleContext bc = (BundleContext) EasyMock.createNiceMock(BundleContext.class);
-        Bundle b = (Bundle) EasyMock.createNiceMock(Bundle.class);
+        BundleContext bc = EasyMock.createNiceMock(BundleContext.class);
+        Bundle b = EasyMock.createNiceMock(Bundle.class);
         EasyMock.expect(b.getBundleContext()).andReturn(bc).anyTimes();
         b.getState();
         EasyMock.expectLastCall().andReturn(Integer.valueOf(Bundle.ACTIVE)).anyTimes();
