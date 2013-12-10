@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.zip.ZipFile;
-import org.osgi.framework.Bundle;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -1056,6 +1056,30 @@ public class SecureAction
         }
     }
 
+    public void invokeBundleCollisionHook(
+        org.osgi.framework.hooks.bundle.CollisionHook ch, int operationType,
+        Bundle targetBundle, Collection<Bundle> collisionCandidates)
+        throws Exception
+    {
+        if (System.getSecurityManager() != null)
+        {
+            Actions actions = (Actions) m_actions.get();
+            actions.set(Actions.INVOKE_BUNDLE_COLLISION_HOOK, ch, operationType, targetBundle, collisionCandidates);
+            try
+            {
+                AccessController.doPrivileged(actions, m_acc);
+            }
+            catch (PrivilegedActionException e)
+            {
+                throw e.getException();
+            }
+        }
+        else
+        {
+            ch.filterCollisions(operationType, targetBundle, collisionCandidates);
+        }
+    }
+
     public void invokeBundleFindHook(
         org.osgi.framework.hooks.bundle.FindHook fh,
         BundleContext bc, Collection<Bundle> bundles)
@@ -1428,6 +1452,7 @@ public class SecureAction
         public static final int INVOKE_RESOLVER_HOOK_SINGLETON = 50;
         public static final int INVOKE_RESOLVER_HOOK_MATCHES = 51;
         public static final int INVOKE_RESOLVER_HOOK_END = 52;
+        public static final int INVOKE_BUNDLE_COLLISION_HOOK = 53;
 
         private int m_action = -1;
         private Object m_arg1 = null;
@@ -1672,6 +1697,10 @@ public class SecureAction
                     return null;
                 case INVOKE_RESOLVER_HOOK_END:
                     ((org.osgi.framework.hooks.resolver.ResolverHook) arg1).end();
+                    return null;
+                case INVOKE_BUNDLE_COLLISION_HOOK:
+                    ((org.osgi.framework.hooks.bundle.CollisionHook) arg1).filterCollisions((Integer) arg2,
+                        (Bundle) arg3, (Collection<Bundle>) arg4);
                     return null;
             }
 
