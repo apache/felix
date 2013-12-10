@@ -19,6 +19,7 @@
 package org.apache.felix.framework;
 
 import java.util.*;
+
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.wiring.BundleCapabilityImpl;
@@ -54,6 +55,7 @@ public class ServiceRegistry
         new WeakHashMap<ServiceReference, ServiceReference>();
 
     private final static Class<?>[] m_hookClasses = {
+        org.osgi.framework.hooks.bundle.CollisionHook.class,
         org.osgi.framework.hooks.bundle.FindHook.class,
         org.osgi.framework.hooks.bundle.EventHook.class,
         org.osgi.framework.hooks.service.EventHook.class,

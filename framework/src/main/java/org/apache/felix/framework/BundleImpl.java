@@ -26,8 +26,8 @@ import java.security.ProtectionDomain;
 import java.util.*;
 
 import org.apache.felix.framework.cache.BundleArchive;
-import org.apache.felix.framework.ext.SecurityProvider;
 import org.apache.felix.framework.util.SecurityManagerEx;
+import org.apache.felix.framework.util.ShrinkableCollection;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.Util;
 import org.osgi.framework.AdaptPermission;
@@ -40,6 +40,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.osgi.framework.hooks.bundle.CollisionHook;
 import org.osgi.framework.startlevel.BundleStartLevel;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleRevisions;
@@ -93,7 +94,7 @@ class BundleImpl implements Bundle, BundleRevisions
         m_activator = null;
         m_context = null;
 
-        BundleRevision revision = createRevision();
+        BundleRevision revision = createRevision(false);
         addRevision(revision);
     }
 
@@ -1138,7 +1139,7 @@ class BundleImpl implements Bundle, BundleRevisions
         m_archive.revise(location, is);
         try
         {
-            BundleRevision revision = createRevision();
+            BundleRevision revision = createRevision(true);
             addRevision(revision);
         }
         catch (Exception ex)
@@ -1189,7 +1190,7 @@ class BundleImpl implements Bundle, BundleRevisions
         }
     }
 
-    private BundleRevision createRevision() throws Exception
+    private BundleRevision createRevision(boolean isUpdate) throws Exception
     {
         // Get and parse the manifest from the most recent revision and
         // create an associated revision object for it.
@@ -1208,7 +1209,7 @@ class BundleImpl implements Bundle, BundleRevisions
         String allowMultiple =
             (String) getFramework().getConfig().get(Constants.FRAMEWORK_BSNVERSION);
         allowMultiple = (allowMultiple == null)
-            ? Constants.FRAMEWORK_BSNVERSION_SINGLE
+            ? Constants.FRAMEWORK_BSNVERSION_MANAGED
             : allowMultiple;
         if (revision.getManifestVersion().equals("2")
             && !allowMultiple.equals(Constants.FRAMEWORK_BSNVERSION_MULTIPLE))
@@ -1217,24 +1218,43 @@ class BundleImpl implements Bundle, BundleRevisions
             bundleVersion = (bundleVersion == null) ? Version.emptyVersion : bundleVersion;
             String symName = revision.getSymbolicName();
 
+            List<Bundle> collisionCanditates = new ArrayList<Bundle>();
             Bundle[] bundles = getFramework().getBundles();
             for (int i = 0; (bundles != null) && (i < bundles.length); i++)
             {
                 long id = ((BundleImpl) bundles[i]).getBundleId();
                 if (id != getBundleId())
                 {
-                    String sym = bundles[i].getSymbolicName();
-                    Version ver = bundles[i].getVersion();
-                    if ((symName != null)
-                        && (sym != null)
-                        && symName.equals(sym)
-                        && bundleVersion.equals(ver))
+                    if (symName.equals(bundles[i].getSymbolicName()) &&
+                         bundleVersion.equals(bundles[i].getVersion()))
+                     {
+                        collisionCanditates.add(bundles[i]);
+                     }
+                }
+            }
+            if (!collisionCanditates.isEmpty() && allowMultiple.equals(Constants.FRAMEWORK_BSNVERSION_MANAGED))
+            {
+                Set<ServiceReference<CollisionHook>> hooks = getFramework().getHooks(CollisionHook.class);
+                if (!hooks.isEmpty())
+                {
+                    Collection<Bundle> shrinkableCollisionCandidates = new ShrinkableCollection<Bundle>(collisionCanditates);
+                    for (ServiceReference<CollisionHook> hook : hooks)
                     {
-                        throw new BundleException(
-                            "Bundle symbolic name and version are not unique: "
-                            + sym + ':' + ver, BundleException.DUPLICATE_BUNDLE_ERROR);
+                        CollisionHook ch = getFramework().getService(getFramework(), hook);
+                        if (ch != null)
+                        {
+                            Felix.m_secureAction.invokeBundleCollisionHook(ch,
+                                isUpdate ? CollisionHook.UPDATING : CollisionHook.INSTALLING,
+                                this, shrinkableCollisionCandidates);
+                        }
                     }
                 }
+            }
+            if (!collisionCanditates.isEmpty())
+            {
+                throw new BundleException(
+                    "Bundle symbolic name and version are not unique: "
+                    + symName + ':' + bundleVersion, BundleException.DUPLICATE_BUNDLE_ERROR);
             }
         }
 
