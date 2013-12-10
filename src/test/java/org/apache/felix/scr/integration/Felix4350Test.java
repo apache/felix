@@ -84,30 +84,8 @@ public class Felix4350Test extends ComponentTestBase
         final Component main = findComponentByName(componentName);
         TestCase.assertNotNull(main);
 
-        ServiceRegistration dep1Reg = bundleContext.registerService(SimpleComponent.class.getName(),
-                new ServiceFactory()
-                {
-                    public Object getService(Bundle bundle, ServiceRegistration registration)
-                    {
-                        return new SimpleComponent();
-                    }
-                    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
-                    {
-                    }
-                }, null);
-        ServiceRegistration dep2Reg = bundleContext.registerService(SimpleComponent2.class.getName(),
-                new ServiceFactory()
-                {
-                    public Object getService(Bundle bundle, ServiceRegistration registration)
-                    {
-                        delay(1000);
-                        return new SimpleComponent2();
-                    }
-                    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
-                    {
-                    }
-                }, null);
-
+        ServiceRegistration dep1Reg = register(new SimpleComponent(), 0);
+        ServiceRegistration dep2Reg = register(new SimpleComponent2(), 1000);
         main.enable();
         delay(300);
         dep1Reg.unregister();
@@ -115,6 +93,41 @@ public class Felix4350Test extends ComponentTestBase
 
         ComponentInstance mainCompInst = main.getComponentInstance();
         TestCase.assertNull(mainCompInst);
+
+        dep1Reg = register(new SimpleComponent(), 0);
+        delay(300);
+
+        mainCompInst = main.getComponentInstance();
+        TestCase.assertNotNull(mainCompInst);
+
+        main.disable();
+        dep1Reg.unregister();
+        dep2Reg.unregister();
+
+        dep1Reg = register(new SimpleComponent(), 0);
+        dep2Reg = register(new SimpleComponent2(), 1000);
+        main.enable();
+        delay(300);
+        dep1Reg.unregister();
+        delay(100);
+        dep1Reg = register(new SimpleComponent(), 0);
+        delay(2000);
+
+        mainCompInst = main.getComponentInstance();
+        TestCase.assertNotNull(mainCompInst);
+    }
+
+    protected ServiceRegistration register(final Object service, final int delay) {
+        return bundleContext.registerService(service.getClass().getName(), new ServiceFactory() {
+            public Object getService(Bundle bundle, ServiceRegistration registration)
+            {
+                delay(delay);
+                return service;
+            }
+            public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+            {
+            }
+        }, null);
     }
 
 }
