@@ -18,11 +18,11 @@
  */
 package org.apache.felix.framework;
 
-import org.osgi.framework.launch.Framework;
 import java.io.*;
 import java.net.*;
 import java.security.*;
 import java.util.*;
+
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.ServiceRegistry.ServiceRegistryCallbacks;
 import org.apache.felix.framework.cache.BundleArchive;
@@ -63,6 +63,7 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.launch.Framework;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
@@ -372,7 +373,7 @@ public class Felix extends BundleImpl implements Framework
         }
 
         // Read the security default policy property
-        m_securityDefaultPolicy = "true".equals(getProperty(FelixConstants.SECURITY_DEFAULT_POLICY)); 
+        m_securityDefaultPolicy = "true".equals(getProperty(FelixConstants.SECURITY_DEFAULT_POLICY));
 
         // Create default bundle stream handler.
         m_bundleStreamHandler = new URLHandlersBundleStreamHandler(this);
@@ -484,7 +485,12 @@ public class Felix extends BundleImpl implements Framework
     public <A> A adapt(Class<A> type)
     {
         checkAdapt(type);
-        if ((type == FrameworkWiring.class)
+        if ((type == Framework.class)
+            || (type == Felix.class))
+        {
+            return (A) this;
+        }
+        else if ((type == FrameworkWiring.class)
             || (type == FrameworkWiringImpl.class))
         {
             return (A) m_fwkWiring;
@@ -4303,7 +4309,7 @@ public class Felix extends BundleImpl implements Framework
         {
             Bundle source = bundleProtectionDomain.getBundle();
 
-            return (m_securityDefaultPolicy && (source == null || source.getBundleId() != 0)) ? 
+            return (m_securityDefaultPolicy && (source == null || source.getBundleId() != 0)) ?
                 bundleProtectionDomain.superImplies(permission) : true;
         }
     }
