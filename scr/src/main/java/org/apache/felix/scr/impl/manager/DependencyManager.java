@@ -942,10 +942,7 @@ public class DependencyManager<S, T> implements Reference
         public void removedService( ServiceReference<T> serviceReference, RefPair<T> refPair, int trackingCount )
         {
             m_componentManager.log( LogService.LOG_DEBUG, "dm {0} tracking {1} SingleStatic removed {2} (enter)", new Object[] {getName(), trackingCount, serviceReference}, null );
-            if ( refPair != null ) //TODO needs investigation
-            {
-                refPair.setDeleted( true );
-            }
+            refPair.setDeleted( true );
             this.trackingCount = trackingCount;
             tracked( trackingCount );
             boolean reactivate;

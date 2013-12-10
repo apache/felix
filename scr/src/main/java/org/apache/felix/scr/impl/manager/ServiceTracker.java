@@ -1249,6 +1249,9 @@ public class ServiceTracker<S, T> {
                 object = tracked.remove(item); /*                                                 * must remove from tracker before
                                                  * calling customizer callback
                                                  */
+                if (object == null) { /* are we actually tracking the item */
+                    return;
+                }
                 trackingCount = modified(); /* increment modification count */
             }
             if (DEBUG) {
