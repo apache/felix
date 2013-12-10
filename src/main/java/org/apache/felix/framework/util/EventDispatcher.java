@@ -48,6 +48,7 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
+import org.osgi.framework.UnfilteredServiceListener;
 import org.osgi.framework.hooks.service.ListenerHook;
 import org.osgi.framework.launch.Framework;
 
@@ -908,8 +909,15 @@ public class EventDispatcher
         if (hasPermission)
         {
             // Dispatch according to the filter.
-            boolean matched = (filter == null)
-                || filter.match(((ServiceEvent) event).getServiceReference());
+            boolean matched;
+            if (l instanceof UnfilteredServiceListener) {
+                // An UnfilteredServiceListener always matches, regardless of the filter.
+                // The filter is still passed on to the Service Registry Hooks.
+                matched = true;
+            } else {
+                matched = (filter == null)
+                        || filter.match(((ServiceEvent) event).getServiceReference());
+            }
 
             if (matched)
             {
