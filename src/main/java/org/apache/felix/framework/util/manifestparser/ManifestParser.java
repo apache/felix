@@ -20,23 +20,27 @@ package org.apache.felix.framework.util.manifestparser;
 
 import java.util.*;
 import java.util.Map.Entry;
-import org.apache.felix.framework.BundleRevisionImpl;
 
+import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.VersionRange;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
 import org.apache.felix.framework.wiring.BundleRequirementImpl;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
+import org.osgi.framework.namespace.BundleNamespace;
+import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
 
 public class ManifestParser
 {
+    private static final String BUNDLE_LICENSE_HEADER = "Bundle-License"; // No constant defined by OSGi...
+
     private final Logger m_logger;
     private final Map m_configMap;
     private final Map m_headerMap;
@@ -129,6 +133,14 @@ public class ManifestParser
                         bundleCap.getDirectives(),
                         hostAttrs));
                 }
+
+                //
+                // Add the osgi.identity capability.
+                // TODO support this for fragments. The main thing with supporting this
+                // for fragments is that the identity capability should not be exposed
+                // through the host's bundle wiring.
+                //
+                capList.add(addIdentityCapability(owner, headerMap, bundleCap));
             }
         }
 
@@ -1297,6 +1309,55 @@ public class ManifestParser
         }
 
         return null;
+    }
+
+    private static BundleCapabilityImpl addIdentityCapability(BundleRevision owner,
+        Map headerMap, BundleCapabilityImpl bundleCap)
+    {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+
+        attrs.put(IdentityNamespace.IDENTITY_NAMESPACE,
+            bundleCap.getAttributes().get(BundleNamespace.BUNDLE_NAMESPACE));
+        attrs.put(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE,
+            headerMap.get(Constants.FRAGMENT_HOST) == null
+            ? IdentityNamespace.TYPE_BUNDLE
+            : IdentityNamespace.TYPE_FRAGMENT);
+        attrs.put(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE,
+            bundleCap.getAttributes().get(Constants.BUNDLE_VERSION_ATTRIBUTE));
+
+        if (headerMap.get(Constants.BUNDLE_COPYRIGHT) != null)
+        {
+            attrs.put(IdentityNamespace.CAPABILITY_COPYRIGHT_ATTRIBUTE,
+                headerMap.get(Constants.BUNDLE_COPYRIGHT));
+        }
+
+        if (headerMap.get(Constants.BUNDLE_DESCRIPTION) != null)
+        {
+            attrs.put(IdentityNamespace.CAPABILITY_DESCRIPTION_ATTRIBUTE,
+                headerMap.get(Constants.BUNDLE_DESCRIPTION));
+        }
+        if (headerMap.get(Constants.BUNDLE_DOCURL) != null)
+        {
+            attrs.put(IdentityNamespace.CAPABILITY_DOCUMENTATION_ATTRIBUTE,
+                headerMap.get(Constants.BUNDLE_DOCURL));
+        }
+        if (headerMap.get(BUNDLE_LICENSE_HEADER) != null)
+        {
+            attrs.put(IdentityNamespace.CAPABILITY_LICENSE_ATTRIBUTE,
+                headerMap.get(BUNDLE_LICENSE_HEADER));
+        }
+
+        Map<String, String> dirs;
+        if (bundleCap.getDirectives().get(Constants.SINGLETON_DIRECTIVE) != null)
+        {
+            dirs = Collections.singletonMap(IdentityNamespace.CAPABILITY_SINGLETON_DIRECTIVE,
+                    bundleCap.getDirectives().get(Constants.SINGLETON_DIRECTIVE));
+        }
+        else
+        {
+            dirs = Collections.emptyMap();
+        }
+        return new BundleCapabilityImpl(owner, IdentityNamespace.IDENTITY_NAMESPACE, dirs, attrs);
     }
 
     private static List<BundleRequirementImpl> parseFragmentHost(
