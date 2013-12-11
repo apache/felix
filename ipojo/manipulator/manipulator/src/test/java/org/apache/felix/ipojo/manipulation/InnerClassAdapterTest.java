@@ -23,10 +23,12 @@ import junit.framework.Assert;
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.Pojo;
 import org.apache.felix.ipojo.metadata.Element;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -46,8 +48,9 @@ public class InnerClassAdapterTest {
     public static String baseClassDirectory = "target/test-classes/";
 
     public static ManipulatedClassLoader manipulate(String className, Manipulator manipulator) throws IOException {
+        final File mainClassFile = new File(baseClassDirectory + className.replace(".", "/") + ".class");
         byte[] bytecode = ManipulatorTest.getBytesFromFile(
-                new File(baseClassDirectory + className.replace(".", "/") + ".class"));
+                mainClassFile);
 
         // Preparation.
         try {
@@ -92,12 +95,30 @@ public class InnerClassAdapterTest {
                 Assert.fail("Cannot find inner class '" + resourcePath + "'");
             }
         }
+
+        // Lookup for all the other inner classes (not manipulated)
+        File[] files = mainClassFile.getParentFile().listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.startsWith(mainClassFile.getName().substring(0, mainClassFile.getName().length() -
+                        ".class".length()) + "$");
+            }
+        });
+
+        for (File f : files) {
+            String name = className + f.getName().substring(f.getName().indexOf("$"));
+            name = name.substring(0, name.length() - ".class".length());
+            byte[] innerClassBytecode = ManipulatorTest.getBytesFromFile(f);
+            classloader.addInnerClassIfNotAlreadyDefined(name, innerClassBytecode);
+        }
+
         return classloader;
     }
 
     public static ManipulatedClassLoader manipulate(String className, Manipulator manipulator,
                                                     ManipulatedClassLoader initial) throws IOException {
         byte[] bytecode = initial.get(className);
+        final File mainClassFile = new File(baseClassDirectory + className.replace(".", "/") + ".class");
+        String mainClass = className;
 
         // Preparation.
         try {
@@ -142,6 +163,23 @@ public class InnerClassAdapterTest {
                 Assert.fail("Cannot find inner class '" + resourcePath + "'");
             }
         }
+
+        // Lookup for all the other inner classes (not manipulated)
+        File[] files = mainClassFile.getParentFile().listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.startsWith(mainClassFile.getName().substring(0, mainClassFile.getName().length() -
+                        ".class".length()) + "$");
+            }
+        });
+
+
+        for (File f : files) {
+            String name = className + f.getName().substring(f.getName().indexOf("$"));
+            name = name.substring(0, name.length() - ".class".length());
+            byte[] innerClassBytecode = ManipulatorTest.getBytesFromFile(f);
+            classloader.addInnerClassIfNotAlreadyDefined(name, innerClassBytecode);
+        }
+
         return classloader;
     }
 
@@ -238,7 +276,7 @@ public class InnerClassAdapterTest {
         InstanceManager im = Mockito.mock(InstanceManager.class);
         Constructor constructor = clazz.getDeclaredConstructor(InstanceManager.class);
         constructor.setAccessible(true);
-        Object pojo = constructor.newInstance(new Object[]{im});
+        Object pojo = constructor.newInstance(im);
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
         Method method = clazz.getMethod("doSomething", new Class[0]);
@@ -267,7 +305,7 @@ public class InnerClassAdapterTest {
         InstanceManager im = Mockito.mock(InstanceManager.class);
         Constructor constructor = clazz.getDeclaredConstructor(InstanceManager.class);
         constructor.setAccessible(true);
-        Object pojo = constructor.newInstance(new Object[]{im});
+        Object pojo = constructor.newInstance(im);
         Assert.assertNotNull(pojo);
         Assert.assertTrue(pojo instanceof Pojo);
         Method method = clazz.getMethod("doSomething", new Class[0]);
@@ -337,17 +375,17 @@ public class InnerClassAdapterTest {
         assertThat((String) bar.invoke(o)).isEqualTo("bar");
     }
 
-//    @Test
-//    public void testThatAnonymousClassDeclaredInStaticFieldsAreNotManipulated() throws Exception {
-//        Manipulator manipulator = new Manipulator();
-//        String className = "test.inner.ComponentWithInnerClasses";
-//        ManipulatedClassLoader classLoader = manipulate(className, manipulator);
-//
-//        Class clazz = classLoader.findClass(className);
-//        Method method = clazz.getMethod("call");
-//        assertThat(method).isNotNull();
-//        assertThat(method.invoke(null)).isEqualTo(1);
-//    }
+    @Test
+    public void testThatAnonymousClassDeclaredInStaticFieldsAreNotManipulated() throws Exception {
+        Manipulator manipulator = new Manipulator();
+        String className = "test.inner.ComponentWithInnerClasses";
+        ManipulatedClassLoader classLoader = manipulate(className, manipulator);
+
+        Class clazz = classLoader.findClass(className);
+        Method method = clazz.getMethod("call");
+        assertThat(method).isNotNull();
+        assertThat(method.invoke(null)).isEqualTo(1);
+    }
 
     private Class findInnerClass(Class[] classes, String name) {
         for (Class clazz : classes) {

@@ -42,7 +42,6 @@ public class InnerClassChecker extends EmptyVisitor implements ClassVisitor, Opc
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         // Do not collect static and native method.
-
         if ((access & ACC_STATIC) == ACC_STATIC) {
             return null;
         }

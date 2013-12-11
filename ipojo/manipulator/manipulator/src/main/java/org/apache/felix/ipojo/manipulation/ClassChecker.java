@@ -97,7 +97,6 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      */
     public FieldVisitor visitField(int access, String name, String desc,
             String signature, Object value) {
-
         if (name.equals(MethodCreator.IM_FIELD)
                 && desc.equals("Lorg/apache/felix/ipojo/InstanceManager;")) {
             m_isAlreadyManipulated = true;
@@ -230,6 +229,10 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
                 }
             }
 
+        }
+
+        if (name.equals("<clinit>")) {
+            return new InnerClassAssignedToStaticFieldDetector();
         }
 
         return null;
@@ -367,7 +370,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
             m_method.addLocalVariable(name, desc, signature, index);
         }
-        
+
         public void visitEnd() {
             m_method.end();
         }
@@ -788,4 +791,20 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     }
 
 
+    /**
+     * Class required to detect inner classes assigned to static field and thus must not be manipulated (FELIX-4347).
+     * If an inner class is assigned to a static field, it must not be manipulated.
+     *
+     * However notice that this is only useful when AspectJ is used, because aspectJ is changing the 'staticity' of
+     * the inner class.
+     */
+    private class InnerClassAssignedToStaticFieldDetector extends EmptyVisitor implements MethodVisitor {
+
+        @Override
+        public void visitTypeInsn(int opcode, String type) {
+            if (opcode == NEW  && m_inners.containsKey(type)) {
+                m_inners.remove(type);
+            }
+        }
+    }
 }
