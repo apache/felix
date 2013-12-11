@@ -2790,7 +2790,7 @@ public class Felix extends BundleImpl implements Framework
             }
             try
             {
-                bundle = new BundleImpl(this, ba);
+                bundle = new BundleImpl(this, null, ba);
 
                 // Extensions are handled as a special case.
                 if (bundle.isExtension())
@@ -2902,7 +2902,7 @@ public class Felix extends BundleImpl implements Framework
                     }
                     try
                     {
-                        bundle = new BundleImpl(this, ba);
+                        bundle = new BundleImpl(this, origin, ba);
                     }
                     finally
                     {
