@@ -928,17 +928,14 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
             obtainStateLock( "AbstractComponentManager.State.doDeactivate.1" );
             try
             {
-                if ( m_activated )
+                m_activated = false;
+                deleteComponent( reason );
+                deactivateDependencyManagers();
+                if ( disable )
                 {
-                    m_activated = false;
-                    deleteComponent( reason );
-                    deactivateDependencyManagers();
-                    if ( disable )
-                    {
-                        disableDependencyManagers();
-                    }
-                    unsetDependenciesCollected();
+                    disableDependencyManagers();
                 }
+                unsetDependenciesCollected();
             }
             finally
             {

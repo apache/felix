@@ -303,8 +303,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 {
                     md.close( implementationObject, componentContext.getEdgeInfo( md ) );
                 }
+                md.deactivate();
             }
             setter.resetImplementationObject( implementationObject );
+            unsetDependenciesCollected();
             return null;
 
         }
@@ -344,21 +346,23 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         componentContext.setImplementationAccessible( false );
         S implementationObject = componentContext.getImplementationObject( false );
 
-        // 1. Call the deactivate method, if present
-        // don't care for the result, the error (acccording to 112.5.12 If the deactivate
-        // method throws an exception, SCR must log an error message containing the
-        // exception with the Log Service and continue) has already been logged
-        final MethodResult result = getComponentMethods().getDeactivateMethod().invoke( implementationObject, new ActivatorParameter( componentContext,
-                reason ), null, this );
-        if ( result != null )
+        if ( implementationObject != null )
         {
-            setServiceProperties( result );
-        }
-
-        // 2. Unbind any bound services
-        for ( DependencyManager md: getReversedDependencyManagers() )
-        {
-            md.close( implementationObject, componentContext.getEdgeInfo( md ) );
+            // 1. Call the deactivate method, if present
+            // don't care for the result, the error (acccording to 112.5.12 If the deactivate
+            // method throws an exception, SCR must log an error message containing the
+            // exception with the Log Service and continue) has already been logged
+            final MethodResult result = getComponentMethods().getDeactivateMethod().invoke( implementationObject,
+                    new ActivatorParameter( componentContext, reason ), null, this );
+            if ( result != null )
+            {
+                setServiceProperties( result );
+            }
+            // 2. Unbind any bound services
+            for ( DependencyManager md: getReversedDependencyManagers() )
+            {
+                md.close( implementationObject, componentContext.getEdgeInfo( md ) );
+            }
         }
 
     }
