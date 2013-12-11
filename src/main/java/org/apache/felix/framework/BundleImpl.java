@@ -22,8 +22,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.AccessControlContext;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.apache.felix.framework.cache.BundleArchive;
 import org.apache.felix.framework.util.SecurityManagerEx;
@@ -171,7 +183,7 @@ class BundleImpl implements Bundle, BundleRevisions
         else
         {
             // Get current revision, since we can reuse it.
-            BundleRevisionImpl current = (BundleRevisionImpl) adapt(BundleRevisionImpl.class);
+            BundleRevisionImpl current = adapt(BundleRevisionImpl.class);
             // Close all existing revisions.
             closeRevisions();
             // Clear all revisions.
@@ -1080,6 +1092,20 @@ class BundleImpl implements Bundle, BundleRevisions
             }
             return (A) m_revisions.get(0).getWiring();
         }
+        else if ( type == AccessControlContext.class)
+        {
+            if (m_state == Bundle.UNINSTALLED)
+            {
+                return null;
+            }
+            final ProtectionDomain pd = this.getProtectionDomain();
+            if (pd == null)
+            {
+                return null;
+            }
+            return (A) new AccessControlContext(new ProtectionDomain[] {pd});
+
+        }
         return null;
     }
 
@@ -1271,8 +1297,7 @@ class BundleImpl implements Bundle, BundleRevisions
 
         for (int i = m_revisions.size() - 1; (i >= 0) && (pd == null); i--)
         {
-            pd = (ProtectionDomain)
-                ((BundleRevisionImpl) m_revisions.get(i)).getProtectionDomain();
+            pd = ((BundleRevisionImpl) m_revisions.get(i)).getProtectionDomain();
         }
 
         return pd;
