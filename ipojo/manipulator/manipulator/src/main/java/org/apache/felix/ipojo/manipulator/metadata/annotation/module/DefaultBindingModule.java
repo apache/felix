@@ -271,7 +271,7 @@ public class DefaultBindingModule extends AbsBindingModule {
                     }
                 });
 
-        bind(Context.class).to(new GenericVisitorFactory("context", ""));
+        //bind(Context.class).to(new GenericVisitorFactory("context", ""));
     }
 
     private DocumentBuilder m_builder;
