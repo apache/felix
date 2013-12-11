@@ -39,10 +39,11 @@ public class CollisionHookTest extends TestCase {
     public void testCollisionHookInstall() throws Exception {
         BundleImpl identicalBundle = mockBundleImpl(1L, "foo", "1.2.1.a");
         BundleImpl differentBundle = mockBundleImpl(2L, "bar", "1.2.1.a");
+        BundleImpl originatingBundle = mockBundleImpl(4L, "xyz", "1.0.0");
 
         CollisionHook testCollisionHook = new CollisionHook() {
             public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates) {
-                if ((target.getBundleId() == 3L) && (operationType == CollisionHook.INSTALLING)) {
+                if ((target.getBundleId() == 4L) && (operationType == CollisionHook.INSTALLING)) {
                     collisionCandidates.clear();
                 }
             }
@@ -72,7 +73,7 @@ public class CollisionHookTest extends TestCase {
         Mockito.when(archive.getCurrentRevision()).thenReturn(archiveRevision);
         Mockito.when(archive.getId()).thenReturn(3L);
 
-        BundleImpl bi = new BundleImpl(felixMock, archive);
+        BundleImpl bi = new BundleImpl(felixMock, originatingBundle, archive);
         assertEquals(3L, bi.getBundleId());
 
         // Do the revise operation.
@@ -125,7 +126,7 @@ public class CollisionHookTest extends TestCase {
         Mockito.when(archive.getCurrentRevision()).thenReturn(archiveRevision);
         Mockito.when(archive.getId()).thenReturn(3L);
 
-        BundleImpl bi = new BundleImpl(felixMock, archive);
+        BundleImpl bi = new BundleImpl(felixMock, null, archive);
         assertEquals("zar", bi.getSymbolicName());
 
         // Do the revise operation, change the bsn to foo
@@ -175,7 +176,7 @@ public class CollisionHookTest extends TestCase {
         Mockito.when(archive.getId()).thenReturn(3L);
 
         try {
-            new BundleImpl(felixMock, archive);
+            new BundleImpl(felixMock, null, archive);
             fail("Should have thrown a BundleException because the collision hook is not enabled");
         } catch (BundleException be) {
             // good
@@ -210,7 +211,7 @@ public class CollisionHookTest extends TestCase {
         Mockito.when(archive.getCurrentRevision()).thenReturn(archiveRevision);
         Mockito.when(archive.getId()).thenReturn(3L);
 
-        BundleImpl bi = new BundleImpl(felixMock, archive);
+        BundleImpl bi = new BundleImpl(felixMock, null, archive);
         assertEquals(3L, bi.getBundleId());
     }
 
@@ -238,7 +239,7 @@ public class CollisionHookTest extends TestCase {
         Mockito.when(archive.getId()).thenReturn(3L);
 
         try {
-            new BundleImpl(felixMock, archive);
+            new BundleImpl(felixMock, null, archive);
             fail("Should have thrown a BundleException because the installed bundle is not unique");
         } catch (BundleException be) {
             // good

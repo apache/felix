@@ -73,6 +73,7 @@ class BundleImpl implements Bundle, BundleRevisions
     private final Map m_cachedHeaders = new HashMap();
     private Map m_uninstalledHeaders = null;
     private long m_cachedHeadersTimestamp;
+    private final Bundle m_installingBundle;
 
     // Indicates whether the bundle is stale, meaning that it has
     // been refreshed and completely removed from the framework.
@@ -94,9 +95,10 @@ class BundleImpl implements Bundle, BundleRevisions
         m_stale = false;
         m_activator = null;
         m_context = null;
+        m_installingBundle = null;
     }
 
-    BundleImpl(Felix felix, BundleArchive archive) throws Exception
+    BundleImpl(Felix felix, Bundle installingBundle, BundleArchive archive) throws Exception
     {
         __m_felix = felix;
         m_archive = archive;
@@ -105,6 +107,7 @@ class BundleImpl implements Bundle, BundleRevisions
         m_stale = false;
         m_activator = null;
         m_context = null;
+        m_installingBundle = installingBundle;
 
         BundleRevision revision = createRevision(false);
         addRevision(revision);
@@ -1273,9 +1276,21 @@ class BundleImpl implements Bundle, BundleRevisions
                         CollisionHook ch = getFramework().getService(getFramework(), hook);
                         if (ch != null)
                         {
-                            Felix.m_secureAction.invokeBundleCollisionHook(ch,
-                                isUpdate ? CollisionHook.UPDATING : CollisionHook.INSTALLING,
-                                this, shrinkableCollisionCandidates);
+                            int operationType;
+                            Bundle target;
+                            if (isUpdate)
+                            {
+                                operationType = CollisionHook.UPDATING;
+                                target = this;
+                            }
+                            else
+                            {
+                                operationType = CollisionHook.INSTALLING;
+                                target = m_installingBundle == null ? this : m_installingBundle;
+                            }
+
+                            Felix.m_secureAction.invokeBundleCollisionHook(ch, operationType, target,
+                                    shrinkableCollisionCandidates);
                         }
                     }
                 }
