@@ -25,7 +25,6 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.felix.jmx.service.coordinator.CoordinatorMBean;
-import org.apache.felix.service.coordinator.Coordinator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -33,6 +32,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.coordinator.Coordinator;
 import org.osgi.util.tracker.ServiceTracker;
 
 @SuppressWarnings("deprecation")

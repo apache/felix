@@ -19,17 +19,17 @@
 package org.apache.felix.coordinator.impl;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
 
-import org.apache.felix.service.coordinator.Coordination;
-import org.apache.felix.service.coordinator.CoordinationException;
-import org.apache.felix.service.coordinator.Participant;
+import org.osgi.framework.Bundle;
+import org.osgi.service.coordinator.Coordination;
+import org.osgi.service.coordinator.CoordinationException;
+import org.osgi.service.coordinator.Participant;
 
-@SuppressWarnings("deprecation")
 public class CoordinationImpl implements Coordination
 {
 
@@ -69,7 +69,7 @@ public class CoordinationImpl implements Coordination
 
     private Thread initiatorThread;
 
-    public CoordinationImpl(final CoordinatorImpl owner, final long id, final String name, final int timeOutInMs)
+    public CoordinationImpl(final CoordinatorImpl owner, final long id, final String name, final long timeOutInMs)
     {
         // TODO: validate name against Bundle Symbolic Name pattern
 
@@ -172,7 +172,7 @@ public class CoordinationImpl implements Coordination
     }
 
 
-    public Collection<Participant> getParticipants()
+    public List<Participant> getParticipants()
     {
         // synchronize access to the state to prevent it from being changed
         // while we create a copy of the participant list
@@ -233,7 +233,7 @@ public class CoordinationImpl implements Coordination
         }
     }
 
-    public Map<Class<?>, ?> getVariables()
+    public Map<Class<?>, Object> getVariables()
     {
         return variables;
     }
@@ -366,5 +366,15 @@ public class CoordinationImpl implements Coordination
 
             owner.schedule(timeoutTask, deadLine);
         }
+    }
+
+    public Bundle getBundle() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Coordination getEnclosingCoordination() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

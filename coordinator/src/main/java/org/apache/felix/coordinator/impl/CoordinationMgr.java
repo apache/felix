@@ -37,9 +37,9 @@ import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 
 import org.apache.felix.jmx.service.coordinator.CoordinatorMBean;
-import org.apache.felix.service.coordinator.Coordination;
-import org.apache.felix.service.coordinator.CoordinationException;
-import org.apache.felix.service.coordinator.Participant;
+import org.osgi.service.coordinator.Coordination;
+import org.osgi.service.coordinator.CoordinationException;
+import org.osgi.service.coordinator.Participant;
 
 /**
  * The <code>CoordinationMgr</code> is the actual backend manager of all
@@ -53,7 +53,6 @@ import org.apache.felix.service.coordinator.Participant;
  * <li>Management support to timeout and cleanup coordinations</li>
  * </ul>
  */
-@SuppressWarnings("deprecation")
 public class CoordinationMgr implements CoordinatorMBean
 {
 
@@ -185,7 +184,7 @@ public class CoordinationMgr implements CoordinatorMBean
 
     // ---------- Coordinator back end implementation
 
-    Coordination create(final CoordinatorImpl owner, final String name, final int timeout)
+    Coordination create(final CoordinatorImpl owner, final String name, final long timeout)
     {
         long id = ctr.incrementAndGet();
         CoordinationImpl c = new CoordinationImpl(owner, id, name, timeout);

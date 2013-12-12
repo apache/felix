@@ -21,12 +21,12 @@ package org.apache.felix.coordinator.impl;
 import java.util.Collection;
 import java.util.Hashtable;
 
-import org.apache.felix.service.coordinator.Coordination;
-import org.apache.felix.service.coordinator.Participant;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.coordinator.Coordination;
+import org.osgi.service.coordinator.Participant;
 
 /**
  * The <code>CrdCommand</code> class implements the required Command Line
@@ -50,14 +50,14 @@ class CrdCommand /* implements Converter */
      *
      *    crd list [ -f, --full ] [ <regex filter on name> ]
      *    crd fail [ -r, --reason <reason> ] [-b,--bundle <bundle>] <coordination> ...
-     *    crd participants <coordination> …
-     *    crd details <coordination> …
+     *    crd participants <coordination> ���
+     *    crd details <coordination> ���
      *
      * A Coordinator must provide a converter to a Coordination based on the
      * following inputs:
-     *    id – the Coordination id
-     *    name – the Coordination name. Must be unique
-     *    bundle – Must translate to all coordinations of a specific bundle
+     *    id ��� the Coordination id
+     *    name ��� the Coordination name. Must be unique
+     *    bundle ��� Must translate to all coordinations of a specific bundle
      */
 
     static ServiceRegistration create(final BundleContext context, final CoordinationMgr mgr)

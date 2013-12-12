@@ -18,13 +18,11 @@
  */
 package org.apache.felix.coordinator.impl;
 
-import org.apache.felix.coordinator.impl.CoordinationMgr;
-import org.apache.felix.coordinator.impl.CoordinatorImpl;
-import org.apache.felix.service.coordinator.Coordination;
-import org.apache.felix.service.coordinator.CoordinationException;
-import org.apache.felix.service.coordinator.Participant;
-
 import junit.framework.TestCase;
+
+import org.osgi.service.coordinator.Coordination;
+import org.osgi.service.coordinator.CoordinationException;
+import org.osgi.service.coordinator.Participant;
 
 @SuppressWarnings("deprecation")
 public class CoordinatorImplTest extends TestCase
@@ -306,6 +304,7 @@ public class CoordinatorImplTest extends TestCase
 
         Thread c2Thread = new Thread()
         {
+            @Override
             public void run()
             {
                 final Coordination c2 = coordinator.create(name2, 0);
