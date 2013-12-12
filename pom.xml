@@ -32,7 +32,6 @@
     <name>Apache Felix Coordinator Service</name>
     <description>
         Implementation of the OSGi Coordinator Service Specification 1.0
-        (Based on OSGi R 4.3 Draft 2 (31 Aug. 2010))
     </description>
     <version>0.0.1-SNAPSHOT</version>
 
@@ -100,17 +99,17 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.2.0</version>
+            <version>4.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <version>4.2.0</version>
+            <version>4.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.enterprise</artifactId>
-            <version>4.2.0</version>
+            <version>5.0.0</version>
         </dependency>
     </dependencies>
 </project>

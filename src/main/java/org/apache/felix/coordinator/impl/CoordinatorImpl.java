@@ -22,14 +22,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.TimerTask;
 
-import org.apache.felix.service.coordinator.Coordination;
-import org.apache.felix.service.coordinator.CoordinationException;
-import org.apache.felix.service.coordinator.Coordinator;
-import org.apache.felix.service.coordinator.Participant;
 import org.osgi.framework.Bundle;
+import org.osgi.service.coordinator.Coordination;
+import org.osgi.service.coordinator.CoordinationException;
+import org.osgi.service.coordinator.Participant;
 
 @SuppressWarnings("deprecation")
-public class CoordinatorImpl implements Coordinator
+public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
 {
 
     private final Bundle owner;
@@ -80,7 +79,7 @@ public class CoordinatorImpl implements Coordinator
         }
     }
 
-    public Coordination create(final String name, final int timeout)
+    public Coordination create(final String name, final long timeout)
     {
         // TODO: check permission
         Coordination c = mgr.create(this, name, timeout);
@@ -114,7 +113,7 @@ public class CoordinatorImpl implements Coordinator
         return mgr.peek();
     }
 
-    public Coordination begin(final String name, final int timeoutInMillis)
+    public Coordination begin(final String name, final long timeoutInMillis)
     {
         // TODO: check permission
         return push(create(name, timeoutInMillis));
