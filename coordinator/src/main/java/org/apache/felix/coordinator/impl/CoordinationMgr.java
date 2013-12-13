@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.Timer;
@@ -33,6 +35,7 @@ import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 
 import org.apache.felix.jmx.service.coordinator.CoordinatorMBean;
+import org.osgi.framework.Bundle;
 import org.osgi.service.coordinator.Coordination;
 import org.osgi.service.coordinator.CoordinationException;
 import org.osgi.service.coordinator.Participant;
@@ -51,6 +54,8 @@ import org.osgi.service.coordinator.Participant;
  */
 public class CoordinationMgr implements CoordinatorMBean
 {
+
+    // TODO - sync access to coordinations
 
     private ThreadLocal<Stack<Coordination>> threadStacks;
 
@@ -135,7 +140,7 @@ public class CoordinationMgr implements CoordinatorMBean
             CoordinationImpl current = participants.get(p);
             while (current != null && current != c)
             {
-                if (current.getThread() == c.getThread())
+                if (current.getThread() != null && current.getThread() == c.getThread())
                 {
                     throw new CoordinationException("Participant " + p + " already participating in Coordination "
                         + current.getId() + "/" + current.getName() + " in this thread", c,
@@ -188,17 +193,20 @@ public class CoordinationMgr implements CoordinatorMBean
         return c;
     }
 
-    void unregister(final CoordinationImpl c)
+    void unregister(final CoordinationImpl c, final boolean removeFromThread)
     {
         coordinations.remove(c.getId());
-        Stack<Coordination> stack = threadStacks.get();
-        if (stack != null)
+        if ( removeFromThread )
         {
-            stack.remove(c);
+            Stack<Coordination> stack = threadStacks.get();
+            if (stack != null)
+            {
+                stack.remove(c);
+            }
         }
     }
 
-    Coordination push(Coordination c)
+    Coordination push(final CoordinationImpl c)
     {
         Stack<Coordination> stack = threadStacks.get();
         if (stack == null)
@@ -208,11 +216,13 @@ public class CoordinationMgr implements CoordinatorMBean
         }
         else
         {
-            if ( stack.contains(c) ) 
+            if ( stack.contains(c) )
             {
                 throw new CoordinationException("Coordination already pushed", c, CoordinationException.ALREADY_PUSHED);
             }
         }
+
+        c.setAssociatedThread(Thread.currentThread());
         return stack.push(c);
     }
 
@@ -221,7 +231,11 @@ public class CoordinationMgr implements CoordinatorMBean
         Stack<Coordination> stack = threadStacks.get();
         if (stack != null && !stack.isEmpty())
         {
-            return stack.pop();
+            final CoordinationImpl c = (CoordinationImpl)stack.pop();
+            if ( c != null ) {
+                c.setAssociatedThread(null);
+            }
+            return c;
         }
         return null;
     }
@@ -238,11 +252,10 @@ public class CoordinationMgr implements CoordinatorMBean
 
     Collection<Coordination> getCoordinations()
     {
-        ArrayList<Coordination> result = new ArrayList<Coordination>();
-        Stack<Coordination> stack = threadStacks.get();
-        if (stack != null)
+        final ArrayList<Coordination> result = new ArrayList<Coordination>();
+        synchronized ( this.coordinations )
         {
-            result.addAll(stack);
+            result.addAll(this.coordinations.values());
         }
         return result;
     }
@@ -326,7 +339,7 @@ public class CoordinationMgr implements CoordinatorMBean
     }
     */
 
-	public Coordination getEnclosingCoordination(final CoordinationImpl c) 
+	public Coordination getEnclosingCoordination(final CoordinationImpl c)
 	{
         Stack<Coordination> stack = threadStacks.get();
         if ( stack != null )
@@ -340,7 +353,7 @@ public class CoordinationMgr implements CoordinatorMBean
 		return null;
 	}
 
-	public void endNestedCoordinations(final CoordinationImpl c) 
+	public void endNestedCoordinations(final CoordinationImpl c)
 	{
         Stack<Coordination> stack = threadStacks.get();
         if ( stack != null )
@@ -349,12 +362,50 @@ public class CoordinationMgr implements CoordinatorMBean
         	if ( index > 0 && stack.size() > index )
         	{
         		final int count = stack.size()-index;
-        		for(int i=0;i<count;i++) 
+        		for(int i=0;i<count;i++)
         		{
-        			final Coordination nested = (Coordination)stack.pop();
+        			final Coordination nested = stack.pop();
         			nested.end();
         		}
         	}
         }
 	}
+
+	/**
+	 * Dispose all coordinations for that bundle
+	 * @param owner The owner bundle
+	 */
+    public void dispose(final Bundle owner) {
+        final List<CoordinationImpl> candidates = new ArrayList<CoordinationImpl>();
+        synchronized ( this.coordinations )
+        {
+            final Iterator<Map.Entry<Long, CoordinationImpl>> iter = this.coordinations.entrySet().iterator();
+            while ( iter.hasNext() )
+            {
+                final Map.Entry<Long, CoordinationImpl> entry = iter.next();
+                if ( entry.getValue().getBundle().getBundleId() == owner.getBundleId() )
+                {
+                    candidates.add(entry.getValue());
+                }
+            }
+        }
+        if ( candidates.size() > 0 )
+        {
+            for(final CoordinationImpl c : candidates)
+            {
+                try {
+                if ( !c.isTerminated() )
+                {
+                    c.fail(Coordination.RELEASED);
+                }
+                else
+                {
+                    this.unregister(c, true);
+                }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }
