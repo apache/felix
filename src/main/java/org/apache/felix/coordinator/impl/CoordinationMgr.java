@@ -28,13 +28,9 @@ import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Pattern;
 
 import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.CompositeDataSupport;
-import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
-import javax.management.openmbean.TabularDataSupport;
 
 import org.apache.felix.jmx.service.coordinator.CoordinatorMBean;
 import org.osgi.service.coordinator.Coordination;
@@ -254,6 +250,8 @@ public class CoordinationMgr implements CoordinatorMBean
 
     public TabularData listCoordinations(String regexFilter)
     {
+        return null;
+/*
         Pattern p = Pattern.compile(regexFilter);
         TabularData td = new TabularDataSupport(COORDINATIONS_TYPE);
         for (CoordinationImpl c : coordinations.values())
@@ -271,10 +269,13 @@ public class CoordinationMgr implements CoordinatorMBean
             }
         }
         return td;
+*/
     }
 
     public CompositeData getCoordination(long id) throws IOException
     {
+        return null;
+        /*
         Coordination c = getCoordinationById(id);
         if (c != null)
         {
@@ -288,6 +289,7 @@ public class CoordinationMgr implements CoordinatorMBean
             }
         }
         throw new IOException("No such Coordination " + id);
+        */
     }
 
     public boolean fail(long id, String reason)
@@ -308,11 +310,12 @@ public class CoordinationMgr implements CoordinatorMBean
             c.extendTimeout(timeout);
         }
     }
-
+/*
     private CompositeData fromCoordination(final CoordinationImpl c) throws OpenDataException
     {
         return new CompositeDataSupport(COORDINATION_TYPE, new String[]
             { ID, NAME, TIMEOUT }, new Object[]
             { c.getId(), c.getName(), c.getDeadLine() });
     }
+    */
 }

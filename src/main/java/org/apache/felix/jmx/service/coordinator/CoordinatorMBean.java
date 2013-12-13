@@ -1,12 +1,12 @@
 /*
  * Copyright (c) OSGi Alliance (2004, 2010). All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,16 +18,13 @@ package org.apache.felix.jmx.service.coordinator;
 import java.io.IOException;
 
 import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.CompositeType;
-import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularData;
-import javax.management.openmbean.TabularType;
 
-import org.osgi.jmx.Item;
+import org.osgi.service.coordinator.Coordination;
 
 /**
  * This MBean provides the management interface to the OSGi Coordinator Service
- * 
+ *
  * @ThreadSafe
  * @Provisional
  */
@@ -49,7 +46,7 @@ public interface CoordinatorMBean
      * The item for the user name for an authorization object. The key is NAME
      * and the type is SimpleType.STRING.
      */
-    public static final org.osgi.jmx.Item NAME_ITEM = new Item(NAME, null, SimpleType.STRING, (String[]) null);
+//    public static final org.osgi.jmx.Item NAME_ITEM = new Item(NAME, null, SimpleType.STRING, (String[]) null);
 
     /**
      * The key ID, used in ID_ITEM.
@@ -62,7 +59,7 @@ public interface CoordinatorMBean
      * unique Coordination (which should no be pinned in memory because of
      * this).
      */
-    public static final org.osgi.jmx.Item ID_ITEM = new Item(ID, null, SimpleType.LONG, (String[]) null);
+//    public static final org.osgi.jmx.Item ID_ITEM = new Item(ID, null, SimpleType.LONG, (String[]) null);
 
     /**
      * The key TIMEOUT, used in TIMEOUT_ITEM.
@@ -73,7 +70,7 @@ public interface CoordinatorMBean
      * The item for the id of an Coordination object. The key is TIMEOUT and the
      * type is SimpleType.LONG.
      */
-    public static final org.osgi.jmx.Item TIMEOUT_ITEM = new Item(TIMEOUT, null, SimpleType.LONG, (String[]) null);
+//    public static final org.osgi.jmx.Item TIMEOUT_ITEM = new Item(TIMEOUT, null, SimpleType.LONG, (String[]) null);
 
     /**
      * The key COORDINATION, used in COORDINATION_TYPE
@@ -82,9 +79,9 @@ public interface CoordinatorMBean
 
     /**
      * Interface Coordination
-     */
     public static final CompositeType COORDINATION_TYPE = Item
         .compositeType("", null, ID_ITEM, NAME_ITEM, TIMEOUT_ITEM);
+     */
 
     /**
      * The key COORDINATIONS, used in COORDINATIONS_TYPE
@@ -100,14 +97,14 @@ public interface CoordinatorMBean
      * fmeschbe note: The draft 2 spec defines this to be ArrayType but to use
      * it for {@link #listCoordinations(String)} this constant must be a
      * <code>TabularType</code>.
-     */
     public static final TabularType COORDINATIONS_TYPE = Item.tabularType(COORDINATIONS, null, COORDINATION_TYPE, ID,
         NAME, TIMEOUT);
+     */
 
     /**
      * List the current coordinations. The Composite Data is typed by
      * COORDINATIONS_TYPE.
-     * 
+     *
      * @param regexFilter a regular expression filter on the coordination name
      * @return the Coordinations typed by COORDINATIONS_TYPE.
      * @throws IOException if the operation fails
@@ -116,7 +113,7 @@ public interface CoordinatorMBean
 
     /**
      * Get a Coordination. The Composite Data is typed by COORDINATION_TYPE.
-     * 
+     *
      * @param id The id of a Coordination
      * @return the Coordinations typed by COORDINATION_TYPE.
      * @throws IOException if the operation fails
@@ -125,7 +122,7 @@ public interface CoordinatorMBean
 
     /**
      * Fail a Coordination.
-     * 
+     *
      * @param id The id of the coordination to be failed.
      * @param reason The reason the coordination should be failed. The
      *            implementation of the MBean should create a
@@ -140,7 +137,7 @@ public interface CoordinatorMBean
 
     /**
      * Set/Change the timeout of a Coordination.
-     * 
+     *
      * @param id The id of the Coordination
      * @param timeout The nr of milliseconds for the next timeout.
      * @throws IOException
