@@ -19,29 +19,25 @@
 package org.apache.felix.coordinator.impl;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.TimerTask;
 
 import org.osgi.framework.Bundle;
 import org.osgi.service.coordinator.Coordination;
 import org.osgi.service.coordinator.CoordinationException;
+import org.osgi.service.coordinator.Coordinator;
 import org.osgi.service.coordinator.Participant;
 
-public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
+public class CoordinatorImpl implements Coordinator
 {
 
     private final Bundle owner;
 
     private final CoordinationMgr mgr;
 
-    private final Set<Coordination> coordinations;
-
     CoordinatorImpl(final Bundle owner, final CoordinationMgr mgr)
     {
         this.owner = owner;
         this.mgr = mgr;
-        this.coordinations = new HashSet<Coordination>();
     }
 
     /**
@@ -55,28 +51,7 @@ public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
      */
     void dispose()
     {
-        final Coordination[] active;
-        synchronized (coordinations)
-        {
-            if (coordinations.isEmpty())
-            {
-                active = null;
-            }
-            else
-            {
-                active = coordinations.toArray(new CoordinationImpl[coordinations.size()]);
-                coordinations.clear();
-            }
-        }
-
-        if (active != null)
-        {
-            Throwable reason = new Exception("Coordinator service released");
-            for (int i = active.length -1; i >=0; i--)
-            {
-                active[i].fail(reason);
-            }
-        }
+        this.mgr.dispose(this.owner);
     }
 
     /**
@@ -110,7 +85,7 @@ public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
         for(final String p : parts)
         {
         	boolean valid = true;
-        	if ( p.length() == 0 ) 
+        	if ( p.length() == 0 )
         	{
         		valid = false;
         	}
@@ -135,30 +110,27 @@ public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
 	            	break;
 	            }
         	}
-        	if ( !valid ) 
+        	if ( !valid )
         	{
-                throw new IllegalArgumentException( "Name [" + name + "] does not comply with the symbolic-name definition." );        		        		
+                throw new IllegalArgumentException( "Name [" + name + "] does not comply with the symbolic-name definition." );
         	}
         }
     }
-    
+
     public Coordination create(final String name, final long timeout)
     {
         // TODO: check permission
 
     	// check arguments
     	checkName(name);
-    	if ( timeout < 0 ) 
+    	if ( timeout < 0 )
     	{
     		throw new IllegalArgumentException("Timeout must not be negative");
     	}
-    	
+
     	// create coordination
         final Coordination c = mgr.create(this, name, timeout);
-        synchronized (coordinations)
-        {
-            coordinations.add(c);
-        }
+
         return c;
     }
 
@@ -188,7 +160,7 @@ public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
     public Coordination begin(final String name, final long timeoutInMillis)
     {
         // TODO: check permission
-        return push(create(name, timeoutInMillis));
+        return push((CoordinationImpl)create(name, timeoutInMillis));
     }
 
     public Coordination pop()
@@ -217,19 +189,15 @@ public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
 
     //----------
 
-    Coordination push(Coordination c)
+    Coordination push(final CoordinationImpl c)
     {
         // TODO: check permission
         return mgr.push(c);
     }
 
-    void unregister(final CoordinationImpl c)
+    void unregister(final CoordinationImpl c, final boolean removeFromStack)
     {
-        mgr.unregister(c);
-        synchronized (coordinations)
-        {
-            coordinations.remove(c);
-        }
+        mgr.unregister(c, removeFromStack);
     }
 
     void schedule(final TimerTask task, final long deadLine)
@@ -252,13 +220,13 @@ public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
         return this.owner;
     }
 
-	public Coordination getEnclosingCoordination(final CoordinationImpl c) 
+	public Coordination getEnclosingCoordination(final CoordinationImpl c)
 	{
 		return mgr.getEnclosingCoordination(c);
 	}
 
-	public void endNestedCoordinations(final CoordinationImpl c) 
+	public void endNestedCoordinations(final CoordinationImpl c)
 	{
-		this.mgr.endNestedCoordinations(c);		
+		this.mgr.endNestedCoordinations(c);
 	}
 }

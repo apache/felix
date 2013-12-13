@@ -33,14 +33,19 @@ import org.osgi.service.coordinator.Participant;
 public class CoordinationImpl implements Coordination
 {
 
-    /** Active */
-    private static final int ACTIVE = 1;
+    private enum State {
+        /** Active */
+        ACTIVE,
 
-    /** Coordination termination started */
-    private static final int TERMINATING = 2;
+        /** failed() called */
+        FAILED,
 
-    /** Coordination completed */
-    private static final int TERMINATED = 3;
+        /** Coordination termination started */
+        TERMINATING,
+
+        /** Coordination completed */
+        TERMINATED
+    }
 
     private final CoordinatorImpl owner;
 
@@ -53,11 +58,11 @@ public class CoordinationImpl implements Coordination
 
     /**
      * Access to this field must be synchronized as long as the expected state
-     * is {@link #ACTIVE}. Once the state has changed, further updates to this
+     * is {@link State#ACTIVE}. Once the state has changed, further updates to this
      * instance will not take place any more and the state will only be modified
-     * by the thread successfully setting the state to {@link #TERMINATING}.
+     * by the thread successfully setting the state to {@link State#TERMINATING}.
      */
-    private volatile int state;
+    private volatile State state;
 
     private Throwable failReason;
 
@@ -67,7 +72,7 @@ public class CoordinationImpl implements Coordination
 
     private TimerTask timeoutTask;
 
-    private Thread initiatorThread;
+    private Thread associatedThread;
 
     public CoordinationImpl(final CoordinatorImpl owner, final long id, final String name, final long timeOutInMs)
     {
@@ -76,11 +81,10 @@ public class CoordinationImpl implements Coordination
         this.owner = owner;
         this.id = id;
         this.name = name;
-        this.state = ACTIVE;
+        this.state = State.ACTIVE;
         this.participants = new ArrayList<Participant>();
         this.variables = new HashMap<Class<?>, Object>();
         this.deadLine = (timeOutInMs > 0) ? System.currentTimeMillis() + timeOutInMs : 0;
-        this.initiatorThread = Thread.currentThread();
 
         scheduleTimeout(deadLine);
     }
@@ -97,9 +101,12 @@ public class CoordinationImpl implements Coordination
 
     public boolean fail(Throwable reason)
     {
+        if ( reason == null)
+        {
+            throw new IllegalArgumentException("Reason must not be null");
+        }
         if (startTermination())
         {
-            this.owner.unregister(this);
             this.failReason = reason;
 
             // consider failure reason (if not null)
@@ -119,7 +126,8 @@ public class CoordinationImpl implements Coordination
                 owner.releaseParticipant(part);
             }
 
-            state = TERMINATED;
+            this.owner.unregister(this, false);
+            state = State.FAILED;
 
             synchronized (this)
             {
@@ -133,11 +141,11 @@ public class CoordinationImpl implements Coordination
 
     public void end()
     {
-    	
         if (startTermination())
         {
+            // TODO check for WRONG_THREAD
         	this.owner.endNestedCoordinations(this);
-            this.owner.unregister(this);
+            this.owner.unregister(this, true);
 
         	boolean partialFailure = false;
             for (int i=participants.size()-1;i>=0;i--)
@@ -157,7 +165,7 @@ public class CoordinationImpl implements Coordination
                 owner.releaseParticipant(part);
             }
 
-            state = TERMINATED;
+            state = State.TERMINATED;
 
             synchronized (this)
             {
@@ -169,6 +177,12 @@ public class CoordinationImpl implements Coordination
                 throw new CoordinationException("One or more participants threw while ending the coordination", this,
                     CoordinationException.PARTIALLY_ENDED);
             }
+        }
+        else if ( state == State.FAILED )
+        {
+            this.owner.unregister(this, true);
+            state = State.TERMINATED;
+            throw new CoordinationException("Coordination failed", this, CoordinationException.FAILED, failReason);
         }
         else
         {
@@ -185,7 +199,7 @@ public class CoordinationImpl implements Coordination
         // while we create a copy of the participant list
         synchronized (this)
         {
-            if (state == ACTIVE)
+            if (state == State.ACTIVE)
             {
                 return new ArrayList<Participant>(participants);
             }
@@ -273,12 +287,12 @@ public class CoordinationImpl implements Coordination
      */
     public boolean isTerminated()
     {
-        return state != ACTIVE;
+        return state != State.ACTIVE;
     }
 
     public Thread getThread()
     {
-        return initiatorThread;
+        return associatedThread;
     }
 
     public void join(long timeoutInMillis) throws InterruptedException
@@ -335,9 +349,9 @@ public class CoordinationImpl implements Coordination
      */
     private synchronized boolean startTermination()
     {
-        if (state == ACTIVE)
+        if (state == State.ACTIVE)
         {
-            state = TERMINATING;
+            state = State.TERMINATING;
             scheduleTimeout(-1);
             return true;
         }
@@ -387,7 +401,7 @@ public class CoordinationImpl implements Coordination
     }
 
 	@Override
-	public int hashCode() 
+	public int hashCode()
 	{
 		final int prime = 31;
 		int result = 1;
@@ -396,7 +410,7 @@ public class CoordinationImpl implements Coordination
 	}
 
 	@Override
-	public boolean equals(final Object obj) 
+	public boolean equals(final Object obj)
 	{
 		if (this == obj)
 			return true;
@@ -408,5 +422,9 @@ public class CoordinationImpl implements Coordination
 		if (id != other.id)
 			return false;
 		return true;
+	}
+
+	void setAssociatedThread(final Thread t) {
+	    this.associatedThread = t;
 	}
 }

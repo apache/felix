@@ -61,12 +61,12 @@ public class CoordinatorImplTest extends TestCase
         try
         {
             c1.end();
-            fail("Expected CoordinationException.ALREADY_ENDED on end() after fail()");
+            fail("Expected CoordinationException.FAILED on end() after fail()");
         }
         catch (CoordinationException ce)
         {
-            // expected already terminated
-            assertEquals(CoordinationException.ALREADY_ENDED, ce.getType());
+            // expected failed
+            assertEquals(CoordinationException.FAILED, ce.getType());
         }
 
         final Coordination c2 = coordinator.create(name, 0);
@@ -106,7 +106,7 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c1, coordinator.pop());
 
         assertNull(coordinator.peek());
-        coordinator.push(c1);
+        coordinator.push((CoordinationImpl)c1);
         assertEquals(c1, coordinator.peek());
 
         c1.end();
@@ -116,7 +116,14 @@ public class CoordinatorImplTest extends TestCase
         assertNotNull(c2);
         assertEquals(name, c2.getName());
         assertEquals(c2, coordinator.peek());
-        c2.fail(null);
+        c2.fail(new Exception());
+        assertNotNull(coordinator.peek());
+        try {
+            c2.end();
+            fail("Exception should be thrown");
+        } catch (CoordinationException ce) {
+            // ignore
+        }
         assertNull(coordinator.peek());
     }
 
@@ -231,7 +238,7 @@ public class CoordinatorImplTest extends TestCase
         assertTrue(c1.getParticipants().contains(p1));
         assertEquals(1, c1.getParticipants().size());
 
-        c1.fail(null);
+        c1.fail(new Exception());
         assertFalse(p1.ended);
         assertTrue(p1.failed);
         assertEquals(c1, p1.c);
@@ -246,7 +253,7 @@ public class CoordinatorImplTest extends TestCase
         assertTrue(c2.getParticipants().contains(p22));
         assertEquals(2, c2.getParticipants().size());
 
-        c2.fail(null);
+        c2.fail(new Exception());
         assertTrue(p21.failed);
         assertEquals(c2, p21.c);
         assertTrue(p22.failed);
@@ -264,7 +271,7 @@ public class CoordinatorImplTest extends TestCase
         assertTrue(c3.getParticipants().contains(p32));
         assertEquals(2, c3.getParticipants().size());
 
-        c3.fail(null);
+        c3.fail(new Exception());
         assertTrue(p31.failed);
         assertEquals(c3, p31.c);
         assertTrue(p32.failed);
