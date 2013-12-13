@@ -20,6 +20,7 @@ package org.apache.felix.coordinator.impl;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.TimerTask;
 
 import org.osgi.framework.Bundle;
@@ -27,7 +28,6 @@ import org.osgi.service.coordinator.Coordination;
 import org.osgi.service.coordinator.CoordinationException;
 import org.osgi.service.coordinator.Participant;
 
-@SuppressWarnings("deprecation")
 public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
 {
 
@@ -35,7 +35,7 @@ public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
 
     private final CoordinationMgr mgr;
 
-    private final HashSet<Coordination> coordinations;
+    private final Set<Coordination> coordinations;
 
     CoordinatorImpl(final Bundle owner, final CoordinationMgr mgr)
     {
@@ -72,17 +72,89 @@ public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
         if (active != null)
         {
             Throwable reason = new Exception("Coordinator service released");
-            for (int i = 0; i < active.length; i++)
+            for (int i = active.length -1; i >=0; i--)
             {
                 active[i].fail(reason);
             }
         }
     }
 
+    /**
+     * Ensures the <code>name</code> complies with the <em>symbolic-name</em>
+     * production of the OSGi core specification (1.3.2):
+     *
+     * <pre>
+     * symbolic-name :: = token('.'token)*
+     * digit    ::= [0..9]
+     * alpha    ::= [a..zA..Z]
+     * alphanum ::= alpha | digit
+     * token    ::= ( alphanum | ’_’ | ’-’ )+
+     * </pre>
+     *
+     * If the key does not comply an <code>IllegalArgumentException</code> is
+     * thrown.
+     *
+     * @param key
+     *            The configuration property key to check.
+     * @throws IllegalArgumentException
+     *             if the key does not comply with the symbolic-name production.
+     */
+    private void checkName( final String name )
+    {
+        // check for empty string
+        if ( name.length() == 0 )
+        {
+            throw new IllegalArgumentException( "Name must not be an empty string" );
+        }
+        final String[] parts = name.split("\\.");
+        for(final String p : parts)
+        {
+        	boolean valid = true;
+        	if ( p.length() == 0 ) 
+        	{
+        		valid = false;
+        	}
+        	else
+        	{
+	            for(int i=0; i<p.length(); i++)
+	            {
+	            	final char c = p.charAt(i);
+	            	if ( c >= '0' && c <= '9') {
+	            		continue;
+	            	}
+	            	if ( c >= 'a' && c <= 'z') {
+	            		continue;
+	            	}
+	            	if ( c >= 'A' && c <= 'Z') {
+	            		continue;
+	            	}
+	            	if ( c == '_' || c == '-') {
+	            		continue;
+	            	}
+	            	valid = false;
+	            	break;
+	            }
+        	}
+        	if ( !valid ) 
+        	{
+                throw new IllegalArgumentException( "Name [" + name + "] does not comply with the symbolic-name definition." );        		        		
+        	}
+        }
+    }
+    
     public Coordination create(final String name, final long timeout)
     {
         // TODO: check permission
-        Coordination c = mgr.create(this, name, timeout);
+
+    	// check arguments
+    	checkName(name);
+    	if ( timeout < 0 ) 
+    	{
+    		throw new IllegalArgumentException("Timeout must not be negative");
+    	}
+    	
+    	// create coordination
+        final Coordination c = mgr.create(this, name, timeout);
         synchronized (coordinations)
         {
             coordinations.add(c);
@@ -174,4 +246,19 @@ public class CoordinatorImpl implements org.osgi.service.coordinator.Coordinator
     {
         mgr.releaseParticipant(p);
     }
+
+    Bundle getBundle()
+    {
+        return this.owner;
+    }
+
+	public Coordination getEnclosingCoordination(final CoordinationImpl c) 
+	{
+		return mgr.getEnclosingCoordination(c);
+	}
+
+	public void endNestedCoordinations(final CoordinationImpl c) 
+	{
+		this.mgr.endNestedCoordinations(c);		
+	}
 }

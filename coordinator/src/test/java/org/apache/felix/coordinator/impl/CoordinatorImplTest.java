@@ -156,9 +156,17 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c2, coordinator.peek());
 
         c1.end();
-        assertEquals(c2, coordinator.peek());
+        assertNull(coordinator.peek());
 
-        c2.end();
+        try
+        {
+            c2.end();
+            fail("c2 is already terminated");
+        }
+        catch (CoordinationException ce)
+        {
+            assertEquals(CoordinationException.ALREADY_ENDED, ce.getType());
+        }
         assertNull(coordinator.peek());
     }
 
@@ -192,7 +200,7 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c2, p21.c);
         assertTrue(p22.ended);
         assertEquals(c2, p22.c);
-        assertTrue("p21 must be called before p22", p21.time < p22.time);
+        assertTrue("p22 must be called before p21", p22.time < p21.time);
 
         // assert order of call with two registrations
         final Coordination c3 = coordinator.create(name, 0);
@@ -210,7 +218,7 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c3, p31.c);
         assertTrue(p32.ended);
         assertEquals(c3, p32.c);
-        assertTrue("p21 must be called before p22", p31.time < p32.time);
+        assertTrue("p32 must be called before p31", p32.time < p31.time);
     }
 
     public void test_addParticipant_with_failed()
@@ -243,7 +251,7 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c2, p21.c);
         assertTrue(p22.failed);
         assertEquals(c2, p22.c);
-        assertTrue("p21 must be called before p22", p21.time < p22.time);
+        assertTrue("p22 must be called before p21", p22.time < p21.time);
 
         // assert order of call with two registrations
         final Coordination c3 = coordinator.create(name, 0);
@@ -261,7 +269,7 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c3, p31.c);
         assertTrue(p32.failed);
         assertEquals(c3, p32.c);
-        assertTrue("p21 must be called before p22", p31.time < p32.time);
+        assertTrue("p31 must be called before p32", p32.time < p31.time);
     }
 
     public void test_Coordination_timeout() throws InterruptedException
