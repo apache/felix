@@ -206,6 +206,13 @@ public class CoordinationMgr implements CoordinatorMBean
             stack = new Stack<Coordination>();
             threadStacks.set(stack);
         }
+        else
+        {
+            if ( stack.contains(c) ) 
+            {
+                throw new CoordinationException("Coordination already pushed", c, CoordinationException.ALREADY_PUSHED);
+            }
+        }
         return stack.push(c);
     }
 
@@ -318,4 +325,36 @@ public class CoordinationMgr implements CoordinatorMBean
             { c.getId(), c.getName(), c.getDeadLine() });
     }
     */
+
+	public Coordination getEnclosingCoordination(final CoordinationImpl c) 
+	{
+        Stack<Coordination> stack = threadStacks.get();
+        if ( stack != null )
+        {
+        	final int index = stack.indexOf(c);
+        	if ( index > 0 )
+        	{
+        		return stack.elementAt(index - 1);
+        	}
+        }
+		return null;
+	}
+
+	public void endNestedCoordinations(final CoordinationImpl c) 
+	{
+        Stack<Coordination> stack = threadStacks.get();
+        if ( stack != null )
+        {
+        	final int index = stack.indexOf(c) + 1;
+        	if ( index > 0 && stack.size() > index )
+        	{
+        		final int count = stack.size()-index;
+        		for(int i=0;i<count;i++) 
+        		{
+        			final Coordination nested = (Coordination)stack.pop();
+        			nested.end();
+        		}
+        	}
+        }
+	}
 }

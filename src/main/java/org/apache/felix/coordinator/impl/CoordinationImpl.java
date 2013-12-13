@@ -99,11 +99,13 @@ public class CoordinationImpl implements Coordination
     {
         if (startTermination())
         {
+            this.owner.unregister(this);
             this.failReason = reason;
 
             // consider failure reason (if not null)
-            for (Participant part : participants)
+            for (int i=participants.size()-1;i>=0;i--)
             {
+                final Participant part = participants.get(i);
                 try
                 {
                     part.failed(this);
@@ -131,11 +133,16 @@ public class CoordinationImpl implements Coordination
 
     public void end()
     {
+    	
         if (startTermination())
         {
-            boolean partialFailure = false;
-            for (Participant part : participants)
+        	this.owner.endNestedCoordinations(this);
+            this.owner.unregister(this);
+
+        	boolean partialFailure = false;
+            for (int i=participants.size()-1;i>=0;i--)
             {
+                final Participant part = participants.get(i);
                 try
                 {
                     part.ended(this);
@@ -287,8 +294,10 @@ public class CoordinationImpl implements Coordination
 
     public Coordination push()
     {
-        // TODO: Check whether this has already been pushed !
-        // throw new CoordinationException("Coordination already pushed", this, CoordinationException.ALREADY_PUSHED);
+    	if ( isTerminated() )
+    	{
+            throw new CoordinationException("Coordination already ended", this, CoordinationException.ALREADY_ENDED);
+    	}
 
         return owner.push(this);
     }
@@ -329,7 +338,6 @@ public class CoordinationImpl implements Coordination
         if (state == ACTIVE)
         {
             state = TERMINATING;
-            owner.unregister(this);
             scheduleTimeout(-1);
             return true;
         }
@@ -368,13 +376,37 @@ public class CoordinationImpl implements Coordination
         }
     }
 
-    public Bundle getBundle() {
-        // TODO Auto-generated method stub
-        return null;
+    public Bundle getBundle()
+    {
+        return this.owner.getBundle();
     }
 
-    public Coordination getEnclosingCoordination() {
-        // TODO Auto-generated method stub
-        return null;
+    public Coordination getEnclosingCoordination()
+    {
+        return this.owner.getEnclosingCoordination(this);
     }
+
+	@Override
+	public int hashCode() 
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (id ^ (id >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) 
+	{
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		final CoordinationImpl other = (CoordinationImpl) obj;
+		if (id != other.id)
+			return false;
+		return true;
+	}
 }
