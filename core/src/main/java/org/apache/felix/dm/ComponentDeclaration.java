@@ -18,6 +18,8 @@
  */
 package org.apache.felix.dm;
 
+import java.util.Dictionary;
+
 import org.osgi.framework.BundleContext;
 
 /**
@@ -37,10 +39,18 @@ public interface ComponentDeclaration {
     public static final int STATE_REGISTERED = 1;
     /** Returns a list of dependencies associated with this component. */
     public ComponentDependencyDeclaration[] getComponentDependencies();
-    /** Returns the name of this component. */
+    /** Returns the description of this component (the classname or the provided service(s)) */
     public String getName();
+    /** Returns the class name of the Component implementation. */
+    public String getClassName();
+    /** Returns the service optionally provided by this component, or null */
+    public String[] getServices();
+    /** Returns the service properties, or null */
+    public Dictionary getServiceProperties();     
     /** Returns the state of this component. */
     public int getState();
+    /** Returns the instance id of this component. */
+    public long getId();
     /** Returns the bundle context associated with this component. */
     public BundleContext getBundleContext();
 }
