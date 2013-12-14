@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ import org.osgi.service.coordinator.CoordinationException;
 import org.osgi.service.coordinator.Participant;
 
 /**
- * The <code>CoordinationMgr</code> is the actual backend manager of all
+ * The <code>CoordinationMgr</code> is the actual back-end manager of all
  * Coordinations created by the Coordinator implementation. The methods in this
  * class fall into three categories:
  * <ul>
@@ -54,8 +55,6 @@ import org.osgi.service.coordinator.Participant;
  */
 public class CoordinationMgr implements CoordinatorMBean
 {
-
-    // TODO - sync access to coordinations
 
     private ThreadLocal<Stack<Coordination>> threadStacks;
 
@@ -87,7 +86,7 @@ public class CoordinationMgr implements CoordinatorMBean
         threadStacks = new ThreadLocal<Stack<Coordination>>();
         ctr = new AtomicLong(-1);
         coordinations = new HashMap<Long, CoordinationImpl>();
-        participants = new HashMap<Participant, CoordinationImpl>();
+        participants = new IdentityHashMap<Participant, CoordinationImpl>();
         coordinationTimer = new Timer("Coordination Timer", true);
     }
 
@@ -98,15 +97,24 @@ public class CoordinationMgr implements CoordinatorMBean
         coordinationTimer.cancel();
 
         // terminate all active coordinations
-        final Exception reason = new Exception();
-        for (Coordination c : coordinations.values())
-        {
-            c.fail(reason);
+        final List<Coordination> coords = new ArrayList<Coordination>();
+        synchronized ( this.coordinations ) {
+            coords.addAll(this.coordinations.values());
+            this.coordinations.clear();
         }
-        coordinations.clear();
+        for(final Coordination c : coords)
+        {
+            if ( !c.isTerminated() )
+            {
+                c.fail(Coordination.RELEASED);
+            }
+        }
 
         // release all participants
-        participants.clear();
+        synchronized ( this.participants )
+        {
+            participants.clear();
+        }
 
         // cannot really clear out the thread local but we can let it go
         threadStacks = null;
@@ -137,6 +145,7 @@ public class CoordinationMgr implements CoordinatorMBean
             // wait for participant to be released
             long cutOff = System.currentTimeMillis() + participationTimeOut;
             long waitTime = (participationTimeOut > 500) ? participationTimeOut / 500 : participationTimeOut;
+            // TODO - the above wait time looks wrong e.g. if it's 800, the wait time 1ms
             CoordinationImpl current = participants.get(p);
             while (current != null && current != c)
             {
@@ -187,15 +196,21 @@ public class CoordinationMgr implements CoordinatorMBean
 
     Coordination create(final CoordinatorImpl owner, final String name, final long timeout)
     {
-        long id = ctr.incrementAndGet();
-        CoordinationImpl c = new CoordinationImpl(owner, id, name, timeout);
-        coordinations.put(id, c);
+        final long id = ctr.incrementAndGet();
+        final CoordinationImpl c = new CoordinationImpl(owner, id, name, timeout);
+        synchronized ( this.coordinations )
+        {
+            coordinations.put(id, c);
+        }
         return c;
     }
 
     void unregister(final CoordinationImpl c, final boolean removeFromThread)
     {
-        coordinations.remove(c.getId());
+        synchronized ( this.coordinations )
+        {
+            coordinations.remove(c.getId());
+        }
         if ( removeFromThread )
         {
             Stack<Coordination> stack = threadStacks.get();
@@ -206,7 +221,7 @@ public class CoordinationMgr implements CoordinatorMBean
         }
     }
 
-    Coordination push(final CoordinationImpl c)
+    void push(final CoordinationImpl c)
     {
         Stack<Coordination> stack = threadStacks.get();
         if (stack == null)
@@ -223,7 +238,7 @@ public class CoordinationMgr implements CoordinatorMBean
         }
 
         c.setAssociatedThread(Thread.currentThread());
-        return stack.push(c);
+        stack.push(c);
     }
 
     Coordination pop()
@@ -262,8 +277,11 @@ public class CoordinationMgr implements CoordinatorMBean
 
     Coordination getCoordinationById(final long id)
     {
-        CoordinationImpl c = coordinations.get(id);
-        return (c == null || c.isTerminated()) ? null : c;
+        synchronized ( this.coordinations )
+        {
+            final CoordinationImpl c = coordinations.get(id);
+            return (c == null || c.isTerminated()) ? null : c;
+        }
     }
 
     // ---------- CoordinatorMBean interface
@@ -353,8 +371,9 @@ public class CoordinationMgr implements CoordinatorMBean
 		return null;
 	}
 
-	public void endNestedCoordinations(final CoordinationImpl c)
+	public boolean endNestedCoordinations(final CoordinationImpl c)
 	{
+	    boolean partiallyFailed = false;
         Stack<Coordination> stack = threadStacks.get();
         if ( stack != null )
         {
@@ -365,10 +384,18 @@ public class CoordinationMgr implements CoordinatorMBean
         		for(int i=0;i<count;i++)
         		{
         			final Coordination nested = stack.pop();
-        			nested.end();
+        			try
+        			{
+        			    nested.end();
+        			}
+        			catch ( final CoordinationException ce)
+        			{
+        			    partiallyFailed = true;
+        			}
         		}
         	}
         }
+        return partiallyFailed;
 	}
 
 	/**

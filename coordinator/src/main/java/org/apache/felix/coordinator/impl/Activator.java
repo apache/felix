@@ -20,20 +20,13 @@ package org.apache.felix.coordinator.impl;
 
 import java.util.Hashtable;
 
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
-import org.apache.felix.jmx.service.coordinator.CoordinatorMBean;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.coordinator.Coordinator;
-import org.osgi.util.tracker.ServiceTracker;
 
 @SuppressWarnings("deprecation")
 public class Activator implements BundleActivator
@@ -41,16 +34,16 @@ public class Activator implements BundleActivator
 
     private CoordinationMgr mgr;
 
-    private ServiceTracker mbeanServerTracker;
+//    private ServiceTracker mbeanServerTracker;
 
     private ServiceRegistration coordinatorService;
 
-    private ServiceRegistration coordinatorCommand;
+//    private ServiceRegistration coordinatorCommand;
 
     public void start(BundleContext context)
     {
         mgr = new CoordinationMgr();
-
+/*
         try
         {
             mbeanServerTracker = new MBeanServerTracker(context, mgr);
@@ -60,13 +53,13 @@ public class Activator implements BundleActivator
         {
             // TODO log
         }
-
-        ServiceFactory factory = new CoordinatorFactory(mgr);
-        Hashtable<String, String> props = new Hashtable<String, String>();
+*/
+        final ServiceFactory factory = new CoordinatorFactory(mgr);
+        final Hashtable<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_DESCRIPTION, "Coordinator Service Implementation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         coordinatorService = context.registerService(Coordinator.class.getName(), factory, props);
-
+/*
         try
         {
             coordinatorCommand = CrdCommand.create(context, mgr);
@@ -75,28 +68,29 @@ public class Activator implements BundleActivator
         {
             // most probably missing resolved packages, ignore
         }
+*/
     }
 
     public void stop(BundleContext context)
     {
-        if (coordinatorCommand != null)
+/*        if (coordinatorCommand != null)
         {
             coordinatorCommand.unregister();
             coordinatorCommand = null;
         }
-
+*/
         if (coordinatorService != null)
         {
             coordinatorService.unregister();
             coordinatorService = null;
         }
-
+/*
         if (mbeanServerTracker != null)
         {
             mbeanServerTracker.close();
             mbeanServerTracker = null;
         }
-
+*/
         mgr.cleanUp();
     }
 
@@ -121,7 +115,7 @@ public class Activator implements BundleActivator
         }
 
     }
-
+/*
     static final class MBeanServerTracker extends ServiceTracker
     {
 
@@ -168,4 +162,5 @@ public class Activator implements BundleActivator
             super.removedService(reference, service);
         }
     }
+*/
 }
