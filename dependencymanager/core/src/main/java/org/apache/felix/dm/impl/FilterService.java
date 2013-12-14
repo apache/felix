@@ -112,8 +112,14 @@ public class FilterService implements Component, ComponentDeclaration {
         return m_component.getService();
     }
 
+    public String getClassName() {
+        return m_component.getClassName();
+    }
+    
     public synchronized Dictionary getServiceProperties() {
-        return m_serviceProperties;
+        // We return the service properties (if any) of the adapter, not of the components 
+        // created by adapters or aspects.
+        return m_component.getServiceProperties();
     }
 
     public ServiceRegistration getServiceRegistration() {
@@ -269,7 +275,15 @@ public class FilterService implements Component, ComponentDeclaration {
     public int getState() {
         return m_component.getState();
     }
+    
+    public long getId() {
+        return m_component.getId();
+    }
 
+    public String[] getServices() {
+        return m_component.getServices();
+    }
+    
     public BundleContext getBundleContext() {
         return m_component.getBundleContext();
     };
