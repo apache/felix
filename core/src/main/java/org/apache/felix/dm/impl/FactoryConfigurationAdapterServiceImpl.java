@@ -45,41 +45,48 @@ import org.osgi.service.metatype.ObjectClassDefinition;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class FactoryConfigurationAdapterServiceImpl extends FilterService {
+    // Our Managed Service Factory PID
+    protected final String m_factoryPid;
+    
     public FactoryConfigurationAdapterServiceImpl(DependencyManager dm, String factoryPid, String update, boolean propagate) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
+        m_factoryPid = factoryPid;
+
         Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_PID, factoryPid);
         m_component
             .setInterface(ManagedServiceFactory.class.getName(), props)
-            .setImplementation(new AdapterImpl(factoryPid, update, propagate))
+            .setImplementation(new AdapterImpl(update, propagate))
             .setCallbacks("init", null, "stop", null);
     }
     
     public FactoryConfigurationAdapterServiceImpl(DependencyManager dm, String factoryPid, String update, boolean propagate,
         BundleContext bctx, Logger logger, String heading, String description, String localization, PropertyMetaData[] properyMetaData) {
         super(dm.createComponent()); // This service will be filtered by our super class, allowing us to take control.
+        m_factoryPid = factoryPid;
         Hashtable props = new Hashtable();
         props.put(Constants.SERVICE_PID, factoryPid);
         m_component
             .setInterface(ManagedServiceFactory.class.getName(), props)
-            .setImplementation(new MetaTypeAdapterImpl(factoryPid, update, propagate,
+            .setImplementation(new MetaTypeAdapterImpl(update, propagate,
                 bctx, logger, heading, description,
                 localization, properyMetaData))
             .setCallbacks("init", null, "stop", null);
+    }
+    
+    public String getName() {
+        return "Adapter for factory pid " + m_factoryPid;
     }
     
     /**
      * Creates, updates, or removes a service, when a ConfigAdmin factory configuration is created/updated or deleted.
      */
     public class AdapterImpl extends AbstractDecorator implements ManagedServiceFactory {        
-        // Our Managed Service Factory PID
-        protected String m_factoryPid;
-        
         // The adapter "update" method used to provide the configuration
-        protected String m_update;
+        protected final String m_update;
 
         // Tells if the CM config must be propagated along with the adapter service properties
-        protected boolean m_propagate;
+        protected final boolean m_propagate;
 
         /**
          * Creates a new CM factory configuration adapter.
@@ -91,8 +98,7 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
          * @param adapterProperties
          * @param propagate
          */
-        public AdapterImpl(String factoryPid, String updateMethod, boolean propagate) {
-            m_factoryPid = factoryPid;
+        public AdapterImpl(String updateMethod, boolean propagate) {
             m_update = updateMethod;
             m_propagate = propagate;
         }
@@ -261,13 +267,13 @@ public class FactoryConfigurationAdapterServiceImpl extends FilterService {
      */
     class MetaTypeAdapterImpl extends AdapterImpl implements MetaTypeProvider {
         // Our MetaType Provider for describing our properties metadata
-        private MetaTypeProviderImpl m_metaType;
+        private final MetaTypeProviderImpl m_metaType;
         
-        public MetaTypeAdapterImpl(String factoryPid, String updateMethod, boolean propagate,
+        public MetaTypeAdapterImpl(String updateMethod, boolean propagate,
                                    BundleContext bctx, Logger logger, String heading, 
                                    String description, String localization,
                                    PropertyMetaData[] properyMetaData) {
-            super(factoryPid, updateMethod, propagate);
+            super(updateMethod, propagate);
             m_metaType = new MetaTypeProviderImpl(m_factoryPid, bctx, logger, null, this);
             m_metaType.setName(heading);
             m_metaType.setDescription(description);
