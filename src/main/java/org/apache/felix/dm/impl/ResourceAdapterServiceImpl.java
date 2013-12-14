@@ -39,6 +39,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
     private Object m_callbackInstance = null;
     private String m_callbackChanged = "changed";
     private String m_callbackAdded = "setResource";
+    private final String m_resourceFilter;
     
     /**
      * Creates a new Resource Adapter Service implementation.
@@ -49,6 +50,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
         m_callbackInstance = callbackInstance;
         m_callbackAdded = callbackSet;
         m_callbackChanged = callbackChanged;
+        m_resourceFilter = resourceFilter;
         m_component.setImplementation(new ResourceAdapterImpl(propagate))
             .add(dm.createResourceDependency()
                  .setFilter(resourceFilter)
@@ -62,6 +64,7 @@ public class ResourceAdapterServiceImpl extends FilterService {
         m_callbackInstance = callbackInstance;
         m_callbackAdded = callbackSet;
         m_callbackChanged = callbackChanged;
+        m_resourceFilter = resourceFilter;
         m_component.setImplementation(new ResourceAdapterImpl(propagateCallbackInstance, propagateCallbackMethod))
             .add(dm.createResourceDependency()
                  .setFilter(resourceFilter)
@@ -69,6 +72,10 @@ public class ResourceAdapterServiceImpl extends FilterService {
                  .setCallbacks("added", "removed"))
             .setCallbacks("init", null, "stop", null);
     }   
+    
+    public String getName() {
+        return "Resource Adapter" + ((m_resourceFilter != null) ? " with filter " + m_resourceFilter : "");
+    }
 
     public class ResourceAdapterImpl extends AbstractDecorator {
         private final boolean m_propagate;
