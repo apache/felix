@@ -165,5 +165,9 @@ public class AspectServiceImpl extends FilterService {
             Long sid = (Long) ref.getProperty(Constants.SERVICE_ID);
             return "(&(|(!(" + Constants.SERVICE_RANKING + "=*))(" + Constants.SERVICE_RANKING + "<=" + (m_ranking - 1) + "))(|(" + Constants.SERVICE_ID + "=" + sid + ")(" + DependencyManager.ASPECT + "=" + sid + ")))";
         }
+        
+        public String toString() {
+            return "Aspect for " + m_aspectInterface + ((m_aspectFilter != null) ? " with filter " + m_aspectFilter : "");
+        }
     }
 }
