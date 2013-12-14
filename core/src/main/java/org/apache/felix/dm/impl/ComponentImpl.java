@@ -21,6 +21,7 @@ package org.apache.felix.dm.impl;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1094,9 +1095,9 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
     }
 
     public String getName() {
+        StringBuffer sb = new StringBuffer();
         Object serviceName = m_serviceName;
         if (serviceName instanceof String[]) {
-            StringBuffer sb = new StringBuffer();
             String[] names = (String[]) serviceName;
             for (int i = 0; i < names.length; i++) {
                 if (i > 0) {
@@ -1104,35 +1105,67 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
                 }
                 sb.append(names[i]);
             }
-            sb.append('(');
-            sb.append(propertiesToString());
-            sb.append(')');
-            return sb.toString();
-        }
-        else if (serviceName instanceof String) {
-            return serviceName.toString() + "(" + propertiesToString() + ")";
-        }
-        else {
+            appendProperties(sb);
+        } else if (serviceName instanceof String) {
+            sb.append(serviceName.toString());
+            appendProperties(sb);
+        } else {
             Object implementation = m_implementation;
             if (implementation != null) {
-                return implementation.toString();
+                if (implementation instanceof Class) {
+                    sb.append(((Class) implementation).getName());
+                } else {
+                    // If the implementation instance does not override "toString", just display
+                    // the class name, else display the component using its toString method
+                    try {
+                	Method m = implementation.getClass().getMethod("toString", new Class[0]);
+                        if (m.getDeclaringClass().equals(Object.class)) {
+                            sb.append(implementation.getClass().getName());
+                        } else {
+                            sb.append(implementation.toString());
+                        }
+                    }  catch (java.lang.NoSuchMethodException e) {
+                        // Just display the class name
+                        sb.append(implementation.getClass().getName());
+                    }
+                }
+            } else {
+                sb.append(super.toString());
             }
-            else {
-                return super.toString();
+        }
+        return sb.toString();
+    }
+    
+    public String getClassName() {
+        Object serviceInstance = m_serviceInstance;
+        if (serviceInstance != null) {
+            return serviceInstance.getClass().getName();
+        } 
+        
+        Object implementation = m_implementation;
+        if (implementation != null) {
+            if (implementation instanceof Class) {
+                return ((Class) implementation).getName();
             }
+            return implementation.getClass().getName();
+        } 
+        
+        Object instanceFactory = m_instanceFactory;
+        if (instanceFactory != null) {
+            return instanceFactory.getClass().getName();
+        } else {
+            // Unexpected ...
+            return getClass().getName();
         }
     }
     
-    private String propertiesToString() {
-        StringBuffer result = new StringBuffer();
+    private void appendProperties(StringBuffer result) {
         Dictionary properties = calculateServiceProperties();
         if (properties != null) {
+            result.append("(");
             Enumeration enumeration = properties.keys();
             while (enumeration.hasMoreElements()) {
                 Object key = enumeration.nextElement();
-                if (result.length() > 0) {
-                    result.append(',');
-                }
                 result.append(key.toString());
                 result.append('=');
                 Object value = properties.get(key);
@@ -1150,13 +1183,30 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
                 else {
                     result.append(value.toString());
                 }
+                if (enumeration.hasMoreElements()) {
+                    result.append(',');
+                }
             }
+            result.append(")");
         }
-        return result.toString();
     }
 
     public int getState() {
         return (isRegistered() ? 1 : 0);
+    }
+    
+    public long getId() {
+        return m_id;
+    }
+        
+    public synchronized String[] getServices() {
+        if (m_serviceName instanceof String[]) {
+            return (String[]) m_serviceName;
+        } else if (m_serviceName instanceof String) {
+            return new String[] { (String) m_serviceName };
+        } else {
+            return null;
+        }
     }
     
     public DependencyManager getDependencyManager() {
