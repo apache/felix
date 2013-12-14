@@ -81,7 +81,7 @@ public abstract class TestBase implements LogService, FrameworkListener {
     protected static final String TESTBUNDLE_SN_DEF = "org.apache.felix.dependencymanager.test";
 
     // The package exported by our test bundle, which we import from all integration tests.
-    private static final String TESTBUNDLE_PACKAGE = "org.apache.felix.dm.test.components";
+    private static final String TESTBUNDLE_PACKAGE = "org.apache.felix.dm.test.components, org.apache.felix.service.command;status=provisional";
 
     // The actual JVM option set, extensions may implement a static
     // initializer overwriting this value to have the configuration()
@@ -143,7 +143,7 @@ public abstract class TestBase implements LogService, FrameworkListener {
                 bootDelegationPackages("org.netbeans.*"), // For jvisualvm
                 mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.8"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.6.0"),
-                mavenBundle("org.apache.felix", "org.apache.felix.shell", "1.4.2"),
+                mavenBundle("org.apache.felix", "org.apache.felix.gogo.runtime", "0.10.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin", "0.9.0").start(false),
                 mavenBundle("org.ops4j.pax.tinybundles", "tinybundles", "1.0.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager","3.1.1-SNAPSHOT"),
