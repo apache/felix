@@ -20,6 +20,7 @@ package org.apache.felix.dm.test.integration.api;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.regex.Pattern;
 
 import junit.framework.Assert;
 
@@ -27,7 +28,8 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.test.components.Ensure;
 import org.apache.felix.dm.test.integration.common.TestBase;
-import org.apache.felix.shell.ShellService;
+import org.apache.felix.service.command.CommandProcessor;
+import org.apache.felix.service.command.CommandSession;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -54,7 +56,7 @@ public class FELIX2955_ShellCommandTest extends TestBase {
         Component shellClient = m.createComponent()
             .setImplementation(new ShellClient(e))
             .add(m.createServiceDependency()
-                .setService(ShellService.class)
+                .setService(CommandProcessor.class)
                 .setRequired(true)
             );
         m.add(shellClient);
@@ -83,7 +85,7 @@ public class FELIX2955_ShellCommandTest extends TestBase {
     }
     
     public class ShellClient {
-        volatile ShellService m_shell;
+        volatile CommandProcessor m_commandProcessor;
         private final Ensure m_ensure;
         
         public ShellClient(Ensure e) {
@@ -94,28 +96,29 @@ public class FELIX2955_ShellCommandTest extends TestBase {
             Thread t = new Thread("Shell Client") {
                 public void run() {
                     m_ensure.step(1);
-                    execute("dm " + m_testBundleId,
-                        "[" + m_testBundleId + "] pax-exam-probe\n" +
-                        "  ShellClient registered\n" +
-                        "    org.apache.felix.shell.ShellService service required available\n", 
-                        "");
+                  execute("dm bid " + m_testBundleId,
+                          "\\[" + m_testBundleId + "\\] PAXEXAM-PROBE.*\n" +
+                          " \\[.*\\] ShellClient registered\n" +
+                          "    org.apache.felix.service.command.CommandProcessor service required available\n", 
+                          "");
+                    
                     m_ensure.step(2);
                     // see if there's anything that's not available
-                    execute("dm notavail " + m_testBundleId,
+                    execute("dm notavail bid " + m_testBundleId,
                         "", 
                         "");
                     m_ensure.step(3);
                     // check again, now there should be something missing
                     m_ensure.waitForStep(4, 5000);
-                    execute("dm notavail " + m_testBundleId,
-                        "[" + m_testBundleId + "] pax-exam-probe\n" + 
-                        "  Object unregistered\n" + 
-                        "    java.lang.Object service required unavailable\n", 
-                        "");
+                    execute("dm notavail bid " + m_testBundleId,
+                            "\\[" + m_testBundleId + "\\] PAXEXAM-PROBE.*\n" +
+                            " \\[.*\\] Object unregistered\n" + 
+                            "    java.lang.Object service required unavailable\n", 
+                            "");
                     m_ensure.step(5);
                     m_ensure.waitForStep(6, 5000);
                     // this next step actually triggers the bug in FELIX-2955
-                    execute("dm notavail " + m_testBundleId,
+                    execute("dm notavail bid " + m_testBundleId,
                         "", 
                         "");
                     m_ensure.step(7);
@@ -133,9 +136,13 @@ public class FELIX2955_ShellCommandTest extends TestBase {
             try {
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
                 ByteArrayOutputStream error = new ByteArrayOutputStream();
-                m_shell.executeCommand(command, new PrintStream(output), new PrintStream(error)); 
-                // In pax-exam 3.0.0, we have to work around something like "[25] PAXEXAM-PROBE-3f88597d-4bc5-4bf4-affb-74db4e453e71 ..." 
-                Assert.assertEquals(expectedOutput, output.toString().replaceAll("PAXEXAM-PROBE.*", "pax-exam-probe"));
+                CommandSession session = m_commandProcessor.createSession(System.in, new PrintStream(output), new PrintStream(error));
+                session.execute(command); 
+                
+                String out = output.toString();                                
+                Pattern p = Pattern.compile(expectedOutput, Pattern.MULTILINE);                
+                                
+                Assert.assertTrue("\n\nexpected:\n\n" + expectedOutput + "\nbut got:\n\n" + out, p.matcher(out).matches());
                 Assert.assertEquals(expectedError, error.toString());
             }
             catch (Throwable throwable) {
