@@ -30,28 +30,12 @@ import org.osgi.framework.BundleContext;
  */
 public class Activator implements BundleActivator {
     public void start(BundleContext context) throws Exception {
-        // Provide DependencyManager shell commands for the old Felix Shell.
-        try {
-            context.registerService("org.apache.felix.shell.Command", new FelixDMCommand(context), null);
-        }
-        catch (Throwable t) {
-        }
-        // Provide DependencyManager shell commands for the Equinox Shell.
-        try {
-            context.registerService("org.eclipse.osgi.framework.console.CommandProvider", new EquinoxDMCommand(context), null);
-        }
-        catch (Throwable t) {
-        }
         // Provide DependencyManager shell commands for the Gogo Shell.
-        try {
-            Hashtable props = new Hashtable();
-            props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_SCOPE, "dependencymanager");
-            props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_FUNCTION, 
-                      new String[] { "dm", "dmhelp" });
-            context.registerService(GogoDMCommand.class.getName(), new GogoDMCommand(context), props);
-        }
-        catch (Throwable t) {            
-        }
+        Hashtable props = new Hashtable();
+        props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_SCOPE, "dependencymanager");
+        props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_FUNCTION, 
+                new String[] { "dm", "diagnose" });
+        context.registerService(DMCommand.class.getName(), new DMCommand(context), props);        
     }
 
     public void stop(BundleContext context) throws Exception {

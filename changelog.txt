@@ -1,3 +1,9 @@
+Latest version
+--------------
+
+FELIX-4294 - Dependency Manager Shell improvements
+
+
 Release 3.0.0
 -------------
 

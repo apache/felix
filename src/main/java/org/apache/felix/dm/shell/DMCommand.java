@@ -18,10 +18,11 @@
  */
 package org.apache.felix.dm.shell;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -30,8 +31,14 @@ import org.apache.felix.dm.Component;
 import org.apache.felix.dm.ComponentDeclaration;
 import org.apache.felix.dm.ComponentDependencyDeclaration;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.service.command.CommandSession;
+import org.apache.felix.service.command.Descriptor;
+import org.apache.felix.service.command.Parameter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
 
 /**
  * Shell command for showing all services and dependencies that are managed
@@ -39,135 +46,386 @@ import org.osgi.framework.BundleContext;
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
+@Descriptor("Commands used to dump all existing Dependency Manager components")
 public class DMCommand {
+    /**
+     * Bundle context used to create OSGI filters.
+     */
     private final BundleContext m_context;
+    
+    /**
+     * Sorter used to sort components.
+     */
     private static final DependencyManagerSorter SORTER = new DependencyManagerSorter();
 
+    /**
+     * Name of a specific gogo shell variable, which may be used to configure "compact" mode.
+     * Example: g! dependencymanager.compact=true
+     */
+    private final static String ENV_COMPACT = "dependencymanager.compact";
+    
+    /**
+     * Name of a specific gogo shell variable, which may be used to configure an OSGI filter, normally
+     * passed to the "dm services" option. It is used to display only some service providing components
+     * matching the given filter. The filter can contain an "objectClass" option.
+     * Example: 
+     *   g! dependencymanager.services="(protocol=http)"
+     *   g! dependencymanager.services="(&(objectClass=foo.Bar)(protocol=http))"
+     */
+    private final static String ENV_SERVICES = "dependencymanager.services";
+
+    /**
+     * Name of a specific gogo shell variable, which may be used to configure a filter on the
+     * component implementation class name.
+     * The value of this shell variable may contain multiple regex (space separated), and each regex can
+     * be negated using "!".
+     * Example: g! dependencymanager.components="foo.bar.* ga.bu.zo.*"
+     */
+    private final static String ENV_COMPONENTS = "dependencymanager.components";
+        
+    /**
+     * Constructor.
+     */
     public DMCommand(BundleContext context) {
         m_context = context;
     }
 
-    public void execute(String line, PrintStream out, PrintStream err) {
-        boolean nodeps = false;
-        boolean notavail = false;
-        boolean compact = false;
-        boolean stats = false;
-        ArrayList ids = new ArrayList();
+    /**
+     * Dependency Manager "dm" command. We use gogo annotations, in order to automate documentation,
+     * and also to automatically manage optional flags/options and parameters ordering.
+     * 
+     * @param session the gogo command session, used to get some variables declared in the shell
+     *        This parameter is automatically passed by the gogo runtime.
+     * @param nodeps false means that dependencies are not displayed
+     * @param compact true means informations are displayed in a compact format. This parameter can also be 
+     *        set using the "dependencymanager.compact" gogo shell variable.
+     * @param notavail only unregistered components / unavailable dependencies are displayed 
+     * @param stats true means some statistics are displayed
+     * @param services an osgi filter used to filter on some given osgi service properties.  This parameter can also be 
+     *        set using the "dependencymanager.services" gogo shell variable.
+     * @param components a regular expression to match either component implementation class names.  This parameter can also be 
+     *        set using the "dependencymanager.components" gogo shell variable.
+     * @param componentIds only components matching one of the specified components ids are displayed
+     * @param bundleIds a list of bundle ids or symbolic names, used to filter on some given bundles
+     */
+    @Descriptor("List dependency manager components")
+    public void dm(
+            CommandSession session,
 
-        // parse the command line
-        StringTokenizer st = new StringTokenizer(line);
-        if (st.hasMoreTokens()) {
-            st.nextToken();
-            while (st.hasMoreTokens()) {
-                String token = st.nextToken();
-                if ("nodeps".equals(token)) {
-                    nodeps = true;
-                }
-                else if ("notavail".equals(token)) {
-                    notavail = true;
-                }
-                else if ("compact".equals(token)) {
-                    compact = true;
-                }
-                else if ("stats".equals(token)) {
-                    stats = true;
-                }
-                else {
-                    try {
-                        ids.add(Long.valueOf(token));
-                    }
-                    catch (NumberFormatException e) {
-                        // if it's not a number, we abort with an error
-                        err.println("Argument " + token + " is not a valid number.");
-                        return;
-                    }
+            @Descriptor("Hides component dependencies") 
+            @Parameter(names = {"nodeps", "nd"}, presentValue = "true", absentValue = "false") 
+            boolean nodeps,
+
+            @Descriptor("Displays components using a compact form") 
+            @Parameter(names = {"compact", "cp"}, presentValue = "true", absentValue = "") 
+            String compact,
+            
+            @Descriptor("Only displays unavailable components") 
+            @Parameter(names = {"notavail", "na"}, presentValue = "true", absentValue = "false") 
+            boolean notavail,
+
+            @Descriptor("Displays components statistics") 
+            @Parameter(names = {"stats", "st"}, presentValue = "true", absentValue = "false") 
+            boolean stats,
+
+            @Descriptor("OSGi filter used to filter some service properties") 
+            @Parameter(names = {"services", "s"}, absentValue = "") 
+            String services,
+
+            @Descriptor("Regex(s) used to filter on component implementation class names (comma separated, can be negated using \"!\" prefix)") 
+            @Parameter(names = {"components", "c"}, absentValue = "") 
+            String components,
+            
+            @Descriptor("Component identifiers to display (list of longs, comma separated)") 
+            @Parameter(names = {"componentIds", "cid", "ci"}, absentValue = "") 
+            String componentIds,
+
+            @Descriptor("List of bundle ids or bundle symbolic names to display (comma separated)") 
+            @Parameter(names = {"bundleIds", "bid", "bi"}, absentValue = "") 
+            String bundleIds) {
+        
+        try {
+            boolean comp = Boolean.parseBoolean(getParam(session, ENV_COMPACT, compact));
+            services = getParam(session, ENV_SERVICES, services);
+            String[] componentsRegex = getParams(session, ENV_COMPONENTS, components);
+
+            ArrayList<String> bids = new ArrayList<String>(); // list of bundle ids or bundle symbolic names
+            ArrayList<Long> cids = new ArrayList<Long>(); // list of component ids
+
+            // Parse and check componentIds option
+            StringTokenizer tok = new StringTokenizer(componentIds, ", ");
+            while (tok.hasMoreTokens()) {
+                try {
+                    cids.add(Long.parseLong(tok.nextToken()));
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid value for componentIds option");
+                    return;
                 }
             }
-            
+
+            // Parse services fitler
+            Filter servicesFilter = null;
+            try {
+                if (services != null) {
+                    servicesFilter = m_context.createFilter(services);
+                }
+            } catch (InvalidSyntaxException e) {
+                System.out.println("Invalid services OSGi filter: " + services);
+                e.printStackTrace(System.err);
+                return;
+            }
+
+            // Parse and check bundleIds option
+            tok = new StringTokenizer(bundleIds, ", ");
+            while (tok.hasMoreTokens()) {
+                bids.add(tok.nextToken());
+            }
+
             // lookup all dependency manager service components
-            List managers = DependencyManager.getDependencyManagers();
+            List<DependencyManager> managers = DependencyManager.getDependencyManagers();
             Collections.sort(managers, SORTER);
-            Iterator iterator = managers.iterator();
+            Iterator<DependencyManager> iterator = managers.iterator();
             long numberOfComponents = 0;
             long numberOfDependencies = 0;
             long lastBundleId = -1;
             while (iterator.hasNext()) {
                 DependencyManager manager = (DependencyManager) iterator.next();
-                List components = manager.getComponents();
-                Iterator componentIterator = components.iterator();
+                List<Component> complist = manager.getComponents();
+                Iterator<Component> componentIterator = complist.iterator();
                 while (componentIterator.hasNext()) {
                     Component component = (Component) componentIterator.next();
                     ComponentDeclaration sc = (ComponentDeclaration) component;
                     String name = sc.getName();
+                    // check if this component is enabled or disabled.
+                    if (!mayDisplay(component, servicesFilter, componentsRegex, cids)) {
+                        continue;
+                    }
                     int state = sc.getState();
                     Bundle bundle = sc.getBundleContext().getBundle();
-                    long bundleId = bundle.getBundleId();
-                    if (ids.size() == 0 || ids.contains(Long.valueOf(bundleId))) {
-                        if (!notavail || (notavail && sc.getState() == ComponentDeclaration.STATE_UNREGISTERED)) {
-                            numberOfComponents++;
-                            if (lastBundleId != bundleId) {
-                                lastBundleId = bundleId;
-                                if (compact) {
-                                    out.println("[" + bundleId + "] " + compactName(bundle.getSymbolicName()));
-                                }
-                                else {
-                                    out.println("[" + bundleId + "] " + bundle.getSymbolicName());
-                                }
+                    if (matchBundle(bundle, bids)) {
+                        long bundleId = bundle.getBundleId();
+                        if (notavail) {
+                            if (sc.getState() != ComponentDeclaration.STATE_UNREGISTERED) {
+                                continue;
                             }
-                            if (compact) {
-                                out.print(" " + compactName(name) + " " + compactState(ComponentDeclaration.STATE_NAMES[state]));
+                        }
+
+                        numberOfComponents++;
+                        if (lastBundleId != bundleId) {
+                            lastBundleId = bundleId;
+                            if (comp) {
+                                System.out.println("[" + bundleId + "] " + compactName(bundle.getSymbolicName()));
+                            } else {
+                                System.out.println("[" + bundleId + "] " + bundle.getSymbolicName());
                             }
-                            else {
-                                out.println("  " + name + " " + ComponentDeclaration.STATE_NAMES[state]);
-                            }
-                            if (!nodeps) {
-                                ComponentDependencyDeclaration[] dependencies = sc.getComponentDependencies();
+                        }
+                        if (comp) {
+                            System.out.print(" [" + sc.getId() + "] " + compactName(name) + " "
+                                    + compactState(ComponentDeclaration.STATE_NAMES[state]));
+                        } else {
+                            System.out.println(" [" + sc.getId() + "] " + name + " "
+                                    + ComponentDeclaration.STATE_NAMES[state]);
+                        }
+                        if (!nodeps) {
+                            ComponentDependencyDeclaration[] dependencies = sc.getComponentDependencies();
+                            if (dependencies != null && dependencies.length > 0) {
                                 numberOfDependencies += dependencies.length;
-                                if (dependencies != null && dependencies.length > 0) {
-                                    if (compact) {
-                                        out.print('(');
+                                if (comp) {
+                                    System.out.print('(');
+                                }
+                                for (int j = 0; j < dependencies.length; j++) {
+                                    ComponentDependencyDeclaration dep = dependencies[j];
+                                    if (notavail && !isUnavailable(dep)) {
+                                        continue;
                                     }
-                                    for (int j = 0; j < dependencies.length; j++) {
-                                        ComponentDependencyDeclaration dep = dependencies[j];
-                                        String depName = dep.getName();
-                                        String depType = dep.getType();
-                                        int depState = dep.getState();
-                                        if (compact) {
-                                            if (j > 0) {
-                                                out.print(' ');
-                                            }
-                                            out.print(compactName(depName) + " " + compactState(depType) + " " + compactState(ComponentDependencyDeclaration.STATE_NAMES[depState]));
+                                    String depName = dep.getName();
+                                    String depType = dep.getType();
+                                    int depState = dep.getState();
+
+                                    if (comp) {
+                                        if (j > 0) {
+                                            System.out.print(' ');
                                         }
-                                        else {
-                                            out.println("    " + depName + " " + depType + " " + ComponentDependencyDeclaration.STATE_NAMES[depState]);
-                                        }
-                                    }
-                                    if (compact) {
-                                        out.print(')');
+                                        System.out.print(compactName(depName) + " " + compactState(depType) + " "
+                                                + compactState(ComponentDependencyDeclaration.STATE_NAMES[depState]));
+                                    } else {
+                                        System.out.println("    " + depName + " " + depType + " "
+                                                + ComponentDependencyDeclaration.STATE_NAMES[depState]);
                                     }
                                 }
+                                if (comp) {
+                                    System.out.print(')');
+                                }
                             }
-                            if (compact) {
-                                out.println();
-                            }
+                        }
+                        if (comp) {
+                            System.out.println();
                         }
                     }
                 }
             }
+
             if (stats) {
-                out.println("Statistics:");
-                out.println(" - Dependency managers: " + managers.size());
-                out.println(" - Components: " + numberOfComponents);
+                System.out.println("Statistics:");
+                System.out.println(" - Dependency managers: " + managers.size());
+                System.out.println(" - Components: " + numberOfComponents);
                 if (!nodeps) {
-                    out.println(" - Dependencies: " + numberOfDependencies);
+                    System.out.println(" - Dependencies: " + numberOfDependencies);
+                }
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+
+    private boolean isUnavailable(ComponentDependencyDeclaration dep) {
+        switch (dep.getState()) {
+            case ComponentDependencyDeclaration.STATE_UNAVAILABLE_OPTIONAL:
+            case ComponentDependencyDeclaration.STATE_UNAVAILABLE_REQUIRED:
+                return true;
+        }
+        return false;
+    }
+
+    private boolean matchBundle(Bundle bundle, List<String> ids) {
+        if (ids.size() == 0) {
+            return true;
+        }
+        
+        for (int i = 0; i < ids.size(); i ++) {
+            String id = (String) ids.get(i);
+            try {
+                Long longId = Long.valueOf(id);
+                if (longId == bundle.getBundleId()) {
+                    return true;
+                }                
+            } catch (NumberFormatException e) {
+                // must match symbolic name
+                if (id.equals(bundle.getSymbolicName())) {
+                    return true;
                 }
             }
         }
-        else {
-            err.println("Invalid command line: " + line);
-        }
+        
+        return false;
     }
-    
+
+    /**
+     * Returns the value of a command arg parameter, or from the gogo shell if the parameter is not passed to
+     * the command.
+     */
+    private String getParam(CommandSession session, String param, String value) {
+        if (value != null && value.length() > 0) {
+            return value;
+        }
+        Object shellParamValue = session.get(param);
+        return shellParamValue != null ? shellParamValue.toString() : null;
+    }
+
+    /**
+     * Returns the value of a command arg parameter, or from the gogo shell if the parameter is not passed to
+     * the command. The parameter value is meant to be a list of values separated by a blank or a comma. 
+     * The values are split and returned as an array.
+     */
+    private String[] getParams(CommandSession session, String name, String value) {
+        String values = null;
+        if (value == null || value.length() == 0) {
+            value = (String) session.get(name);
+            if (value != null) {
+                values = value;
+            }
+        } else {
+            values = value;
+        }
+        if (values == null) {
+            return new String[0];
+        }      
+        return values.trim().split(", ");
+    }
+
+    /**
+     * Checks if a component can be displayed. We make a logical OR between the three following conditions:
+     * 
+     *  - the component service properties are matching a given service filter ("services" option)
+     *  - the component implementation class name is matching some regex ("components" option)
+     *  - the component declaration name is matching some regex ("names" option)
+     *  
+     *  If some component ids are provided, then the component must also match one of them.
+     */
+    private boolean mayDisplay(Component component, Filter servicesFilter, String[] components, List<Long> componentIds) {   
+        // Check component id
+        if (componentIds.size() > 0) {
+            long componentId = ((ComponentDeclaration) component).getId();
+            if (componentIds.indexOf(componentId) == -1) {
+                return false;
+            }
+        }
+        
+        if (servicesFilter == null && components.length == 0) {
+            return true;
+        }     
+        
+        // Check component service properties
+        boolean servicesMatches = servicesMatches(component, servicesFilter);        
+
+        // Check components regexs, which may match component implementation class name
+        boolean componentsMatches = componentMatches(((ComponentDeclaration) component).getClassName(), components);
+
+        // Logical OR between service properties match and component service/impl match.
+        return servicesMatches || componentsMatches;   
+    }
+
+    /**
+     * Checks if a given filter is matching some service properties possibly provided by a component
+     */
+    private boolean servicesMatches(Component component, Filter servicesFilter) {
+        boolean match = false;
+        if (servicesFilter != null) {
+            String[] services = ((ComponentDeclaration) component).getServices();
+            if (services != null) {
+                Dictionary<String, Object> properties = component.getServiceProperties();
+                if (properties == null) {
+                    properties = new Hashtable<String, Object>();
+                }
+                if (properties.get(Constants.OBJECTCLASS) == null) {
+                    properties.put(Constants.OBJECTCLASS, services);
+                }
+                match = servicesFilter.match(properties);
+            }
+        }
+        return match;
+    }
+
+    /**
+     * Checks if the component implementation class name (or some possible provided services) are matching
+     * some regular expressions.
+     */
+    private boolean componentMatches(String description, String[] names) {
+        for (int i = 0; i < names.length; i ++) {
+            String name = names[i];
+            boolean not = false;
+            if (name.startsWith("!")) {
+                name = name.substring(1);
+                not = true;
+            }
+            boolean match = false;
+
+            if (description.matches(name)) {
+                match = true;
+            }
+                       
+            if (not) {
+                match = !match;
+            }
+            
+            if (match) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
     /**
      * Compact names that look like state strings. State strings consist of
      * one or more words. Each word will be shortened to the first letter,
@@ -181,7 +439,7 @@ public class DMCommand {
         }
         return output.toString();
     }
-    
+
     /**
      * Compacts names that look like fully qualified class names. All packages
      * will be shortened to the first letter, except for the last one. So
@@ -193,13 +451,13 @@ public class DMCommand {
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
             switch (c) {
-                case '.':
+                case '.' :
                     output.append(input.charAt(lastIndex));
                     output.append('.');
                     lastIndex = i + 1;
                     break;
-                case ' ':
-                case ',':
+                case ' ' :
+                case ',' :
                     if (lastIndex < i) {
                         output.append(input.substring(lastIndex, i));
                     }
@@ -214,22 +472,8 @@ public class DMCommand {
         return output.toString();
     }
 
-    public String getName() {
-        return "dm";
-    }
-
-    public String getShortDescription() {
-        return "list dependency manager component diagnostics.";
-    }
-
-    public String getUsage() {
-        return "dm [nodeps] [notavail] [compact] [stats] [<bundleid> ...]";
-    }
-    
-    public static class DependencyManagerSorter implements Comparator {
-        public int compare(Object o1, Object o2) {
-            DependencyManager dm1 = (DependencyManager) o1;
-            DependencyManager dm2 = (DependencyManager) o2;
+    public static class DependencyManagerSorter implements Comparator<DependencyManager> {
+        public int compare(DependencyManager dm1, DependencyManager dm2) {
             long id1 = dm1.getBundleContext().getBundle().getBundleId();
             long id2 = dm2.getBundleContext().getBundle().getBundleId();
             return id1 > id2 ? 1 : -1;
