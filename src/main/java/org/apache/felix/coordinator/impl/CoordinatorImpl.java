@@ -23,15 +23,20 @@ import java.util.TimerTask;
 
 import org.osgi.framework.Bundle;
 import org.osgi.service.coordinator.Coordination;
-import org.osgi.service.coordinator.CoordinationException;
 import org.osgi.service.coordinator.Coordinator;
 import org.osgi.service.coordinator.Participant;
 
+/**
+ * The coordinator implementation is a per bundle wrapper for the
+ * coordination manager.
+ */
 public class CoordinatorImpl implements Coordinator
 {
 
+    /** The bundle that requested this service. */
     private final Bundle owner;
 
+    /** The coordination mgr. */
     private final CoordinationMgr mgr;
 
     CoordinatorImpl(final Bundle owner, final CoordinationMgr mgr)
@@ -117,6 +122,9 @@ public class CoordinatorImpl implements Coordinator
         }
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordinator#create(java.lang.String, long)
+     */
     public Coordination create(final String name, final long timeout)
     {
         // TODO: check permission
@@ -134,13 +142,19 @@ public class CoordinatorImpl implements Coordinator
         return c;
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordinator#getCoordinations()
+     */
     public Collection<Coordination> getCoordinations()
     {
         // TODO: check permission
         return mgr.getCoordinations();
     }
 
-    public boolean fail(Throwable reason)
+    /**
+     * @see org.osgi.service.coordinator.Coordinator#fail(java.lang.Throwable)
+     */
+    public boolean fail(final Throwable reason)
     {
         // TODO: check permission
         CoordinationImpl current = (CoordinationImpl) peek();
@@ -151,25 +165,39 @@ public class CoordinatorImpl implements Coordinator
         return false;
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordinator#peek()
+     */
     public Coordination peek()
     {
         // TODO: check permission
         return mgr.peek();
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordinator#begin(java.lang.String, long)
+     */
     public Coordination begin(final String name, final long timeoutInMillis)
     {
         // TODO: check permission
-        return push((CoordinationImpl)create(name, timeoutInMillis));
+        final Coordination c = create(name, timeoutInMillis);
+        this.mgr.push((CoordinationImpl)c);
+        return c;
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordinator#pop()
+     */
     public Coordination pop()
     {
         // TODO: check permission
         return mgr.pop();
     }
 
-    public boolean addParticipant(Participant participant) throws CoordinationException
+    /**
+     * @see org.osgi.service.coordinator.Coordinator#addParticipant(org.osgi.service.coordinator.Participant)
+     */
+    public boolean addParticipant(Participant participant)
     {
         // TODO: check permission
         Coordination current = peek();
@@ -181,6 +209,9 @@ public class CoordinatorImpl implements Coordinator
         return false;
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordinator#getCoordination(long)
+     */
     public Coordination getCoordination(long id)
     {
         // TODO: check permission
@@ -189,10 +220,9 @@ public class CoordinatorImpl implements Coordinator
 
     //----------
 
-    Coordination push(final CoordinationImpl c)
+    void push(final CoordinationImpl c)
     {
-        // TODO: check permission
-        return mgr.push(c);
+        mgr.push(c);
     }
 
     void unregister(final CoordinationImpl c, final boolean removeFromStack)
@@ -220,13 +250,13 @@ public class CoordinatorImpl implements Coordinator
         return this.owner;
     }
 
-	public Coordination getEnclosingCoordination(final CoordinationImpl c)
+	Coordination getEnclosingCoordination(final CoordinationImpl c)
 	{
 		return mgr.getEnclosingCoordination(c);
 	}
 
-	public void endNestedCoordinations(final CoordinationImpl c)
+	boolean endNestedCoordinations(final CoordinationImpl c)
 	{
-		this.mgr.endNestedCoordinations(c);
+		return this.mgr.endNestedCoordinations(c);
 	}
 }

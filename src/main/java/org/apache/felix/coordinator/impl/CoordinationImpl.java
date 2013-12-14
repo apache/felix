@@ -21,6 +21,7 @@ package org.apache.felix.coordinator.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
@@ -66,9 +67,9 @@ public class CoordinationImpl implements Coordination
 
     private Throwable failReason;
 
-    private ArrayList<Participant> participants;
+    private final ArrayList<Participant> participants;
 
-    private HashMap<Class<?>, Object> variables;
+    private final HashMap<Class<?>, Object> variables;
 
     private TimerTask timeoutTask;
 
@@ -76,8 +77,6 @@ public class CoordinationImpl implements Coordination
 
     public CoordinationImpl(final CoordinatorImpl owner, final long id, final String name, final long timeOutInMs)
     {
-        // TODO: validate name against Bundle Symbolic Name pattern
-
         this.owner = owner;
         this.id = id;
         this.name = name;
@@ -89,17 +88,26 @@ public class CoordinationImpl implements Coordination
         scheduleTimeout(deadLine);
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordination#getId()
+     */
     public long getId()
     {
         return this.id;
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordination#getName()
+     */
     public String getName()
     {
         return name;
     }
 
-    public boolean fail(Throwable reason)
+    /**
+     * @see org.osgi.service.coordinator.Coordination#fail(java.lang.Throwable)
+     */
+    public boolean fail(final Throwable reason)
     {
         if ( reason == null)
         {
@@ -109,10 +117,16 @@ public class CoordinationImpl implements Coordination
         {
             this.failReason = reason;
 
-            // consider failure reason (if not null)
-            for (int i=participants.size()-1;i>=0;i--)
+            final List<Participant> releaseList = new ArrayList<Participant>();
+            synchronized ( this.participants )
             {
-                final Participant part = participants.get(i);
+                releaseList.addAll(this.participants);
+                this.participants.clear();
+            }
+            // consider failure reason (if not null)
+            for (int i=releaseList.size()-1;i>=0;i--)
+            {
+                final Participant part = releaseList.get(i);
                 try
                 {
                     part.failed(this);
@@ -139,23 +153,32 @@ public class CoordinationImpl implements Coordination
         return false;
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordination#end()
+     */
     public void end()
     {
         if (startTermination())
         {
             // TODO check for WRONG_THREAD
-        	this.owner.endNestedCoordinations(this);
+            boolean partialFailure = this.owner.endNestedCoordinations(this);
             this.owner.unregister(this, true);
 
-        	boolean partialFailure = false;
-            for (int i=participants.size()-1;i>=0;i--)
+            final List<Participant> releaseList = new ArrayList<Participant>();
+            synchronized ( this.participants )
             {
-                final Participant part = participants.get(i);
+                releaseList.addAll(this.participants);
+                this.participants.clear();
+            }
+            // consider failure reason (if not null)
+            for (int i=releaseList.size()-1;i>=0;i--)
+            {
+                final Participant part = releaseList.get(i);
                 try
                 {
                     part.ended(this);
                 }
-                catch (Exception e)
+                catch (final Exception e)
                 {
                     // TODO: log
                     partialFailure = true;
@@ -193,6 +216,9 @@ public class CoordinationImpl implements Coordination
     }
 
 
+    /**
+     * @see org.osgi.service.coordinator.Coordination#getParticipants()
+     */
     public List<Participant> getParticipants()
     {
         // synchronize access to the state to prevent it from being changed
@@ -201,13 +227,19 @@ public class CoordinationImpl implements Coordination
         {
             if (state == State.ACTIVE)
             {
-                return new ArrayList<Participant>(participants);
+                synchronized ( this.participants )
+                {
+                    return new ArrayList<Participant>(participants);
+                }
             }
         }
 
         return Collections.<Participant> emptyList();
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordination#getFailure()
+     */
     public Throwable getFailure()
     {
         return failReason;
@@ -215,24 +247,16 @@ public class CoordinationImpl implements Coordination
 
 
     /**
-     * Adds the participant to the end of the list of participants of this
-     * coordination.
-     * <p>
-     * This method blocks if the given participant is currently participating in
-     * another coordination.
-     * <p>
-     * Participants can only be added to a coordination if it is active.
-     *
-     * @throws org.apache.felix.service.coordination.CoordinationException if
-     *             the participant cannot currently participate in this
-     *             coordination
+     * @see org.osgi.service.coordinator.Coordination#addParticipant(org.osgi.service.coordinator.Participant)
      */
-    public void addParticipant(Participant p)
+    public void addParticipant(final Participant p)
     {
-
-        // ensure participant only pariticipates on a single coordination
+        if ( p == null ) {
+            throw new IllegalArgumentException("Participant must not be null");
+        }
+        // ensure participant only participates on a single coordination
         // this blocks until the participant can participate or until
-        // a timeout occurrs (or a deadlock is detected)
+        // a timeout occurs (or a deadlock is detected)
         owner.lockParticipant(p, this);
 
         // synchronize access to the state to prevent it from being changed
@@ -244,29 +268,53 @@ public class CoordinationImpl implements Coordination
                 owner.releaseParticipant(p);
 
                 throw new CoordinationException("Cannot add Participant " + p + " to terminated Coordination", this,
-                    (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED);
+                    (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED, getFailure());
             }
 
-            if (!participants.contains(p))
+            synchronized ( this.participants )
             {
-                participants.add(p);
+                boolean found = false;
+                final Iterator<Participant> iter = this.participants.iterator();
+                while ( !found && iter.hasNext() )
+                {
+                    if ( iter.next() == p )
+                    {
+                        found = true;
+                    }
+                }
+                if (!found)
+                {
+                    participants.add(p);
+                }
+
             }
         }
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordination#getVariables()
+     */
     public Map<Class<?>, Object> getVariables()
     {
         return variables;
     }
 
-    public long extendTimeout(long timeOutInMs)
+    /**
+     * @see org.osgi.service.coordinator.Coordination#extendTimeout(long)
+     */
+    public long extendTimeout(final long timeOutInMs)
     {
+        if ( timeOutInMs < 0 )
+        {
+            throw new IllegalArgumentException("Timeout must not be negative");
+        }
+
         synchronized (this)
         {
             if (isTerminated())
             {
                 throw new CoordinationException("Cannot extend timeout on terminated Coordination", this,
-                    (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED);
+                    (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED, getFailure());
             }
 
             if (timeOutInMs > 0)
@@ -280,21 +328,24 @@ public class CoordinationImpl implements Coordination
     }
 
     /**
-     * Returns whether the coordination has ended.
-     * <p>
-     * The return value of <code>false</code> may be a transient situation if
-     * the coordination is in the process of terminating.
+     * @see org.osgi.service.coordinator.Coordination#isTerminated()
      */
     public boolean isTerminated()
     {
         return state != State.ACTIVE;
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordination#getThread()
+     */
     public Thread getThread()
     {
         return associatedThread;
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordination#join(long)
+     */
     public void join(long timeoutInMillis) throws InterruptedException
     {
         synchronized (this)
@@ -306,6 +357,9 @@ public class CoordinationImpl implements Coordination
         }
     }
 
+    /**
+     * @see org.osgi.service.coordinator.Coordination#push()
+     */
     public Coordination push()
     {
     	if ( isTerminated() )
@@ -313,7 +367,24 @@ public class CoordinationImpl implements Coordination
             throw new CoordinationException("Coordination already ended", this, CoordinationException.ALREADY_ENDED);
     	}
 
-        return owner.push(this);
+        owner.push(this);
+        return this;
+    }
+
+    /**
+     * @see org.osgi.service.coordinator.Coordination#getBundle()
+     */
+    public Bundle getBundle()
+    {
+        return this.owner.getBundle();
+    }
+
+    /**
+     * @see org.osgi.service.coordinator.Coordination#getEnclosingCoordination()
+     */
+    public Coordination getEnclosingCoordination()
+    {
+        return this.owner.getEnclosingCoordination(this);
     }
 
     //-------
@@ -322,17 +393,12 @@ public class CoordinationImpl implements Coordination
      * Initiates a coordination timeout. Called from the timer task scheduled by
      * the {@link #scheduleTimeout(long)} method.
      * <p>
-     * This method is inteded to only be called from the scheduled timer task.
+     * This method is intended to only be called from the scheduled timer task.
      */
-    void timeout()
+    private void timeout()
     {
         // Fail the Coordination upon timeout
         fail(TIMEOUT);
-    }
-
-    long getDeadLine()
-    {
-        return this.deadLine;
     }
 
     /**
@@ -388,16 +454,6 @@ public class CoordinationImpl implements Coordination
 
             owner.schedule(timeoutTask, deadLine);
         }
-    }
-
-    public Bundle getBundle()
-    {
-        return this.owner.getBundle();
-    }
-
-    public Coordination getEnclosingCoordination()
-    {
-        return this.owner.getEnclosingCoordination(this);
     }
 
 	@Override
