@@ -265,6 +265,12 @@ public abstract class AbstractDecorator  {
         configureAutoConfigState(target, source, DependencyManager.class);
         configureAutoConfigState(target, source, Component.class);
     }
+    
+    public Map getServices() {
+        synchronized (m_services) {
+            return new HashMap(m_services);
+        }
+    }
 
     private void configureAutoConfigState(Component target, Component source, Class clazz) {
         String name = source.getAutoConfigInstance(clazz);
@@ -274,5 +280,5 @@ public abstract class AbstractDecorator  {
         else {
             target.setAutoConfig(clazz, source.getAutoConfig(clazz));
         }
-    }
+    }    
 }
