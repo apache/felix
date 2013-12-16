@@ -171,7 +171,7 @@ public class CoordinationMgr implements CoordinatorMBean
                 if (System.currentTimeMillis() > cutOff)
                 {
                     throw new CoordinationException("Timed out waiting to join coordinaton", c,
-                        CoordinationException.UNKNOWN);
+                        CoordinationException.FAILED, Coordination.TIMEOUT);
                 }
 
                 // check again
