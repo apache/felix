@@ -17,7 +17,9 @@
  * under the License.
  */
 package org.apache.felix.dm.impl;
+import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 
@@ -87,33 +89,8 @@ public class AdapterServiceImpl extends FilterService {
         
         public Component createService(Object[] properties) {
             ServiceReference ref = (ServiceReference) properties[0]; 
-            Properties props = new Properties();
-            String[] keys = ref.getPropertyKeys();
-            String serviceIdToTrack = null;
-            for (int i = 0; i < keys.length; i++) {
-                String key = keys[i];
-                if (key.equals(DependencyManager.ASPECT)) {
-                	// if we're handed an aspect fetch the aspect property as the service id to track, but do not copy it
-                	serviceIdToTrack = ref.getProperty(key).toString();
-                }
-                if (key.equals(DependencyManager.ASPECT) || key.equals(Constants.SERVICE_ID) || key.equals(Constants.SERVICE_RANKING) || key.equals(Constants.OBJECTCLASS)) {
-                    // do not copy these either
-                }
-                else {
-                    props.put(key, ref.getProperty(key));
-                }
-            }
-            if (serviceIdToTrack == null) {
-            	// we're not handed an aspect so we can use the service id to track
-            	serviceIdToTrack = ref.getProperty(Constants.SERVICE_ID).toString();
-            }
-            if (m_serviceProperties != null) {
-                Enumeration e = m_serviceProperties.keys();
-                while (e.hasMoreElements()) {
-                    Object key = e.nextElement();
-                    props.put(key, m_serviceProperties.get(key));
-                }
-            }
+            Object aspect = ref.getProperty(DependencyManager.ASPECT);            
+            String serviceIdToTrack = (aspect != null) ? aspect.toString() : ref.getProperty(Constants.SERVICE_ID).toString();
             List dependencies = m_component.getDependencies();
             dependencies.remove(0);
             ServiceDependency dependency = m_manager.createServiceDependency()
@@ -127,9 +104,12 @@ public class AdapterServiceImpl extends FilterService {
             if (m_add != null || m_change != null || m_remove != null || m_swap != null) {
                 dependency.setCallbacks(m_add, m_change, m_remove, m_swap);
             }
+            dependency.setPropagate(this, "propagateAdapteeProperties");
+            
+//            dependency.setDebug("AdapterDependency#" + m_adapteeInterface.getSimpleName());
 
             Component service = m_manager.createComponent()
-                .setInterface(m_serviceInterfaces, props)
+                .setInterface(m_serviceInterfaces, getServiceProperties(ref))
                 .setImplementation(m_serviceImpl)
                 .setFactory(m_factory, m_factoryCreateMethod) // if not set, no effect
                 .setComposition(m_compositionInstance, m_compositionMethod) // if not set, no effect
@@ -147,8 +127,36 @@ public class AdapterServiceImpl extends FilterService {
             }
             return service;
         }
+        
         public String toString() {
             return "Adapter for " + m_adapteeInterface + ((m_adapteeFilter != null) ? " with filter " + m_adapteeFilter : "");
+        }
+        
+        public Dictionary getServiceProperties(ServiceReference ref) {
+            Dictionary props = new Hashtable();
+            if (m_serviceProperties != null) {
+                Enumeration e = m_serviceProperties.keys();
+                while (e.hasMoreElements()) {
+                    Object key = e.nextElement();
+                    props.put(key, m_serviceProperties.get(key));
+                }
+            }
+            return props;
+        }
+        
+        public Dictionary propagateAdapteeProperties(ServiceReference ref) {
+            Dictionary props = new Hashtable();
+            String[] keys = ref.getPropertyKeys();
+            for (int i = 0; i < keys.length; i++) {
+                String key = keys[i];
+                if (key.equals(DependencyManager.ASPECT) || key.equals(Constants.SERVICE_ID) || key.equals(Constants.SERVICE_RANKING) || key.equals(Constants.OBJECTCLASS)) {
+                    // do not copy these either
+                }
+                else {
+                    props.put(key, ref.getProperty(key));
+                }
+            }
+            return props;
         }
     }
 }
