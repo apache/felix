@@ -492,4 +492,14 @@ public class CoordinationImpl implements Coordination
 	void setAssociatedThread(final Thread t) {
 	    this.associatedThread = t;
 	}
+
+    @Override
+    protected void finalize() throws Throwable {
+        if ( !this.isTerminated() )
+        {
+            this.fail(Coordination.ORPHANED);
+        }
+        super.finalize();
+    }
+
 }

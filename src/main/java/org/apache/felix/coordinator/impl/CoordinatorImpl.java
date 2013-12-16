@@ -212,7 +212,7 @@ public class CoordinatorImpl implements Coordinator
     /**
      * @see org.osgi.service.coordinator.Coordinator#getCoordination(long)
      */
-    public Coordination getCoordination(long id)
+    public Coordination getCoordination(final long id)
     {
         // TODO: check permission
         return mgr.getCoordinationById(id);
