@@ -117,9 +117,7 @@ public class FilterService implements Component, ComponentDeclaration {
     }
     
     public synchronized Dictionary getServiceProperties() {
-        // We return the service properties (if any) of the adapter, not of the components 
-        // created by adapters or aspects.
-        return m_component.getServiceProperties();
+	return m_serviceProperties;
     }
 
     public ServiceRegistration getServiceRegistration() {
