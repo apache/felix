@@ -139,7 +139,11 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         public int hashCode() {
             return m_serviceReference.hashCode();
         }
-    }
+        
+        public String toString() {
+            return "{" + m_serviceReference.getProperty(Constants.SERVICE_ID) + "=" + m_service + "}";
+        }  
+   }
 
     /**
      * Entry to wrap service properties behind a Map.
@@ -694,8 +698,51 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         m_propagateCallbackMethod = method;
         return this;
     }
+    
+    public void invoke(Object[] callbackInstances, DependencyService dependencyService, ServiceReference reference, Object service, String name) {
+        if (m_debug) {
+            m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke: " + name);
+        }
+        if (name != null) {
+            dependencyService.invokeCallbackMethod(callbackInstances, name, new Class[][]{
+                    {Component.class, ServiceReference.class, m_trackedServiceName},
+                    {Component.class, ServiceReference.class, Object.class}, {Component.class, ServiceReference.class},
+                    {Component.class, m_trackedServiceName}, {Component.class, Object.class}, {Component.class},
+                    {Component.class, Map.class, m_trackedServiceName}, {ServiceReference.class, m_trackedServiceName},
+                    {ServiceReference.class, Object.class}, {ServiceReference.class}, {m_trackedServiceName}, {Object.class}, {},
+                    {Map.class, m_trackedServiceName}}, new Object[][]{{dependencyService, reference, service},
+                    {dependencyService, reference, service}, {dependencyService, reference}, {dependencyService, service},
+                    {dependencyService, service}, {dependencyService}, {dependencyService, new ServicePropertiesMap(reference), service},
+                    {reference, service}, {reference, service}, {reference}, {service}, {service}, {},
+                    {new ServicePropertiesMap(reference), service}});
+        }
+    }
 
-    // --------------------------------------- Protected methods -------------------------------------------------------------------
+    public void invokeSwappedCallback(Object[] callbackInstances, DependencyService component, ServiceReference previousReference, Object previous,
+            ServiceReference currentServiceReference, Object current, String swapCallback) {
+        // sanity check on the service references
+        Integer oldRank = (Integer) previousReference.getProperty(Constants.SERVICE_RANKING);
+        Integer newRank = (Integer) currentServiceReference.getProperty(Constants.SERVICE_RANKING);
+
+        if (oldRank != null && newRank != null && oldRank.equals(newRank)) {
+            throw new IllegalStateException("Attempt to swap a service for a service with the same rank! previousReference: "
+                    + previousReference + ", currentReference: " + currentServiceReference);
+        }
+
+        component.invokeCallbackMethod(callbackInstances, swapCallback, new Class[][]{
+                {m_trackedServiceName, m_trackedServiceName}, {Object.class, Object.class},
+                {ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName},
+                {ServiceReference.class, Object.class, ServiceReference.class, Object.class},
+                {Component.class, m_trackedServiceName, m_trackedServiceName}, {Component.class, Object.class, Object.class},
+                {Component.class, ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName},
+                {Component.class, ServiceReference.class, Object.class, ServiceReference.class, Object.class}}, new Object[][]{
+                {previous, current}, {previous, current}, {previousReference, previous, currentServiceReference, current},
+                {previousReference, previous, currentServiceReference, current}, {component, previous, current},
+                {component, previous, current}, {component, previousReference, previous, currentServiceReference, current},
+                {component, previousReference, previous, currentServiceReference, current}});
+    }
+
+   // --------------------------------------- Protected methods -------------------------------------------------------------------
 
     protected synchronized boolean makeAvailable() {
         if (!isAvailable()) {
@@ -791,7 +838,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     if (m_debug) {
                         m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke added: " + ref);       
                     }
-                    invokeAdded(ds, ref, service); //**
+                    invokeAdded(ds, ref, service);
                 }
                 // The dependency callback will be deferred until all required dependency are available.
                 if (m_debug) {
@@ -806,24 +853,28 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     if (m_debug) {
                         m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke added: " + ref);
                     }
-                    invokeAdded(ds, ref, service); //**
+                    invokeAdded(ds, ref, service);
                 }
             } else {
                 if (m_debug) {
-                    m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] dependency changed: " + ref);
+                    m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] dependency added (was available): " + ref);
                 }
-                ds.dependencyChanged(this); //**
+                // First, inject the added service in autoconfig field, if any.
+                ds.autoConfig(this);
+                
                 // At this point, either the dependency is optional (meaning that the service has been started,
                 // because if not, then our dependency would not be active); or the dependency is required,
                 // meaning that either the service is not yet started, or already started.
                 // In all cases, we have to inject the required dependency.
-
                 // we only try to invoke the method here if we are really already instantiated
                 if (ds.isInstantiated() && ds.getCompositionInstances().length > 0) {
                     if (m_debug) {
                         m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke added: " + ref);
                     }
-                    invokeAdded(ds, ref, service); //**
+                    if (invokeAdded(ds, ref, service)) {
+                	// Propagate (if needed) all "setPropagate" dependencies to the dependency service.
+                	ds.propagate(this);
+                    }
                 }
             }
         }
@@ -836,16 +887,21 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
         for (int i = 0; i < services.length; i++) {
             DependencyService ds = (DependencyService) services[i];
-            ds.dependencyChanged(this);
+            ds.autoConfig(this);
             if (ds.isInstantiated()) {
-                invokeChanged(ds, ref, service);
+                if (invokeChanged(ds, ref, service)) {
+                    // The "change" or "swap" callback has been invoked (if not it means that the modified service 
+                    // is for a lower ranked aspect to which we are not interested in).
+                    // Now, propagate (if needed) changed properties to dependency service properties.
+                    ds.propagate(this);
+                }
             }
         }
     }
 
     private void doRemovedService(ServiceReference ref, Object service) {
         if (m_debug) {
-            m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] removedservice: " + ref + ", rank: " + ref.getProperty("service.ranking"));
+            m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] removedService: " + ref + ", rank: " + ref.getProperty("service.ranking"));
         }
         boolean makeUnavailable = makeUnavailable();
         if (m_debug) {
@@ -866,8 +922,17 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     invokeRemoved(ds, ref, service);
                 }
             } else {
-                ds.dependencyChanged(this);
-                invokeRemoved(ds, ref, service);
+                // Some dependencies are still available: first inject the remaining highest ranked dependency
+                // in component class field, if the dependency is configured in autoconfig mode.
+                ds.autoConfig(this);
+                // Next, invoke "removed" callback. If the dependency is aspect aware, we only invoke removed cb
+                // if the removed service is the highest ranked service. Note that if the cb is not called, we don't
+                // propagate the remaining dependency properties.
+                if (invokeRemoved(ds, ref, service)) {
+                    // Finally, since we have lost one dependency, we have to possibly propagate the highest ranked 
+                    // dependency available.
+                    ds.propagate(this);
+                }
             }
         }
         // unget what we got in addingService (see ServiceTracker 701.4.1)
@@ -1021,7 +1086,11 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         return m_defaultImplementationInstance;
     }
 
-    private void invokeAdded(DependencyService dependencyService, ServiceReference reference, Object service) {
+    /**
+     * Invoke added or swap callback.
+     * @return true if one of the swap/added callbacks has been invoked, false if not, meaning that the added dependency is not the highest ranked one.
+     */
+    private boolean invokeAdded(DependencyService dependencyService, ServiceReference reference, Object service) {
         // We are already serialized.
         if (m_debug) {
             m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke added");
@@ -1038,18 +1107,31 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         if (added) {
             // when a changed callback is specified we might not call the added callback just yet
             if (m_callbackSwapped != null) {
-                handleAspectAwareAdded(dependencyService, reference, service);
+                return handleAspectAwareAdded(dependencyService, reference, service);
             } else {
                 invoke(dependencyService, reference, service, m_callbackAdded);
+                return true;
             }
         }
+        return false;
     }
 
-    private void invokeChanged(DependencyService dependencyService, ServiceReference reference, Object service) {
+    private boolean invokeChanged(DependencyService dependencyService, ServiceReference reference, Object service) {
+        if (m_callbackSwapped != null) {
+            if (m_debug) {
+                m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] handleAspectAwareChanged on " + service);
+            }
+            return handleAspectAwareChanged(dependencyService, reference, service);
+        } 
         invoke(dependencyService, reference, service, m_callbackChanged);
+        return true;
     }
 
-    private void invokeRemoved(DependencyService dependencyService, ServiceReference reference, Object service) {
+    /*
+     * Invoke the removed or the swap callback.
+     * @return true if the swap or the removed callback has  been called, false if not.
+     */
+    private boolean invokeRemoved(DependencyService dependencyService, ServiceReference reference, Object service) {
         if (m_debug) {
             m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke removed");
         }
@@ -1063,40 +1145,31 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         }
         if (removed) {
             if (m_callbackSwapped != null) {
-                handleAspectAwareRemoved(dependencyService, reference, service);
+                return handleAspectAwareRemoved(dependencyService, reference, service);
             } else {
                 invoke(dependencyService, reference, service, m_callbackRemoved);
+                return true;
             }
         }
+        return false;
     }
 
     private void invoke(DependencyService dependencyService, ServiceReference reference, Object service, String name) {
-        if (m_debug) {
-            m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke: " + name);
-        }
-        if (name != null) {
-            dependencyService.invokeCallbackMethod(getCallbackInstances(dependencyService), name, new Class[][]{
-                    {Component.class, ServiceReference.class, m_trackedServiceName},
-                    {Component.class, ServiceReference.class, Object.class}, {Component.class, ServiceReference.class},
-                    {Component.class, m_trackedServiceName}, {Component.class, Object.class}, {Component.class},
-                    {Component.class, Map.class, m_trackedServiceName}, {ServiceReference.class, m_trackedServiceName},
-                    {ServiceReference.class, Object.class}, {ServiceReference.class}, {m_trackedServiceName}, {Object.class}, {},
-                    {Map.class, m_trackedServiceName}}, new Object[][]{{dependencyService, reference, service},
-                    {dependencyService, reference, service}, {dependencyService, reference}, {dependencyService, service},
-                    {dependencyService, service}, {dependencyService}, {dependencyService, new ServicePropertiesMap(reference), service},
-                    {reference, service}, {reference, service}, {reference}, {service}, {service}, {},
-                    {new ServicePropertiesMap(reference), service}});
-        }
+        invoke(getCallbackInstances(dependencyService), dependencyService, reference, service, name);
     }
 
-    private void handleAspectAwareAdded(final DependencyService dependencyService, final ServiceReference reference, final Object service) {
+    /**
+     * Invoke added or swap callback for aspect aware service dependency.
+     * @return true if one of the swap/added callbacks has been invoked, false if not, meaning that the added dependency is not the highest ranked one.
+     */
+    private boolean handleAspectAwareAdded(final DependencyService dependencyService, final ServiceReference reference, final Object service) {
         // At this point, we are already serialized: no need to synchronized.
         if (m_debug) {
             m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] aspectawareadded: " + reference.getProperty("service.ranking"));
         }
         if (componentIsDependencyManagerFactory(dependencyService)) {
             // component is either aspect or adapter factory instance, these must be ignored.
-            return;
+            return false;
         }
         boolean invokeAdded = false;
         boolean invokeSwapped = false;
@@ -1104,7 +1177,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         Tuple newHighestRankedService = null;
         Tuple prevHighestRankedService = null;
         Map rankings = null;
-        //synchronized (m_componentByRank) { // don't synchronize: we are serialized and we can now invoke callbacks
+
         Long originalServiceId = ServiceUtil.getServiceIdAsLong(reference);
         Map componentMap = (Map) m_componentByRank.get(dependencyService); /* <Long, Map<Integer, Tuple>> */
         if (componentMap == null) {
@@ -1156,6 +1229,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             }
             // We can safely invoke callback since we are already serialized.
             invoke(dependencyService, reference, service, m_callbackAdded);
+            return true;
         } else if (invokeSwapped) {
             if (m_debug) {
                 m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke swapped: " + newHighestRankedService.getServiceReference().getProperty("service.ranking") + " replacing " + 
@@ -1164,8 +1238,9 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             // We can safely invoke callback since we are already serialized.
             invokeSwappedCallback(dependencyService, prevHighestRankedService.getServiceReference(), prevHighestRankedService.getService(),
                     newHighestRankedService.getServiceReference(), newHighestRankedService.getService());
+            return true;
         }
-        //} 
+        return false;
     }
     
     private boolean componentIsDependencyManagerFactory(DependencyService dependencyService) {
@@ -1234,13 +1309,64 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                 .getKey().equals(ServiceUtil.getRankingAsInteger(reference)));
     }
 
-    private void handleAspectAwareRemoved(DependencyService dependencyService, ServiceReference reference, Object service) {
+    private boolean handleAspectAwareChanged(DependencyService dependencyService, ServiceReference reference, Object service) {
+        if (m_debug) {
+            m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] aspectawareChanged: service.ranking=" + reference.getProperty("service.ranking"));
+        }
+        if (componentIsDependencyManagerFactory(dependencyService)) {
+            // component is either aspect or adapter factory instance, these must be ignored.
+            return false;
+        }
+        boolean invokeChanged = false;
+
+        // Determine current highest ranked service: we'll take into account the change event only if it
+        // comes from the highest ranked service.
+        Long serviceId = ServiceUtil.getServiceIdAsLong(reference);
+        Map componentMap = (Map) m_componentByRank.get(dependencyService); /* <Long, Map<Integer, Tuple>> */
+        if (componentMap != null) {
+            Map rankings = (Map) componentMap.get(serviceId); /* <Integer, Tuple> */
+            if (rankings != null) {
+                Entry highestEntry = getHighestRankedService(dependencyService, serviceId); /* <Integer, Tuple> */
+                if (m_debug) {
+                    m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] highest service ref:" + highestEntry);
+                }
+                if (highestEntry == null) {
+                    invokeChanged = true;
+                } else {
+                    Tuple tuple = (Tuple) highestEntry.getValue();
+                    if (reference.equals(tuple.getServiceReference())) {
+                        // The changed service is the highest ranked service: we can handle the modification event.
+                        invokeChanged = true;
+                    }
+                } 
+            }
+        }
+
+        if (m_debug) {
+            m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invokeChanged=" + invokeChanged);
+        }
+        
+        if (invokeChanged) {
+            if (m_debug) {
+                m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke changed: ref ranking=" + reference.getProperty("service.ranking"));
+            }
+            invoke(dependencyService, reference, service, m_callbackChanged);
+            return true;
+        }
+        return false;
+    }
+
+    /*
+     * handles aspect aware removed service.
+     * @return true if the swap or the removed callback has  been called, false if not.
+     */
+   private boolean handleAspectAwareRemoved(DependencyService dependencyService, ServiceReference reference, Object service) {
         if (m_debug) {
             m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] aspectawareremoved: " + reference.getProperty("service.ranking"));
         }
         if (componentIsDependencyManagerFactory(dependencyService)) {
             // component is either aspect or adapter factory instance, these must be ignored.
-            return;
+            return false;
         }
         // we might need to swap here too!
         boolean invokeRemoved = false;
@@ -1249,8 +1375,8 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         Tuple newHighestRankedService = null;
         boolean invokeSwapped = false;
         Map rankings = null;
-        // synchronized (m_componentByRank) { // don't synchronize: we are serialized and we invoke callbacks
         Long originalServiceId = ServiceUtil.getServiceIdAsLong(reference);
+
         if (isLastService(dependencyService, reference, service, serviceId)) {
             invokeRemoved = true;
         } else {
@@ -1301,6 +1427,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             }
             // We can safely invoke callback, since we are already serialized
             invoke(dependencyService, reference, service, m_callbackRemoved);
+            return true;
         } else if (invokeSwapped) {
             if (m_debug) {
                 m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke swapped: " + newHighestRankedService.getServiceReference().getProperty("service.ranking") + " replacing " + 
@@ -1309,32 +1436,15 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
             // We can safely invoke callback, since we are already serialized
             invokeSwappedCallback(dependencyService, prevHighestRankedService.getServiceReference(), prevHighestRankedService.getService(),
                     newHighestRankedService.getServiceReference(), newHighestRankedService.getService());
+            return true;
         }
-        //}
+        
+        return false;
     }
 
     private void invokeSwappedCallback(DependencyService component, ServiceReference previousReference, Object previous,
             ServiceReference currentServiceReference, Object current) {
-        // sanity check on the service references
-        Integer oldRank = (Integer) previousReference.getProperty(Constants.SERVICE_RANKING);
-        Integer newRank = (Integer) currentServiceReference.getProperty(Constants.SERVICE_RANKING);
-
-        if (oldRank != null && newRank != null && oldRank.equals(newRank)) {
-            throw new IllegalStateException("Attempt to swap a service for a service with the same rank! previousReference: "
-                    + previousReference + ", currentReference: " + currentServiceReference);
-        }
-
-        component.invokeCallbackMethod(getCallbackInstances(component), m_callbackSwapped, new Class[][]{
-                {m_trackedServiceName, m_trackedServiceName}, {Object.class, Object.class},
-                {ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName},
-                {ServiceReference.class, Object.class, ServiceReference.class, Object.class},
-                {Component.class, m_trackedServiceName, m_trackedServiceName}, {Component.class, Object.class, Object.class},
-                {Component.class, ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName},
-                {Component.class, ServiceReference.class, Object.class, ServiceReference.class, Object.class}}, new Object[][]{
-                {previous, current}, {previous, current}, {previousReference, previous, currentServiceReference, current},
-                {previousReference, previous, currentServiceReference, current}, {component, previous, current},
-                {component, previous, current}, {component, previousReference, previous, currentServiceReference, current},
-                {component, previousReference, previous, currentServiceReference, current}});
+        invokeSwappedCallback(getCallbackInstances(component), component, previousReference, previous, currentServiceReference, current, m_callbackSwapped);
     }
 
     private synchronized boolean makeUnavailable() {
