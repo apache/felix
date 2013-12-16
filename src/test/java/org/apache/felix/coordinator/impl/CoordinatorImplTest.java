@@ -348,11 +348,11 @@ public class CoordinatorImplTest extends TestCase
         Throwable p1PartFailure = p1.addParticipantFailure;
         if (p1PartFailure == null)
         {
-            fail("Expecting CoordinationException/UNKNOWN for second participation");
+            fail("Expecting CoordinationException/FAILED for second participation");
         }
         else if (p1PartFailure instanceof CoordinationException)
         {
-            assertEquals(CoordinationException.UNKNOWN, ((CoordinationException) p1PartFailure).getType());
+            assertEquals(CoordinationException.FAILED, ((CoordinationException) p1PartFailure).getType());
         }
         else
         {

@@ -75,6 +75,8 @@ public class CoordinationImpl implements Coordination
 
     private Thread associatedThread;
 
+    private final Object waitLock = new Object();
+
     public CoordinationImpl(final CoordinatorImpl owner, final long id, final String name, final long timeOutInMs)
     {
         this.owner = owner;
@@ -143,9 +145,9 @@ public class CoordinationImpl implements Coordination
             this.owner.unregister(this, false);
             state = State.FAILED;
 
-            synchronized (this)
+            synchronized (this.waitLock)
             {
-                this.notifyAll();
+                this.waitLock.notifyAll();
             }
 
             return true;
@@ -190,9 +192,9 @@ public class CoordinationImpl implements Coordination
 
             state = State.TERMINATED;
 
-            synchronized (this)
+            synchronized (this.waitLock)
             {
-                this.notifyAll();
+                this.waitLock.notifyAll();
             }
 
             if (partialFailure)
@@ -308,23 +310,25 @@ public class CoordinationImpl implements Coordination
         {
             throw new IllegalArgumentException("Timeout must not be negative");
         }
-
-        synchronized (this)
+        if ( this.deadLine > 0 )
         {
-            if (isTerminated())
+            synchronized (this)
             {
-                throw new CoordinationException("Cannot extend timeout on terminated Coordination", this,
-                    (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED, getFailure());
-            }
+                if (isTerminated())
+                {
+                    throw new CoordinationException("Cannot extend timeout on terminated Coordination", this,
+                        (getFailure() != null) ? CoordinationException.FAILED : CoordinationException.ALREADY_ENDED, getFailure());
+                }
 
-            if (timeOutInMs > 0)
-            {
-                this.deadLine += timeOutInMs;
-                scheduleTimeout(this.deadLine);
-            }
+                if (timeOutInMs > 0)
+                {
+                    this.deadLine += timeOutInMs;
+                    scheduleTimeout(this.deadLine);
+                }
 
-            return this.deadLine;
+            }
         }
+        return this.deadLine;
     }
 
     /**
@@ -346,13 +350,18 @@ public class CoordinationImpl implements Coordination
     /**
      * @see org.osgi.service.coordinator.Coordination#join(long)
      */
-    public void join(long timeoutInMillis) throws InterruptedException
+    public void join(final long timeOutInMs) throws InterruptedException
     {
-        synchronized (this)
+        if ( timeOutInMs < 0 )
         {
-            if (!isTerminated())
+            throw new IllegalArgumentException("Timeout must not be negative");
+        }
+
+        if ( !isTerminated() )
+        {
+            synchronized ( this.waitLock )
             {
-                this.wait(timeoutInMillis);
+                this.waitLock.wait(timeOutInMs);
             }
         }
     }
