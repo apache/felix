@@ -34,14 +34,14 @@ public interface DependencyService {
     public void dependencyAvailable(Dependency dependency);
     
     /**
-     * Will be called when the dependency changes.
+     * Will be called when the dependency becomes unavailable .
      * 
      * @param dependency the dependency
      */
     public void dependencyUnavailable(Dependency dependency);
     
     /**
-     * Will be called when the dependency becomes unavailable.
+     * Will be called when the dependency changes.
      * 
      * @param dependency the dependency
      */
@@ -93,4 +93,21 @@ public interface DependencyService {
      * @return the component interface
      */
     public Component getServiceInterface();
+    
+    /**
+     * Injects the dependency into autoconfig class field (if any) of the dependency service.
+     * @param dependency
+     */
+    public void autoConfig(final Dependency dependency);
+
+    /**
+     * Propagates the dependency properties to the ones provided by the dependency service.
+     * No effet if the dependency is not configured with the setPropagate method.
+     * 
+     * @param dependency the dependency whose properties will be propagated to the service properties of this dependency service.
+     * 
+     * @see ServiceDependency#setPropagate(boolean)
+     * @see ServiceDependency#setPropagate(String)
+     */
+    public void propagate(final Dependency dependency);
 }
