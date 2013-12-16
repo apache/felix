@@ -370,6 +370,26 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
         }
     }
 
+    public void autoConfig(final Dependency dependency) {
+        State state;
+        synchronized (m_dependencies) {
+            state = m_state;
+        }
+        if (state.isAllRequiredAvailable() && dependency.isAutoConfig()) {
+            configureImplementation(dependency.getAutoConfigType(), dependency.getAutoConfigInstance(), dependency.getAutoConfigName());
+        }
+    }
+
+    public void propagate(final Dependency dependency) {
+        State state;
+        synchronized (m_dependencies) {
+            state = m_state;
+        }
+        if (state.isAllRequiredAvailable() && dependency.isPropagated() && m_registration != null) {
+            m_registration.setProperties(calculateServiceProperties());
+        }
+    }
+
     public void dependencyUnavailable(final Dependency dependency) {
     	State oldState, newState;
         synchronized (m_dependencies) {
