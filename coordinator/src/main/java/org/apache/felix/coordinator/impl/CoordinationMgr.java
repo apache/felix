@@ -408,9 +408,9 @@ public class CoordinationMgr implements CoordinatorMBean
 		return null;
 	}
 
-	public boolean endNestedCoordinations(final CoordinationImpl c)
+	public CoordinationException endNestedCoordinations(final CoordinationImpl c)
 	{
-	    boolean partiallyFailed = false;
+	    CoordinationException partiallyFailed = null;
         final Stack<CoordinationImpl> stack = this.getThreadStack(false);
         if ( stack != null )
         {
@@ -423,11 +423,15 @@ public class CoordinationMgr implements CoordinatorMBean
         			final CoordinationImpl nested = stack.pop();
         			try
         			{
+        			    if ( partiallyFailed != null)
+        			    {
+        			        nested.fail(partiallyFailed);
+        			    }
     			        nested.end();
         			}
         			catch ( final CoordinationException ce)
         			{
-        			    partiallyFailed = true;
+        			    partiallyFailed = ce;
         			}
         		}
         	}

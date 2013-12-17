@@ -160,10 +160,20 @@ public class CoordinationImpl implements Coordination
      */
     public void end()
     {
+        if ( !this.isTerminated() && this.associatedThread != null && Thread.currentThread() != this.associatedThread )
+        {
+            throw new CoordinationException("Coordination is associated with different thread", this, CoordinationException.WRONG_THREAD);
+        }
+
         if (startTermination())
         {
-            // TODO check for WRONG_THREAD
-            boolean partialFailure = this.owner.endNestedCoordinations(this);
+
+            final CoordinationException nestedFailed = this.owner.endNestedCoordinations(this);
+            if ( nestedFailed != null )
+            {
+                this.failReason = nestedFailed;
+            }
+            boolean partialFailure = false;
             this.owner.unregister(this, true);
 
             final List<Participant> releaseList = new ArrayList<Participant>();
@@ -178,7 +188,14 @@ public class CoordinationImpl implements Coordination
                 final Participant part = releaseList.get(i);
                 try
                 {
-                    part.ended(this);
+                    if ( this.failReason != null )
+                    {
+                        part.failed(this);
+                    }
+                    else
+                    {
+                        part.ended(this);
+                    }
                 }
                 catch (final Exception e)
                 {
@@ -197,6 +214,11 @@ public class CoordinationImpl implements Coordination
                 this.waitLock.notifyAll();
             }
 
+            if ( this.failReason != null )
+            {
+                throw new CoordinationException("Nested coordination failed", this,
+                        CoordinationException.FAILED, this.failReason);
+            }
             if (partialFailure)
             {
                 throw new CoordinationException("One or more participants threw while ending the coordination", this,

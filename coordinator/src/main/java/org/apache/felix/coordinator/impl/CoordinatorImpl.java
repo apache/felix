@@ -23,6 +23,7 @@ import java.util.TimerTask;
 
 import org.osgi.framework.Bundle;
 import org.osgi.service.coordinator.Coordination;
+import org.osgi.service.coordinator.CoordinationException;
 import org.osgi.service.coordinator.Coordinator;
 import org.osgi.service.coordinator.Participant;
 
@@ -255,7 +256,7 @@ public class CoordinatorImpl implements Coordinator
 		return mgr.getEnclosingCoordination(c);
 	}
 
-	boolean endNestedCoordinations(final CoordinationImpl c)
+	CoordinationException endNestedCoordinations(final CoordinationImpl c)
 	{
 		return this.mgr.endNestedCoordinations(c);
 	}
