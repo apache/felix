@@ -595,7 +595,13 @@ public class DependencyManager {
      * @return a list of services
      */
     public List getComponents() {
-        return Collections.unmodifiableList(m_components);
+        synchronized (m_components) {
+        	List copyComponents = new ArrayList(m_components.size());
+            for (int i = 0; i < m_components.size(); i++) {
+                copyComponents.add(m_components.get(i));
+            }
+            return copyComponents;
+        }
     }
 
     /**
