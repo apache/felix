@@ -27,11 +27,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Converter;
@@ -50,7 +53,7 @@ public class CommandSessionImpl implements CommandSession, Converter
     PrintStream err;
     
     private final CommandProcessorImpl processor;
-    protected final Map<String, Object> variables = new HashMap<String, Object>();
+    protected final Map<String, Object> variables = new ConcurrentHashMap<String, Object>();
     private boolean closed;
 
     protected CommandSessionImpl(CommandProcessorImpl shell, InputStream in, PrintStream out, PrintStream err)
@@ -107,7 +110,7 @@ public class CommandSessionImpl implements CommandSession, Converter
         // there is no API to list all variables, so overload name == null
         if (name == null || VARIABLES.equals(name))
         {
-            return variables.keySet();
+            return Collections.unmodifiableSet(variables.keySet());
         }
 
         if (COMMANDS.equals(name))
@@ -115,30 +118,34 @@ public class CommandSessionImpl implements CommandSession, Converter
             return processor.getCommands();
         }
 
-        if( processor.constants.containsKey(name) )
+        Object val = processor.constants.get(name);
+        if( val != null )
         {
-            return processor.constants.get(name);
+            return val;
         }
 
-        if (variables.containsKey("#" + name))
+        val = variables.get("#" + name);
+        if (val instanceof Function)
         {
-            Object f = variables.get("#" + name);
-            if (f instanceof Function)
+            try
             {
-                try
-                {
-                    f = ((Function) f).execute(this, null);
-                }
-                catch (Exception e)
-                {
-                    // Ignore
-                }
+                val = ((Function) val).execute(this, null);
             }
-            return f;
+            catch (Exception e)
+            {
+                // Ignore
+            }
+            return val;
         }
-        if (variables.containsKey(name))
+        else if( val != null )
         {
-            return variables.get(name);
+            return val;
+        }
+
+        val = variables.get(name);
+        if( val != null )
+        {
+            return val;
         }
 
         return processor.getCommand(name, variables.get("SCOPE"));
