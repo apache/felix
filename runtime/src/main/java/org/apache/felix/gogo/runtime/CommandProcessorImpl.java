@@ -42,7 +42,7 @@ import org.apache.felix.service.threadio.ThreadIO;
 
 public class CommandProcessorImpl implements CommandProcessor
 {
-    protected final Set<Converter> converters = new HashSet<Converter>();
+    protected final Set<Converter> converters = new CopyOnWriteArraySet<Converter>();
     protected final Set<CommandSessionListener> listeners = new CopyOnWriteArraySet<CommandSessionListener>();
     protected final Map<String, Object> commands = new LinkedHashMap<String, Object>();
     protected final Map<String, Object> constants = new HashMap<String, Object>();
@@ -56,16 +56,22 @@ public class CommandProcessorImpl implements CommandProcessor
 
     public CommandSession createSession(InputStream in, PrintStream out, PrintStream err)
     {
-        CommandSessionImpl session = new CommandSessionImpl(this, in, out, err);
-        sessions.put(session, null);
-        return session;
+        synchronized (sessions)
+        {
+            CommandSessionImpl session = new CommandSessionImpl(this, in, out, err);
+            sessions.put(session, null);
+            return session;
+        }
     }
 
     public void stop()
     {
-        for (CommandSession session : sessions.keySet())
+        synchronized (sessions)
         {
-            session.close();
+            for (CommandSession session : sessions.keySet())
+            {
+                session.close();
+            }
         }
     }
 
