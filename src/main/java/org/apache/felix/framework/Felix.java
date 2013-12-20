@@ -4498,6 +4498,17 @@ public class Felix extends BundleImpl implements Framework
             {
                 ex.printStackTrace();
             }
+            finally
+            {
+                try
+                {
+                    in.close();
+                }
+                catch (IOException ex)
+                {
+                    // Not much we can do.
+                }
+            }
         }
 
         // Maven uses a '-' to separate the version qualifier,
