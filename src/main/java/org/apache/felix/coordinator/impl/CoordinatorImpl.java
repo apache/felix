@@ -150,9 +150,9 @@ public class CoordinatorImpl implements Coordinator
     	}
 
     	// create coordination
-        final Coordination c = mgr.create(this, name, timeout);
+        final CoordinationImpl c = mgr.create(this, name, timeout);
 
-        return c;
+        return new CoordinationHolder(c);
     }
 
     /**
@@ -170,7 +170,7 @@ public class CoordinatorImpl implements Coordinator
     public boolean fail(final Throwable reason)
     {
         // TODO: check permission
-        CoordinationImpl current = (CoordinationImpl) peek();
+        CoordinationImpl current = (CoordinationImpl)mgr.peek();
         if (current != null)
         {
             return current.fail(reason);
@@ -184,18 +184,32 @@ public class CoordinatorImpl implements Coordinator
     public Coordination peek()
     {
         // TODO: check permission
-        return mgr.peek();
+        Coordination c = mgr.peek();
+        if ( c != null )
+        {
+            c = new CoordinationHolder((CoordinationImpl)c);
+        }
+        return c;
     }
 
     /**
      * @see org.osgi.service.coordinator.Coordinator#begin(java.lang.String, long)
      */
-    public Coordination begin(final String name, final long timeoutInMillis)
+    public Coordination begin(final String name, final long timeout)
     {
-        // TODO: check permission
-        final Coordination c = create(name, timeoutInMillis);
-        this.mgr.push((CoordinationImpl)c);
-        return c;
+        this.checkPermission(name, CoordinationPermission.INITIATE);
+
+        // check arguments
+        checkName(name);
+        if ( timeout < 0 )
+        {
+            throw new IllegalArgumentException("Timeout must not be negative");
+        }
+
+        // create coordination
+        final CoordinationImpl c = mgr.create(this, name, timeout);
+        this.mgr.push(c);
+        return new CoordinationHolder(c);
     }
 
     /**
@@ -204,13 +218,18 @@ public class CoordinatorImpl implements Coordinator
     public Coordination pop()
     {
         // TODO: check permission
-        return mgr.pop();
+        Coordination c = mgr.pop();
+        if ( c != null )
+        {
+            c = new CoordinationHolder((CoordinationImpl)c);
+        }
+        return c;
     }
 
     /**
      * @see org.osgi.service.coordinator.Coordinator#addParticipant(org.osgi.service.coordinator.Participant)
      */
-    public boolean addParticipant(Participant participant)
+    public boolean addParticipant(final Participant participant)
     {
         // TODO: check permission
         Coordination current = peek();
@@ -228,7 +247,12 @@ public class CoordinatorImpl implements Coordinator
     public Coordination getCoordination(final long id)
     {
         // TODO: check permission
-        return mgr.getCoordinationById(id);
+        Coordination c = mgr.getCoordinationById(id);
+        if ( c != null )
+        {
+            c = new CoordinationHolder((CoordinationImpl)c);
+        }
+        return c;
     }
 
     //----------

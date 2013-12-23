@@ -106,7 +106,7 @@ public class CoordinatorImplTest extends TestCase
         assertEquals(c1, coordinator.pop());
 
         assertNull(coordinator.peek());
-        coordinator.push((CoordinationImpl)c1);
+        c1.push();
         assertEquals(c1, coordinator.peek());
 
         c1.end();

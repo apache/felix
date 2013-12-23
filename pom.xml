@@ -53,13 +53,6 @@
                             <placement>a</placement>
                             <head>ThreadSafe</head>
                         </tag>
-                        <tag>
-                            <name>Provisional</name>
-                            <placement>a</placement>
-                            <head>
-                                This is provisional API derived from OSGi R4.3 DRAFT 2 specification. This API is provided for testing purposes and gaining experience. As such this API is subject to change and will be removed once the OSGi R4.3 specification is finalized.
-                            </head>
-                        </tag>
                     </tags>
                 </configuration>
             </plugin>
@@ -96,11 +89,6 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
             <version>4.3.0</version>
         </dependency>
         <dependency>
