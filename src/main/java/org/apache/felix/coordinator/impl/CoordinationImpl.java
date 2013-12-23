@@ -69,7 +69,7 @@ public class CoordinationImpl implements Coordination
 
     private final ArrayList<Participant> participants;
 
-    private final HashMap<Class<?>, Object> variables;
+    private final Map<Class<?>, Object> variables;
 
     private TimerTask timeoutTask;
 
@@ -213,6 +213,8 @@ public class CoordinationImpl implements Coordination
             {
                 this.waitLock.notifyAll();
             }
+
+            this.associatedThread = null;
 
             if ( this.failReason != null )
             {
