@@ -19,7 +19,6 @@
 package org.apache.felix.coordinator.impl;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -61,9 +60,9 @@ public class CoordinationMgr implements CoordinatorMBean
 
     private final AtomicLong ctr;
 
-    private final Map<Long, WeakReference<CoordinationImpl>> coordinations;
+    private final Map<Long, CoordinationImpl> coordinations;
 
-    private final Map<Participant, WeakReference<CoordinationImpl>> participants;
+    private final Map<Participant, CoordinationImpl> participants;
 
     private final Timer coordinationTimer;
 
@@ -86,8 +85,8 @@ public class CoordinationMgr implements CoordinatorMBean
     {
         perThreadStack = new ThreadLocal<Stack<CoordinationImpl>>();
         ctr = new AtomicLong(-1);
-        coordinations = new HashMap<Long, WeakReference<CoordinationImpl>>();
-        participants = new IdentityHashMap<Participant, WeakReference<CoordinationImpl>>();
+        coordinations = new HashMap<Long, CoordinationImpl>();
+        participants = new IdentityHashMap<Participant, CoordinationImpl>();
         coordinationTimer = new Timer("Coordination Timer", true);
     }
 
@@ -98,15 +97,14 @@ public class CoordinationMgr implements CoordinatorMBean
         coordinationTimer.cancel();
 
         // terminate all active coordinations
-        final List<WeakReference<CoordinationImpl>> refs = new ArrayList<WeakReference<CoordinationImpl>>();
+        final List<CoordinationImpl> coords = new ArrayList<CoordinationImpl>();
         synchronized ( this.coordinations ) {
-            refs.addAll(this.coordinations.values());
+            coords.addAll(this.coordinations.values());
             this.coordinations.clear();
         }
-        for(final WeakReference<CoordinationImpl> r : refs)
+        for(final CoordinationImpl c : coords)
         {
-            final Coordination c = r.get();
-            if ( c != null && !c.isTerminated() )
+            if ( !c.isTerminated() )
             {
                 c.fail(Coordination.RELEASED);
             }
@@ -163,16 +161,7 @@ public class CoordinationMgr implements CoordinatorMBean
             long cutOff = System.currentTimeMillis() + participationTimeOut;
             long waitTime = (participationTimeOut > 500) ? participationTimeOut / 500 : participationTimeOut;
             // TODO - the above wait time looks wrong e.g. if it's 800, the wait time 1ms
-            WeakReference<CoordinationImpl> currentRef = participants.get(p);
-            CoordinationImpl current = null;
-            if ( currentRef != null )
-            {
-                current = currentRef.get();
-                if ( current == null )
-                {
-                    participants.remove(p);
-                }
-            }
+            CoordinationImpl current = participants.get(p);
             while (current != null && current != c)
             {
                 if (current.getThread() != null && current.getThread() == c.getThread())
@@ -201,20 +190,11 @@ public class CoordinationMgr implements CoordinatorMBean
                 }
 
                 // check again
-                current = null;
-                currentRef = participants.get(p);
-                if ( currentRef != null )
-                {
-                    current = currentRef.get();
-                    if ( current == null )
-                    {
-                        participants.remove(p);
-                    }
-                }
+                current = participants.get(p);
             }
 
             // lock participant into coordination
-            participants.put(p, new WeakReference<CoordinationImpl>(c));
+            participants.put(p, c);
         }
     }
 
@@ -229,13 +209,13 @@ public class CoordinationMgr implements CoordinatorMBean
 
     // ---------- Coordinator back end implementation
 
-    Coordination create(final CoordinatorImpl owner, final String name, final long timeout)
+    CoordinationImpl create(final CoordinatorImpl owner, final String name, final long timeout)
     {
         final long id = ctr.incrementAndGet();
         final CoordinationImpl c = new CoordinationImpl(owner, id, name, timeout);
         synchronized ( this.coordinations )
         {
-            coordinations.put(id, new WeakReference<CoordinationImpl>(c));
+            coordinations.put(id, c);
         }
         return c;
     }
@@ -299,13 +279,9 @@ public class CoordinationMgr implements CoordinatorMBean
         final ArrayList<Coordination> result = new ArrayList<Coordination>();
         synchronized ( this.coordinations )
         {
-            for(final WeakReference<CoordinationImpl> ref : this.coordinations.values() )
+            for(final CoordinationImpl c : this.coordinations.values() )
             {
-                final CoordinationImpl c = ref.get();
-                if ( c != null )
-                {
-                    result.add(c);
-                }
+                result.add(new CoordinationHolder(c));
             }
         }
         return result;
@@ -315,8 +291,7 @@ public class CoordinationMgr implements CoordinatorMBean
     {
         synchronized ( this.coordinations )
         {
-            final WeakReference<CoordinationImpl> ref = coordinations.get(id);
-            final CoordinationImpl c = (ref == null) ? null : ref.get();
+            final CoordinationImpl c = coordinations.get(id);
             return (c == null || c.isTerminated()) ? null : c;
         }
     }
@@ -447,12 +422,12 @@ public class CoordinationMgr implements CoordinatorMBean
         final List<CoordinationImpl> candidates = new ArrayList<CoordinationImpl>();
         synchronized ( this.coordinations )
         {
-            final Iterator<Map.Entry<Long, WeakReference<CoordinationImpl>>> iter = this.coordinations.entrySet().iterator();
+            final Iterator<Map.Entry<Long, CoordinationImpl>> iter = this.coordinations.entrySet().iterator();
             while ( iter.hasNext() )
             {
-                final Map.Entry<Long, WeakReference<CoordinationImpl>> entry = iter.next();
-                final CoordinationImpl c = entry.getValue().get();
-                if ( c != null && c.getBundle().getBundleId() == owner.getBundleId() )
+                final Map.Entry<Long, CoordinationImpl> entry = iter.next();
+                final CoordinationImpl c = entry.getValue();
+                if ( c.getBundle().getBundleId() == owner.getBundleId() )
                 {
                     candidates.add(c);
                 }

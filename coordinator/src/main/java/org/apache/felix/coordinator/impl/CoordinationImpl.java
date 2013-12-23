@@ -417,7 +417,12 @@ public class CoordinationImpl implements Coordination
      */
     public Coordination getEnclosingCoordination()
     {
-        return this.owner.getEnclosingCoordination(this);
+        Coordination c = this.owner.getEnclosingCoordination(this);
+        if ( c != null )
+        {
+            c = new CoordinationHolder((CoordinationImpl)c);
+        }
+        return c;
     }
 
     //-------
@@ -501,29 +506,19 @@ public class CoordinationImpl implements Coordination
 	@Override
 	public boolean equals(final Object obj)
 	{
-		if (this == obj)
-			return true;
-		if (obj == null)
+		if (obj instanceof CoordinationHolder )
+		{
+		    return obj.equals(this);
+		}
+        if ( !(obj instanceof CoordinationImpl) )
+        {
 			return false;
-		if (getClass() != obj.getClass())
-			return false;
+        }
 		final CoordinationImpl other = (CoordinationImpl) obj;
-		if (id != other.id)
-			return false;
-		return true;
+		return id == other.id;
 	}
 
 	void setAssociatedThread(final Thread t) {
 	    this.associatedThread = t;
 	}
-
-    @Override
-    protected void finalize() throws Throwable {
-        if ( !this.isTerminated() )
-        {
-            this.fail(Coordination.ORPHANED);
-        }
-        super.finalize();
-    }
-
 }
