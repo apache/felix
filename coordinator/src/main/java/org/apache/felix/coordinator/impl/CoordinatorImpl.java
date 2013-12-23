@@ -18,12 +18,14 @@
  */
 package org.apache.felix.coordinator.impl;
 
+import java.security.Permission;
 import java.util.Collection;
 import java.util.TimerTask;
 
 import org.osgi.framework.Bundle;
 import org.osgi.service.coordinator.Coordination;
 import org.osgi.service.coordinator.CoordinationException;
+import org.osgi.service.coordinator.CoordinationPermission;
 import org.osgi.service.coordinator.Coordinator;
 import org.osgi.service.coordinator.Participant;
 
@@ -123,12 +125,22 @@ public class CoordinatorImpl implements Coordinator
         }
     }
 
+    private void checkPermission(final String coordinationName, final String actions )
+    {
+        final SecurityManager securityManager = System.getSecurityManager();
+        if (securityManager != null)
+        {
+            final Permission permission = new CoordinationPermission(coordinationName, this.owner, actions);
+            securityManager.checkPermission(permission);
+        }
+    }
+
     /**
      * @see org.osgi.service.coordinator.Coordinator#create(java.lang.String, long)
      */
     public Coordination create(final String name, final long timeout)
     {
-        // TODO: check permission
+        this.checkPermission(name, CoordinationPermission.INITIATE);
 
     	// check arguments
     	checkName(name);
