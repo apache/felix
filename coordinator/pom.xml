@@ -45,18 +45,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <tags>
-                        <tag>
-                            <name>ThreadSafe</name>
-                            <placement>a</placement>
-                            <head>ThreadSafe</head>
-                        </tag>
-                    </tags>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>

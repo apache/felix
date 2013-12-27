@@ -38,8 +38,6 @@ public class Activator implements BundleActivator
 
     private ServiceRegistration coordinatorService;
 
-//    private ServiceRegistration coordinatorCommand;
-
     public void start(BundleContext context)
     {
         mgr = new CoordinationMgr();
@@ -59,26 +57,10 @@ public class Activator implements BundleActivator
         props.put(Constants.SERVICE_DESCRIPTION, "Coordinator Service Implementation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         coordinatorService = context.registerService(Coordinator.class.getName(), factory, props);
-/*
-        try
-        {
-            coordinatorCommand = CrdCommand.create(context, mgr);
-        }
-        catch (Throwable t)
-        {
-            // most probably missing resolved packages, ignore
-        }
-*/
     }
 
     public void stop(BundleContext context)
     {
-/*        if (coordinatorCommand != null)
-        {
-            coordinatorCommand.unregister();
-            coordinatorCommand = null;
-        }
-*/
         if (coordinatorService != null)
         {
             coordinatorService.unregister();

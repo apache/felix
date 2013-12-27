@@ -152,7 +152,7 @@ public class CoordinatorImpl implements Coordinator
     	// create coordination
         final CoordinationImpl c = mgr.create(this, name, timeout);
 
-        return new CoordinationHolder(c);
+        return c.getHolder();
     }
 
     /**
@@ -187,7 +187,7 @@ public class CoordinatorImpl implements Coordinator
         Coordination c = mgr.peek();
         if ( c != null )
         {
-            c = new CoordinationHolder((CoordinationImpl)c);
+            c = ((CoordinationImpl)c).getHolder();
         }
         return c;
     }
@@ -209,7 +209,7 @@ public class CoordinatorImpl implements Coordinator
         // create coordination
         final CoordinationImpl c = mgr.create(this, name, timeout);
         this.mgr.push(c);
-        return new CoordinationHolder(c);
+        return c.getHolder();
     }
 
     /**
@@ -221,7 +221,7 @@ public class CoordinatorImpl implements Coordinator
         Coordination c = mgr.pop();
         if ( c != null )
         {
-            c = new CoordinationHolder((CoordinationImpl)c);
+            c = ((CoordinationImpl)c).getHolder();
         }
         return c;
     }
@@ -250,7 +250,7 @@ public class CoordinatorImpl implements Coordinator
         Coordination c = mgr.getCoordinationById(id);
         if ( c != null )
         {
-            c = new CoordinationHolder((CoordinationImpl)c);
+            c = ((CoordinationImpl)c).getHolder();
         }
         return c;
     }
