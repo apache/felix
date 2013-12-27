@@ -61,7 +61,6 @@
                             org.osgi.service.coordinator
                         </Export-Package>
                         <Private-Package>
-                            org.apache.felix.jmx.service.coordinator,
                             org.apache.felix.coordinator.impl.*
                         </Private-Package>
                         <Bundle-Activator>

@@ -307,7 +307,7 @@ public class CoordinatorImplTest extends TestCase
         final MockParticipant p1 = new MockParticipant();
 
         // ensure short timeout for participation
-        mgr.configure(60000, 200);
+        mgr.configure(200);
 
         final Coordination c1 = coordinator.create(name1, 0);
         c1.addParticipant(p1);
