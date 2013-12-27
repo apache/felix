@@ -18,6 +18,7 @@
  */
 package org.apache.felix.coordinator.impl;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,6 +48,8 @@ public class CoordinationImpl implements Coordination
         /** Coordination completed */
         TERMINATED
     }
+
+    private final WeakReference<CoordinationHolder> holderRef;
 
     private final CoordinatorImpl owner;
 
@@ -86,6 +89,8 @@ public class CoordinationImpl implements Coordination
         this.participants = new ArrayList<Participant>();
         this.variables = new HashMap<Class<?>, Object>();
         this.deadLine = (timeOutInMs > 0) ? System.currentTimeMillis() + timeOutInMs : 0;
+
+        this.holderRef = new WeakReference<CoordinationHolder>(new CoordinationHolder(this));
 
         scheduleTimeout(deadLine);
     }
@@ -420,7 +425,7 @@ public class CoordinationImpl implements Coordination
         Coordination c = this.owner.getEnclosingCoordination(this);
         if ( c != null )
         {
-            c = new CoordinationHolder((CoordinationImpl)c);
+            c = ((CoordinationImpl)c).holderRef.get();
         }
         return c;
     }
@@ -521,4 +526,8 @@ public class CoordinationImpl implements Coordination
 	void setAssociatedThread(final Thread t) {
 	    this.associatedThread = t;
 	}
+
+    public Coordination getHolder() {
+        return this.holderRef.get();
+    }
 }

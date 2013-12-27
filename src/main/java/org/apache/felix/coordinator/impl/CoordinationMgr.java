@@ -281,7 +281,7 @@ public class CoordinationMgr implements CoordinatorMBean
         {
             for(final CoordinationImpl c : this.coordinations.values() )
             {
-                result.add(new CoordinationHolder(c));
+                result.add(c.getHolder());
             }
         }
         return result;
