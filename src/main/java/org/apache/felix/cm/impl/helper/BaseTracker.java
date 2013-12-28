@@ -19,6 +19,8 @@
 package org.apache.felix.cm.impl.helper;
 
 
+import java.security.AccessControlContext;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,7 +51,6 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
     protected final ConfigurationManager cm;
 
     private final boolean managedServiceFactory;
-
 
     protected BaseTracker( final ConfigurationManager cm, final boolean managedServiceFactory )
     {
@@ -284,4 +285,10 @@ public abstract class BaseTracker<S> extends ServiceTracker<S, ConfigurationMap<
         return null;
     }
 
+
+    protected AccessControlContext getAccessControlContext( final Object ref )
+    {
+        return new AccessControlContext( new ProtectionDomain[]
+            { ref.getClass().getProtectionDomain() } );
+    }
 }

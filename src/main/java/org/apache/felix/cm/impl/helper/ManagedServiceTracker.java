@@ -19,11 +19,15 @@
 package org.apache.felix.cm.impl.helper;
 
 
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.cm.impl.ConfigurationManager;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
 
@@ -145,7 +149,7 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
         {
             try
             {
-                srv.updated( properties );
+                updated( srv, properties );
                 configs.record( configPid, null, revision );
             }
             catch ( Throwable t )
@@ -157,5 +161,32 @@ public class ManagedServiceTracker extends BaseTracker<ManagedService>
                 this.ungetRealService( service );
             }
         }
-   }
+    }
+
+
+    private void updated( final ManagedService service, final Dictionary properties ) throws ConfigurationException
+    {
+        if ( System.getSecurityManager() != null )
+        {
+            try
+            {
+                AccessController.doPrivileged( new PrivilegedExceptionAction()
+                {
+                    public Object run() throws ConfigurationException
+                    {
+                        service.updated( properties );
+                        return null;
+                    }
+                }, getAccessControlContext( service ) );
+            }
+            catch ( PrivilegedActionException e )
+            {
+                throw ( ConfigurationException ) e.getException();
+            }
+        }
+        else
+        {
+            service.updated( properties );
+        }
+    }
 }

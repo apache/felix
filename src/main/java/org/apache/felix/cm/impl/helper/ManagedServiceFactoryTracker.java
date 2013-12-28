@@ -18,10 +18,15 @@
  */
 package org.apache.felix.cm.impl.helper;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Dictionary;
 
 import org.apache.felix.cm.impl.ConfigurationManager;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 
 public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFactory>
@@ -85,7 +90,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
             {
                 Dictionary props = getProperties( properties, reference, configPid.toString(),
                     factoryPid.toString() );
-                service.updated( configPid.toString(), props );
+                updated( service, configPid.toString(), props );
                 configs.record( configPid, factoryPid, revision );
             }
             catch ( Throwable t )
@@ -112,7 +117,7 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
             {
                 try
                 {
-                    service.deleted( configPid.toString() );
+                    deleted( service, configPid.toString() );
                     configs.record( configPid, factoryPid, -1 );
                 }
                 catch ( Throwable t )
@@ -124,6 +129,54 @@ public class ManagedServiceFactoryTracker extends BaseTracker<ManagedServiceFact
                     this.ungetRealService( reference );
                 }
             }
+        }
+    }
+
+
+    private void updated( final ManagedServiceFactory service, final String pid, final Dictionary properties )
+        throws ConfigurationException
+    {
+        if ( System.getSecurityManager() != null )
+        {
+            try
+            {
+                AccessController.doPrivileged( new PrivilegedExceptionAction()
+                {
+                    public Object run() throws ConfigurationException
+                    {
+                        service.updated( pid, properties );
+                        return null;
+                    }
+                }, getAccessControlContext( service ) );
+            }
+            catch ( PrivilegedActionException e )
+            {
+                throw ( ConfigurationException ) e.getException();
+            }
+        }
+        else
+        {
+            service.updated( pid, properties );
+        }
+    }
+
+
+    private void deleted( final ManagedServiceFactory service, final String pid )
+    {
+        if ( System.getSecurityManager() != null )
+        {
+            AccessController.doPrivileged( new PrivilegedAction()
+            {
+                public Object run()
+                {
+                    service.deleted( pid );
+                    return null;
+                }
+            }, getAccessControlContext( service ) );
+        }
+        else
+        {
+            service.deleted( pid );
         }
     }
 }
