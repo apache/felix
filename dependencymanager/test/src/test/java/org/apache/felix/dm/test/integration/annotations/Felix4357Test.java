@@ -37,7 +37,7 @@ public class Felix4357Test extends TestBase {
     }
 
     @Test
-    public void testPropertiesDefinedWithValueAttribute() {
+    public void testPropertiesWithTypes() {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, Felix4357.ENSURE);
         // wait for S to be started
