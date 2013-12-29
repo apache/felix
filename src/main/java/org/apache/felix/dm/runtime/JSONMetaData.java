@@ -18,6 +18,7 @@
  */
 package org.apache.felix.dm.runtime;
 
+import java.lang.reflect.Array;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -41,8 +42,29 @@ public class JSONMetaData implements MetaData, Cloneable
     private HashMap<String, Object> m_metadata = new HashMap<String, Object>();
 
     /**
-     * Decodes SON metadata for either a Service or a Dependency descriptor entry.
-     * The JSON object contains some of the following types: a String, a String[], or a Dictionary of String/String[].
+     * Decodes Json metadata for either a Service or a Dependency descriptor entry.
+     * The JSON object has the following form:
+     * 
+     * entry            ::= String | String[] | dictionary
+     * dictionary       ::= key-value-pair*
+     * key-value-pair   ::= key value
+     * value            ::= String | String[] | value-type
+     * value-type       ::= jsonObject with value-type-info
+     * value-type-info  ::= "type"=primitive java type
+     *                      "value"=String|String[]
+     *                      
+     * Exemple:
+     * 
+     * {"string-param" : "string-value",
+     *  "string-array-param" : ["string1", "string2"],
+     *  "properties" : {
+     *      "string-param" : "string-value",
+     *      "string-array-param" : ["str1", "str2],
+     *      "long-param" : {"type":"java.lang.Long", "value":"1"}}
+     *      "long-array-param" : {"type":"java.lang.Long", "value":["1"]}}
+     *  }
+     * }
+     *   
      * @param jso the JSON object that corresponds to a dependency manager descriptor entry line.
      * @throws JSONException 
      */
@@ -61,37 +83,178 @@ public class JSONMetaData implements MetaData, Cloneable
             }
             else if (value instanceof JSONArray)
             {
-                String[] array = decodeStringArray((JSONArray) value);
-                m_metadata.put(key, array);
+                m_metadata.put(key, decodeStringArray((JSONArray) value));
             }
             else if (value instanceof JSONObject)
             {
-                Hashtable<String, Object> h = new Hashtable<String, Object>();
-                JSONObject obj = ((JSONObject) value);
-                Iterator<String> it2 = obj.keys();
-                while (it2.hasNext())
-                {
-                    String key2 = it2.next();
-                    Object value2 = obj.get(key2);
-                    if (value2 instanceof String)
-                    {
-                        h.put(key2, value2);
-                    }
-                    else if (value2 instanceof JSONArray)
-                    {
-                        String[] array = decodeStringArray((JSONArray) value2);
-                        h.put(key2, array);
-                    }
-                    else
-                    {
-                        throw new IllegalArgumentException("Could not decode JSON metadata: key " + key +
-                                "contains an invalid dictionary key: " + key
-                                + " (the value is neither a String nor a String[]).");
-                    }
-                }
-                m_metadata.put(key, h);
+                m_metadata.put(key, parseProperties((JSONObject) value));
             }
         }
+    }
+
+    private Hashtable<String, Object> parseProperties(JSONObject properties) throws JSONException {
+        Hashtable<String, Object> parsedProps = new Hashtable<String, Object>();
+        Iterator<String> it = properties.keys();
+        while (it.hasNext())
+        {
+            String key = it.next();
+            Object value = properties.get(key);
+            if (value instanceof String)
+            {
+                // This property type is a simple string
+                parsedProps.put(key, value);
+            }
+            else if (value instanceof JSONArray)
+            {
+                // This property type is a simple string array
+                parsedProps.put(key, decodeStringArray((JSONArray) value));
+            }
+            else if (value instanceof JSONObject)
+            {
+                // This property type is a typed value, encoded as a JSONObject with two keys: "type"/"value"
+                JSONObject json = ((JSONObject) value);
+                String type = json.getString("type");
+                Object typeValue = json.get("value");
+
+                if (type == null)
+                {
+                    throw new JSONException("missing type attribute in json metadata for key " + key);
+                }
+                if (typeValue == null)
+                {
+                    throw new JSONException("missing type value attribute in json metadata for key " + key);
+                }
+
+                Class<?> typeClass;
+                try
+                {
+                    typeClass = Class.forName(type);
+                }
+                catch (ClassNotFoundException e)
+                {
+                    throw new JSONException("invalid type attribute (" + type + ") in json metadata for key "
+                        + key);
+                }
+
+                if (typeValue instanceof JSONArray)
+                {
+                    parsedProps.put(key, toPrimitiveTypeArray(typeClass, (JSONArray) typeValue));
+                }
+                else
+                {
+                    parsedProps.put(key, toPrimitiveType(typeClass, typeValue.toString()));
+                }
+            }
+        }
+        return parsedProps;
+    }
+
+    private Object toPrimitiveType(Class<?> type, String value) throws JSONException {
+        if (type.equals(String.class))
+        {
+            return value;
+        }
+        else if (type.equals(Long.class))
+        {
+            return Long.parseLong(value);
+        }
+        else if (type.equals(Double.class))
+        {
+            return Double.valueOf(value);
+        }
+        else if (type.equals(Float.class))
+        {
+            return Float.valueOf(value);
+        }
+        else if (type.equals(Integer.class))
+        {
+            return Integer.valueOf(value);
+        }
+        else if (type.equals(Byte.class))
+        {
+            return Byte.valueOf(value);
+        }
+        else if (type.equals(Character.class))
+        {
+            return Character.valueOf((char) Integer.parseInt(value));
+        }
+        else if (type.equals(Boolean.class))
+        {
+            return Boolean.valueOf(value);
+        }
+        else if (type.equals(Short.class))
+        {
+            return Short.valueOf(value);
+        }
+        else
+        {
+            throw new JSONException("invalid type (" + type + ") attribute in json metadata");
+        }
+    }
+
+    private Object toPrimitiveTypeArray(Class<?> type, JSONArray array) throws JSONException {
+        int len = array.length();
+        Object result = Array.newInstance(type, len);
+
+        if (type.equals(String.class))
+        {
+            for (int i = 0; i < len; i ++) {
+                Array.set(result, i, array.getString(i));
+            }
+        } 
+        else if (type.equals(Long.class))
+        {
+            for (int i = 0; i < len; i ++) {
+                Array.set(result, i, Long.valueOf(array.getString(i)));
+            }
+        }
+        else if (type.equals(Double.class))
+        {
+            for (int i = 0; i < len; i ++) {
+                Array.set(result, i, Double.valueOf(array.getString(i)));
+            }
+        } 
+        else if (type.equals(Float.class))
+        {
+            for (int i = 0; i < len; i ++) {
+                Array.set(result, i, Float.valueOf(array.getString(i)));
+            }
+        }
+        else if (type.equals(Integer.class))
+        {
+            for (int i = 0; i < len; i ++) {
+                Array.set(result, i, Integer.valueOf(array.getString(i)));
+            }
+        }
+        else if (type.equals(Byte.class))
+        {
+            for (int i = 0; i < len; i ++) {
+                Array.set(result, i, Byte.valueOf(array.getString(i)));
+            }
+        }
+        else if (type.equals(Character.class))
+        {
+            for (int i = 0; i < len; i ++) {
+                Array.set(result, i,  Character.valueOf((char) Integer.parseInt(array.getString(i))));
+            }
+        }
+        else if (type.equals(Boolean.class))
+        {
+            for (int i = 0; i < len; i ++) {
+                Array.set(result, i, Boolean.valueOf(array.getString(i)));
+            }
+        } 
+        else if (type.equals(Short.class))
+        {
+            for (int i = 0; i < len; i ++) {
+                Array.set(result, i, Short.valueOf(array.getString(i)));
+            }
+        }
+        else 
+        {
+            throw new JSONException("invalid type (" + type + ") attribute in json metadata");
+        }   
+        return result;
     }
 
     /**
@@ -108,12 +271,12 @@ public class JSONMetaData implements MetaData, Cloneable
 
     public String getString(Params key)
     {
-        String value = (String) m_metadata.get(key.toString());
+        Object value = m_metadata.get(key.toString());
         if (value == null)
         {
             throw new IllegalArgumentException("Parameter " + key + " not found");
         }
-        return value;
+        return value.toString();
     }
 
     public String getString(Params key, String def)
@@ -130,12 +293,15 @@ public class JSONMetaData implements MetaData, Cloneable
 
     public int getInt(Params key)
     {
-        String value = getString(key, null);
+        Object value = m_metadata.get(key.toString());
         if (value != null)
         {
             try
             {
-                return Integer.parseInt(value);
+                if (value instanceof Integer) {
+                    return ((Integer) value).intValue();
+                }
+                return Integer.parseInt(value.toString());
             }
             catch (NumberFormatException e)
             {
@@ -153,12 +319,15 @@ public class JSONMetaData implements MetaData, Cloneable
 
     public int getInt(Params key, int def)
     {
-        String value = getString(key, null);
+        Object value = m_metadata.get(key.toString());
         if (value != null)
         {
             try
             {
-                return Integer.parseInt(value);
+                if (value instanceof Integer) {
+                    return ((Integer) value).intValue();
+                }
+                return Integer.parseInt(value.toString());
             }
             catch (NumberFormatException e)
             {
@@ -175,12 +344,15 @@ public class JSONMetaData implements MetaData, Cloneable
 
     public long getLong(Params key)
     {
-        String value = getString(key, null);
+        Object value = m_metadata.get(key.toString());
         if (value != null)
         {
             try
             {
-                return Long.parseLong(value);
+                if (value instanceof Long) {
+                    return ((Long) value).longValue();
+                }
+                return Long.parseLong(value.toString());
             }
             catch (NumberFormatException e)
             {
@@ -198,12 +370,15 @@ public class JSONMetaData implements MetaData, Cloneable
 
     public long getLong(Params key, long def)
     {
-        String value = getString(key, null);
+        Object value = m_metadata.get(key.toString());
         if (value != null)
         {
             try
             {
-                return Long.parseLong(value);
+                if (value instanceof Long) {
+                    return (Long) value;
+                }
+                return Long.parseLong(value.toString());
             }
             catch (NumberFormatException e)
             {
@@ -285,7 +460,7 @@ public class JSONMetaData implements MetaData, Cloneable
     {
         m_metadata.put(key.toString(), values);
     }
-
+    
     /**
      * Decodes a JSONArray into a String array (all JSON array values are supposed to be strings).
      */
