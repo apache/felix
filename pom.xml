@@ -96,7 +96,7 @@
                         <Private-Package>org.apache.felix.dm.runtime</Private-Package>
                         <Import-Package>*</Import-Package>
                         <Export-Package />
-                        <Embed-Dependency>json</Embed-Dependency>
+                        <Embed-Dependency>json;inline=org/json/**</Embed-Dependency>
                         <Bundle-Activator>org.apache.felix.dm.runtime.Activator</Bundle-Activator>
                     </instructions>
                 </configuration>
