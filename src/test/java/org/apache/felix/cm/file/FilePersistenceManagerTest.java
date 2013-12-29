@@ -62,16 +62,69 @@ public class FilePersistenceManagerTest extends TestCase
 
     public void testPidPlain()
     {
-        assertEquals( "plain", FilePersistenceManager.encodePid( "plain" ) );
-        assertEquals( "plain" + File.separatorChar + "path", FilePersistenceManager.encodePid( "plain.path" ) );
-        assertEquals( "encod%00e8", FilePersistenceManager.encodePid( "encod\u00E8" ) );
-        assertEquals( "encod%00e8" + File.separatorChar + "path", FilePersistenceManager.encodePid( "encod\u00E8/path" ) );
-        assertEquals( "encode" + File.separatorChar + "%1234" + File.separatorChar + "path", FilePersistenceManager
-            .encodePid( "encode/\u1234/path" ) );
-        assertEquals( "encode" + File.separatorChar + " %0025 " + File.separatorChar + "path", FilePersistenceManager
-            .encodePid( "encode/ % /path" ) );
+        assertEquals( "plain", fpm.encodePid( "plain" ) );
+        assertEquals( "plain" + File.separatorChar + "path", fpm.encodePid( "plain.path" ) );
+        assertEquals( "encod%00e8", fpm.encodePid( "encod\u00E8" ) );
+        assertEquals( "encod%00e8" + File.separatorChar + "path", fpm.encodePid( "encod\u00E8/path" ) );
+        assertEquals( "encode" + File.separatorChar + "%1234" + File.separatorChar + "path",
+            fpm.encodePid( "encode/\u1234/path" ) );
+        assertEquals( "encode" + File.separatorChar + " %0025 " + File.separatorChar + "path",
+            fpm.encodePid( "encode/ % /path" ) );
     }
 
+    public void testPidEncodingCollision() {
+        // assert a == encode(a) ==> encode(a) == encode(encode(a))
+        final String plain = "plain";
+        assertEquals( plain, fpm.encodePid( plain ) );
+        assertEquals( fpm.encodePid( plain ), fpm.encodePid( fpm.encodePid( plain ) ) );
+        assertEquals( plain, fpm.encodePid( fpm.encodePid( plain ) ) );
+
+        // assert a != encode(a) ==> encode(a) != encode(encode(a))
+        final String encode = "encod\u00E8";
+        final String encoded = "encod%00e8";
+        assertEquals( encoded, fpm.encodePid( encode ) );
+        assertFalse( encode.equals( fpm.encodePid( encode ) ) );
+        assertFalse( fpm.encodePid( encode ).equals( fpm.encodePid( fpm.encodePid( encode ) ) ) );
+        assertFalse( encode.equals( fpm.encodePid( fpm.encodePid( encode ) ) ) );
+    }
+
+    public void testPidDeviceNameEncodingWindows()  {
+        // assert proper encoding of windows device file names (FELIX-4302)
+        String oldOsName = System.getProperty( "os.name" );
+        try {
+            System.setProperty("os.name", "Windows for testing");
+            FilePersistenceManager winFpm = new FilePersistenceManager( file.getAbsolutePath() );
+            assertEquals("%004cPT1", winFpm.encodePid( "LPT1" ));
+            assertEquals("%006cpt1", winFpm.encodePid( "lpt1" ));
+            assertEquals("%0043ON", winFpm.encodePid( "CON" ));
+            assertEquals("%0050RN", winFpm.encodePid( "PRN" ));
+            assertEquals("%0041UX", winFpm.encodePid( "AUX" ));
+            assertEquals("%0043LOCK%0024", winFpm.encodePid( "CLOCK$" ));
+            assertEquals("%004eUL", winFpm.encodePid( "NUL" ));
+            assertEquals("%0043OM6", winFpm.encodePid( "COM6" ));
+        } finally {
+            System.setProperty( "os.name", oldOsName );
+        }
+    }
+
+    public void testPidDeviceNameEncodingNonWindows()  {
+        // assert no encoding of windows device file names (FELIX-4302)
+        String oldOsName = System.getProperty( "os.name" );
+        try {
+            System.setProperty("os.name", "Unix for testing");
+            FilePersistenceManager winFpm = new FilePersistenceManager( file.getAbsolutePath() );
+            assertEquals("LPT1", winFpm.encodePid( "LPT1" ));
+            assertEquals("lpt1", winFpm.encodePid( "lpt1" ));
+            assertEquals("CON", winFpm.encodePid( "CON" ));
+            assertEquals("PRN", winFpm.encodePid( "PRN" ));
+            assertEquals("AUX", winFpm.encodePid( "AUX" ));
+            assertEquals("CLOCK%0024", winFpm.encodePid( "CLOCK$" ));
+            assertEquals("NUL", winFpm.encodePid( "NUL" ));
+            assertEquals("COM6", winFpm.encodePid( "COM6" ));
+        } finally {
+            System.setProperty( "os.name", oldOsName );
+        }
+    }
 
     public void testCreateDir()
     {
@@ -187,6 +240,20 @@ public class FilePersistenceManagerTest extends TestCase
         check( "=leading equals", "leading equals" );
     }
 
+
+    // Test expected to always succeed on non-Windows platforms. It may
+    // break if FilePersistenceManager.encode does not cope properly
+    // with Windows device names (see FELIX-4302)
+    public void testWindowsSpecialNames() throws IOException
+    {
+        check( "prefixLPT1", "lpt1" );
+        check( "prefix.prefix2.LPT1.suffix", "lpt1" );
+        check( "prefix.LPT1.suffix", "lpt1" );
+        check( "prefix.LPT1", "lpt1" );
+        check( "LPT1", "lpt1" );
+    }
+
+
     private void check( String name, Object value ) throws IOException
     {
         Dictionary props = new Hashtable();
@@ -200,7 +267,7 @@ public class FilePersistenceManagerTest extends TestCase
     {
         fpm.store( pid, props );
 
-        assertTrue( new File( file, FilePersistenceManager.encodePid( pid ) + ".config" ).exists() );
+        assertTrue( new File( file, fpm.encodePid( pid ) + ".config" ).exists() );
 
         Dictionary loaded = fpm.load( pid );
         assertNotNull( loaded );
