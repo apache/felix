@@ -33,8 +33,11 @@ import java.security.PrivilegedExceptionAction;
 import java.util.BitSet;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.Stack;
+import java.util.StringTokenizer;
 
 import org.apache.felix.cm.PersistenceManager;
 import org.osgi.framework.BundleContext;
@@ -135,6 +138,22 @@ public class FilePersistenceManager implements PersistenceManager
      */
     private final File location;
 
+    /**
+     * Flag indicating whether this instance is running on a Windows
+     * platform or not.
+     */
+    private final boolean isWin;
+
+    /**
+     * A set of three character names (prefixes) considered reserved
+     * on Windows platform systems. This set consists of names such as
+     * LPT, CON, COM, etc., which cause weird behaviour on Windows systems
+     * if used as prefixes on path segments. See .
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/FELIX-4302">FELIX-4302</a>
+     */
+    private final Set winDevNames;
+
     // sets up this class defining the set of valid characters in path
     // set getFile(String) for details.
     static
@@ -160,61 +179,29 @@ public class FilePersistenceManager implements PersistenceManager
     }
 
 
-    /**
-     * Encodes a Service PID to a filesystem path as described in the class
-     * JavaDoc above.
-     * <p>
-     * This method is not part of the API of this class and is declared package
-     * private to enable JUnit testing on it. This method may be removed or
-     * modified at any time without notice.
-     *
-     * @param pid The Service PID to encode into a relative path name.
-     *
-     * @return The relative path name corresponding to the Service PID.
-     */
-    static String encodePid( String pid )
     {
-
-        // replace dots by File.separatorChar
-        pid = pid.replace( '.', File.separatorChar );
-
-        // replace slash by File.separatorChar if different
-        if ( File.separatorChar != '/' )
+        // Windows Specific Preparation (FELIX-4302)
+        // According to the GetJavaProperties method in
+        // jdk/src/windows/native/java/lang/java_props_md.c the os.name
+        // system property on all Windows platforms start with the string
+        // "Windows" hence we assume a Windows platform in thus case.
+        final String osName = System.getProperty( "os.name" );
+        isWin = osName != null && osName.startsWith( "Windows" );
+        if ( isWin )
         {
-            pid = pid.replace( '/', File.separatorChar );
+            winDevNames = new HashSet();
+            winDevNames.add( "CON" ); // keyboard and display
+            winDevNames.add( "PRN" ); // system list; generally par. port
+            winDevNames.add( "AUX" ); // auxiliary; generally ser. port
+            winDevNames.add( "CLO" ); // CLOCK$; system real time clock
+            winDevNames.add( "NUL" ); // Bit-bucket
+            winDevNames.add( "COM" ); // COM1..COMn; serial ports
+            winDevNames.add( "LPT" ); // LPT1..LPTn; parallel ports
         }
-
-        // scan for first non-valid character (if any)
-        int first = 0;
-        while ( first < pid.length() && VALID_PATH_CHARS.get( pid.charAt( first ) ) )
+        else
         {
-            first++;
+            winDevNames = null;
         }
-
-        // check whether we exhausted
-        if ( first < pid.length() )
-        {
-            StringBuffer buf = new StringBuffer( pid.substring( 0, first ) );
-
-            for ( int i = first; i < pid.length(); i++ )
-            {
-                char c = pid.charAt( i );
-                if ( VALID_PATH_CHARS.get( c ) )
-                {
-                    buf.append( c );
-                }
-                else
-                {
-                    String val = "000" + Integer.toHexString( c );
-                    buf.append( '%' );
-                    buf.append( val.substring( val.length() - 4 ) );
-                }
-            }
-
-            pid = buf.toString();
-        }
-
-        return pid;
     }
 
 
@@ -353,6 +340,91 @@ public class FilePersistenceManager implements PersistenceManager
         }
 
         this.location = locationFile;
+    }
+
+
+    /**
+     * Encodes a Service PID to a filesystem path as described in the class
+     * JavaDoc above.
+     * <p>
+     * This method is not part of the API of this class and is declared package
+     * private to enable JUnit testing on it. This method may be removed or
+     * modified at any time without notice.
+     *
+     * @param pid The Service PID to encode into a relative path name.
+     *
+     * @return The relative path name corresponding to the Service PID.
+     */
+    String encodePid( String pid )
+    {
+
+        // replace dots by File.separatorChar
+        pid = pid.replace( '.', File.separatorChar );
+
+        // replace slash by File.separatorChar if different
+        if ( File.separatorChar != '/' )
+        {
+            pid = pid.replace( '/', File.separatorChar );
+        }
+
+        // scan for first non-valid character (if any)
+        int first = 0;
+        while ( first < pid.length() && VALID_PATH_CHARS.get( pid.charAt( first ) ) )
+        {
+            first++;
+        }
+
+        // check whether we exhausted
+        if ( first < pid.length() )
+        {
+            StringBuffer buf = new StringBuffer( pid.substring( 0, first ) );
+
+            for ( int i = first; i < pid.length(); i++ )
+            {
+                char c = pid.charAt( i );
+                if ( VALID_PATH_CHARS.get( c ) )
+                {
+                    buf.append( c );
+                }
+                else
+                {
+                    appendEncoded( buf, c );
+                }
+            }
+
+            pid = buf.toString();
+        }
+
+        // Prefix special device names on Windows (FELIX-4302)
+        if ( isWin )
+        {
+            final StringTokenizer segments = new StringTokenizer( pid, File.separator, true );
+            final StringBuffer pidBuffer = new StringBuffer( pid.length() );
+            while ( segments.hasMoreTokens() )
+            {
+                final String segment = segments.nextToken();
+                if ( segment.length() >= 3 && winDevNames.contains( segment.substring( 0, 3 ).toUpperCase() ) )
+                {
+                    appendEncoded( pidBuffer, segment.charAt( 0 ) );
+                    pidBuffer.append( segment.substring( 1 ) );
+                }
+                else
+                {
+                    pidBuffer.append( segment );
+                }
+            }
+            pid = pidBuffer.toString();
+        }
+
+        return pid;
+    }
+
+
+    private void appendEncoded( StringBuffer buf, final char c )
+    {
+        String val = "000" + Integer.toHexString( c );
+        buf.append( '%' );
+        buf.append( val.substring( val.length() - 4 ) );
     }
 
 

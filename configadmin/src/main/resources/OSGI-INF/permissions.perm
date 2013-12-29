@@ -39,6 +39,7 @@
 
 # Handle persistent configuration files
 # -> FilePersistenceManager
+(java.util.PropertyPermission "os.name" "read")
 (java.util.PropertyPermission "user.dir" "read")
 (java.io.FilePermission "-" "read,write,execute,delete")
 
