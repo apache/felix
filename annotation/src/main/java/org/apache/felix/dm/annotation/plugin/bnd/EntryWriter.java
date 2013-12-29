@@ -113,39 +113,12 @@ public class EntryWriter
     }
 
     /**
-     * Put a Map parameter in the descriptor entry. The map values must be either Strings or Strings arrays.
+     * Puts a json object.
+     * @throws JSONException 
      */
-    public void putProperties(EntryParam param, Map<String, Object> properties)
+    public void putJsonObject(EntryParam param, JSONObject jsonObject) throws JSONException
     {
-        checkType(param.toString());
-
-        try
-        {
-            JSONObject props = new JSONObject();
-            for (String key: properties.keySet())
-            {
-                Object value = properties.get(key);
-                if (value instanceof String)
-                {
-                    props.put(key, value);
-                }
-                else if (value instanceof String[])
-                {
-                    props.put(key, new JSONArray(Arrays.asList((String[]) value)));
-                }
-                else
-                {
-                    throw new IllegalArgumentException("invalid property value: " + value);
-                }
-            }
-            m_json.put(param.toString(), props);
-        }
-
-        catch (JSONException e)
-        {
-            throw new IllegalArgumentException("invalid properties for " + param + ": "
-                + properties, e);
-        }
+        m_json.put(param.toString(),  jsonObject);
     }
 
     /**

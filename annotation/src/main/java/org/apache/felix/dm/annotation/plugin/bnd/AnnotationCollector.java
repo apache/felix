@@ -21,10 +21,8 @@ package org.apache.felix.dm.annotation.plugin.bnd;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.felix.dm.annotation.api.AdapterService;
@@ -39,20 +37,23 @@ import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
 import org.apache.felix.dm.annotation.api.Init;
 import org.apache.felix.dm.annotation.api.Inject;
 import org.apache.felix.dm.annotation.api.LifecycleController;
+import org.apache.felix.dm.annotation.api.Registered;
 import org.apache.felix.dm.annotation.api.ResourceAdapterService;
 import org.apache.felix.dm.annotation.api.ResourceDependency;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
-import org.apache.felix.dm.annotation.api.Registered;
 import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.annotation.api.Unregistered;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.osgi.framework.Bundle;
 
 import aQute.bnd.osgi.Annotation;
 import aQute.bnd.osgi.ClassDataCollector;
 import aQute.bnd.osgi.Clazz;
-import aQute.bnd.osgi.Verifier;
 import aQute.bnd.osgi.Descriptors.TypeRef;
+import aQute.bnd.osgi.Verifier;
 
 /**
  * This is the scanner which does all the annotation parsing on a given class.
@@ -932,44 +933,254 @@ public class AnnotationCollector extends ClassDataCollector
 
     /**
      * Parses a Property annotation (which represents a list of key-value pair).
+     * The properties are encoded using the following json form:
+     * 
+     * properties       ::= key-value-pair*
+     * key-value-pair   ::= key value
+     * value            ::= String | String[] | value-type
+     * value-type       ::= jsonObject with value-type-info
+     * value-type-info  ::= "type"=primitive java type
+     *                      "value"=String|String[]
+     *                      
+     * Exemple:
+     * 
+     *  "properties" : {
+     *      "string-param" : "string-value",
+     *      "string-array-param" : ["str1", "str2],
+     *      "long-param" : {"type":"java.lang.Long", "value":"1"}}
+     *      "long-array-param" : {"type":"java.lang.Long", "value":["1"]}}
+     *  }
+     * }
+     * 
      * @param annotation the annotation where the Param annotation is defined
      * @param attribute the attribute name which is of Param type
      * @param writer the object where the parsed attributes are written
      */
     private void parseProperties(Annotation annotation, EntryParam attribute, EntryWriter writer)
     {
-        Object[] parameters = annotation.get(attribute.toString());
-        Map<String, Object> properties = new HashMap<String, Object>();
-        if (parameters != null)
+        try
         {
-            for (Object p: parameters)
+            Object[] parameters = annotation.get(attribute.toString());
+            if (parameters != null)
             {
-                Annotation a = (Annotation) p;
-                String name = (String) a.get("name");
-                String value = (String) a.get("value");
-                if (value != null)
+                JSONObject properties = new JSONObject();
+                for (Object p : parameters)
                 {
-                    properties.put(name, value);
-                }
-                else
-                {
-                    Object[] values = a.get("values");
-                    if (values != null)
+                    Annotation a = (Annotation) p;
+                    String name = (String) a.get("name");
+
+                    String type = a.get("type");
+                    Class<?> classType;
+                    try
                     {
-                        // the values is an Object array of actual strings, and we must convert it into a String array.
-                        properties.put(name, Arrays.asList(values).toArray(new String[values.length]));
+                        classType = (type == null) ? String.class : Class.forName(Patterns.parseClass(type,
+                            Patterns.CLASS, 1));
+                    }
+                    catch (ClassNotFoundException e)
+                    {
+                        // Theorically impossible
+                        throw new IllegalArgumentException("Invalid Property type " + type
+                            + " from annotation " + annotation + " in class " + m_className);
+                    }
+
+                    Object[] values;
+
+                    if ((values = a.get("value")) != null)
+                    {
+                        values = checkPropertyType(name, classType, values);
+                        addProperty(properties, name, values, classType);
+                    }
+                    else if ((values = a.get("values")) != null)
+                    { // deprecated
+                        values = checkPropertyType(name, classType, values);
+                        addProperty(properties, name, values, classType);
+                    }
+                    else if ((values = a.get("longValue")) != null)
+                    {
+                        addProperty(properties, name, values, Long.class);
+                    }
+                    else if ((values = a.get("doubleValue")) != null)
+                    {
+                        addProperty(properties, name, values, Double.class);
+                    }
+                    else if ((values = a.get("floatValue")) != null)
+                    {
+                        addProperty(properties, name, values, Float.class);
+                    }
+                    else if ((values = a.get("intValue")) != null)
+                    {
+                        addProperty(properties, name, values, Integer.class);
+                    }
+                    else if ((values = a.get("byteValue")) != null)
+                    {
+                        addProperty(properties, name, values, Byte.class);
+                    }
+                    else if ((values = a.get("charValue")) != null)
+                    {
+                        addProperty(properties, name, values, Character.class);
+                    }
+                    else if ((values = a.get("booleanValue")) != null)
+                    {
+                        addProperty(properties, name, values, Boolean.class);
+                    }
+                    else if ((values = a.get("shortValue")) != null)
+                    {
+                        addProperty(properties, name, values, Short.class);
                     }
                     else
                     {
-                        throw new IllegalArgumentException("Invalid Property attribyte \"" + attribute
-                            + " from annotation " + annotation + " in class " + m_className);
+                        throw new IllegalArgumentException("Missing Property value from annotation "
+                            + annotation + " in class " + m_className);
                     }
                 }
+                writer.putJsonObject(attribute, properties);
             }
-            writer.putProperties(attribute, properties);
+        }
+        catch (JSONException e)
+        {
+            throw new IllegalArgumentException("UNexpected exception while parsing Property from annotation "
+                + annotation + " in class " + m_className, e);
         }
     }
     
+    /**
+     * Checks if a property contains values that are compatible with a give primitive type.
+     * 
+     * @param name the property name
+     * @param values the values for the property name
+     * @param type the primitive type.
+     * @return the same property values, possibly modified if the type is 'Character' (the strings are converted to their character integer values). 
+     */
+    private Object[] checkPropertyType(String name, Class<?> type, Object ... values)
+    {
+        if (type.equals(String.class))
+        {
+            return values;
+        } else if (type.equals(Long.class)) {
+            for (Object value : values) {
+                try {
+                    Long.valueOf(value.toString());
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                        + " does not contain a valid Long value (" + value.toString() + ")");
+                }
+            }
+        } else if (type.equals(Double.class)) {
+            for (Object value : values) {
+                try {
+                    Double.valueOf(value.toString());
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                        + " does not contain a valid Double value (" + value.toString() + ")");
+                }
+            }
+        } else if (type.equals(Float.class)) {
+            for (Object value : values) {
+                try {
+                    Float.valueOf(value.toString());
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                        + " does not contain a valid Float value (" + value.toString() + ")");
+                }
+            }
+        } else if (type.equals(Integer.class)) {
+            for (Object value : values) {
+                try {
+                    Integer.valueOf(value.toString());
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                        + " does not contain a valid Integer value (" + value.toString() + ")");
+                }
+            }
+        } else if (type.equals(Byte.class)) {
+            for (Object value : values) {
+                try {
+                    Byte.valueOf(value.toString());
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                        + " does not contain a valid Byte value (" + value.toString() + ")");
+                }
+            }
+        } else if (type.equals(Character.class)) {
+            for (int i = 0; i < values.length; i++)
+            {
+                try
+                {
+                    // If the string is already an integer, don't modify it
+                    Integer.valueOf(values[i].toString());
+                }
+                catch (NumberFormatException e)
+                {
+                    // Converter the character string to its corresponding integer code.
+                    if (values[i].toString().length() != 1)
+                    {
+                        throw new IllegalArgumentException("Property \"" + name + "\" in class "
+                            + m_className + " does not contain a valid Character value (" + values[i] + ")");
+                    }
+                    try
+                    {
+                        values[i] = Integer.valueOf(values[i].toString().charAt(0));
+                    }
+                    catch (NumberFormatException e2)
+                    {
+                        throw new IllegalArgumentException("Property \"" + name + "\" in class "
+                            + m_className + " does not contain a valid Character value (" + values[i].toString()
+                            + ")");
+                    }
+                }
+            }
+        } else if (type.equals(Boolean.class)) {
+            for (Object value : values) {
+                if (! value.toString().equalsIgnoreCase("false") && ! value.toString().equalsIgnoreCase("true")) {
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                        + " does not contain a valid Boolean value (" + value.toString() + ")");
+                }
+            }
+        } else if (type.equals(Short.class)) {
+            for (Object value : values) {
+                try {
+                    Short.valueOf(value.toString());
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Property \"" + name + "\" in class " + m_className
+                        + " does not contain a valid Short value (" + value.toString() + ")");
+                }
+            }
+        }
+
+        return values;
+    }
+
+    /**
+     * Adds a key/value(s) pair in a properties map
+     * @param properties the target properties map
+     * @param name the property name
+     * @param value the property value(s)
+     * @param type the property type
+     * @throws JSONException 
+     */
+    private void addProperty(JSONObject props, String name, Object value, Class type) throws JSONException {
+        if (value.getClass().isArray())
+        {
+            Object[] array = (Object[]) value;
+            if (array.length == 1)
+            {
+                value = array[0];
+            }
+        }
+
+        if (type.equals(String.class))
+        {
+            props.put(name, value.getClass().isArray() ? new JSONArray(value) : value);
+        }
+        else
+        {
+            JSONObject jsonValue = new JSONObject();
+            jsonValue.put("type", type.getName());
+            jsonValue.put("value", value.getClass().isArray() ? new JSONArray(value) : value);
+            props.put(name, jsonValue);
+        }
+    }
+
     /**
      * Parse Inject annotation, used to inject some special classes in some fields
      * (BundleContext/DependencyManager etc ...)
