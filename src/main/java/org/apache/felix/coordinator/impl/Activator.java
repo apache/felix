@@ -36,8 +36,10 @@ public class Activator implements BundleActivator
 
     private ServiceRegistration coordinatorService;
 
-    public void start(BundleContext context)
+    public void start(final BundleContext context)
     {
+        LogWrapper.setContext(context);
+
         mgr = new CoordinationMgr();
 
         final ServiceFactory factory = new CoordinatorFactory(mgr);
@@ -47,7 +49,7 @@ public class Activator implements BundleActivator
         coordinatorService = context.registerService(Coordinator.class.getName(), factory, props);
     }
 
-    public void stop(BundleContext context)
+    public void stop(final BundleContext context)
     {
         if (coordinatorService != null)
         {
@@ -56,6 +58,8 @@ public class Activator implements BundleActivator
         }
 
         mgr.cleanUp();
+
+        LogWrapper.setContext(null);
     }
 
     static final class CoordinatorFactory implements ServiceFactory
@@ -68,12 +72,12 @@ public class Activator implements BundleActivator
             this.mgr = mgr;
         }
 
-        public Object getService(Bundle bundle, ServiceRegistration registration)
+        public Object getService(final Bundle bundle, final ServiceRegistration registration)
         {
             return new CoordinatorImpl(bundle, mgr);
         }
 
-        public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+        public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service)
         {
             ((CoordinatorImpl) service).dispose();
         }

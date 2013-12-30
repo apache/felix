@@ -30,6 +30,7 @@ import java.util.TimerTask;
 import org.osgi.framework.Bundle;
 import org.osgi.service.coordinator.Coordination;
 import org.osgi.service.coordinator.CoordinationException;
+import org.osgi.service.coordinator.CoordinationPermission;
 import org.osgi.service.coordinator.Participant;
 
 public class CoordinationImpl implements Coordination
@@ -57,7 +58,6 @@ public class CoordinationImpl implements Coordination
 
     private final String name;
 
-    // TODO: timeout must be enforced
     private long deadLine;
 
     /**
@@ -116,6 +116,7 @@ public class CoordinationImpl implements Coordination
      */
     public boolean fail(final Throwable reason)
     {
+        this.owner.checkPermission(name, CoordinationPermission.PARTICIPATE);
         if ( reason == null)
         {
             throw new IllegalArgumentException("Reason must not be null");
@@ -138,9 +139,10 @@ public class CoordinationImpl implements Coordination
                 {
                     part.failed(this);
                 }
-                catch (Exception e)
+                catch (final Exception e)
                 {
-                    // TODO: log
+                    LogWrapper.getLogger()
+                        .log(LogWrapper.LOG_ERROR, "Participant threw exception during call to fail()", e);
                 }
 
                 // release the participant for other coordinations
@@ -165,6 +167,7 @@ public class CoordinationImpl implements Coordination
      */
     public void end()
     {
+        this.owner.checkPermission(name, CoordinationPermission.INITIATE);
         if ( !this.isTerminated() && this.associatedThread != null && Thread.currentThread() != this.associatedThread )
         {
             throw new CoordinationException("Coordination is associated with different thread", this, CoordinationException.WRONG_THREAD);
@@ -204,7 +207,8 @@ public class CoordinationImpl implements Coordination
                 }
                 catch (final Exception e)
                 {
-                    // TODO: log
+                    LogWrapper.getLogger()
+                        .log(LogWrapper.LOG_ERROR, "Participant threw exception during call to fail()", e);
                     partialFailure = true;
                 }
 
@@ -252,6 +256,7 @@ public class CoordinationImpl implements Coordination
      */
     public List<Participant> getParticipants()
     {
+        this.owner.checkPermission(name, CoordinationPermission.INITIATE);
         // synchronize access to the state to prevent it from being changed
         // while we create a copy of the participant list
         synchronized (this)
@@ -273,6 +278,7 @@ public class CoordinationImpl implements Coordination
      */
     public Throwable getFailure()
     {
+        this.owner.checkPermission(name, CoordinationPermission.INITIATE);
         return failReason;
     }
 
@@ -282,6 +288,7 @@ public class CoordinationImpl implements Coordination
      */
     public void addParticipant(final Participant p)
     {
+        this.owner.checkPermission(name, CoordinationPermission.PARTICIPATE);
         if ( p == null ) {
             throw new IllegalArgumentException("Participant must not be null");
         }
@@ -327,6 +334,7 @@ public class CoordinationImpl implements Coordination
      */
     public Map<Class<?>, Object> getVariables()
     {
+        this.owner.checkPermission(name, CoordinationPermission.PARTICIPATE);
         return variables;
     }
 
@@ -335,6 +343,7 @@ public class CoordinationImpl implements Coordination
      */
     public long extendTimeout(final long timeOutInMs)
     {
+        this.owner.checkPermission(name, CoordinationPermission.PARTICIPATE);
         if ( timeOutInMs < 0 )
         {
             throw new IllegalArgumentException("Timeout must not be negative");
@@ -373,6 +382,7 @@ public class CoordinationImpl implements Coordination
      */
     public Thread getThread()
     {
+        this.owner.checkPermission(name, CoordinationPermission.ADMIN);
         return associatedThread;
     }
 
@@ -381,6 +391,7 @@ public class CoordinationImpl implements Coordination
      */
     public void join(final long timeOutInMs) throws InterruptedException
     {
+        this.owner.checkPermission(name, CoordinationPermission.PARTICIPATE);
         if ( timeOutInMs < 0 )
         {
             throw new IllegalArgumentException("Timeout must not be negative");
@@ -400,6 +411,7 @@ public class CoordinationImpl implements Coordination
      */
     public Coordination push()
     {
+        this.owner.checkPermission(name, CoordinationPermission.INITIATE);
     	if ( isTerminated() )
     	{
             throw new CoordinationException("Coordination already ended", this, CoordinationException.ALREADY_ENDED);
@@ -414,6 +426,7 @@ public class CoordinationImpl implements Coordination
      */
     public Bundle getBundle()
     {
+        this.owner.checkPermission(name, CoordinationPermission.ADMIN);
         return this.owner.getBundle();
     }
 
@@ -422,6 +435,7 @@ public class CoordinationImpl implements Coordination
      */
     public Coordination getEnclosingCoordination()
     {
+        this.owner.checkPermission(name, CoordinationPermission.ADMIN);
         Coordination c = this.owner.getEnclosingCoordination(this);
         if ( c != null )
         {
