@@ -210,11 +210,11 @@ public class DMCommand {
             long numberOfDependencies = 0;
             long lastBundleId = -1;
             while (iterator.hasNext()) {
-                DependencyManager manager = (DependencyManager) iterator.next();
+                DependencyManager manager = iterator.next();
                 List<Component> complist = manager.getComponents();
                 Iterator<Component> componentIterator = complist.iterator();
                 while (componentIterator.hasNext()) {
-                    Component component = (Component) componentIterator.next();
+                    Component component = componentIterator.next();
                     ComponentDeclaration sc = (ComponentDeclaration) component;
                     String name = sc.getName();
                     // check if this component is enabled or disabled.
@@ -314,7 +314,7 @@ public class DMCommand {
         }
         
         for (int i = 0; i < ids.size(); i ++) {
-            String id = (String) ids.get(i);
+            String id = ids.get(i);
             try {
                 Long longId = Long.valueOf(id);
                 if (longId == bundle.getBundleId()) {
@@ -512,7 +512,7 @@ public class DMCommand {
     private Set<ComponentId> getTheRootCouses(List<ComponentDeclaration> downComponents) {
         Set<ComponentId> downComponentsRoot = new TreeSet<ComponentId>();
         for (ComponentDeclaration c : downComponents) {
-            ComponentId root = getRoot(downComponents, c);
+            ComponentId root = getRoot(downComponents, c, new ArrayList<ComponentId>());
             if (root != null) {
                 downComponentsRoot.add(root);
             }
@@ -622,7 +622,7 @@ public class DMCommand {
         return false;
     }
     
-    private ComponentId getRoot(List<ComponentDeclaration> downComponents, ComponentDeclaration c) {
+    private ComponentId getRoot(List<ComponentDeclaration> downComponents, ComponentDeclaration c, List<ComponentId> backTrace) {
         ComponentDependencyDeclaration[] componentDependencies = c.getComponentDependencies();
         int downDeps = 0;
         for (ComponentDependencyDeclaration cdd : componentDependencies) {
@@ -636,7 +636,19 @@ public class DMCommand {
                     }
                     return new ComponentId(cdd.getName(), cdd.getType(), contextName);
                 }
-                return getRoot(downComponents, component);
+                // Detect circular dependency
+                ComponentId componentId = new ComponentId(cdd.getName(), cdd.getType(), null);
+                if (backTrace.contains(componentId)) {
+                    // We already got this one so its a circular dependency
+                    System.out.print("Circular dependency found:\n *");
+                    for (ComponentId cid : backTrace) {
+                        System.out.print(" -> " + cid.getName() + " ");
+                    }
+                    System.out.println(" -> " + componentId.getName());
+                    return new ComponentId(c.getName(), SERVICE, c.getBundleContext().getBundle().getSymbolicName());
+                }
+                backTrace.add(componentId);
+                return getRoot(downComponents, component, backTrace);
             }
         }
         if (downDeps > 0) {
