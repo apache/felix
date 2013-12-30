@@ -20,6 +20,7 @@ package org.apache.felix.coordinator.impl;
 
 import java.security.Permission;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.TimerTask;
 
 import org.osgi.framework.Bundle;
@@ -125,7 +126,7 @@ public class CoordinatorImpl implements Coordinator
         }
     }
 
-    private void checkPermission(final String coordinationName, final String actions )
+    public void checkPermission(final String coordinationName, final String actions )
     {
         final SecurityManager securityManager = System.getSecurityManager();
         if (securityManager != null)
@@ -160,8 +161,20 @@ public class CoordinatorImpl implements Coordinator
      */
     public Collection<Coordination> getCoordinations()
     {
-        // TODO: check permission
-        return mgr.getCoordinations();
+        final Collection<Coordination> result = mgr.getCoordinations();
+        final Iterator<Coordination> i = result.iterator();
+        while ( i.hasNext() )
+        {
+            final Coordination c = i.next();
+            try {
+                this.checkPermission(c.getName(), CoordinationPermission.ADMIN);
+            }
+            catch (final SecurityException se)
+            {
+                i.remove();
+            }
+        }
+        return result;
     }
 
     /**
@@ -169,7 +182,6 @@ public class CoordinatorImpl implements Coordinator
      */
     public boolean fail(final Throwable reason)
     {
-        // TODO: check permission
         CoordinationImpl current = (CoordinationImpl)mgr.peek();
         if (current != null)
         {
@@ -183,7 +195,6 @@ public class CoordinatorImpl implements Coordinator
      */
     public Coordination peek()
     {
-        // TODO: check permission
         Coordination c = mgr.peek();
         if ( c != null )
         {
@@ -217,10 +228,10 @@ public class CoordinatorImpl implements Coordinator
      */
     public Coordination pop()
     {
-        // TODO: check permission
         Coordination c = mgr.pop();
         if ( c != null )
         {
+            checkPermission(c.getName(), CoordinationPermission.INITIATE);
             c = ((CoordinationImpl)c).getHolder();
         }
         return c;
@@ -231,7 +242,6 @@ public class CoordinatorImpl implements Coordinator
      */
     public boolean addParticipant(final Participant participant)
     {
-        // TODO: check permission
         Coordination current = peek();
         if (current != null)
         {
@@ -246,11 +256,15 @@ public class CoordinatorImpl implements Coordinator
      */
     public Coordination getCoordination(final long id)
     {
-        // TODO: check permission
         Coordination c = mgr.getCoordinationById(id);
         if ( c != null )
         {
-            c = ((CoordinationImpl)c).getHolder();
+            try {
+                checkPermission(c.getName(), CoordinationPermission.ADMIN);
+                c = ((CoordinationImpl)c).getHolder();
+            } catch (final SecurityException e) {
+                c = null;
+            }
         }
         return c;
     }

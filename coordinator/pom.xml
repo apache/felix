@@ -57,6 +57,16 @@
                         <Bundle-DocURL>
                             http://felix.apache.org/site/apache-felix-coordination-service.html
                         </Bundle-DocURL>
+                        <DynamicImport-Package>
+                            org.osgi.service.log;version="[1.3,2)"
+                        </DynamicImport-Package>
+                        <Import-Package>
+                            <!--
+                                Optional import to back the dynamic import on org.osgi.service.log
+                            -->
+                            org.osgi.service.log;version="[1.3,2)";resolution:=optional,
+                            *
+                        </Import-Package>
                         <Export-Package>
                             org.osgi.service.coordinator
                         </Export-Package>
@@ -77,11 +87,13 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <version>4.3.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.enterprise</artifactId>
+            <artifactId>org.osgi.compendium</artifactId>
             <version>5.0.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
