@@ -28,6 +28,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Properties;
 
+import javax.crypto.Cipher;
+
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
 import org.junit.After;
@@ -53,6 +55,8 @@ public class DMCommandTest {
     @Before
     public void setUp() {
         m_bundleContext = mock(BundleContext.class);
+        Bundle bundle = mock(Bundle.class);
+        when(m_bundleContext.getBundle()).thenReturn(bundle);
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
         dm = new DependencyManager(m_bundleContext);
@@ -107,6 +111,35 @@ public class DMCommandTest {
         
         // remove the mess
         dm.remove(component);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testComponentThatHaveCycliclyDependencyOnAOtheComponentShouldRegisterAsFailure() {
+        setupEmptyBundles();
+        DependencyManager dm = new DependencyManager(m_bundleContext);
+        DependencyManager.getDependencyManagers().add(dm);
+        
+        Component component1 = dm.createComponent()
+            .setImplementation(Cipher.class)
+            .setInterface(Cipher.class.getName(), null)
+            .add(dm.createServiceDependency().setService(Math.class).setRequired(true));
+        dm.add(component1);
+        
+        Component component2 = dm.createComponent()
+            .setImplementation(Math.class)
+            .setInterface(Math.class.getName(), null)
+            .add(dm.createServiceDependency().setService(Cipher.class).setRequired(true));
+        dm.add(component2);
+        
+        dme.wtf();
+        String output = outContent.toString();
+        assertTrue(output.contains("Circular dependency found:"));
+        assertTrue(output.contains("-> java.lang.Math  -> javax.crypto.Cipher  -> java.lang.Math"));
+        
+        // remove the mess
+        dm.remove(component1);
+        dm.remove(component2);
     }
     
     @Test
