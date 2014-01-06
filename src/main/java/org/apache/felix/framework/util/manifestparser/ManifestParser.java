@@ -133,15 +133,12 @@ public class ManifestParser
                         bundleCap.getDirectives(),
                         hostAttrs));
                 }
-
-                //
-                // Add the osgi.identity capability.
-                // TODO support this for fragments. The main thing with supporting this
-                // for fragments is that the identity capability should not be exposed
-                // through the host's bundle wiring.
-                //
-                capList.add(addIdentityCapability(owner, headerMap, bundleCap));
             }
+
+            //
+            // Add the osgi.identity capability.
+            //
+            capList.add(addIdentityCapability(owner, headerMap, bundleCap));
         }
 
         // Verify that bundle symbolic name is specified.
