@@ -25,12 +25,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
 import junit.framework.TestCase;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -41,7 +41,6 @@ import org.osgi.framework.launch.Framework;
 public class StartStopBundleTest extends TestCase
 {
     public static final int DELAY = 1000;
-    private File cacheDir;
 
     public void testStartStopBundle() throws Exception
     {
@@ -52,7 +51,7 @@ public class StartStopBundleTest extends TestCase
             + "org.osgi.service.startlevel; version=1.1.0,"
             + "org.osgi.util.tracker; version=1.3.3,"
             + "org.osgi.service.url; version=1.0.0");
-        cacheDir = File.createTempFile("felix-cache", ".dir");
+        File cacheDir = File.createTempFile("felix-cache", ".dir");
         cacheDir.delete();
         cacheDir.mkdirs();
         String cache = cacheDir.getPath();
@@ -64,66 +63,69 @@ public class StartStopBundleTest extends TestCase
             + "Bundle-Version: 1.1.0\n"
             + "Bundle-ManifestVersion: 2\n"
             + "Import-Package: org.osgi.framework\n";
-        File bundleFile = createBundle(mf);
+        File bundleFile = createBundle(mf, cacheDir);
 
         Framework f = new Felix(params);
         f.init();
         f.start();
 
-        final Bundle bundle = f.getBundleContext().installBundle(bundleFile.toURI().toString());
-        final CountDownLatch latch = new CountDownLatch(1);
+        try {
+            final Bundle bundle = f.getBundleContext().installBundle(bundleFile.toURI().toString());
 
-        new Thread()
-        {
-            public void run()
+            new Thread()
             {
-                try
+                public void run()
                 {
-                    bundle.start();
+                    try
+                    {
+                        bundle.start();
+                    }
+                    catch (BundleException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
-                catch (BundleException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
-        Thread.sleep(DELAY / 4);
-        long t0 = System.currentTimeMillis();
-        bundle.stop();
-        long t1 = System.currentTimeMillis();
+            }.start();
+            Thread.sleep(DELAY / 4);
+            long t0 = System.currentTimeMillis();
+            bundle.stop();
+            long t1 = System.currentTimeMillis();
 
-        assertEquals(Bundle.RESOLVED, bundle.getState());
-        assertTrue((t1 - t0) > DELAY / 2);
+            assertEquals(Bundle.RESOLVED, bundle.getState());
+            assertTrue((t1 - t0) > DELAY / 2);
 
-        bundle.start();
+            bundle.start();
 
-        new Thread()
-        {
-            public void run()
+            new Thread()
             {
-                try
+                public void run()
                 {
-                    bundle.stop();
+                    try
+                    {
+                        bundle.stop();
+                    }
+                    catch (BundleException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
-                catch (BundleException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
-        Thread.sleep(DELAY / 4);
-        t0 = System.currentTimeMillis();
-        bundle.start();
-        t1 = System.currentTimeMillis();
+            }.start();
+            Thread.sleep(DELAY / 4);
+            t0 = System.currentTimeMillis();
+            bundle.start();
+            t1 = System.currentTimeMillis();
 
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-        assertTrue((t1 - t0) > DELAY / 2);
+            assertEquals(Bundle.ACTIVE, bundle.getState());
+            assertTrue((t1 - t0) > DELAY / 2);
+        } finally {
+            f.stop();
+            deleteDir(cacheDir);
+        }
     }
 
-    private static File createBundle(String manifest) throws IOException
+    private static File createBundle(String manifest, File tempDir) throws IOException
     {
-        File f = File.createTempFile("felix-bundle", ".jar");
-        f.deleteOnExit();
+        File f = File.createTempFile("felix-bundle", ".jar", tempDir);
 
         Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
@@ -143,7 +145,18 @@ public class StartStopBundleTest extends TestCase
         return f;
     }
 
-    public static class TestBundleActivator implements BundleActivator
+    private static void deleteDir(File root) throws IOException
+    {
+        if (root.isDirectory())
+        {
+            for (File file : root.listFiles())
+            {
+                deleteDir(file);
+            }
+        }
+        assertTrue(root.delete());
+    }
+   public static class TestBundleActivator implements BundleActivator
     {
         public void start(BundleContext context) throws Exception
         {
