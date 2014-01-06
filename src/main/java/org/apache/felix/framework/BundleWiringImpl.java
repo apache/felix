@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.JarContent;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
@@ -63,6 +64,7 @@ import org.osgi.framework.PackagePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.hooks.weaving.WeavingException;
 import org.osgi.framework.hooks.weaving.WeavingHook;
+import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
@@ -254,19 +256,32 @@ public class BundleWiringImpl implements BundleWiring
         // Calculate resolved list of capabilities, which includes:
         // 1. All capabilities from host and any fragments except for exported
         //    packages that we have an import (i.e., the export was substituted).
-        // And nothing else at this time. Fragments currently have no capabilities.
+        // 2. For fragments the identity capability only.
+        // And nothing else at this time.
         boolean isFragment = Util.isFragment(revision);
-        List<BundleCapability> capList = (isFragment)
-            ? Collections.EMPTY_LIST
-            : new ArrayList<BundleCapability>();
+        List<BundleCapability> capList = new ArrayList<BundleCapability>();
         // Also keep track of whether any resolved package capabilities are filtered.
         Map<String, List<List<String>>> includedPkgFilters =
             new HashMap<String, List<List<String>>>();
         Map<String, List<List<String>>> excludedPkgFilters =
             new HashMap<String, List<List<String>>>();
-// TODO: OSGi R4.4 - Fragments currently have no capabilities, but they may
-//       have an identity capability in the future.
-        if (!isFragment)
+
+        if (isFragment)
+        {
+            // This is a fragment, add its identity capability
+            for (BundleCapability cap : m_revision.getDeclaredCapabilities(null))
+            {
+                if (IdentityNamespace.IDENTITY_NAMESPACE.equals(cap.getNamespace()))
+                {
+                    String effective = cap.getDirectives().get(Constants.EFFECTIVE_DIRECTIVE);
+                    if ((effective == null) || (effective.equals(Constants.EFFECTIVE_RESOLVE)))
+                    {
+                        capList.add(cap);
+                    }
+                }
+            }
+        }
+        else
         {
             for (BundleCapability cap : m_revision.getDeclaredCapabilities(null))
             {
@@ -308,8 +323,11 @@ public class BundleWiringImpl implements BundleWiring
                 {
                     for (BundleCapability cap : fragment.getDeclaredCapabilities(null))
                     {
-// TODO: OSGi R4.4 - OSGi R4.4 may introduce an identity capability, if so
-//       that will need to be excluded from here.
+                        if (IdentityNamespace.IDENTITY_NAMESPACE.equals(cap.getNamespace())) {
+                            // The identity capability is not transferred from the fragment to the bundle
+                            continue;
+                        }
+
                         if (!cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
                             || (cap.getNamespace().equals(BundleRevision.PACKAGE_NAMESPACE)
                                 && !imports.contains(cap.getAttributes()
