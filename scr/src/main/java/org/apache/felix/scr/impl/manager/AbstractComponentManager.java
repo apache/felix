@@ -108,12 +108,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      */
     private final AtomicReference< CountDownLatch> m_enabledLatchRef = new AtomicReference<CountDownLatch>( new CountDownLatch(0) );
 
-    /**
-     * This ReadWriteLock prevents locateService calls from the ComponentContext from occurring while target filters are 
-     * being changed during reconfigure, when the set of bound services is unclear.
-     */
-    private final ReadWriteLock m_reconfigureLock = new ReentrantReadWriteLock();
-    
     protected volatile boolean m_enabled;
     protected volatile boolean m_internalEnabled;
     
@@ -500,24 +494,6 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return newEnabledLatch;  
     }
 
-    void reconfigureWriteLock() {
-        obtainLock(m_reconfigureLock.writeLock(), "AbstractComponentManager.ReconfigureLock.WriteLock");
-    }
-    
-    void reconfigureWriteUnlock() 
-    {
-        m_reconfigureLock.writeLock().unlock();
-    }
-    
-    void reconfigureReadLock() {
-        obtainLock(m_reconfigureLock.readLock(), "AbstractComponentManager.ReconfigureLock.ReadLock");
-    }
-    
-    void reconfigureReadUnlock() 
-    {
-        m_reconfigureLock.readLock().unlock();
-    }
-    
     /**
      * Disables this component and - if active - first deactivates it. The
      * component may be reenabled by calling the {@link #enable()} method.

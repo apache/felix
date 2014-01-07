@@ -961,7 +961,8 @@ public class DependencyManager<S, T> implements Reference
             this.trackingCount = trackingCount;
             tracked( trackingCount );
             boolean reactivate;
-            synchronized (getTracker().tracked())
+            final Object sync = getTracker().tracked();
+            synchronized (sync)
             {
                 reactivate = ( isActive() && refPair == this.refPair) || ( !isOptional() && getTracker().isEmpty());
                 if (!reactivate && refPair == this.refPair) {
@@ -971,7 +972,7 @@ public class DependencyManager<S, T> implements Reference
             if ( reactivate )
             {
                 m_componentManager.deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
-                synchronized ( getTracker().tracked() )
+                synchronized ( sync )
                 {
                     if (refPair == this.refPair)
                     {
@@ -1318,8 +1319,13 @@ public class DependencyManager<S, T> implements Reference
      */
     private RefPair<T> getRefPair( ServiceReference<T> serviceReference )
     {
-        AtomicInteger trackingCount = new AtomicInteger( );
-        return m_tracker.getTracked( null, trackingCount ).get( serviceReference );
+        final ServiceTracker<T, RefPair<T>> tracker = m_tracker;
+        if ( tracker != null )
+        {
+            AtomicInteger trackingCount = new AtomicInteger( );
+            return tracker.getTracked( null, trackingCount ).get( serviceReference );
+        }
+        return null;
     }
 
 
