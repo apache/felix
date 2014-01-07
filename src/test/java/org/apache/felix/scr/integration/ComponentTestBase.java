@@ -140,6 +140,7 @@ public abstract class ComponentTestBase
                                             "org.apache.felix.scr.integration.components.circular," +
                                             "org.apache.felix.scr.integration.components.circularFactory," +
                                             "org.apache.felix.scr.integration.components.concurrency," +
+                                            "org.apache.felix.scr.integration.components.deadlock," +
                                             "org.apache.felix.scr.integration.components.felix3680," +
                                             "org.apache.felix.scr.integration.components.felix3680_2");
         builder.setHeader("Import-Package", "org.apache.felix.scr,org.apache.felix.scr.component;mandatory:=\"status\"; status=\"provisional\"");
