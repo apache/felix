@@ -96,7 +96,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     public Object locateService( String name )
     {
-        m_componentManager.reconfigureReadLock();
+        m_componentManager.obtainActivationReadLock( "locate.service.name" );
         try
         {
             DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
@@ -104,14 +104,14 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
         finally
         {
-            m_componentManager.reconfigureReadUnlock();
+            m_componentManager.releaseActivationReadLock( "locate.service.name" );
         }
     }
 
 
     public Object locateService( String name, ServiceReference ref )
     {
-        m_componentManager.reconfigureReadLock();
+        m_componentManager.obtainActivationReadLock( "locate.service.ref" );
         try
         {
             DependencyManager<S, ?> dm = m_componentManager.getDependencyManager( name );
@@ -119,14 +119,14 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
         finally
         {
-            m_componentManager.reconfigureReadUnlock();
+            m_componentManager.releaseActivationReadLock( "locate.service.ref" );
         }
     }
 
 
     public Object[] locateServices( String name )
     {
-        m_componentManager.reconfigureReadLock();
+        m_componentManager.obtainActivationReadLock( "locate.services" );
         try
         {
             DependencyManager dm = m_componentManager.getDependencyManager( name );
@@ -134,7 +134,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         }
         finally
         {
-            m_componentManager.reconfigureReadUnlock();
+            m_componentManager.releaseActivationReadLock( "locate.services" );
         }
     }
 

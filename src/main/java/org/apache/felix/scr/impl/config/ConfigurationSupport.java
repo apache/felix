@@ -315,6 +315,9 @@ public class ConfigurationSupport implements ConfigurationListener
                         //this sets the location to this component's bundle if not already set.  OK here
                         //since it used to be set to this bundle, ok to reset it
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, componentHolder, bundleContext );
+                        Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, same targetedPID {0}, location now {1}",
+                                new Object[] {targetedPid, configInfo.getBundleLocation()},
+                                null);
                         if (configInfo.getProps() == null)
                         {
                             throw new IllegalStateException("Existing Configuration with pid " + pid + 
@@ -338,6 +341,9 @@ public class ConfigurationSupport implements ConfigurationListener
                         //this sets the location to this component's bundle if not already set.  OK here
                         //because if it is set to this bundle we will use it.
                         final ConfigurationInfo configInfo = getConfigurationInfo( pid, componentHolder, bundleContext );
+                        Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, better targetedPID {0} compared to {1}, location now {2}",
+                                new Object[] {targetedPid, oldTargetedPID, configInfo.getBundleLocation()},
+                                null);
                         if (configInfo.getProps() == null)
                         {
                             //location has been changed before any properties are set.  We don't care.  Wait for an updated event with the properties
@@ -356,6 +362,12 @@ public class ConfigurationSupport implements ConfigurationListener
                         }
                     }
                     //else worse match, do nothing
+                    else
+                    {
+                        Activator.log(LogService.LOG_DEBUG, null, "LocationChanged event, worse targetedPID {0} compared to {1}, do nothing",
+                                new Object[] {targetedPid, oldTargetedPID},
+                                null);
+                    }
                     break;
                 }
                 default:
