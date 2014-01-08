@@ -384,7 +384,9 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private void configureConnector(final Connector connector, int port)
     {
         connector.setMaxIdleTime(this.config.getHttpTimeout());
+        connector.setRequestHeaderSize(this.config.getHeaderSize());
         connector.setRequestBufferSize(this.config.getRequestBufferSize());
+        connector.setResponseHeaderSize(this.config.getHeaderSize());
         connector.setResponseBufferSize(this.config.getResponseBufferSize());
         connector.setPort(port);
         connector.setHost(this.config.getHost());
