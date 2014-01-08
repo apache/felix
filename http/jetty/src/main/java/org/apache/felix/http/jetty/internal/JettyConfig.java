@@ -108,6 +108,13 @@ public final class JettyConfig
     /** Felix specific property to set the list of path exclusions for Web Application Bundles */
     public static final String FELIX_HTTP_PATH_EXCLUSIONS = "org.apache.felix.http.path_exclusions";
 
+    /** Felix specific property to configure the excluded cipher suites */
+    public static final String FELIX_JETTY_EXCLUDED_SUITES = "org.apache.felix.https.jetty.cipersuites.excluded";
+
+    /** Felix specific property to configure the included cipher suites */
+    public static final String FELIX_JETTY_INCLUDED_SUITES = "org.apache.felix.https.jetty.cipersuites.included";
+
+
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
@@ -173,6 +180,11 @@ public final class JettyConfig
         return validateContextPath(getProperty(FELIX_HTTP_CONTEXT_PATH, null));
     }
 
+    public String[] getExcludedCipherSuites()
+    {
+        return getStringArrayProperty(FELIX_JETTY_EXCLUDED_SUITES, null);
+    }
+
     public String getHost()
     {
         return getProperty(FELIX_HOST, null);
@@ -191,6 +203,11 @@ public final class JettyConfig
     public int getHttpTimeout()
     {
         return getIntProperty(HTTP_TIMEOUT, 60000);
+    }
+
+    public String[] getIncludedCipherSuites()
+    {
+        return getStringArrayProperty(FELIX_JETTY_INCLUDED_SUITES, null);
     }
 
     /**
@@ -330,7 +347,7 @@ public final class JettyConfig
 
     /**
      * Updates this configuration with the given dictionary.
-     * 
+     *
      * @param props the dictionary with the new configuration values, can be <code>null</code> to reset this configuration to its defaults.
      * @return <code>true</code> if the configuration was updated due to a changed value, or <code>false</code> if no change was found.
      */
@@ -341,7 +358,7 @@ public final class JettyConfig
             props = new Properties();
         }
 
-        // FELIX-4312 Check whether there's something changed in our configuration... 
+        // FELIX-4312 Check whether there's something changed in our configuration...
         Dictionary currentConfig = this.config;
         if (currentConfig == null || !props.equals(currentConfig))
         {
@@ -381,7 +398,7 @@ public final class JettyConfig
      * <dd>[,9000) | 1 &lt; port &lt; 9000</dd>
      * <dd>[8000,) | 8000 &lt;= port &lt; 65534</dd>
      * </dl>
-     * 
+     *
      * @param portProp
      *            The port property value to parse.
      * @return The port determined to be usable. -1 if failed to find a port.
