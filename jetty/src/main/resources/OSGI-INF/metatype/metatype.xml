@@ -45,6 +45,8 @@
         <AD id="org.apache.felix.http.jetty.responseBufferSize" type="Integer" default="24576" name="%org.apache.felix.http.jetty.responseBufferSize.name" description="%org.apache.felix.http.jetty.responseBufferSize.description"/>
         <AD id="org.apache.felix.http.debug" type="Boolean" default="false" name="%org.apache.felix.http.debug.name" description="%org.apache.felix.http.debug.description"/>
         <AD id="org.apache.felix.http.path_exclusions" type="String" default="/system" cardinality="2147483647" name="%org.apache.felix.http.path_exclusions.name" description="%org.apache.felix.http.path_exclusions.description"/>
+        <AD id="org.apache.felix.https.jetty.cipersuites.excluded" type="String" cardinality="2147483647" name="%org.apache.felix.https.jetty.cipersuites.excluded.name" description="%org.apache.felix.https.jetty.cipersuites.excluded.description"/>
+        <AD id="org.apache.felix.https.jetty.cipersuites.included" type="String" cardinality="2147483647" name="%org.apache.felix.https.jetty.cipersuites.included.name" description="%org.apache.felix.https.jetty.cipersuites.included.description"/>
     </OCD>
     <Designate pid="org.apache.felix.http">
         <Object ocdref="org.apache.felix.http"/>

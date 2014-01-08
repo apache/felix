@@ -369,6 +369,16 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         {
             connector.setNeedClientAuth(true);
         }
+
+        if (this.config.getExcludedCipherSuites() != null)
+        {
+            connector.setExcludeCipherSuites(this.config.getExcludedCipherSuites());
+        }
+
+        if (this.config.getIncludedCipherSuites() != null)
+        {
+            connector.setIncludeCipherSuites(this.config.getIncludedCipherSuites());
+        }
     }
 
     private void configureConnector(final Connector connector, int port)
