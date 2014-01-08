@@ -628,13 +628,16 @@ public class DMCommand {
         for (ComponentDependencyDeclaration cdd : componentDependencies) {
             if (cdd.getState() == ComponentDependencyDeclaration.STATE_UNAVAILABLE_REQUIRED) {
                 downDeps++;
+                // Detect missing configuration dependency
+                if (CONFIGURATION.equals(cdd.getType())) {
+                    String bsn = c.getBundleContext().getBundle().getSymbolicName();
+                    return new ComponentId(cdd.getName(), cdd.getType(), bsn);
+                }
+
+                // Detect if the missing dependency is a root cause failure
                 ComponentDeclaration component = getComponentDeclaration(cdd.getName(), downComponents);
                 if (component == null) {
-                    String contextName = null;
-                    if (CONFIGURATION.equals(cdd.getType())) {
-                        contextName = c.getBundleContext().getBundle().getSymbolicName();
-                    }
-                    return new ComponentId(cdd.getName(), cdd.getType(), contextName);
+                    return new ComponentId(cdd.getName(), cdd.getType(), null);
                 }
                 // Detect circular dependency
                 ComponentId componentId = new ComponentId(cdd.getName(), cdd.getType(), null);
