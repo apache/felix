@@ -185,6 +185,11 @@ public final class JettyConfig
         return getStringArrayProperty(FELIX_JETTY_EXCLUDED_SUITES, null);
     }
 
+    public int getHeaderSize()
+    {
+        return getIntProperty(FELIX_JETTY_HEADER_BUFFER_SIZE, 16 * 1024);
+    }
+
     public String getHost()
     {
         return getProperty(FELIX_HOST, null);
