@@ -142,7 +142,7 @@ public abstract class TestBase implements LogService, FrameworkListener {
                 junitBundles(),
                 bootDelegationPackages("org.netbeans.*"), // For jvisualvm
                 mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.8"),
-                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.6.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.gogo.runtime", "0.10.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin", "0.9.0").start(false),
                 mavenBundle("org.ops4j.pax.tinybundles", "tinybundles", "1.0.0"),
@@ -360,24 +360,30 @@ public abstract class TestBase implements LogService, FrameworkListener {
         }
     }
 
-    protected void warn(String msg) {
-        log(LogService.LOG_WARNING, msg);
+    protected void warn(String msg, Object ... params) {
+	if (LOG_LEVEL >= LogService.LOG_WARNING) {
+	    log(LogService.LOG_WARNING, params.length > 0 ? String.format(msg, params) : msg);
+	}
     }
 
-    protected void info(String msg) {
-        log(LogService.LOG_INFO, msg);
+    protected void info(String msg, Object ... params) {
+	if (LOG_LEVEL >= LogService.LOG_INFO) {
+	    log(LogService.LOG_INFO, params.length > 0 ? String.format(msg, params) : msg);
+	}
     }
 
-    protected void debug(String msg) {
-        log(LogService.LOG_DEBUG, msg);
+    protected void debug(String msg, Object ... params) {
+	if (LOG_LEVEL >= LogService.LOG_DEBUG) {
+	    log(LogService.LOG_DEBUG, params.length > 0 ? String.format(msg, params) : msg);
+	}
     }
 
-    protected void error(String msg) {
-        log(LogService.LOG_ERROR, msg);
+    protected void error(String msg, Object ... params) {
+        log(LogService.LOG_ERROR, params.length > 0 ? String.format(msg, params) : msg);
     }
 
-    protected void error(String msg, Throwable err) {
-        log(LogService.LOG_ERROR, msg, err);
+    protected void error(String msg, Throwable err, Object ... params) {
+        log(LogService.LOG_ERROR, params.length > 0 ? String.format(msg, params) : msg, err);
     }
 
     protected void error(Throwable err) {
