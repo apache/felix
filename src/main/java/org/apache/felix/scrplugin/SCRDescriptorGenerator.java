@@ -383,11 +383,11 @@ public class SCRDescriptorGenerator {
                     componentDesc.setSpecVersion(SpecVersion.VERSION_1_1);
                 }
 
-                // services, properties, references
-                this.processServices(current, container);
-                this.processProperties(current, container, ocd);
-                this.processReferences(current, container);
             }
+            // services, properties, references
+            this.processServices(current, container);
+            this.processProperties(current, container, ocd);
+            this.processReferences(current, container);
 
 
             // go up in the class hierarchy
