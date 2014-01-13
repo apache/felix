@@ -129,7 +129,7 @@ public class MetaTypeIO {
                     for(final ComponentContainer cc : ccc.components) {
                         final MetatypeContainer mc = cc.getMetatypeContainer();
 
-                        final String baseKey = cc.getClassDescription().getDescribedClass().getName().replace("$", ".");
+                        final String baseKey = cc.getComponentDescription().getName().replace("$", ".");
 
                         if ( mc.getName() != null ) {
                             final String key = baseKey + ".name";
