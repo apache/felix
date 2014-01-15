@@ -143,6 +143,7 @@ public abstract class TestBase implements LogService, FrameworkListener {
                 bootDelegationPackages("org.netbeans.*"), // For jvisualvm
                 mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.8"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.gogo.runtime", "0.10.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin", "0.9.0").start(false),
                 mavenBundle("org.ops4j.pax.tinybundles", "tinybundles", "1.0.0"),
