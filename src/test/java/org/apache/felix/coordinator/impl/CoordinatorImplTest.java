@@ -24,7 +24,6 @@ import org.osgi.service.coordinator.Coordination;
 import org.osgi.service.coordinator.CoordinationException;
 import org.osgi.service.coordinator.Participant;
 
-@SuppressWarnings("deprecation")
 public class CoordinatorImplTest extends TestCase
 {
 
