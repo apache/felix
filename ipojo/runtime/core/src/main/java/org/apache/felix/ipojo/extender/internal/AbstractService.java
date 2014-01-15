@@ -31,8 +31,9 @@ public abstract class AbstractService implements Lifecycle {
 
     /**
      * The bundle context.
+     * To let sub-classes retrieve the used bundle context, this member is {@literal protected}.
      */
-    private final BundleContext m_bundleContext;
+    protected final BundleContext m_bundleContext;
     /**
      * The service specification.
      */

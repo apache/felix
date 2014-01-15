@@ -21,6 +21,7 @@ package org.apache.felix.ipojo.extender.internal.declaration;
 
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.extender.InstanceDeclaration;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 import java.util.Dictionary;
@@ -76,6 +77,16 @@ public class DefaultInstanceDeclaration extends AbstractDeclaration implements I
 
     public String getInstanceName() {
         return m_instanceName;
+    }
+
+    /**
+     * Gets the bundle that is declaring this instance.
+     *
+     * @return the bundle object
+     * @since 1.11.2
+     */
+    public Bundle getBundle() {
+        return m_bundleContext.getBundle();
     }
 
     @Override

@@ -19,6 +19,8 @@
 
 package org.apache.felix.ipojo.extender;
 
+import org.osgi.framework.Bundle;
+
 import java.util.Dictionary;
 
 /**
@@ -68,4 +70,11 @@ public interface InstanceDeclaration extends Declaration {
      * @return the instance name, {@literal unnamed} if not specified.
      */
     String getInstanceName();
+
+    /**
+     * Gets the bundle that is declaring this instance.
+     * @return the bundle object
+     * @since 1.11.2
+     */
+    Bundle getBundle();
 }
