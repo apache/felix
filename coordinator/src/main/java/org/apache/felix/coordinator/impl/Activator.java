@@ -28,7 +28,6 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.coordinator.Coordinator;
 
-@SuppressWarnings("deprecation")
 public class Activator implements BundleActivator
 {
 
