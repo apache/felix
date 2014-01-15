@@ -169,6 +169,62 @@ public class DMCommandTest {
     }
     
     @Test
+    public void testCanFindRootFailureWithSecondair() {
+        setupEmptyBundles();
+        
+        Component component1 = dm.createComponent()
+            .setImplementation(Object.class)
+            .setInterface(Object.class.getName(), null)
+            .add(dm.createServiceDependency().setService(Math.class).setRequired(true));
+        dm.add(component1);
+        
+        Component component2 = dm.createComponent()
+            .setImplementation(Math.class)
+            .setInterface(Math.class.getName(), null)
+            .add(dm.createServiceDependency().setService(Float.class).setRequired(true));
+        dm.add(component2);
+        
+        Component component3 = dm.createComponent()
+            .setImplementation(Object.class)
+            .setInterface(new String[] {Object.class.getName(), Float.class.getName()}, null)
+            .add(dm.createServiceDependency().setService(String.class).setRequired(true));
+        dm.add(component3);
+        
+        dme.wtf();
+        String output = outContent.toString();
+        assertTrue(output.contains("3 missing"));
+        assertTrue(output.contains("java.lang.String"));
+        assertFalse(output.contains("java.lang.Float"));
+        
+        // remove the mess
+        dm.remove(component1);
+        dm.remove(component2);
+        dm.remove(component3);
+    }
+    
+    @Test
+    public void testCanFindRootFailureWithTwoFailures() {
+        setupEmptyBundles();
+        
+        Component component1 = dm.createComponent()
+            .setImplementation(Object.class)
+            .setInterface(Object.class.getName(), null)
+            .add(dm.createServiceDependency().setService(Math.class).setRequired(true))
+            .add(dm.createServiceDependency().setService(Long.class).setRequired(true));
+        dm.add(component1);
+        
+        
+        dme.wtf();
+        String output = outContent.toString();
+        assertTrue(output.contains("1 missing"));
+        assertTrue(output.contains("java.lang.Math"));
+        assertTrue(output.contains("java.lang.Long"));
+        
+        // remove the mess
+        dm.remove(component1);
+    }
+    
+    @Test
     public void testInstalledBundleListing() {
         Bundle bundle1 = mock(Bundle.class);
         when(bundle1.getState()).thenReturn(Bundle.INSTALLED);
