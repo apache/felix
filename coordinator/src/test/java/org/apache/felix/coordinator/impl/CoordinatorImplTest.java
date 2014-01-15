@@ -366,7 +366,7 @@ public class CoordinatorImplTest extends TestCase
         {
             c2Thread.interrupt();
             c2Thread.join(1000);
-            assertFalse("Thread for second Coordination did not terminate....", c2Thread.isAlive());
+            assertFalse("Thread for second Coordination did still not terminate....", c2Thread.isAlive());
         }
     }
 
