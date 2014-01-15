@@ -861,7 +861,12 @@ class BundleImpl implements Bundle, BundleRevisions
     {
         try
         {
-            return m_archive.getStartLevel();
+            int level = m_archive.getStartLevel();
+            if ( level == -1 )
+            {
+                level = defaultLevel;
+            }
+            return level;
         }
         catch (Exception ex)
         {
