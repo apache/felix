@@ -25,6 +25,8 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -512,10 +514,8 @@ public class DMCommand {
     private Set<ComponentId> getTheRootCouses(List<ComponentDeclaration> downComponents) {
         Set<ComponentId> downComponentsRoot = new TreeSet<ComponentId>();
         for (ComponentDeclaration c : downComponents) {
-            ComponentId root = getRoot(downComponents, c, new ArrayList<ComponentId>());
-            if (root != null) {
-                downComponentsRoot.add(root);
-            }
+            List<ComponentId> root = getRoot(downComponents, c, new ArrayList<ComponentId>());
+            downComponentsRoot.addAll(root);
         }
         return downComponentsRoot;
     }
@@ -622,22 +622,25 @@ public class DMCommand {
         return false;
     }
     
-    private ComponentId getRoot(List<ComponentDeclaration> downComponents, ComponentDeclaration c, List<ComponentId> backTrace) {
+    private List<ComponentId> getRoot(List<ComponentDeclaration> downComponents, ComponentDeclaration c, List<ComponentId> backTrace) {
         ComponentDependencyDeclaration[] componentDependencies = c.getComponentDependencies();
         int downDeps = 0;
+        List<ComponentId> result = new ArrayList<ComponentId>();
         for (ComponentDependencyDeclaration cdd : componentDependencies) {
             if (cdd.getState() == ComponentDependencyDeclaration.STATE_UNAVAILABLE_REQUIRED) {
                 downDeps++;
                 // Detect missing configuration dependency
                 if (CONFIGURATION.equals(cdd.getType())) {
                     String bsn = c.getBundleContext().getBundle().getSymbolicName();
-                    return new ComponentId(cdd.getName(), cdd.getType(), bsn);
+                    result.add(new ComponentId(cdd.getName(), cdd.getType(), bsn));
+                    continue;
                 }
 
                 // Detect if the missing dependency is a root cause failure
                 ComponentDeclaration component = getComponentDeclaration(cdd.getName(), downComponents);
                 if (component == null) {
-                    return new ComponentId(cdd.getName(), cdd.getType(), null);
+                    result.add(new ComponentId(cdd.getName(), cdd.getType(), null));
+                    continue;
                 }
                 // Detect circular dependency
                 ComponentId componentId = new ComponentId(cdd.getName(), cdd.getType(), null);
@@ -648,30 +651,69 @@ public class DMCommand {
                         System.out.print(" -> " + cid.getName() + " ");
                     }
                     System.out.println(" -> " + componentId.getName());
-                    return new ComponentId(c.getName(), SERVICE, c.getBundleContext().getBundle().getSymbolicName());
+                    result.add(new ComponentId(c.getName(), SERVICE, c.getBundleContext().getBundle().getSymbolicName()));
+                    continue;
                 }
                 backTrace.add(componentId);
                 return getRoot(downComponents, component, backTrace);
             }
         }
-        if (downDeps > 0) {
-            return new ComponentId(c.getName(), SERVICE, c.getBundleContext().getBundle().getSymbolicName());
+        if (downDeps > 0 && result.isEmpty()) {
+            result.add(new ComponentId(c.getName(), SERVICE, c.getBundleContext().getBundle().getSymbolicName()));
+        }
+        return result;
+    }
+    
+    private ComponentDeclaration getComponentDeclaration(final String fullName, List<ComponentDeclaration> list) {
+        String simpleName = getSimpleName(fullName);
+        Properties props = parseProperties(fullName);
+        for (ComponentDeclaration c : list) {
+            String serviceNames = c.getName();
+            int cuttOff = serviceNames.indexOf("(");
+            if (cuttOff != -1) {
+                serviceNames = serviceNames.substring(0, cuttOff).trim();
+            }
+            for (String serviceName : serviceNames.split(",")) {
+                if (simpleName.equals(serviceName.trim()) && doPropertiesMatch(props, parseProperties(c.getName()))) {
+                    return c;
+                }
+            }
         }
         return null;
     }
     
-    private ComponentDeclaration getComponentDeclaration(String name, List<ComponentDeclaration> list) {
-        for (ComponentDeclaration c : list) {
-            String serviceName = c.getName();
-            int cuttOff = serviceName.indexOf("(");
-            if (cuttOff != -1) {
-                serviceName = serviceName.substring(0, cuttOff);
-            }
-            if (name.equals(serviceName)) {
-                return c;
+    private boolean doPropertiesMatch(Properties need, Properties provide) {
+        for (Entry<Object, Object> entry : need.entrySet()) {
+            Object prop = provide.get(entry.getKey());
+            if (prop == null || !prop.equals(entry.getValue())) {
+                return false;
             }
         }
-        return null;
+        return true;
+    }
+
+    private String getSimpleName(String name) {
+        int cuttOff = name.indexOf("(");
+        if (cuttOff != -1) {
+            return name.substring(0, cuttOff).trim();
+        }
+        return name.trim();
+    }
+    
+    private Properties parseProperties(String name) {
+        Properties result = new Properties();
+        int cuttOff = name.indexOf("(");
+        if (cuttOff != -1) {
+            String propsText = name.substring(cuttOff + 1, name.indexOf(")"));
+            String[] split = propsText.split(",");
+            for (String prop : split) {
+                String[] kv = prop.split("=");
+                if (kv.length == 2) {
+                    result.put(kv[0], kv[1]);
+                }
+            }
+        }
+        return result;
     }
     
     public static class DependencyManagerSorter implements Comparator<DependencyManager> {
