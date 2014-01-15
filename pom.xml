@@ -35,6 +35,12 @@
     </description>
     <version>0.0.1-SNAPSHOT</version>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/coordinator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/coordinator</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/trunk/coordinator</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
