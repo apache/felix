@@ -164,7 +164,7 @@ public class CoordinationMgr
                 }
 
                 // timeout waiting for participation
-                if (System.currentTimeMillis() > cutOff)
+                if (System.currentTimeMillis() >= cutOff)
                 {
                     throw new CoordinationException("Timed out waiting to join coordinaton", c,
                         CoordinationException.FAILED, Coordination.TIMEOUT);
