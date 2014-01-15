@@ -33,12 +33,12 @@
     <description>
         Implementation of the OSGi Coordinator Service Specification 1.0
     </description>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/coordinator</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/coordinator</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/coordinator</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.coordinator-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.coordinator-1.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/felix/releases/org.apache.felix.coordinator-1.0.0</url>
     </scm>
 
     <build>
