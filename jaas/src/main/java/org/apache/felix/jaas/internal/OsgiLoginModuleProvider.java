@@ -34,19 +34,23 @@ import org.osgi.framework.ServiceReference;
 final class OsgiLoginModuleProvider implements LoginModuleProvider
 {
     private final LoginModuleFactory delegate;
-    private final int ranking;
-    private final LoginModuleControlFlag flag;
-    private final String realmName;
     private final ServiceReference serviceReference;
+
+    private int ranking;
+    private LoginModuleControlFlag flag;
+    private String realmName;
 
     public OsgiLoginModuleProvider(ServiceReference sr, LoginModuleFactory delegate)
     {
         this.delegate = delegate;
-        this.ranking = PropertiesUtil.toInteger(sr.getProperty(Constants.SERVICE_RANKING), 0);
-        this.flag = ControlFlag.from(
-            (String) sr.getProperty(LoginModuleFactory.JAAS_CONTROL_FLAG)).flag();
-        this.realmName = (String) sr.getProperty(LoginModuleFactory.JAAS_REALM_NAME);
         this.serviceReference = sr;
+        configure();
+    }
+
+    public void configure() {
+        ranking = PropertiesUtil.toInteger(serviceReference.getProperty(Constants.SERVICE_RANKING), 0);
+        flag = ControlFlag.from((String) serviceReference.getProperty(LoginModuleFactory.JAAS_CONTROL_FLAG)).flag();
+        realmName = (String) serviceReference.getProperty(LoginModuleFactory.JAAS_REALM_NAME);
     }
 
     public Map<String, ?> options()

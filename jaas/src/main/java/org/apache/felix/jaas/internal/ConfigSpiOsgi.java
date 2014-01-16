@@ -375,6 +375,11 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
     @Override
     public void modifiedService(ServiceReference reference, Object service)
     {
+        LoginModuleFactory lmf = providerMap.get(reference);
+        if (lmf instanceof OsgiLoginModuleProvider) {
+            // refresh to update configs
+            ((OsgiLoginModuleProvider) lmf).configure();
+        }
         recreateConfigs();
     }
 
