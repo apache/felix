@@ -117,19 +117,19 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
     /**
      * List of available Architecture service.
      */
-    @Requires(optional = true, specification = "org.apache.felix.ipojo.architecture.Architecture")
+    @Requires(optional = true, specification = Architecture.class)
     private List<Architecture> m_archs;
 
     /**
      * List of available Factories.
      */
-    @Requires(optional = true, specification = "org.apache.felix.ipojo.Factory")
+    @Requires(optional = true, specification = Factory.class)
     private List<Factory> m_factories;
 
     /**
      * List of available Handler Factories.
      */
-    @Requires(optional = true, specification = "org.apache.felix.ipojo.HandlerFactory")
+    @Requires(optional = true, specification = HandlerFactory.class)
     private List<HandlerFactory> m_handlers;
     
     /**
@@ -149,7 +149,7 @@ public class IPOJOPlugin extends AbstractWebConsolePlugin {
      * @param templateFile the template file name
      * @return the template
      */
-    private final String readTemplate(final String templateFile) {
+    private String readTemplate(final String templateFile) {
         InputStream templateStream = getClass().getResourceAsStream(
                 templateFile);
         if (templateStream != null) {
