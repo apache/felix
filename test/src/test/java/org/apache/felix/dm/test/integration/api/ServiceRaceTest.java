@@ -19,7 +19,9 @@
 package org.apache.felix.dm.test.integration.api;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,7 @@ import junit.framework.Assert;
 
 import org.apache.felix.dm.Component;
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ServiceUtil;
 import org.apache.felix.dm.test.components.Ensure;
 import org.apache.felix.dm.test.integration.common.TestBase;
 import org.junit.Test;
@@ -341,7 +344,7 @@ public class ServiceRaceTest extends TestBase {
         volatile S m_next;
         final String m_name;
         final Ensure m_invoked, m_started, m_stopped, m_updated;
-        volatile Dictionary<String, String> m_conf;
+        volatile Map<String, String> m_conf;
 
         SAspect(Ensure started, Ensure stopped, Ensure updated, Ensure invoked, String name) {
             m_started = started;
@@ -353,11 +356,16 @@ public class ServiceRaceTest extends TestBase {
 
         public void updated(Dictionary<String, String> conf) {
             if (conf == null) {
-                error("Aspect %s injected with a null configuration", this);
+                info("Aspect %s injected with a null configuration", this);
                 return;
             }
             debug("Aspect %s injected with configuration: %s", this, conf);
-            m_conf = conf;
+            Map<String, String> copy = new HashMap<String, String>();
+            for (String key : Collections.list(conf.keys()))
+            {
+                copy.put(key, conf.get(key));
+            }
+            m_conf = copy;
             m_updated.step();
         }
 
