@@ -117,6 +117,8 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
     public ConfigSpiOsgi(BundleContext context, Logger log) throws ConfigurationException {
         this.context = context;
         this.log = log;
+        this.originalConfig = getGlobalConfiguration();
+        this.proxyConfig = new DelegatingConfiguration(osgiConfig, originalConfig);
 
         updated(getDefaultConfig());
         this.tracker = new ServiceTracker(context, LoginModuleFactory.class.getName(),
@@ -131,9 +133,6 @@ public class ConfigSpiOsgi extends ConfigurationSpi implements ManagedService,
         //TODO Should this registration be made conditional i.e. service is only registered
         //only if there active LoginModules present
         this.context.registerService(LoginContextFactory.class.getName(), this, new Properties());
-
-        this.originalConfig = getGlobalConfiguration();
-        this.proxyConfig = new DelegatingConfiguration(osgiConfig, originalConfig);
     }
 
     @Override
