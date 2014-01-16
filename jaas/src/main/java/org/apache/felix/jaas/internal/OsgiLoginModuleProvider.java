@@ -48,7 +48,13 @@ final class OsgiLoginModuleProvider implements LoginModuleProvider
     }
 
     public void configure() {
-        ranking = PropertiesUtil.toInteger(serviceReference.getProperty(Constants.SERVICE_RANKING), 0);
+        // FELIX-4389: Support jaas.ranking (in addition to service.ranking
+        // to help ordering LoginModuleFactory instances
+        Object ranking = serviceReference.getProperty(LoginModuleFactory.JAAS_RANKING);
+        if (ranking == null) {
+            ranking = serviceReference.getProperty(Constants.SERVICE_RANKING);
+        }
+        ranking = PropertiesUtil.toInteger(ranking, 0);
         flag = ControlFlag.from((String) serviceReference.getProperty(LoginModuleFactory.JAAS_CONTROL_FLAG)).flag();
         realmName = (String) serviceReference.getProperty(LoginModuleFactory.JAAS_REALM_NAME);
     }

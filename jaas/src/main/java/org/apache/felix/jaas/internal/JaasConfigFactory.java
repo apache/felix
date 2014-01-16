@@ -19,16 +19,19 @@
 
 package org.apache.felix.jaas.internal;
 
+import static org.apache.felix.jaas.internal.Util.trimToNull;
+
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.jaas.LoginModuleFactory;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -40,14 +43,22 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.log.LogService;
 
-import static org.apache.felix.jaas.internal.Util.trimToNull;
-
 @Component(label = "%jaas.name",
         description = "%jaas.description",
         metatype = true,
         ds = false,
         name = JaasConfigFactory.SERVICE_PID,
         configurationFactory = true)
+@Properties({
+    @Property(name = LoginModuleFactory.JAAS_CONTROL_FLAG, value = "required", options = {
+        @PropertyOption(name = "required", value = "%jaas.flag.required"),
+        @PropertyOption(name = "requisite", value = "%jaas.flag.requisite"),
+        @PropertyOption(name = "sufficient", value = "%jaas.flag.sufficient"),
+        @PropertyOption(name = "optional", value = "%jaas.flag.optional")
+    }),
+    @Property(name = LoginModuleFactory.JAAS_RANKING, intValue = 0),
+    @Property(name = LoginModuleFactory.JAAS_REALM_NAME)
+})
 public class JaasConfigFactory implements ManagedServiceFactory
 {
 
@@ -56,21 +67,8 @@ public class JaasConfigFactory implements ManagedServiceFactory
     @Property
     static final String JAAS_CLASS_NAME = "jaas.classname";
 
-    @Property(value = "required", options = {
-            @PropertyOption(name = "required", value = "%jaas.flag.required"),
-            @PropertyOption(name = "requisite", value = "%jaas.flag.requisite"),
-            @PropertyOption(name = "sufficient", value = "%jaas.flag.sufficient"),
-            @PropertyOption(name = "optional", value = "%jaas.flag.optional") })
-    static final String JAAS_CONTROL_FLAG = "jaas.controlFlag";
-
-    @Property(intValue = 0)
-    static final String JAAS_RANKING = "jaas.ranking";
-
     @Property(unbounded = PropertyUnbounded.ARRAY)
     static final String JAAS_OPTIONS = "jaas.options";
-
-    @Property
-    static final String JAAS_REALM_NAME = "jaas.realmName";
 
     private final Logger log;
 
@@ -86,9 +84,9 @@ public class JaasConfigFactory implements ManagedServiceFactory
         this.factory = factory;
         this.log = log;
 
-        Properties props = new Properties();
-        props.setProperty(Constants.SERVICE_VENDOR, "Apache Software Foundation");
-        props.setProperty(Constants.SERVICE_PID, SERVICE_PID);
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
+        props.put(Constants.SERVICE_PID, SERVICE_PID);
         context.registerService(ManagedServiceFactory.class.getName(), this, props);
     }
 
@@ -103,13 +101,13 @@ public class JaasConfigFactory implements ManagedServiceFactory
     public void updated(String pid, Dictionary config) throws ConfigurationException
     {
         String className = trimToNull(PropertiesUtil.toString(config.get(JAAS_CLASS_NAME), null));
-        String flag = trimToNull(PropertiesUtil.toString(config.get(JAAS_CONTROL_FLAG), "required"));
-        int ranking = PropertiesUtil.toInteger(config.get(JAAS_RANKING), 0);
+        String flag = trimToNull(PropertiesUtil.toString(config.get(LoginModuleFactory.JAAS_CONTROL_FLAG), "required"));
+        int ranking = PropertiesUtil.toInteger(config.get(LoginModuleFactory.JAAS_RANKING), 0);
 
         //TODO support system property substitution e.g. ${user.home}
         //in property values
         Map options = PropertiesUtil.toMap(config.get(JAAS_OPTIONS), new String[0]);
-        String realmName = trimToNull(PropertiesUtil.toString(config.get(JAAS_REALM_NAME), null));
+        String realmName = trimToNull(PropertiesUtil.toString(config.get(LoginModuleFactory.JAAS_REALM_NAME), null));
 
         if (className == null)
         {
@@ -129,8 +127,7 @@ public class JaasConfigFactory implements ManagedServiceFactory
         LoginModuleProvider lmf = new ConfigLoginModuleProvider(realmName, className,
             combinedOptions, ControlFlag.from(flag).flag(), ranking, factory);
 
-        ServiceRegistration reg = context.registerService(
-            LoginModuleFactory.class.getName(), lmf, new Properties());
+        ServiceRegistration reg = context.registerService(LoginModuleFactory.class.getName(), lmf, null);
         ServiceRegistration oldReg = registrations.put(pid, reg);
 
         //Remove earlier registration if any

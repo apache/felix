@@ -22,7 +22,7 @@
  *
  * @version 1.0
  */
-@Version("1.0")
+@Version("1.0.1")
 @Export(optional = "provide:=true")
 package org.apache.felix.jaas;
 
