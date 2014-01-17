@@ -31,6 +31,7 @@ import javax.xml.transform.TransformerException;
 
 import org.apache.felix.scrplugin.Log;
 import org.apache.felix.scrplugin.Options;
+import org.apache.felix.scrplugin.Project;
 import org.apache.felix.scrplugin.SCRDescriptorException;
 import org.apache.felix.scrplugin.helper.ComponentContainer;
 import org.apache.felix.scrplugin.helper.ComponentContainerUtil;
@@ -78,6 +79,7 @@ public class MetaTypeIO {
     private static final String OPTION_ELEMENT_QNAME = OPTION_ELEMENT;
 
     public static List<String> generateDescriptors(final DescriptionContainer module,
+            final Project project,
             final Options options,
             final Log logger)
     throws SCRDescriptorException {
@@ -93,6 +95,9 @@ public class MetaTypeIO {
         final File parentDir = mtDir.getParentFile();
 
         if (components.size() > 0) {
+            // check for metatype.properties
+            final File mtProps = new File(project.getClassesDirectory(), "OSGI-INF" + File.separator + "metatype" + File.separator + "metatype.properties");
+            final boolean oldStyle = mtProps.exists();
             mtDir.mkdirs();
 
             final List<String> fileNames = new ArrayList<String>();
@@ -107,15 +112,43 @@ public class MetaTypeIO {
                 for(final ComponentContainer cc : ccc.components) {
                     final MetatypeContainer mc = cc.getMetatypeContainer();
 
+                    if ( mc.getName() == null ) {
+                        if ( oldStyle ) {
+                            mc.setName( "%" + cc.getComponentDescription().getName() + ".name");
+                        } else {
+                            mc.setName("Component " + cc.getComponentDescription().getName());
+                        }
+                    }
                     if ( mc.getName() != null && mc.getName().startsWith("%") ) {
                         allInlined = false;
+                    }
+                    if ( mc.getDescription() == null ) {
+                        if ( oldStyle ) {
+                            mc.setDescription("%" + cc.getComponentDescription().getName() + ".description");
+                        } else {
+                            mc.setDescription("Description for " + cc.getComponentDescription().getName());
+                        }
                     }
                     if ( mc.getDescription() != null && mc.getDescription().startsWith("%") ) {
                         allInlined = false;
                     }
                     for(final MetatypeAttributeDefinition mad : mc.getProperties()) {
+                        if ( mad.getName() == null ) {
+                            if ( oldStyle ) {
+                                mad.setName("%" + mad.getId() + ".name");
+                            } else {
+                                mad.setName("Property " + mad.getId());
+                            }
+                        }
                         if ( mad.getName() != null && mad.getName().startsWith("%") ) {
                             allInlined = false;
+                        }
+                        if ( mad.getDescription() == null ) {
+                            if ( oldStyle ) {
+                                mad.setDescription("%" + mad.getId() + ".description");
+                            } else {
+                                mad.setDescription("Description for " + mad.getId());
+                            }
                         }
                         if ( mad.getDescription() != null && mad.getDescription().startsWith("%") ) {
                             allInlined = false;

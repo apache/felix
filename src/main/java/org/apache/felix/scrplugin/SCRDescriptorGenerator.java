@@ -224,7 +224,7 @@ public class SCRDescriptorGenerator {
         }
 
         // and generate files
-        result.setMetatypeFiles(MetaTypeIO.generateDescriptors(module, this.options, this.logger));
+        result.setMetatypeFiles(MetaTypeIO.generateDescriptors(module, this.project, this.options, this.logger));
         result.setScrFiles(ComponentDescriptorIO.generateDescriptorFiles(module, this.options, logger));
 
         return result;
@@ -310,13 +310,9 @@ public class SCRDescriptorGenerator {
             ocd.setId( componentDesc.getName() );
             if ( componentDesc.getLabel() != null ) {
                 ocd.setName( componentDesc.getLabel() );
-            } else {
-                ocd.setName( "%" + componentDesc.getName() + ".name");
             }
             if ( componentDesc.getDescription() != null ) {
                 ocd.setDescription( componentDesc.getDescription() );
-            } else {
-                ocd.setDescription( "%" + componentDesc.getName() + ".description");
             }
 
             // Factory pid
@@ -525,13 +521,9 @@ public class SCRDescriptorGenerator {
 
                         if (pd.getLabel() != null ) {
                             ad.setName(pd.getLabel());
-                        } else {
-                            ad.setName("%" + pd.getName() + ".name");
                         }
                         if (pd.getDescription() != null ) {
                             ad.setDescription(pd.getDescription());
-                        } else {
-                            ad.setDescription("%" + pd.getName() + ".description");
                         }
 
                         if ( pd.getUnbounded() == PropertyUnbounded.DEFAULT ) {
