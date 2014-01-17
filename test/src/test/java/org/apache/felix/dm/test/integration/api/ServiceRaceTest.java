@@ -344,7 +344,7 @@ public class ServiceRaceTest extends TestBase {
         volatile S m_next;
         final String m_name;
         final Ensure m_invoked, m_started, m_stopped, m_updated;
-        volatile Map<String, String> m_conf;
+        volatile Dictionary<String, String> m_conf;
 
         SAspect(Ensure started, Ensure stopped, Ensure updated, Ensure invoked, String name) {
             m_started = started;
@@ -360,12 +360,7 @@ public class ServiceRaceTest extends TestBase {
                 return;
             }
             debug("Aspect %s injected with configuration: %s", this, conf);
-            Map<String, String> copy = new HashMap<String, String>();
-            for (String key : Collections.list(conf.keys()))
-            {
-                copy.put(key, conf.get(key));
-            }
-            m_conf = copy;
+            m_conf = conf;
             m_updated.step();
         }
 
