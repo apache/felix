@@ -208,7 +208,7 @@
             <artifactId>org.apache.felix.ipojo</artifactId>
             <!-- To update before the release -->
             <!--<version>${project.version}</version>-->
-            <version>1.10.1</version>
+            <version>1.11.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.osgi</groupId>
