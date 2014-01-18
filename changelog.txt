@@ -9,6 +9,8 @@ Changes from 1.8 to 1.8.2
     * [FELIX-4325] - [DS] Synchronization issue when activating component
     * [FELIX-4326] - Possible Invalid BundleContext exception when shutting down the extender
     * [FELIX-4348] - [DS] locateService calls race with component reconfiguration
+    * [FELIX-4349] - Synchronization issue in ComponentRegistry
+    * [FELIX-4350] - Component wrongly activated
 
 ** Improvement
     * [FELIX-4316] - Packages imported dynamically should also be imported statically with an optional flag
