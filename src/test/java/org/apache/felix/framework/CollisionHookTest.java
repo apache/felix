@@ -35,15 +35,20 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.framework.hooks.bundle.CollisionHook;
 
-public class CollisionHookTest extends TestCase {
-    public void testCollisionHookInstall() throws Exception {
+public class CollisionHookTest extends TestCase
+{
+    public void testCollisionHookInstall() throws Exception
+    {
         BundleImpl identicalBundle = mockBundleImpl(1L, "foo", "1.2.1.a");
         BundleImpl differentBundle = mockBundleImpl(2L, "bar", "1.2.1.a");
         BundleImpl originatingBundle = mockBundleImpl(4L, "xyz", "1.0.0");
 
-        CollisionHook testCollisionHook = new CollisionHook() {
-            public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates) {
-                if ((target.getBundleId() == 4L) && (operationType == CollisionHook.INSTALLING)) {
+        CollisionHook testCollisionHook = new CollisionHook()
+        {
+            public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates)
+            {
+                if ((target.getBundleId() == 4L) && (operationType == CollisionHook.INSTALLING))
+                {
                     collisionCandidates.clear();
                 }
             }
@@ -57,11 +62,14 @@ public class CollisionHookTest extends TestCase {
         Felix felixMock = Mockito.mock(Felix.class);
         Mockito.when(felixMock.getHooks(CollisionHook.class)).thenReturn(Collections.singleton(chRef));
         Mockito.when(felixMock.getResolver()).thenReturn(mockResolver);
-        Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[] {differentBundle, identicalBundle});
+        Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[]
+        {
+            differentBundle, identicalBundle
+        });
         Mockito.when(felixMock.getService(felixMock, chRef)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
-        Map<String,String> headerMap = new HashMap<String, String>();
+        Map<String, String> headerMap = new HashMap<String, String>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -77,22 +85,29 @@ public class CollisionHookTest extends TestCase {
         assertEquals(3L, bi.getBundleId());
 
         // Do the revise operation.
-        try {
+        try
+        {
             bi.revise(null, null);
             fail("Should have thrown a BundleException because the installed bundle is not unique");
-        } catch (BundleException be) {
+        }
+        catch (BundleException be)
+        {
             // good
             assertTrue(be.getMessage().contains("not unique"));
         }
     }
 
-    public void testCollisionHookUpdate() throws Exception {
+    public void testCollisionHookUpdate() throws Exception
+    {
         BundleImpl identicalBundle = mockBundleImpl(1L, "foo", "1.2.1.a");
         BundleImpl differentBundle = mockBundleImpl(2L, "foo", "1.2.1");
 
-        CollisionHook testCollisionHook = new CollisionHook() {
-            public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates) {
-                if ((target.getBundleId() == 3L) && (operationType == CollisionHook.UPDATING)) {
+        CollisionHook testCollisionHook = new CollisionHook()
+        {
+            public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates)
+            {
+                if ((target.getBundleId() == 3L) && (operationType == CollisionHook.UPDATING))
+                {
                     collisionCandidates.clear();
                 }
             }
@@ -110,11 +125,14 @@ public class CollisionHookTest extends TestCase {
         Mockito.when(felixMock.getConfig()).thenReturn(config);
         Mockito.when(felixMock.getHooks(CollisionHook.class)).thenReturn(Collections.singleton(chRef));
         Mockito.when(felixMock.getResolver()).thenReturn(mockResolver);
-        Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[] {differentBundle, identicalBundle});
+        Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[]
+        {
+            differentBundle, identicalBundle
+        });
         Mockito.when(felixMock.getService(felixMock, chRef)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
-        Map<String,String> headerMap = new HashMap<String, String>();
+        Map<String, String> headerMap = new HashMap<String, String>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "zar");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -135,13 +153,17 @@ public class CollisionHookTest extends TestCase {
         assertEquals("foo", bi.getSymbolicName());
     }
 
-    public void testCollisionNotEnabled() throws Exception {
+    public void testCollisionNotEnabled() throws Exception
+    {
         BundleImpl identicalBundle = mockBundleImpl(1L, "foo", "1.2.1.a");
         BundleImpl differentBundle = mockBundleImpl(2L, "bar", "1.2.1.a");
 
-        CollisionHook testCollisionHook = new CollisionHook() {
-            public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates) {
-                if ((target.getBundleId() == 3L) && (operationType == CollisionHook.INSTALLING)) {
+        CollisionHook testCollisionHook = new CollisionHook()
+        {
+            public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates)
+            {
+                if ((target.getBundleId() == 3L) && (operationType == CollisionHook.INSTALLING))
+                {
                     collisionCandidates.clear();
                 }
             }
@@ -159,11 +181,14 @@ public class CollisionHookTest extends TestCase {
         Mockito.when(felixMock.getConfig()).thenReturn(config);
         Mockito.when(felixMock.getHooks(CollisionHook.class)).thenReturn(Collections.singleton(chRef));
         Mockito.when(felixMock.getResolver()).thenReturn(mockResolver);
-        Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[] {differentBundle, identicalBundle});
+        Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[]
+        {
+            differentBundle, identicalBundle
+        });
         Mockito.when(felixMock.getService(felixMock, chRef)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
-        Map<String,String> headerMap = new HashMap<String, String>();
+        Map<String, String> headerMap = new HashMap<String, String>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -175,16 +200,20 @@ public class CollisionHookTest extends TestCase {
         Mockito.when(archive.getCurrentRevision()).thenReturn(archiveRevision);
         Mockito.when(archive.getId()).thenReturn(3L);
 
-        try {
+        try
+        {
             new BundleImpl(felixMock, null, archive);
             fail("Should have thrown a BundleException because the collision hook is not enabled");
-        } catch (BundleException be) {
+        }
+        catch (BundleException be)
+        {
             // good
             assertTrue(be.getMessage().contains("not unique"));
         }
     }
 
-    public void testAllowMultiple() throws Exception {
+    public void testAllowMultiple() throws Exception
+    {
         BundleImpl identicalBundle = mockBundleImpl(1L, "foo", "1.2.1.a");
         BundleImpl differentBundle = mockBundleImpl(2L, "bar", "1.2.1.a");
 
@@ -196,10 +225,13 @@ public class CollisionHookTest extends TestCase {
         Felix felixMock = Mockito.mock(Felix.class);
         Mockito.when(felixMock.getConfig()).thenReturn(config);
         Mockito.when(felixMock.getResolver()).thenReturn(mockResolver);
-        Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[] {differentBundle, identicalBundle});
+        Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[]
+        {
+            differentBundle, identicalBundle
+        });
 
         // Mock the archive of the bundle being installed
-        Map<String,String> headerMap = new HashMap<String, String>();
+        Map<String, String> headerMap = new HashMap<String, String>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -215,7 +247,8 @@ public class CollisionHookTest extends TestCase {
         assertEquals(3L, bi.getBundleId());
     }
 
-    public void testNoCollisionHook() throws Exception {
+    public void testNoCollisionHook() throws Exception
+    {
         BundleImpl identicalBundle = mockBundleImpl(1L, "foo", "1.2.1.a");
         BundleImpl differentBundle = mockBundleImpl(2L, "bar", "1.2.1.a");
 
@@ -223,10 +256,13 @@ public class CollisionHookTest extends TestCase {
         StatefulResolver mockResolver = Mockito.mock(StatefulResolver.class);
         Felix felixMock = Mockito.mock(Felix.class);
         Mockito.when(felixMock.getResolver()).thenReturn(mockResolver);
-        Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[] {differentBundle, identicalBundle});
+        Mockito.when(felixMock.getBundles()).thenReturn(new Bundle[]
+        {
+            differentBundle, identicalBundle
+        });
 
         // Mock the archive of the bundle being installed
-        Map<String,String> headerMap = new HashMap<String, String>();
+        Map<String, String> headerMap = new HashMap<String, String>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -238,16 +274,20 @@ public class CollisionHookTest extends TestCase {
         Mockito.when(archive.getCurrentRevision()).thenReturn(archiveRevision);
         Mockito.when(archive.getId()).thenReturn(3L);
 
-        try {
+        try
+        {
             new BundleImpl(felixMock, null, archive);
             fail("Should have thrown a BundleException because the installed bundle is not unique");
-        } catch (BundleException be) {
+        }
+        catch (BundleException be)
+        {
             // good
             assertTrue(be.getMessage().contains("not unique"));
         }
     }
 
-    private BundleImpl mockBundleImpl(long id, String bsn, String version) {
+    private BundleImpl mockBundleImpl(long id, String bsn, String version)
+    {
         BundleImpl identicalBundle = Mockito.mock(BundleImpl.class);
         Mockito.when(identicalBundle.getSymbolicName()).thenReturn(bsn);
         Mockito.when(identicalBundle.getVersion()).thenReturn(Version.parseVersion(version));
