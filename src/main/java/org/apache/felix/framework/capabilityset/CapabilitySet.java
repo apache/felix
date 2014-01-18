@@ -43,34 +43,34 @@ public class CapabilitySet
     private final Set<BundleCapability> m_capSet = new HashSet<BundleCapability>();
     private final static SecureAction m_secureAction = new SecureAction();
 
-public void dump()
-{
-    for (Entry<String, Map<Object, Set<BundleCapability>>> entry : m_indices.entrySet())
+    public void dump()
     {
-        boolean header1 = false;
-        for (Entry<Object, Set<BundleCapability>> entry2 : entry.getValue().entrySet())
+        for (Entry<String, Map<Object, Set<BundleCapability>>> entry : m_indices.entrySet())
         {
-            boolean header2 = false;
-            for (BundleCapability cap : entry2.getValue())
+            boolean header1 = false;
+            for (Entry<Object, Set<BundleCapability>> entry2 : entry.getValue().entrySet())
             {
-                if (cap.getRevision().getBundle().getBundleId() != 0)
+                boolean header2 = false;
+                for (BundleCapability cap : entry2.getValue())
                 {
-                    if (!header1)
+                    if (cap.getRevision().getBundle().getBundleId() != 0)
                     {
-                        System.out.println(entry.getKey() + ":");
-                        header1 = true;
+                        if (!header1)
+                        {
+                            System.out.println(entry.getKey() + ":");
+                            header1 = true;
+                        }
+                        if (!header2)
+                        {
+                            System.out.println("   " + entry2.getKey());
+                            header2 = true;
+                        }
+                        System.out.println("      " + cap);
                     }
-                    if (!header2)
-                    {
-                        System.out.println("   " + entry2.getKey());
-                        header2 = true;
-                    }
-                    System.out.println("      " + cap);
                 }
             }
         }
     }
-}
 
     public CapabilitySet(List<String> indexProps, boolean caseSensitive)
     {
@@ -573,19 +573,25 @@ public void dump()
                     rhsString = rhsString.trim();
                 }
 
-                try {
+                try
+                {
                     // Try to find a suitable static valueOf method
-                    Method valueOfMethod = m_secureAction.getDeclaredMethod(lhs.getClass(), VALUE_OF_METHOD_NAME, STRING_CLASS);
-                    if (valueOfMethod.getReturnType().isAssignableFrom(lhs.getClass()) &&
-                        ((valueOfMethod.getModifiers() & Modifier.STATIC) > 0)) {
+                    Method valueOfMethod = m_secureAction.getDeclaredMethod(
+                        lhs.getClass(), VALUE_OF_METHOD_NAME, STRING_CLASS);
+                    if (valueOfMethod.getReturnType().isAssignableFrom(lhs.getClass())
+                        && ((valueOfMethod.getModifiers() & Modifier.STATIC) > 0))
+                    {
                         m_secureAction.setAccesssible(valueOfMethod);
                         rhs = valueOfMethod.invoke(null, new Object[] { rhsString });
                     }
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     // Static valueOf fails, try the next conversion mechanism
                 }
 
-                if (rhs == null) {
+                if (rhs == null)
+                {
                     Constructor ctor = m_secureAction.getConstructor(lhs.getClass(), STRING_CLASS);
                     m_secureAction.setAccesssible(ctor);
                     rhs = ctor.newInstance(new Object[] { rhsString });

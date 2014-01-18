@@ -30,8 +30,10 @@ import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 
-public class ManifestParserTest extends TestCase {
-    public void testIdentityCapabilityMinimal() throws BundleException {
+public class ManifestParserTest extends TestCase
+{
+    public void testIdentityCapabilityMinimal() throws BundleException
+    {
         Map<String, String> headers = new HashMap<String, String>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "foo.bar");
@@ -43,7 +45,8 @@ public class ManifestParserTest extends TestCase {
         assertEquals(0, ic.getDirectives().size());
     }
 
-    public void testIdentityCapabilityFull() throws BundleException {
+    public void testIdentityCapabilityFull() throws BundleException
+    {
         Map<String, String> headers = new HashMap<String, String>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "abc;singleton:=true");
@@ -71,9 +74,12 @@ public class ManifestParserTest extends TestCase {
         assertEquals("true", ic.getDirectives().get(IdentityNamespace.CAPABILITY_SINGLETON_DIRECTIVE));
     }
 
-    private BundleCapability findCapability(Collection<BundleCapability> capabilities, String namespace) {
-        for (BundleCapability capability : capabilities) {
-            if (namespace.equals(capability.getNamespace())) {
+    private BundleCapability findCapability(Collection<BundleCapability> capabilities, String namespace)
+    {
+        for (BundleCapability capability : capabilities)
+        {
+            if (namespace.equals(capability.getNamespace()))
+            {
                 return capability;
             }
         }

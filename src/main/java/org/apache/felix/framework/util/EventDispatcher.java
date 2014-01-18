@@ -910,11 +910,14 @@ public class EventDispatcher
         {
             // Dispatch according to the filter.
             boolean matched;
-            if (l instanceof UnfilteredServiceListener) {
+            if (l instanceof UnfilteredServiceListener)
+            {
                 // An UnfilteredServiceListener always matches, regardless of the filter.
                 // The filter is still passed on to the Service Registry Hooks.
                 matched = true;
-            } else {
+            }
+            else
+            {
                 matched = (filter == null)
                         || filter.match(((ServiceEvent) event).getServiceReference());
             }
