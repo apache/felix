@@ -367,7 +367,7 @@ public abstract class IPojoFactory implements Factory {
      * Gets the component type description.
      * @return the component type description object. <code>Null</code> if not already computed.
      */
-    public synchronized ComponentTypeDescription getComponentDescription() {
+    public ComponentTypeDescription getComponentDescription() {
         return m_componentDesc;
     }
 
@@ -376,7 +376,7 @@ public abstract class IPojoFactory implements Factory {
      * @return the component type description.
      * @see org.apache.felix.ipojo.Factory#getDescription()
      */
-    public synchronized Element getDescription() {
+    public Element getDescription() {
         // Can be null, if not already computed.
         if (m_componentDesc == null) {
             return new Element("No description available for " + m_factoryName, "");
