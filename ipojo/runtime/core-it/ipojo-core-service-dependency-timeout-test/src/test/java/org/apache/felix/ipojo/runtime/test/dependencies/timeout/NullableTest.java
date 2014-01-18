@@ -23,10 +23,13 @@ import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.runtime.test.dependencies.timeout.services.CheckService;
 import org.apache.felix.ipojo.runtime.test.dependencies.timeout.services.FooService;
 import org.junit.Test;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceReference;
 
 import static org.junit.Assert.*;
 
+@ExamReactorStrategy(PerMethod.class)
 public class NullableTest extends Common {
 
     @Test
