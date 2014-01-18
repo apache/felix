@@ -110,7 +110,7 @@ public class HandlerManagerFactory extends ComponentFactory implements HandlerFa
     }
 
     public String getFactoryName() {
-        if (m_type != null  && "composite".equals(m_type)  && IPOJO_NAMESPACE.equals(m_namespace)) {
+        if ("composite".equals(m_type) && IPOJO_NAMESPACE.equals(m_namespace)) {
             // Artificially change the factory name, to avoid name clash when we generate the instance name.
             return m_namespace + ".composite:" + getName();
         }
