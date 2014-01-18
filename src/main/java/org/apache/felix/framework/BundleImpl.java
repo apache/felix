@@ -1263,11 +1263,11 @@ class BundleImpl implements Bundle, BundleRevisions
                 long id = ((BundleImpl) bundles[i]).getBundleId();
                 if (id != getBundleId())
                 {
-                    if (symName.equals(bundles[i].getSymbolicName()) &&
-                         bundleVersion.equals(bundles[i].getVersion()))
-                     {
+                    if (symName.equals(bundles[i].getSymbolicName())
+                        && bundleVersion.equals(bundles[i].getVersion()))
+                    {
                         collisionCanditates.add(bundles[i]);
-                     }
+                    }
                 }
             }
             if (!collisionCanditates.isEmpty() && allowMultiple.equals(Constants.FRAMEWORK_BSNVERSION_MANAGED))
