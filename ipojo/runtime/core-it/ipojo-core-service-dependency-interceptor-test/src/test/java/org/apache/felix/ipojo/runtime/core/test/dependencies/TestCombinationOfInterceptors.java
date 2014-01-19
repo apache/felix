@@ -46,7 +46,7 @@ public class TestCombinationOfInterceptors extends Common {
     private ComponentInstance provider6;
 
     @Test
-    public void test() {
+    public void testCombination() {
 
         provider1 = provider(0);
         provider2 = provider(1);
@@ -76,13 +76,47 @@ public class TestCombinationOfInterceptors extends Common {
         // Change range
         Setter setter = osgiHelper.getServiceObject(Setter.class);
         setter.set("LOW REVERSE");
-
-//        check = osgiHelper.getServiceObject(CheckService.class);
-//        assertThat(check.getProps().get("grade")).isEqualTo(3);
-//
-//        setter.set("REVERSE");
-//        check = osgiHelper.getServiceObject(CheckService.class);
         assertThat(check.getProps().get("grade")).isEqualTo(0);
+    }
+
+    @Test
+    public void testAdvanced() {
+
+        provider1 = provider(0);
+        provider2 = provider(0);
+        provider3 = provider(1);
+        provider4 = provider(1);
+        provider5 = provider(2);
+        provider6 = provider(2);
+
+        // Create the interceptor
+        Properties configuration = new Properties();
+        configuration.put("target", "(dependency.id=foo)");
+        ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.test.interceptors" +
+                ".AdvancedTrackerAndRankerInterceptor", configuration);
+
+        // Create the FooConsumer
+        ComponentInstance instance = ipojoHelper.createComponentInstance("org.apache.felix.ipojo.runtime.core.test" +
+                ".components.AdvancedFooConsumer");
+
+        // Check we are using provider 0
+        osgiHelper.waitForService(CheckService.class.getName(), null, 1000, true);
+        CheckService check = osgiHelper.getServiceObject(CheckService.class);
+        assertThat(check.getProps().get("grade")).isEqualTo(0);
+
+        Dictionary conf = new Hashtable();
+        conf.put("grade", "1");
+        instance.reconfigure(conf);
+
+        assertThat(check.getProps().get("grade")).isEqualTo(1);
+
+        conf.put("grade", "2");
+        instance.reconfigure(conf);
+        assertThat(check.getProps().get("grade")).isEqualTo(2);
+
+        conf.put("grade", "3");
+        instance.reconfigure(conf);
+        assertThat(check.getProps().get("grade")).isNull();
     }
 
 
