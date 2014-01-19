@@ -1,3 +1,10 @@
+Changes from the 1.11.0 to 1.11.1
+---------------------------------
+
+** Bug
+    * [FELIX-4340] - Flex iPOJO online manipulator error if metadata.xml file not supplied
+    * [FELIX-4347] -  should ignore inner classes that are assigned to static fields
+
 Changes from the 1.10.1 to 1.11.0
 ---------------------------------
 
