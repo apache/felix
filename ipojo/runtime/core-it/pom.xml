@@ -42,7 +42,7 @@
         <equinox.version>3.9.0.v20130529-1710</equinox.version>
         <knoperflerfish.version>6.0.2</knoperflerfish.version>
 
-        <manipulator.version>1.11.0</manipulator.version>
+        <manipulator.version>1.11.1-SNAPSHOT</manipulator.version>
     </properties>
 
     <modules>
@@ -259,7 +259,7 @@
         <dependency>
             <groupId>org.ow2.chameleon.testing</groupId>
             <artifactId>osgi-helpers</artifactId>
-            <version>0.6.1</version>
+            <version>0.6.2-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.osgi</groupId>
