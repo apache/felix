@@ -43,9 +43,12 @@
 
            1.11.0:
            * several changes - annotations, enum, refactoring of the dependency handler
+
+           1.11.1:
+           * minor changes such as synchronization protocols
         -->
-        <ipojo.package.version>1.11.0</ipojo.package.version>
-        <ipojo.extender.version>1.11.0</ipojo.extender.version>
+        <ipojo.package.version>1.11.1</ipojo.package.version>
+        <ipojo.extender.version>1.11.1</ipojo.extender.version>
     </properties>
 
     <description>
@@ -149,6 +152,7 @@
                             org.apache.felix.ipojo.handlers.architecture,
                             org.apache.felix.ipojo.handlers.lifecycle.callback,
                             org.apache.felix.ipojo.handlers.lifecycle.controller,
+                            org.apache.felix.ipojo.handlers.context,
                             org.apache.felix.ipojo.extender.internal*,
                             org.objectweb.asm;-split-package:=merge-last,
                             org.objectweb.asm.commons;-split-package:=merge-last,
