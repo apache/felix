@@ -34,7 +34,7 @@
     </description>
 
     <properties>
-            <ipojo.import.packages>[1.11.0,2.0.0)</ipojo.import.packages>
+            <ipojo.import.packages>[1.11.1,2.0.0)</ipojo.import.packages>
     </properties>
 
     <dependencies>
