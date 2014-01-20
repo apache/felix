@@ -1547,24 +1547,23 @@ public class ManifestParser
 
         if (clauses.size() == 1)
         {
-            // See if there is the "extension" directive.
             for (Entry<String, String> entry : clauses.get(0).m_dirs.entrySet())
             {
                 if (Constants.EXTENSION_DIRECTIVE.equals(entry.getKey()))
                 {
-                    // If the extension directive is specified, make sure
-                    // the target is the system bundle.
-                    if (FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(clauses.get(0).m_paths.get(0)) ||
-                        Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(clauses.get(0).m_paths.get(0)))
-                    {
-                        return entry.getValue();
-                    }
-                    else
-                    {
-                        throw new BundleException(
-                            "Only the system bundle can have extension bundles.");
-                    }
+                    result = entry.getValue();
                 }
+            }
+
+            if (FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(clauses.get(0).m_paths.get(0)) ||
+                Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(clauses.get(0).m_paths.get(0)))
+            {
+                result = (result == null) ? Constants.EXTENSION_FRAMEWORK : result;
+            }
+            else if (result != null)
+            {
+                throw new BundleException(
+                    "Only the system bundle can have extension bundles.");
             }
         }
 
