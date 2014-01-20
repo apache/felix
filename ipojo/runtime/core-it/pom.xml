@@ -42,7 +42,7 @@
         <equinox.version>3.9.0.v20130529-1710</equinox.version>
         <knoperflerfish.version>6.0.2</knoperflerfish.version>
 
-        <manipulator.version>1.11.1-SNAPSHOT</manipulator.version>
+        <manipulator.version>1.11.1</manipulator.version>
     </properties>
 
     <modules>
