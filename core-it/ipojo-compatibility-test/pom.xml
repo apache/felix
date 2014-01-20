@@ -24,11 +24,11 @@
     <parent>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.ipojo.runtime.core-it</artifactId>
-        <version>1.11.1</version>
+        <version>1.11.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>ipojo-compatibility-test</artifactId>
-    <version>1.11.1</version>
+    <version>1.11.2-SNAPSHOT</version>
 
     <name>${project.artifactId}</name>
     
