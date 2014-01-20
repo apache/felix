@@ -651,7 +651,7 @@ public class BundleWiringImpl implements BundleWiring
 
     public BundleRevision getResource()
     {
-        return null;
+        return m_revision;
     }
 
     public BundleRevision getRevision()
