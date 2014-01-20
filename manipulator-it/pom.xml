@@ -26,7 +26,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.apache.felix.ipojo.manipulator.manipulator-it</artifactId>
-    <version>1.11.1</version>
+    <version>1.11.2-SNAPSHOT</version>
     <name>Apache Felix iPOJO Manipulator ~ Integration Tests</name>
     <packaging>pom</packaging>
 
@@ -411,10 +411,4 @@
             </properties>
         </profile>
     </profiles>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.11.1/org.apache.felix.ipojo.manipulator.manipulator-it</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.manipulator-project-1.11.1/org.apache.felix.ipojo.manipulator.manipulator-it</developerConnection>
-    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.manipulator-project-1.11.1/org.apache.felix.ipojo.manipulator.manipulator-it</url>
-  </scm>
 </project>
