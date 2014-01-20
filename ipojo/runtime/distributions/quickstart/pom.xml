@@ -33,7 +33,7 @@
 
     <name>Apache Felix iPOJO - Distribution - Quickstart</name>
     <artifactId>org.apache.felix.ipojo.distribution.quickstart</artifactId>
-    <version>1.11.1-SNAPSHOT</version>
+    <version>1.11.1</version>
 
     <properties>
         <!-- Felix version -->
@@ -141,4 +141,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.11.1/felix-parent-2.1/org.apache.felix.ipojo.distribution.quickstart</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.11.1/felix-parent-2.1/org.apache.felix.ipojo.distribution.quickstart</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.runtime-project-1.11.1/felix-parent-2.1/org.apache.felix.ipojo.distribution.quickstart</url>
+  </scm>
 </project>
