@@ -27,7 +27,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.felix.ipojo.runtime.core-it</artifactId>
-    <version>1.11.1-SNAPSHOT</version>
+    <version>1.11.1</version>
     <name>Apache Felix iPOJO Runtime Project ~ Core Integration Tests</name>
     <packaging>pom</packaging>
 
@@ -224,7 +224,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>1.11.1-SNAPSHOT</version>
+            <version>1.11.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.osgi</groupId>
@@ -428,4 +428,10 @@
             </properties>
         </profile>
     </profiles>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.11.1/org.apache.felix.ipojo.runtime.core-it</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.11.1/org.apache.felix.ipojo.runtime.core-it</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.runtime-project-1.11.1/org.apache.felix.ipojo.runtime.core-it</url>
+  </scm>
 </project>
