@@ -99,6 +99,9 @@ public final class JettyConfig
     /** Felix specific property to configure the request buffer size. Default is 24KB */
     public static final String FELIX_JETTY_RESPONSE_BUFFER_SIZE = "org.apache.felix.http.jetty.responseBufferSize";
 
+    /** Felix specific property to configure the max form size. Default is 200KB */
+    public static final String FELIX_JETTY_MAX_FORM_SIZE = "org.apache.felix.http.jetty.maxFormSize";
+
     /** Felix specific property to enable Jetty MBeans. Valid values are "true", "false". Default is false */
     public static final String FELIX_HTTP_MBEANS = "org.apache.felix.http.mbeans";
 
@@ -269,6 +272,11 @@ public final class JettyConfig
     public int getResponseBufferSize()
     {
         return getIntProperty(FELIX_JETTY_RESPONSE_BUFFER_SIZE, 24 * 1024);
+    }
+
+    public int getMaxFormSize()
+    {
+        return getIntProperty(FELIX_JETTY_MAX_FORM_SIZE, 200 * 1024);
     }
 
     /**
