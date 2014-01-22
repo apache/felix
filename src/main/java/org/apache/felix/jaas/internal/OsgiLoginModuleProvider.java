@@ -50,13 +50,13 @@ final class OsgiLoginModuleProvider implements LoginModuleProvider
     public void configure() {
         // FELIX-4389: Support jaas.ranking (in addition to service.ranking
         // to help ordering LoginModuleFactory instances
-        Object ranking = serviceReference.getProperty(LoginModuleFactory.JAAS_RANKING);
-        if (ranking == null) {
-            ranking = serviceReference.getProperty(Constants.SERVICE_RANKING);
+        Object rankingProperty = serviceReference.getProperty(LoginModuleFactory.JAAS_RANKING);
+        if (rankingProperty == null) {
+            rankingProperty = serviceReference.getProperty(Constants.SERVICE_RANKING);
         }
-        ranking = PropertiesUtil.toInteger(ranking, 0);
-        flag = ControlFlag.from((String) serviceReference.getProperty(LoginModuleFactory.JAAS_CONTROL_FLAG)).flag();
-        realmName = (String) serviceReference.getProperty(LoginModuleFactory.JAAS_REALM_NAME);
+        this.ranking = PropertiesUtil.toInteger(rankingProperty, 0);
+        this.flag = ControlFlag.from((String) serviceReference.getProperty(LoginModuleFactory.JAAS_CONTROL_FLAG)).flag();
+        this.realmName = (String) serviceReference.getProperty(LoginModuleFactory.JAAS_REALM_NAME);
     }
 
     public Map<String, ?> options()
