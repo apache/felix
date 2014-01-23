@@ -36,51 +36,54 @@ import org.osgi.service.useradmin.UserAdmin;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @RunWith(JUnit4TestRunner.class)
-public class FileStoreInitializationTest extends BaseIntegrationTest {
+public class FileStoreInitializationTest extends BaseIntegrationTest
+{
 
-	/**
-	 * Tests that initialization and closing of the repository store is
-	 * performed correctly.
-	 */
-	@Test
-	public void testStoreIsInitializedAndClosedProperlyOk() throws Exception {
-	    UserAdmin ua = getUserAdmin();
-	    
-	    // Create two roles...
-	    User user = (User) ua.createRole("user1", Role.USER);
-	    assertNotNull(user);
-	    
-	    Group group = (Group) ua.createRole("group1", Role.GROUP);
-	    assertNotNull(group);
-	    
-	    group.addMember(user);
-	    group.addRequiredMember(ua.getRole(Role.USER_ANYONE));
+    /**
+     * Tests that initialization and closing of the repository store is
+     * performed correctly.
+     */
+    @Test
+    public void testStoreIsInitializedAndClosedProperlyOk() throws Exception
+    {
+        UserAdmin ua = getUserAdmin();
+        // Start the file store bundle...
+        Bundle fileStoreBundle = getFileStoreBundle();
+        fileStoreBundle.start();
 
-		// Stop the file store; should persist the two roles...
-		Bundle fileStoreBundle = findBundle(ORG_APACHE_FELIX_USERADMIN_FILESTORE);
-		assertNotNull(fileStoreBundle);
-		fileStoreBundle.stop();
+        // Create two roles...
+        User user = (User) ua.createRole("user1", Role.USER);
+        assertNotNull(user);
 
-		Thread.sleep(100); // Wait a little until the bundle is really stopped...
-		
-		// Retrieve the roles again; should both yield null due to the store not being available...
-		user = (User) ua.getRole("user1");
-		assertNull(user);
+        Group group = (Group) ua.createRole("group1", Role.GROUP);
+        assertNotNull(group);
 
-		group = (Group) ua.getRole("group1");
-		assertNull(group);
-		
-		// This will not succeed: no backend to store the user in...
-		assertNull(ua.createRole("user2", Role.USER));
+        group.addMember(user);
+        group.addRequiredMember(ua.getRole(Role.USER_ANYONE));
 
-		fileStoreBundle.start();
+        // Stop the file store; should persist the two roles...
+        fileStoreBundle.stop();
 
-		awaitService(ORG_APACHE_FELIX_USERADMIN_FILESTORE);
-        
+        Thread.sleep(100); // Wait a little until the bundle is really stopped...
+
+        // Retrieve the roles again; should both yield null due to the store not being available...
+        user = (User) ua.getRole("user1");
+        assertNull(user);
+
+        group = (Group) ua.getRole("group1");
+        assertNull(group);
+
+        // This will not succeed: no backend to store the user in...
+        assertNull(ua.createRole("user2", Role.USER));
+
+        fileStoreBundle.start();
+
+        awaitService(ORG_APACHE_FELIX_USERADMIN_FILESTORE);
+
         // Retrieve the roles again; should both yield valid values...
         user = (User) ua.getRole("user1");
         assertNotNull(user);
-        
+
         group = (Group) ua.getRole("group1");
         assertNotNull(group);
 
@@ -93,8 +96,8 @@ public class FileStoreInitializationTest extends BaseIntegrationTest {
         assertNotNull(members);
         assertEquals(1, members.length);
         assertEquals(Role.USER_ANYONE, members[0].getName());
-        
+
         user = (User) ua.getRole("user2");
         assertNull(user);
-	}
+    }
 }

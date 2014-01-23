@@ -35,108 +35,112 @@ import org.osgi.service.useradmin.UserAdmin;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @RunWith(JUnit4TestRunner.class)
-public class UserAdminIntegrationTest extends BaseIntegrationTest {
-	
-	/**
-	 * Tests that stopping a filled store and starting it again will cause it to
-	 * properly restore its state.
-	 */
-	@Test
-	public void testFelix3735_StopRunningStoreRetainsDataOk() throws Exception {
-		final String userName = "testUser";
-		final String groupName = "testGroup";
+public class UserAdminIntegrationTest extends BaseIntegrationTest
+{
+    /**
+     * Tests that stopping a filled store and starting it again will cause it to
+     * properly restore its state.
+     */
+    @Test
+    public void testFelix3735_StopRunningStoreRetainsDataOk() throws Exception
+    {
+        final String userName = "testUser";
+        final String groupName = "testGroup";
 
-		UserAdmin userAdmin = awaitService(UserAdmin.class.getName());
+        UserAdmin userAdmin = awaitService(UserAdmin.class.getName());
+        Bundle fileStoreBundle = getFileStoreBundle();
+        // Start a suitable storage service...
+        fileStoreBundle.start();
 
-		// Fill the user admin with some data...
-		User testUser = (User) userAdmin.createRole(userName, Role.USER);
-		testUser.getProperties().put("key", "value");
+        // Fill the user admin with some data...
+        User testUser = (User) userAdmin.createRole(userName, Role.USER);
+        testUser.getProperties().put("key", "value");
 
-		Group testGroup = (Group) userAdmin.createRole(groupName, Role.GROUP);
-		testGroup.addMember(testUser);
+        Group testGroup = (Group) userAdmin.createRole(groupName, Role.GROUP);
+        testGroup.addMember(testUser);
 
-		// Stop the file store...
-		Bundle fileStoreBundle = findBundle(ORG_APACHE_FELIX_USERADMIN_FILESTORE);
-		assertNotNull(fileStoreBundle);
-		fileStoreBundle.stop();
+        // Stop the file store...
+        fileStoreBundle.stop();
 
-		// retrieve the useradmin again...
-		userAdmin = awaitService(UserAdmin.class.getName());
+        // retrieve the useradmin again...
+        userAdmin = awaitService(UserAdmin.class.getName());
 
-		// Verify the user + group are gone (no store available)...
-		assertNull(userAdmin.getRole(userName));
-		assertNull(userAdmin.getRole(groupName));
+        // Verify the user + group are gone (no store available)...
+        assertNull(userAdmin.getRole(userName));
+        assertNull(userAdmin.getRole(groupName));
 
-		// Start the file store...
-		fileStoreBundle.start();
+        // Start the file store...
+        fileStoreBundle.start();
 
-		// Verify the user + group are gone (no store available)...
-		User readUser = (User) userAdmin.getRole(userName);
-		assertNotNull(readUser);
-		assertEquals(userName, readUser.getName());
-		assertEquals("value", readUser.getProperties().get("key"));
+        // Verify the user + group are gone (no store available)...
+        User readUser = (User) userAdmin.getRole(userName);
+        assertNotNull(readUser);
+        assertEquals(userName, readUser.getName());
+        assertEquals("value", readUser.getProperties().get("key"));
 
-		Group readGroup = (Group) userAdmin.getRole(groupName);
-		assertNotNull(readGroup);
-		assertEquals(groupName, readGroup.getName());
-		assertEquals(1, readGroup.getMembers().length);
-		assertEquals(readUser, readGroup.getMembers()[0]);
-	}
+        Group readGroup = (Group) userAdmin.getRole(groupName);
+        assertNotNull(readGroup);
+        assertEquals(groupName, readGroup.getName());
+        assertEquals(1, readGroup.getMembers().length);
+        assertEquals(readUser, readGroup.getMembers()[0]);
+    }
 
-	/**
-	 * Tests that starting the file store <em>after</em> the user admin service
-	 * is started will cause it to be properly initialized.
-	 */
-	@Test
-	public void testFelix3735_StartStoreAfterUserAdminInitializesOk() throws Exception {
-		final String userName = "anotherTestUser";
-		final String groupName = "anotherTestGroup";
+    /**
+     * Tests that starting the file store <em>after</em> the user admin service
+     * is started will cause it to be properly initialized.
+     */
+    @Test
+    public void testFelix3735_StartStoreAfterUserAdminInitializesOk() throws Exception
+    {
+        final String userName = "anotherTestUser";
+        final String groupName = "anotherTestGroup";
 
-		UserAdmin userAdmin = awaitService(UserAdmin.class.getName());
+        UserAdmin userAdmin = awaitService(UserAdmin.class.getName());
+        Bundle fileStoreBundle = getFileStoreBundle();
+        // Start a suitable storage service...
+        fileStoreBundle.start();
 
-		// Fill the user admin with some data...
-		User testUser = (User) userAdmin.createRole(userName, Role.USER);
-		testUser.getProperties().put("key", "value");
+        // Fill the user admin with some data...
+        User testUser = (User) userAdmin.createRole(userName, Role.USER);
+        testUser.getProperties().put("key", "value");
 
-		Group testGroup = (Group) userAdmin.createRole(groupName, Role.GROUP);
-		testGroup.addMember(testUser);
+        Group testGroup = (Group) userAdmin.createRole(groupName, Role.GROUP);
+        testGroup.addMember(testUser);
 
-		// Stop the file store...
-		Bundle fileStoreBundle = findBundle(ORG_APACHE_FELIX_USERADMIN_FILESTORE);
-		assertNotNull(fileStoreBundle);
-		fileStoreBundle.stop();
+        // Stop the file store...
+        fileStoreBundle.stop();
 
-		Bundle userAdminBundle = findBundle(ORG_APACHE_FELIX_USERADMIN);
-		assertNotNull(userAdminBundle);
-		userAdminBundle.stop();
+        Bundle userAdminBundle = findBundle(ORG_APACHE_FELIX_USERADMIN);
+        assertNotNull(userAdminBundle);
+        userAdminBundle.stop();
 
-		// Obtain user admin service again; shouldn't be available...
-		userAdmin = getService(UserAdmin.class.getName());
-		assertNull(userAdmin);
+        // Obtain user admin service again; shouldn't be available...
+        userAdmin = getService(UserAdmin.class.getName());
+        assertNull(userAdmin);
 
-		userAdminBundle.start();
+        userAdminBundle.start();
 
-		// Obtain user admin service again; should be available now...
-		userAdmin = awaitService(UserAdmin.class.getName());
-		assertNotNull(userAdmin);
+        // Obtain user admin service again; should be available now...
+        userAdmin = awaitService(UserAdmin.class.getName());
+        assertNotNull(userAdmin);
 
-		// Verify the user + group are gone (no store available)...
-		assertNull(userAdmin.getRole(userName));
-		assertNull(userAdmin.getRole(groupName));
+        // Verify the user + group are gone (no store available)...
+        assertNull(userAdmin.getRole(userName));
+        assertNull(userAdmin.getRole(groupName));
 
-		// Start the file store...
-		fileStoreBundle.start();
+        // Start the file store...
+        fileStoreBundle.start();
 
-		// Verify the user + group are gone (no store available)...
-		User readUser = (User) userAdmin.getRole(userName);
-		assertNotNull(readUser);
-		assertEquals(userName, readUser.getName());
-		assertEquals("value", readUser.getProperties().get("key"));
+        // Verify the user + group are gone (no store available)...
+        User readUser = (User) userAdmin.getRole(userName);
+        assertNotNull(readUser);
+        assertEquals(userName, readUser.getName());
+        assertEquals("value", readUser.getProperties().get("key"));
 
-		Group readGroup = (Group) userAdmin.getRole(groupName);
-		assertNotNull(readGroup);
-		assertEquals(groupName, readGroup.getName());
-		assertEquals(1, readGroup.getMembers().length);
-		assertEquals(readUser, readGroup.getMembers()[0]);
-	}
+        Group readGroup = (Group) userAdmin.getRole(groupName);
+        assertNotNull(readGroup);
+        assertEquals(groupName, readGroup.getName());
+        assertEquals(1, readGroup.getMembers().length);
+        assertEquals(readUser, readGroup.getMembers()[0]);
+    }
 }
