@@ -69,7 +69,7 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 */
 	public T addingService( ServiceReference<S> reference );
 
-    public void addedService( ServiceReference<S> reference, T service, int trackingCount );
+    public void addedService( ServiceReference<S> reference, T service, int trackingCount, int serviceCount );
 
 	/**
 	 * A service tracked by the {@code ServiceTracker} has been modified.
@@ -92,8 +92,8 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 * {@code ServiceTracker}.
 	 *
      * @param reference The reference to the service that has been removed.
-     * @param service The service object for the specified referenced service.
-     * @param trackingCount
+	 * @param service The service object for the specified referenced service.
+	 * @param trackingCount
      */
 	public void removedService( ServiceReference<S> reference, T service, int trackingCount );
 

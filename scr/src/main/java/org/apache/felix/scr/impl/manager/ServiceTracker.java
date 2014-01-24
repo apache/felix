@@ -865,15 +865,25 @@ public class ServiceTracker<S, T> {
 	 *         services.
 	 * @since 1.5
 	 */
-	public boolean isEmpty() {
-		final Tracked t = tracked();
-		if (t == null) { /* if ServiceTracker is not open */
-			return true;
-		}
-		synchronized (t) {
-			return t.isEmpty();
-		}
-	}
+    public boolean isEmpty() {
+        final Tracked t = tracked();
+        if (t == null) { /* if ServiceTracker is not open */
+            return true;
+        }
+        synchronized (t) {
+            return t.isEmpty();
+        }
+    }
+
+    public int getServiceCount() {
+        final Tracked t = tracked();
+        if (t == null) { /* if ServiceTracker is not open */
+            return 0;
+        }
+        synchronized (t) {
+            return t.size();
+        }
+    }
 
     public boolean isActive() {
         final Tracked t = tracked();
@@ -1171,6 +1181,7 @@ public class ServiceTracker<S, T> {
             T object = null;
             boolean becameUntracked = false;
             int trackingCount = -1;
+            int serviceCount = -1;
             /* Call customizer outside of synchronized region */
             try {
                 object = customizerAdding(item, related);
@@ -1187,6 +1198,7 @@ public class ServiceTracker<S, T> {
                          */
                         tracked.put( item, object );
                         trackingCount = modified(); /* increment modification count */
+                        serviceCount = tracked.size();
                         notifyAll(); /* notify any waiters */
                     } else {
                         becameUntracked = true;
@@ -1207,7 +1219,7 @@ public class ServiceTracker<S, T> {
                  * let it propagate
                  */
             } else {
-                customizerAdded( item, related, object, trackingCount );
+                customizerAdded( item, related, object, trackingCount, serviceCount );
             }
         }
 
@@ -1366,7 +1378,7 @@ public class ServiceTracker<S, T> {
          */
         abstract T customizerAdding( final S item, final R related );
 
-        abstract void customizerAdded( final S item, final R related, final T object, int trackingCount );
+        abstract void customizerAdded( final S item, final R related, final T object, int trackingCount, int serviceCount );
 
         /**
          * Call the specific customizer modified method. This method must not be
@@ -1476,8 +1488,8 @@ public class ServiceTracker<S, T> {
 			return customizer.addingService( item );
 		}
 
-		final void customizerAdded( final ServiceReference<S> item, final ServiceEvent related, final T object, int trackingCount ) {
-		    customizer.addedService( item, object, trackingCount );
+		final void customizerAdded( final ServiceReference<S> item, final ServiceEvent related, final T object, int trackingCount, int serviceCount ) {
+		    customizer.addedService( item, object, trackingCount, serviceCount );
 		}
 
 		/**

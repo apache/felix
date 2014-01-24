@@ -434,6 +434,11 @@ public class ReferenceMetadata
     {
         return getName() + ".target";
     }
+    
+    public String getMinCardinalityName()
+    {
+        return getName() + ".cardinality.minimum";
+    }
 
 
     /**
