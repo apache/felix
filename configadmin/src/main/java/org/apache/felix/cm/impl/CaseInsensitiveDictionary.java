@@ -27,6 +27,7 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
 
@@ -74,7 +75,7 @@ public class CaseInsensitiveDictionary extends Dictionary
                 checkKey( key );
 
                 // check uniqueness of key
-                String lowerCase = ( ( String ) key ).toLowerCase();
+                String lowerCase = toLowerCase( key );
                 if ( internalMap.containsKey( lowerCase ) )
                 {
                     throw new IllegalArgumentException( "Key [" + key + "] already present in different case" );
@@ -156,8 +157,7 @@ public class CaseInsensitiveDictionary extends Dictionary
             throw new NullPointerException( "key" );
         }
 
-        String stringKey = String.valueOf( key ).toLowerCase();
-        return internalMap.get( stringKey );
+        return internalMap.get( toLowerCase( key ) );
     }
 
 
@@ -198,7 +198,7 @@ public class CaseInsensitiveDictionary extends Dictionary
         checkKey( key );
         value = checkValue( value );
 
-        String lowerCase = String.valueOf( key ).toLowerCase();
+        String lowerCase = toLowerCase( key );
         originalKeys.put( lowerCase, key );
         return internalMap.put( lowerCase, value );
     }
@@ -216,7 +216,7 @@ public class CaseInsensitiveDictionary extends Dictionary
             throw new NullPointerException( "key" );
         }
 
-        String lowerCase = String.valueOf( key ).toLowerCase();
+        String lowerCase = toLowerCase( key );
         originalKeys.remove( lowerCase );
         return internalMap.remove( lowerCase );
     }
@@ -270,6 +270,13 @@ public class CaseInsensitiveDictionary extends Dictionary
         {
             throw new IllegalArgumentException( "Key [" + key + "] must not be an empty string" );
         }
+    }
+
+
+    static final String toLowerCase( Object keyObject )
+    {
+        final String key = ( String ) keyObject;
+        return key.toLowerCase( Locale.ENGLISH );
     }
 
 
