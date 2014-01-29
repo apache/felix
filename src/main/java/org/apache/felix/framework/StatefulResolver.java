@@ -24,9 +24,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
@@ -172,7 +174,7 @@ class StatefulResolver
         BundleRequirement req, boolean obeyMandatory)
     {
         ResolverHookRecord record = new ResolverHookRecord(
-            Collections.EMPTY_SET, Collections.EMPTY_LIST, null);
+            Collections.<ServiceReference<ResolverHookFactory>, ResolverHook>emptyMap(), null);
         return findProvidersInternal(record, req, obeyMandatory);
     }
 
@@ -229,15 +231,15 @@ class StatefulResolver
 
         // If we have resolver hooks, then we may need to filter our results
         // based on a whitelist and/or fine-grained candidate filtering.
-        if (!result.isEmpty() && !record.m_resolverHooks.isEmpty())
+        if (!result.isEmpty() && !record.getResolverHookRefs().isEmpty())
         {
             // It we have a whitelist, then first filter out candidates
             // from disallowed revisions.
-            if (record.m_brWhitelist != null)
+            if (record.getBundleRevisionWhitelist() != null)
             {
                 for (Iterator<BundleCapability> it = result.iterator(); it.hasNext(); )
                 {
-                    if (!record.m_brWhitelist.contains(it.next().getRevision()))
+                    if (!record.getBundleRevisionWhitelist().contains(it.next().getRevision()))
                     {
                         it.remove();
                     }
@@ -247,7 +249,7 @@ class StatefulResolver
             // Now give the hooks a chance to do fine-grained filtering.
             ShrinkableCollection<BundleCapability> shrinkable =
                 new ShrinkableCollection<BundleCapability>(result);
-            for (ResolverHook hook : record.m_resolverHooks)
+            for (ResolverHook hook : record.getResolverHooks())
             {
                 try
                 {
@@ -563,16 +565,21 @@ class StatefulResolver
         Set<BundleRevision> mandatory, Set<BundleRevision> optional)
         throws BundleException
     {
+        // This map maps the hook factory service to the actual hook objects. It
+        // needs to be a map that preserves insertion order to ensure that we call 
+        // hooks in the correct order.
+        // The hooks are added in the order that m_felix.getHooks() returns them which
+        // is also the order in which they should be called.
+        Map<ServiceReference<ResolverHookFactory>, ResolverHook> hookMap =
+            new LinkedHashMap<ServiceReference<ResolverHookFactory>, ResolverHook>();
+
         // Get resolver hook factories.
         Set<ServiceReference<ResolverHookFactory>> hookRefs =
             m_felix.getHooks(ResolverHookFactory.class);
-        List<ResolverHook> hooks;
         Collection<BundleRevision> whitelist;
 
         if (!hookRefs.isEmpty())
         {
-            hooks = new ArrayList<ResolverHook>();
-
             // Create triggers list.
             Set<BundleRevision> triggers;
             if (!mandatory.isEmpty() && !optional.isEmpty())
@@ -587,6 +594,8 @@ class StatefulResolver
             }
             triggers = Collections.unmodifiableSet(triggers);
 
+            BundleException rethrow = null;
+            
             // Create resolver hook objects by calling begin() on factory.
             for (ServiceReference<ResolverHookFactory> ref : hookRefs)
             {
@@ -600,23 +609,46 @@ class StatefulResolver
                                 .invokeResolverHookFactory(rhf, triggers);
                         if (hook != null)
                         {
-                            hooks.add(hook);
+                            hookMap.put(ref, hook);
                         }
                     }
                 }
                 catch (Throwable ex)
                 {
-                    throw new BundleException(
+                    rethrow = new BundleException(
                         "Resolver hook exception: " + ex.getMessage(),
                         BundleException.REJECTED_BY_HOOK,
                         ex);
+                    // Resolver hook spec: if there is an exception during the resolve operation; abort.
+                    // So we break here to make sure that no further resolver hooks are created.
+                    break; 
                 }
+            }
+
+            if (rethrow != null)
+            {
+                for (ResolverHook hook : hookMap.values())
+                {
+                    try
+                    {
+                        Felix.m_secureAction.invokeResolverHookEnd(hook);
+                    }
+                    catch (Exception ex)
+                    {
+                        rethrow = new BundleException(
+                                "Resolver hook exception: " + ex.getMessage(),
+                                BundleException.REJECTED_BY_HOOK,
+                                ex);
+                    }
+                }
+
+                throw rethrow;
             }
 
             // Ask hooks to indicate which revisions should not be resolved.
             whitelist = new ShrinkableCollection<BundleRevision>(getUnresolvedRevisions());
             int originalSize = whitelist.size();
-            for (ResolverHook hook : hooks)
+            for (ResolverHook hook : hookMap.values())
             {
                 try
                 {
@@ -625,12 +657,36 @@ class StatefulResolver
                 }
                 catch (Throwable ex)
                 {
-                    throw new BundleException(
+                    rethrow = new BundleException(
                         "Resolver hook exception: " + ex.getMessage(),
                         BundleException.REJECTED_BY_HOOK,
                         ex);
+                    // Resolver hook spec: if there is an exception during the resolve operation; abort.
+                    // So we break here to make sure that no further resolver operations are executed.
+                    break; 
                 }
             }
+
+            if (rethrow != null)
+            {
+                for (ResolverHook hook : hookMap.values())
+                {
+                    try
+                    {
+                        Felix.m_secureAction.invokeResolverHookEnd(hook);
+                    }
+                    catch (Exception ex)
+                    {
+                        rethrow = new BundleException(
+                                "Resolver hook exception: " + ex.getMessage(),
+                                BundleException.REJECTED_BY_HOOK,
+                                ex);
+                    }
+                }
+
+                throw rethrow;
+            }
+
             // If nothing was removed, then just null the whitelist
             // as an optimization.
             if (whitelist.size() == originalSize)
@@ -660,26 +716,22 @@ class StatefulResolver
         }
         else
         {
-            hooks = Collections.EMPTY_LIST;
             whitelist = null;
         }
 
-        return new ResolverHookRecord(hookRefs, hooks, whitelist);
+        return new ResolverHookRecord(hookMap, whitelist);
     }
 
     private void releaseResolverHooks(ResolverHookRecord record)
         throws BundleException
     {
         // If we have resolver hooks, we must call end() on them.
-        if (!record.m_resolveHookRefs.isEmpty())
+        if (!record.getResolverHookRefs().isEmpty())
         {
             // Verify that all resolver hook service references are still valid
             // Call end() on resolver hooks.
-            for (ResolverHook hook : record.m_resolverHooks)
+            for (ResolverHook hook : record.getResolverHooks())
             {
-// TODO: OSGi R4.3/RESOLVER HOOK - We likely need to put these hooks into a map
-//       to their svc ref since we aren't supposed to call end() on unregistered
-//       but currently we call end() on all.
                 try
                 {
                     Felix.m_secureAction.invokeResolverHookEnd(hook);
@@ -693,7 +745,7 @@ class StatefulResolver
             // Verify that all hook service references are still valid
             // and unget all resolver hook factories.
             boolean invalid = false;
-            for (ServiceReference<ResolverHookFactory> ref : record.m_resolveHookRefs)
+            for (ServiceReference<ResolverHookFactory> ref : record.getResolverHookRefs())
             {
                 if (ref.getBundle() == null)
                 {
@@ -1218,7 +1270,7 @@ class StatefulResolver
 
         // If no resolver hooks, then use default singleton selection
         // algorithm, otherwise defer to the resolver hooks.
-        if (record.m_resolverHooks.isEmpty())
+        if (record.getResolverHookRefs().isEmpty())
         {
             selectDefaultSingletons(record);
         }
@@ -1281,7 +1333,7 @@ class StatefulResolver
         }
 
         // Invoke hooks to allow them to filter singleton collisions.
-        for (ResolverHook hook : record.m_resolverHooks)
+        for (ResolverHook hook : record.getResolverHooks())
         {
             for (Entry<BundleCapability, Collection<BundleCapability>> entry
                 : allCollisions.entrySet())
@@ -1380,7 +1432,7 @@ class StatefulResolver
             // be selected. If it is, in can only be selected if it has
             // a higher version than the currently selected singleton, if
             // there is one.
-            if (((record.m_brWhitelist == null) || record.m_brWhitelist.contains(singleton))
+            if (((record.getBundleRevisionWhitelist() == null) || record.getBundleRevisionWhitelist().contains(singleton))
                 && ((selected == null)
                     || (selected.getVersion().compareTo(singleton.getVersion()) > 0)))
             {
@@ -1551,17 +1603,87 @@ class StatefulResolver
 
     static class ResolverHookRecord
     {
-        final Set<ServiceReference<ResolverHookFactory>> m_resolveHookRefs;
-        final List<ResolverHook> m_resolverHooks;
+        final Map<ServiceReference<ResolverHookFactory>, ResolverHook> m_resolveHookMap;
         final Collection<BundleRevision> m_brWhitelist;
-
-        ResolverHookRecord(Set<ServiceReference<ResolverHookFactory>> resolveHookRefs,
-            List<ResolverHook> resolverHooks,
-            Collection<BundleRevision> brWhitelist)
+ 
+        /** The map passed in must be of an ordered type, so that the iteration order over the values
+         * is predictable.
+         */
+        ResolverHookRecord(Map<ServiceReference<ResolverHookFactory>, ResolverHook> resolveHookMap,
+            Collection<BundleRevision> brWhiteList)
         {
-            m_resolveHookRefs = resolveHookRefs;
-            m_resolverHooks = resolverHooks;
-            m_brWhitelist = brWhitelist;
+            m_resolveHookMap = resolveHookMap;
+            m_brWhitelist = brWhiteList;
+        }
+        
+        Collection<BundleRevision> getBundleRevisionWhitelist() 
+        {
+            return m_brWhitelist;
+        }
+
+        Set<ServiceReference<ResolverHookFactory>> getResolverHookRefs()
+        {
+            return m_resolveHookMap.keySet();
+        }
+
+        // This slightly over the top implementation to obtain the hooks is to ensure that at the point that
+        // the actual hook is obtained, the service is still registered. There are CT tests that unregister
+        // the hook service while iterating over the hooks and expect that the unregistered hook is not called
+        // in that case.
+        Iterable<ResolverHook> getResolverHooks()
+        {
+            return new Iterable<ResolverHook>()
+            {
+                public Iterator<ResolverHook> iterator()
+                {
+                    return new Iterator<ResolverHook>()
+                    {
+                        private Iterator<Map.Entry<ServiceReference<ResolverHookFactory>, ResolverHook>> it =
+                            m_resolveHookMap.entrySet().iterator();
+                        private Entry<ServiceReference<ResolverHookFactory>, ResolverHook> next = null;
+
+                        public boolean hasNext()
+                        {
+                            if (next == null)
+                                findNext();
+
+                            return next != null;
+                        }
+
+                        public ResolverHook next()
+                        {
+                            if (next == null)
+                                findNext();
+
+                            if (next == null)
+                                throw new NoSuchElementException();
+
+                            ResolverHook hook = next.getValue();
+                            next = null;
+                            return hook;
+                        }
+
+                        // Find the next hook on the iterator, but only if the service is still registered.
+                        // If the service has since been unregistered, skip the hook.
+                        private void findNext()
+                        {
+                            while (it.hasNext())
+                            {
+                                next = it.next();
+                                if (next.getKey().getBundle() != null)
+                                    return;
+                                else
+                                    next = null;
+                            }
+                        }
+
+                        public void remove()
+                        {
+                            throw new UnsupportedOperationException();
+                        }
+                    };
+                }
+            };
         }
     }
 }
