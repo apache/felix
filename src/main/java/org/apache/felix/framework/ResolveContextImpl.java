@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.felix.framework.StatefulResolver.ResolverHookRecord;
 import org.apache.felix.framework.resolver.CandidateComparator;
 import org.apache.felix.framework.resolver.HostedCapability;
@@ -100,11 +101,6 @@ public class ResolveContextImpl extends ResolveContext
     public Map<BundleRevision, BundleWiring> getWirings()
     {
         return m_wirings;
-    }
-
-    public void checkExecutionEnvironment(BundleRevision rev) throws ResolveException
-    {
-        m_state.checkExecutionEnvironment(rev);
     }
 
     public void checkNativeLibraries(BundleRevision rev) throws ResolveException
