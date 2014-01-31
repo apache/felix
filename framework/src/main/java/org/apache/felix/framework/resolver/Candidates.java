@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+
 import org.apache.felix.framework.ResolveContextImpl;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.Util;
@@ -229,9 +230,6 @@ class Candidates
         // do some one-time checks and initialization.
         if ((remainingReqs == null) && (localCandidateMap == null))
         {
-            // Verify that any required execution environment is satisfied.
-            ((ResolveContextImpl) rc).checkExecutionEnvironment(revision);
-
             // Verify that any native libraries match the current platform.
             ((ResolveContextImpl) rc).checkNativeLibraries(revision);
 
@@ -357,8 +355,6 @@ class Candidates
         // If there are populates host candidates, then finish up
         // some other checks and prepopulate the result cache with
         // the work we've done so far.
-        // Verify that any required execution environment is satisfied.
-        ((ResolveContextImpl) rc).checkExecutionEnvironment(revision);
         // Verify that any native libraries match the current platform.
         ((ResolveContextImpl) rc).checkNativeLibraries(revision);
         // Record cycle count, but start at -1 since it will
