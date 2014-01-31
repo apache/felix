@@ -1471,41 +1471,6 @@ class StatefulResolver
         return fragments;
     }
 
-    void checkExecutionEnvironment(BundleRevision revision) throws ResolveException
-    {
-        String bundleExecEnvStr = (String)
-            ((BundleRevisionImpl) revision).getHeaders().get(
-                Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT);
-        if (bundleExecEnvStr != null)
-        {
-            bundleExecEnvStr = bundleExecEnvStr.trim();
-
-            // If the bundle has specified an execution environment and the
-            // framework has an execution environment specified, then we must
-            // check for a match.
-            if (!bundleExecEnvStr.equals("")
-                && (m_fwkExecEnvStr != null)
-                && (m_fwkExecEnvStr.length() > 0))
-            {
-                StringTokenizer tokens = new StringTokenizer(bundleExecEnvStr, ",");
-                boolean found = false;
-                while (tokens.hasMoreTokens() && !found)
-                {
-                    if (m_fwkExecEnvSet.contains(tokens.nextToken().trim()))
-                    {
-                        found = true;
-                    }
-                }
-                if (!found)
-                {
-                    throw new ResolveException(
-                        "Execution environment not supported: "
-                        + bundleExecEnvStr, revision, null);
-                }
-            }
-        }
-    }
-
     void checkNativeLibraries(BundleRevision revision) throws ResolveException
     {
         // Next, try to resolve any native code, since the revision is
