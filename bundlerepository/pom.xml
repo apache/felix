@@ -28,7 +28,7 @@
   <name>Apache Felix Bundle Repository</name>
   <description>Bundle repository service.</description>
   <artifactId>org.apache.felix.bundlerepository</artifactId>
-  <version>1.6.7-SNAPSHOT</version>
+  <version>1.7.0-SNAPSHOT</version>
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/bundlerepository</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/bundlerepository</developerConnection>
@@ -46,6 +46,12 @@
       <artifactId>org.osgi.service.obr</artifactId>
       <version>1.0.2</version>
       <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.osgi.core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -68,13 +74,13 @@
     <dependency>
         <groupId>org.osgi</groupId>
         <artifactId>org.osgi.compendium</artifactId>
-        <version>4.0.0</version>
+        <version>5.0.0</version>
         <optional>true</optional>
     </dependency>
     <dependency>
        <groupId>org.osgi</groupId>
         <artifactId>org.osgi.core</artifactId>
-        <version>4.1.0</version>
+        <version>5.0.0</version>
     </dependency>
     <dependency>
         <groupId>org.codehaus.woodstox</groupId>
@@ -91,13 +97,25 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <target>1.5</target>
+          <source>1.5</source>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <version>2.3.4</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Export-Package>org.apache.felix.bundlerepository;version="2.0"</Export-Package>
+            <Export-Package>
+                org.osgi.service.repository,
+                org.apache.felix.bundlerepository;version="2.1"
+            </Export-Package>
             <Private-Package>
                 org.kxml2.io,
                 org.xmlpull.v1,

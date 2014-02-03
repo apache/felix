@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,10 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Property;
@@ -26,8 +29,8 @@ import org.apache.felix.bundlerepository.Property;
 public class CapabilityImpl implements Capability
 {
     private String m_name = null;
-    private final Map m_map = new HashMap();
-    private final List m_list = new ArrayList();
+    private final Map<String, Object> m_map = new HashMap<String, Object>();
+    private final List<Property> m_list = new ArrayList<Property>();
 
     public CapabilityImpl()
     {
@@ -57,19 +60,22 @@ public class CapabilityImpl implements Capability
         m_name = name.intern();
     }
 
-    public Map getPropertiesAsMap()
+    public Map<String, Object> getPropertiesAsMap()
     {
         return m_map;
     }
 
     public Property[] getProperties()
     {
-        return (Property[]) m_list.toArray(new Property[m_list.size()]);
+        return m_list.toArray(new Property[m_list.size()]);
     }
 
     public void addProperty(Property prop)
     {
-        m_map.put(prop.getName().toLowerCase(), prop.getConvertedValue());
+        // m_map.put(prop.getName().toLowerCase(), prop.getConvertedValue()); // TODO is toLowerCase() on the key the right thing to do?
+        // However if we definitely need to re-enable the to-lowercasing, the Felix Util FilterImpl supports treating filters
+        // case-insensitively
+        m_map.put(prop.getName(), prop.getConvertedValue());
         m_list.add(prop);
     }
 

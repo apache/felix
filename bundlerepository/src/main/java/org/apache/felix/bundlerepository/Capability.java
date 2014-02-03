@@ -35,8 +35,8 @@
  */
 
 // This document is an experimental draft to enable interoperability
-// between bundle repositories. There is currently no commitment to 
-// turn this draft into an official specification.  
+// between bundle repositories. There is currently no commitment to
+// turn this draft into an official specification.
 package org.apache.felix.bundlerepository;
 
 import java.util.Map;
@@ -44,12 +44,11 @@ import java.util.Map;
 /**
  * A named set of properties representing some capability that is provided by
  * its owner.
- * 
+ *
  * @version $Revision: 1.3 $
  */
 public interface Capability
 {
-
     String BUNDLE = "bundle";
     String FRAGMENT = "fragment";
     String PACKAGE = "package";
@@ -58,24 +57,21 @@ public interface Capability
 
     /**
      * Return the name of the capability.
-     * 
+     *
      */
     String getName();
 
     /**
      * Return the properties of this capability
-     * 
+     *
      * @return
      */
     Property[] getProperties();
 
     /**
      * Return the map of properties.
-     * 
+     *
      * @return a Map<String,Object>
      */
-    Map getPropertiesAsMap();
-
-
-
+    Map<String, Object> getPropertiesAsMap();
 }
