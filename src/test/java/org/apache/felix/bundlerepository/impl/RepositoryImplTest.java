@@ -21,8 +21,10 @@ package org.apache.felix.bundlerepository.impl;
 import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
 
 import junit.framework.TestCase;
+
 import org.apache.felix.bundlerepository.Repository;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.utils.log.Logger;
@@ -70,7 +72,7 @@ public class RepositoryImplTest extends TestCase
         URL url = getClass().getResource("/referral1_repository.xml");
 
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
-        RepositoryImpl repo = (RepositoryImpl) repoAdmin.addRepository(url, 1);
+        RepositoryImpl repo = repoAdmin.addRepository(url, 1);
         Referral[] refs = repo.getReferrals();
 
         assertNotNull("Expect referrals", refs);
@@ -92,8 +94,8 @@ public class RepositoryImplTest extends TestCase
 
     private RepositoryAdminImpl createRepositoryAdmin() throws Exception
     {
-        BundleContext bundleContext = (BundleContext) EasyMock.createMock(BundleContext.class);
-        Bundle systemBundle = (Bundle) EasyMock.createMock(Bundle.class);
+        BundleContext bundleContext = EasyMock.createMock(BundleContext.class);
+        Bundle systemBundle = EasyMock.createMock(Bundle.class);
 
         Activator.setContext(bundleContext);
         EasyMock.expect(bundleContext.getProperty((String) EasyMock.anyObject())).andReturn(null).anyTimes();
@@ -113,6 +115,9 @@ public class RepositoryImplTest extends TestCase
                 return true;
             }
             public boolean matchCase(Dictionary dictionary) {
+                return true;
+            }
+            public boolean matches(Map<String, ?> map) {
                 return true;
             }
         }).anyTimes();

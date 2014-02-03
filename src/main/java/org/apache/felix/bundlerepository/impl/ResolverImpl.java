@@ -19,13 +19,27 @@
 package org.apache.felix.bundlerepository.impl;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import org.apache.felix.bundlerepository.*;
+import org.apache.felix.bundlerepository.Capability;
+import org.apache.felix.bundlerepository.Reason;
+import org.apache.felix.bundlerepository.Repository;
+import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Resolver;
-import org.apache.felix.bundlerepository.impl.ResourceImpl;
+import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.utils.log.Logger;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 
 public class ResolverImpl implements Resolver
 {
@@ -446,7 +460,7 @@ public class ResolverImpl implements Resolver
                 {
                     // If there is no best version or if the current
                     // resource's version is lower, then select it.
-                    if ((bestVersion == null) || (bestVersion.compareTo(v) < 0))
+                    if ((bestVersion == null) || (bestVersion.compareTo((Version) v) < 0))
                     {
                         best = current;
                         bestLocal = isCurrentLocal;
@@ -454,7 +468,7 @@ public class ResolverImpl implements Resolver
                     }
                     // If the current resource version is equal to the
                     // best
-                    else if ((bestVersion != null) && (bestVersion.compareTo(v) == 0))
+                    else if ((bestVersion != null) && (bestVersion.compareTo((Version) v) == 0))
                     {
                         // If the symbolic name is the same, use the highest
                         // bundle version.
@@ -789,7 +803,7 @@ public class ResolverImpl implements Resolver
 
     public static String getBundleName(Bundle bundle)
     {
-        String name = (String) bundle.getHeaders().get(Constants.BUNDLE_NAME);
+        String name = bundle.getHeaders().get(Constants.BUNDLE_NAME);
         return (name == null)
             ? "Bundle " + Long.toString(bundle.getBundleId())
             : name;

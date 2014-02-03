@@ -1,0 +1,899 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+<repository increment='1389802088217' name='Untitled' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='org.apache.sshd.core'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='a1c64578808c38a63cd6563e9936f025638aeaf9de70f36765367db81c0afc38'/>
+      <attribute name='url' value='local-repo/sshd-core-0.9.0.jar'/>
+      <attribute name='size' type='Long' value='464733'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.io.nio2'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.slf4j,org.apache.sshd.common,org.apache.sshd.common.future,org.apache.sshd.common.util'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.agent,org.apache.sshd.common.file,org.slf4j,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.common.session,org.apache.sshd.client.future,org.apache.sshd.common.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.kex'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='javax.crypto.interfaces,org.apache.sshd.common.util,javax.crypto.spec,javax.crypto'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.keyprovider'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common,org.slf4j,org.apache.sshd.common.util,org.bouncycastle.openssl'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.session'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.common.io,org.slf4j,org.apache.sshd.common,org.apache.sshd.common.util,org.apache.sshd.client.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.future'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd,org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.future'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.keyverifier'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.client,org.apache.sshd,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.channel'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.client.future,org.slf4j,org.apache.sshd.common.channel,org.apache.sshd.common.future,org.apache.sshd.server,org.apache.sshd.common.file,org.apache.sshd.agent,org.apache.sshd.server.session'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.shell'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.server,org.apache.sshd.server.session,org.apache.sshd.common.util,org.slf4j,org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.agent'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.scp'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.common.scp,org.apache.sshd.common,org.apache.sshd.client,org.apache.sshd.client.future,org.apache.sshd,org.apache.sshd.common.file,org.apache.sshd.client.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.kex'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.common.kex,org.apache.sshd.common.session,org.apache.sshd.server.session,org.apache.sshd.common.digest,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.session'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.server.channel,org.apache.sshd.common,org.apache.sshd.client.future,org.apache.sshd.common.channel,org.apache.sshd.client,org.apache.sshd.common.session,org.apache.sshd.client.channel,org.slf4j,org.apache.sshd.client.sftp,org.apache.sshd.agent,org.apache.sshd.client.scp,org.apache.sshd,org.apache.sshd.client.auth'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.command'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.scp,org.apache.sshd.server,org.apache.sshd.common.file,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.auth'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.client,org.apache.sshd.client.session,org.slf4j,org.apache.sshd.common,org.apache.sshd.common.io,org.apache.sshd.common.util,org.apache.sshd.agent'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.random'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common,org.bouncycastle.crypto.prng'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.scp'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.file,org.apache.sshd.common.util,org.apache.sshd.common,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.agent.local'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.agent,org.apache.sshd.agent.common,org.apache.sshd.common,org.apache.sshd.client.future,org.slf4j,org.apache.sshd.client.channel,org.apache.sshd.common.channel,org.apache.sshd.common.signature,org.apache.sshd.server.session,org.apache.sshd.server.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.forward'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.future,org.apache.sshd.common,org.apache.sshd.client.future,org.apache.sshd.common.util,org.slf4j,org.apache.sshd.common.channel,org.apache.sshd.client.channel,org.apache.sshd.server.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.agent.unix'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.agent.common,org.apache.tomcat.jni,org.apache.sshd.common.future,org.apache.sshd.client.future,org.slf4j,org.apache.sshd.common.channel,org.apache.sshd.client.channel,org.apache.sshd.agent,org.apache.sshd.agent.local,org.apache.sshd.server.session,org.apache.sshd.server.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.auth.gss'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='javax.security.auth.login,org.ietf.jgss,javax.security.auth.callback,javax.security.auth,org.apache.sshd.server.session,org.apache.sshd.common,org.apache.sshd.server,org.apache.sshd.common.io,org.apache.sshd.common.util,org.apache.sshd.server.auth,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.agent.common'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.agent,org.apache.sshd.common,org.apache.sshd.server.session,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.compression'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common,org.apache.sshd.common.util,com.jcraft.jzlib'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.cipher'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common,javax.crypto,org.apache.sshd.common.util,javax.crypto.spec'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.signature'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.file.nativefs'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common,org.slf4j,org.apache.sshd.common.file'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.file'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.channel'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.client.future,org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd,org.slf4j,org.apache.sshd.common.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.auth'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.server,org.apache.sshd.server.session,org.slf4j,org.apache.sshd.common,org.apache.sshd.common.io'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.io'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common,org.slf4j,org.apache.sshd.common.future,org.apache.sshd.common.util'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.util'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common,org.slf4j,org.bouncycastle.jce.provider,javax.crypto'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.keyprovider'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.common.keyprovider,org.slf4j,org.bouncycastle.openssl'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.mac'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.util,javax.crypto.spec,org.apache.sshd.common,javax.crypto'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.x11'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.client.future,org.apache.sshd.client.channel,org.slf4j,org.apache.sshd.common.channel,org.apache.sshd.server.session'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.jaas'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='javax.security.auth.callback,javax.security.auth.login,org.apache.sshd.server,org.apache.sshd.server.session,javax.security.auth,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.kex'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.common.kex,org.apache.sshd.common.session,org.apache.sshd.client.session,org.apache.sshd.common.digest,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.sftp'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd,org.apache.sshd.client,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.client.future,org.apache.sshd.client.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common,org.apache.sshd,org.apache.sshd.common.io,org.apache.sshd.common.session,org.apache.sshd.client.session,org.apache.sshd.common.util'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.server.channel,org.apache.sshd.server.session,org.apache.sshd.common,org.apache.sshd.server.auth.gss,org.apache.sshd.common.util'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.io.mina'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.mina.core.session,org.apache.sshd.common,org.apache.mina.core.service,org.apache.mina.transport.socket.nio,org.apache.mina.transport.socket,org.slf4j,org.apache.mina.core.future,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.mina.core.buffer'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.sftp'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.file,org.apache.sshd.common,org.apache.sshd.server,org.apache.sshd.common.util,org.apache.sshd.server.session,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.session'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.server.channel,org.apache.sshd.common,org.apache.sshd.client.future,org.apache.sshd.common.channel,org.apache.sshd.common.session,org.apache.sshd.agent.common,org.slf4j,org.apache.sshd.server.x11,org.apache.sshd.server'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.digest'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.client.future,org.apache.sshd.common,org.apache.sshd.client,org.apache.sshd.client.channel,org.apache.sshd.common.io,org.apache.sshd.common.session,org.apache.sshd.client.session,org.apache.sshd.client.keyverifier,org.apache.sshd.agent,org.apache.sshd.common.random,org.apache.sshd.common.forward,org.apache.sshd.common.compression,org.apache.sshd.common.cipher,org.apache.sshd.common.signature,org.apache.sshd.common.file.nativefs,org.apache.sshd.common.file,org.apache.sshd.common.util,org.apache.sshd.common.mac,org.apache.sshd.client.kex,org.apache.sshd.server,org.apache.sshd.server.session,org.apache.sshd.common.io.nio2,org.apache.sshd.server.channel,org.apache.sshd.server.shell,org.apache.sshd.server.kex,org.apache.sshd.server.command,org.apache.sshd.server.auth.gss,org.slf4j,org.apache.sshd.server.auth,org.apache.sshd.server.keyprovider,org.apache.sshd.common.io.mina,org.apache.sshd.server.sftp'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.channel'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.0'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.common,org.apache.sshd.common.io,org.slf4j,org.apache.sshd.common.util'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=com.jcraft.jzlib)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.crypto)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.crypto.interfaces)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.crypto.spec)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.security.auth)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.security.auth.callback)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.security.auth.login)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.core.buffer)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.core.future)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.core.service)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.core.session)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.transport.socket)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.transport.socket.nio)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.apache.tomcat.jni)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.bouncycastle.crypto.prng)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.bouncycastle.jce.provider)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.bouncycastle.openssl)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.ietf.jgss)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.slf4j)(version&gt;=1.6.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='org.apache.sshd.core'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='0.9.1'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='6e60da106b050e88c06a476c1f3462637e864826be4b31ee77502b62d0bc59a0'/>
+      <attribute name='url' value='local-repo/sshd-core-0.9.1.jar'/>
+      <attribute name='size' type='Long' value='470632'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.io.nio2'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.slf4j,org.apache.sshd.common,org.apache.sshd.common.future,org.apache.sshd.common.util'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.agent,org.apache.sshd.common.file,org.slf4j,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.common.session,org.apache.sshd.client.future,org.apache.sshd.common.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.kex'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='javax.crypto.interfaces,org.apache.sshd.common.util,javax.crypto.spec,javax.crypto'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.keyprovider'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common,org.slf4j,org.apache.sshd.common.util,org.bouncycastle.openssl'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.session'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.common.io,org.slf4j,org.apache.sshd.common,org.apache.sshd.common.util,org.apache.sshd.client.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.future'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd,org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.future'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.keyverifier'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.client,org.apache.sshd,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.channel'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.client.future,org.slf4j,org.apache.sshd.common.channel,org.apache.sshd.common.future,org.apache.sshd.server,org.apache.sshd.common.file,org.apache.sshd.agent,org.apache.sshd.server.session'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.shell'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.server,org.apache.sshd.server.session,org.apache.sshd.common.util,org.slf4j,org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.agent'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.scp'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.common.scp,org.apache.sshd.common,org.apache.sshd.client,org.apache.sshd.client.future,org.apache.sshd,org.apache.sshd.common.file,org.apache.sshd.client.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.kex'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.common.kex,org.apache.sshd.common.session,org.apache.sshd.server.session,org.apache.sshd.common.digest,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.session'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.server.channel,org.apache.sshd.common,org.apache.sshd.client.future,org.apache.sshd.common.channel,org.apache.sshd.client,org.apache.sshd.common.session,org.apache.sshd.client.channel,org.slf4j,org.apache.sshd.client.sftp,org.apache.sshd.agent,org.apache.sshd.client.scp,org.apache.sshd,org.apache.sshd.client.auth'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.command'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.scp,org.apache.sshd.server,org.apache.sshd.common.file,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.auth'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.client,org.apache.sshd.client.session,org.slf4j,org.apache.sshd.common,org.apache.sshd.common.io,org.apache.sshd.common.util,org.apache.sshd.agent'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.random'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common,org.bouncycastle.crypto.prng'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.scp'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.file,org.apache.sshd.common.util,org.apache.sshd.common,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.agent.local'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.agent,org.apache.sshd.agent.common,org.apache.sshd.common,org.apache.sshd.client.future,org.slf4j,org.apache.sshd.client.channel,org.apache.sshd.common.channel,org.apache.sshd.common.signature,org.apache.sshd.server.session,org.apache.sshd.server.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.forward'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.future,org.apache.sshd.common,org.apache.sshd.client.future,org.apache.sshd.common.util,org.slf4j,org.apache.sshd.common.channel,org.apache.sshd.client.channel,org.apache.sshd.server.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.agent.unix'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.agent.common,org.apache.tomcat.jni,org.apache.sshd.common.future,org.apache.sshd.client.future,org.slf4j,org.apache.sshd.common.channel,org.apache.sshd.client.channel,org.apache.sshd.agent,org.apache.sshd.agent.local,org.apache.sshd.server.session,org.apache.sshd.server.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.auth.gss'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='javax.security.auth.login,org.ietf.jgss,javax.security.auth.callback,javax.security.auth,org.apache.sshd.server.session,org.apache.sshd.common,org.apache.sshd.server,org.apache.sshd.common.io,org.apache.sshd.common.util,org.apache.sshd.server.auth,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.agent.common'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.agent,org.apache.sshd.common,org.apache.sshd.server.session,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.compression'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common,org.apache.sshd.common.util,com.jcraft.jzlib'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.cipher'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common,javax.crypto,org.apache.sshd.common.util,javax.crypto.spec'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.signature'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.file.nativefs'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common,org.slf4j,org.apache.sshd.common.file'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.file'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.channel'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.client.future,org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd,org.slf4j,org.apache.sshd.common.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.auth'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.server,org.apache.sshd.server.session,org.slf4j,org.apache.sshd.common,org.apache.sshd.common.io'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.io'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common,org.slf4j,org.apache.sshd.common.future,org.apache.sshd.common.util'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.util'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common,org.slf4j,org.bouncycastle.jce.provider,javax.crypto'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.keyprovider'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.common.keyprovider,org.slf4j,org.bouncycastle.openssl'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.mac'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.util,javax.crypto.spec,org.apache.sshd.common,javax.crypto'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.x11'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.client.future,org.apache.sshd.client.channel,org.slf4j,org.apache.sshd.common.channel,org.apache.sshd.server.session'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.jaas'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='javax.security.auth.callback,javax.security.auth.login,org.apache.sshd.server,org.apache.sshd.server.session,javax.security.auth,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.kex'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.common.kex,org.apache.sshd.common.session,org.apache.sshd.client.session,org.apache.sshd.common.digest,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client.sftp'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd,org.apache.sshd.client,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.common,org.apache.sshd.client.future,org.apache.sshd.client.channel'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.client'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common,org.apache.sshd,org.apache.sshd.common.io,org.apache.sshd.common.session,org.apache.sshd.client.session,org.apache.sshd.common.util'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.server.channel,org.apache.sshd.server.session,org.apache.sshd.common,org.apache.sshd.server.auth.gss,org.apache.sshd.common.util'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.io.mina'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.mina.core.session,org.apache.sshd.common,org.apache.mina.core.service,org.apache.mina.transport.socket.nio,org.apache.mina.transport.socket,org.slf4j,org.apache.mina.core.future,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.mina.core.buffer'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.sftp'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.file,org.apache.sshd.common,org.apache.sshd.server,org.apache.sshd.common.util,org.apache.sshd.server.session,org.slf4j'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.server.session'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.io,org.apache.sshd.common.future,org.apache.sshd.common.util,org.apache.sshd.server.channel,org.apache.sshd.common,org.apache.sshd.client.future,org.apache.sshd.common.channel,org.apache.sshd.common.session,org.apache.sshd.agent.common,org.slf4j,org.apache.sshd.server.x11,org.apache.sshd.server'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.digest'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.util,org.apache.sshd.common'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.client.future,org.apache.sshd.common,org.apache.sshd.client,org.apache.sshd.client.channel,org.apache.sshd.common.io,org.apache.sshd.common.session,org.apache.sshd.client.session,org.apache.sshd.client.keyverifier,org.apache.sshd.agent,org.apache.sshd.common.random,org.apache.sshd.common.forward,org.apache.sshd.common.compression,org.apache.sshd.common.cipher,org.apache.sshd.common.signature,org.apache.sshd.common.file.nativefs,org.apache.sshd.common.file,org.apache.sshd.common.util,org.apache.sshd.common.mac,org.apache.sshd.client.kex,org.apache.sshd.server,org.apache.sshd.server.session,org.apache.sshd.common.io.nio2,org.apache.sshd.server.channel,org.apache.sshd.server.shell,org.apache.sshd.server.kex,org.apache.sshd.server.command,org.apache.sshd.server.auth.gss,org.slf4j,org.apache.sshd.server.auth,org.apache.sshd.server.keyprovider,org.apache.sshd.common.io.mina,org.apache.sshd.server.sftp'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.apache.sshd.common.channel'/>
+      <attribute name='version' type='Version' value='0.9.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.sshd.core'/>
+      <attribute name='bundle-version' type='Version' value='0.9.1'/>
+      <directive name='uses' value='org.apache.sshd.common.future,org.apache.sshd.common,org.apache.sshd.common.io,org.slf4j,org.apache.sshd.common.util'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=com.jcraft.jzlib)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.crypto)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.crypto.interfaces)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.crypto.spec)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.security.auth)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.security.auth.callback)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=javax.security.auth.login)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.core.buffer)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.core.future)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.core.service)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.core.session)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.transport.socket)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.apache.mina.transport.socket.nio)(version&gt;=2.0.0)(!(version&gt;=3.0.0)))'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.apache.tomcat.jni)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.bouncycastle.crypto.prng)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.bouncycastle.jce.provider)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.bouncycastle.openssl)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.ietf.jgss)'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.slf4j)(version&gt;=1.6.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='cdi-subsystem'/>
+      <attribute name='type' value='osgi.subsystem.feature'/>
+      <attribute name='version' type='Version' value='0.5.0'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='cf437416541f1c04a503b4c4db9127c805a0d1989db6e71c3245e09d3b572d41'/>
+      <attribute name='url' value='local-repo/cdi.esa'/>
+      <attribute name='size' type='Long' value='5060942'/>
+      <attribute name='mime' value='application/vnd.osgi.subsystem'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.osgi.service.cdi'/>
+      <attribute name='version' type='Version' value='1.0.0'/>
+      <attribute name='bundle-symbolic-name' value='org.ops4j.pax.cdi.api'/>
+      <attribute name='bundle-version' type='Version' value='0.5.0.ri-SNAPSHOT'/>
+      <directive name='uses' value='org.osgi.framework,javax.enterprise.util,javax.inject'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.osgi.service.http'/>
+      <attribute name='version' type='Version' value='1.2.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.felix.http.jetty'/>
+      <attribute name='bundle-version' type='Version' value='2.2.2'/>
+      <directive name='uses' value='javax.servlet.http,javax.servlet'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='javax.servlet'/>
+      <attribute name='version' type='Version' value='2.5.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.felix.http.jetty'/>
+      <attribute name='bundle-version' type='Version' value='2.2.2'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='javax.servlet.http'/>
+      <attribute name='version' type='Version' value='2.5.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.felix.http.jetty'/>
+      <attribute name='bundle-version' type='Version' value='2.2.2'/>
+      <directive name='uses' value='javax.servlet'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='javax.inject'/>
+      <attribute name='version' type='Version' value='1.0.0'/>
+      <attribute name='bundle-symbolic-name' value='org.apache.geronimo.specs.geronimo-atinject_1.0_spec'/>
+      <attribute name='bundle-version' type='Version' value='1.0.0'/>
+    </capability>
+    <capability namespace='osgi.extender'>
+      <attribute name='osgi.extender' value='osgi.cdi'/>
+      <attribute name='version' type='Version' value='1.0.0'/>
+      <directive name='uses' value='org.osgi.service.cdi,javax.enterprise.inject.spi'/>
+    </capability>
+    <capability namespace='osgi.whiteboard'>
+      <attribute name='osgi.whiteboard' value='osgi.http'/>
+      <attribute name='version' type='Version' value='1.2.0'/>
+      <directive name='uses' value='javax.servlet,javax.servlet.http'/>
+    </capability>
+  </resource>
+</repository>

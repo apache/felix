@@ -39,18 +39,32 @@ public class PullParser extends RepositoryParser
     public RepositoryImpl parseRepository(InputStream is) throws Exception
     {
         XmlPullParser reader = new KXmlParser();
+
+        // The spec-based Repository XML uses namespaces, so switch this on...
+        reader.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+
         reader.setInput(is, null);
         int event = reader.nextTag();
         if (event != XmlPullParser.START_TAG || !REPOSITORY.equals(reader.getName()))
         {
             throw new Exception("Expected element 'repository' at the root of the document");
         }
-        return parse(reader);
+
+        if ("http://www.osgi.org/xmlns/repository/v1.0.0".equals(reader.getNamespace()))
+            // TODO there are a bunch of other methods here that create a parser, should they be updated too?
+            // at the very least they should be made namespace-aware too, so that parsing is the same no matter
+            // how its initiated.
+            return SpecXMLPullParser.parse(reader);
+        else
+            // We're parsing the old
+            return parse(reader);
     }
 
     public RepositoryImpl parseRepository(Reader r) throws Exception
     {
         XmlPullParser reader = new KXmlParser();
+        reader.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+
         reader.setInput(r);
         int event = reader.nextTag();
         if (event != XmlPullParser.START_TAG || !REPOSITORY.equals(reader.getName()))
@@ -63,6 +77,8 @@ public class PullParser extends RepositoryParser
     public ResourceImpl parseResource(Reader r) throws Exception
     {
         XmlPullParser reader = new KXmlParser();
+        reader.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+
         reader.setInput(r);
         int event = reader.nextTag();
         if (event != XmlPullParser.START_TAG || !RESOURCE.equals(reader.getName()))
@@ -75,6 +91,8 @@ public class PullParser extends RepositoryParser
     public CapabilityImpl parseCapability(Reader r) throws Exception
     {
         XmlPullParser reader = new KXmlParser();
+        reader.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+
         reader.setInput(r);
         int event = reader.nextTag();
         if (event != XmlPullParser.START_TAG || !CAPABILITY.equals(reader.getName()))
@@ -87,6 +105,8 @@ public class PullParser extends RepositoryParser
     public PropertyImpl parseProperty(Reader r) throws Exception
     {
         XmlPullParser reader = new KXmlParser();
+        reader.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+
         reader.setInput(r);
         int event = reader.nextTag();
         if (event != XmlPullParser.START_TAG || !P.equals(reader.getName()))
@@ -99,6 +119,8 @@ public class PullParser extends RepositoryParser
     public RequirementImpl parseRequirement(Reader r) throws Exception
     {
         XmlPullParser reader = new KXmlParser();
+        reader.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+
         reader.setInput(r);
         int event = reader.nextTag();
         if (event != XmlPullParser.START_TAG || !REQUIRE.equals(reader.getName()))
@@ -148,7 +170,7 @@ public class PullParser extends RepositoryParser
         return repository;
     }
 
-    private void sanityCheckEndElement(XmlPullParser reader, int event, String element)
+    static void sanityCheckEndElement(XmlPullParser reader, int event, String element)
     {
         if (event != XmlPullParser.END_TAG || !element.equals(reader.getName()))
         {
@@ -367,7 +389,7 @@ public class PullParser extends RepositoryParser
         return requirement;
     }
 
-    public void ignoreTag(XmlPullParser reader) throws IOException, XmlPullParserException {
+    static void ignoreTag(XmlPullParser reader) throws IOException, XmlPullParserException {
         int level = 1;
         while (level > 0)
         {
