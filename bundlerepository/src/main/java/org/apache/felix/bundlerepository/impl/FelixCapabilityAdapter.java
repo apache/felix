@@ -14,9 +14,9 @@
 package org.apache.felix.bundlerepository.impl;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
-import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Resource;
 
@@ -24,6 +24,7 @@ public class FelixCapabilityAdapter implements Capability
 {
     private final org.apache.felix.bundlerepository.Capability capability;
     private final Resource resource;
+    private volatile Map<String, Object> convertedAttributes;
 
     public FelixCapabilityAdapter(org.apache.felix.bundlerepository.Capability capability, Resource resource)
     {
@@ -35,22 +36,18 @@ public class FelixCapabilityAdapter implements Capability
 
     public Map<String, Object> getAttributes()
     {
-        Map<String, Object> result = capability.getPropertiesAsMap();
-        String namespace = getNamespace();
-        if (BundleNamespace.BUNDLE_NAMESPACE.equals(namespace))
-            result.put(BundleNamespace.BUNDLE_NAMESPACE, result.get(org.apache.felix.bundlerepository.Resource.SYMBOLIC_NAME));
+        if (convertedAttributes == null)
+        {
+            Map<String, Object> orgMap = capability.getPropertiesAsMap();
+            HashMap<String, Object> converted = new HashMap<String, Object>(orgMap.size());
 
-        /*
-         This was here, but I don't think it applies in this use-case.
-        if (ServiceNamespace.SERVICE_NAMESPACE.equals(namespace))
-            result.put(ServiceNamespace.CAPABILITY_OBJECTCLASS_ATTRIBUTE,
-                    result.get(ServiceNamespace.CAPABILITY_OBJECTCLASS_ATTRIBUTE.toLowerCase()));
-        else if (BundleNamespace.BUNDLE_NAMESPACE.equals(namespace))
-            result.put(BundleNamespace.BUNDLE_NAMESPACE, result.get(org.apache.felix.bundlerepository.Resource.SYMBOLIC_NAME));
-        else
-            result.put(namespace, result.get(capability.getName()));
-            */
-        return result;
+            for (Map.Entry<String, Object> entry : orgMap.entrySet())
+            {
+                converted.put(NamespaceTranslator.getOSGiNamespace(entry.getKey()), entry.getValue());
+            }
+            convertedAttributes = converted; // Cache the result
+        }
+        return convertedAttributes;
     }
 
     public Map<String, String> getDirectives()
