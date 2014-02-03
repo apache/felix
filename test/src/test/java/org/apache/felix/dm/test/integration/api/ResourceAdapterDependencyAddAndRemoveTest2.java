@@ -99,6 +99,7 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
         e.waitForStep(2, 5000);
         
         System.out.println("Done!");
+        m.clear();
      }
     
     static class ResourceAdapter {
