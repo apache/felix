@@ -43,16 +43,14 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer {
     }
 
     public Object addingService(ServiceReference reference) {
-        Object service = m_context.getService(reference);
-        System.out.println("Service added: " + service);
-        return service;
+        return null;
     }
 
     public void modifiedService(ServiceReference reference, Object service) {
-        System.out.println("Service modified: " + service);
+        // Nop
     }
 
     public void removedService(ServiceReference reference, Object service) {
-        System.out.println("Service removed: " + service);
+        // Nop
     }
 }

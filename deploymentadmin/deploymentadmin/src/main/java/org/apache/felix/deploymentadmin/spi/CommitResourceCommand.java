@@ -29,15 +29,16 @@ import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
 import org.osgi.service.log.LogService;
 
 /**
- * Command that commits all the resource processors that were added to the command.
+ * Command that commits all the resource processors that were added to the
+ * command.
  */
 public class CommitResourceCommand extends Command {
 
     private final List m_processors = new ArrayList();
 
-    public void execute(DeploymentSessionImpl session) throws DeploymentException {
+    protected void doExecute(DeploymentSessionImpl session) throws Exception {
         for (ListIterator i = m_processors.listIterator(m_processors.size()); i.hasPrevious();) {
-    		ResourceProcessor processor = (ResourceProcessor) i.previous();
+            ResourceProcessor processor = (ResourceProcessor) i.previous();
             try {
                 processor.prepare();
             }
@@ -76,17 +77,20 @@ public class CommitResourceCommand extends Command {
             catch (Exception e) {
                 // We cannot throw an exception, see OSGi spec.
                 session.getLog().log(LogService.LOG_ERROR, "Rollback of resource processor '" + processor + "' failed", e);
-            } finally {
+            }
+            finally {
                 i.remove();
             }
         }
     }
 
     /**
-     * Add a resource processor, all resource processors that are added will be committed when the command is executed.
-     *
+     * Add a resource processor, all resource processors that are added will be
+     * committed when the command is executed.
+     * 
      * @param processor The resource processor to add.
-     * @return true if the resource processor was added, false if it was already added.
+     * @return true if the resource processor was added, false if it was already
+     *         added.
      */
     public boolean addResourceProcessor(ResourceProcessor processor) {
         for (Iterator i = m_processors.iterator(); i.hasNext();) {

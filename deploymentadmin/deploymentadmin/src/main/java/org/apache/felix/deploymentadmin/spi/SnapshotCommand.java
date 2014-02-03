@@ -44,7 +44,7 @@ public class SnapshotCommand extends Command {
         m_getStorageAreaCommand = getStorageAreaCommand;
     }
 
-    public void execute(DeploymentSessionImpl session) throws DeploymentException {
+    protected void doExecute(DeploymentSessionImpl session) throws Exception {
         AbstractDeploymentPackage target = session.getTargetAbstractDeploymentPackage();
         BundleContext context = session.getBundleContext();
 
@@ -54,9 +54,11 @@ public class SnapshotCommand extends Command {
             if (isCancelled()) {
                 throw new DeploymentException(DeploymentException.CODE_CANCELLED);
             }
-            Bundle bundle = target.getBundle(infos[i].getSymbolicName());
+
+            String symbolicName = infos[i].getSymbolicName();
+            Bundle bundle = target.getBundle(symbolicName);
             if (bundle != null) {
-                File root = (File) storageAreas.get(bundle.getSymbolicName());
+                File root = (File) storageAreas.get(symbolicName);
                 if (root != null) {
                     File snapshot = context.getDataFile("snapshots");
                     snapshot.mkdirs();
@@ -67,11 +69,12 @@ public class SnapshotCommand extends Command {
                         addRollback(new RestoreSnapshotRunnable(session, snapshot, root));
                         addCommit(new DeleteSnapshotRunnable(session, snapshot));
                     }
-                    catch (IOException e) {
+                    catch (Exception e) {
+                        session.getLog().log(LogService.LOG_WARNING, "Could not access storage area of bundle '" + symbolicName + "'!", e);
                         snapshot.delete();
                     }
                 } else {
-                    session.getLog().log(LogService.LOG_WARNING, "Could not retrieve storage area of bundle '" + bundle.getSymbolicName() + "', skipping it.");
+                    session.getLog().log(LogService.LOG_WARNING, "Could not retrieve storage area of bundle '" + symbolicName + "', skipping it.");
                 }
             }
         }
@@ -87,14 +90,7 @@ public class SnapshotCommand extends Command {
             }
         }
         finally {
-            if (output != null) {
-                try {
-                    output.close();
-                }
-                catch (Exception ex) {
-                    // Not much we can do
-                }
-            }
+            closeSilently(output);
         }
     }
 
@@ -106,8 +102,7 @@ public class SnapshotCommand extends Command {
             for (int i = 0; i < childs.length; i++) {
                 storeRecursive(childs[i], new File(path, childs[i].getName()), output);
             }
-        }
-        else {
+        } else {
             InputStream input = null;
             try {
                 input = new FileInputStream(current);
@@ -118,20 +113,14 @@ public class SnapshotCommand extends Command {
                 output.closeEntry();
             }
             finally {
-                try {
-                    if (input != null) {
-                        input.close();
-                    }
-                }
-                catch (Exception ex) {
-                    // Not much we can do
-                }
+                closeSilently(input);
             }
         }
     }
 
-    private static class DeleteSnapshotRunnable implements Runnable {
+    private static class DeleteSnapshotRunnable extends AbstractAction {
         private final DeploymentSessionImpl m_session;
+
         private final File m_snapshot;
 
         private DeleteSnapshotRunnable(DeploymentSessionImpl session, File snapshot) {
@@ -139,16 +128,18 @@ public class SnapshotCommand extends Command {
             m_snapshot = snapshot;
         }
 
-        public void run() {
+        protected void doRun() {
             if (!m_snapshot.delete()) {
                 m_session.getLog().log(LogService.LOG_WARNING, "Failed to delete snapshot in " + m_snapshot + "!");
             }
         }
     }
 
-    private static class RestoreSnapshotRunnable implements Runnable {
+    private static class RestoreSnapshotRunnable extends AbstractAction {
         private final DeploymentSessionImpl m_session;
+
         private final File m_snapshot;
+
         private final File m_root;
 
         private RestoreSnapshotRunnable(DeploymentSessionImpl session, File snapshot, File root) {
@@ -157,17 +148,18 @@ public class SnapshotCommand extends Command {
             m_root = root;
         }
 
-        public void run() {
+        protected void doRun() throws Exception {
             try {
                 delete(m_root, false);
                 unpack(m_snapshot, m_root);
             }
-            catch (Exception ex) {
-                m_session.getLog().log(LogService.LOG_WARNING, "Failed to restore snapshot!", ex);
-            }
             finally {
                 m_snapshot.delete();
             }
+        }
+
+        protected void onFailure(Exception e) {
+            m_session.getLog().log(LogService.LOG_WARNING, "Failed to restore snapshot!", e);
         }
 
         private void delete(File root, boolean deleteRoot) {
@@ -189,8 +181,7 @@ public class SnapshotCommand extends Command {
                 for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry()) {
                     if (entry.isDirectory()) {
                         (new File(target, entry.getName())).mkdirs();
-                    }
-                    else {
+                    } else {
                         OutputStream output = null;
                         try {
                             output = new FileOutputStream(target);
@@ -200,29 +191,15 @@ public class SnapshotCommand extends Command {
                             }
                         }
                         finally {
-                            if (output != null) {
-                                try {
-                                    output.close();
-                                }
-                                catch (Exception ex) {
-                                    // Not much we can do
-                                }
-                            }
+                            closeSilently(output);
                         }
                     }
                     input.closeEntry();
                 }
             }
             finally {
-                if (input != null) {
-                    try {
-                        input.close();
-                    }
-                    catch (Exception ex) {
-                        // Not much we can do
-                    }
-                }
+                closeSilently(input);
             }
         }
-   }
+    }
 }

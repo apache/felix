@@ -43,6 +43,7 @@ public class DeploymentSessionImpl implements DeploymentSession {
     private final AbstractDeploymentPackage m_source;
     private final List m_commands;
     private final DeploymentAdminImpl m_admin;
+
     private volatile Command m_currentCommand = null;
     private volatile boolean m_cancelled;
 
@@ -54,10 +55,13 @@ public class DeploymentSessionImpl implements DeploymentSession {
     }
 
     /**
-     * Calling this method will cause the commands specified for this session to be executed. the commands will be rolled back if the session is
-     * canceled or if an exception is caused by one of the commands.
-     *
-     * @throws DeploymentException If the session was canceled (<code>DeploymentException.CODE_CANCELLED</code>) or if one of the commands caused an exception (<code>DeploymentException.*</code>)
+     * Calling this method will cause the commands specified for this session to
+     * be executed. the commands will be rolled back if the session is canceled
+     * or if an exception is caused by one of the commands.
+     * 
+     * @throws DeploymentException If the session was canceled (
+     *         <code>DeploymentException.CODE_CANCELLED</code>) or if one of the
+     *         commands caused an exception (<code>DeploymentException.*</code>)
      */
     public void call(boolean ignoreExceptions) throws DeploymentException {
         List executedCommands = new ArrayList();
@@ -74,6 +78,8 @@ public class DeploymentSessionImpl implements DeploymentSession {
             }
             catch (DeploymentException de) {
                 if (!ignoreExceptions) {
+                    // XXX catch exception and verify whether it is possible to
+                    // have exceptions during a rollback
                     rollback(executedCommands);
                     throw de;
                 }
@@ -94,8 +100,9 @@ public class DeploymentSessionImpl implements DeploymentSession {
 
     /**
      * Cancels the session if it is in progress.
-     *
-     * @return true if a session was in progress and now canceled, false otherwise.
+     * 
+     * @return true if a session was in progress and now canceled, false
+     *         otherwise.
      */
     public boolean cancel() {
         m_cancelled = true;
@@ -110,12 +117,12 @@ public class DeploymentSessionImpl implements DeploymentSession {
     }
 
     /**
-     * Retrieve the base directory of the persistent storage area according to 
+     * Retrieve the base directory of the persistent storage area according to
      * OSGi Core R4 6.1.6.10 for the given <code>BundleContext</code>.
      * 
      * @param bundle of which the storage area will be returned
      * @return a <code>File</code> that represents the base directory of the
-     *     persistent storage area for the bundle
+     *         persistent storage area for the bundle
      */
     public File getDataFile(Bundle bundle) {
         File result = null;
@@ -123,9 +130,9 @@ public class DeploymentSessionImpl implements DeploymentSession {
         BundleContext context = bundle.getBundleContext();
         if (context != null) {
             result = context.getDataFile("");
-        }
-        else {
-            // TODO this method should not return null or throw an exception; we need to resolve this...
+        } else {
+            // TODO this method should not return null or throw an exception; we
+            // need to resolve this...
             throw new IllegalStateException("Could not retrieve valid bundle context from bundle " + bundle.getSymbolicName());
         }
 
@@ -145,7 +152,7 @@ public class DeploymentSessionImpl implements DeploymentSession {
 
     /**
      * Returns the bundle context of the bundle this class is part of.
-     *
+     * 
      * @return The <code>BundleContext</code>.
      */
     public BundleContext getBundleContext() {
@@ -154,7 +161,7 @@ public class DeploymentSessionImpl implements DeploymentSession {
 
     /**
      * Returns the currently present log service.
-     *
+     * 
      * @return The <code>LogService</code>.
      */
     public LogService getLog() {
@@ -163,7 +170,7 @@ public class DeploymentSessionImpl implements DeploymentSession {
 
     /**
      * Returns the currently present package admin.
-     *
+     * 
      * @return The <code>PackageAdmin</code>
      */
     public PackageAdmin getPackageAdmin() {
@@ -171,8 +178,9 @@ public class DeploymentSessionImpl implements DeploymentSession {
     }
 
     /**
-     * Returns the target deployment package as an <code>AbstractDeploymentPackage</code>.
-     *
+     * Returns the target deployment package as an
+     * <code>AbstractDeploymentPackage</code>.
+     * 
      * @return The target deployment package of the session.
      */
     public AbstractDeploymentPackage getTargetAbstractDeploymentPackage() {
@@ -180,8 +188,9 @@ public class DeploymentSessionImpl implements DeploymentSession {
     }
 
     /**
-     * Returns the source deployment package as an <code>AbstractDeploymentPackage</code>.
-     *
+     * Returns the source deployment package as an
+     * <code>AbstractDeploymentPackage</code>.
+     * 
      * @return The source deployment packge of the session.
      */
     public AbstractDeploymentPackage getSourceAbstractDeploymentPackage() {

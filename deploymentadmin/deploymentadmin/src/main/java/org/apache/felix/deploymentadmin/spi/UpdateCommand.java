@@ -29,19 +29,19 @@ import org.apache.felix.deploymentadmin.BundleInfoImpl;
 import org.apache.felix.deploymentadmin.Constants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.Version;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.log.LogService;
 
 /**
- * Command that installs all bundles described in the source deployment package of a deployment
- * session. If a bundle was already defined in the target deployment package of the same session
- * it is updated, otherwise the bundle is simply installed.
+ * Command that installs all bundles described in the source deployment package
+ * of a deployment session. If a bundle was already defined in the target
+ * deployment package of the same session it is updated, otherwise the bundle is
+ * simply installed.
  */
 public class UpdateCommand extends Command {
 
-    public void execute(DeploymentSessionImpl session) throws DeploymentException {
+    protected void doExecute(DeploymentSessionImpl session) throws Exception {
         AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
         AbstractDeploymentPackage targetPackage = session.getTargetAbstractDeploymentPackage();
         BundleContext context = session.getBundleContext();
@@ -58,44 +58,49 @@ public class UpdateCommand extends Command {
 
         try {
             while (!expectedBundles.isEmpty()) {
-            	AbstractInfo entry = source.getNextEntry();
-            	if (entry == null) {
-                	throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Expected more bundles in the stream: " + expectedBundles.keySet());
-            	}
-            	
-            	String name = entry.getPath();
+                AbstractInfo entry = source.getNextEntry();
+                if (entry == null) {
+                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Expected more bundles in the stream: " + expectedBundles.keySet());
+                }
+
+                String name = entry.getPath();
                 BundleInfoImpl bundleInfo = (BundleInfoImpl) expectedBundles.remove(name);
                 if (bundleInfo == null) {
                     throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Resource '" + name + "' is not described in the manifest.");
                 }
 
-                Bundle bundle = targetPackage.getBundle(bundleInfo.getSymbolicName());
+                String bsn = bundleInfo.getSymbolicName();
+                Version sourceVersion = bundleInfo.getVersion();
+
+                Bundle bundle = targetPackage.getBundle(bsn);
                 try {
                     if (bundle == null) {
                         // new bundle, install it
-                        bundle = context.installBundle(Constants.BUNDLE_LOCATION_PREFIX + bundleInfo.getSymbolicName(), new BundleInputStream(source.getCurrentEntryStream()));
+                        bundle = context.installBundle(Constants.BUNDLE_LOCATION_PREFIX + bsn, new BundleInputStream(source.getCurrentEntryStream()));
                         addRollback(new UninstallBundleRunnable(bundle, log));
                     } else {
                         // existing bundle, update it
-                        Version sourceVersion = bundleInfo.getVersion();
-                        Version targetVersion = Version.parseVersion((String) bundle.getHeaders().get(org.osgi.framework.Constants.BUNDLE_VERSION));
-                        if (!sourceVersion.equals(targetVersion)) {
+                        Version currentVersion = getVersion(bundle);
+                        if (!sourceVersion.equals(currentVersion)) {
                             bundle.update(new BundleInputStream(source.getCurrentEntryStream()));
                             addRollback(new UpdateBundleRunnable(bundle, targetPackage, log));
                         }
                     }
                 }
-                catch (BundleException be) {
+                catch (Exception be) {
                     if (isCancelled()) {
                         return;
                     }
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not install new bundle '" + name + "'", be);
+                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not install new bundle '" + name + "' (" + bsn + ")", be);
                 }
-                if (!bundle.getSymbolicName().equals(bundleInfo.getSymbolicName())) {
-                    throw new DeploymentException(DeploymentException.CODE_BUNDLE_NAME_ERROR, "Installed/updated bundle symbolicname do not match what was installed/updated");
+
+                if (!bundle.getSymbolicName().equals(bsn)) {
+                    throw new DeploymentException(DeploymentException.CODE_BUNDLE_NAME_ERROR, "Installed/updated bundle symbolicname (" + bundle.getSymbolicName() + ") do not match what was installed/updated: " + bsn);
                 }
-                if (!Version.parseVersion((String) bundle.getHeaders().get(org.osgi.framework.Constants.BUNDLE_VERSION)).equals(bundleInfo.getVersion())) {
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Installed/updated bundle version do not match what was installed/updated");
+
+                Version targetVersion = getVersion(bundle);
+                if (!sourceVersion.equals(targetVersion)) {
+                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Installed/updated bundle version (" + targetVersion + ") do not match what was installed/updated: " + sourceVersion + ", offending bundle = " + bsn);
                 }
             }
         }
@@ -104,7 +109,11 @@ public class UpdateCommand extends Command {
         }
     }
 
-    private static class UninstallBundleRunnable implements Runnable {
+    private Version getVersion(Bundle bundle) {
+        return Version.parseVersion((String) bundle.getHeaders().get(org.osgi.framework.Constants.BUNDLE_VERSION));
+    }
+
+    private static class UninstallBundleRunnable extends AbstractAction {
         private final Bundle m_bundle;
         private final LogService m_log;
 
@@ -113,17 +122,16 @@ public class UpdateCommand extends Command {
             m_log = log;
         }
 
-        public void run() {
-            try {
-                m_bundle.uninstall();
-            }
-            catch (BundleException e) {
-                m_log.log(LogService.LOG_WARNING, "Could not rollback update of bundle '" + m_bundle.getSymbolicName() + "'", e);
-            }
+        protected void doRun() throws Exception {
+            m_bundle.uninstall();
+        }
+
+        protected void onFailure(Exception e) {
+            m_log.log(LogService.LOG_WARNING, "Could not rollback update of bundle '" + m_bundle.getSymbolicName() + "'", e);
         }
     }
 
-    private static class UpdateBundleRunnable implements Runnable {
+    private static class UpdateBundleRunnable extends AbstractAction {
         private final AbstractDeploymentPackage m_targetPackage;
         private final Bundle m_bundle;
         private final LogService m_log;
@@ -134,28 +142,23 @@ public class UpdateCommand extends Command {
             m_log = log;
         }
 
-        public void run() {
+        protected void doRun() throws Exception {
             InputStream is = null;
             try {
                 is = m_targetPackage.getBundleStream(m_bundle.getSymbolicName());
                 if (is != null) {
                     m_bundle.update(is);
+                } else {
+                    throw new RuntimeException("Unable to get inputstream for bundle " + m_bundle.getSymbolicName());
                 }
-                throw new Exception("Unable to get Inputstream for bundle " + m_bundle.getSymbolicName());
-            }
-            catch (Exception e) {
-                m_log.log(LogService.LOG_WARNING, "Could not rollback update of bundle '" + m_bundle.getSymbolicName() + "'", e);
             }
             finally {
-                if (is != null) {
-                    try {
-                        is.close();
-                    }
-                    catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+                closeSilently(is);
             }
+        }
+
+        protected void onFailure(Exception e) {
+            m_log.log(LogService.LOG_WARNING, "Could not rollback update of bundle '" + m_bundle.getSymbolicName() + "'", e);
         }
     }
 

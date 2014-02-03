@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
+import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 
 /**
@@ -30,6 +31,32 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
  */
 @RunWith(PaxExam.class)
 public class InstallDeploymentPackageTest extends BaseIntegrationTest {
+
+    /**
+     * FELIX-4409/4410 - test the installation of an invalid deployment package.
+     */
+    @Test
+    public void testInstallInvalidDeploymentPackageFail() throws Exception {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA spec...
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi", "2.0.0")));
+
+        try
+        {
+            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            fail("DeploymentException expected!");
+        }
+        catch (DeploymentException e)
+        {
+            // Ok; expected...
+        }
+        
+        // Verify that none of the bundles are installed...
+        assertBundleNotExists("testbundles.bundleapi", "1.0.0");
+        assertBundleNotExists("testbundles.bundleapi", "2.0.0");
+    }
 
     /**
      * Tests that adding the dependency for a bundle in an update package causes the depending bundle to be resolved and started.
