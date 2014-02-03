@@ -56,7 +56,6 @@ public class AspectAwareServiceDependencyTest extends TestBase {
             m_ensure = e;
         }
         public void invoke() {
-            m_ensure.step(2);
         }
     }
 
