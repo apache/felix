@@ -27,30 +27,30 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
-import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
 import org.osgi.service.log.LogService;
 
 /**
  * Command that drops resources.
  */
 public class DropAllResourcesCommand extends Command {
-
     private final CommitResourceCommand m_commitCommand;
 
     /**
-     * Creates an instance of this command. The commit command is used to make sure
-     * the resource processors used to drop all resources will be committed at a later stage in the process.
-     *
-     * @param commitCommand The commit command that will be executed at a later stage in the process.
+     * Creates an instance of this command. The commit command is used to make
+     * sure the resource processors used to drop all resources will be committed
+     * at a later stage in the process.
+     * 
+     * @param commitCommand The commit command that will be executed at a later
+     *        stage in the process.
      */
     public DropAllResourcesCommand(CommitResourceCommand commitCommand) {
         m_commitCommand = commitCommand;
     }
 
-    public void execute(DeploymentSessionImpl session) throws DeploymentException {
+    protected void doExecute(DeploymentSessionImpl session) throws Exception {
         // Allow proper rollback in case the drop fails...
         addRollback(new RollbackCommitAction(session));
-        
+
         AbstractDeploymentPackage target = session.getTargetAbstractDeploymentPackage();
         BundleContext context = session.getBundleContext();
         LogService log = session.getLog();
@@ -61,7 +61,7 @@ public class DropAllResourcesCommand extends Command {
         ResourceInfoImpl[] orderedTargetResources = target.getOrderedResourceInfos();
         for (int i = orderedTargetResources.length - 1; i >= 0; i--) {
             ResourceInfoImpl resourceInfo = orderedTargetResources[i];
-            
+
             String rpName = resourceInfo.getResourceProcessor();
             String path = resourceInfo.getPath();
 
@@ -78,34 +78,34 @@ public class DropAllResourcesCommand extends Command {
                 log.log(LogService.LOG_ERROR, "Failed to find resource processor for '" + rpName + "'!");
                 throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "Failed to find resource processor '" + rpName + "'!");
             }
-            
+
             ResourceProcessor resourceProcessor = (ResourceProcessor) context.getService(ref);
             if (resourceProcessor == null) {
                 log.log(LogService.LOG_ERROR, "Failed to find resource processor for '" + rpName + "'!");
                 throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "Failed to find resource processor '" + rpName + "'!");
             }
-            
+
             try {
                 if (m_commitCommand.addResourceProcessor(resourceProcessor)) {
                     resourceProcessor.begin(session);
                 }
                 resourceProcessor.dropAllResources();
             }
-            catch (ResourceProcessorException e) {
+            catch (Exception e) {
                 log.log(LogService.LOG_ERROR, "Failed to drop all resources for resource processor '" + rpName + "'!", e);
                 throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Failed to drop all resources for resource processor '" + rpName + "'!", e);
             }
         }
     }
-    
-    private class RollbackCommitAction implements Runnable {
-        private final DeploymentSessionImpl m_session; 
-        
+
+    private class RollbackCommitAction extends AbstractAction {
+        private final DeploymentSessionImpl m_session;
+
         public RollbackCommitAction(DeploymentSessionImpl session) {
             m_session = session;
         }
-        
-        public void run() {
+
+        protected void doRun() {
             m_commitCommand.rollback(m_session);
         }
     }

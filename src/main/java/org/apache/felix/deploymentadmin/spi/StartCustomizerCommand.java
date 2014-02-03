@@ -25,18 +25,18 @@ import java.util.Set;
 import org.apache.felix.deploymentadmin.AbstractDeploymentPackage;
 import org.apache.felix.deploymentadmin.BundleInfoImpl;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.log.LogService;
 
 /**
- * Command that starts all customizer bundles defined in the source deployment packages of a deployment
- * session. In addition all customizer bundles of the target deployment package that are not present in the source
- * deployment package are started as well.
+ * Command that starts all customizer bundles defined in the source deployment
+ * packages of a deployment session. In addition all customizer bundles of the
+ * target deployment package that are not present in the source deployment
+ * package are started as well.
  */
 public class StartCustomizerCommand extends Command {
 
-    public void execute(DeploymentSessionImpl session) throws DeploymentException {
+    protected void doExecute(DeploymentSessionImpl session) throws Exception {
         AbstractDeploymentPackage target = session.getTargetAbstractDeploymentPackage();
         AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
 
@@ -69,15 +69,16 @@ public class StartCustomizerCommand extends Command {
             try {
                 bundle.start();
             }
-            catch (BundleException be) {
+            catch (Exception be) {
                 throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not start customizer bundle '" + bundle.getSymbolicName() + "'", be);
             }
             addRollback(new StopCustomizerRunnable(session, bundle));
         }
     }
 
-    private static class StopCustomizerRunnable implements Runnable {
+    private static class StopCustomizerRunnable extends AbstractAction {
         private final DeploymentSessionImpl m_session;
+
         private final Bundle m_bundle;
 
         public StopCustomizerRunnable(DeploymentSessionImpl session, Bundle bundle) {
@@ -85,13 +86,12 @@ public class StartCustomizerCommand extends Command {
             m_bundle = bundle;
         }
 
-        public void run() {
-            try {
-                m_bundle.stop();
-            }
-            catch (BundleException e) {
-                m_session.getLog().log(LogService.LOG_WARNING, "Failed to stop bundle '" + m_bundle.getSymbolicName() + "'", e);
-            }
+        protected void doRun() throws Exception {
+            m_bundle.stop();
+        }
+
+        protected void onFailure(Exception e) {
+            m_session.getLog().log(LogService.LOG_WARNING, "Failed to stop bundle '" + m_bundle.getSymbolicName() + "'", e);
         }
     }
 }

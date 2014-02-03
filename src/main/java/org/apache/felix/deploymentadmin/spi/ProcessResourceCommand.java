@@ -32,29 +32,30 @@ import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessorException;
 
 /**
- * Command that processes all the processed resources in the source deployment package
- * of a deployment session by finding their Resource Processors and having those process
- * the resources.
- * System property <code>org.apache.felix.deploymentadmin.allowforeigncustomizers</code> allows
- * you to skip the source handling of resource processors, allowing the use of processors already on
- * the system. Defaults to <code>false</code>.
+ * Command that processes all the processed resources in the source deployment
+ * package of a deployment session by finding their Resource Processors and
+ * having those process the resources. System property
+ * <code>org.apache.felix.deploymentadmin.allowforeigncustomizers</code> allows
+ * you to skip the source handling of resource processors, allowing the use of
+ * processors already on the system. Defaults to <code>false</code>.
  */
 public class ProcessResourceCommand extends Command {
 
     private final CommitResourceCommand m_commitCommand;
 
     /**
-     * Creates an instance of this command, the <code>CommitCommand</code> is used
-     * to ensure that all used <code>ResourceProcessor</code>s will be committed at a later
-     * stage in the deployment session.
-     *
-     * @param commitCommand The <code>CommitCommand</code> that will commit all resource processors used in this command.
+     * Creates an instance of this command, the <code>CommitCommand</code> is
+     * used to ensure that all used <code>ResourceProcessor</code>s will be
+     * committed at a later stage in the deployment session.
+     * 
+     * @param commitCommand The <code>CommitCommand</code> that will commit all
+     *        resource processors used in this command.
      */
     public ProcessResourceCommand(CommitResourceCommand commitCommand) {
         m_commitCommand = commitCommand;
     }
 
-    public void execute(DeploymentSessionImpl session) throws DeploymentException {
+    protected void doExecute(DeploymentSessionImpl session) throws Exception {
         // Allow proper rollback in case the drop fails...
         addRollback(new RollbackCommitAction(session));
 
@@ -73,17 +74,17 @@ public class ProcessResourceCommand extends Command {
         try {
             String allowForeignCustomerizers = System.getProperty("org.apache.felix.deploymentadmin.allowforeigncustomizers", "false");
 
-        	while (!expectedResources.isEmpty()) {
-            	AbstractInfo jarEntry = source.getNextEntry();
-            	if (jarEntry == null) {
-                	throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Expected more resources in the stream: " + expectedResources.keySet());
-            	}
-            	
-            	String name = jarEntry.getPath();
+            while (!expectedResources.isEmpty()) {
+                AbstractInfo jarEntry = source.getNextEntry();
+                if (jarEntry == null) {
+                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Expected more resources in the stream: " + expectedResources.keySet());
+                }
+
+                String name = jarEntry.getPath();
 
                 ResourceInfoImpl resourceInfo = (ResourceInfoImpl) expectedResources.remove(name);
                 if (resourceInfo == null) {
-                	throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Resource '" + name + "' is not described in the manifest.");
+                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Resource '" + name + "' is not described in the manifest.");
                 }
 
                 ServiceReference ref = source.getResourceProcessor(name);
@@ -94,28 +95,24 @@ public class ProcessResourceCommand extends Command {
                         if (resourceProcessor != null) {
                             try {
                                 if (m_commitCommand.addResourceProcessor(resourceProcessor)) {
-                                	resourceProcessor.begin(session);
+                                    resourceProcessor.begin(session);
                                 }
                                 resourceProcessor.process(name, source.getCurrentEntryStream());
                             }
                             catch (ResourceProcessorException rpe) {
                                 if (rpe.getCode() == ResourceProcessorException.CODE_RESOURCE_SHARING_VIOLATION) {
                                     throw new DeploymentException(DeploymentException.CODE_RESOURCE_SHARING_VIOLATION, "Sharing violation while processing resource '" + name + "'", rpe);
-                                }
-                                else {
+                                } else {
                                     throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Error while processing resource '" + name + "'", rpe);
                                 }
                             }
-                        }
-                        else {
+                        } else {
                             throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "No resource processor for resource: '" + name + "'");
                         }
-                    }
-                    else {
+                    } else {
                         throw new DeploymentException(DeploymentException.CODE_FOREIGN_CUSTOMIZER, "Resource processor for resource '" + name + "' belongs to foreign deployment package");
                     }
-                }
-                else {
+                } else {
                     throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "No resource processor for resource: '" + name + "'");
                 }
             }
@@ -124,15 +121,15 @@ public class ProcessResourceCommand extends Command {
             throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Problem while reading stream", e);
         }
     }
-    
-    private class RollbackCommitAction implements Runnable {
-        private final DeploymentSessionImpl m_session; 
-        
+
+    private class RollbackCommitAction extends AbstractAction {
+        private final DeploymentSessionImpl m_session;
+
         public RollbackCommitAction(DeploymentSessionImpl session) {
             m_session = session;
         }
-        
-        public void run() {
+
+        protected void doRun() {
             m_commitCommand.rollback(m_session);
         }
     }

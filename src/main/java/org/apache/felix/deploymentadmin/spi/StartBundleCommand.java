@@ -21,19 +21,19 @@ package org.apache.felix.deploymentadmin.spi;
 import org.apache.felix.deploymentadmin.AbstractDeploymentPackage;
 import org.apache.felix.deploymentadmin.BundleInfoImpl;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
 /**
- * Command that starts all bundles described in the source deployment package of a deployment session.
+ * Command that starts all bundles described in the source deployment package of
+ * a deployment session.
  */
 public class StartBundleCommand extends Command {
     private final RefreshPackagesMonitor m_refreshMonitor = new RefreshPackagesMonitor();
 
-    public void execute(DeploymentSessionImpl session) {
+    protected void doExecute(DeploymentSessionImpl session) throws Exception {
         AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
         PackageAdmin packageAdmin = session.getPackageAdmin();
         RefreshPackagesListener listener = new RefreshPackagesListener();
@@ -49,29 +49,31 @@ public class StartBundleCommand extends Command {
         for (int i = 0; i < bundleInfos.length; i++) {
             BundleInfoImpl bundleInfoImpl = bundleInfos[i];
             if (!bundleInfoImpl.isCustomizer()) {
-                Bundle bundle = source.getBundle(bundleInfoImpl.getSymbolicName());
+                String symbolicName = bundleInfoImpl.getSymbolicName();
+
+                Bundle bundle = source.getBundle(symbolicName);
                 if (bundle != null) {
                     if (isFragmentBundle(bundle)) {
-                        log.log(LogService.LOG_INFO, "Skipping fragment bundle '" + bundle.getSymbolicName() + "'");
+                        log.log(LogService.LOG_INFO, "Skipping fragment bundle '" + symbolicName + "'");
                     } else {
                         try {
                             bundle.start();
                         }
-                        catch (BundleException be) {
-                            log.log(LogService.LOG_WARNING, "Could not start bundle '" + bundle.getSymbolicName() + "'", be);
+                        catch (Exception be) {
+                            log.log(LogService.LOG_WARNING, "Could not start bundle '" + symbolicName + "'", be);
                         }
                     }
-                }
-                else {
-                	log.log(LogService.LOG_WARNING, "Could not start bundle '" + bundleInfoImpl.getSymbolicName() + "' because it is not defined in the framework");
+                } else {
+                    log.log(LogService.LOG_WARNING, "Could not start bundle '" + symbolicName + "' because it is not present in the framework");
                 }
             }
         }
     }
 
     /**
-     * RefreshPackagesListener is only listing to FrameworkEvents of the type PACKAGES_REFRESHED. It will
-     * notify any object waiting the completion of a refreshpackages() call.
+     * RefreshPackagesListener is only listing to FrameworkEvents of the type
+     * PACKAGES_REFRESHED. It will notify any object waiting the completion of a
+     * refreshpackages() call.
      */
     private class RefreshPackagesListener implements FrameworkListener {
         public void frameworkEvent(FrameworkEvent event) {
@@ -82,7 +84,8 @@ public class StartBundleCommand extends Command {
     }
 
     /**
-     * Use this monitor when its desired to wait for the completion of the asynchronous PackageAdmin.refreshPackages() call.
+     * Use this monitor when its desired to wait for the completion of the
+     * asynchronous PackageAdmin.refreshPackages() call.
      */
     private static class RefreshPackagesMonitor {
         private static final int REFRESH_TIMEOUT = 10000;
@@ -90,11 +93,12 @@ public class StartBundleCommand extends Command {
         private volatile boolean m_alreadyNotified = false;
 
         /**
-         * Waits for the completion of the PackageAdmin.refreshPackages() call. Because
-         * its not sure whether all OSGi framework implementations implement this method as
-         * specified we have build in a timeout. So if a event about the completion of the
-         * refreshpackages() is never received, we continue after the timeout whether the refresh
-         * was done or not.
+         * Waits for the completion of the PackageAdmin.refreshPackages() call.
+         * Because its not sure whether all OSGi framework implementations
+         * implement this method as specified we have build in a timeout. So if
+         * a event about the completion of the refreshpackages() is never
+         * received, we continue after the timeout whether the refresh was done
+         * or not.
          */
         public synchronized void waitForRefresh() {
             if (!m_alreadyNotified) {
@@ -106,16 +110,16 @@ public class StartBundleCommand extends Command {
                 finally {
                     m_alreadyNotified = false;
                 }
-            }
-            else {
-                // just reset the misted notification variable, this Monitor object might be reused.
+            } else {
+                // just reset the misted notification variable, this Monitor
+                // object might be reused.
                 m_alreadyNotified = false;
             }
         }
 
         /**
-         * After a PACKAGES_REFRESHED event notify all the parties interested in the completion of
-         * the PackageAdmin.refreshPackages() call.
+         * After a PACKAGES_REFRESHED event notify all the parties interested in
+         * the completion of the PackageAdmin.refreshPackages() call.
          */
         public synchronized void proceed() {
             m_alreadyNotified = true;

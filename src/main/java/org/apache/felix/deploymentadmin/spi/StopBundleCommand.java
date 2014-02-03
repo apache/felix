@@ -21,27 +21,30 @@ package org.apache.felix.deploymentadmin.spi;
 import org.apache.felix.deploymentadmin.AbstractDeploymentPackage;
 import org.apache.felix.deploymentadmin.BundleInfoImpl;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 import org.osgi.service.deploymentadmin.BundleInfo;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.log.LogService;
 
 /**
- * Command that stops all bundles described in the target deployment package of a deployment session.
+ * Command that stops all bundles described in the target deployment package of
+ * a deployment session.
  * 
- * By spec every single bundle of the target package should be stopped, even if this is not strictly necessary 
- * because of bundles being unaffected by an update. To be able to skip the stopping of unaffected bundles the 
- * following system property can be defined: <code>org.apache.felix.deploymentadmin.stopunaffectedbundle</code>.
- * If this property has value <code>false</code> (case insensitive) then unaffected bundles will not be stopped, 
- * in all other cases the bundles will be stopped according to the OSGi specification.
+ * By spec every single bundle of the target package should be stopped, even if
+ * this is not strictly necessary because of bundles being unaffected by an
+ * update. To be able to skip the stopping of unaffected bundles the following
+ * system property can be defined:
+ * <code>org.apache.felix.deploymentadmin.stopunaffectedbundle</code>. If this
+ * property has value <code>false</code> (case insensitive) then unaffected
+ * bundles will not be stopped, in all other cases the bundles will be stopped
+ * according to the OSGi specification.
  */
 public class StopBundleCommand extends Command {
 
-    public void execute(DeploymentSessionImpl session) throws DeploymentException {
+    protected void doExecute(DeploymentSessionImpl session) throws Exception {
         String stopUnaffectedBundle = System.getProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", "true");
 
         LogService log = session.getLog();
-        
+
         AbstractDeploymentPackage target = session.getTargetAbstractDeploymentPackage();
         BundleInfo[] bundleInfos = target.getOrderedBundleInfos();
         for (int i = 0; i < bundleInfos.length; i++) {
@@ -49,25 +52,24 @@ public class StopBundleCommand extends Command {
                 throw new DeploymentException(DeploymentException.CODE_CANCELLED);
             }
             String symbolicName = bundleInfos[i].getSymbolicName();
-			Bundle bundle = target.getBundle(symbolicName);
+            Bundle bundle = target.getBundle(symbolicName);
             if (bundle != null) {
-        		if ("false".equalsIgnoreCase(stopUnaffectedBundle) && omitBundleStop(session, symbolicName)) {
-        			continue;
-        		}
-        		if (isFragmentBundle(bundle)) {
-                    log.log(LogService.LOG_INFO, "Skipping fragment bundle '" + bundle.getSymbolicName() + "'");
-        		} else {
-        		    addRollback(new StartBundleRunnable(session, bundle));
-        		    try {
-        		        bundle.stop();
-        		    }
-        		    catch (BundleException e) {
-        		        log.log(LogService.LOG_WARNING, "Could not stop bundle '" + bundle.getSymbolicName() + "'", e);
-        		    }
-        		}
-            }
-            else {
-            	log.log(LogService.LOG_WARNING, "Could not stop bundle '" + symbolicName + "' because it was not defined int he framework");
+                if ("false".equalsIgnoreCase(stopUnaffectedBundle) && omitBundleStop(session, symbolicName)) {
+                    continue;
+                }
+                if (isFragmentBundle(bundle)) {
+                    log.log(LogService.LOG_INFO, "Skipping fragment bundle '" + symbolicName + "'");
+                } else {
+                    addRollback(new StartBundleRunnable(session, bundle));
+                    try {
+                        bundle.stop();
+                    }
+                    catch (Exception e) {
+                        log.log(LogService.LOG_WARNING, "Could not stop bundle '" + symbolicName + "'", e);
+                    }
+                }
+            } else {
+                log.log(LogService.LOG_WARNING, "Could not stop bundle '" + symbolicName + "' because it was not present in the framework");
             }
         }
     }
@@ -78,24 +80,27 @@ public class StopBundleCommand extends Command {
      * @param session The current deployment session.
      * @param symbolicName The symbolic name of the bundle to inspect.
      * 
-     * @return Returns <code>true</code> if <code>Constants.DEPLOYMENTPACKAGE_MISSING</code> is true for the specified bundle in the
-     * source deployment package or if the version of the bundle is the same in both source and target deployment package. Returns 
-     * <code>false</code> otherwise.
+     * @return Returns <code>true</code> if
+     *         <code>Constants.DEPLOYMENTPACKAGE_MISSING</code> is true for the
+     *         specified bundle in the source deployment package or if the
+     *         version of the bundle is the same in both source and target
+     *         deployment package. Returns <code>false</code> otherwise.
      */
     private boolean omitBundleStop(DeploymentSessionImpl session, String symbolicName) {
-    	boolean result = false;
-		BundleInfoImpl sourceBundleInfo = session.getSourceAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
-		BundleInfoImpl targetBundleInfo = session.getTargetAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
-		boolean fixPackageMissing = sourceBundleInfo != null  && sourceBundleInfo.isMissing();
-		boolean sameVersion = (targetBundleInfo != null && sourceBundleInfo != null && targetBundleInfo.getVersion().equals(sourceBundleInfo.getVersion()));
-		if (fixPackageMissing || sameVersion) {
-			result = true;
-		}
-		return result;
-	}
+        boolean result = false;
+        BundleInfoImpl sourceBundleInfo = session.getSourceAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
+        BundleInfoImpl targetBundleInfo = session.getTargetAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
+        boolean fixPackageMissing = sourceBundleInfo != null && sourceBundleInfo.isMissing();
+        boolean sameVersion = (targetBundleInfo != null && sourceBundleInfo != null && targetBundleInfo.getVersion().equals(sourceBundleInfo.getVersion()));
+        if (fixPackageMissing || sameVersion) {
+            result = true;
+        }
+        return result;
+    }
 
-	private static class StartBundleRunnable implements Runnable {
+    private static class StartBundleRunnable extends AbstractAction {
         private final DeploymentSessionImpl m_session;
+
         private final Bundle m_bundle;
 
         public StartBundleRunnable(DeploymentSessionImpl session, Bundle bundle) {
@@ -103,14 +108,12 @@ public class StopBundleCommand extends Command {
             m_bundle = bundle;
         }
 
-        public void run() {
-            try {
-                m_bundle.start();
-            }
-            catch (BundleException e) {
-                m_session.getLog().log(LogService.LOG_WARNING, "Failed to start bundle '" + m_bundle.getSymbolicName() + "'", e);
-            }
+        protected void doRun() throws Exception {
+            m_bundle.start();
+        }
+
+        protected void onFailure(Exception e) {
+            m_session.getLog().log(LogService.LOG_WARNING, "Failed to start bundle '" + m_bundle.getSymbolicName() + "'", e);
         }
     }
 }
-
