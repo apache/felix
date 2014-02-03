@@ -34,7 +34,7 @@ public class Activator implements BundleActivator {
         Hashtable props = new Hashtable();
         props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_SCOPE, "dependencymanager");
         props.put(org.apache.felix.service.command.CommandProcessor.COMMAND_FUNCTION, 
-                new String[] { "dm", "diagnose" });
+                new String[] { "dm", });
         context.registerService(DMCommand.class.getName(), new DMCommand(context), props);        
     }
 
