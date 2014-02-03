@@ -17,13 +17,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
-import org.apache.felix.bundlerepository.impl.LazyHashMap.LazyValue;
-import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
@@ -44,13 +40,19 @@ public class FelixResourceAdapter implements Resource, RepositoryContent
     {
         if (namespace == null || namespace.equals(IdentityNamespace.IDENTITY_NAMESPACE))
         {
-            Capability c = newOsgiIdentityCapability(this, resource.getSymbolicName(), resource.getVersion());
-            return Collections.singletonList(c);
+            // TODO cater for null request
+            Object type = resource.getProperties().get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE);
+            OSGiCapabilityImpl c = OSGiRepositoryImpl.newOSGiIdentityCapability(resource.getSymbolicName(),
+                type != null ? type.toString() : IdentityNamespace.TYPE_BUNDLE, resource.getVersion());
+            c.setResource(this);
+            return Collections.<Capability>singletonList(c);
         }
         if (namespace.equals(ContentNamespace.CONTENT_NAMESPACE))
         {
-            Capability c = newOsgiContentCapability(this, resource.getURI(), resource.getSize());
-            return Collections.singletonList(c);
+            // TODO cater for null request
+            OSGiCapabilityImpl c = OSGiRepositoryImpl.newOSGiContentCapability(resource.getURI(), resource.getSize());
+            c.setResource(this);
+            return Collections.<Capability>singletonList(c);
         }
 
         namespace = NamespaceTranslator.getFelixNamespace(namespace);
@@ -66,40 +68,13 @@ public class FelixResourceAdapter implements Resource, RepositoryContent
         return result;
     }
 
-    private static Capability newOsgiIdentityCapability(Resource res, String symbolicName, Version version)
-    {
-        Map<String, Object> idAttrs = new HashMap<String, Object>();
-        idAttrs.put(IdentityNamespace.IDENTITY_NAMESPACE, symbolicName);
-        idAttrs.put(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, IdentityNamespace.TYPE_BUNDLE);
-        idAttrs.put(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE, version);
-
-        return new OSGiCapabilityImpl(IdentityNamespace.IDENTITY_NAMESPACE, idAttrs, Collections.<String, String> emptyMap(), res);
-    }
-
-    private static Capability newOsgiContentCapability(Resource res, final String uri, long size)
-    {
-        // TODO duplicated in OSGiRepositoryImpl
-        LazyValue<String, Object> lazyValue =
-            new LazyValue<String, Object>(ContentNamespace.CONTENT_NAMESPACE, new Callable<Object>() {
-                public Object call() throws Exception
-                {
-                    // This is expensive to do, so only compute it when actually obtained...
-                    return OSGiRepositoryImpl.getSHA256(uri);
-                }
-            });
-        Map<String, Object> contentAttrs = new LazyHashMap<String, Object>(Collections.singleton(lazyValue));
-        contentAttrs.put(ContentNamespace.CAPABILITY_MIME_ATTRIBUTE, "application/vnd.osgi.bundle");
-        contentAttrs.put(ContentNamespace.CAPABILITY_SIZE_ATTRIBUTE, size);
-        contentAttrs.put(ContentNamespace.CAPABILITY_URL_ATTRIBUTE, uri);
-        return new OSGiCapabilityImpl(ContentNamespace.CONTENT_NAMESPACE, contentAttrs, Collections.<String, String> emptyMap());
-    }
-
     public InputStream getContent()
     {
         try
         {
             return new URL(resource.getURI()).openStream();
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             throw new RuntimeException(e);
         }
