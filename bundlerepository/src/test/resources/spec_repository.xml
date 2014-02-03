@@ -20,6 +20,22 @@
 <repository increment='1389802088217' name='Untitled' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
   <resource>
     <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='org.apache.felix.bundlerepository.test_file_3'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='1.2.3.something'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='a1c64578808c38a63cd6563e9936f025638aeaf9de70f36765367db81c0afc38'/>
+      <attribute name='url' value='repo_files/test_file_3.jar'/>
+      <attribute name='size' type='Long' value='3'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='foo'>
+      <attribute name='bar' value='toast'/>
+    </capability>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
       <attribute name='osgi.identity' value='org.apache.sshd.core'/>
       <attribute name='type' value='osgi.bundle'/>
       <attribute name='version' type='Version' value='0.9.0'/>

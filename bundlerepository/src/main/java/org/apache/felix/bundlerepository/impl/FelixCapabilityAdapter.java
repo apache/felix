@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.osgi.framework.namespace.BundleNamespace;
-import org.osgi.namespace.service.ServiceNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Resource;
 
@@ -38,6 +37,11 @@ public class FelixCapabilityAdapter implements Capability
     {
         Map<String, Object> result = capability.getPropertiesAsMap();
         String namespace = getNamespace();
+        if (BundleNamespace.BUNDLE_NAMESPACE.equals(namespace))
+            result.put(BundleNamespace.BUNDLE_NAMESPACE, result.get(org.apache.felix.bundlerepository.Resource.SYMBOLIC_NAME));
+
+        /*
+         This was here, but I don't think it applies in this use-case.
         if (ServiceNamespace.SERVICE_NAMESPACE.equals(namespace))
             result.put(ServiceNamespace.CAPABILITY_OBJECTCLASS_ATTRIBUTE,
                     result.get(ServiceNamespace.CAPABILITY_OBJECTCLASS_ATTRIBUTE.toLowerCase()));
@@ -45,6 +49,7 @@ public class FelixCapabilityAdapter implements Capability
             result.put(BundleNamespace.BUNDLE_NAMESPACE, result.get(org.apache.felix.bundlerepository.Resource.SYMBOLIC_NAME));
         else
             result.put(namespace, result.get(capability.getName()));
+            */
         return result;
     }
 
