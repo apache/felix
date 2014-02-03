@@ -1663,6 +1663,9 @@ public class ConfigurationManager implements BundleActivator, BundleListener
                 try
                 {
                     final String configPidString = this.getHelper().getServicePid( sr, this.config.getPid() );
+                    if (configPidString == null) {
+                        return false; // The managed service is not registered anymore in the OSGi service registry.
+                    }
                     final ConfigurationImpl rc = getTargetedConfiguration( configPidString, sr );
                     if ( rc != null )
                     {
@@ -1723,7 +1726,15 @@ public class ConfigurationManager implements BundleActivator, BundleListener
             if ( !srList.isEmpty() )
             {
                 // optionally bind dynamically to the first service
-                config.tryBindLocation( srList.get( 0 ).getBundle().getLocation() );
+                Bundle bundle = srList.get(0).getBundle();
+                if (bundle == null) {
+                    log( LogService.LOG_DEBUG,
+                        "Service {0} seems to be unregistered concurrently (not providing configuration)",
+                        new Object[]
+                            { ConfigurationManager.toString( srList.get(0) ) } );
+                    return;
+                }
+                config.tryBindLocation( bundle.getLocation() );
 
                 final String configBundleLocation = config.getBundleLocation();
 
