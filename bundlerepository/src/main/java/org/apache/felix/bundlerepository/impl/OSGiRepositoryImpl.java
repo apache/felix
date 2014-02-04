@@ -37,7 +37,6 @@ import org.apache.felix.bundlerepository.RepositoryAdmin;
 import org.apache.felix.bundlerepository.impl.LazyHashMap.LazyValue;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Namespace;
@@ -108,9 +107,7 @@ class OSGiRepositoryImpl implements Repository
     private void addResourceForIdentity(final org.apache.felix.bundlerepository.Resource res, Filter filter, List<Capability> caps)
         throws Exception
     {
-        Object type = res.getProperties().get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE);
-        OSGiCapabilityImpl idCap = newOSGiIdentityCapability(res.getSymbolicName(),
-            type != null ? type.toString() : IdentityNamespace.TYPE_BUNDLE, res.getVersion());
+        OSGiCapabilityImpl idCap = newOSGiIdentityCapability(res);
         if (filter != null)
         {
             if (!filter.matches(idCap.getAttributes()))
@@ -131,12 +128,15 @@ class OSGiRepositoryImpl implements Repository
         caps.add(idCap);
     }
 
-    static OSGiCapabilityImpl newOSGiIdentityCapability(String symbolicName, String type, Version version)
-    {
-        Map<String, Object> idAttrs = new HashMap<String, Object>();
-        idAttrs.put(IdentityNamespace.IDENTITY_NAMESPACE, symbolicName);
-        idAttrs.put(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, type);
-        idAttrs.put(IdentityNamespace.CAPABILITY_VERSION_ATTRIBUTE, version);
+    static OSGiCapabilityImpl newOSGiIdentityCapability(org.apache.felix.bundlerepository.Resource res) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> idAttrs = new HashMap<String, Object>(res.getProperties());
+
+        // Set a number of specific properties that need to be translated
+        idAttrs.put(IdentityNamespace.IDENTITY_NAMESPACE, res.getSymbolicName());
+
+        if (idAttrs.get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE) == null)
+            idAttrs.put(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, IdentityNamespace.TYPE_BUNDLE);
 
         return new OSGiCapabilityImpl(IdentityNamespace.IDENTITY_NAMESPACE, idAttrs, Collections.<String, String> emptyMap());
     }

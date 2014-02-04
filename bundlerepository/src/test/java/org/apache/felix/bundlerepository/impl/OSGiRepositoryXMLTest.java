@@ -63,6 +63,25 @@ public class OSGiRepositoryXMLTest extends TestCase
         assertEquals("osgi.subsystem.feature", cap.getAttributes().get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE));
     }
 
+    public void testOtherIdentityAttribute() throws Exception
+    {
+        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
+        URL url = getClass().getResource("/spec_repository.xml");
+        repoAdmin.addRepository(url);
+
+        Repository repo = new OSGiRepositoryImpl(repoAdmin);
+        Requirement req = new OSGiRequirementImpl("osgi.identity",
+                "(license=http://www.opensource.org/licenses/mytestlicense)");
+
+        Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
+        assertEquals(1, result.size());
+        Collection<Capability> caps = result.values().iterator().next();
+        assertEquals(1, caps.size());
+        Capability cap = caps.iterator().next();
+        assertEquals("org.apache.felix.bundlerepository.test_file_3", cap.getAttributes().
+                get(IdentityNamespace.IDENTITY_NAMESPACE));
+    }
+
     public void testContentCapability() throws Exception
     {
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();

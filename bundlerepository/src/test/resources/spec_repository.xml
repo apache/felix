@@ -23,6 +23,7 @@
       <attribute name='osgi.identity' value='org.apache.felix.bundlerepository.test_file_3'/>
       <attribute name='type' value='osgi.bundle'/>
       <attribute name='version' type='Version' value='1.2.3.something'/>
+      <attribute name='license' value='http://www.opensource.org/licenses/mytestlicense' />
     </capability>
     <capability namespace='osgi.content'>
       <attribute name='osgi.content' value='a1c64578808c38a63cd6563e9936f025638aeaf9de70f36765367db81c0afc38'/>
