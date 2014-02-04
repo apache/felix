@@ -44,34 +44,6 @@ import org.osgi.service.repository.RepositoryContent;
 
 public class OSGiRepositoryImplTest extends TestCase
 {
-    public void testRepositoryContent() throws Exception {
-        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
-        URL url = getClass().getResource("/another_repository.xml");
-        repoAdmin.addRepository(url);
-
-        Repository repo = new OSGiRepositoryImpl(repoAdmin);
-        Requirement req = new OSGiRequirementImpl("osgi.wiring.package",
-                "(&(osgi.wiring.package=org.apache.commons.logging)(version>=1.0.1)(!(version>=2)))");
-
-        Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
-        assertEquals(1, result.size());
-        Collection<Capability> caps = result.values().iterator().next();
-        assertEquals(1, caps.size());
-        Capability cap = caps.iterator().next();
-        assertEquals("osgi.wiring.package", cap.getNamespace());
-        assertEquals("org.apache.commons.logging", cap.getAttributes().get("osgi.wiring.package"));
-        assertEquals(Version.parseVersion("1.0.4"), cap.getAttributes().get("version"));
-
-        Resource resource = cap.getResource();
-        RepositoryContent rc = (RepositoryContent) resource; // Repository Resources must implement this interface
-        byte[] actualBytes = Streams.suck(rc.getContent());
-
-        URL actualURL = getClass().getResource("/repo_files/test_file_1.jar");
-        byte[] expectedBytes = Streams.suck(actualURL.openStream());
-
-        assertTrue(Arrays.equals(expectedBytes, actualBytes));
-    }
-
     public void testIdentityAndContentCapabilities() throws Exception
     {
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
@@ -176,6 +148,34 @@ public class OSGiRepositoryImplTest extends TestCase
 
         Set<String> expected = new HashSet<String>(Arrays.asList("test_file_1", "test_file_2"));
         assertEquals(expected, identities);
+    }
+
+    public void testRepositoryContent() throws Exception {
+        RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
+        URL url = getClass().getResource("/another_repository.xml");
+        repoAdmin.addRepository(url);
+
+        Repository repo = new OSGiRepositoryImpl(repoAdmin);
+        Requirement req = new OSGiRequirementImpl("osgi.wiring.package",
+                "(&(osgi.wiring.package=org.apache.commons.logging)(version>=1.0.1)(!(version>=2)))");
+
+        Map<Requirement, Collection<Capability>> result = repo.findProviders(Collections.singleton(req));
+        assertEquals(1, result.size());
+        Collection<Capability> caps = result.values().iterator().next();
+        assertEquals(1, caps.size());
+        Capability cap = caps.iterator().next();
+        assertEquals("osgi.wiring.package", cap.getNamespace());
+        assertEquals("org.apache.commons.logging", cap.getAttributes().get("osgi.wiring.package"));
+        assertEquals(Version.parseVersion("1.0.4"), cap.getAttributes().get("version"));
+
+        Resource resource = cap.getResource();
+        RepositoryContent rc = (RepositoryContent) resource; // Repository Resources must implement this interface
+        byte[] actualBytes = Streams.suck(rc.getContent());
+
+        URL actualURL = getClass().getResource("/repo_files/test_file_1.jar");
+        byte[] expectedBytes = Streams.suck(actualURL.openStream());
+
+        assertTrue(Arrays.equals(expectedBytes, actualBytes));
     }
 
     private RepositoryAdminImpl createRepositoryAdmin() throws Exception

@@ -42,8 +42,7 @@ public class FelixResourceAdapter implements Resource, RepositoryContent
         {
             // TODO cater for null request
             Object type = resource.getProperties().get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE);
-            OSGiCapabilityImpl c = OSGiRepositoryImpl.newOSGiIdentityCapability(resource.getSymbolicName(),
-                type != null ? type.toString() : IdentityNamespace.TYPE_BUNDLE, resource.getVersion());
+            OSGiCapabilityImpl c = OSGiRepositoryImpl.newOSGiIdentityCapability(resource);
             c.setResource(this);
             return Collections.<Capability>singletonList(c);
         }
