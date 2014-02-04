@@ -16,14 +16,10 @@ package org.apache.felix.bundlerepository.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Property;
-import org.osgi.framework.Version;
 
 public class OSGiCapabilityAdapter implements Capability
 {
@@ -53,10 +49,10 @@ public class OSGiCapabilityAdapter implements Capability
         {
             if (entry.getKey().equals(capability.getNamespace()))
             {
-                result.add(new FelixProperty(getName(), entry.getValue()));
+                result.add(new FelixPropertyAdapter(getName(), entry.getValue()));
                 continue;
             }
-            result.add(new FelixProperty(entry));
+            result.add(new FelixPropertyAdapter(entry));
         }
         return result.toArray(new Property[result.size()]);
     }
@@ -72,61 +68,5 @@ public class OSGiCapabilityAdapter implements Capability
     public int hashCode()
     {
         return capability.hashCode();
-    }
-
-    static class FelixProperty implements Property
-    {
-        private static Set<?> asSet(List<?> list)
-        {
-            return new HashSet<Object>(list);
-        }
-
-        private final String name;
-        private final Object value;
-
-        public FelixProperty(String name, Object value)
-        {
-            if (name == null)
-                throw new NullPointerException("Missing required parameter: name");
-            if (value == null)
-                throw new NullPointerException("Missing required parameter: value");
-            this.name = name;
-            this.value = value;
-        }
-
-        public FelixProperty(Map.Entry<String, Object> entry)
-        {
-            this(entry.getKey(), entry.getValue());
-        }
-
-        public Object getConvertedValue()
-        {
-            if (value instanceof List)
-                return asSet((List<?>) value);
-            return value;
-        }
-
-        public String getName()
-        {
-            return name;
-        }
-
-        public String getType()
-        {
-            if (value instanceof Version)
-                return Property.VERSION;
-            if (value instanceof Long)
-                return Property.LONG;
-            if (value instanceof Double)
-                return Property.DOUBLE;
-            if (value instanceof List<?>)
-                return Property.SET;
-            return null;
-        }
-
-        public String getValue()
-        {
-            return String.valueOf(value);
-        }
     }
 }

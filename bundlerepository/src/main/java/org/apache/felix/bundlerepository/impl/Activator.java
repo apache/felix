@@ -20,11 +20,12 @@ package org.apache.felix.bundlerepository.impl;
 
 import java.util.Hashtable;
 
+import org.apache.felix.bundlerepository.RepositoryAdmin;
 import org.apache.felix.bundlerepository.impl.wrapper.Wrapper;
 import org.apache.felix.utils.log.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.apache.felix.bundlerepository.RepositoryAdmin;
+import org.osgi.service.repository.Repository;
 import org.osgi.service.url.URLConstants;
 import org.osgi.service.url.URLStreamHandlerService;
 
@@ -71,6 +72,11 @@ public class Activator implements BundleActivator
         context.registerService(
             RepositoryAdmin.class.getName(),
             m_repoAdmin, null);
+
+        // Register the OSGi Repository-spec compliant facade
+        context.registerService(
+            Repository.class.getName(),
+            new OSGiRepositoryImpl(m_repoAdmin), null);
 
         try
         {
