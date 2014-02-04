@@ -46,7 +46,7 @@ import org.osgi.resource.Resource;
 import org.osgi.service.repository.ContentNamespace;
 import org.osgi.service.repository.Repository;
 
-public class OSGiRepositoryImpl implements Repository
+class OSGiRepositoryImpl implements Repository
 {
     private final RepositoryAdmin repository;
 

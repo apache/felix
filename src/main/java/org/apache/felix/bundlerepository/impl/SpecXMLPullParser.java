@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Resource;
+import org.osgi.framework.Version;
 import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.resource.Namespace;
 import org.osgi.service.repository.ContentNamespace;
@@ -140,7 +141,7 @@ public class SpecXMLPullParser
 
         for (Map.Entry<String, Object> entry : attributes.entrySet())
         {
-            capability.addProperty(entry.getKey(), "" + entry.getValue()); // TODO handle non-string data types
+            capability.addProperty(new FelixPropertyAdapter(entry.getKey(), entry.getValue()));
         }
 
         return capability;
@@ -186,9 +187,9 @@ public class SpecXMLPullParser
             if (ATTRIBUTE.equals(element))
             {
                 String name = reader.getAttributeValue(null, "name");
-                String type = reader.getAttributeValue(null, "type"); // TODO handle
+                String type = reader.getAttributeValue(null, "type");
                 String value = reader.getAttributeValue(null, "value");
-                attributes.put(name, value);
+                attributes.put(name, getTypedValue(type, value));
                 PullParser.sanityCheckEndElement(reader, reader.nextTag(), ATTRIBUTE);
             }
             else
@@ -197,6 +198,21 @@ public class SpecXMLPullParser
             }
         }
         PullParser.sanityCheckEndElement(reader, event, parentTag);
+    }
+
+    private static Object getTypedValue(String type, String value)
+    {
+        if (type == null)
+            return value;
+
+        type = type.trim();
+        if ("Version".equals(type))
+            return Version.parseVersion(value);
+        else if ("Long".equals(type))
+            return Long.parseLong(value);
+        else if ("Double".equals(type))
+            return Double.parseDouble(value);
+        return value;
     }
 
     private static Requirement parseRequirement(XmlPullParser reader) throws Exception
