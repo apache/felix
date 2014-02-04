@@ -64,6 +64,7 @@
       <modules>
         <module>utils</module>
         <module>bundlerepository</module>
+        <module>bundlerepository.osgi-ct</module>
      </modules>
    </profile>
 

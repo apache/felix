@@ -1,0 +1,101 @@
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>felix-parent</artifactId>
+    <version>2.1</version>
+    <relativePath>../../pom/pom.xml</relativePath>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <packaging>bundle</packaging>
+  <name>Apache Felix Bundle Repository - OSGi CT integration</name>
+  <description>
+    Bundle repository service OSGi CT integration. To run a Repository implementation in the 
+    OSGi CT, a small integration layer needs to be provided by the implementation that knows
+    how to prime the repository with the provided repository xml file.
+  </description>
+  <artifactId>org.apache.felix.bundlerepository.osgi-ct</artifactId>
+  <version>1.7.0-SNAPSHOT</version>
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/bundlerepository.osgi-ct</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/bundlerepository.osgi-ct</developerConnection>
+    <url>http://svn.apache.org/repos/asf/felix/trunk/bundlerepository.osgi-ct</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <version>5.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <version>5.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>org.apache.felix.bundlerepository</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <target>1.5</target>
+          <source>1.5</source>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.3.4</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Export-Package></Export-Package>
+            <Private-Package>org.apache.felix.bundlerepository.osgict</Private-Package>
+            <Bundle-Activator>org.apache.felix.bundlerepository.osgict.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+          </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludeSubProjects>false</excludeSubProjects>
+          <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
+          <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
+          <excludes>
+            <param>doc/*</param>
+            <param>maven-eclipse.xml</param>
+            <param>.checkstyle</param>
+            <param>.externalToolBuilders/*</param>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
