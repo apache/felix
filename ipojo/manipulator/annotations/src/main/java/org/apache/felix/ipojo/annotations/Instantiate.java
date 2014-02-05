@@ -24,6 +24,17 @@ import java.lang.annotation.Target;
 /**
  * This annotation is used to create an 'empty' instance of the
  * current component type.
+ *
+ * Notice that all mandatory properties should have a default value, otherwise
+ * configuration is declared unacceptable and the instance creation fails.
+ *
+ * <pre>
+ *     {@linkplain org.apache.felix.ipojo.annotations.Component @Component}
+ *     {@code @Instantiate}
+ *     public class MyComponent {
+ *         // ...
+ *     }
+ * </pre>
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
@@ -31,7 +42,14 @@ public @interface Instantiate {
     
     /**
      * Optional attribute to set the instance name.
-     * Default: no name
+     * Default: unique generated name
+     * <pre>
+     *     {@linkplain org.apache.felix.ipojo.annotations.Component @Component}
+     *     {@code @Instantiate("my-default-component")}
+     *     public class MyComponent {
+     *         // ...
+     *     }
+     * </pre>
      */
     String name() default ""; 
 }
