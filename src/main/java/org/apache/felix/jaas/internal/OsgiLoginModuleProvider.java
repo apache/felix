@@ -19,8 +19,6 @@
 
 package org.apache.felix.jaas.internal;
 
-import static javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -30,6 +28,8 @@ import org.apache.felix.jaas.LoginModuleFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+
+import static javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 
 final class OsgiLoginModuleProvider implements LoginModuleProvider
 {
@@ -56,7 +56,7 @@ final class OsgiLoginModuleProvider implements LoginModuleProvider
         }
         this.ranking = PropertiesUtil.toInteger(rankingProperty, 0);
         this.flag = ControlFlag.from((String) serviceReference.getProperty(LoginModuleFactory.JAAS_CONTROL_FLAG)).flag();
-        this.realmName = (String) serviceReference.getProperty(LoginModuleFactory.JAAS_REALM_NAME);
+        this.realmName = Util.trimToNull((String) serviceReference.getProperty(LoginModuleFactory.JAAS_REALM_NAME));
     }
 
     public Map<String, ?> options()
