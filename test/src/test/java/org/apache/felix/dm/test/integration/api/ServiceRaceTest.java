@@ -23,6 +23,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -64,32 +65,30 @@ public class ServiceRaceTest extends TestBase {
         warn("starting concurrent services");
         int cores = Math.max(10, Runtime.getRuntime().availableProcessors());
         final DependencyManager dm = new DependencyManager(context);
+        Random rnd = new Random();
 
         try {
             m_execServices = Executors.newFixedThreadPool(cores);
             m_execAspects = Executors.newFixedThreadPool(cores);
-            int aspectPidCounter = 1;
-            int aspectCounter = 1;
+            int serviceIdCounter = 1;
             long timeStamp = System.currentTimeMillis();
-            final int tests = 100000;
+            final int tests = 30000;
             for (int loop = 0; loop < tests; loop++) {
                 debug("loop#%d -------------------------", (loop + 1));
 
                 final Ensure clientStarted = new Ensure(false);
                 final Ensure clientStopped = new Ensure(false);
-                final Ensure serviceStarted = new Ensure(false);
-                final Ensure serviceStopped = new Ensure(false);
-                final Ensure serviceInvoked = new Ensure(false);
-                final Ensure aspectStarted = new Ensure(false);
-                final Ensure aspectStopped = new Ensure(false);
-                final Ensure aspectUpdated = new Ensure(false);
-                final Ensure aspectInvoked = new Ensure(false);
+                final Ensure servicesStopped = new Ensure(false);
+                final Ensure servicesInvoked = new Ensure(false);
+                final Ensure aspectsInvoked = new Ensure(false);
+                final Ensure aspectsRemoved = new Ensure(false);
 
                 // Create one client depending on many S services
                 Client client = new Client(clientStarted, clientStopped);
                 Component c = dm.createComponent().setImplementation(client);
                 for (int i = 0; i < SERVICES; i++) {
-                    c.add(dm.createServiceDependency().setService(S.class, "(name=S" + i + ")").setRequired(true).setCallbacks(
+                    String filter = "(name=S" + i + "-" + serviceIdCounter + ")";
+                    c.add(dm.createServiceDependency().setService(S.class, filter).setRequired(true).setCallbacks(
                         "add", null, "remove", "swap"));
                 }
                 dm.add(c);
@@ -98,15 +97,15 @@ public class ServiceRaceTest extends TestBase {
                 info("registering S services concurrently");
                 final ConcurrentLinkedQueue<Component> services = new ConcurrentLinkedQueue<Component>();
                 for (int i = 0; i < SERVICES; i++) {
-                    final String name = "S" + i;
+                    final String name = "S" + i + "-" + serviceIdCounter;
+                    Hashtable h = new Hashtable();
+                    h.put("name", name);
+                    final Component sImpl = dm.createComponent().setImplementation(
+                        new SImpl(servicesStopped, servicesInvoked, name)).setInterface(
+                        S.class.getName(), h);
+                    services.add(sImpl);
                     m_execServices.execute(new Runnable() {
                         public void run() {
-                            Hashtable h = new Hashtable();
-                            h.put("name", name);
-                            Component sImpl = dm.createComponent().setImplementation(
-                                new SImpl(serviceStarted, serviceStopped, serviceInvoked, name)).setInterface(
-                                S.class.getName(), h);
-                            services.add(sImpl);
                             dm.add(sImpl);
                         }
                     });
@@ -115,49 +114,63 @@ public class ServiceRaceTest extends TestBase {
                 // Create S aspects concurrently
                 info("registering aspects concurrently");
                 final Queue<Component> aspects = new ConcurrentLinkedQueue<Component>();
-                final Queue<Configuration> aspectPids = new ConcurrentLinkedQueue<Configuration>();
                 for (int i = 0; i < SERVICES; i++) {
-                    final String name = "Aspect" + i + "-" + (aspectCounter++);
-                    final String filter = "(name=S" + i + ")";
-                    final String pid = "Aspect" + i + ".pid" + (aspectPidCounter++);
+                    final String name = "Aspect" + i + "-" + serviceIdCounter;
+                    final String filter = "(name=S" + i + "-" + serviceIdCounter + ")";
+                    final String pid = "Aspect" + i + "-" + serviceIdCounter + ".pid";
                     final int rank = (i+1);
-                    m_execServices.execute(new Runnable() {
+                    SAspect sa = new SAspect(aspectsInvoked, name, rank);
+                    debug("Adding aspect " + sa);
+                    final Component aspect = dm.createAspectService(S.class, filter, rank).setImplementation(sa).add(
+                        dm.createConfigurationDependency().setPid(pid));
+                    aspects.add(aspect);
+                    m_execAspects.execute(new Runnable() {
                         public void run() {
-                            SAspect sa = new SAspect(aspectStarted, aspectStopped, aspectUpdated, aspectInvoked, name, rank);
-                            debug("Adding aspect " + sa);
-                            Component aspect = dm.createAspectService(S.class, filter, rank).setImplementation(sa).add(
-                                dm.createConfigurationDependency().setPid(pid));
-                            aspects.add(aspect);
                             dm.add(aspect);
-                            try {
-                                Configuration aspectConf = m_ca.getConfiguration(pid, null);
-                                aspectConf.update(new Hashtable() {
-                                    {
-                                        put("name", name);
-                                    }
-                                });
-                                aspectPids.add(aspectConf);
-                            }
-                            catch (IOException e) {
-                                error("could not create pid %s for aspect %s", e, pid, name);
-                                return;
-                            }
                         }
                     });
                 }
+                
+                // Provide all aspect configuration (asynchronously)
+                final Queue<Configuration> aspectPids = new ConcurrentLinkedQueue<Configuration>();
+                for (int i = 0; i < SERVICES; i++) {
+                    final String name = "Aspect" + i + "-" + serviceIdCounter;
+                    final String pid = "Aspect" + i + "-" + serviceIdCounter + ".pid";
+                    final int rank = (i+1);
+                    SAspect sa = new SAspect(aspectsInvoked, name, rank);
+                    debug("Adding aspect configuration pid %s for aspect %s", pid, sa);
+                    try {
+                        Configuration aspectConf = m_ca.getConfiguration(pid, null);
+                        aspectConf.update(new Hashtable() {
+                            {
+                                put("name", name);
+                            }
+                        });
+                        aspectPids.add(aspectConf);
+                    }
+                    catch (IOException e) {
+                        error("could not create pid %s for aspect %s", e, pid, name);
+                    }
+                }
+                
+                // Increment service id counter, for next iteration.
+                serviceIdCounter ++;
 
-                // Make sure all services and aspects are created
+                // Make sure client is started
                 clientStarted.waitForStep(1, STEP_WAIT);
-                aspectUpdated.waitForStep(SERVICES, STEP_WAIT);
-                aspectStarted.waitForStep(SERVICES, STEP_WAIT);
-                info("all aspects and services registered");
+                info("all services have been started");
 
-                // Make sure client invoked services and aspects SERVICES * INVOKES times
-                serviceInvoked.waitForStep(SERVICES * INVOKES, STEP_WAIT);
-                aspectInvoked.waitForStep(SERVICES * INVOKES, STEP_WAIT);
-                info("All aspects and services have been properly invoked");
-
-                // Unregister services concurrently
+                // Make sure client invoked services SERVICES * INVOKES times
+                servicesInvoked.waitForStep(SERVICES * INVOKES, STEP_WAIT);
+                info("All services have been properly invoked");
+                
+                // Now ensure that some random aspects have been randomly invoked.
+                int aspectCount = Math.min(1, rnd.nextInt(SERVICES));
+                int aspectInvocations = Math.min(1, rnd.nextInt(INVOKES));                
+                aspectsInvoked.waitForStep(aspectCount * aspectInvocations, STEP_WAIT);
+                info("%d aspects have been properly invoked %d times", aspectCount, aspectInvocations);                                
+                                
+                // Unregister services concurrently (at this point, it is possible that we have still some aspects being activating !
                 info("unregistering services concurrently");
                 for (final Component sImpl : services) {
                     m_execServices.execute(new Runnable() {
@@ -167,39 +180,48 @@ public class ServiceRaceTest extends TestBase {
                     });
                 }
 
-                // Unregister aspects (and configuration) concurrently
+                // unregister aspects concurrently (some aspects can potentially be still activating !)
                 info("unregistering aspects concurrently");
                 for (final Component a : aspects) {
                     m_execAspects.execute(new Runnable() {
                         public void run() {
                             debug("removing aspect %s", a);
                             dm.remove(a);
+                            aspectsRemoved.step();
                         }
                     });
                 }
-                info("unregistering aspect configuration concurrently");
+                
+                info("unregistering aspects configuration concurrently");
                 for (Configuration aspectConf : aspectPids) {
-                    aspectConf.delete();
+                    aspectConf.delete(); // asynchronous
                 }
 
-                info("removing client from dm");
+                info("removing client");
                 dm.remove(c);
 
-                // Wait until all services/aspects have been stopped
-                serviceStopped.waitForStep(SERVICES, STEP_WAIT);
-                aspectStopped.waitForStep(SERVICES, STEP_WAIT);
+                // Wait until all services have been stopped
+                servicesStopped.waitForStep(SERVICES, STEP_WAIT);
+                
+                // Wait until client has been stopped
                 clientStopped.waitForStep(1, STEP_WAIT);
-
+                
+                // Wait until all aspects have been deleted
+                aspectsRemoved.waitForStep(SERVICES, STEP_WAIT);
+                
                 if (super.errorsLogged()) {
                     throw new IllegalStateException("Race test interrupted (some error occured, see previous logs)");
                 }
 
-                info("finished one test loop");
+                info("finished one test loop: current components=%d", dm.getComponents().size());
                 if ((loop + 1) % 100 == 0) {
                     long duration = System.currentTimeMillis() - timeStamp;
                     warn("Performed %d tests (total=%d) in %d ms.", (loop + 1), tests, duration);
                     timeStamp = System.currentTimeMillis();
                 }
+                
+                // Cleanup all remaining components (but all components should have been removed now).
+                dm.clear();
             }
         }
 
@@ -228,12 +250,11 @@ public class ServiceRaceTest extends TestBase {
     }
 
     public class SImpl implements S {
-        final Ensure m_started, m_stopped, m_invoked;
+        final Ensure m_stopped, m_invoked;
         final String m_name;
 
-        public SImpl(Ensure started, Ensure stopped, Ensure invoked, String name) {
+        public SImpl(Ensure stopped, Ensure invoked, String name) {
             m_name = name;
-            m_started = started;
             m_stopped = stopped;
             m_invoked = invoked;
         }
@@ -249,7 +270,6 @@ public class ServiceRaceTest extends TestBase {
 
         public void start() {
             info("started %s", this);
-            m_started.step();
         }
 
         public void stop() {
@@ -272,10 +292,6 @@ public class ServiceRaceTest extends TestBase {
 
         synchronized void swap(ServiceReference prevRef, S prev, ServiceReference nextRef, S next) {
             info("client.swap: prev=%s, next=%s", prev, next);
-            if (m_services.remove(prevRef.getProperty("name")) == null) {
-                throw new IllegalStateException("client being swapped with an unknown old service: oldRef=" + prevRef.getProperty("name") + 
-                    ", newRef=" + nextRef.getProperty("name") + ", current injected services=" + m_services);
-            }
             m_services.put((String) nextRef.getProperty("name"), next);
         }
 
@@ -286,9 +302,7 @@ public class ServiceRaceTest extends TestBase {
 
         synchronized void remove(Map<String, String> props, S s) {
             info("client.remove: %s", s);
-            if (m_services.remove(props.get("name")) == null) {
-                throw new IllegalStateException("client being removed with an unknown old service: " + props.get("name"));
-            }
+            m_services.remove(props.get("name"));
         }
 
         public synchronized void start() {
@@ -350,13 +364,10 @@ public class ServiceRaceTest extends TestBase {
         volatile S m_next;
         final String m_name;
         final int m_rank;
-        final Ensure m_invoked, m_started, m_stopped, m_updated;
+        final Ensure m_invoked;
         volatile Dictionary<String, String> m_conf;
 
-        SAspect(Ensure started, Ensure stopped, Ensure updated, Ensure invoked, String name, int rank) {
-            m_started = started;
-            m_stopped = stopped;
-            m_updated = updated;
+        SAspect(Ensure invoked, String name, int rank) {
             m_invoked = invoked;
             m_name = name;
             m_rank = rank;
@@ -369,17 +380,14 @@ public class ServiceRaceTest extends TestBase {
             }
             debug("Aspect %s injected with configuration: %s", this, conf);
             m_conf = conf;
-            m_updated.step();
         }
 
         public void start() {
             info("started aspect %s", this);
-            m_started.step();
         }
 
         public void stop() {
             info("stopped aspect %s", this);
-            m_stopped.step();
         }
 
         public void invoke(int prevRank) {
