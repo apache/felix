@@ -23,6 +23,13 @@ import java.lang.annotation.Target;
 
 /**
  * This annotation declares an invalidate callback.
+ *
+ * <pre>
+ *     {@code @Invalidate}
+ *     public void stop() {
+ *         // Code executed when instances are becoming invalid
+ *     }
+ * </pre>
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})

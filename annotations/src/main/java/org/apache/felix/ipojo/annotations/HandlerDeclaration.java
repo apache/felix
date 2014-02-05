@@ -22,7 +22,14 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is used to configure a handler.
+ * This annotation is used to configure a handler through XML (as in {@literal metadata.xml}).
+ * <pre>
+ *     {@linkplain org.apache.felix.ipojo.annotations.Component @Component}
+ *     {@code @HandlerDeclaration("<ns:my-handler attribute='value' xmlns:ns='http://www.acme.com/ipojo/ns'/>")}
+ *     public class MyComponent {
+ *         // ...
+ *     }
+ * </pre>
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
@@ -31,6 +38,7 @@ public @interface HandlerDeclaration {
     /**
      * The content of this attribute represents the XML 
      * that would be used in the metadata.xml.
+     * It must be a root XML Element, namespaces are allowed and so for child elements.
      */
     String value();
 }

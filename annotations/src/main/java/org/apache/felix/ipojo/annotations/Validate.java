@@ -23,6 +23,13 @@ import java.lang.annotation.Target;
 
 /**
  * This annotation declares a validate callback.
+ *
+ * <pre>
+ *     {@code @Validate}
+ *     public void start() {
+ *         // Code executed when instances are becoming valid
+ *     }
+ * </pre>
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})

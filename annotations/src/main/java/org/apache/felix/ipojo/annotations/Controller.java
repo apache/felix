@@ -22,7 +22,27 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 /**
- * This annotation declares a lifecycle controller.
+ * This annotation declares a <a href="http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/instance-vs-service-controller.html">lifecycle controller</a>.
+ *
+ * <pre>
+ *     {@code @Component}
+ *     public class MyComponent {
+ *         // ...
+ *         {@code @Controller}
+ *         private boolean controller;
+ *
+ *         public void aMethod() {
+ *             // Invalidate the instance
+ *             controller = false;
+ *         }
+ *
+ *         public void anotherMethod() {
+ *             // Validate the instance again
+ *             controller = true;
+ *         }
+ *     }
+ * </pre>
+
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 @Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})

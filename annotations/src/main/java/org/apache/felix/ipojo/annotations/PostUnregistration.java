@@ -23,8 +23,16 @@ import java.lang.annotation.Target;
 
 
 /**
- * This annotation declares a post-service-unregistration method.
+ * Declares a method to be <a href="http://felix.apache.org/documentation/subprojects/apache-felix-ipojo/apache-felix-ipojo-userguide/describing-components/providing-osgi-services.html#being-notified-of-the-service-registration-and-unregistration">notified after service un-registration</a> is effective.
+ *
+ * <pre>
+ *     {@code @PostUnregistration}
+ *     public void unregistered(ServiceReference<?> reference) {
+ *         // Called after the service un-publication
+ *     }
+ * </pre>
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * @see org.apache.felix.ipojo.annotations.Provides
  */
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface PostUnregistration {
