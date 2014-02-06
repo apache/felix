@@ -276,68 +276,72 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     //@Override
     public void start(final DependencyService service) {
-        boolean needsStarting = false;
-        synchronized (this) {
-            m_services.add(service);
-            if (!m_isStarted) {
-                if (m_trackedServiceName != null) {
-                    if (m_trackedServiceFilter != null) {
-                        try {
-                            m_tracker = new ServiceTracker(m_context, m_context.createFilter(m_trackedServiceFilter),
-                                this);
+        m_serial.executeNow(new Runnable() {
+            public void run() {
+                boolean needsStarting = false;
+                m_services.add(service);
+                if (!m_isStarted) {
+                    if (m_trackedServiceName != null) {
+                        if (m_trackedServiceFilter != null) {
+                            try {
+                                m_tracker = new ServiceTracker(m_context,
+                                    m_context.createFilter(m_trackedServiceFilter), ServiceDependencyImpl.this);
+                            }
+                            catch (InvalidSyntaxException e) {
+                                throw new IllegalStateException("Invalid filter definition for dependency: "
+                                    + m_trackedServiceFilter);
+                            }
                         }
-                        catch (InvalidSyntaxException e) {
-                            throw new IllegalStateException("Invalid filter definition for dependency: "
-                                + m_trackedServiceFilter);
+                        else if (m_trackedServiceReference != null) {
+                            m_tracker = new ServiceTracker(m_context, m_trackedServiceReference,
+                                ServiceDependencyImpl.this);
                         }
-                    }
-                    else if (m_trackedServiceReference != null) {
-                        m_tracker = new ServiceTracker(m_context, m_trackedServiceReference, this);
+                        else {
+                            m_tracker = new ServiceTracker(m_context, m_trackedServiceName.getName(),
+                                ServiceDependencyImpl.this);
+                        }
                     }
                     else {
-                        m_tracker = new ServiceTracker(m_context, m_trackedServiceName.getName(), this);
+                        throw new IllegalStateException(
+                            "Could not create tracker for dependency, no service name specified.");
                     }
+                    m_isStarted = true;
+                    needsStarting = true;
                 }
-                else {
-                    throw new IllegalStateException(
-                        "Could not create tracker for dependency, no service name specified.");
-                }
-                m_isStarted = true;
-                needsStarting = true;
-            }
-        }
 
-        if (needsStarting) {
-            // when the swapped callback is set, also track the aspects
-            boolean trackAllServices = false;
-            boolean trackAllAspects = false;
-            if (m_callbackSwapped != null) {
-                trackAllAspects = true;
+                if (needsStarting) {
+                    // when the swapped callback is set, also track the aspects
+                    boolean trackAllServices = false;
+                    boolean trackAllAspects = false;
+                    if (m_callbackSwapped != null) {
+                        trackAllAspects = true;
+                    }
+                    m_tracker.open(trackAllServices, trackAllAspects);
+                }
             }
-            m_tracker.open(trackAllServices, trackAllAspects);
-        }
+        });
     }
 
     //@Override
     public void stop(final DependencyService service) {
-        boolean needsStopping = false;
-        synchronized (this) {
-            if (m_services.size() == 1 && m_services.contains(service)) {
-                m_isStarted = false;
-                needsStopping = true;
-                // Don't remove the service from our m_services list now, because when we'll close the tracker,
-                // our removedService callback will be called, and at this point we'll need to access to our m_services list.
-            }
-        }
-        if (needsStopping) {
-            m_tracker.close(); // will invoke our removedService method synchronously. 
-            m_tracker = null;
-        }
+        m_serial.executeNow(new Runnable() {
+            public void run() {
+                boolean needsStopping = false;
+                if (m_services.size() == 1 && m_services.contains(service)) {
+                    m_isStarted = false;
+                    needsStopping = true;
+                    // Don't remove the service from our m_services list now, because when we'll close the tracker,
+                    // our removedService callback will be called, and at this point we'll need to access to our m_services list.
+                }
 
-        synchronized (this) {
-            // moved this down
-            m_services.remove(service);
-        }
+                if (needsStopping) {
+                    m_tracker.close(); // will invoke our removedService method synchronously. 
+                    m_tracker = null;
+                }
+                // moved this down
+                m_services.remove(service);
+            }
+        });
     }
 
     //@Override
@@ -352,18 +356,14 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     //@Override
     public void addedService(final ServiceReference ref, final Object service) {
-        if (m_debug) {
-            m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] addedservice: " + ref);
-        }
-        final boolean makeAvailable = makeAvailable();
-        Object[] srv;
-        synchronized (this) {
-            srv = m_services.toArray();
-        }
-        final Object[] services = srv;
-
-        Runnable task = new Runnable() {
+        m_serial.executeNow(new Runnable() {
             public void run() {
+                if (m_debug) {
+                    m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] addedservice: " + ref);
+                }
+                final boolean makeAvailable = makeAvailable();
+                final Object[] services = m_services.toArray();
+
                 for (int i = 0; i < services.length; i++) {
                     final DependencyService ds = (DependencyService) services[i];
                     if (makeAvailable) {
@@ -414,21 +414,14 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     }
                 }
             }
-        };
-
-        m_serial.execute(task);
+        });
     }
 
     //@Override
     public void modifiedService(final ServiceReference ref, final Object service) {
-        Object[] srv;
-        synchronized (this) {
-            srv = m_services.toArray();
-        }
-        final Object[] services = srv;
-
-        Runnable task = new Runnable() {
+        m_serial.executeNow(new Runnable() {
             public void run() {
+                final Object[] services = m_services.toArray();
                 for (int i = 0; i < services.length; i++) {
                     final DependencyService ds = (DependencyService) services[i];
                     ds.autoConfig(ServiceDependencyImpl.this);
@@ -442,28 +435,23 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     }
                 }
             }
-        };
-        m_serial.execute(task);
+        });
     }
 
     //@Override
     public void removedService(final ServiceReference ref, final Object service) {
-        if (m_debug) {
-            m_logger.log(Logger.LOG_DEBUG,
-                "[" + m_debugKey + "] removedService: " + ref + ", rank: " + ref.getProperty("service.ranking"));
-        }
-        final boolean makeUnavailable = makeUnavailable();
-        if (m_debug) {
-            m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] make unavailable: " + makeUnavailable);
-        }
-        Object[] srv;
-        synchronized (this) {
-            srv = m_services.toArray();
-        }
-        final Object[] services = srv;
-
-        Runnable task = new Runnable() {
+        m_serial.executeNow(new Runnable() {
             public void run() {
+                if (m_debug) {
+                    m_logger.log(Logger.LOG_DEBUG,
+                        "[" + m_debugKey + "] removedService: " + ref + ", rank: " + ref.getProperty("service.ranking"));
+                }
+                final boolean makeUnavailable = makeUnavailable();
+                if (m_debug) {
+                    m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] make unavailable: " + makeUnavailable);
+                }
+                final Object[] services = m_services.toArray();
+
                 for (int i = 0; i < services.length; i++) {
                     final DependencyService ds = (DependencyService) services[i];
                     if (makeUnavailable) {
@@ -490,8 +478,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                 }
                 m_context.ungetService(ref);
             }
-        };
-        m_serial.execute(task);
+        });
     }
 
     // @Override
@@ -512,10 +499,10 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     continue; // The service has just been unregistered !
                 }
                 // We may be currently executing from our executor, that's why we "execute now".
-                m_serial.executeNow( new Runnable() {
+                m_serial.executeNow(new Runnable() {
                     public void run() {
                         invokeAdded(service, sr, svc);
-                   }
+                    }
                 });
             }
         }
@@ -545,7 +532,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     if (svc == null) { // it seems that the service has just gone !
                         m_logger.log(Logger.LOG_INFO, "[" + m_debugKey
                             + "] invoke removed found a null service from osgi registry for service ref:" + sr);
-                        continue; 
+                        continue;
                     }
 
                     invokeRemoved(service, sr, svc);
@@ -968,7 +955,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         return false;
     }
 
-    protected synchronized Object getService() {
+    protected Object getService() {
         Object service = null;
         if (m_isStarted) {
             service = m_tracker.getService();
