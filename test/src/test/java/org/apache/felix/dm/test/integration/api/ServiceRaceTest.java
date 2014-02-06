@@ -52,8 +52,12 @@ import org.osgi.service.cm.ConfigurationAdmin;
 @RunWith(PaxExam.class)
 public class ServiceRaceTest extends TestBase {
     final static int STEP_WAIT = 10000;
-    final static int SERVICES = 3;
-    final static int INVOKES = 10;
+    final static int SERVICES = 2;
+    final static int INVOKES = 1;
+    final static int TESTS = 10000;
+    
+    final static boolean INCLUDE_CONFIG_DEPENDENCY = false;
+    
     volatile ExecutorService m_execServices; // used to register/unregister S services
     volatile ExecutorService m_execAspects; // used to register/unregister Aspects
 
@@ -63,7 +67,9 @@ public class ServiceRaceTest extends TestBase {
     @Test
     public void testConcurrentServices() {
         warn("starting concurrent services");
-        int cores = Math.max(10, Runtime.getRuntime().availableProcessors());
+        int cores = Math.max(16, Runtime.getRuntime().availableProcessors());
+        warn("using " + cores + " cores.");
+        warn("include configuration dependency: " + INCLUDE_CONFIG_DEPENDENCY);
         final DependencyManager dm = new DependencyManager(context);
         Random rnd = new Random();
 
@@ -72,11 +78,10 @@ public class ServiceRaceTest extends TestBase {
             m_execAspects = Executors.newFixedThreadPool(cores);
             int serviceIdCounter = 1;
             long timeStamp = System.currentTimeMillis();
-            final int tests = 30000;
-            for (int loop = 0; loop < tests; loop++) {
+            for (int loop = 0; loop < TESTS; loop++) {
                 debug("loop#%d -------------------------", (loop + 1));
 
-                final Ensure clientStarted = new Ensure(false);
+                final Ensure clientStarted = new Ensure(false); // no debug
                 final Ensure clientStopped = new Ensure(false);
                 final Ensure servicesStopped = new Ensure(false);
                 final Ensure servicesInvoked = new Ensure(false);
@@ -121,8 +126,10 @@ public class ServiceRaceTest extends TestBase {
                     final int rank = (i+1);
                     SAspect sa = new SAspect(aspectsInvoked, name, rank);
                     debug("Adding aspect " + sa);
-                    final Component aspect = dm.createAspectService(S.class, filter, rank).setImplementation(sa).add(
-                        dm.createConfigurationDependency().setPid(pid));
+                    final Component aspect = dm.createAspectService(S.class, filter, rank).setImplementation(sa);
+                    if (INCLUDE_CONFIG_DEPENDENCY) {
+                        aspect.add(dm.createConfigurationDependency().setPid(pid));
+                    }
                     aspects.add(aspect);
                     m_execAspects.execute(new Runnable() {
                         public void run() {
@@ -133,23 +140,25 @@ public class ServiceRaceTest extends TestBase {
                 
                 // Provide all aspect configuration (asynchronously)
                 final Queue<Configuration> aspectPids = new ConcurrentLinkedQueue<Configuration>();
-                for (int i = 0; i < SERVICES; i++) {
-                    final String name = "Aspect" + i + "-" + serviceIdCounter;
-                    final String pid = "Aspect" + i + "-" + serviceIdCounter + ".pid";
-                    final int rank = (i+1);
-                    SAspect sa = new SAspect(aspectsInvoked, name, rank);
-                    debug("Adding aspect configuration pid %s for aspect %s", pid, sa);
-                    try {
-                        Configuration aspectConf = m_ca.getConfiguration(pid, null);
-                        aspectConf.update(new Hashtable() {
-                            {
-                                put("name", name);
-                            }
-                        });
-                        aspectPids.add(aspectConf);
-                    }
-                    catch (IOException e) {
-                        error("could not create pid %s for aspect %s", e, pid, name);
+                if (INCLUDE_CONFIG_DEPENDENCY) {
+                    for (int i = 0; i < SERVICES; i++) {
+                        final String name = "Aspect" + i + "-" + serviceIdCounter;
+                        final String pid = "Aspect" + i + "-" + serviceIdCounter + ".pid";
+                        final int rank = (i+1);
+                        SAspect sa = new SAspect(aspectsInvoked, name, rank);
+                        debug("Adding aspect configuration pid %s for aspect %s", pid, sa);
+                        try {
+                            Configuration aspectConf = m_ca.getConfiguration(pid, null);
+                            aspectConf.update(new Hashtable() {
+                                {
+                                    put("name", name);
+                                }
+                            });
+                            aspectPids.add(aspectConf);
+                        }
+                        catch (IOException e) {
+                            error("could not create pid %s for aspect %s", e, pid, name);
+                        }
                     }
                 }
                 
@@ -216,7 +225,7 @@ public class ServiceRaceTest extends TestBase {
                 info("finished one test loop: current components=%d", dm.getComponents().size());
                 if ((loop + 1) % 100 == 0) {
                     long duration = System.currentTimeMillis() - timeStamp;
-                    warn("Performed %d tests (total=%d) in %d ms.", (loop + 1), tests, duration);
+                    warn("Performed %d tests (total=%d) in %d ms.", (loop + 1), TESTS, duration);
                     timeStamp = System.currentTimeMillis();
                 }
                 
@@ -374,12 +383,14 @@ public class ServiceRaceTest extends TestBase {
         }
 
         public void updated(Dictionary<String, String> conf) {
-            if (conf == null) {
-                info("Aspect %s injected with a null configuration", this);
-                return;
+            if (INCLUDE_CONFIG_DEPENDENCY) {
+                if (conf == null) {
+                    info("Aspect %s injected with a null configuration", this);
+                    return;
+                }
+                debug("Aspect %s injected with configuration: %s", this, conf);
+                m_conf = conf;
             }
-            debug("Aspect %s injected with configuration: %s", this, conf);
-            m_conf = conf;
         }
 
         public void start() {
@@ -392,14 +403,16 @@ public class ServiceRaceTest extends TestBase {
 
         public void invoke(int prevRank) {
             Assert.assertTrue(prevRank > m_rank);
-            if (m_conf == null) {
-                error("Aspect: %s has not been injected with its configuration", this);
-                return;
-            }
-
-            if (!m_name.equals(m_conf.get("name"))) {
-                error("Aspect %s has not been injected with expected configuration: %s", this, m_conf);
-                return;
+            if (INCLUDE_CONFIG_DEPENDENCY) {
+                if (m_conf == null) {
+                    error("Aspect: %s has not been injected with its configuration", this);
+                    return;
+                }
+    
+                if (!m_name.equals(m_conf.get("name"))) {
+                    error("Aspect %s has not been injected with expected configuration: %s", this, m_conf);
+                    return;
+                }
             }
             m_invoked.step();
             m_next.invoke(m_rank);
