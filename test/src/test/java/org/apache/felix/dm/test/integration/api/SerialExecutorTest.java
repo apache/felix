@@ -39,6 +39,14 @@ import org.osgi.framework.BundleContext;
  */
 public class SerialExecutorTest {
     final Random m_rnd = new Random();
+    public enum LogLevel { WARN, INFO, DEBUG, };
+    final static LogLevel m_level = LogLevel.DEBUG;
+    
+    void debug(String msg) {
+        if (m_level.ordinal() >= LogLevel.DEBUG.ordinal()) {
+            System.out.println("[" + Thread.currentThread().getName() + "] " + msg);
+        }
+    }
     
     @Test
     public void testSerialExecutor() {
@@ -99,7 +107,7 @@ public class SerialExecutorTest {
             m_exec = exec;
             m_firstExecution = true;
         }
-
+        
         public void run() {
             Thread self = Thread.currentThread();
             if (m_firstExecution) {
@@ -129,8 +137,9 @@ public class SerialExecutorTest {
                 if (! m_executingThread.compareAndSet(self, null)) {
                     System.out.println("detected concurrent call to SerialTask: currThread=" + self
                         + ", other executing thread=" + m_executingThread);
-                    return;
+                    return;                    
                 }
+                m_firstExecution = true;
             }
             
             m_latch.countDown();
