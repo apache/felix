@@ -86,7 +86,26 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     private final Map m_componentByRank = new HashMap(); /* <Component, Map<Long, Map<Integer, Tuple>>> */
     private volatile boolean m_debug = false;
     private volatile String m_debugKey = null;
-
+    
+    /* Some additional logging feature for debugging the race conditions */
+    private final List logList = new ArrayList(); /* <String> */
+    
+    private synchronized void addToLog(String message) {
+    	logList.add(message);
+    }
+    
+    private String printableLog() {
+    	String log = "";
+    	synchronized (logList) {
+    		for (Iterator logListIterator = logList.iterator(); logListIterator.hasNext(); ) {
+    			String message = (String) logListIterator.next();
+				log += message + "\n";
+			}
+		}
+    	return log;
+    }
+    /* End of debug logging feature */
+    
     // ----------------------- Inner classes --------------------------------------------------------------
 
     private static final Comparator COMPARATOR = new Comparator() {
@@ -276,6 +295,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     //@Override
     public void start(final DependencyService service) {
+    	addToLog("start " + service);
         m_serial.executeNow(new Runnable() {
             public void run() {
                 boolean needsStarting = false;
@@ -319,11 +339,13 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     m_tracker.open(trackAllServices, trackAllAspects);
                 }
             }
+            public String toString() { return "stop"; }
         });
     }
 
     //@Override
     public void stop(final DependencyService service) {
+    	addToLog("stop " + service);
         m_serial.executeNow(new Runnable() {
             public void run() {
                 boolean needsStopping = false;
@@ -341,11 +363,13 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                 // moved this down
                 m_services.remove(service);
             }
+            public String toString() { return "stop"; }
         });
     }
 
     //@Override
     public Object addingService(ServiceReference ref) {
+    	addToLog("adding service " + ref);
         // Check to make sure the service is actually an instance of our service
         Object service = m_context.getService(ref);
         if (!m_trackedServiceName.isInstance(service)) {
@@ -356,6 +380,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     //@Override
     public void addedService(final ServiceReference ref, final Object service) {
+    	addToLog("added service " + ref);
         m_serial.executeNow(new Runnable() {
             public void run() {
                 if (m_debug) {
@@ -414,11 +439,13 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     }
                 }
             }
+            public String toString() { return "addedService"; }
         });
     }
 
     //@Override
     public void modifiedService(final ServiceReference ref, final Object service) {
+    	addToLog("modified service " + ref);
         m_serial.executeNow(new Runnable() {
             public void run() {
                 final Object[] services = m_services.toArray();
@@ -435,11 +462,13 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     }
                 }
             }
+            public String toString() { return "modifiedService"; }
         });
     }
 
     //@Override
     public void removedService(final ServiceReference ref, final Object service) {
+    	addToLog("removed service " + ref);
         m_serial.executeNow(new Runnable() {
             public void run() {
                 if (m_debug) {
@@ -478,6 +507,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                 }
                 m_context.ungetService(ref);
             }
+            public String toString() { return "removedService"; }
         });
     }
 
@@ -485,33 +515,41 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     public void invokeAdded(final DependencyService service) {
         m_serial.executeNow(new Runnable() {
             public void run() {
-
-                if (m_debug) {
-                    m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey
-                        + "] invoke added due to configure. (component is activated)");
-                }
-                ServiceReference[] refs = m_tracker.getServiceReferences();
-                if (refs != null) {
-                    for (int i = 0; i < refs.length; i++) {
-                        final ServiceReference sr = refs[i];
-                        final Object svc = m_context.getService(sr); // May be null if service has just been unregistered !
-
-                        if (svc == null) {
-                            m_logger.log(Logger.LOG_INFO, "[" + m_debugKey
-                                + "] invoke added found a null service from osgi registry for service ref:" + sr);
-                            continue; // The service has just been unregistered !
-                        }
-                        // We may be currently executing from our executor, that's why we "execute now".
-                        invokeAdded(service, sr, svc);
-                    }
-                }
+		        if (m_debug) {
+		            m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey
+		                + "] invoke added due to configure. (component is activated)");
+		        }
+		        if (m_tracker == null) {
+		        	throw new IllegalStateException("The service tracker is gone. Log: \n" + printableLog());
+		        }
+		        ServiceReference[] refs = m_tracker.getServiceReferences();
+		        if (refs != null) {
+		            for (int i = 0; i < refs.length; i++) {
+		                final ServiceReference sr = refs[i];
+		                final Object svc = m_context.getService(sr); // May be null if service has just been unregistered !
+		
+		                if (svc == null) {
+		                    m_logger.log(Logger.LOG_INFO, "[" + m_debugKey
+		                        + "] invoke added found a null service from osgi registry for service ref:" + sr);
+		                    continue; // The service has just been unregistered !
+		                }
+		                // We may be currently executing from our executor, that's why we "execute now".
+		                m_serial.executeNow(new Runnable() {
+		                    public void run() {
+		                        invokeAdded(service, sr, svc);
+		                    }
+		                    public String toString() { return "invokeAdded"; }
+		                });
+		            }
+		        }
             }
+            public String toString() { return "invokeAdded"; }
         });
     }
 
     // @Override
     public void invokeRemoved(final DependencyService service) {
-        Runnable task = new Runnable() {
+    	Runnable task = new Runnable() {
             public void run() {
                 if (m_debug) {
                     m_logger.log(Logger.LOG_INFO, "[" + m_debugKey
@@ -539,6 +577,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
                     invokeRemoved(service, sr, svc);
                 }
             }
+            public String toString() { return "invokeRemoved"; }
         };
         m_serial.executeNow(task);
     }
@@ -893,6 +932,7 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
     public void invoke(final Object[] callbackInstances, final DependencyService component,
         final ServiceReference reference, final Object service, final String name)
     {
+    	addToLog("invoke " + name + " for " + reference);
         if (m_debug) {
             m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey + "] invoke: " + name);
         }
@@ -918,6 +958,8 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
         final ServiceReference previousReference, final Object previous,
         final ServiceReference currentServiceReference, final Object current, final String swapCallback)
     {
+    	addToLog("invoke swapped " + previousReference + " with " + currentServiceReference);
+
         // sanity check on the service references
         Integer oldRank = (Integer) previousReference.getProperty(Constants.SERVICE_RANKING);
         Integer newRank = (Integer) currentServiceReference.getProperty(Constants.SERVICE_RANKING);

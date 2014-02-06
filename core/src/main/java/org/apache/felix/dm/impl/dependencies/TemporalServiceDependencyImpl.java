@@ -20,6 +20,7 @@ import org.apache.felix.dm.DependencyService;
 import org.apache.felix.dm.ServiceDependency;
 import org.apache.felix.dm.TemporalServiceDependency;
 import org.apache.felix.dm.impl.Logger;
+import org.apache.felix.dm.impl.SerialExecutor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -127,6 +128,7 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
                     }
                 }
             }
+            public String toString() { return "addedService"; }
         };
         m_serial.execute(task);
     }
