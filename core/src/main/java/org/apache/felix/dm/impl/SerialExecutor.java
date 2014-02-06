@@ -66,6 +66,7 @@ public final class SerialExecutor {
 					scheduleNext();
 				}
 			}
+			public String toString() { return runnable.toString(); }
 		});
     }
     
@@ -106,6 +107,10 @@ public final class SerialExecutor {
      */
     public void executeNow(Runnable task) {
         if (Thread.currentThread() == (Thread) m_runningThread) {
+        	int queueSize = m_workQueue.size();
+        	if (queueSize > 0) {
+        		m_logger.log(Logger.LOG_WARNING, task + " is overtaking " + queueSize + " items in the queue..." + m_workQueue);
+        	}
             task.run();
         } else {
            enqueue(task);
@@ -129,4 +134,5 @@ public final class SerialExecutor {
             active.run();
         }
     }
+    
 }

@@ -575,6 +575,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
                     m_stateListeners.add(listener);
                 }
             }
+            public String toString() { return "addStateListener"; }
         }); 
     }
 
@@ -595,6 +596,7 @@ public class ComponentImpl implements Component, DependencyService, ComponentDec
                     m_stateListeners.remove(listener);
                 }
             }
+            public String toString() { return "removeStateListener"; }
         });
 	}
 
