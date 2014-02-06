@@ -55,11 +55,11 @@ public class SerialExecutorTest {
             long timeStamp = System.currentTimeMillis();
             for (int i = 0; i < TESTS; i++) {
                 final CountDownLatch latch = new CountDownLatch(cores * 2 /* each task reexecutes itself one time */);
+                final SerialTask task = new SerialTask(serial, latch);
                 for (int j = 0; j < cores; j ++) {
                     threadPool.execute(new Runnable() {
                         public void run() {
-                            serial.enqueue(new SerialTask(serial, latch));
-                            serial.execute();
+                            serial.execute(task);
                         }
                     });
                 }
