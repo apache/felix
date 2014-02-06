@@ -483,29 +483,30 @@ public class ServiceDependencyImpl extends DependencyBase implements ServiceDepe
 
     // @Override
     public void invokeAdded(final DependencyService service) {
-        if (m_debug) {
-            m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey
-                + "] invoke added due to configure. (component is activated)");
-        }
-        ServiceReference[] refs = m_tracker.getServiceReferences();
-        if (refs != null) {
-            for (int i = 0; i < refs.length; i++) {
-                final ServiceReference sr = refs[i];
-                final Object svc = m_context.getService(sr); // May be null if service has just been unregistered !
+        m_serial.executeNow(new Runnable() {
+            public void run() {
 
-                if (svc == null) {
-                    m_logger.log(Logger.LOG_INFO, "[" + m_debugKey
-                        + "] invoke added found a null service from osgi registry for service ref:" + sr);
-                    continue; // The service has just been unregistered !
+                if (m_debug) {
+                    m_logger.log(Logger.LOG_DEBUG, "[" + m_debugKey
+                        + "] invoke added due to configure. (component is activated)");
                 }
-                // We may be currently executing from our executor, that's why we "execute now".
-                m_serial.executeNow(new Runnable() {
-                    public void run() {
+                ServiceReference[] refs = m_tracker.getServiceReferences();
+                if (refs != null) {
+                    for (int i = 0; i < refs.length; i++) {
+                        final ServiceReference sr = refs[i];
+                        final Object svc = m_context.getService(sr); // May be null if service has just been unregistered !
+
+                        if (svc == null) {
+                            m_logger.log(Logger.LOG_INFO, "[" + m_debugKey
+                                + "] invoke added found a null service from osgi registry for service ref:" + sr);
+                            continue; // The service has just been unregistered !
+                        }
+                        // We may be currently executing from our executor, that's why we "execute now".
                         invokeAdded(service, sr, svc);
                     }
-                });
+                }
             }
-        }
+        });
     }
 
     // @Override
