@@ -16,26 +16,369 @@
  */
 package org.apache.felix.http.base.internal.context;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Assert;
-import org.mockito.Mockito;
-import org.osgi.framework.Bundle;
-import org.osgi.service.http.HttpContext;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.EventListener;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.Filter;
+import javax.servlet.FilterRegistration;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletContextAttributeListener;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.*;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRegistration;
+import javax.servlet.SessionCookieConfig;
+import javax.servlet.SessionTrackingMode;
+import javax.servlet.descriptor.JspConfigDescriptor;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.osgi.framework.Bundle;
+import org.osgi.service.http.HttpContext;
 
 public class ServletContextImplTest
 {
+    private static class AttributeListener implements ServletContextAttributeListener
+    {
+
+        private int type;
+
+        private String name;
+
+        private Object value;
+
+        public void attributeAdded(ServletContextAttributeEvent scab)
+        {
+            setData(1, scab);
+        }
+
+        public void attributeRemoved(ServletContextAttributeEvent scab)
+        {
+            setData(2, scab);
+        }
+
+        public void attributeReplaced(ServletContextAttributeEvent scab)
+        {
+            setData(3, scab);
+        }
+
+        void checkAdded(String name, Object value)
+        {
+            check(1, name, value);
+        }
+
+        void checkNull()
+        {
+            check(0, null, null);
+        }
+
+        void checkRemoved(String name, Object value)
+        {
+            check(2, name, value);
+        }
+
+        void checkReplaced(String name, Object value)
+        {
+            check(3, name, value);
+        }
+
+        private void check(int type, String name, Object value)
+        {
+            try
+            {
+                Assert.assertEquals(type, this.type);
+                Assert.assertEquals(name, this.name);
+                Assert.assertEquals(value, this.value);
+            }
+            finally
+            {
+                this.type = 0;
+                this.name = null;
+                this.value = null;
+            }
+        }
+
+        private void setData(int type, ServletContextAttributeEvent scab)
+        {
+            this.type = type;
+            this.name = scab.getName();
+            this.value = scab.getValue();
+        }
+    }
+    private class MockServletContext implements ServletContext
+    {
+
+        private Dictionary attributes = new Hashtable();
+
+        public FilterRegistration.Dynamic addFilter(String name, Class<? extends Filter> type)
+        {
+            return null;
+        }
+
+        public FilterRegistration.Dynamic addFilter(String name, Filter filter)
+        {
+            return null;
+        }
+
+        public FilterRegistration.Dynamic addFilter(String name, String className)
+        {
+            return null;
+        }
+
+        public void addListener(Class<? extends EventListener> listener)
+        {
+        }
+
+        public void addListener(String className)
+        {
+        }
+
+        public <T extends EventListener> void addListener(T listener)
+        {
+        }
+
+        public ServletRegistration.Dynamic addServlet(String name, Class<? extends Servlet> type)
+        {
+            return null;
+        }
+
+        public ServletRegistration.Dynamic addServlet(String name, Servlet servlet)
+        {
+            return null;
+        }
+
+        public ServletRegistration.Dynamic addServlet(String name, String className)
+        {
+            return null;
+        }
+
+        public <T extends Filter> T createFilter(Class<T> type) throws ServletException
+        {
+            return null;
+        }
+
+        public <T extends EventListener> T createListener(Class<T> type) throws ServletException
+        {
+            return null;
+        }
+
+        public <T extends Servlet> T createServlet(Class<T> type) throws ServletException
+        {
+            return null;
+        }
+
+        public void declareRoles(String... roleNames)
+        {
+        }
+
+        public Object getAttribute(String name)
+        {
+            return attributes.get(name);
+        }
+
+        public Enumeration getAttributeNames()
+        {
+            return attributes.keys();
+        }
+
+        public ClassLoader getClassLoader()
+        {
+            return ServletContextImplTest.class.getClassLoader();
+        }
+
+        public ServletContext getContext(String uripath)
+        {
+            return null;
+        }
+
+        public String getContextPath()
+        {
+            return null;
+        }
+
+        public Set<SessionTrackingMode> getDefaultSessionTrackingModes()
+        {
+            return null;
+        }
+
+        public int getEffectiveMajorVersion()
+        {
+            return 0;
+        }
+
+        public int getEffectiveMinorVersion()
+        {
+            return 0;
+        }
+
+        public Set<SessionTrackingMode> getEffectiveSessionTrackingModes()
+        {
+            return null;
+        }
+
+        public FilterRegistration getFilterRegistration(String name)
+        {
+            return null;
+        }
+
+        public Map<String, ? extends FilterRegistration> getFilterRegistrations()
+        {
+            return null;
+        }
+
+        public String getInitParameter(String name)
+        {
+            return null;
+        }
+
+        public Enumeration getInitParameterNames()
+        {
+            return Collections.enumeration(Collections.emptyList());
+        }
+
+        public JspConfigDescriptor getJspConfigDescriptor()
+        {
+            return null;
+        }
+
+        public int getMajorVersion()
+        {
+            return 0;
+        }
+
+        public String getMimeType(String file)
+        {
+            return null;
+        }
+
+        public int getMinorVersion()
+        {
+            return 0;
+        }
+
+        public RequestDispatcher getNamedDispatcher(String name)
+        {
+            return null;
+        }
+
+        public String getRealPath(String path)
+        {
+            return null;
+        }
+
+        public RequestDispatcher getRequestDispatcher(String path)
+        {
+            return null;
+        }
+
+        public URL getResource(String path)
+        {
+            return null;
+        }
+
+        public InputStream getResourceAsStream(String path)
+        {
+            return null;
+        }
+
+        public Set getResourcePaths(String path)
+        {
+            return null;
+        }
+
+        public String getServerInfo()
+        {
+            return null;
+        }
+
+        public Servlet getServlet(String name)
+        {
+            return null;
+        }
+
+        public String getServletContextName()
+        {
+            return null;
+        }
+
+        public Enumeration getServletNames()
+        {
+            return Collections.enumeration(Collections.emptyList());
+        }
+
+        public ServletRegistration getServletRegistration(String name)
+        {
+            return null;
+        }
+
+        public Map<String, ? extends ServletRegistration> getServletRegistrations()
+        {
+            return null;
+        }
+
+        public Enumeration getServlets()
+        {
+            return Collections.enumeration(Collections.emptyList());
+        }
+
+        public SessionCookieConfig getSessionCookieConfig()
+        {
+            return null;
+        }
+
+        public void log(Exception exception, String msg)
+        {
+        }
+
+        public void log(String msg)
+        {
+        }
+
+        public void log(String message, Throwable throwable)
+        {
+        }
+
+        public void removeAttribute(String name)
+        {
+            attributes.remove(name);
+        }
+
+        public void setAttribute(String name, Object object)
+        {
+            if (object != null)
+            {
+                attributes.put(name, object);
+            }
+            else
+            {
+                removeAttribute(name);
+            }
+        }
+
+        public boolean setInitParameter(String name, String value)
+        {
+            return false;
+        }
+
+        public void setSessionTrackingModes(Set<SessionTrackingMode> modes)
+        {
+        }
+    }
+
     private Bundle bundle;
     private HttpContext httpContext;
     private AttributeListener listener;
@@ -45,67 +388,10 @@ public class ServletContextImplTest
     public void setUp()
     {
         this.bundle = Mockito.mock(Bundle.class);
-        ServletContext globalContext = Mockito.mock(ServletContext.class);
+        ServletContext globalContext = new MockServletContext();
         this.httpContext = Mockito.mock(HttpContext.class);
         this.listener = new AttributeListener();
         this.context = new ServletContextImpl(this.bundle, globalContext, this.httpContext, this.listener, false);
-    }
-
-    @Test
-    public void testGetResource()
-        throws Exception
-    {
-        URL url = getClass().getResource("resource.txt");
-        Assert.assertNotNull(url);
-
-        Mockito.when(this.httpContext.getResource("resource.txt")).thenReturn(url);
-        Assert.assertNull(this.context.getResource("/notfound.txt"));
-        Assert.assertEquals(url, this.context.getResource("/resource.txt"));
-    }
-
-    @Test
-    public void testGetResourceAsStream()
-        throws Exception
-    {
-        URL url = getClass().getResource("resource.txt");
-        Assert.assertNotNull(url);
-
-        Mockito.when(this.httpContext.getResource("resource.txt")).thenReturn(url);
-        Assert.assertNull(this.context.getResourceAsStream("/notfound.txt"));
-        Assert.assertNotNull(this.context.getResourceAsStream("/resource.txt"));
-    }
-
-    @Test
-    public void testGetResourcePaths()
-    {
-        HashSet<String> paths = new HashSet<String>(Arrays.asList("/some/path/1", "/some/path/2"));
-        Mockito.when(this.bundle.getEntryPaths("some/path")).thenReturn(Collections.enumeration(paths));
-
-        Set set = this.context.getResourcePaths("/some/path");
-        Assert.assertNotNull(set);
-        Assert.assertEquals(2, set.size());
-        Assert.assertTrue(set.contains("/some/path/1"));
-        Assert.assertTrue(set.contains("/some/path/2"));
-    }
-
-    @Test
-    public void testGetRealPath()
-    {
-        Assert.assertNull(this.context.getRealPath("path"));
-    }
-
-    @Test
-    public void testGetInitParameter()
-    {
-        Assert.assertNull(this.context.getInitParameter("key1"));
-    }
-
-    @Test
-    public void testGetInitParameterNames()
-    {
-        Enumeration e = this.context.getInitParameterNames();
-        Assert.assertNotNull(e);
-        Assert.assertFalse(e.hasMoreElements());
     }
 
     @Test
@@ -147,6 +433,91 @@ public class ServletContextImplTest
         Assert.assertNotNull(e);
         Assert.assertTrue(e.hasMoreElements());
         Assert.assertEquals("key1", e.nextElement());
+        Assert.assertFalse(e.hasMoreElements());
+    }
+
+    @Test
+    public void testGetInitParameter()
+    {
+        Assert.assertNull(this.context.getInitParameter("key1"));
+    }
+
+    @Test
+    public void testGetInitParameterNames()
+    {
+        Enumeration e = this.context.getInitParameterNames();
+        Assert.assertNotNull(e);
+        Assert.assertFalse(e.hasMoreElements());
+    }
+
+    @Test
+    public void testGetMimeType()
+    {
+        Mockito.when(this.httpContext.getMimeType("file.xml")).thenReturn("some-other-format");
+        Assert.assertEquals("some-other-format", this.context.getMimeType("file.xml"));
+        Assert.assertEquals("text/plain", this.context.getMimeType("file.txt"));
+    }
+
+    @Test
+    public void testGetRealPath()
+    {
+        Assert.assertNull(this.context.getRealPath("path"));
+    }
+
+    @Test
+    public void testGetResource() throws Exception
+    {
+        URL url = getClass().getResource("resource.txt");
+        Assert.assertNotNull(url);
+
+        Mockito.when(this.httpContext.getResource("resource.txt")).thenReturn(url);
+        Assert.assertNull(this.context.getResource("/notfound.txt"));
+        Assert.assertEquals(url, this.context.getResource("/resource.txt"));
+    }
+
+    @Test
+    public void testGetResourceAsStream() throws Exception
+    {
+        URL url = getClass().getResource("resource.txt");
+        Assert.assertNotNull(url);
+
+        Mockito.when(this.httpContext.getResource("resource.txt")).thenReturn(url);
+        Assert.assertNull(this.context.getResourceAsStream("/notfound.txt"));
+        Assert.assertNotNull(this.context.getResourceAsStream("/resource.txt"));
+    }
+
+    @Test
+    public void testGetResourcePaths()
+    {
+        HashSet<String> paths = new HashSet<String>(Arrays.asList("/some/path/1", "/some/path/2"));
+        Mockito.when(this.bundle.getEntryPaths("some/path")).thenReturn(Collections.enumeration(paths));
+
+        Set set = this.context.getResourcePaths("/some/path");
+        Assert.assertNotNull(set);
+        Assert.assertEquals(2, set.size());
+        Assert.assertTrue(set.contains("/some/path/1"));
+        Assert.assertTrue(set.contains("/some/path/2"));
+    }
+
+    @Test
+    public void testGetServlet() throws Exception
+    {
+        Assert.assertNull(this.context.getServlet("test"));
+    }
+
+    @Test
+    public void testGetServletNames()
+    {
+        Enumeration e = this.context.getServletNames();
+        Assert.assertNotNull(e);
+        Assert.assertFalse(e.hasMoreElements());
+    }
+
+    @Test
+    public void testGetServlets()
+    {
+        Enumeration e = this.context.getServlets();
+        Assert.assertNotNull(e);
         Assert.assertFalse(e.hasMoreElements());
     }
 
@@ -295,7 +666,6 @@ public class ServletContextImplTest
         Assert.assertFalse(e.hasMoreElements());
     }
 
-
     @Test
     public void testGetUnsharedAttribute()
     {
@@ -375,39 +745,7 @@ public class ServletContextImplTest
     }
 
     @Test
-    public void testGetServlet()
-        throws Exception
-    {
-        Assert.assertNull(this.context.getServlet("test"));
-    }
-
-    @Test
-    public void testGetServletNames()
-    {
-        Enumeration e = this.context.getServletNames();
-        Assert.assertNotNull(e);
-        Assert.assertFalse(e.hasMoreElements());
-    }
-
-    @Test
-    public void testGetServlets()
-    {
-        Enumeration e = this.context.getServlets();
-        Assert.assertNotNull(e);
-        Assert.assertFalse(e.hasMoreElements());
-    }
-
-    @Test
-    public void testGetMimeType()
-    {
-        Mockito.when(this.httpContext.getMimeType("file.xml")).thenReturn("some-other-format");
-        Assert.assertEquals("some-other-format", this.context.getMimeType("file.xml"));
-        Assert.assertEquals("text/plain", this.context.getMimeType("file.txt"));
-    }
-
-    @Test
-    public void testHandleSecurity()
-        throws Exception
+    public void testHandleSecurity() throws Exception
     {
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
         HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
@@ -417,207 +755,5 @@ public class ServletContextImplTest
 
         Mockito.when(this.httpContext.handleSecurity(req, res)).thenReturn(false);
         Assert.assertFalse(this.context.handleSecurity(req, res));
-    }
-
-    private static class AttributeListener implements ServletContextAttributeListener
-    {
-
-        private int type;
-
-        private String name;
-
-        private Object value;
-
-        public void attributeAdded(ServletContextAttributeEvent scab)
-        {
-            setData(1, scab);
-        }
-
-        public void attributeRemoved(ServletContextAttributeEvent scab)
-        {
-            setData(2, scab);
-        }
-
-        public void attributeReplaced(ServletContextAttributeEvent scab)
-        {
-            setData(3, scab);
-        }
-
-        private void setData(int type, ServletContextAttributeEvent scab)
-        {
-            this.type = type;
-            this.name = scab.getName();
-            this.value = scab.getValue();
-        }
-
-        void checkAdded(String name, Object value)
-        {
-            check(1, name, value);
-        }
-
-        void checkRemoved(String name, Object value)
-        {
-            check(2, name, value);
-        }
-
-        void checkReplaced(String name, Object value)
-        {
-            check(3, name, value);
-        }
-
-        void checkNull()
-        {
-            check(0, null, null);
-        }
-
-        private void check(int type, String name, Object value)
-        {
-            try
-            {
-                Assert.assertEquals(type, this.type);
-                Assert.assertEquals(name, this.name);
-                Assert.assertEquals(value, this.value);
-            }
-            finally
-            {
-                this.type = 0;
-                this.name = null;
-                this.value = null;
-            }
-        }
-    }
-
-    private class MockServletContext implements ServletContext {
-
-        private Dictionary attributes = new Hashtable();
-
-        public Object getAttribute(String name)
-        {
-            return attributes.get(name);
-        }
-
-        public Enumeration getAttributeNames()
-        {
-            return attributes.keys();
-        }
-
-        public void setAttribute(String name, Object object)
-        {
-            if (object != null)
-            {
-                attributes.put(name, object);
-            }
-            else
-            {
-                removeAttribute(name);
-            }
-        }
-
-        public void removeAttribute(String name)
-        {
-            attributes.remove(name);
-        }
-
-        public String getContextPath()
-        {
-            return null;
-        }
-
-        public ServletContext getContext(String uripath)
-        {
-            return null;
-        }
-
-        public int getMajorVersion()
-        {
-            return 0;
-        }
-
-        public int getMinorVersion()
-        {
-            return 0;
-        }
-
-        public String getMimeType(String file)
-        {
-            return null;
-        }
-
-        public Set getResourcePaths(String path)
-        {
-            return null;
-        }
-
-        public URL getResource(String path)
-        {
-            return null;
-        }
-
-        public InputStream getResourceAsStream(String path)
-        {
-            return null;
-        }
-
-        public RequestDispatcher getRequestDispatcher(String path)
-        {
-            return null;
-        }
-
-        public RequestDispatcher getNamedDispatcher(String name)
-        {
-            return null;
-        }
-
-        public Servlet getServlet(String name)
-        {
-            return null;
-        }
-
-        public Enumeration getServlets()
-        {
-            return null;
-        }
-
-        public Enumeration getServletNames()
-        {
-            return null;
-        }
-
-        public void log(String msg)
-        {
-        }
-
-        public void log(Exception exception, String msg)
-        {
-        }
-
-        public void log(String message, Throwable throwable)
-        {
-        }
-
-        public String getRealPath(String path)
-        {
-            return null;
-        }
-
-        public String getServerInfo()
-        {
-            return null;
-        }
-
-        public String getInitParameter(String name)
-        {
-            return null;
-        }
-
-        public Enumeration getInitParameterNames()
-        {
-            return null;
-        }
-
-        public String getServletContextName()
-        {
-            return null;
-        }
     }
 }

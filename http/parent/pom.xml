@@ -39,10 +39,10 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    	<jetty.version>7.6.13.v20130916</jetty.version>
+    	<jetty.version>8.1.14.v20131031</jetty.version>
     	<cometd.version>2.7.0</cometd.version>
     	<http.service.version>1.2.0</http.service.version>
-    	<servlet.version>2.5</servlet.version>
+    	<servlet.version>3.0.1</servlet.version>
 
     	<http.api.version>2.0.4</http.api.version>
     </properties>
@@ -109,7 +109,7 @@
         <dependencies>
             <dependency>
                 <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
+                <artifactId>javax.servlet-api</artifactId>
                 <version>${servlet.version}</version>
                 <scope>provided</scope>
             </dependency>
