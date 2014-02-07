@@ -52,7 +52,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 @RunWith(PaxExam.class)
 public class ServiceRaceTest extends TestBase {
     final static int STEP_WAIT = 10000;
-    final static int SERVICES = 2;
+    final static int SERVICES = 3;
     final static int INVOKES = 1;
     final static int TESTS = 10000;
     
@@ -174,8 +174,8 @@ public class ServiceRaceTest extends TestBase {
                 info("All services have been properly invoked");
                 
                 // Now ensure that some random aspects have been randomly invoked.
-                int aspectCount = Math.min(1, rnd.nextInt(SERVICES));
-                int aspectInvocations = Math.min(1, rnd.nextInt(INVOKES));                
+                int aspectCount = Math.max(1, rnd.nextInt(SERVICES));
+                int aspectInvocations = Math.max(1, rnd.nextInt(INVOKES));                
                 aspectsInvoked.waitForStep(aspectCount * aspectInvocations, STEP_WAIT);
                 info("%d aspects have been properly invoked %d times", aspectCount, aspectInvocations);                                
                                 
@@ -205,7 +205,7 @@ public class ServiceRaceTest extends TestBase {
                 for (Configuration aspectConf : aspectPids) {
                     aspectConf.delete(); // asynchronous
                 }
-
+                
                 info("removing client");
                 dm.remove(c);
 
