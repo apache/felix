@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -33,6 +34,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+
+import javax.servlet.ServletContext;
+import javax.servlet.SessionCookieConfig;
+import javax.servlet.SessionTrackingMode;
 
 import org.apache.felix.http.base.internal.DispatcherServlet;
 import org.apache.felix.http.base.internal.EventDispatcher;
@@ -66,8 +71,6 @@ import org.osgi.util.tracker.BundleTracker;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-import javax.servlet.ServletContext;
 
 public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListener implements BundleTrackerCustomizer, ServiceTrackerCustomizer
 {
@@ -399,12 +402,15 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         final SessionManager manager = context.getSessionHandler().getSessionManager();
 
         manager.setMaxInactiveInterval(this.config.getSessionTimeout() * 60);
-
-        manager.setSessionCookie(this.config.getProperty(SessionManager.__SessionCookieProperty, SessionManager.__DefaultSessionCookie));
         manager.setSessionIdPathParameterName(this.config.getProperty(SessionManager.__SessionIdPathParameterNameProperty, SessionManager.__DefaultSessionIdPathParameterName));
-        manager.setSessionDomain(this.config.getProperty(SessionManager.__SessionDomainProperty, SessionManager.__DefaultSessionDomain));
-        manager.setSessionPath(this.config.getProperty(SessionManager.__SessionPathProperty, context.getContextPath()));
-        manager.setMaxCookieAge(this.config.getIntProperty(SessionManager.__MaxAgeProperty, -1));
+        manager.setCheckingRemoteSessionIdEncoding(this.config.getBooleanProperty(SessionManager.__CheckRemoteSessionEncoding, true));
+        manager.setSessionTrackingModes(Collections.singleton(SessionTrackingMode.COOKIE)); // XXX
+
+        SessionCookieConfig cookieConfig = manager.getSessionCookieConfig();
+        cookieConfig.setName(this.config.getProperty(SessionManager.__SessionCookieProperty, SessionManager.__DefaultSessionCookie));
+        cookieConfig.setDomain(this.config.getProperty(SessionManager.__SessionDomainProperty, SessionManager.__DefaultSessionDomain));
+        cookieConfig.setPath(this.config.getProperty(SessionManager.__SessionPathProperty, context.getContextPath()));
+        cookieConfig.setMaxAge(this.config.getIntProperty(SessionManager.__MaxAgeProperty, -1));
     }
 
     private String getEndpoint(final Connector listener, final InetAddress ia)

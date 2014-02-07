@@ -1,0 +1,440 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.felix.http.itest;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.ops4j.pax.exam.Constants.START_LEVEL_SYSTEM_BUNDLES;
+import static org.ops4j.pax.exam.Constants.START_LEVEL_TEST_BUNDLE;
+import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
+import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
+import static org.ops4j.pax.exam.CoreOptions.felix;
+import static org.ops4j.pax.exam.CoreOptions.frameworkStartLevel;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.url;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+
+import javax.inject.Inject;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.felix.http.api.ExtHttpService;
+import org.junit.After;
+import org.junit.Before;
+import org.ops4j.pax.exam.CoreOptions;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.junit.Configuration;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.http.HttpContext;
+import org.osgi.service.http.HttpService;
+import org.osgi.service.http.NamespaceException;
+import org.osgi.util.tracker.ServiceTracker;
+
+/**
+ * Base class for integration tests.
+ *  
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
+public abstract class BaseIntegrationTest
+{
+    protected static class TestFilter implements Filter
+    {
+        private final CountDownLatch m_initLatch;
+        private final CountDownLatch m_destroyLatch;
+
+        public TestFilter(CountDownLatch initLatch, CountDownLatch destroyLatch)
+        {
+            m_initLatch = initLatch;
+            m_destroyLatch = destroyLatch;
+        }
+
+        public void destroy()
+        {
+            if (m_destroyLatch != null)
+            {
+                m_destroyLatch.countDown();
+            }
+        }
+
+        public final void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException
+        {
+            filter((HttpServletRequest) req, (HttpServletResponse) resp, chain);
+        }
+
+        public void init(FilterConfig config) throws ServletException
+        {
+            if (m_initLatch != null)
+            {
+                m_initLatch.countDown();
+            }
+        }
+
+        protected void filter(HttpServletRequest req, HttpServletResponse resp, FilterChain chain) throws IOException, ServletException
+        {
+            ((HttpServletResponse) resp).setStatus(HttpServletResponse.SC_OK);
+        }
+    }
+
+    protected static class TestServlet extends HttpServlet
+    {
+        private static final long serialVersionUID = 1L;
+
+        private final CountDownLatch m_initLatch;
+        private final CountDownLatch m_destroyLatch;
+
+        public TestServlet(CountDownLatch initLatch, CountDownLatch destroyLatch)
+        {
+            m_initLatch = initLatch;
+            m_destroyLatch = destroyLatch;
+        }
+
+        @Override
+        public void destroy()
+        {
+            super.destroy();
+            if (m_destroyLatch != null)
+            {
+                m_destroyLatch.countDown();
+            }
+        }
+
+        @Override
+        public void init() throws ServletException
+        {
+            super.init();
+            if (m_initLatch != null)
+            {
+                m_initLatch.countDown();
+            }
+        }
+
+        @Override
+        protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+        {
+            resp.setStatus(HttpServletResponse.SC_OK);
+        }
+    }
+
+    private static final int DEFAULT_TIMEOUT = 10000;
+
+    protected static final String ORG_APACHE_FELIX_HTTP_JETTY = "org.apache.felix.http.jetty";
+
+    protected static void assertContent(int expectedRC, String expected, URL url) throws IOException
+    {
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+        int rc = conn.getResponseCode();
+        assertEquals("Unexpected response code,", expectedRC, rc);
+
+        if (rc >= 200 && rc < 500)
+        {
+            InputStream is = null;
+            try
+            {
+                is = conn.getInputStream();
+                assertEquals(expected, slurpAsString(is));
+            }
+            finally
+            {
+                close(is);
+                conn.disconnect();
+            }
+        }
+        else
+        {
+            InputStream is = null;
+            try
+            {
+                is = conn.getErrorStream();
+                assertEquals(expected, slurpAsString(is));
+            }
+            finally
+            {
+                close(is);
+                conn.disconnect();
+            }
+        }
+    }
+
+    protected static void assertContent(String expected, URL url) throws IOException
+    {
+        assertContent(200, expected, url);
+    }
+
+    protected static void assertResponseCode(int expected, URL url) throws IOException
+    {
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        try
+        {
+            assertEquals(expected, conn.getResponseCode());
+        }
+        finally
+        {
+            conn.disconnect();
+        }
+    }
+
+    protected static void close(Closeable resource)
+    {
+        if (resource != null)
+        {
+            try
+            {
+                resource.close();
+            }
+            catch (IOException e)
+            {
+                // Ignore...
+            }
+        }
+    }
+
+    protected static URL createURL(String path)
+    {
+        if (path == null)
+        {
+            path = "";
+        }
+        while (path.startsWith("/"))
+        {
+            path = path.substring(1);
+        }
+        int port = Integer.getInteger("org.osgi.service.http.port", 8080);
+        try
+        {
+            return new URL(String.format("http://localhost:%d/%s", port, path));
+        }
+        catch (MalformedURLException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected static String slurpAsString(InputStream is) throws IOException
+    {
+        // See <weblogs.java.net/blog/pat/archive/2004/10/stupid_scanner_1.html>
+        Scanner scanner = new Scanner(is, "UTF-8");
+        try
+        {
+            scanner.useDelimiter("\\A");
+
+            return scanner.hasNext() ? scanner.next() : null;
+        }
+        finally
+        {
+            try
+            {
+                scanner.close();
+            }
+            catch (Exception e)
+            {
+                // Ignore...
+            }
+        }
+    }
+
+    @Inject
+    protected volatile BundleContext m_context;
+
+    @Configuration
+    public Option[] config()
+    {
+        return options(
+            bootDelegationPackage("sun.*"),
+            cleanCaches(),
+            CoreOptions.systemProperty("logback.configurationFile").value("file:src/test/resources/logback.xml"), //
+//            CoreOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8787"),
+
+            mavenBundle("org.slf4j", "slf4j-api").version("1.6.5").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("ch.qos.logback", "logback-core").version("1.0.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("ch.qos.logback", "logback-classic").version("1.0.6").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+
+            url("link:classpath:META-INF/links/org.ops4j.pax.exam.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            url("link:classpath:META-INF/links/org.ops4j.pax.exam.inject.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            url("link:classpath:META-INF/links/org.ops4j.pax.extender.service.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            url("link:classpath:META-INF/links/org.ops4j.base.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.core.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.extender.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.lifecycle.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.framework.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            url("link:classpath:META-INF/links/org.apache.geronimo.specs.atinject.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
+
+            mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY).versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
+
+            junitBundles(), frameworkStartLevel(START_LEVEL_TEST_BUNDLE), felix());
+    }
+
+    @Before
+    public void setUp() throws Exception
+    {
+        assertNotNull("No bundle context?!", m_context);
+    }
+
+    @After
+    public void tearDown() throws Exception
+    {
+        Bundle bundle = getHttpJettyBundle();
+        // Restart the HTTP-service to clean all registrations...
+        if (bundle.getState() == Bundle.ACTIVE)
+        {
+            bundle.stop();
+            bundle.start();
+        }
+    }
+
+    /**
+     * Waits for a service to become available in certain time interval.
+     * @param serviceName
+     * @return
+     * @throws Exception
+     */
+    protected <T> T awaitService(String serviceName) throws Exception
+    {
+        ServiceTracker tracker = new ServiceTracker(m_context, serviceName, null);
+        tracker.open();
+        T result;
+        try
+        {
+            result = (T) tracker.waitForService(DEFAULT_TIMEOUT);
+        }
+        finally
+        {
+            tracker.close();
+        }
+        return result;
+    }
+
+    /**
+     * @param bsn
+     * @return
+     */
+    protected Bundle findBundle(String bsn)
+    {
+        for (Bundle bundle : m_context.getBundles())
+        {
+            if (bsn.equals(bundle.getSymbolicName()))
+            {
+                return bundle;
+            }
+        }
+        return null;
+    }
+
+    protected ExtHttpService getExtHttpService()
+    {
+        return getService(ExtHttpService.class.getName());
+    }
+
+    protected Bundle getHttpJettyBundle()
+    {
+        Bundle b = findBundle(ORG_APACHE_FELIX_HTTP_JETTY);
+        assertNotNull("Filestore bundle not found?!", b);
+        return b;
+    }
+
+    protected HttpService getHttpService()
+    {
+        return getService(HttpService.class.getName());
+    }
+
+    /**
+     * Obtains a service without waiting for it to become available.
+     * @param serviceName
+     * @return
+     */
+    protected <T> T getService(String serviceName)
+    {
+        ServiceTracker tracker = new ServiceTracker(m_context, serviceName, null);
+        tracker.open();
+        T result;
+        try
+        {
+            result = (T) tracker.getService();
+        }
+        finally
+        {
+            tracker.close();
+        }
+        return result;
+    }
+
+    protected void register(String pattern, Filter filter) throws ServletException, NamespaceException
+    {
+        register(pattern, filter, null);
+    }
+
+    protected void register(String pattern, Filter servlet, HttpContext context) throws ServletException, NamespaceException
+    {
+        getExtHttpService().registerFilter(servlet, pattern, null, 0, context);
+    }
+
+    protected void register(String alias, Servlet servlet) throws ServletException, NamespaceException
+    {
+        register(alias, servlet, null);
+    }
+
+    protected void register(String alias, Servlet servlet, HttpContext context) throws ServletException, NamespaceException
+    {
+        getHttpService().registerServlet(alias, servlet, null, context);
+    }
+
+    protected void register(String alias, String name) throws ServletException, NamespaceException
+    {
+        register(alias, name, null);
+    }
+
+    protected void register(String alias, String name, HttpContext context) throws ServletException, NamespaceException
+    {
+        getExtHttpService().registerResources(alias, name, context);
+    }
+
+    protected void unregister(Filter filter) throws ServletException, NamespaceException
+    {
+        getExtHttpService().unregisterFilter(filter);
+    }
+
+    protected void unregister(Servlet servlet) throws ServletException, NamespaceException
+    {
+        getExtHttpService().unregisterServlet(servlet);
+    }
+
+    protected void unregister(String alias) throws ServletException, NamespaceException
+    {
+        getExtHttpService().unregister(alias);
+    }
+}

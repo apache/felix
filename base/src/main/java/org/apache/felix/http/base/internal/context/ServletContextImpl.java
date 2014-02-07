@@ -21,17 +21,24 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.EventListener;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterRegistration;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextAttributeEvent;
 import javax.servlet.ServletContextAttributeListener;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRegistration;
+import javax.servlet.SessionCookieConfig;
+import javax.servlet.SessionTrackingMode;
+import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -40,8 +47,8 @@ import org.apache.felix.http.base.internal.util.MimeTypes;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 
-public final class ServletContextImpl
-    implements ExtServletContext
+@SuppressWarnings("deprecation")
+public final class ServletContextImpl implements ExtServletContext
 {
     private final Bundle bundle;
     private final ServletContext context;
@@ -49,8 +56,7 @@ public final class ServletContextImpl
     private final Map<String, Object> attributes;
     private final ServletContextAttributeListener attributeListener;
 
-    public ServletContextImpl(Bundle bundle, ServletContext context, HttpContext httpContext,
-        ServletContextAttributeListener attributeListener, boolean sharedAttributes)
+    public ServletContextImpl(Bundle bundle, ServletContext context, HttpContext httpContext, ServletContextAttributeListener attributeListener, boolean sharedAttributes)
     {
         this.bundle = bundle;
         this.context = context;
@@ -59,9 +65,84 @@ public final class ServletContextImpl
         this.attributes = sharedAttributes ? null : new ConcurrentHashMap<String, Object>();
     }
 
-    public String getContextPath()
+    public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> type)
     {
-        return this.context.getContextPath();
+        throw new UnsupportedOperationException();
+    }
+
+    public FilterRegistration.Dynamic addFilter(String filterName, Filter filter)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public FilterRegistration.Dynamic addFilter(String filterName, String className)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void addListener(Class<? extends EventListener> type)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void addListener(String className)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T extends EventListener> void addListener(T listener)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public ServletRegistration.Dynamic addServlet(String servletName, Class<? extends Servlet> type)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public ServletRegistration.Dynamic addServlet(String servletName, String className)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T extends Filter> T createFilter(Class<T> type) throws ServletException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T extends EventListener> T createListener(Class<T> type) throws ServletException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T extends Servlet> T createServlet(Class<T> type) throws ServletException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void declareRoles(String... roleNames)
+    {
+        this.context.declareRoles(roleNames);
+    }
+
+    public Object getAttribute(String name)
+    {
+        return (this.attributes != null) ? this.attributes.get(name) : this.context.getAttribute(name);
+    }
+
+    public Enumeration getAttributeNames()
+    {
+        return (this.attributes != null) ? Collections.enumeration(this.attributes.keySet()) : this.context.getAttributeNames();
+    }
+
+    public ClassLoader getClassLoader()
+    {
+        return bundle.getClass().getClassLoader();
     }
 
     public ServletContext getContext(String uri)
@@ -69,9 +150,70 @@ public final class ServletContextImpl
         return this.context.getContext(uri);
     }
 
+    public String getContextPath()
+    {
+        return this.context.getContextPath();
+    }
+
+    public Set<SessionTrackingMode> getDefaultSessionTrackingModes()
+    {
+        return this.context.getDefaultSessionTrackingModes();
+    }
+
+    public int getEffectiveMajorVersion()
+    {
+        return this.context.getEffectiveMajorVersion();
+    }
+
+    public int getEffectiveMinorVersion()
+    {
+        return this.context.getEffectiveMinorVersion();
+    }
+
+    public Set<SessionTrackingMode> getEffectiveSessionTrackingModes()
+    {
+        return this.context.getEffectiveSessionTrackingModes();
+    }
+
+    public FilterRegistration getFilterRegistration(String filterName)
+    {
+        return this.context.getFilterRegistration(filterName);
+    }
+
+    public Map<String, ? extends FilterRegistration> getFilterRegistrations()
+    {
+        return this.context.getFilterRegistrations();
+    }
+
+    public String getInitParameter(String name)
+    {
+        return this.context.getInitParameter(name);
+    }
+
+    public Enumeration getInitParameterNames()
+    {
+        return this.context.getInitParameterNames();
+    }
+
+    public JspConfigDescriptor getJspConfigDescriptor()
+    {
+        throw new UnsupportedOperationException();
+    }
+
     public int getMajorVersion()
     {
         return this.context.getMajorVersion();
+    }
+
+    public String getMimeType(String file)
+    {
+        String type = this.httpContext.getMimeType(file);
+        if (type != null)
+        {
+            return type;
+        }
+
+        return MimeTypes.get().getByFile(file);
     }
 
     public int getMinorVersion()
@@ -79,19 +221,23 @@ public final class ServletContextImpl
         return this.context.getMinorVersion();
     }
 
-    public Set getResourcePaths(String path)
+    public RequestDispatcher getNamedDispatcher(String name)
     {
-        Enumeration paths = this.bundle.getEntryPaths(normalizePath(path));
-        if ((paths == null) || !paths.hasMoreElements()) {
+        return this.context.getNamedDispatcher(name);
+    }
+
+    public String getRealPath(String name)
+    {
+        URL url = getResource(normalizePath(name));
+        if (url == null) {
             return null;
         }
+        return url.toExternalForm();
+    }
 
-        Set<String> set = new HashSet<String>();
-        while (paths.hasMoreElements()) {
-            set.add((String) paths.nextElement());
-        }
-
-        return set;
+    public RequestDispatcher getRequestDispatcher(String uri)
+    {
+        return this.context.getRequestDispatcher(uri);
     }
 
     public URL getResource(String path)
@@ -102,61 +248,114 @@ public final class ServletContextImpl
     public InputStream getResourceAsStream(String path)
     {
         URL res = getResource(path);
-        if (res != null) {
-            try {
+        if (res != null)
+        {
+            try
+            {
                 return res.openStream();
             }
-            catch (IOException e) {
+            catch (IOException e)
+            {
                 // Do nothing
             }
         }
-
         return null;
     }
 
-    private String normalizePath(String path)
+    public Set getResourcePaths(String path)
     {
-        if (path == null) {
+        Enumeration paths = this.bundle.getEntryPaths(normalizePath(path));
+        if ((paths == null) || !paths.hasMoreElements())
+        {
             return null;
         }
 
-        String normalizedPath = path.trim().replaceAll("/+", "/");
-        if (normalizedPath.startsWith("/") && (normalizedPath.length() > 1)) {
-            normalizedPath = normalizedPath.substring(1);
+        Set<String> set = new HashSet<String>();
+        while (paths.hasMoreElements())
+        {
+            set.add((String) paths.nextElement());
         }
 
-        return normalizedPath;
+        return set;
     }
 
-    public RequestDispatcher getRequestDispatcher(String uri)
+    public String getServerInfo()
     {
-        return null;
+        return this.context.getServerInfo();
     }
 
-    public RequestDispatcher getNamedDispatcher(String name)
+    public Servlet getServlet(String name) throws ServletException
     {
-        return null;
+        return this.context.getServlet(name);
     }
 
-    public String getInitParameter(String name)
+    public String getServletContextName()
     {
-        return null;
+        return this.context.getServletContextName();
     }
 
-    public Enumeration getInitParameterNames()
+    public Enumeration getServletNames()
     {
-        return Collections.enumeration(Collections.emptyList());
+        return this.context.getServletNames();
     }
 
-    public Object getAttribute(String name)
+    public ServletRegistration getServletRegistration(String servletName)
     {
-        return (this.attributes != null) ? this.attributes.get(name) : this.context.getAttribute(name);
+        return this.context.getServletRegistration(servletName);
     }
 
-    public Enumeration getAttributeNames()
+    public Map<String, ? extends ServletRegistration> getServletRegistrations()
     {
-        return (this.attributes != null) ? Collections.enumeration(this.attributes.keySet()) : this.context
-            .getAttributeNames();
+        return this.context.getServletRegistrations();
+    }
+
+    public Enumeration getServlets()
+    {
+        return this.context.getServlets();
+    }
+
+    public SessionCookieConfig getSessionCookieConfig()
+    {
+        return this.context.getSessionCookieConfig();
+    }
+
+    public boolean handleSecurity(HttpServletRequest req, HttpServletResponse res) throws IOException
+    {
+        return this.httpContext.handleSecurity(req, res);
+    }
+
+    public void log(Exception cause, String message)
+    {
+        SystemLogger.error(message, cause);
+    }
+
+    public void log(String message)
+    {
+        SystemLogger.info(message);
+    }
+
+    public void log(String message, Throwable cause)
+    {
+        SystemLogger.error(message, cause);
+    }
+
+    public void removeAttribute(String name)
+    {
+        Object oldValue;
+        if (this.attributes != null)
+        {
+            oldValue = this.attributes.remove(name);
+        }
+        else
+        {
+            oldValue = this.context.getAttribute(name);
+            this.context.removeAttribute(name);
+        }
+
+        if (oldValue != null)
+        {
+            attributeListener.attributeRemoved(new ServletContextAttributeEvent(this, name, oldValue));
+        }
     }
 
     public void setAttribute(String name, Object value)
@@ -189,84 +388,29 @@ public final class ServletContextImpl
         }
     }
 
-    public void removeAttribute(String name)
+    public boolean setInitParameter(String name, String value)
     {
-        Object oldValue;
-        if (this.attributes != null)
+        return this.context.setInitParameter(name, value);
+    }
+
+    public void setSessionTrackingModes(Set<SessionTrackingMode> modes)
+    {
+        this.context.setSessionTrackingModes(modes);
+    }
+
+    private String normalizePath(String path)
+    {
+        if (path == null)
         {
-            oldValue = this.attributes.remove(name);
+            return null;
         }
-        else
+
+        String normalizedPath = path.trim().replaceAll("/+", "/");
+        if (normalizedPath.startsWith("/") && (normalizedPath.length() > 1))
         {
-            oldValue = this.context.getAttribute(name);
-            this.context.removeAttribute(name);
+            normalizedPath = normalizedPath.substring(1);
         }
 
-        if (oldValue != null)
-        {
-            attributeListener.attributeRemoved(new ServletContextAttributeEvent(this, name, oldValue));
-        }
-    }
-
-    public Servlet getServlet(String name)
-        throws ServletException
-    {
-        return null;
-    }
-
-    public Enumeration getServlets()
-    {
-        return Collections.enumeration(Collections.emptyList());
-    }
-
-    public Enumeration getServletNames()
-    {
-        return Collections.enumeration(Collections.emptyList());
-    }
-
-    public void log(String message)
-    {
-        SystemLogger.info(message);
-    }
-
-    public void log(Exception cause, String message)
-    {
-        SystemLogger.error(message, cause);
-    }
-
-    public void log(String message, Throwable cause)
-    {
-        SystemLogger.error(message, cause);
-    }
-
-    public String getServletContextName()
-    {
-        return this.context.getServletContextName();
-    }
-
-    public String getRealPath(String name)
-    {
-        return null;
-    }
-
-    public String getServerInfo()
-    {
-        return this.context.getServerInfo();
-    }
-
-    public String getMimeType(String file)
-    {
-        String type = this.httpContext.getMimeType(file);
-        if (type != null) {
-            return type;
-        }
-
-        return MimeTypes.get().getByFile(file);
-    }
-
-    public boolean handleSecurity(HttpServletRequest req, HttpServletResponse res)
-        throws IOException
-    {
-        return this.httpContext.handleSecurity(req, res);
+        return normalizedPath;
     }
 }

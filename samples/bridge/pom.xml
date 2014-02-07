@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Samples - Bridge</name>
     <artifactId>org.apache.felix.http.samples.bridge</artifactId>
-    <version>2.2.3-SNAPSHOT</version>
+    <version>2.3.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <scm>
@@ -109,7 +109,7 @@
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

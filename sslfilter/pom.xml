@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http SSL Filter</name>
     <artifactId>org.apache.felix.http.sslfilter</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -38,7 +38,7 @@
     </scm>
     
     <properties>
-    	<felix.http.api.version>2.2.2-SNAPSHOT</felix.http.api.version>
+    	<felix.http.api.version>2.3.0-SNAPSHOT</felix.http.api.version>
     </properties>
 
     <build>
@@ -65,7 +65,7 @@
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -81,7 +81,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.api</artifactId>
-            <version>2.2.3-SNAPSHOT</version>
+            <version>2.3.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Test Dependencies -->
