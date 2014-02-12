@@ -34,6 +34,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
 import javax.servlet.SessionCookieConfig;
@@ -124,14 +125,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     public void start() throws Exception
     {
-        this.executor.submit(new JettyOperation()
-        {
-            @Override
-            protected void doExecute() throws Exception
-            {
-                startJetty();
-            }
-        });
+        // FELIX-4422: start Jetty synchronously...
+        startJetty();
 
         Properties props = new Properties();
         props.put(Constants.SERVICE_PID, PID);
@@ -162,18 +157,14 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.serviceTracker = null;
         }
 
+        // FELIX-4422: stop Jetty synchronously...
+        stopJetty();
+
         if (isExecutorServiceAvailable())
         {
-            this.executor.submit(new JettyOperation()
-            {
-                @Override
-                protected void doExecute() throws Exception
-                {
-                    stopJetty();
-                }
-            });
-
             this.executor.shutdown();
+            // FELIX-4423: make sure to await the termination of the executor...
+            this.executor.awaitTermination(5, TimeUnit.SECONDS);
         }
     }
 
@@ -190,23 +181,11 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     public void updated(Dictionary props)
     {
-        if (isExecutorServiceAvailable())
+        if (this.config.update(props))
         {
-            if (!this.config.update(props))
-            {
-                // Nothing changed in our configuration, let's not needlessly restart Jetty...
-                return;
-            }
-
-            this.executor.submit(new JettyOperation()
-            {
-                @Override
-                protected void doExecute() throws Exception
-                {
-                    stopJetty();
-                    startJetty();
-                }
-            });
+            // Something changed in our configuration, restart Jetty...
+            stopJetty();
+            startJetty();
         }
     }
 
@@ -580,81 +559,87 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
     public void deploy(final Deployment deployment, final WebAppBundleContext context)
     {
-        if (isExecutorServiceAvailable())
+        if (!isExecutorServiceAvailable())
         {
-            this.executor.submit(new JettyOperation()
-            {
-                @Override
-                protected void doExecute()
-                {
-                    final Bundle webAppBundle = deployment.getBundle();
-                    final Bundle extenderBundle = JettyService.this.context.getBundle();
-
-                    try
-                    {
-                        JettyService.this.parent.addHandler(context);
-                        context.start();
-
-                        Dictionary<String, Object> props = new Hashtable<String, Object>();
-                        props.put(WEB_SYMBOLIC_NAME, webAppBundle.getSymbolicName());
-                        props.put(WEB_VERSION, webAppBundle.getVersion());
-                        props.put(WEB_CONTEXT_PATH, deployment.getContextPath());
-                        deployment.setRegistration(webAppBundle.getBundleContext().registerService(ServletContext.class.getName(), context.getServletContext(), props));
-
-                        context.getServletContext().setAttribute(OSGI_BUNDLE_CONTEXT, webAppBundle.getBundleContext());
-
-                        postEvent(WebEvent.DEPLOYED(webAppBundle, extenderBundle));
-                    }
-                    catch (Exception e)
-                    {
-                        SystemLogger.error(String.format("Deploying web application bundle %s failed.", webAppBundle.getSymbolicName()), e);
-                        postEvent(WebEvent.FAILED(webAppBundle, extenderBundle, e, null, null));
-                        deployment.setContext(null);
-                    }
-                }
-            });
-            deployment.setContext(context);
+            // Shutting down...?
+            return;
         }
+
+        this.executor.submit(new JettyOperation()
+        {
+            @Override
+            protected void doExecute()
+            {
+                final Bundle webAppBundle = deployment.getBundle();
+                final Bundle extenderBundle = JettyService.this.context.getBundle();
+
+                try
+                {
+                    JettyService.this.parent.addHandler(context);
+                    context.start();
+
+                    Dictionary<String, Object> props = new Hashtable<String, Object>();
+                    props.put(WEB_SYMBOLIC_NAME, webAppBundle.getSymbolicName());
+                    props.put(WEB_VERSION, webAppBundle.getVersion());
+                    props.put(WEB_CONTEXT_PATH, deployment.getContextPath());
+                    deployment.setRegistration(webAppBundle.getBundleContext().registerService(ServletContext.class.getName(), context.getServletContext(), props));
+
+                    context.getServletContext().setAttribute(OSGI_BUNDLE_CONTEXT, webAppBundle.getBundleContext());
+
+                    postEvent(WebEvent.DEPLOYED(webAppBundle, extenderBundle));
+                }
+                catch (Exception e)
+                {
+                    SystemLogger.error(String.format("Deploying web application bundle %s failed.", webAppBundle.getSymbolicName()), e);
+                    postEvent(WebEvent.FAILED(webAppBundle, extenderBundle, e, null, null));
+                    deployment.setContext(null);
+                }
+            }
+        });
+        deployment.setContext(context);
     }
 
     public void undeploy(final Deployment deployment, final WebAppBundleContext context)
     {
-        if (isExecutorServiceAvailable())
+        if (!isExecutorServiceAvailable())
         {
-            this.executor.submit(new JettyOperation()
-            {
-                @Override
-                protected void doExecute()
-                {
-                    final Bundle webAppBundle = deployment.getBundle();
-                    final Bundle extenderBundle = JettyService.this.context.getBundle();
-
-                    try
-                    {
-                        postEvent(WebEvent.UNDEPLOYING(webAppBundle, extenderBundle));
-
-                        context.getServletContext().removeAttribute(OSGI_BUNDLE_CONTEXT);
-
-                        ServiceRegistration registration = deployment.getRegistration();
-                        if (registration != null)
-                        {
-                            registration.unregister();
-                        }
-                        deployment.setRegistration(null);
-                        context.stop();
-                    }
-                    catch (Exception e)
-                    {
-                        SystemLogger.error(String.format("Undeploying web application bundle %s failed.", webAppBundle.getSymbolicName()), e);
-                    }
-                    finally
-                    {
-                        postEvent(WebEvent.UNDEPLOYED(webAppBundle, extenderBundle));
-                    }
-                }
-            });
+            // Already stopped...?
+            return;
         }
-        deployment.setContext(null);
+
+        this.executor.submit(new JettyOperation()
+        {
+            @Override
+            protected void doExecute()
+            {
+                final Bundle webAppBundle = deployment.getBundle();
+                final Bundle extenderBundle = JettyService.this.context.getBundle();
+
+                try
+                {
+                    postEvent(WebEvent.UNDEPLOYING(webAppBundle, extenderBundle));
+
+                    context.getServletContext().removeAttribute(OSGI_BUNDLE_CONTEXT);
+
+                    ServiceRegistration registration = deployment.getRegistration();
+                    if (registration != null)
+                    {
+                        registration.unregister();
+                    }
+                    deployment.setRegistration(null);
+                    deployment.setContext(null);
+                    context.stop();
+                }
+                catch (Exception e)
+                {
+                    SystemLogger.error(String.format("Undeploying web application bundle %s failed.", webAppBundle.getSymbolicName()), e);
+                }
+                finally
+                {
+                    postEvent(WebEvent.UNDEPLOYED(webAppBundle, extenderBundle));
+                }
+            }
+        });
     }
 
     public Object addingBundle(Bundle bundle, BundleEvent event)
