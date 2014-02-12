@@ -108,108 +108,48 @@ public class HttpJettyTest extends BaseIntegrationTest
         assertResponseCode(SC_NOT_FOUND, createURL("/test"));
     }
 
-    /**
-     * Tests that we can register a filter with Jetty and that its lifecycle is correctly controlled.
-     */
     @Test
-    public void testRegisterFilterLifecycleOk() throws Exception
-    {
-        CountDownLatch initLatch = new CountDownLatch(1);
-        CountDownLatch destroyLatch = new CountDownLatch(1);
-
-        TestFilter filter = new TestFilter(initLatch, destroyLatch);
-
-        register("/test", filter);
-
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-
-        unregister(filter);
-
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
-    }
-
-    /**
-     * Tests that we can register a servlet with Jetty and that its lifecycle is correctly controlled.
-     */
-    @Test
-    public void testRegisterServletLifecycleOk() throws Exception
-    {
-        CountDownLatch initLatch = new CountDownLatch(1);
-        CountDownLatch destroyLatch = new CountDownLatch(1);
-
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch);
-
-        register("/test", servlet);
-
-        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
-
-        unregister(servlet);
-
-        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
-    }
-
-    @Test
-    public void testUseServletContextOk() throws Exception
+    public void testCorrectPathInfoInHttpContextOk() throws Exception
     {
         CountDownLatch initLatch = new CountDownLatch(1);
         CountDownLatch destroyLatch = new CountDownLatch(1);
 
         HttpContext context = new HttpContext()
         {
-            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
-            {
-                return true;
-            }
-
-            public URL getResource(String name)
-            {
-                try
-                {
-                    File f = new File("src/test/resources/resource/" + name);
-                    if (f.exists())
-                    {
-                        return f.toURI().toURL();
-                    }
-                }
-                catch (MalformedURLException e)
-                {
-                    fail();
-                }
-                return null;
-            }
-
             public String getMimeType(String name)
             {
                 return null;
             }
-        };
 
-        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void init(ServletConfig config) throws ServletException
+            public URL getResource(String name)
             {
-                ServletContext context = config.getServletContext();
+                return null;
+            }
+
+            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
+            {
                 try
                 {
-                    assertEquals("", context.getContextPath());
-                    assertNotNull(context.getResource("test.html"));
-                    assertNotNull(context.getRealPath("test.html"));
+                    assertEquals("", request.getContextPath());
+                    assertEquals("/foo", request.getServletPath());
+                    assertEquals("/bar", request.getPathInfo());
+                    assertEquals("/foo/bar", request.getRequestURI());
+                    assertEquals("qux=quu", request.getQueryString());
+                    return true;
                 }
-                catch (MalformedURLException e)
+                catch (Exception e)
                 {
-                    fail();
+                    e.printStackTrace();
                 }
-
-                super.init(config);
+                return false;
             }
         };
 
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch);
+
         register("/foo", servlet, context);
 
-        URL testURL = createURL("/foo");
+        URL testURL = createURL("/foo/bar?qux=quu");
 
         assertTrue(initLatch.await(5, TimeUnit.SECONDS));
 
@@ -305,5 +245,119 @@ public class HttpJettyTest extends BaseIntegrationTest
         unregister(filter);
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Tests that we can register a filter with Jetty and that its lifecycle is correctly controlled.
+     */
+    @Test
+    public void testRegisterFilterLifecycleOk() throws Exception
+    {
+        CountDownLatch initLatch = new CountDownLatch(1);
+        CountDownLatch destroyLatch = new CountDownLatch(1);
+
+        TestFilter filter = new TestFilter(initLatch, destroyLatch);
+
+        register("/test", filter);
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+
+        unregister(filter);
+
+        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Tests that we can register a servlet with Jetty and that its lifecycle is correctly controlled.
+     */
+    @Test
+    public void testRegisterServletLifecycleOk() throws Exception
+    {
+        CountDownLatch initLatch = new CountDownLatch(1);
+        CountDownLatch destroyLatch = new CountDownLatch(1);
+
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch);
+
+        register("/test", servlet);
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+
+        unregister(servlet);
+
+        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+    }
+
+    @Test
+    public void testUseServletContextOk() throws Exception
+    {
+        CountDownLatch initLatch = new CountDownLatch(1);
+        CountDownLatch destroyLatch = new CountDownLatch(1);
+
+        HttpContext context = new HttpContext()
+        {
+            public String getMimeType(String name)
+            {
+                return null;
+            }
+
+            public URL getResource(String name)
+            {
+                try
+                {
+                    File f = new File("src/test/resources/resource/" + name);
+                    if (f.exists())
+                    {
+                        return f.toURI().toURL();
+                    }
+                }
+                catch (MalformedURLException e)
+                {
+                    fail();
+                }
+                return null;
+            }
+
+            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
+            {
+                return true;
+            }
+        };
+
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void init(ServletConfig config) throws ServletException
+            {
+                ServletContext context = config.getServletContext();
+                try
+                {
+                    assertEquals("", context.getContextPath());
+                    assertNotNull(context.getResource("test.html"));
+                    assertNotNull(context.getRealPath("test.html"));
+                }
+                catch (MalformedURLException e)
+                {
+                    fail();
+                }
+
+                super.init(config);
+            }
+        };
+
+        register("/foo", servlet, context);
+
+        URL testURL = createURL("/foo");
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+
+        assertResponseCode(SC_OK, testURL);
+
+        unregister(servlet);
+
+        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+
+        assertResponseCode(SC_NOT_FOUND, testURL);
     }
 }

@@ -325,6 +325,13 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
 
     final void doHandle(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
+        // Only wrap the original ServletRequest in case we're handling plain requests, 
+        // not inclusions or forwards from servlets. Should solve FELIX-2774 and FELIX-3054... 
+        if (DispatcherType.REQUEST == req.getDispatcherType())
+        {
+            req = new ServletHandlerRequest(req, getContext(), this.alias);
+        }
+
         // set a sensible status code in case handleSecurity returns false
         // but fails to send a response
         res.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -333,16 +340,7 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
             // reset status to OK for further processing
             res.setStatus(HttpServletResponse.SC_OK);
 
-            // Only wrap the original ServletRequest in case we're handling plain requests, 
-            // not inclusions or forwards from servlets. Should solve FELIX-2774 (partly)... 
-            if (DispatcherType.REQUEST == req.getDispatcherType())
-            {
-                this.servlet.service(new ServletHandlerRequest(req, getContext(), this.alias), res);
-            }
-            else
-            {
-                this.servlet.service(req, res);
-            }
+            this.servlet.service(req, res);
         }
     }
 
