@@ -48,7 +48,8 @@
                             org.apache.felix.http.base.*
                         </Private-Package>
                         <Import-Package>
-                            *;resolution:=optional
+                        	org.osgi.service.useradmin;resolution:=optional,
+                            *
                         </Import-Package>
                     </instructions>
                 </configuration>
