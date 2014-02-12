@@ -49,19 +49,31 @@
                         </Bundle-Activator>
                         <Export-Package>
                             org.apache.felix.http.cometd;version=${project.version},
-                            org.cometd.bayeux;version=${cometd.version},
-                            org.cometd.bayeux.client;version=${cometd.version},
-                            org.cometd.client;version=${cometd.version}
+                            org.cometd.bayeux;version=${cometd.version};-split-package:=merge-first,
+                            org.cometd.bayeux.client;version=${cometd.version};-split-package:=merge-first,
+                            org.cometd.bayeux.server;version=${cometd.version};-split-package:=merge-first,
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
-                            org.apache.felix.http.cometd.internal
+                            org.apache.felix.http.cometd.internal,
+                            org.cometd.server.*;-split-package:=merge-first,
+                            org.cometd.common.*;-split-package:=merge-first
                         </Private-Package>
                         <Embed-Dependency>
                             cometd-java-server;inline=true,
                             cometd-java-common;inline=true,
                             jetty-util;inline=true,
                         </Embed-Dependency>
+                        <Import-Package>
+                        	javax.imageio;resolution:=optional,
+                        	org.slf4j.*;resolution:=optional,
+                        	org.osgi.service.useradmin;resolution:=optional,
+                        	org.codehaus.jackson.map;resolution:=optional,
+                        	org.codehaus.jackson.type;resolution:=optional,
+                        	org.eclipse.jetty.continuation;version="[7.6,9)",
+                        	org.eclipse.jetty.jmx;version="[7.6,9)",
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
