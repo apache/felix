@@ -16,12 +16,19 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import org.mockito.Mockito;
-import org.osgi.service.http.HttpContext;
-import org.junit.Test;
-import org.junit.Assert;
-import org.junit.Before;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.felix.http.base.internal.context.ServletContextImpl;
+import org.apache.felix.http.base.internal.dispatch.Dispatcher;
+import org.junit.Before;
+import org.junit.Test;
+import org.osgi.service.http.HttpContext;
 
 public class ServletHandlerRequestTest
 {
@@ -38,106 +45,112 @@ public class ServletHandlerRequestTest
     @Before
     public void setUp()
     {
-        this.superReq1 = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(this.superReq1.getContextPath()).thenReturn("/mycontext");
-        Mockito.when(this.superReq1.getServletPath()).thenReturn("");
-        Mockito.when(this.superReq1.getRequestURI()).thenReturn("/mycontext/request/to/resource");
-        Mockito.when(this.superReq1.getPathInfo()).thenReturn("/request/to/resource");
-        Mockito.when(this.superReq1.getAttribute(HttpContext.AUTHENTICATION_TYPE)).thenReturn(HttpServletRequest.BASIC_AUTH);
-        Mockito.when(this.superReq1.getAttribute(HttpContext.REMOTE_USER)).thenReturn("felix");
-        this.req1 = new ServletHandlerRequest(this.superReq1, "/");
+        ServletContextImpl context = mock(ServletContextImpl.class);
 
-        this.superReq2 = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(this.superReq2.getContextPath()).thenReturn("/mycontext");
-        Mockito.when(this.superReq2.getServletPath()).thenReturn("");
-        Mockito.when(this.superReq2.getRequestURI()).thenReturn("/mycontext/myservlet/request/to/resource;jsession=123");
-        Mockito.when(this.superReq2.getPathInfo()).thenReturn("/myservlet/request/to/resource");
-        Mockito.when(this.superReq2.getAttribute(HttpContext.AUTHENTICATION_TYPE)).thenReturn(null);
-        Mockito.when(this.superReq2.getAuthType()).thenReturn(HttpServletRequest.DIGEST_AUTH);
-        Mockito.when(this.superReq2.getAttribute(HttpContext.REMOTE_USER)).thenReturn(null);
-        Mockito.when(this.superReq2.getRemoteUser()).thenReturn("sling");
-        this.req2 = new ServletHandlerRequest(this.superReq2, "/myservlet");
+        this.superReq1 = mock(HttpServletRequest.class);
+        when(this.superReq1.getContextPath()).thenReturn("/mycontext");
+        when(this.superReq1.getServletPath()).thenReturn("");
+        when(this.superReq1.getRequestURI()).thenReturn("/mycontext/request/to/resource");
+        when(this.superReq1.getPathInfo()).thenReturn("/request/to/resource");
+        when(this.superReq1.getAttribute(HttpContext.AUTHENTICATION_TYPE)).thenReturn(HttpServletRequest.BASIC_AUTH);
+        when(this.superReq1.getAttribute(HttpContext.REMOTE_USER)).thenReturn("felix");
+        this.req1 = new ServletHandlerRequest(this.superReq1, context, "/");
 
-        this.superReq3 = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(this.superReq3.getContextPath()).thenReturn("/mycontext");
-        Mockito.when(this.superReq3.getServletPath()).thenReturn("/proxyservlet");
-        Mockito.when(this.superReq3.getRequestURI()).thenReturn("/mycontext/proxyservlet/request/to/resource");
-        Mockito.when(this.superReq3.getPathInfo()).thenReturn("/request/to/resource");
-        Mockito.when(this.superReq3.getAttribute(HttpContext.AUTHENTICATION_TYPE)).thenReturn(HttpServletRequest.BASIC_AUTH);
-        Mockito.when(this.superReq3.getAttribute(HttpContext.REMOTE_USER)).thenReturn("felix");
-        this.req3 = new ServletHandlerRequest(this.superReq3, "/");
+        this.superReq2 = mock(HttpServletRequest.class);
+        when(this.superReq2.getContextPath()).thenReturn("/mycontext");
+        when(this.superReq2.getServletPath()).thenReturn("");
+        when(this.superReq2.getRequestURI()).thenReturn("/mycontext/myservlet/request/to/resource;jsession=123");
+        when(this.superReq2.getPathInfo()).thenReturn("/myservlet/request/to/resource");
+        when(this.superReq2.getAttribute(HttpContext.AUTHENTICATION_TYPE)).thenReturn(null);
+        when(this.superReq2.getAuthType()).thenReturn(HttpServletRequest.DIGEST_AUTH);
+        when(this.superReq2.getAttribute(HttpContext.REMOTE_USER)).thenReturn(null);
+        when(this.superReq2.getRemoteUser()).thenReturn("sling");
+        this.req2 = new ServletHandlerRequest(this.superReq2, context, "/myservlet");
 
-        this.superReq4 = Mockito.mock(HttpServletRequest.class);
-        Mockito.when(this.superReq4.getContextPath()).thenReturn("/mycontext");
-        Mockito.when(this.superReq4.getServletPath()).thenReturn("/proxyservlet");
-        Mockito.when(this.superReq4.getRequestURI()).thenReturn("/mycontext/proxyservlet/myservlet/request/to/resource;jsession=123");
-        Mockito.when(this.superReq4.getPathInfo()).thenReturn("/myservlet/request/to/resource");
-        Mockito.when(this.superReq4.getAttribute(HttpContext.AUTHENTICATION_TYPE)).thenReturn(null);
-        Mockito.when(this.superReq4.getAuthType()).thenReturn(HttpServletRequest.DIGEST_AUTH);
-        Mockito.when(this.superReq4.getAttribute(HttpContext.REMOTE_USER)).thenReturn(null);
-        Mockito.when(this.superReq4.getRemoteUser()).thenReturn("sling");
-        this.req4 = new ServletHandlerRequest(this.superReq4, "/myservlet");
+        this.superReq3 = mock(HttpServletRequest.class);
+        when(this.superReq3.getContextPath()).thenReturn("/mycontext");
+        when(this.superReq3.getServletPath()).thenReturn("/proxyservlet");
+        when(this.superReq3.getRequestURI()).thenReturn("/mycontext/proxyservlet/request/to/resource");
+        when(this.superReq3.getPathInfo()).thenReturn("/request/to/resource");
+        when(this.superReq3.getAttribute(HttpContext.AUTHENTICATION_TYPE)).thenReturn(HttpServletRequest.BASIC_AUTH);
+        when(this.superReq3.getAttribute(HttpContext.REMOTE_USER)).thenReturn("felix");
+        this.req3 = new ServletHandlerRequest(this.superReq3, context, "/");
+
+        this.superReq4 = mock(HttpServletRequest.class);
+        when(this.superReq4.getContextPath()).thenReturn("/mycontext");
+        when(this.superReq4.getServletPath()).thenReturn("/proxyservlet");
+        when(this.superReq4.getRequestURI()).thenReturn("/mycontext/proxyservlet/myservlet/request/to/resource;jsession=123");
+        when(this.superReq4.getPathInfo()).thenReturn("/myservlet/request/to/resource");
+        when(this.superReq4.getAttribute(HttpContext.AUTHENTICATION_TYPE)).thenReturn(null);
+        when(this.superReq4.getAuthType()).thenReturn(HttpServletRequest.DIGEST_AUTH);
+        when(this.superReq4.getAttribute(HttpContext.REMOTE_USER)).thenReturn(null);
+        when(this.superReq4.getRemoteUser()).thenReturn("sling");
+        this.req4 = new ServletHandlerRequest(this.superReq4, context, "/myservlet");
     }
 
     @Test
     public void testPathInfo()
     {
-        Assert.assertEquals("/request/to/resource", this.req1.getPathInfo());
-        Assert.assertEquals("/request/to/resource", this.req2.getPathInfo());
-        Assert.assertEquals("/request/to/resource", this.req3.getPathInfo());
-        Assert.assertEquals("/request/to/resource", this.req4.getPathInfo());
+        assertEquals("/request/to/resource", this.req1.getPathInfo());
+        assertEquals("/request/to/resource", this.req2.getPathInfo());
+        assertEquals("/request/to/resource", this.req3.getPathInfo());
+        assertEquals("/request/to/resource", this.req4.getPathInfo());
     }
 
     @Test
     public void testSuperGetServletPath()
     {
-        Assert.assertEquals("", this.superReq1.getServletPath());
-        Assert.assertEquals("", this.superReq2.getServletPath());
-        Assert.assertEquals("/proxyservlet", this.superReq3.getServletPath());
-        Assert.assertEquals("/proxyservlet", this.superReq4.getServletPath());
+        assertEquals("", this.superReq1.getServletPath());
+        assertEquals("", this.superReq2.getServletPath());
+        assertEquals("/proxyservlet", this.superReq3.getServletPath());
+        assertEquals("/proxyservlet", this.superReq4.getServletPath());
     }
 
     @Test
     public void testServletPath()
     {
-        Assert.assertEquals("", this.req1.getServletPath());
-        Assert.assertEquals("/myservlet", this.req2.getServletPath());
-        Assert.assertEquals("", this.req3.getServletPath());
-        Assert.assertEquals("/myservlet", this.req4.getServletPath());
+        assertEquals("", this.req1.getServletPath());
+        assertEquals("/myservlet", this.req2.getServletPath());
+        assertEquals("", this.req3.getServletPath());
+        assertEquals("/myservlet", this.req4.getServletPath());
     }
 
     @Test
     public void testContextPath()
     {
-        Assert.assertEquals("/mycontext", this.req1.getContextPath());
-        Assert.assertEquals("/mycontext", this.req2.getContextPath());
-        Assert.assertEquals("/mycontext/proxyservlet", this.req3.getContextPath());
-        Assert.assertEquals("/mycontext/proxyservlet", this.req4.getContextPath());
+        assertEquals("/mycontext", this.req1.getContextPath());
+        assertEquals("/mycontext", this.req2.getContextPath());
+        assertEquals("/mycontext/proxyservlet", this.req3.getContextPath());
+        assertEquals("/mycontext/proxyservlet", this.req4.getContextPath());
     }
 
     @Test
     public void testGetAuthType()
     {
-        Assert.assertEquals(HttpServletRequest.BASIC_AUTH, this.req1.getAuthType());
-        Mockito.verify(this.superReq1).getAttribute(HttpContext.AUTHENTICATION_TYPE);
-        Mockito.verifyNoMoreInteractions(this.superReq1);
+        assertEquals(HttpServletRequest.BASIC_AUTH, this.req1.getAuthType());
+        verify(this.superReq1).getAttribute(Dispatcher.REQUEST_DISPATCHER_PROVIDER);
+        verify(this.superReq1).getAttribute(HttpContext.AUTHENTICATION_TYPE);
+        verifyNoMoreInteractions(this.superReq1);
 
-        Assert.assertEquals(HttpServletRequest.DIGEST_AUTH, this.req2.getAuthType());
-        Mockito.verify(this.superReq2).getAttribute(HttpContext.AUTHENTICATION_TYPE);
-        Mockito.verify(this.superReq2).getAuthType();
-        Mockito.verifyNoMoreInteractions(this.superReq2);
+        assertEquals(HttpServletRequest.DIGEST_AUTH, this.req2.getAuthType());
+        verify(this.superReq2).getAttribute(Dispatcher.REQUEST_DISPATCHER_PROVIDER);
+        verify(this.superReq2).getAttribute(HttpContext.AUTHENTICATION_TYPE);
+        verify(this.superReq2).getAuthType();
+        verifyNoMoreInteractions(this.superReq2);
     }
 
     @Test
     public void testGetRemoteUser()
     {
-        Assert.assertEquals("felix", this.req1.getRemoteUser());
-        Mockito.verify(this.superReq1).getAttribute(HttpContext.REMOTE_USER);
-        Mockito.verifyNoMoreInteractions(this.superReq1);
+        assertEquals("felix", this.req1.getRemoteUser());
+        verify(this.superReq1).getAttribute(Dispatcher.REQUEST_DISPATCHER_PROVIDER);
+        verify(this.superReq1).getAttribute(HttpContext.REMOTE_USER);
+        verifyNoMoreInteractions(this.superReq1);
 
-        Assert.assertEquals("sling", this.req2.getRemoteUser());
-        Mockito.verify(this.superReq2).getAttribute(HttpContext.REMOTE_USER);
-        Mockito.verify(this.superReq2).getRemoteUser();
-        Mockito.verifyNoMoreInteractions(this.superReq2);
+        assertEquals("sling", this.req2.getRemoteUser());
+        verify(this.superReq2).getAttribute(Dispatcher.REQUEST_DISPATCHER_PROVIDER);
+        verify(this.superReq2).getAttribute(HttpContext.REMOTE_USER);
+        verify(this.superReq2).getRemoteUser();
+        verifyNoMoreInteractions(this.superReq2);
     }
 }

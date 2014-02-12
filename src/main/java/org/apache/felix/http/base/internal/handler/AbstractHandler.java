@@ -16,30 +16,70 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+
 import org.apache.felix.http.base.internal.context.ExtServletContext;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class AbstractHandler
 {
-    private final static AtomicInteger ID =
-        new AtomicInteger();
+    private final static AtomicInteger ID = new AtomicInteger();
 
-    private final String id;
+    private final int id;
+    private final String baseName;
     private final ExtServletContext context;
     private final Map<String, String> initParams;
 
-    public AbstractHandler(ExtServletContext context)
+    public AbstractHandler(ExtServletContext context, String baseName)
     {
-        this.id = "" + ID.incrementAndGet();
         this.context = context;
+        this.baseName = baseName;
+        this.id = ID.incrementAndGet();
         this.initParams = new HashMap<String, String>();
     }
 
-    public final String getId()
+    public abstract void destroy();
+
+    public final Map<String, String> getInitParams()
     {
-        return this.id;
+        return this.initParams;
+    }
+
+    public final String getName()
+    {
+        String name = this.baseName;
+        if (name == null)
+        {
+            name = String.format("%s_%d", getSubject().getClass(), this.id);
+        }
+        return name;
+    }
+
+    public abstract void init() throws ServletException;
+
+    public final void setInitParams(Dictionary map)
+    {
+        this.initParams.clear();
+        if (map == null)
+        {
+            return;
+        }
+
+        Enumeration e = map.keys();
+        while (e.hasMoreElements())
+        {
+            Object key = e.nextElement();
+            Object value = map.get(key);
+
+            if ((key instanceof String) && (value instanceof String))
+            {
+                this.initParams.put((String) key, (String) value);
+            }
+        }
     }
 
     protected final ExtServletContext getContext()
@@ -47,31 +87,16 @@ public abstract class AbstractHandler
         return this.context;
     }
 
-    public final Map<String, String> getInitParams()
+    /**
+     * @return a unique ID for this handler, &gt; 0.
+     */
+    protected final int getId()
     {
-        return this.initParams;
+        return id;
     }
 
-    public final void setInitParams(Dictionary map)
-    {
-        this.initParams.clear();
-        if (map == null) {
-            return;
-        }
-
-        Enumeration e = map.keys();
-        while (e.hasMoreElements()) {
-            Object key = e.nextElement();
-            Object value = map.get(key);
-
-            if ((key instanceof String) && (value instanceof String)) {
-                this.initParams.put((String)key, (String)value);
-            }
-        }
-    }
-
-    public abstract void init()
-        throws ServletException;
-
-    public abstract void destroy();
+    /**
+     * @return the {@link Servlet} or {@link Filter} this handler handles.
+     */
+    protected abstract Object getSubject();
 }

@@ -51,14 +51,15 @@ public final class HandlerRegistry
         return this.filters;
     }
 
-    public synchronized void addServlet(ServletHandler handler)
-        throws ServletException, NamespaceException
+    public synchronized void addServlet(ServletHandler handler) throws ServletException, NamespaceException
     {
-        if (this.servletMap.containsKey(handler.getServlet())) {
+        if (this.servletMap.containsKey(handler.getServlet()))
+        {
             throw new ServletException("Servlet instance already registered");
         }
 
-        if (this.aliasMap.containsKey(handler.getAlias())) {
+        if (this.aliasMap.containsKey(handler.getAlias()))
+        {
             throw new NamespaceException("Servlet with alias already registered");
         }
 
@@ -68,10 +69,10 @@ public final class HandlerRegistry
         updateServletArray();
     }
 
-    public synchronized void addFilter(FilterHandler handler)
-        throws ServletException
+    public synchronized void addFilter(FilterHandler handler) throws ServletException
     {
-        if (this.filterMap.containsKey(handler.getFilter())) {
+        if (this.filterMap.containsKey(handler.getFilter()))
+        {
             throw new ServletException("Filter instance already registered");
         }
 
@@ -83,7 +84,8 @@ public final class HandlerRegistry
     public synchronized void removeServlet(Servlet servlet, final boolean destroy)
     {
         ServletHandler handler = this.servletMap.remove(servlet);
-        if (handler != null) {
+        if (handler != null)
+        {
             updateServletArray();
             this.aliasMap.remove(handler.getAlias());
             if (destroy)
@@ -96,7 +98,8 @@ public final class HandlerRegistry
     public synchronized void removeFilter(Filter filter, final boolean destroy)
     {
         FilterHandler handler = this.filterMap.remove(filter);
-        if (handler != null) {
+        if (handler != null)
+        {
             updateFilterArray();
             if (destroy)
             {
@@ -112,11 +115,13 @@ public final class HandlerRegistry
 
     public synchronized void removeAll()
     {
-        for (ServletHandler handler : this.servletMap.values()) {
+        for (ServletHandler handler : this.servletMap.values())
+        {
             handler.destroy();
         }
 
-        for (FilterHandler handler : this.filterMap.values()) {
+        for (FilterHandler handler : this.filterMap.values())
+        {
             handler.destroy();
         }
 

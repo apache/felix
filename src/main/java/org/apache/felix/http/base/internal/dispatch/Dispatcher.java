@@ -16,14 +16,21 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
-import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import java.io.IOException;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
-import java.io.IOException;
+
+import org.apache.felix.http.base.internal.handler.HandlerRegistry;
 
 public final class Dispatcher
 {
+    public static final String REQUEST_DISPATCHER_PROVIDER = "org.apache.felix.http.requestDispatcherProvider";
+
+    private static final FilterChain DEFAULT_CHAIN = new NotFoundFilterChain();
+
     private final HandlerRegistry handlerRegistry;
 
     public Dispatcher(HandlerRegistry handlerRegistry)
@@ -31,11 +38,19 @@ public final class Dispatcher
         this.handlerRegistry = handlerRegistry;
     }
 
-    public void dispatch(HttpServletRequest req, HttpServletResponse res)
-        throws ServletException, IOException
+    public void dispatch(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
         ServletPipeline servletPipeline = new ServletPipeline(this.handlerRegistry.getServlets());
-        FilterPipeline filterPipeline = new FilterPipeline(this.handlerRegistry.getFilters(), servletPipeline);
-        filterPipeline.dispatch(req, res, new NotFoundFilterChain());
+        // Provides access to the correct request dispatcher...
+        req.setAttribute(REQUEST_DISPATCHER_PROVIDER, servletPipeline);
+
+        try
+        {
+            new FilterPipeline(this.handlerRegistry.getFilters(), servletPipeline).dispatch(req, res, DEFAULT_CHAIN);
+        }
+        finally
+        {
+            req.removeAttribute(REQUEST_DISPATCHER_PROVIDER);
+        }
     }
 }

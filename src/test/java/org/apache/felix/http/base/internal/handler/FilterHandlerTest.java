@@ -26,8 +26,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class FilterHandlerTest
-    extends AbstractHandlerTest
+public class FilterHandlerTest extends AbstractHandlerTest
 {
     private Filter filter;
 
@@ -45,7 +44,7 @@ public class FilterHandlerTest
 
     private FilterHandler createHandler(String pattern, int ranking)
     {
-        return new FilterHandler(this.context, this.filter, pattern, ranking);
+        return new FilterHandler(this.context, this.filter, pattern, ranking, null /* name */);
     }
 
     @Test
@@ -83,8 +82,7 @@ public class FilterHandlerTest
     }
 
     @Test
-    public void testInit()
-        throws Exception
+    public void testInit() throws Exception
     {
         FilterHandler h1 = createHandler("/a", 0);
         h1.init();
@@ -100,8 +98,7 @@ public class FilterHandlerTest
     }
 
     @Test
-    public void testHandleNotFound()
-        throws Exception
+    public void testHandleNotFound() throws Exception
     {
         FilterHandler h1 = createHandler("/a", 0);
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -116,8 +113,7 @@ public class FilterHandlerTest
     }
 
     @Test
-    public void testHandleFound()
-        throws Exception
+    public void testHandleFound() throws Exception
     {
         FilterHandler h1 = createHandler("/a", 0);
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -133,8 +129,7 @@ public class FilterHandlerTest
     }
 
     @Test
-    public void testHandleFoundForbidden()
-        throws Exception
+    public void testHandleFoundForbidden() throws Exception
     {
         FilterHandler h1 = createHandler("/a", 0);
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -151,8 +146,7 @@ public class FilterHandlerTest
     }
 
     @Test
-    public void testHandleNotFoundContextRoot()
-        throws Exception
+    public void testHandleNotFoundContextRoot() throws Exception
     {
         FilterHandler h1 = createHandler("/a", 0);
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -167,8 +161,7 @@ public class FilterHandlerTest
     }
 
     @Test
-    public void testHandleFoundContextRoot()
-        throws Exception
+    public void testHandleFoundContextRoot() throws Exception
     {
         FilterHandler h1 = createHandler("/", 0);
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);

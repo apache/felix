@@ -19,74 +19,26 @@ package org.apache.felix.http.base.internal.handler;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 
-public final class FilterHandler
-    extends AbstractHandler implements Comparable<FilterHandler>
+public final class FilterHandler extends AbstractHandler implements Comparable<FilterHandler>
 {
     private final Filter filter;
     private final Pattern regex;
     private final int ranking;
 
-    public FilterHandler(ExtServletContext context, Filter filter, String pattern, int ranking)
+    public FilterHandler(ExtServletContext context, Filter filter, String pattern, int ranking, String name)
     {
-        super(context);
+        super(context, name);
         this.filter = filter;
         this.ranking = ranking;
-	    this.regex = Pattern.compile(pattern);
-    }
-
-    public Filter getFilter()
-    {
-        return this.filter;
-    }
-
-    public void init()
-        throws ServletException
-    {
-        String name = "filter_" + getId();
-        FilterConfig config = new FilterConfigImpl(name, getContext(), getInitParams());
-        this.filter.init(config);
-    }
-
-    public void destroy()
-    {
-        this.filter.destroy();
-    }
-
-    public boolean matches(String uri)
-    {
-        // assume root if uri is null
-        if (uri == null) {
-            uri = "/";
-        }
-
-        return this.regex.matcher(uri).matches();
-    }
-
-    public void handle(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
-        throws ServletException, IOException
-    {
-        final boolean matches = matches(req.getPathInfo());
-        if (matches) {
-            doHandle(req, res, chain);
-        } else {
-            chain.doFilter(req, res);
-        }
-    }
-
-    private void doHandle(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
-        throws ServletException, IOException
-    {
-        if (!getContext().handleSecurity(req, res)) {
-            res.sendError(HttpServletResponse.SC_FORBIDDEN);
-        } else {
-            this.filter.doFilter(req, res, chain);
-        }
+        this.regex = Pattern.compile(pattern);
     }
 
     public int compareTo(FilterHandler other)
@@ -99,13 +51,70 @@ public final class FilterHandler
         return (other.ranking > this.ranking) ? 1 : -1;
     }
 
-    public int getRanking()
+    public void destroy()
     {
-        return ranking;
+        this.filter.destroy();
+    }
+
+    public Filter getFilter()
+    {
+        return this.filter;
     }
 
     public String getPattern()
     {
         return regex.toString();
+    }
+
+    public int getRanking()
+    {
+        return ranking;
+    }
+
+    public void handle(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException
+    {
+        final boolean matches = matches(req.getPathInfo());
+        if (matches)
+        {
+            doHandle(req, res, chain);
+        }
+        else
+        {
+            chain.doFilter(req, res);
+        }
+    }
+
+    public void init() throws ServletException
+    {
+        this.filter.init(new FilterConfigImpl(getName(), getContext(), getInitParams()));
+    }
+
+    public boolean matches(String uri)
+    {
+        // assume root if uri is null
+        if (uri == null)
+        {
+            uri = "/";
+        }
+
+        return this.regex.matcher(uri).matches();
+    }
+
+    final void doHandle(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException
+    {
+        if (!getContext().handleSecurity(req, res))
+        {
+            res.sendError(HttpServletResponse.SC_FORBIDDEN);
+        }
+        else
+        {
+            this.filter.doFilter(req, res, chain);
+        }
+    }
+    
+    @Override
+    protected Object getSubject()
+    {
+        return this.filter;
     }
 }

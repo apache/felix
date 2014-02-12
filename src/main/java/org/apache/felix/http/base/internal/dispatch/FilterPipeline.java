@@ -16,17 +16,45 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.ServletException;
+import java.io.IOException;
+
 import javax.servlet.FilterChain;
 import javax.servlet.RequestDispatcher;
-import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 
 public final class FilterPipeline
 {
+    private static class FilterRequestWrapper extends HttpServletRequestWrapper
+    {
+        public FilterRequestWrapper(HttpServletRequest req)
+        {
+            super(req);
+        }
+
+        @Override
+        public RequestDispatcher getRequestDispatcher(String path)
+        {
+            RequestDispatcherProvider provider = (RequestDispatcherProvider) getAttribute(Dispatcher.REQUEST_DISPATCHER_PROVIDER);
+            RequestDispatcher dispatcher = null;
+            if (provider != null)
+            {
+                dispatcher = provider.getRequestDispatcher(path);
+            }
+            return (dispatcher != null) ? dispatcher : super.getRequestDispatcher(path);
+        }
+
+        @Override
+        public String toString()
+        {
+            return getClass().getSimpleName() + "->" + super.getRequest();
+        }
+    }
+
     private final FilterHandler[] handlers;
     private final ServletPipeline servletPipeline;
 
@@ -36,31 +64,15 @@ public final class FilterPipeline
         this.servletPipeline = servletPipeline;
     }
 
-    public void dispatch(HttpServletRequest req, HttpServletResponse res, FilterChain proceedingChain)
-        throws ServletException, IOException
+    public void dispatch(HttpServletRequest req, HttpServletResponse res, FilterChain proceedingChain) throws ServletException, IOException
     {
         FilterChain chain = new InvocationFilterChain(this.handlers, this.servletPipeline, proceedingChain);
 
-        if (this.servletPipeline.hasServletsMapped()) {
-            req = new RequestWrapper(req);
+        if (this.servletPipeline.hasServletsMapped())
+        {
+            req = new FilterRequestWrapper(req);
         }
 
         chain.doFilter(req, res);
-    }
-
-    private final class RequestWrapper
-        extends HttpServletRequestWrapper
-    {
-        public RequestWrapper(HttpServletRequest req)
-        {
-            super(req);
-        }
-
-        @Override
-        public RequestDispatcher getRequestDispatcher(String path)
-        {
-            final RequestDispatcher dispatcher = servletPipeline.getRequestDispatcher(path);
-            return (null != dispatcher) ? dispatcher : super.getRequestDispatcher(path);
-        }        
     }
 }
