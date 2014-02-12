@@ -55,25 +55,25 @@
                             org.apache.felix.http.jetty.internal.JettyActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.felix.http.api;version=${http.api.version},
+                            javax.servlet.*;version=${servlet.version};-split-package:=merge-first,
                             org.osgi.service.http;version=${http.service.version},
-                            javax.servlet.*;version=${servlet.version};-split-package:=merge-first
+                            org.apache.felix.http.api;version=${http.api.version},
+        					org.eclipse.jetty.*;-split-package:=merge-first;version=${version;===;${jetty.version}}
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
-                            org.apache.felix.http.jetty.*,
-                            org.eclipse.*;-split-package:=merge-first        
+                            org.apache.felix.http.jetty.*
                         </Private-Package>
                         <Import-Package>
-                            javax.net.ssl; javax.security.cert;
-                            javax.xml.parsers; org.xml.sax;
-                            org.xml.sax.helpers;
-                            org.slf4j;resolution:=optional,
-                            *;resolution:=optional
+                        	javax.imageio;resolution:=optional,
+                        	javax.sql;resolution:=optional,
+                        	org.slf4j.*;resolution:=optional,
+                        	org.ietf.jgss;resolution:=optional,
+                        	org.mortbay.log;resolution:=optional;version="[6.1,7)",
+                        	org.mortbay.util.ajax;resolution:=optional;version="[6.1,7)",
+                        	org.osgi.service.useradmin;resolution:=optional,
+                            *
                         </Import-Package>
-                        <DynamicImport-Package>
-                            org.osgi.service.cm;version=1.2
-                        </DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>

@@ -52,10 +52,6 @@
                         <Bundle-Activator>
                             org.apache.felix.http.sslfilter.internal.SslFilterActivator
                         </Bundle-Activator>
-                        <Import-Package>
-                            javax.servlet.*;version=${servlet.version},
-                            *
-                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

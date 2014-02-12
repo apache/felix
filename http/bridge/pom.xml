@@ -56,8 +56,8 @@
                             org.apache.felix.http.bridge.internal.*
                         </Private-Package>
                         <Import-Package>
-                            javax.servlet.*,
-                            *;resolution:=optional
+                        	org.osgi.service.useradmin;resolution:=optional,
+                            *
                         </Import-Package>
                     </instructions>
                 </configuration>

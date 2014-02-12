@@ -40,7 +40,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     	<jetty.version>8.1.14.v20131031</jetty.version>
-    	<cometd.version>2.7.0</cometd.version>
+    	<cometd.version>2.8.0</cometd.version>
     	<http.service.version>1.2.0</http.service.version>
     	<servlet.version>3.0.1</servlet.version>
 
