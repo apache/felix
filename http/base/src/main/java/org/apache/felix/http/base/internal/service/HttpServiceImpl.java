@@ -30,8 +30,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.NamespaceException;
 
-public final class HttpServiceImpl
-    implements ExtHttpService
+public final class HttpServiceImpl implements ExtHttpService
 {
     private final Bundle bundle;
     private final HandlerRegistry handlerRegistry;
@@ -39,33 +38,33 @@ public final class HttpServiceImpl
     private final HashSet<Filter> localFilters;
     private final ServletContextManager contextManager;
 
-    public HttpServiceImpl(Bundle bundle, ServletContext context, HandlerRegistry handlerRegistry,
-        ServletContextAttributeListener servletAttributeListener, boolean sharedContextAttributes)
+    public HttpServiceImpl(Bundle bundle, ServletContext context, HandlerRegistry handlerRegistry, ServletContextAttributeListener servletAttributeListener, boolean sharedContextAttributes)
     {
         this.bundle = bundle;
         this.handlerRegistry = handlerRegistry;
         this.localServlets = new HashSet<Servlet>();
         this.localFilters = new HashSet<Filter>();
-        this.contextManager = new ServletContextManager(this.bundle, context, servletAttributeListener,
-            sharedContextAttributes);
+        this.contextManager = new ServletContextManager(this.bundle, context, servletAttributeListener, sharedContextAttributes);
     }
 
     private ExtServletContext getServletContext(HttpContext context)
     {
-        if (context == null) {
+        if (context == null)
+        {
             context = createDefaultHttpContext();
         }
 
         return this.contextManager.getServletContext(context);
     }
 
-    public void registerFilter(Filter filter, String pattern, Dictionary initParams, int ranking, HttpContext context)
-        throws ServletException
+    public void registerFilter(Filter filter, String pattern, Dictionary initParams, int ranking, HttpContext context) throws ServletException
     {
-        if (filter == null ) {
+        if (filter == null)
+        {
             throw new IllegalArgumentException("Filter must not be null");
         }
-        FilterHandler handler = new FilterHandler(getServletContext(context), filter, pattern, ranking);
+        String filterName = null; // XXX
+        FilterHandler handler = new FilterHandler(getServletContext(context), filter, pattern, ranking, filterName);
         handler.setInitParams(initParams);
         this.handlerRegistry.addFilter(handler);
         this.localFilters.add(filter);
@@ -81,32 +80,37 @@ public final class HttpServiceImpl
         unregisterServlet(servlet, true);
     }
 
-    public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context)
-        throws ServletException, NamespaceException
+    public void registerServlet(String alias, Servlet servlet, Dictionary initParams, HttpContext context) throws ServletException, NamespaceException
     {
-        if (servlet == null ) {
+        if (servlet == null)
+        {
             throw new IllegalArgumentException("Servlet must not be null");
         }
-        if (!isAliasValid(alias)) {
-            throw new IllegalArgumentException( "Malformed servlet alias [" + alias + "]");
+        if (!isAliasValid(alias))
+        {
+            throw new IllegalArgumentException("Malformed servlet alias [" + alias + "]");
         }
-        ServletHandler handler = new ServletHandler(getServletContext(context), servlet, alias);
+        String servletName = null; // XXX
+        ServletHandler handler = new ServletHandler(getServletContext(context), servlet, alias, servletName);
         handler.setInitParams(initParams);
         this.handlerRegistry.addServlet(handler);
         this.localServlets.add(servlet);
     }
 
-    public void registerResources(String alias, String name, HttpContext context)
-        throws NamespaceException
+    public void registerResources(String alias, String name, HttpContext context) throws NamespaceException
     {
-        if (!isNameValid(name)) {
-            throw new IllegalArgumentException( "Malformed resource name [" + name + "]");
+        if (!isNameValid(name))
+        {
+            throw new IllegalArgumentException("Malformed resource name [" + name + "]");
         }
 
-        try {
+        try
+        {
             Servlet servlet = new ResourceServlet(name);
             registerServlet(alias, servlet, null, context);
-        } catch (ServletException e) {
+        }
+        catch (ServletException e)
+        {
             SystemLogger.error("Failed to register resources", e);
         }
     }
@@ -124,19 +128,22 @@ public final class HttpServiceImpl
     public void unregisterAll()
     {
         HashSet<Servlet> servlets = new HashSet<Servlet>(this.localServlets);
-        for (Servlet servlet : servlets) {
+        for (Servlet servlet : servlets)
+        {
             unregisterServlet(servlet, false);
         }
 
         HashSet<Filter> filters = new HashSet<Filter>(this.localFilters);
-        for (Filter fiter : filters) {
+        for (Filter fiter : filters)
+        {
             unregisterFilter(fiter, false);
         }
     }
 
     private void unregisterFilter(Filter filter, final boolean destroy)
     {
-        if (filter != null) {
+        if (filter != null)
+        {
             this.handlerRegistry.removeFilter(filter, destroy);
             this.localFilters.remove(filter);
         }
@@ -144,7 +151,8 @@ public final class HttpServiceImpl
 
     private void unregisterServlet(Servlet servlet, final boolean destroy)
     {
-        if (servlet != null) {
+        if (servlet != null)
+        {
             this.handlerRegistry.removeServlet(servlet, destroy);
             this.localServlets.remove(servlet);
         }
@@ -152,11 +160,13 @@ public final class HttpServiceImpl
 
     private boolean isNameValid(String name)
     {
-        if (name == null) {
+        if (name == null)
+        {
             return false;
         }
 
-        if (!name.equals("/") && name.endsWith( "/" )) {
+        if (!name.equals("/") && name.endsWith("/"))
+        {
             return false;
         }
 
@@ -165,11 +175,13 @@ public final class HttpServiceImpl
 
     private boolean isAliasValid(String alias)
     {
-        if (alias == null) {
+        if (alias == null)
+        {
             return false;
         }
 
-        if (!alias.equals("/") && ( !alias.startsWith("/") || alias.endsWith("/"))) {
+        if (!alias.equals("/") && (!alias.startsWith("/") || alias.endsWith("/")))
+        {
             return false;
         }
 

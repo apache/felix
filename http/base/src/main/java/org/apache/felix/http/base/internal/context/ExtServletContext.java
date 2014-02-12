@@ -22,9 +22,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public interface ExtServletContext
-    extends ServletContext
+public interface ExtServletContext extends ServletContext
 {
-    public boolean handleSecurity(HttpServletRequest req, HttpServletResponse res)
-        throws IOException;
+    boolean handleSecurity(HttpServletRequest req, HttpServletResponse res) throws IOException;
 }

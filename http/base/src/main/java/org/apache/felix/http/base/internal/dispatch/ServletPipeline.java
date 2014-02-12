@@ -16,17 +16,19 @@
  */
 package org.apache.felix.http.base.internal.dispatch;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.ServletException;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import static org.apache.felix.http.base.internal.util.UriUtils.decodePath;
+import static org.apache.felix.http.base.internal.util.UriUtils.removeDotSegments;
+
 import java.io.IOException;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.felix.http.base.internal.handler.ServletHandler;
 
-public final class ServletPipeline
+public final class ServletPipeline implements RequestDispatcherProvider
 {
     private final ServletHandler[] handlers;
 
@@ -35,11 +37,61 @@ public final class ServletPipeline
         this.handlers = handlers;
     }
 
-    public boolean handle(HttpServletRequest req, HttpServletResponse res)
-        throws ServletException, IOException
+    public RequestDispatcher getNamedDispatcher(String name)
     {
-        for (ServletHandler handler : this.handlers) {
-            if (handler.handle(req, res)) {
+        // See section 9.1 of Servlet 3.x specification...
+        if (name == null)
+        {
+            return null;
+        }
+
+        for (ServletHandler handler : this.handlers)
+        {
+            if (name.equals(handler.getName()))
+            {
+                return handler.createNamedRequestDispatcher();
+            }
+        }
+
+        return null;
+    }
+
+    public RequestDispatcher getRequestDispatcher(String path)
+    {
+        // See section 9.1 of Servlet 3.x specification...
+        if (path == null || (!path.startsWith("/") && !"".equals(path)))
+        {
+            return null;
+        }
+
+        String query = null;
+        int q = 0;
+        if ((q = path.indexOf('?')) > 0)
+        {
+            query = path.substring(q + 1);
+            path = path.substring(0, q);
+        }
+        // TODO remove path parameters...
+        String pathInContext = decodePath(removeDotSegments(path));
+
+        for (ServletHandler handler : this.handlers)
+        {
+            if (handler.matches(pathInContext))
+            {
+                return handler.createRequestDispatcher(path, pathInContext, query);
+            }
+        }
+
+        return null;
+    }
+
+    public boolean handle(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
+    {
+        // NOTE: this code assumes that HttpServletRequest#getRequestDispatcher() is properly mapped, see FilterPipeline.FilterRequestWrapper!
+        for (ServletHandler handler : this.handlers)
+        {
+            if (handler.handle(req, res))
+            {
                 return true;
             }
         }
@@ -50,62 +102,5 @@ public final class ServletPipeline
     public boolean hasServletsMapped()
     {
         return this.handlers.length > 0;
-    }
-
-    public RequestDispatcher getRequestDispatcher(String path)
-    {
-        for (ServletHandler handler : this.handlers) {
-            if (handler.matches(path)) {
-                return new Dispatcher(path, handler);
-            }
-        }
-        
-        return null;
-    }
-
-    private final class Dispatcher
-        implements RequestDispatcher
-    {
-        private final String path;
-        private final ServletHandler handler;
-
-        public Dispatcher(String path, ServletHandler handler)
-        {
-            this.path = path;
-            this.handler = handler;
-        }
-
-        public void forward(ServletRequest req, ServletResponse res)
-            throws ServletException, IOException
-        {
-            if (res.isCommitted()) {
-                throw new ServletException("Response has been committed");
-            }
-
-            this.handler.handle(new RequestWrapper((HttpServletRequest)req, this.path), (HttpServletResponse)res);
-        }
-
-        public void include(ServletRequest req, ServletResponse res)
-            throws ServletException, IOException
-        {
-            this.handler.handle((HttpServletRequest)req, (HttpServletResponse)res);
-        }
-    }
-
-    private final class RequestWrapper
-        extends HttpServletRequestWrapper
-    {
-        private final String requestUri;
-        
-        public RequestWrapper(HttpServletRequest req, String requestUri)
-        {
-            super(req);
-            this.requestUri = requestUri;
-        }
-
-        public String getRequestURI()
-        {
-            return this.requestUri;
-        }
     }
 }

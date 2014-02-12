@@ -22,8 +22,7 @@ import java.util.Enumeration;
 import java.util.Collections;
 import java.util.Map;
 
-public final class FilterConfigImpl
-    implements FilterConfig
+public final class FilterConfigImpl implements FilterConfig
 {
     private final String name;
     private final ServletContext context;

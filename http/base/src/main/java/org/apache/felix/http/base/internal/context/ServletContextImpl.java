@@ -48,7 +48,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
 
 @SuppressWarnings("deprecation")
-public final class ServletContextImpl implements ExtServletContext
+public class ServletContextImpl implements ExtServletContext
 {
     private final Bundle bundle;
     private final ServletContext context;
@@ -63,6 +63,16 @@ public final class ServletContextImpl implements ExtServletContext
         this.httpContext = httpContext;
         this.attributeListener = attributeListener;
         this.attributes = sharedAttributes ? null : new ConcurrentHashMap<String, Object>();
+    }
+
+    protected ServletContextImpl(ExtServletContext delegate)
+    {
+        ServletContextImpl impl = (ServletContextImpl) delegate;
+        this.bundle = impl.bundle;
+        this.context = impl.context;
+        this.httpContext = impl.httpContext;
+        this.attributeListener = impl.attributeListener;
+        this.attributes = impl.attributes;
     }
 
     public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> type)
@@ -229,7 +239,8 @@ public final class ServletContextImpl implements ExtServletContext
     public String getRealPath(String name)
     {
         URL url = getResource(normalizePath(name));
-        if (url == null) {
+        if (url == null)
+        {
             return null;
         }
         return url.toExternalForm();
@@ -354,7 +365,7 @@ public final class ServletContextImpl implements ExtServletContext
 
         if (oldValue != null)
         {
-            attributeListener.attributeRemoved(new ServletContextAttributeEvent(this, name, oldValue));
+            this.attributeListener.attributeRemoved(new ServletContextAttributeEvent(this, name, oldValue));
         }
     }
 
@@ -379,11 +390,11 @@ public final class ServletContextImpl implements ExtServletContext
 
             if (oldValue == null)
             {
-                attributeListener.attributeAdded(new ServletContextAttributeEvent(this, name, value));
+                this.attributeListener.attributeAdded(new ServletContextAttributeEvent(this, name, value));
             }
             else
             {
-                attributeListener.attributeReplaced(new ServletContextAttributeEvent(this, name, oldValue));
+                this.attributeListener.attributeReplaced(new ServletContextAttributeEvent(this, name, oldValue));
             }
         }
     }

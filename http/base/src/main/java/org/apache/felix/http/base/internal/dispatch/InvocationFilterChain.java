@@ -23,12 +23,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.apache.felix.http.base.internal.handler.FilterHandler;
 
-public final class InvocationFilterChain
-    extends HttpFilterChain
+public final class InvocationFilterChain extends HttpFilterChain
 {
     private final FilterHandler[] handlers;
     private final ServletPipeline servletPipeline;
-    private final FilterChain proceedingChain;    
+    private final FilterChain proceedingChain;
     private int index = -1;
 
     public InvocationFilterChain(FilterHandler[] handlers, ServletPipeline servletPipeline, FilterChain proceedingChain)
@@ -38,15 +37,18 @@ public final class InvocationFilterChain
         this.proceedingChain = proceedingChain;
     }
 
-    protected void doFilter(HttpServletRequest req, HttpServletResponse res)
-        throws IOException, ServletException
+    protected void doFilter(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException
     {
         this.index++;
 
-        if (this.index < this.handlers.length) {
+        if (this.index < this.handlers.length)
+        {
             this.handlers[this.index].handle(req, res, this);
-        } else {
-            if (!this.servletPipeline.handle(req, res)) {
+        }
+        else
+        {
+            if (!this.servletPipeline.handle(req, res))
+            {
                 this.proceedingChain.doFilter(req, res);
             }
         }
