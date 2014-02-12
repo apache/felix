@@ -24,15 +24,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public abstract class HttpFilterChain 
-    implements FilterChain
+public abstract class HttpFilterChain implements FilterChain
 {
-    public final void doFilter(ServletRequest req, ServletResponse res)
-        throws IOException, ServletException
+    public final void doFilter(ServletRequest req, ServletResponse res) throws IOException, ServletException
     {
-        doFilter((HttpServletRequest)req, (HttpServletResponse)res);
+        doFilter((HttpServletRequest) req, (HttpServletResponse) res);
     }
 
-    protected abstract void doFilter(HttpServletRequest req, HttpServletResponse res)
-        throws IOException, ServletException;
+    protected abstract void doFilter(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException;
 }

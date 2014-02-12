@@ -16,17 +16,17 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Assert;
-import org.mockito.Mockito;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class ServletHandlerTest
-    extends AbstractHandlerTest
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+
+public class ServletHandlerTest extends AbstractHandlerTest
 {
     private Servlet servlet;
 
@@ -44,7 +44,7 @@ public class ServletHandlerTest
 
     private ServletHandler createHandler(String alias)
     {
-        return new ServletHandler(this.context, this.servlet, alias);
+        return new ServletHandler(this.context, this.servlet, alias, null /* name */);
     }
 
     @Test
@@ -71,8 +71,7 @@ public class ServletHandlerTest
     }
 
     @Test
-    public void testInit()
-        throws Exception
+    public void testInit() throws Exception
     {
         ServletHandler h1 = createHandler("/a");
         h1.init();
@@ -88,8 +87,7 @@ public class ServletHandlerTest
     }
 
     @Test
-    public void testHandleNotFound()
-        throws Exception
+    public void testHandleNotFound() throws Exception
     {
         ServletHandler h1 = createHandler("/a");
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -103,8 +101,7 @@ public class ServletHandlerTest
     }
 
     @Test
-    public void testHandleFound()
-    throws Exception
+    public void testHandleFound() throws Exception
     {
         ServletHandler h1 = createHandler("/a");
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -115,13 +112,11 @@ public class ServletHandlerTest
         boolean result = h1.handle(req, res);
 
         Assert.assertTrue(result);
-        Mockito.verify(this.servlet).service(Mockito.any(HttpServletRequest.class),
-            Mockito.any(HttpServletResponse.class));
+        Mockito.verify(this.servlet).service(Mockito.any(HttpServletRequest.class), Mockito.any(HttpServletResponse.class));
     }
 
     @Test
-    public void testHandleFoundForbidden()
-        throws Exception
+    public void testHandleFoundForbidden() throws Exception
     {
         ServletHandler h1 = createHandler("/a");
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -137,8 +132,7 @@ public class ServletHandlerTest
     }
 
     @Test
-    public void testHandleNotFoundContextRoot()
-        throws Exception
+    public void testHandleNotFoundContextRoot() throws Exception
     {
         ServletHandler h1 = createHandler("/a");
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -153,8 +147,7 @@ public class ServletHandlerTest
     }
 
     @Test
-    public void testHandleFoundContextRoot()
-        throws Exception
+    public void testHandleFoundContextRoot() throws Exception
     {
         ServletHandler h1 = createHandler("/");
         HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
@@ -165,7 +158,6 @@ public class ServletHandlerTest
         boolean result = h1.handle(req, res);
 
         Assert.assertTrue(result);
-        Mockito.verify(this.servlet).service(Mockito.any(HttpServletRequest.class),
-                Mockito.any(HttpServletResponse.class));
+        Mockito.verify(this.servlet).service(Mockito.any(HttpServletRequest.class), Mockito.any(HttpServletResponse.class));
     }
 }

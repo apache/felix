@@ -16,22 +16,22 @@
  */
 package org.apache.felix.http.base.internal;
 
+import java.io.IOException;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequestAttributeEvent;
+import javax.servlet.ServletRequestEvent;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletRequestAttributeEvent;
-import javax.servlet.ServletRequestEvent;
 
 import org.apache.felix.http.base.internal.listener.ServletRequestAttributeListenerManager;
+import org.apache.felix.http.base.internal.listener.ServletRequestListenerManager;
 
-import java.io.IOException;
-
-public final class DispatcherServlet
-    extends HttpServlet
+public final class DispatcherServlet extends HttpServlet
 {
     private final HttpServiceController controller;
 
@@ -41,8 +41,7 @@ public final class DispatcherServlet
     }
 
     @Override
-    public void init(ServletConfig config)
-        throws ServletException
+    public void init(ServletConfig config) throws ServletException
     {
         super.init(config);
         this.controller.register(getServletContext());
@@ -56,11 +55,12 @@ public final class DispatcherServlet
     }
 
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse res)
-        throws ServletException, IOException
+    protected void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException
     {
+        ServletRequestListenerManager requestListener = this.controller.getRequestListener();
+
         final ServletRequestEvent sre = new ServletRequestEvent(getServletContext(), req);
-        this.controller.getRequestListener().requestInitialized(sre);
+        requestListener.requestInitialized(sre);
         try
         {
             req = new AttributeEventRequest(getServletContext(), this.controller.getRequestAttributeListener(), req);
@@ -68,22 +68,20 @@ public final class DispatcherServlet
         }
         finally
         {
-            this.controller.getRequestListener().requestDestroyed(sre);
+            requestListener.requestDestroyed(sre);
         }
     }
 
     private static class AttributeEventRequest extends HttpServletRequestWrapper
     {
-
         private final ServletContext servletContext;
-        private final ServletRequestAttributeListenerManager requestAttributeListener;
+        private final ServletRequestAttributeListenerManager listener;
 
-        public AttributeEventRequest(ServletContext servletContext,
-            ServletRequestAttributeListenerManager requestAttributeListener, HttpServletRequest request)
+        public AttributeEventRequest(ServletContext servletContext, ServletRequestAttributeListenerManager requestAttributeListener, HttpServletRequest request)
         {
             super(request);
             this.servletContext = servletContext;
-            this.requestAttributeListener = requestAttributeListener;
+            this.listener = requestAttributeListener;
         }
 
         public void setAttribute(String name, Object value)
@@ -99,13 +97,11 @@ public final class DispatcherServlet
 
                 if (oldValue == null)
                 {
-                    requestAttributeListener.attributeAdded(new ServletRequestAttributeEvent(servletContext, this,
-                        name, value));
+                    this.listener.attributeAdded(new ServletRequestAttributeEvent(this.servletContext, this, name, value));
                 }
                 else
                 {
-                    requestAttributeListener.attributeReplaced(new ServletRequestAttributeEvent(servletContext, this,
-                        name, oldValue));
+                    this.listener.attributeReplaced(new ServletRequestAttributeEvent(this.servletContext, this, name, oldValue));
                 }
             }
         }
@@ -117,9 +113,14 @@ public final class DispatcherServlet
 
             if (oldValue != null)
             {
-                requestAttributeListener.attributeRemoved(new ServletRequestAttributeEvent(servletContext, this, name,
-                    oldValue));
+                this.listener.attributeRemoved(new ServletRequestAttributeEvent(this.servletContext, this, name, oldValue));
             }
+        }
+
+        @Override
+        public String toString()
+        {
+            return getClass().getSimpleName() + "->" + super.getRequest();
         }
     }
 }

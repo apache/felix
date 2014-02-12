@@ -72,6 +72,11 @@
             <artifactId>org.apache.felix.http.jetty</artifactId>
             <version>${felix.http.api.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.configadmin</artifactId>
+            <version>1.8.0</version>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>

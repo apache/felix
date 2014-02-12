@@ -81,7 +81,7 @@ public final class HttpServiceController
         this.sessionListener = new HttpSessionListenerManager(bundleContext);
         this.sessionAttributeListener = new HttpSessionAttributeListenerManager(bundleContext);
         this.sharedContextAttributes = getBoolean(FELIX_HTTP_SHARED_SERVLET_CONTEXT_ATTRIBUTES);
-        this.plugin = new HttpServicePlugin(bundleContext,registry);
+        this.plugin = new HttpServicePlugin(bundleContext, registry);
     }
 
     public Dispatcher getDispatcher()
@@ -119,7 +119,8 @@ public final class HttpServiceController
         this.serviceProps.clear();
         this.serviceProps.putAll(props);
 
-        if (this.serviceReg != null) {
+        if (this.serviceReg != null)
+        {
             this.serviceReg.setProperties(this.serviceProps);
         }
     }
@@ -133,15 +134,16 @@ public final class HttpServiceController
         this.sessionAttributeListener.open();
         this.plugin.register();
 
-        HttpServiceFactory factory = new HttpServiceFactory(servletContext, this.registry,
-            this.contextAttributeListener, this.sharedContextAttributes);
         String[] ifaces = new String[] { HttpService.class.getName(), ExtHttpService.class.getName() };
+        HttpServiceFactory factory = new HttpServiceFactory(servletContext, this.registry, this.contextAttributeListener, this.sharedContextAttributes);
+
         this.serviceReg = this.bundleContext.registerService(ifaces, factory, this.serviceProps);
     }
 
     public void unregister()
     {
-        if (this.serviceReg == null) {
+        if (this.serviceReg == null)
+        {
             return;
         }
 
@@ -152,10 +154,13 @@ public final class HttpServiceController
         this.requestAttributeListener.close();
         this.plugin.unregister();
 
-        try {
+        try
+        {
             this.serviceReg.unregister();
             this.registry.removeAll();
-        } finally {
+        }
+        finally
+        {
             this.serviceReg = null;
         }
     }

@@ -16,11 +16,12 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
-import org.junit.Test;
-import org.junit.Assert;
-import org.mockito.Mockito;
-import org.apache.felix.http.base.internal.context.ExtServletContext;
 import java.util.Hashtable;
+
+import org.apache.felix.http.base.internal.context.ExtServletContext;
+import org.junit.Assert;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 public abstract class AbstractHandlerTest
 {
@@ -32,16 +33,16 @@ public abstract class AbstractHandlerTest
     {
         this.context = Mockito.mock(ExtServletContext.class);
     }
-    
+
     @Test
     public void testId()
     {
         AbstractHandler h1 = createHandler();
         AbstractHandler h2 = createHandler();
 
-        Assert.assertNotNull(h1.getId());
-        Assert.assertNotNull(h2.getId());
-        Assert.assertFalse(h1.getId().equals(h2.getId()));
+        Assert.assertTrue(h1.getId() > 0);
+        Assert.assertTrue(h2.getId() > 0);
+        Assert.assertFalse(h1.getId() == h2.getId());
     }
 
     @Test
@@ -49,7 +50,7 @@ public abstract class AbstractHandlerTest
     {
         AbstractHandler handler = createHandler();
         Assert.assertEquals(0, handler.getInitParams().size());
-        
+
         Hashtable<String, String> map = new Hashtable<String, String>();
         map.put("key1", "value1");
 

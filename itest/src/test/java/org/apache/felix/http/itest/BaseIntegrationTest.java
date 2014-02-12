@@ -20,6 +20,7 @@ package org.apache.felix.http.itest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.Constants.START_LEVEL_SYSTEM_BUNDLES;
 import static org.ops4j.pax.exam.Constants.START_LEVEL_TEST_BUNDLE;
 import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
@@ -37,8 +38,11 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.servlet.Filter;
@@ -60,6 +64,10 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
@@ -144,7 +152,7 @@ public abstract class BaseIntegrationTest
         }
 
         @Override
-        protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
         {
             resp.setStatus(HttpServletResponse.SC_OK);
         }
@@ -224,6 +232,18 @@ public abstract class BaseIntegrationTest
         }
     }
 
+    protected static Dictionary<String, ?> createDictionary(Object... entries)
+    {
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        for (int i = 0; i < entries.length; i += 2)
+        {
+            String key = (String) entries[i];
+            Object value = entries[i + 1];
+            props.put(key, value);
+        }
+        return props;
+    }
+
     protected static URL createURL(String path)
     {
         if (path == null)
@@ -295,6 +315,7 @@ public abstract class BaseIntegrationTest
             url("link:classpath:META-INF/links/org.apache.geronimo.specs.atinject.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
             mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY).versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
             junitBundles(), frameworkStartLevel(START_LEVEL_TEST_BUNDLE), felix());
     }
@@ -337,6 +358,64 @@ public abstract class BaseIntegrationTest
             tracker.close();
         }
         return result;
+    }
+
+    protected org.osgi.service.cm.Configuration configureHttpService(Dictionary<?, ?> props) throws Exception
+    {
+        final String pid = "org.apache.felix.http";
+        ServiceTracker tracker = new ServiceTracker(m_context, ConfigurationAdmin.class.getName(), null);
+        tracker.open();
+
+        ServiceRegistration reg = null;
+        org.osgi.service.cm.Configuration config = null;
+
+        try
+        {
+            ConfigurationAdmin configAdmin = (ConfigurationAdmin) tracker.waitForService(TimeUnit.SECONDS.toMillis(5));
+            assertNotNull("No configuration admin service found?!", configAdmin);
+
+            final CountDownLatch latch = new CountDownLatch(1);
+            final int configEvent = (props != null) ? ConfigurationEvent.CM_UPDATED : ConfigurationEvent.CM_DELETED;
+
+            config = configAdmin.getConfiguration(pid, null);
+
+            reg = m_context.registerService(ConfigurationListener.class.getName(), new ConfigurationListener()
+            {
+                @Override
+                public void configurationEvent(ConfigurationEvent event)
+                {
+                    if (pid.equals(event.getPid()) && event.getType() == configEvent)
+                    {
+                        latch.countDown();
+                    }
+                }
+            }, null);
+
+            if (props != null)
+            {
+                config.update(props);
+            }
+            else
+            {
+                config.delete();
+            }
+
+            assertTrue("Configuration not provisioned in time!", latch.await(5, TimeUnit.SECONDS));
+
+            // Needed to get Jetty restarted...
+            TimeUnit.MILLISECONDS.sleep(150);
+
+            return config;
+        }
+        finally
+        {
+            if (reg != null)
+            {
+                reg.unregister();
+            }
+
+            tracker.close();
+        }
     }
 
     /**
