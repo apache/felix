@@ -21,6 +21,7 @@ package org.apache.felix.http.itest;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static javax.servlet.http.HttpServletResponse.SC_PAYMENT_REQUIRED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -35,6 +36,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -245,6 +247,108 @@ public class HttpJettyTest extends BaseIntegrationTest
         unregister(filter);
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Test case for FELIX-3988, handling security constraints in {@link Filter}s.
+     */
+    @Test
+    public void testHandleSecurityInFilterOk() throws Exception
+    {
+        CountDownLatch initLatch = new CountDownLatch(1);
+        CountDownLatch destroyLatch = new CountDownLatch(1);
+
+        HttpContext context = new HttpContext()
+        {
+            public String getMimeType(String name)
+            {
+                return null;
+            }
+
+            public URL getResource(String name)
+            {
+                return null;
+            }
+
+            public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) throws IOException
+            {
+                if (request.getParameter("setStatus") != null)
+                {
+                    response.setStatus(SC_PAYMENT_REQUIRED);
+                }
+                else if (request.getParameter("sendError") != null)
+                {
+                    response.sendError(SC_PAYMENT_REQUIRED);
+                }
+                else if (request.getParameter("commit") != null)
+                {
+                    response.getWriter().append("Not allowed!");
+                    response.flushBuffer();
+                }
+                return false;
+            }
+        };
+
+        TestFilter filter = new TestFilter(initLatch, destroyLatch);
+
+        register("/.*", filter, context);
+
+        URL url1 = createURL("/foo");
+        URL url2 = createURL("/foo?sendError=true");
+        URL url3 = createURL("/foo?setStatus=true");
+        URL url4 = createURL("/foo?commit=true");
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+
+        assertResponseCode(SC_FORBIDDEN, url1);
+        assertResponseCode(SC_PAYMENT_REQUIRED, url2);
+        assertResponseCode(SC_PAYMENT_REQUIRED, url3);
+        assertContent(SC_OK, "Not allowed!", url4);
+
+        unregister(filter);
+
+        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+
+        assertResponseCode(SC_NOT_FOUND, url1);
+    }
+
+    /**
+     * Tests the handling of URI path parameters.
+     */
+    @Test
+    public void testHandleUriPathParametersOk() throws Exception
+    {
+        CountDownLatch initLatch = new CountDownLatch(1);
+        CountDownLatch destroyLatch = new CountDownLatch(1);
+
+        TestServlet servlet = new TestServlet(initLatch, destroyLatch)
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+            {
+                assertEquals("", request.getContextPath());
+                assertEquals("/foo", request.getServletPath());
+                assertEquals("/a", request.getPathInfo()); // /a,b/c;d/e.f;g/h
+                assertEquals("/foo/a;b/c;d/e;f;g/h", request.getRequestURI());
+                assertEquals("i=j+k&l=m", request.getQueryString());
+            }
+        };
+
+        register("/foo", servlet);
+
+        URL testURL = createURL("/foo/a;b/c;d/e;f;g/h?i=j+k&l=m");
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+
+        assertResponseCode(SC_OK, testURL);
+
+        unregister(servlet);
+
+        assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+
+        assertResponseCode(SC_NOT_FOUND, testURL);
     }
 
     /**

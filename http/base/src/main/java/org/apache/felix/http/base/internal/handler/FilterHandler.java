@@ -16,6 +16,7 @@
  */
 package org.apache.felix.http.base.internal.handler;
 
+import static javax.servlet.http.HttpServletResponse.*;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
@@ -102,16 +103,21 @@ public final class FilterHandler extends AbstractHandler implements Comparable<F
 
     final void doHandle(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException
     {
-        if (!getContext().handleSecurity(req, res))
-        {
-            res.sendError(HttpServletResponse.SC_FORBIDDEN);
-        }
-        else
+        if (getContext().handleSecurity(req, res))
         {
             this.filter.doFilter(req, res, chain);
         }
+        else
+        {
+            // FELIX-3988: If the response is not yet committed and still has the default 
+            // status, we're going to override this and send an error instead.
+            if (!res.isCommitted() && res.getStatus() == SC_OK)
+            {
+                res.sendError(SC_FORBIDDEN);
+            }
+        }
     }
-    
+
     @Override
     protected Object getSubject()
     {
