@@ -26,6 +26,8 @@ import static javax.servlet.RequestDispatcher.INCLUDE_PATH_INFO;
 import static javax.servlet.RequestDispatcher.INCLUDE_QUERY_STRING;
 import static javax.servlet.RequestDispatcher.INCLUDE_REQUEST_URI;
 import static javax.servlet.RequestDispatcher.INCLUDE_SERVLET_PATH;
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static org.apache.felix.http.base.internal.util.UriUtils.concat;
 
 import java.io.IOException;
@@ -332,15 +334,18 @@ public final class ServletHandler extends AbstractHandler implements Comparable<
             req = new ServletHandlerRequest(req, getContext(), this.alias);
         }
 
-        // set a sensible status code in case handleSecurity returns false
-        // but fails to send a response
-        res.setStatus(HttpServletResponse.SC_FORBIDDEN);
         if (getContext().handleSecurity(req, res))
         {
-            // reset status to OK for further processing
-            res.setStatus(HttpServletResponse.SC_OK);
-
             this.servlet.service(req, res);
+        }
+        else
+        {
+            // FELIX-3988: If the response is not yet committed and still has the default 
+            // status, we're going to override this and send an error instead.
+            if (!res.isCommitted() && res.getStatus() == SC_OK)
+            {
+                res.sendError(SC_FORBIDDEN);
+            }
         }
     }
 
