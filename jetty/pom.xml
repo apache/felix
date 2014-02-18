@@ -55,9 +55,6 @@
                             org.apache.felix.http.jetty.internal.JettyActivator
                         </Bundle-Activator>
                         <Export-Package>
-                            javax.servlet.*;version=${servlet.version};-split-package:=merge-first,
-                            org.osgi.service.http;version=${http.service.version},
-                            org.apache.felix.http.api;version=${http.api.version},
         					org.eclipse.jetty.*;-split-package:=merge-first;version=${version;===;${jetty.version}}
                         </Export-Package>
                         <Private-Package>
