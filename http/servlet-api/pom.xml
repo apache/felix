@@ -24,11 +24,7 @@
     <description>Provides the Servlet API for use by applications</description>
     <artifactId>org.apache.felix.http.servlet-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
-
-    <properties>
-        <bundle_version>0.0.1.SNAPSHOT</bundle_version>
-    </properties>
+    <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/servlet-api</connection>
@@ -39,76 +35,24 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>unpack-dependencies</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>unpack-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <includeArtifactIds>tomcat-servlet-api</includeArtifactIds>
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                            <includes>
-                                javax/servlet/*.*,
-                                javax/servlet/annotation/*.*,
-                                javax/servlet/descriptor/*.*,
-                                javax/servlet/http/*.*
-                            </includes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
                 <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
-                            <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
-                        </manifest>
-                        <manifestEntries>
-                            <Bundle-ManifestVersion> 2</Bundle-ManifestVersion>
-                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Bundle-Version>${bundle_version}</Bundle-Version>
-                            <Bundle-Description>${project.description}</Bundle-Description>
-                            <Bundle-Name>${project.name}</Bundle-Name>
-                            <Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
-                            <Bundle-License>${project.licenses[0].url}</Bundle-License>
-                            <Bundle-DocURL>http://felix.apache.org</Bundle-DocURL>
-
-                            <Export-Package>
-                                javax.servlet;uses:="javax.servlet.annotation,javax.servlet.descriptor";version="2.6",javax.servlet.descriptor;version="2.6",javax.servlet.annotation;uses:="javax.servlet";version="2.6",javax.servlet.http;uses:="javax.servlet";version="2.6",javax.servlet;uses:="javax.servlet.annotation,javax.servlet.descriptor";version="3.0",javax.servlet.descriptor;version="3.0",javax.servlet.annotation;uses:="javax.servlet";version="3.0",javax.servlet.http;uses:="javax.servlet";version="3.0"
-                            </Export-Package>
-                        </manifestEntries>
-
-                        <manifestSections>
-                            <manifestSection>
-                                <name>javax/servlet/</name>
-                                <manifestEntries>
-                                    <Specification-Title>
-                                        Java API for Servlets
-                                    </Specification-Title>
-                                    <Specification-Version>
-                                        3.0
-                                    </Specification-Version>
-                                    <Specification-Vendor>
-                                        Sun Microsystems, Inc.
-                                    </Specification-Vendor>
-                                    <Implementation-Title>
-                                        javax.servlet
-                                    </Implementation-Title>
-                                    <Implementation-Version>
-                                        3.0.FR
-                                    </Implementation-Version>
-                                    <Implementation-Vendor>
-                                        Apache Software Foundation
-                                    </Implementation-Vendor>
-                                </manifestEntries>
-                            </manifestSection>
-                        </manifestSections>
-                    </archive>
+                    <instructions>
+                        <Export-Package>
+                            javax.servlet;
+                            javax.servlet.annotation;
+                            javax.servlet.descriptor;
+                            javax.servlet.http;
+                                version=2.6,
+                            javax.servlet;
+                            javax.servlet.annotation;
+                            javax.servlet.descriptor;
+                            javax.servlet.http;
+                                version=3.0
+                        </Export-Package>
+                    </instructions>
                 </configuration>
             </plugin>
         </plugins>
