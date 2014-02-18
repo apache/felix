@@ -45,10 +45,11 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.osgi.service.http;version=${http.service.version},                       
+                            org.osgi.service.http;version=${http.service.version},
                             org.apache.felix.http.api;version=${http.api.version}
                         </Export-Package>
                         <Import-Package>
+                            org.osgi.service.http,
                             javax.servlet.*;version="[2.3,4)",
                             *
                         </Import-Package>
