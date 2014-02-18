@@ -26,6 +26,10 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
+    <properties>
+        <bundle_version>0.0.1.SNAPSHOT</bundle_version>
+    </properties>
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/http/servlet-api</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/http/servlet-api</developerConnection>
@@ -47,10 +51,10 @@
                             <includeArtifactIds>tomcat-servlet-api</includeArtifactIds>
                             <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             <includes>
-                                javax/servlet/*.class,
-                                javax/servlet/annotation/*.class,
-                                javax/servlet/descriptor/*.class,
-                                javax/servlet/http/*.class
+                                javax/servlet/*.*,
+                                javax/servlet/annotation/*.*,
+                                javax/servlet/descriptor/*.*,
+                                javax/servlet/http/*.*
                             </includes>
                         </configuration>
                     </execution>
@@ -67,7 +71,7 @@
                         <manifestEntries>
                             <Bundle-ManifestVersion> 2</Bundle-ManifestVersion>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Bundle-Version>${project.version}</Bundle-Version>
+                            <Bundle-Version>${bundle_version}</Bundle-Version>
                             <Bundle-Description>${project.description}</Bundle-Description>
                             <Bundle-Name>${project.name}</Bundle-Name>
                             <Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
