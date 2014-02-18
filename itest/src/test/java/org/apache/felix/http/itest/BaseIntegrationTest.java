@@ -75,7 +75,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Base class for integration tests.
- *  
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public abstract class BaseIntegrationTest
@@ -314,6 +314,8 @@ public abstract class BaseIntegrationTest
             url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.framework.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
             url("link:classpath:META-INF/links/org.apache.geronimo.specs.atinject.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
+            mavenBundle("org.apache.felix", "org.apache.felix.http.api").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
+            mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
             mavenBundle("org.apache.felix", ORG_APACHE_FELIX_HTTP_JETTY).versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
             mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject().startLevel(START_LEVEL_SYSTEM_BUNDLES),
 
