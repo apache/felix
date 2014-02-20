@@ -96,6 +96,9 @@
                         <Private-Package>
                             org.apache.felix.webconsole.plugins.packageadmin.*
                         </Private-Package>
+                        <Embed-Dependency>
+                            org.apache.felix.utils;inline=org/apache/felix/utils/manifest/*
+                        </Embed-Dependency>
                         <Bundle-Activator>
                             org.apache.felix.webconsole.plugins.packageadmin.internal.Activator
                         </Bundle-Activator>
@@ -121,13 +124,19 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.0.0</version>
+            <version>4.3.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
             <version>4.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
+            <version>1.4.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
