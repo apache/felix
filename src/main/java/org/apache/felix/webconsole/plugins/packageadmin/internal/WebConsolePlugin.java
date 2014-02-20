@@ -39,6 +39,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.felix.utils.manifest.Clause;
+import org.apache.felix.utils.manifest.Parser;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleUtil;
 import org.json.JSONArray;
@@ -46,6 +48,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 
@@ -80,13 +83,13 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         TEMPLATE = readTemplateFile("/res/plugin.html"); //$NON-NLS-1$
     }
 
-    
+
     public String getCategory()
     {
         return CATEGORY;
     }
 
-    
+
     /**
      * @see org.apache.felix.webconsole.AbstractWebConsolePlugin#renderContent(HttpServletRequest, HttpServletResponse)
      */
@@ -205,11 +208,6 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                 {
                     ExportedPackage exportedPackage = (ExportedPackage) packageIter.next();
                     final JSONObject json = toJSON(exportedPackage);
-                    Bundle[] importers = exportedPackage.getImportingBundles();
-                    for (int j = 0; importers != null && j < importers.length; j++)
-                    {
-                        json.append("importers", toJSON(importers[j], new JSONObject())); //$NON-NLS-1$
-                    }
                     container//
                     .put("name", exportedPackage.getName()) //$NON-NLS-1$
                     .append("entries", json); //$NON-NLS-1$
@@ -227,12 +225,38 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
         return json;
     }
 
+    private static final JSONObject toJSON(final String pkgName, final Bundle[] importers, final JSONObject json)
+        throws JSONException
+    {
+        for (int i = 0; i < importers.length; i++)
+        {
+            Bundle bundle = importers[i];
+            final JSONObject usingJson = new JSONObject();
+            toJSON(bundle, usingJson);
+            final String ip = (String) bundle.getHeaders().get(Constants.IMPORT_PACKAGE);
+            final Clause[] clauses = Parser.parseHeader(ip);
+            for (int j = 0; j < clauses.length; j++)
+            {
+                Clause clause = clauses[j];
+                if (pkgName.equals(clause.getName()))
+                {
+                    usingJson.put("ver", clause.getAttribute(Constants.VERSION_ATTRIBUTE));
+                    break;
+                }
+            }
+            json.append("importers", usingJson); //$NON-NLS-1$
+        }
+        return json;
+    }
+
     private static final JSONObject toJSON(final ExportedPackage pkg)
         throws JSONException
     {
         final JSONObject ret = new JSONObject();
         ret.put("version", pkg.getVersion()); //$NON-NLS-1$
-        return toJSON(pkg.getExportingBundle(), ret);
+        toJSON(pkg.getExportingBundle(), ret);
+        toJSON(pkg.getName(), pkg.getImportingBundles(), ret);
+        return ret;
     }
 
     private static final JSONObject getPackageInfo(String packageName, PackageAdmin pa,
@@ -304,7 +328,7 @@ class WebConsolePlugin extends SimpleWebConsolePlugin
                     {
                         result.add(part);
                     }
-                } 
+                }
                 else
                 {
                     result.add(part);
