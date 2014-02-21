@@ -267,11 +267,11 @@ public class InterpolationHelper {
         return val;
     }
 
-    private static class BundleContextSubstitutionCallback implements SubstitutionCallback
+    static class BundleContextSubstitutionCallback implements SubstitutionCallback
     {
         private final BundleContext context;
 
-        private BundleContextSubstitutionCallback(BundleContext context)
+        public BundleContextSubstitutionCallback(BundleContext context)
         {
             this.context = context;
         }

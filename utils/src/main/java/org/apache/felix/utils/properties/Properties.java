@@ -86,20 +86,34 @@ public class Properties extends AbstractMap<String, String> {
     private List<String> header;
     private List<String> footer;
     private File location;
-    private BundleContext context;
+    private InterpolationHelper.SubstitutionCallback callback;
+    private boolean substitute = true;
 
     public Properties() {
     }
 
     public Properties(File location) throws IOException {
-      this(location, null);
+      this(location, (InterpolationHelper.SubstitutionCallback) null);
     }
 
     public Properties(File location, BundleContext context) throws IOException {
+        this(location, new InterpolationHelper.BundleContextSubstitutionCallback(context));
+    }
+
+    public Properties(File location, InterpolationHelper.SubstitutionCallback callback) throws IOException {
         this.location = location;
-        this.context = context;
+        this.callback = callback;
         if(location.exists())
             load(location);
+    }
+
+    public Properties(boolean substitute) throws IOException {
+        this.substitute = substitute;
+    }
+
+    public Properties(File location, boolean substitute) throws IOException {
+        this.location = location;
+        this.substitute = substitute;
     }
 
     public void load(File location) throws IOException {
@@ -347,13 +361,27 @@ public class Properties extends AbstractMap<String, String> {
                                new ArrayList<String>(reader.getValueLines())));
         }
         footer = new ArrayList<String>(reader.getCommentLines());
-        if(context != null)
+        if (substitute)
         {
-            InterpolationHelper.performSubstitution(storage, context);
+            substitute();
+        }
+    }
+
+    public void substitute()
+    {
+        substitute(callback);
+    }
+
+    public void substitute(InterpolationHelper.SubstitutionCallback callback)
+    {
+        if(callback != null)
+        {
+            InterpolationHelper.performSubstitution(storage, callback);
         }
         else {
             InterpolationHelper.performSubstitution(storage);
         }
+
     }
 
     /**
