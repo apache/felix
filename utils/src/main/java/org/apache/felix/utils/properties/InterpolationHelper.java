@@ -101,6 +101,37 @@ public class InterpolationHelper {
      *        detect cycles.
      * @param cycleMap Map of variable references used to detect nested cycles.
      * @param configProps Set of configuration properties.
+     * @return The value of the specified string after system property substitution.
+     * @throws IllegalArgumentException If there was a syntax error in the
+     *         property placeholder syntax or a recursive variable reference.
+     **/
+    public static String substVars(String val,
+                                   String currentKey,
+                                   Map<String,String> cycleMap,
+                                   Map<String,String> configProps)
+            throws IllegalArgumentException
+    {
+        return substVars(val, currentKey, cycleMap, configProps, (SubstitutionCallback) null);
+    }
+
+    /**
+     * <p>
+     * This method performs property variable substitution on the
+     * specified value. If the specified value contains the syntax
+     * <tt>${&lt;prop-name&gt;}</tt>, where <tt>&lt;prop-name&gt;</tt>
+     * refers to either a configuration property or a system property,
+     * then the corresponding property value is substituted for the variable
+     * placeholder. Multiple variable placeholders may exist in the
+     * specified value as well as nested variable placeholders, which
+     * are substituted from inner most to outer most. Configuration
+     * properties override system properties.
+     * </p>
+     *
+     * @param val The string on which to perform property substitution.
+     * @param currentKey The key of the property being evaluated used to
+     *        detect cycles.
+     * @param cycleMap Map of variable references used to detect nested cycles.
+     * @param configProps Set of configuration properties.
      * @param context the bundle context to retrieve properties from
      * @return The value of the specified string after system property substitution.
      * @throws IllegalArgumentException If there was a syntax error in the
