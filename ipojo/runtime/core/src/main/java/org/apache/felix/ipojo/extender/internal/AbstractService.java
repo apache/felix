@@ -94,4 +94,11 @@ public abstract class AbstractService implements Lifecycle {
     protected ServiceRegistration<?> getRegistration() {
         return m_registration;
     }
+
+    /**
+     * Is this service registered or not ?
+     */
+    public boolean isRegistered() {
+        return m_registration != null;
+    }
 }

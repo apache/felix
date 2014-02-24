@@ -46,11 +46,15 @@
     </properties>
 
     <modules>
+<!--
         <module>ipojo-core-annotations-test</module>
         <module>ipojo-core-bad-configuration-test</module>
         <module>ipojo-core-configuration-admin-test</module>
         <module>ipojo-core-configuration-processor-test</module>
         <module>ipojo-core-configuration-test</module>
+-->
+        <module>ipojo-core-declaration-test</module>
+<!--
         <module>ipojo-core-external-handlers-test</module>
         <module>ipojo-core-factory-test</module>
         <module>ipojo-core-factory-version-test</module>
@@ -67,6 +71,7 @@
         <module>ipojo-core-service-providing-test</module>
         <module>ipojo-api-test</module>
         <module>ipojo-compatibility-test</module>
+-->
     </modules>
 
     <build>

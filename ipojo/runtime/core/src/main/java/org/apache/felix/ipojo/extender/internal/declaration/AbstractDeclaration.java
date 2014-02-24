@@ -20,6 +20,7 @@
 package org.apache.felix.ipojo.extender.internal.declaration;
 
 import org.apache.felix.ipojo.extender.Declaration;
+import org.apache.felix.ipojo.extender.DeclarationHandle;
 import org.apache.felix.ipojo.extender.Status;
 import org.apache.felix.ipojo.extender.internal.AbstractService;
 import org.osgi.framework.BundleContext;
@@ -27,7 +28,7 @@ import org.osgi.framework.BundleContext;
 /**
  * Common code to all Declaration objects.
  */
-public abstract class AbstractDeclaration extends AbstractService implements Declaration, Status {
+public abstract class AbstractDeclaration extends AbstractService implements Declaration, DeclarationHandle, Status {
 
     /**
      * The message used when a declaration is bound.
@@ -131,5 +132,17 @@ public abstract class AbstractDeclaration extends AbstractService implements Dec
         m_bound = false;
         m_message = message;
         m_throwable = throwable;
+    }
+
+    public void publish() {
+        if (!isRegistered()) {
+            start();
+        }
+    }
+
+    public void retract() {
+        if (isRegistered()) {
+            stop();
+        }
     }
 }
