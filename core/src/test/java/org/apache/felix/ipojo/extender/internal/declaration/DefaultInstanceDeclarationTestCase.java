@@ -19,20 +19,23 @@
 
 package org.apache.felix.ipojo.extender.internal.declaration;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
+import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.ipojo.Factory;
 import org.apache.felix.ipojo.extender.InstanceDeclaration;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import junit.framework.TestCase;
 
@@ -44,12 +47,22 @@ public class DefaultInstanceDeclarationTestCase extends TestCase {
     @Mock
     private BundleContext m_bundleContext;
 
+    @Mock
+    private ServiceRegistration<?> m_registration;
+
     @Captor
     private ArgumentCaptor<Hashtable<String, Object>> argument;
 
     @Override
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
+        doReturn(m_registration)
+                .when(m_bundleContext)
+                .registerService(
+                        eq(InstanceDeclaration.class.getName()),
+                        anyObject(),
+                        any(Dictionary.class));
+
     }
 
     public void testRegistrationWithEmptyConfiguration() throws Exception {
@@ -81,5 +94,39 @@ public class DefaultInstanceDeclarationTestCase extends TestCase {
         assertEquals(argument.getValue().get(InstanceDeclaration.COMPONENT_NAME_PROPERTY), "component.Hello");
         assertEquals(argument.getValue().get(InstanceDeclaration.COMPONENT_VERSION_PROPERTY), "1.0.0");
 
+    }
+
+    public void testHandlePublication() throws Exception {
+        DefaultInstanceDeclaration declaration = new DefaultInstanceDeclaration(m_bundleContext, "component.Hello");
+        declaration.publish();
+        assertTrue(declaration.isRegistered());
+    }
+
+    public void testHandleMultiplePublication() throws Exception {
+        DefaultInstanceDeclaration declaration = new DefaultInstanceDeclaration(m_bundleContext, "component.Hello");
+        declaration.publish();
+        assertTrue(declaration.isRegistered());
+        declaration.publish();
+        assertTrue(declaration.isRegistered());
+    }
+
+    public void testHandleRetraction() throws Exception {
+        DefaultInstanceDeclaration declaration = new DefaultInstanceDeclaration(m_bundleContext, "component.Hello");
+        declaration.publish();
+        assertTrue(declaration.isRegistered());
+        declaration.retract();
+        assertFalse(declaration.isRegistered());
+        verify(m_registration).unregister();
+    }
+
+    public void testHandleMultipleRetraction() throws Exception {
+        DefaultInstanceDeclaration declaration = new DefaultInstanceDeclaration(m_bundleContext, "component.Hello");
+        declaration.publish();
+        assertTrue(declaration.isRegistered());
+        declaration.retract();
+        assertFalse(declaration.isRegistered());
+        declaration.retract();
+        assertFalse(declaration.isRegistered());
+        verify(m_registration).unregister();
     }
 }
