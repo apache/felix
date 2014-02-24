@@ -21,8 +21,8 @@ package org.apache.felix.ipojo.dependency.interceptors;
 
 import org.apache.felix.ipojo.util.DependencyModel;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * A default implementation of the dependency interceptor.
@@ -34,7 +34,7 @@ public class DefaultDependencyInterceptor implements DependencyInterceptor {
      * The set of managed dependencies.
      * Access must be guarded by the monitor lock.
      */
-    protected final List<DependencyModel> dependencies = new ArrayList<DependencyModel>();
+    protected final Set<DependencyModel> dependencies = new LinkedHashSet<DependencyModel>();
 
 
     /**
