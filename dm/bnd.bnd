@@ -1,0 +1,11 @@
+-buildpath: \
+	osgi.cmpn,\
+	osgi.core;version=4.2
+Private-Package: \
+	dm.impl,\
+	dm.context,\
+	dm.impl.index,\
+	dm.impl.index.multiproperty
+Export-Package: \
+	dm,\
+	tracker

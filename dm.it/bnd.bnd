@@ -1,0 +1,20 @@
+Test-Cases: \
+	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
+-runbundles: \
+	org.mockito.mockito-all,\
+	dm;version=latest,\
+	org.apache.felix.configadmin;version=1.6.0
+Private-Package: \
+	dm.it
+-runee:JavaSE-1.6
+-runvm:-ea
+-runfw:org.apache.felix.framework
+-buildpath: \
+	osgi.core;version='[4.2,5)',\
+	osgi.cmpn,\
+	org.mockito.mockito-all,\
+	junit.osgi;version=3.8,\
+	dm;version=latest
+Bundle-Version:0.0.0.${tstamp}
+-runsystempackages: \
+	sun.reflect
