@@ -1,9 +1,8 @@
 package dm.impl;
 
-import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.CopyOnWriteArraySet;
 
+import dm.ComponentDependencyDeclaration;
 import dm.Dependency;
 import dm.context.ComponentContext;
 import dm.context.DependencyContext;
@@ -11,20 +10,37 @@ import dm.context.Event;
 
 public class DependencyImpl implements Dependency, DependencyContext {
 	protected ComponentContext m_component;
-	protected boolean m_available;
+	protected volatile boolean m_available; // volatile because accessed by getState method
 	protected boolean m_instanceBound;
-	protected boolean m_required;
+	protected volatile boolean m_required; // volatile because accessed by getState method
 	protected String m_add;
 	protected String m_change;
 	protected String m_remove;
 	protected boolean m_autoConfig;
 	protected String m_autoConfigInstance;
 	protected boolean m_autoConfigInvoked;
+    protected volatile boolean m_isStarted; // volatile because accessed by getState method
 
 	// TODO when we start injecting the "highest" one, this needs to be sorted at
 	// some point in time (note that we could choose to only do that if the dependency is
 	// actually injected (auto config is on for it)
 	protected final ConcurrentSkipListSet<Event> m_dependencies = new ConcurrentSkipListSet();
+	
+	public DependencyImpl() {		
+	}
+	
+	public DependencyImpl(DependencyImpl prototype) {
+		m_component = prototype.m_component;
+		m_available = prototype.m_available;
+		m_instanceBound = prototype.m_instanceBound;
+		m_required = prototype.m_required;
+		m_add = prototype.m_add;
+		m_change = prototype.m_change;
+		m_remove = prototype.m_remove;
+		m_autoConfig = prototype.m_autoConfig;
+		m_autoConfigInstance = prototype.m_autoConfigInstance;
+		m_autoConfigInvoked = prototype.m_autoConfigInvoked;
+	}
 	
 	public synchronized void add(final Event e) {
 		// since this method can be invoked by anyone from any thread, we need to
@@ -81,12 +97,16 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	}
 
 	protected void removeDependency(Event e) {
-		m_dependencies.remove(e);
-		m_available = (!m_dependencies.isEmpty());
+		// First check if we are about to become unavailable, but don't remove the dependency from our list now.
+		m_available = !(m_dependencies.contains(e) && m_dependencies.size() == 1);
+		// Run the state machine, which might stop the component, and then trigger our invokeRemove method.
+		m_component.handleChange();
+		// If the component is still active, then we can invoke our removed callback from our own decision
 		if (m_component.isAvailable()) {
 			invoke(m_remove, e);
 		}
-		m_component.handleChange();
+		// cleanup the removed event from our dependencies list.
+		m_dependencies.remove(e);
 	}
 
 	@Override
@@ -101,12 +121,14 @@ public class DependencyImpl implements Dependency, DependencyContext {
 
 	@Override
 	public void start() {
+        m_isStarted = true;
 		// you would normally start tracking this dependency here, so for example
 		// for a service dependency you might start a service tracker here
 	}
 
 	@Override
 	public void stop() {
+		m_isStarted = false;
 	}
 
 	@Override
@@ -219,6 +241,20 @@ public class DependencyImpl implements Dependency, DependencyContext {
         return this;
     }
     
+    @Override
+    public DependencyContext createCopy() {
+        return new DependencyImpl(this);
+    }
+    
+    public int getState() { // Can be called from any threads, but our class attributes are volatile
+    	if (m_isStarted) {
+    		return (isAvailable() ? 1 : 0) + (isRequired() ? 2 : 0);
+    	}
+    	else {
+    		return isRequired() ? ComponentDependencyDeclaration.STATE_REQUIRED : ComponentDependencyDeclaration.STATE_OPTIONAL;
+    	}
+    }
+   
     protected Object getService() {
         // only real dependencies can return actual service.
         return null;
