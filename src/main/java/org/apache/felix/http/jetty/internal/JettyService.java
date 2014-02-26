@@ -284,7 +284,11 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         // FELIX-4311: report the real version of Jetty...
         Dictionary headers = this.context.getBundle().getHeaders();
         String version = (String) headers.get("X-Jetty-Version");
-        if (version == null)
+        if (version != null)
+        {
+            System.setProperty("jetty.version", version);
+        }
+        else
         {
             version = Server.getVersion();
         }
