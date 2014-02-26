@@ -16,6 +16,7 @@ public class Ensure {
     private static PrintStream STREAM = System.out;
     int step = 0;
     private Throwable m_throwable;
+	private boolean previousStepFailed;
     
     public Ensure() {
         this(true);
@@ -38,8 +39,16 @@ public class Ensure {
      * @param nr the step we are in
      */
     public synchronized void step(int nr) {
+    	if (previousStepFailed) {
+    		throw new RuntimeException("can not enter into step " + nr + " (some previous steps failed)");
+    	}
         step++;
-        Assert.assertEquals(nr, step);
+        try {
+        	Assert.assertEquals(nr, step);
+        } catch (Throwable e) {
+        	previousStepFailed = true;
+        	throw e;
+        }
         if (DEBUG) {
             String info = getLineInfo(3);
             STREAM.println("[Ensure " + INSTANCE + "] step " + step + " [" + currentThread() + "] " + info);
@@ -57,6 +66,9 @@ public class Ensure {
      * Mark this point as the next step.
      */
     public synchronized void step() {
+    	if (previousStepFailed) {
+    		throw new RuntimeException("can not enter into step " + (step+1) + " (some previous steps failed)");
+    	}
         step++;
         if (DEBUG) {
             String info = getLineInfo(3);
