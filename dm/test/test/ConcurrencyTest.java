@@ -55,6 +55,7 @@ public class ConcurrencyTest {
 			}
 		};
 		
+		c.setImplementation(new Object()); // If not, we may see NullPointers when invoking lifecycle callbacks
 		c.start();
 		c.add(d);
 		c.add(l);
@@ -78,6 +79,7 @@ public class ConcurrencyTest {
 	@Test
 	public void createComponentAddAndRemoveDependenciesInParallelThreads() throws Exception {
 		final ComponentImpl c = new ComponentImpl();
+		c.setImplementation(new Object()); // If not, we may see NullPointers when invoking lifecycle callbacks
 		ExecutorService e = Executors.newFixedThreadPool(16); 
 		c.start();
 		for (int i = 0; i < 1000; i++) {
