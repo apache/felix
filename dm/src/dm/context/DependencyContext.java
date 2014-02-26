@@ -29,4 +29,5 @@ public interface DependencyContext {
     public Object getAutoConfigInstance();
     public boolean isAutoConfig();
     public String getAutoConfigName();
+    public DependencyContext createCopy();
 }
