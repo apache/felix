@@ -15,8 +15,13 @@ import tracker.ServiceTracker;
 import tracker.ServiceTrackerCustomizer;
 import dm.Component;
 import dm.ServiceDependency;
+import dm.context.DependencyContext;
 import dm.context.Event;
 
+// TODO implement:
+// - setPropagate(...)
+// - setCallback(Object instance, ...)
+// - getProperties()
 public class ServiceDependencyImpl extends DependencyImpl implements ServiceDependency, ServiceTrackerCustomizer {
 	private volatile ServiceTracker m_tracker;
     private final BundleContext m_context;
@@ -29,7 +34,6 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
     private boolean m_autoConfigInvoked;
     private volatile boolean m_debug = false;
     private volatile String m_debugKey = null;
-    protected volatile boolean m_isStarted;
     private volatile String m_autoConfigInstance;
     private volatile boolean m_propagate;
     private volatile Object m_propagateCallbackInstance;
@@ -118,9 +122,24 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 	    m_logger = logger;
         m_autoConfig = true;
 	}
+	
+	public ServiceDependencyImpl(ServiceDependencyImpl prototype) {
+		super(prototype);
+		// TODO check if some fields have been forgotten
+		m_logger = prototype.m_logger;
+		m_context = prototype.m_context;	
+        m_trackedServiceName = prototype.m_trackedServiceName;
+        m_nullObject = prototype.m_nullObject;
+        m_trackedServiceFilter = prototype.m_trackedServiceFilter;
+        m_trackedServiceFilterUnmodified = prototype.m_trackedServiceFilterUnmodified;
+        m_trackedServiceReference = prototype.m_trackedServiceReference;
+        m_autoConfigInstance = prototype.m_autoConfigInstance;
+        m_defaultImplementation = prototype.m_defaultImplementation;		
+	}
 	    	    
     // --- CREATION
     
+    @Override
     public ServiceDependency setDebug(String identifier) {
         this.m_debug = true;
         this.m_debugKey = identifier;
@@ -134,7 +153,8 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
         return this;
     }   
 
-    public ServiceDependency setService(Class serviceName) {
+    @Override
+   	public ServiceDependency setService(Class serviceName) {
         setService(serviceName, null, null);
         return this;
     }
@@ -159,9 +179,10 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 
 	@Override
 	public void start() {
+		boolean wasStarted = super.m_isStarted;
 		super.start();
 
-        if (!m_isStarted) {
+        if (!wasStarted) {
             if (m_trackedServiceName != null) {
                 if (m_trackedServiceFilter != null) {
                     try {
@@ -177,16 +198,18 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
             } else {
                 throw new IllegalStateException("Could not create tracker for dependency, no service name specified.");
             }
-            m_isStarted = true;
             m_tracker.open();
         }
 	}
 	
 	@Override
 	public void stop() {
+		boolean wasStarted = super.m_isStarted;
 		super.stop();
-		m_tracker.close();
-		m_tracker = null;
+		if (wasStarted) {
+			m_tracker.close();
+			m_tracker = null;
+		}
 	}
 
 	@Override
@@ -249,10 +272,41 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 	}
 	
 	@Override
-    public Class getAutoConfigType() {
+    public Class<?> getAutoConfigType() {
         return m_trackedServiceName;
     }
 	
+    @Override
+    public DependencyContext createCopy() {
+        return new ServiceDependencyImpl(this);
+    }
+    
+    @Override
+    public synchronized String toString() {
+        return "ServiceDependency[" + m_trackedServiceName + " " + m_trackedServiceFilterUnmodified + "]";
+    }
+
+    @Override
+    public String getName() {
+        StringBuilder sb = new StringBuilder();
+        if (m_trackedServiceName != null) {
+            sb.append(m_trackedServiceName.getName());
+            if (m_trackedServiceFilterUnmodified != null) {
+                sb.append(' ');
+                sb.append(m_trackedServiceFilterUnmodified);
+            }
+        }
+        if (m_trackedServiceReference != null) {
+            sb.append("{service.id=" + m_trackedServiceReference.getProperty(Constants.SERVICE_ID) + "}");
+        }
+        return sb.toString();
+    }
+    
+    @Override
+    public String getType() {
+        return "service";
+    }
+
     private BundleContext getBundleContext() {
         return m_context;
     }
