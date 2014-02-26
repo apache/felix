@@ -110,7 +110,7 @@ public class ComponentTest {
 			}
 			void destroy() {
 				System.out.println("destroy");
-				e.step(7);
+				e.step(9);
 			}
 		});
 		e.step(1);
@@ -521,7 +521,7 @@ public class ComponentTest {
 				e.step();
 			}
 			public void remove() {
-				e.step(5);
+				e.step();
 			}
 		});
 		DependencyImpl d1 = new DependencyImpl();
@@ -555,5 +555,42 @@ public class ComponentTest {
 		c.stop();
 		c.remove(d1);
 		Assert.assertEquals("Component stopped, should be unavailable again", false, c.isAvailable());
+	}
+	
+	@Test
+	public void createComponentAddAvailableDependencyRemoveDependencyCheckStopCalledBeforeUnbind() {
+		final Ensure e = new Ensure();
+		ComponentImpl c = new ComponentImpl();
+		c.setImplementation(new Object() {
+			void add() {
+				e.step(1);
+			}
+			void start() {
+				e.step(2);
+			}
+			void stop() {
+				e.step(4);
+			}
+			void remove() {
+				e.step(5);
+			}
+		});
+		DependencyImpl d = new DependencyImpl();
+		d.setCallbacks("add", "remove");
+		d.setRequired(true);
+		// add the dependency to the component
+		c.add(d);
+		// start the component
+		c.start();
+		// make the dependency available, we expect the add callback
+		// to be invoked here, then start is called.
+		d.add(new EventImpl());
+		e.step(3);
+		// remove the dependency, should trigger the stop, then remove callback
+		d.remove(new EventImpl());
+		e.step(6);
+		c.stop();
+		c.remove(d);
+		Assert.assertEquals("Component stopped, should be unavailable", false, c.isAvailable());
 	}
 }
