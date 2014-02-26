@@ -20,7 +20,8 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	protected String m_autoConfigInstance;
 	protected boolean m_autoConfigInvoked;
     protected volatile boolean m_isStarted; // volatile because accessed by getState method
-
+    private Object m_callbackInstance;
+    
 	// TODO when we start injecting the "highest" one, this needs to be sorted at
 	// some point in time (note that we could choose to only do that if the dependency is
 	// actually injected (auto config is on for it)
@@ -40,6 +41,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		m_autoConfig = prototype.m_autoConfig;
 		m_autoConfigInstance = prototype.m_autoConfigInstance;
 		m_autoConfigInvoked = prototype.m_autoConfigInvoked;
+		m_callbackInstance = prototype.m_callbackInstance;
 	}
 	
 	public synchronized void add(final Event e) {
@@ -152,9 +154,18 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	}
 	
 	public Dependency setCallbacks(String add, String change, String remove) {
+		return setCallbacks(null, add, change, remove);		
+	}
+	
+	public Dependency setCallbacks(Object instance, String add, String remove) {
+		return setCallbacks(instance, add, null, remove);
+	}
+	
+	public Dependency setCallbacks(Object instance, String add, String change, String remove) {
         if ((add != null || change != null || remove != null) && !m_autoConfigInvoked) {
             setAutoConfig(false);
         }
+        m_callbackInstance = instance;
 		m_add = add;
 		m_change = change;
 		m_remove = remove;
@@ -186,8 +197,11 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	}
 	
 	public Object[] getInstances() {
-		// TODO what instance(s) should be called should be configurable
-		return m_component.getInstances();
+        if (m_callbackInstance == null) {
+        	return m_component.getInstances();
+        } else {
+            return new Object[]{m_callbackInstance};
+        }
 	}
 
 	public void invoke(String method, Event e) {
