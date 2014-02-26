@@ -341,10 +341,10 @@ public class ComponentImpl implements Component, ComponentContext {
             }
             catch (InvocationTargetException e) {
                 // the method itself threw an exception, log that
-                //m_logger.log(Logger.LOG_ERROR, "Invocation of '" + methodName + "' failed.", e.getCause());
+                m_logger.log(Logger.LOG_ERROR, "Invocation of '" + methodName + "' failed.", e.getCause());
             }
-            catch (Exception e) {
-                //m_logger.log(Logger.LOG_ERROR, "Could not invoke '" + methodName + "'.", e);
+            catch (Throwable e) {
+                m_logger.log(Logger.LOG_ERROR, "Could not invoke '" + methodName + "'.", e);
             }
         }
     }
