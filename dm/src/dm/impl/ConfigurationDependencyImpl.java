@@ -9,6 +9,7 @@ import org.osgi.service.cm.ManagedService;
 
 import dm.context.Event;
 
+// Todo implements some methods from DependencyImpl (createCopy, etc ...)
 public class ConfigurationDependencyImpl extends DependencyImpl implements ManagedService {
     private Dictionary m_settings;
     private String m_callback = "updated";
