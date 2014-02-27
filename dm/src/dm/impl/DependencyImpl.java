@@ -1,5 +1,6 @@
 package dm.impl;
 
+import java.util.Dictionary;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import dm.ComponentDependencyDeclaration;
@@ -273,4 +274,16 @@ public class DependencyImpl implements Dependency, DependencyContext {
         // only real dependencies can return actual service.
         return null;
     }
+
+	@Override
+	public boolean isPropagated() {
+		// specific for this type of dependency
+		return false;
+	}
+
+	@Override
+	public Dictionary getProperties() {
+		// specific for this type of dependency
+		return null;
+	}
 }
