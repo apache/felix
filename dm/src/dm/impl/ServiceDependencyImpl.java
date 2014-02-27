@@ -235,6 +235,7 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 	
 	@Override
 	public void invoke(String method, Event e) {
+		if (method == null) return;
 		ServiceEventImpl se = (ServiceEventImpl) e;
 		m_component.invokeCallbackMethod(getInstances(), method,
 		    new Class[][]{
@@ -322,6 +323,7 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
         return this;
 	}
 	
+	@Override
     public Dictionary getProperties() {
         Object service = null;
         ServiceEventImpl se = m_dependencies.size() > 0 ? (ServiceEventImpl) m_dependencies.first() : null;
@@ -352,6 +354,7 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
         }
     }	
 
+    @Override
     public boolean isPropagated() {
         return m_propagate;
     }
