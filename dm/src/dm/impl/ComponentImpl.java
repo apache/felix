@@ -7,6 +7,7 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -47,6 +48,22 @@ public class ComponentImpl implements Component, ComponentContext {
     private final Map m_autoConfig = new ConcurrentHashMap();
     private final Map m_autoConfigInstance = new ConcurrentHashMap();
 
+    // configuration (static)
+    private volatile String m_callbackInit;
+    private volatile String m_callbackStart;
+    private volatile String m_callbackStop;
+    private volatile String m_callbackDestroy;
+    private volatile Object m_callbackInstance;
+    
+    // instance factory
+	private volatile Object m_instanceFactory;
+	private volatile String m_instanceFactoryCreateMethod;
+	
+	// composition manager
+	private volatile Object m_compositionManager;
+	private volatile String m_compositionManagerGetMethod;
+	private volatile Object m_compositionManagerInstance;
+
 	public ComponentImpl() {
 	    this(null, null, new Logger(null));
 	}
@@ -59,6 +76,10 @@ public class ComponentImpl implements Component, ComponentContext {
         m_autoConfig.put(ServiceRegistration.class, Boolean.TRUE);
         m_autoConfig.put(DependencyManager.class, Boolean.TRUE);
         m_autoConfig.put(Component.class, Boolean.TRUE);
+        m_callbackInit = "init";
+        m_callbackStart = "start";
+        m_callbackStop = "stop";
+        m_callbackDestroy = "destroy";
     }
 
 	public SerialExecutor getExecutor() {
@@ -128,7 +149,7 @@ public class ComponentImpl implements Component, ComponentContext {
 	}
 
 	@Override
-	public synchronized Component setInterface(String serviceName, Dictionary properties) {
+	public Component setInterface(String serviceName, Dictionary properties) {
 		// ensureNotActive(); // TODO
 	    m_serviceName = serviceName;
 	    m_serviceProperties = properties;
@@ -136,7 +157,7 @@ public class ComponentImpl implements Component, ComponentContext {
 	}
 
 	@Override
-	public synchronized Component setInterface(String[] serviceName, Dictionary properties) {
+	public Component setInterface(String[] serviceName, Dictionary properties) {
 	    // ensureNotActive(); // TODO
 	    m_serviceName = serviceName;
 	    m_serviceProperties = properties;
@@ -260,14 +281,14 @@ public class ComponentImpl implements Component, ComponentContext {
 			instantiateComponent();
 			invokeAddRequiredDependencies();
 			invokeAutoConfigDependencies();
-	        invoke("init" /* TODO make callbacks configurable */ );
+	        invoke(m_callbackInit);
 			notifyListeners(newState);
 			return true;
 		}
 		if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.TRACKING_OPTIONAL) {
 			invokeAddRequiredInstanceBoundDependencies();
 			invokeAutoConfigInstanceBoundDependencies();
-			invoke("start");
+			invoke(m_callbackStart);
 			invokeAddOptionalDependencies();
 			registerService();
 			notifyListeners(newState);
@@ -275,13 +296,13 @@ public class ComponentImpl implements Component, ComponentContext {
 		}
 		if (oldState == ComponentState.TRACKING_OPTIONAL && newState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
 			unregisterService();
-			invoke("stop");
+			invoke(m_callbackStop);
 			invokeRemoveInstanceBoundDependencies();
 			notifyListeners(newState);
 			return true;
 		}
 		if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.WAITING_FOR_REQUIRED) {
-			invoke("destroy");
+			invoke(m_callbackDestroy);
 			invokeRemoveRequiredDependencies();
 			notifyListeners(newState);
 			if (! someDependenciesNeedInstance()) {
@@ -382,6 +403,41 @@ public class ComponentImpl implements Component, ComponentContext {
                 }
             }
             else {
+	        	if (m_instanceFactoryCreateMethod != null) {
+	        		Object factory = null;
+		        	if (m_instanceFactory != null) {
+		        		if (m_instanceFactory instanceof Class) {
+		        			try {
+								factory = createInstance((Class) m_instanceFactory);
+							}
+		                    catch (Exception e) {
+		                        m_logger.log(Logger.LOG_ERROR, "Could not create factory instance of class " + m_instanceFactory + ".", e);
+		                    }
+		        		}
+		        		else {
+		        			factory = m_instanceFactory;
+		        		}
+		        	}
+		        	else {
+		        		// TODO review if we want to try to default to something if not specified
+		        	    // for now the JavaDoc of setFactory(method) reflects the fact that we need
+		        	    // to review it
+		        	}
+		        	if (factory == null) {
+                        m_logger.log(Logger.LOG_ERROR, "Factory cannot be null.");
+		        	}
+		        	else {
+    		        	try {
+    		        		m_componentInstance = InvocationUtil.invokeMethod(factory, factory.getClass(), m_instanceFactoryCreateMethod, new Class[][] {{}}, new Object[][] {{}}, false);
+    					}
+    		        	catch (Exception e) {
+    	                    m_logger.log(Logger.LOG_ERROR, "Could not create service instance using factory " + factory + " method " + m_instanceFactoryCreateMethod + ".", e);
+    					}
+		        	}
+	        	}
+            }
+            
+            if (m_componentInstance == null) {
                 m_componentInstance = m_componentDefinition;
             }
             
@@ -462,7 +518,6 @@ public class ComponentImpl implements Component, ComponentContext {
 	}
 
 	private void invoke(String name) {
-//		System.out.println("invoke " + name);
         if (name != null) {
             // if a callback instance was specified, look for the method there, if not,
             // ask the service for its composition instances
@@ -474,9 +529,8 @@ public class ComponentImpl implements Component, ComponentContext {
     }
     
     public Object[] getInstances() {
-    	// TODO
-//      Object[] instances = m_callbackInstance != null ? new Object[] { m_callbackInstance } : getCompositionInstances();
-    	return new Object[] { m_componentInstance };
+    	Object[] instances = m_callbackInstance != null ? new Object[] { m_callbackInstance } : getCompositionInstances();
+    	return instances;
     }
     
     public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters) {
@@ -588,4 +642,116 @@ public class ComponentImpl implements Component, ComponentContext {
             }
         }
     }
+
+	@Override
+	public ServiceRegistration getServiceRegistration() {
+        return m_registration;
+	}
+
+	@Override
+	public Object getService() {
+		return m_componentInstance;
+	}
+
+	@Override
+	public Dictionary getServiceProperties() {
+		if (m_serviceProperties != null) {
+			// Applied patch from FELIX-4304
+			Hashtable serviceProperties = new Hashtable();
+			addTo(serviceProperties, m_serviceProperties);
+			return serviceProperties;
+		}
+		return null;
+	}
+
+	@Override
+	public Component setServiceProperties(final Dictionary serviceProperties) {
+	    getExecutor().execute(new Runnable() {
+			@Override
+			public void run() {
+			    Dictionary properties = null;
+		        m_serviceProperties = serviceProperties;
+		        if ((m_registration != null) && (m_serviceName != null)) {
+		            properties = calculateServiceProperties();
+			        m_registration.setProperties(properties);
+		        }
+			}
+		});
+	    return this;
+	}
+	
+	public Component setCallbacks(String init, String start, String stop, String destroy) {
+	    // ensureNotActive(); // TODO
+	    m_callbackInit = init;
+	    m_callbackStart = start;
+	    m_callbackStop = stop;
+	    m_callbackDestroy = destroy;
+	    return this;
+	}
+	
+    public synchronized Component setCallbacks(Object instance, String init, String start, String stop, String destroy) {
+	    // ensureNotActive(); // TODO
+        m_callbackInstance = instance;
+        m_callbackInit = init;
+        m_callbackStart = start;
+        m_callbackStop = stop;
+        m_callbackDestroy = destroy;
+        return this;
+    }
+
+	@Override
+	public Component setFactory(Object factory, String createMethod) {
+	    // ensureNotActive(); // TODO
+		m_instanceFactory = factory;
+		m_instanceFactoryCreateMethod = createMethod;
+		return this;
+	}
+
+	@Override
+	public Component setFactory(String createMethod) {
+		return setFactory(null, createMethod);
+	}
+
+	@Override
+	public Component setComposition(Object instance, String getMethod) {
+	    // ensureNotActive(); // TODO
+		m_compositionManager = instance;
+		m_compositionManagerGetMethod = getMethod;
+		return this;
+	}
+
+	@Override
+	public Component setComposition(String getMethod) {
+		return setComposition(null, getMethod);
+	}
+
+	private Object[] getCompositionInstances() {
+        Object[] instances = null;
+        if (m_compositionManagerGetMethod != null) {
+            if (m_compositionManager != null) {
+                m_compositionManagerInstance = m_compositionManager;
+            }
+            else {
+                m_compositionManagerInstance = m_componentInstance;
+            }
+            if (m_compositionManagerInstance != null) {
+                try {
+                    instances = (Object[]) InvocationUtil.invokeMethod(m_compositionManagerInstance, m_compositionManagerInstance.getClass(), m_compositionManagerGetMethod, new Class[][] {{}}, new Object[][] {{}}, false);
+                }
+                catch (Exception e) {
+                    m_logger.log(Logger.LOG_ERROR, "Could not obtain instances from the composition manager.", e);
+                    instances = m_componentInstance == null ? new Object[] {} : new Object[] { m_componentInstance };
+                }
+            }
+        }
+        else {
+            instances = m_componentInstance == null ? new Object[] {} : new Object[] { m_componentInstance };
+        }
+        return instances;
+	}
+
+	@Override
+	public DependencyManager getDependencyManager() {
+        return m_manager;
+	}
 }
