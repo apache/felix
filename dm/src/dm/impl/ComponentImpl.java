@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -46,15 +47,21 @@ public class ComponentImpl implements Component, ComponentContext {
 	}
 	
 	@Override
-	public Component add(final Dependency d) {
+	public Component add(final Dependency[] dependencies) {
 		getExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
-				DependencyContext dc = (DependencyContext) d;
-				m_dependencies.add(dc);
-				dc.add(ComponentImpl.this);
-				if (!(m_state == ComponentState.INACTIVE)) {
-					dc.setInstanceBound(true);
+				List<DependencyContext> instanceBoundDeps = new ArrayList();
+				for (Dependency d : dependencies) {
+					DependencyContext dc = (DependencyContext) d;
+					m_dependencies.add(dc);
+					dc.add(ComponentImpl.this);
+					if (!(m_state == ComponentState.INACTIVE)) {
+						dc.setInstanceBound(true);
+						instanceBoundDeps.add(dc);
+					}
+				}
+				for (DependencyContext dc : instanceBoundDeps) {
 					dc.start();
 				}
 				handleChange();
