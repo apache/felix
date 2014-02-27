@@ -235,7 +235,6 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 	
 	@Override
 	public void invoke(String method, Event e) {
-		if (method == null) return;
 		ServiceEventImpl se = (ServiceEventImpl) e;
 		m_component.invokeCallbackMethod(getInstances(), method,
 		    new Class[][]{
