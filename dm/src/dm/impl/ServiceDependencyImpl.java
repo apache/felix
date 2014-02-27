@@ -1,15 +1,19 @@
 package dm.impl;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.AbstractMap;
+import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.log.LogService;
 
 import tracker.ServiceTracker;
 import tracker.ServiceTrackerCustomizer;
@@ -18,10 +22,6 @@ import dm.ServiceDependency;
 import dm.context.DependencyContext;
 import dm.context.Event;
 
-// TODO implement:
-// - setPropagate(...)
-// - setCallback(Object instance, ...)
-// - getProperties()
 public class ServiceDependencyImpl extends DependencyImpl implements ServiceDependency, ServiceTrackerCustomizer {
 	private volatile ServiceTracker m_tracker;
     private final BundleContext m_context;
@@ -305,6 +305,55 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
     @Override
     public String getType() {
         return "service";
+    }
+
+	@Override
+	public ServiceDependency setPropagate(boolean propagate) {
+        ensureNotActive();
+        m_propagate = propagate;
+        return this;
+	}
+
+	@Override
+	public ServiceDependency setPropagate(Object instance, String method) {
+        setPropagate(instance != null && method != null);
+        m_propagateCallbackInstance = instance;
+        m_propagateCallbackMethod = method;
+        return this;
+	}
+	
+    public Dictionary getProperties() {
+        Object service = null;
+        ServiceEventImpl se = m_dependencies.size() > 0 ? (ServiceEventImpl) m_dependencies.first() : null;
+        if (se != null) {
+            if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
+                try {
+                    return (Dictionary) InvocationUtil.invokeCallbackMethod(m_propagateCallbackInstance, m_propagateCallbackMethod,
+                            new Class[][]{{ServiceReference.class, Object.class}, {ServiceReference.class}}, new Object[][]{
+                                    {se.getReference(), se.getService()}, {se.getReference()}});
+                } catch (InvocationTargetException e) {
+                    m_logger.log(LogService.LOG_WARNING, "Exception while invoking callback method", e.getCause());
+                } catch (Exception e) {
+                    m_logger.log(LogService.LOG_WARNING, "Exception while trying to invoke callback method", e);
+                }
+                throw new IllegalStateException("Could not invoke callback");
+            } else {
+                Properties props = new Properties();
+                String[] keys = se.getReference().getPropertyKeys();
+                for (int i = 0; i < keys.length; i++) {
+                    if (!(keys[i].equals(Constants.SERVICE_ID) || keys[i].equals(Constants.SERVICE_PID))) {
+                        props.put(keys[i], se.getReference().getProperty(keys[i]));
+                    }
+                }
+                return props;
+            }
+        } else {
+            throw new IllegalStateException("cannot find service reference");
+        }
+    }	
+
+    public boolean isPropagated() {
+        return m_propagate;
     }
 
     private BundleContext getBundleContext() {
