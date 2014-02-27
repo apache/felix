@@ -5,10 +5,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import dm.Component;
 import dm.ComponentStateListener;
@@ -19,6 +25,10 @@ import dm.context.ComponentState;
 import dm.context.DependencyContext;
 
 public class ComponentImpl implements Component, ComponentContext {
+	private static final ServiceRegistration NULL_REGISTRATION = (ServiceRegistration) Proxy
+			.newProxyInstance(ComponentImpl.class.getClassLoader(),
+					new Class[] { ServiceRegistration.class },
+					new DefaultNullObject());
     private static final Class[] VOID = new Class[] {};
 	private final SerialExecutor m_executor = new SerialExecutor(new Logger(null));
 	private ComponentState m_state = ComponentState.INACTIVE;
@@ -31,7 +41,12 @@ public class ComponentImpl implements Component, ComponentContext {
     private final Object SYNC = new Object();
 	private Object m_componentDefinition;
 	private Object m_componentInstance;
-	
+    private volatile Object m_serviceName;
+    private volatile Dictionary m_serviceProperties;
+    private volatile ServiceRegistration m_registration;
+    private final Map m_autoConfig = new ConcurrentHashMap();
+    private final Map m_autoConfigInstance = new ConcurrentHashMap();
+
 	public ComponentImpl() {
 	    this(null, null, new Logger(null));
 	}
@@ -40,6 +55,10 @@ public class ComponentImpl implements Component, ComponentContext {
         m_context = context;
         m_manager = manager;
         m_logger = logger;
+        m_autoConfig.put(BundleContext.class, Boolean.TRUE);
+        m_autoConfig.put(ServiceRegistration.class, Boolean.TRUE);
+        m_autoConfig.put(DependencyManager.class, Boolean.TRUE);
+        m_autoConfig.put(Component.class, Boolean.TRUE);
     }
 
 	public SerialExecutor getExecutor() {
@@ -109,6 +128,22 @@ public class ComponentImpl implements Component, ComponentContext {
 	}
 
 	@Override
+	public synchronized Component setInterface(String serviceName, Dictionary properties) {
+		// ensureNotActive(); // TODO
+	    m_serviceName = serviceName;
+	    m_serviceProperties = properties;
+	    return this;
+	}
+
+	@Override
+	public synchronized Component setInterface(String[] serviceName, Dictionary properties) {
+	    // ensureNotActive(); // TODO
+	    m_serviceName = serviceName;
+	    m_serviceProperties = properties;
+	    return this;
+	}
+
+	@Override
 	public void handleChange() {
 		ComponentState oldState;
 		ComponentState newState;
@@ -119,6 +154,26 @@ public class ComponentImpl implements Component, ComponentContext {
 		}
 		while (performTransition(oldState, newState));
 	}
+	
+    public Component setAutoConfig(Class clazz, boolean autoConfig) {
+        m_autoConfig.put(clazz, Boolean.valueOf(autoConfig));
+        return this;
+    }
+    
+    public Component setAutoConfig(Class clazz, String instanceName) {
+        m_autoConfig.put(clazz, Boolean.valueOf(instanceName != null));
+        m_autoConfigInstance.put(clazz, instanceName);
+        return this;
+    }
+    
+    public boolean getAutoConfig(Class clazz) {
+        Boolean result = (Boolean) m_autoConfig.get(clazz);
+        return (result != null && result.booleanValue());
+    }
+    
+    public String getAutoConfigInstance(Class clazz) {
+        return (String) m_autoConfigInstance.get(clazz);
+    }
 
 	/** Based on the current state, calculate the new state. */
 	private ComponentState calculateNewState(ComponentState currentState) {
@@ -214,10 +269,12 @@ public class ComponentImpl implements Component, ComponentContext {
 			invokeAutoConfigInstanceBoundDependencies();
 			invoke("start");
 			invokeAddOptionalDependencies();
+			registerService();
 			notifyListeners(newState);
 			return true;
 		}
 		if (oldState == ComponentState.TRACKING_OPTIONAL && newState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
+			unregisterService();
 			invoke("stop");
 			invokeRemoveInstanceBoundDependencies();
 			notifyListeners(newState);
@@ -243,6 +300,76 @@ public class ComponentImpl implements Component, ComponentContext {
 		return false;
 	}
 	
+    private void registerService() {
+        if (m_context != null && m_serviceName != null) {
+            ServiceRegistrationImpl wrapper = new ServiceRegistrationImpl();
+            m_registration = wrapper;
+            if (((Boolean) m_autoConfig.get(ServiceRegistration.class)).booleanValue()) {
+                configureImplementation(ServiceRegistration.class, m_registration, (String) m_autoConfigInstance.get(ServiceRegistration.class));
+            }
+            
+            // service name can either be a string or an array of strings
+            ServiceRegistration registration;
+
+            // determine service properties
+            Dictionary properties = calculateServiceProperties();
+
+            // register the service
+            try {
+                if (m_serviceName instanceof String) {
+                    registration = m_context.registerService((String) m_serviceName, m_componentInstance, properties);
+                }
+                else {
+                    registration = m_context.registerService((String[]) m_serviceName, m_componentInstance, properties);
+                }
+                wrapper.setServiceRegistration(registration);
+            }
+            catch (IllegalArgumentException iae) {
+                m_logger.log(Logger.LOG_ERROR, "Could not register service " + m_componentInstance, iae);
+                // set the registration to an illegal state object, which will make all invocations on this
+                // wrapper fail with an ISE (which also occurs when the SR becomes invalid)
+                wrapper.setIllegalState();
+            }
+        }
+    }
+
+    private void unregisterService() {
+        if (m_serviceName != null && m_registration != null) {
+            m_registration.unregister();
+            configureImplementation(ServiceRegistration.class, NULL_REGISTRATION);
+            m_registration = null;
+        }
+    }
+
+    private Dictionary calculateServiceProperties() {
+		Dictionary properties = new Properties();
+		addTo(properties, m_serviceProperties);
+		for (int i = 0; i < m_dependencies.size(); i++) {
+			DependencyContext d = (DependencyContext) m_dependencies.get(i);
+			if (d.isPropagated() && d.isAvailable()) {
+				Dictionary dict = d.getProperties();
+				addTo(properties, dict);
+			}
+		}
+		if (properties.size() == 0) {
+			properties = null;
+		}
+		return properties;
+	}
+
+	private void addTo(Dictionary properties, Dictionary additional) {
+		if (properties == null) {
+			throw new IllegalArgumentException("Dictionary to add to cannot be null.");
+		}
+		if (additional != null) {
+			Enumeration e = additional.keys();
+			while (e.hasMoreElements()) {
+				Object key = e.nextElement();
+				properties.put(key, additional.get(key));
+			}
+		}
+	}
+
 	private void instantiateComponent() {
 		// TODO add more complex factory instantiations of one or more components in a composition here
 	    if (m_componentInstance == null) {
@@ -256,6 +383,20 @@ public class ComponentImpl implements Component, ComponentContext {
             }
             else {
                 m_componentInstance = m_componentDefinition;
+            }
+            
+	        // configure the bundle context
+	        if (((Boolean) m_autoConfig.get(BundleContext.class)).booleanValue()) {
+	            configureImplementation(BundleContext.class, m_context, (String) m_autoConfigInstance.get(BundleContext.class));
+	        }
+            if (((Boolean) m_autoConfig.get(ServiceRegistration.class)).booleanValue()) {
+                configureImplementation(ServiceRegistration.class, NULL_REGISTRATION, (String) m_autoConfigInstance.get(ServiceRegistration.class));
+            }
+            if (((Boolean) m_autoConfig.get(DependencyManager.class)).booleanValue()) {
+                configureImplementation(DependencyManager.class, m_manager, (String) m_autoConfigInstance.get(DependencyManager.class));
+            }
+            if (((Boolean) m_autoConfig.get(Component.class)).booleanValue()) {
+                configureImplementation(Component.class, this, (String) m_autoConfigInstance.get(Component.class));
             }
 	    }
 	}
@@ -399,6 +540,10 @@ public class ComponentImpl implements Component, ComponentContext {
 		return this;
 	}
 	
+    private void configureImplementation(Class clazz, Object instance) {
+        configureImplementation(clazz, instance, null);
+    }
+
     /**
      * Configure a field in the service implementation. The service implementation
      * is searched for fields that have the same type as the class that was specified
