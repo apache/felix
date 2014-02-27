@@ -1,5 +1,7 @@
 package dm.context;
 
+import java.util.Dictionary;
+
 
 public interface DependencyContext {
 	public void invokeAdd();
@@ -30,4 +32,6 @@ public interface DependencyContext {
     public boolean isAutoConfig();
     public String getAutoConfigName();
     public DependencyContext createCopy();
+    public boolean isPropagated();
+    public Dictionary getProperties();
 }
