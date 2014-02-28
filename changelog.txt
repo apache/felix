@@ -1,3 +1,14 @@
+Changes in 1.0.4
+----------------
+** Bug
+    * [FELIX-4437] - Zip Writer does not pass the correct isZip status to the InventoryPrinterHandler
+
+
+Changes in 1.0.2
+----------------
+    * [FELIX-4078] - ConfigurationPrinterAdapter.getMethod should not only consider implementation class
+
+
 Initial Release 1.0.0
 ---------------------
 
