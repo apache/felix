@@ -126,7 +126,7 @@ public class Validator {
 
                 if (component.getModified() != null) {
                     if ( this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
-                        this.checkLifecycleMethod(component.getModified(), true);
+                        this.checkLifecycleMethod(component.getModified(), true, true);
                     } else {
                         this.logError(component, "If modified version is specified, spec version must be " +
                             SpecVersion.VERSION_1_1.name() + " or higher : " + component.getModified());
