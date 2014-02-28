@@ -317,9 +317,9 @@ public class MetaTypeIO {
         }
 
         String result = value.trim();
+        result = result.replace("\\", "\\\\");
         result = result.replace(" ", "\\ ");
         result = result.replace(",", "\\,");
-        result = result.replace("\\", "\\\\");
         return result;
     }
 
