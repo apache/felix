@@ -121,8 +121,8 @@ public class Validator {
                 final String deactivateName = component.getDeactivate() == null ? "deactivate" : component.getDeactivate();
 
                 // check activate and deactivate methods
-                this.checkLifecycleMethod(activateName, true);
-                this.checkLifecycleMethod(deactivateName, false);
+                this.checkLifecycleMethod(activateName, true, component.getActivate() != null);
+                this.checkLifecycleMethod(deactivateName, false, component.getDeactivate() != null);
 
                 if (component.getModified() != null) {
                     if ( this.options.getSpecVersion().ordinal() >= SpecVersion.VERSION_1_1.ordinal() ) {
@@ -227,17 +227,15 @@ public class Validator {
     /**
      * Check for existence of lifecycle methods.
      *
-     * @param specVersion
-     *            The spec version
-     * @param javaClass
-     *            The java class to inspect.
      * @param methodName
      *            The method name.
-     * @param warnings
-     *            The list of warnings used to add new warnings.
+     * @param isActivate Whether this is the activate or deactivate method.
+     * @param isSpecified Whether this method has explicitely been specified or is just
+     *                    the default
      */
     private void checkLifecycleMethod(final String methodName,
-                                      final boolean isActivate)
+                                      final boolean isActivate,
+                                      final boolean isSpecified)
     throws SCRDescriptorException {
         // first candidate is (de)activate(ComponentContext)
         Method method = this.getMethod(methodName, new String[] { TYPE_COMPONENT_CONTEXT });
@@ -313,17 +311,26 @@ public class Validator {
                 }
             }
         }
-        // if no method is found, we check for any method with that name to print some warnings!
+        // if no method is found, we check for any method with that name to print some warnings or errors!
         if (method == null) {
            final Method[] methods = this.container.getClassDescription().getDescribedClass().getDeclaredMethods();
             for (int i = 0; i < methods.length; i++) {
                 if (methodName.equals(methods[i].getName())) {
                     if (methods[i].getParameterTypes() == null || methods[i].getParameterTypes().length != 1) {
-                        this.logWarn(container.getComponentDescription(), "Lifecycle method " + methods[i].getName() + " has wrong number of arguments");
+                        final String msg = "Lifecycle method " + methods[i].getName() + " has wrong number of arguments";
+                        if ( isSpecified ) {
+                            this.logError(container.getComponentDescription(), msg);
+                        } else {
+                            this.logWarn(container.getComponentDescription(), msg);
+                        }
                     } else {
-                        this.logWarn(container.getComponentDescription(),
-                            "Lifecycle method " + methods[i].getName() + " has wrong argument "
-                            + methods[i].getParameterTypes()[0].getName());
+                        final String msg = "Lifecycle method " + methods[i].getName() + " has wrong argument "
+                                + methods[i].getParameterTypes()[0].getName();
+                        if ( isSpecified ) {
+                            this.logError(container.getComponentDescription(), msg);
+                        } else {
+                            this.logWarn(container.getComponentDescription(), msg);
+                        }
                     }
                 }
             }
