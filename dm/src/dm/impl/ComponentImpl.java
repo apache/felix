@@ -3,6 +3,7 @@ package dm.impl;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -13,11 +14,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import dm.Component;
+import dm.ComponentDeclaration;
+import dm.ComponentDependencyDeclaration;
 import dm.ComponentStateListener;
 import dm.Dependency;
 import dm.DependencyManager;
@@ -25,7 +29,7 @@ import dm.context.ComponentContext;
 import dm.context.ComponentState;
 import dm.context.DependencyContext;
 
-public class ComponentImpl implements Component, ComponentContext {
+public class ComponentImpl implements Component, ComponentContext, ComponentDeclaration {
 	private static final ServiceRegistration NULL_REGISTRATION = (ServiceRegistration) Proxy
 			.newProxyInstance(ComponentImpl.class.getClassLoader(),
 					new Class[] { ServiceRegistration.class },
@@ -47,6 +51,8 @@ public class ComponentImpl implements Component, ComponentContext {
     private volatile ServiceRegistration m_registration;
     private final Map m_autoConfig = new ConcurrentHashMap();
     private final Map m_autoConfigInstance = new ConcurrentHashMap();
+    private final long m_id;
+    private static AtomicLong m_idGenerator = new AtomicLong();
 
     // configuration (static)
     private volatile String m_callbackInit;
@@ -64,7 +70,31 @@ public class ComponentImpl implements Component, ComponentContext {
 	private volatile String m_compositionManagerGetMethod;
 	private volatile Object m_compositionManagerInstance;
 
-	public ComponentImpl() {
+    static class SCDImpl implements ComponentDependencyDeclaration {
+        private final String m_name;
+        private final int m_state;
+        private final String m_type;
+
+        public SCDImpl(String name, int state, String type) {
+            m_name = name;
+            m_state = state;
+            m_type = type;
+        }
+
+        public String getName() {
+            return m_name;
+        }
+
+        public int getState() {
+            return m_state;
+        }
+
+        public String getType() {
+            return m_type;
+        }
+    }
+
+    public ComponentImpl() {
 	    this(null, null, new Logger(null));
 	}
 	
@@ -80,6 +110,7 @@ public class ComponentImpl implements Component, ComponentContext {
         m_callbackStart = "start";
         m_callbackStop = "stop";
         m_callbackDestroy = "destroy";
+        m_id = m_idGenerator.getAndIncrement();
     }
 
 	public SerialExecutor getExecutor() {
@@ -754,4 +785,141 @@ public class ComponentImpl implements Component, ComponentContext {
 	public DependencyManager getDependencyManager() {
         return m_manager;
 	}
+	
+    public ComponentDependencyDeclaration[] getComponentDependencies() {
+        List deps = getDependencies();
+        if (deps != null) {
+            ComponentDependencyDeclaration[] result = new ComponentDependencyDeclaration[deps.size()];
+            for (int i = 0; i < result.length; i++) {
+                DependencyContext dep = (DependencyContext) deps.get(i);
+                if (dep instanceof ComponentDependencyDeclaration) {
+                    result[i] = (ComponentDependencyDeclaration) dep;
+                }
+                else {
+                    result[i] = new SCDImpl(dep.toString(), (dep.isAvailable() ? 1 : 0) + (dep.isRequired() ? 2 : 0), dep.getClass().getName());
+                }
+            }
+            return result;
+        }
+        return null;
+    }
+    
+    public String getName() {
+        StringBuffer sb = new StringBuffer();
+        Object serviceName = m_serviceName;
+        if (serviceName instanceof String[]) {
+            String[] names = (String[]) serviceName;
+            for (int i = 0; i < names.length; i++) {
+                if (i > 0) {
+                    sb.append(", ");
+                }
+                sb.append(names[i]);
+            }
+            appendProperties(sb);
+        } else if (serviceName instanceof String) {
+            sb.append(serviceName.toString());
+            appendProperties(sb);
+        } else {
+            Object implementation = m_componentDefinition;
+            if (implementation != null) {
+                if (implementation instanceof Class) {
+                    sb.append(((Class) implementation).getName());
+                } else {
+                    // If the implementation instance does not override "toString", just display
+                    // the class name, else display the component using its toString method
+                    try {
+                	Method m = implementation.getClass().getMethod("toString", new Class[0]);
+                        if (m.getDeclaringClass().equals(Object.class)) {
+                            sb.append(implementation.getClass().getName());
+                        } else {
+                            sb.append(implementation.toString());
+                        }
+                    }  catch (java.lang.NoSuchMethodException e) {
+                        // Just display the class name
+                        sb.append(implementation.getClass().getName());
+                    }
+                }
+            } else {
+                sb.append(super.toString());
+            }
+        }
+        return sb.toString();
+    }
+    
+    private void appendProperties(StringBuffer result) {
+        Dictionary properties = calculateServiceProperties();
+        if (properties != null) {
+            result.append("(");
+            Enumeration enumeration = properties.keys();
+            while (enumeration.hasMoreElements()) {
+                Object key = enumeration.nextElement();
+                result.append(key.toString());
+                result.append('=');
+                Object value = properties.get(key);
+                if (value instanceof String[]) {
+                    String[] values = (String[]) value;
+                    result.append('{');
+                    for (int i = 0; i < values.length; i++) {
+                        if (i > 0) {
+                            result.append(',');
+                        }
+                        result.append(values[i].toString());
+                    }
+                    result.append('}');
+                }
+                else {
+                    result.append(value.toString());
+                }
+                if (enumeration.hasMoreElements()) {
+                    result.append(',');
+                }
+            }
+            result.append(")");
+        }
+    }
+    
+    public BundleContext getBundleContext() {
+        return m_context;
+    }
+    
+    public long getId() {
+        return m_id;
+    }
+    
+    public String getClassName() {
+        Object serviceInstance = m_componentInstance;
+        if (serviceInstance != null) {
+            return serviceInstance.getClass().getName();
+        } 
+        
+        Object implementation = m_componentDefinition;
+        if (implementation != null) {
+            if (implementation instanceof Class) {
+                return ((Class<?>) implementation).getName();
+            }
+            return implementation.getClass().getName();
+        } 
+        
+        Object instanceFactory = m_instanceFactory;
+        if (instanceFactory != null) {
+            return instanceFactory.getClass().getName();
+        } else {
+            // Unexpected ...
+            return getClass().getName();
+        }
+    }
+    
+    public synchronized String[] getServices() {
+        if (m_serviceName instanceof String[]) {
+            return (String[]) m_serviceName;
+        } else if (m_serviceName instanceof String) {
+            return new String[] { (String) m_serviceName };
+        } else {
+            return null;
+        }
+    }
+    
+    public int getState() {
+        return (isAvailable() ? ComponentDeclaration.STATE_REGISTERED : ComponentDeclaration.STATE_UNREGISTERED);
+    }
 }
