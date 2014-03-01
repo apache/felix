@@ -3,11 +3,8 @@ package dm.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Dictionary;
 
-import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
-
-import dm.context.Event;
 
 // Todo implements some methods from DependencyImpl (createCopy, etc ...)
 public class ConfigurationDependencyImpl extends DependencyImpl implements ManagedService {
