@@ -179,7 +179,7 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 
 	@Override
 	public void start() {
-		boolean wasStarted = super.m_isStarted;
+		boolean wasStarted = isStarted();
 		super.start();
 
         if (!wasStarted) {
@@ -204,7 +204,7 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 	
 	@Override
 	public void stop() {
-		boolean wasStarted = super.m_isStarted;
+		boolean wasStarted = isStarted();
 		super.stop();
 		if (wasStarted) {
 			m_tracker.close();

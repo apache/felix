@@ -20,7 +20,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	protected boolean m_autoConfig;
 	protected String m_autoConfigInstance;
 	protected boolean m_autoConfigInvoked;
-    protected volatile boolean m_isStarted; // volatile because accessed by getState method
+    private volatile boolean m_isStarted; // volatile because accessed by getState method
     private Object m_callbackInstance;
     
 	// TODO when we start injecting the "highest" one, this needs to be sorted at
@@ -273,6 +273,10 @@ public class DependencyImpl implements Dependency, DependencyContext {
     protected Object getService() {
         // only real dependencies can return actual service.
         return null;
+    }
+    
+    protected boolean isStarted() {
+    	return m_isStarted;
     }
 
 	@Override
