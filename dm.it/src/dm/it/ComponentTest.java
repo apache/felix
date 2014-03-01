@@ -5,7 +5,6 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -13,7 +12,7 @@ import org.osgi.framework.FrameworkUtil;
 import dm.Component;
 import dm.DependencyManager;
 
-public class ComponentTest extends TestCase {
+public class ComponentTest extends TestBase {
     private final Ensure m_ensure = new Ensure();
     private final BundleContext m_context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
 
