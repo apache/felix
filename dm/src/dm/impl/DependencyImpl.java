@@ -1,6 +1,7 @@
 package dm.impl;
 
 import java.util.Dictionary;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import dm.ComponentDependencyDeclaration;
@@ -28,7 +29,12 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	// actually injected (auto config is on for it)
 	protected final ConcurrentSkipListSet<Event> m_dependencies = new ConcurrentSkipListSet();
 	
-	public DependencyImpl() {		
+	public DependencyImpl() {	
+        this(true);
+	}
+
+	public DependencyImpl(boolean autoConfig) {	
+        m_autoConfig = autoConfig;
 	}
 	
 	public DependencyImpl(DependencyImpl prototype) {
@@ -98,7 +104,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		}
 		m_component.handleChange();
 	}
-
+	
 	protected void removeDependency(Event e) {
 		// First check if we are about to become unavailable, but don't remove the dependency from our list now.
 		m_available = !(m_dependencies.contains(e) && m_dependencies.size() == 1);
