@@ -22,11 +22,11 @@ import org.osgi.framework.ServiceRegistration;
 import dm.Component;
 import dm.ComponentDeclaration;
 import dm.ComponentDependencyDeclaration;
+import dm.ComponentState;
 import dm.ComponentStateListener;
 import dm.Dependency;
 import dm.DependencyManager;
 import dm.context.ComponentContext;
-import dm.context.ComponentState;
 import dm.context.DependencyContext;
 
 public class ComponentImpl implements Component, ComponentContext, ComponentDeclaration {
@@ -207,6 +207,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		while (performTransition(oldState, newState));
 	}
 	
+	public void propagateChange() {
+		if (m_registration != null) {
+            m_registration.setProperties(calculateServiceProperties());
+		}
+	}
+	
     public Component setAutoConfig(Class clazz, boolean autoConfig) {
         m_autoConfig.put(clazz, Boolean.valueOf(autoConfig));
         return this;
@@ -349,6 +355,21 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			notifyListeners(newState);
 			return true;
 		}
+		
+		switch(m_state) {
+		case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+			invokeAutoConfigInstanceBoundDependencies();
+			break;
+			
+		case TRACKING_OPTIONAL:
+			invokeAutoConfigDependencies();
+			if (hasSomePropagateDependencies()) {
+				propagateChange();
+			}
+			break;
+		default:
+		}
+		
 		return false;
 	}
 	
@@ -391,6 +412,16 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
             configureImplementation(ServiceRegistration.class, NULL_REGISTRATION);
             m_registration = null;
         }
+    }
+    
+    private boolean hasSomePropagateDependencies() {
+		for (int i = 0; i < m_dependencies.size(); i++) {
+			DependencyContext d = (DependencyContext) m_dependencies.get(i);
+			if (d.isPropagated()) {
+				return true;
+			}
+		}
+		return false;
     }
 
     private Dictionary calculateServiceProperties() {
