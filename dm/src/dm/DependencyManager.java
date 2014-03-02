@@ -41,6 +41,7 @@ import dm.impl.index.AdapterFilterIndex;
 import dm.impl.index.AspectFilterIndex;
 import dm.impl.index.ServiceRegistryCache;
 import dm.impl.index.multiproperty.MultiPropertyFilterIndex;
+import dm.impl.metatype.PropertyMetaDataImpl;
 
 /**
  * The dependency manager manages all components and their dependencies. Using 
@@ -151,8 +152,8 @@ public class DependencyManager {
         return new ServiceDependencyImpl(m_context, m_logger);
     }
     
-    public ConfigurationDependencyImpl createConfigurationDependency() {
-        return new ConfigurationDependencyImpl(); // TODO pass context and logger in the constructor
+    public ConfigurationDependency createConfigurationDependency() {
+        return new ConfigurationDependencyImpl(m_context, m_logger); // TODO pass context and logger in the constructor
     }
         
     public List getComponents() {
@@ -164,6 +165,10 @@ public class DependencyManager {
             remove(component);
         }
         m_components.clear();
+    }
+    
+    public PropertyMetaData createPropertyMetaData() {
+        return new PropertyMetaDataImpl();
     }
     
     private BundleContext createContext(BundleContext context) {
