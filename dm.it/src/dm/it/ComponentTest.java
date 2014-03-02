@@ -5,19 +5,14 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import junit.framework.Assert;
-
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-
 import dm.Component;
 import dm.DependencyManager;
 
 public class ComponentTest extends TestBase {
     private final Ensure m_ensure = new Ensure();
-    private final BundleContext m_context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
 
     public void testSimple() throws Exception {
-        DependencyManager dm = new DependencyManager(m_context);
+        DependencyManager dm = new DependencyManager(context);
         Component consumer = dm.createComponent();
         consumer
             .setImplementation(new Consumer())

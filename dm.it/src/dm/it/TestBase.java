@@ -1,6 +1,5 @@
 package dm.it;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Hashtable;
@@ -10,7 +9,6 @@ import junit.framework.TestCase;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.FrameworkUtil;
@@ -28,22 +26,22 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     // Flag used to check if some errors have been logged during the execution of a given test.
     private volatile boolean m_errorsLogged;
 
-    // Bundle context injected by pax-exam for each integration test.
-    protected final BundleContext context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
-
     // We implement OSGI log service.
     protected ServiceRegistration logService;
+    
+    protected BundleContext context;
        
-    @Override
     public void setUp() throws Exception {
+    	warn("Setting up test " + getClass().getName());
+    	context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
         logService = context.registerService(LogService.class.getName(), this, null);
         context.addFrameworkListener(this);
     }
     
-    @Override
     public void tearDown() throws Exception {
-       logService.unregister();
-       context.removeFrameworkListener(this);
+    	warn("Tearing down test " + getClass().getName());
+    	logService.unregister();
+    	context.removeFrameworkListener(this);
     }
 
     /**
