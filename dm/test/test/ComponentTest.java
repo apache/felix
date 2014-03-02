@@ -4,9 +4,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import dm.Component;
+import dm.ComponentState;
 import dm.ComponentStateListener;
 import dm.Dependency;
-import dm.context.ComponentState;
 import dm.impl.ComponentImpl;
 import dm.impl.DependencyImpl;
 import dm.impl.EventImpl;
