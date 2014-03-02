@@ -23,8 +23,7 @@ public class ServiceEventImpl extends EventImpl implements Comparable {
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof ServiceEventImpl) {
-			ServiceEventImpl sdi = (ServiceEventImpl) obj;
-			return sdi.getReference().equals(getReference());
+			return getReference().equals(((ServiceEventImpl) obj).getReference());
 		}
 		return false;
 	}
@@ -36,22 +35,10 @@ public class ServiceEventImpl extends EventImpl implements Comparable {
 
     @Override
     public int compareTo(Object b) {
-        ServiceReference ra = (ServiceReference) getReference(), rb = ((ServiceEventImpl) b).getReference();
-        int ranka = getRank(ra);
-        int rankb = getRank(rb);
-        if (ranka < rankb) {
-            return -1;
-        } else if (ranka > rankb) {
-            return 1;
-        }
-        return 0;
+    	return getReference().compareTo(((ServiceEventImpl) b).getReference());
     }
-    
-    private int getRank(ServiceReference ref) {
-        Object ranking = ref.getProperty(Constants.SERVICE_RANKING);
-        if (ranking != null && (ranking instanceof Integer)) {
-            return ((Integer) ranking).intValue();
-        }
-        return 0;
+        
+    public String toString() {
+    	return m_service.toString();
     }
 }
