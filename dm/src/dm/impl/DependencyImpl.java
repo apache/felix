@@ -90,8 +90,11 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		m_available = true;
 		// if this is an optional dependency and the component is in an instantiated
 		// state, we can invoke the callback here
-		if (m_add != null && m_component.isAvailable()) {
-			invoke(m_add, e);
+		if (m_component.isAvailable()) {
+			if (m_add != null) {
+				invoke(m_add, e);
+			}
+			m_component.updateInstance(this);
 		}
 		m_component.handleChange();
 	}
@@ -99,23 +102,25 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	protected void changeDependency(Event e) {
 		m_dependencies.remove(e);
 		m_dependencies.add(e);
-		if (m_change != null && m_component.isAvailable()) {
-			invoke(m_change, e);
+		if (m_component.isAvailable()) {
+			if (m_change != null) {
+				invoke(m_change, e);
+			} 
+			m_component.updateInstance(this);
 		}
 		m_component.handleChange();
 	}
 	
 	protected void removeDependency(Event e) {
-		// First check if we are about to become unavailable, but don't remove the dependency from our list now.
 		m_available = !(m_dependencies.contains(e) && m_dependencies.size() == 1);
-		// Run the state machine, which might stop the component, and then trigger our invokeRemove method.
 		m_component.handleChange();
-		// If the component is still active, then we can invoke our removed callback from our own decision
-		if (m_remove != null && m_component.isAvailable()) {
-			invoke(m_remove, e);
-		}
-		// cleanup the removed event from our dependencies list.
 		m_dependencies.remove(e);
+		if (m_component.isAvailable()) {
+			if (m_remove != null) {
+				invoke(m_remove, e);
+			}
+			m_component.updateInstance(this);
+		}
 	}
 
 	@Override

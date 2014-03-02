@@ -207,8 +207,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		while (performTransition(oldState, newState));
 	}
 	
-	public void propagateChange() {
-		if (m_registration != null) {
+	@Override
+	public void updateInstance(DependencyContext d) {
+		if (d.isAutoConfig()) {
+            configureImplementation(d.getAutoConfigType(), d.getAutoConfigInstance(), d.getAutoConfigName());
+		}
+		if (d.isPropagated() && m_registration != null) {
             m_registration.setProperties(calculateServiceProperties());
 		}
 	}
@@ -355,21 +359,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			notifyListeners(newState);
 			return true;
 		}
-		
-		switch(m_state) {
-		case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-			invokeAutoConfigInstanceBoundDependencies();
-			break;
-			
-		case TRACKING_OPTIONAL:
-			invokeAutoConfigDependencies();
-			if (hasSomePropagateDependencies()) {
-				propagateChange();
-			}
-			break;
-		default:
-		}
-		
 		return false;
 	}
 	

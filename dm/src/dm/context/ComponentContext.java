@@ -13,4 +13,5 @@ public interface ComponentContext {
     public List<DependencyContext> getDependencies(); // for testing only...
     public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters);
     public Object[] getInstances();
+    public void updateInstance(DependencyContext dependency);
 }
