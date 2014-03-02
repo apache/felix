@@ -20,7 +20,6 @@ public class ConfigurationTest extends TestBase {
 
         // Create our configuration dependency
         final ConfigurationDependencyImpl conf = new ConfigurationDependencyImpl();
-        conf.setCallbacks("updated", "updated");
 
         // Create another required dependency
         final DependencyImpl requiredDependency = new DependencyImpl();
