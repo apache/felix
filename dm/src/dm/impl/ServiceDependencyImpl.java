@@ -30,11 +30,6 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
     private volatile String m_trackedServiceFilter;
     private volatile String m_trackedServiceFilterUnmodified;
     private volatile ServiceReference m_trackedServiceReference;
-    private volatile boolean m_autoConfig;
-    private boolean m_autoConfigInvoked;
-    private volatile boolean m_debug = false;
-    private volatile String m_debugKey = null;
-    private volatile String m_autoConfigInstance;
     private volatile boolean m_propagate;
     private volatile Object m_propagateCallbackInstance;
     private volatile String m_propagateCallbackMethod;
@@ -118,9 +113,9 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
     }
     
 	public ServiceDependencyImpl(BundleContext ctx, Logger logger) {
+		super(true /* autoconfig */);
 	    m_context = ctx;
 	    m_logger = logger;
-        m_autoConfig = true;
 	}
 	
 	public ServiceDependencyImpl(ServiceDependencyImpl prototype) {
@@ -134,16 +129,45 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
         m_trackedServiceFilterUnmodified = prototype.m_trackedServiceFilterUnmodified;
         m_trackedServiceReference = prototype.m_trackedServiceReference;
         m_autoConfigInstance = prototype.m_autoConfigInstance;
-        m_defaultImplementation = prototype.m_defaultImplementation;		
+        m_defaultImplementation = prototype.m_defaultImplementation;
+        m_autoConfig = prototype.m_autoConfig;
 	}
 	    	    
     // --- CREATION
     
-    @Override
-    public ServiceDependency setDebug(String identifier) {
-        this.m_debug = true;
-        this.m_debugKey = identifier;
-        return this;
+	public ServiceDependency setCallbacks(String add, String remove) {
+		super.setCallbacks(add,  remove);
+		return this;
+	}
+	
+	public ServiceDependency setCallbacks(String add, String change, String remove) {
+		super.setCallbacks(add, change, remove);
+		return this;
+	}
+	
+	public ServiceDependency setCallbacks(Object instance, String add, String remove) {
+		super.setCallbacks(instance, add, remove);
+		return this;
+	}
+	
+	public ServiceDependency setCallbacks(Object instance, String add, String change, String remove) {
+		super.setCallbacks(instance, add, change, remove);
+		return this;
+	}
+	
+	public ServiceDependency setRequired(boolean required) {
+		super.setRequired(required);
+		return this;
+	}
+	
+	public ServiceDependency setAutoConfig(boolean autoConfig) {
+		super.setAutoConfig(autoConfig);
+		return this;
+	}
+	
+    public ServiceDependency setAutoConfig(String instanceName) {
+    	super.setAutoConfig(instanceName);
+    	return this;
     }
 
     @Override
@@ -399,7 +423,7 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
     @Override
     protected Object getService() {
         Object service = null;
-        ServiceEventImpl se = m_dependencies.size() > 0 ? (ServiceEventImpl) m_dependencies.first() : null;
+        ServiceEventImpl se = m_dependencies.size() > 0 ? (ServiceEventImpl) m_dependencies.last() : null;
         if (se != null) {
             service = se.getService();
         } else if (isAutoConfig()) {
