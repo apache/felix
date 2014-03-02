@@ -1,4 +1,4 @@
-package dm.context;
+package dm;
 
 public enum ComponentState {
 	INACTIVE, 
