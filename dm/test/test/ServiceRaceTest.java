@@ -11,9 +11,9 @@ import org.junit.Test;
 import org.osgi.service.cm.ConfigurationException;
 
 import dm.Component;
+import dm.ComponentState;
 import dm.ComponentStateListener;
 import dm.Dependency;
-import dm.context.ComponentState;
 import dm.context.Event;
 import dm.impl.ComponentImpl;
 import dm.impl.ConfigurationDependencyImpl;
