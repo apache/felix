@@ -19,12 +19,18 @@ package org.apache.felix.http.base.internal.service;
 import java.util.Dictionary;
 import java.util.HashSet;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextAttributeListener;
+import javax.servlet.ServletException;
 
 import org.apache.felix.http.api.ExtHttpService;
 import org.apache.felix.http.base.internal.context.ExtServletContext;
 import org.apache.felix.http.base.internal.context.ServletContextManager;
-import org.apache.felix.http.base.internal.handler.*;
+import org.apache.felix.http.base.internal.handler.FilterHandler;
+import org.apache.felix.http.base.internal.handler.HandlerRegistry;
+import org.apache.felix.http.base.internal.handler.ServletHandler;
 import org.apache.felix.http.base.internal.logger.SystemLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.service.http.HttpContext;
@@ -117,7 +123,12 @@ public final class HttpServiceImpl implements ExtHttpService
 
     public void unregister(String alias)
     {
-        unregisterServlet(this.handlerRegistry.getServletByAlias(alias));
+        final Servlet servlet = this.handlerRegistry.getServletByAlias(alias);
+        if ( servlet == null )
+        {
+            throw new IllegalArgumentException("Nothing registered at " + alias);
+        }
+        unregisterServlet(servlet);
     }
 
     public HttpContext createDefaultHttpContext()
