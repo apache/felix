@@ -20,8 +20,10 @@ package org.apache.felix.fileinstall.internal;
 
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
 
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -51,7 +53,7 @@ public class DirectoryWatcherTest extends TestCase
         super.setUp();
         mockBundleContext = (BundleContext) EasyMock.createMock(BundleContext.class);
         mockPackageAdmin = (PackageAdmin) EasyMock.createMock(PackageAdmin.class);
-        mockBundle = (Bundle) EasyMock.createMock(Bundle.class);
+        mockBundle = (Bundle) EasyMock.createNiceMock(Bundle.class);
         props.put( DirectoryWatcher.DIR, new File( "target/load" ).getAbsolutePath() );
 
         // Might get called, but most of the time it doesn't matter whether they do or don't.
@@ -253,5 +255,94 @@ public class DirectoryWatcherTest extends TestCase
         }
     }
 
+    public void testNonOpaqueURIOnBundleLocation() throws URISyntaxException
+    {
+        final RuntimeException expectedException = new RuntimeException("expected exception to break execution on defined point.");
+        final File watchedDirectoryFile = new File("src/test/resources/watched");
+        final String watchedDirectoryPath = watchedDirectoryFile.getAbsolutePath();
+
+        final String bundleFileName = "firstjar.jar";
+        final File bundleFile = new File(watchedDirectoryPath,bundleFileName);
+        final String bundleLocation = "file:"+watchedDirectoryPath+'/'+bundleFileName;
+
+        // break execution
+        Scanner scanner = new Scanner(watchedDirectoryFile)
+        {
+            public void initialize(Map checksums)
+            {
+                throw expectedException;
+            }
+        };
+
+        mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+        EasyMock.expect(mockBundleContext.getBundles()).andReturn(new Bundle[]{mockBundle});
+        EasyMock.expect(mockBundleContext.getDataFile((String) EasyMock.anyObject())).andReturn(null).anyTimes();
+        EasyMock.expect(mockBundle.getLocation()).andReturn(bundleLocation).anyTimes();
+        Map mockCurrentManagedArtifacts = (Map)EasyMock.createNiceMock(Map.class);
+        EasyMock.expect(mockCurrentManagedArtifacts.put(EasyMock.eq(bundleFile), (Artifact)EasyMock.anyObject())).andReturn(null).times(1);
+
+        EasyMock.replay(new Object[]{mockBundleContext, mockBundle, mockCurrentManagedArtifacts});
+
+        props.put(DirectoryWatcher.DIR, watchedDirectoryPath);
+
+        dw = new DirectoryWatcher(props, mockBundleContext);
+        dw.noInitialDelay = true;
+        dw.currentManagedArtifacts = mockCurrentManagedArtifacts;
+        dw.scanner = scanner;
+        try {
+        dw.start();
+        }
+        catch(RuntimeException e)
+        {
+            assertEquals(e, expectedException);
+        }
+
+        EasyMock.verify(new Object[]{mockBundleContext, mockBundle, mockCurrentManagedArtifacts});
+    }
+
+    public void testOpaqueURIOnBundleLocation() throws URISyntaxException
+    {
+        final RuntimeException expectedException = new RuntimeException("expected exception to break execution on defined point.");
+        final File watchedDirectoryFile = new File("src/test/resources/watched");
+        final String watchedDirectoryPath = watchedDirectoryFile.getAbsolutePath();
+
+        final String bundleFileName = "firstjar.jar";
+        final File bundleFile = new File(watchedDirectoryPath,bundleFileName);
+        final String bundleLocation = "blueprint:file:"+watchedDirectoryPath+'/'+bundleFileName;
+
+        // break execution
+        Scanner scanner = new Scanner(watchedDirectoryFile)
+        {
+            public void initialize(Map checksums)
+            {
+                throw expectedException;
+            }
+        };
+
+        mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+        EasyMock.expect(mockBundleContext.getBundles()).andReturn(new Bundle[]{mockBundle});
+        EasyMock.expect(mockBundleContext.getDataFile((String) EasyMock.anyObject())).andReturn(null).anyTimes();
+        EasyMock.expect(mockBundle.getLocation()).andReturn(bundleLocation).anyTimes();
+        Map mockCurrentManagedArtifacts = (Map)EasyMock.createNiceMock(Map.class);
+        EasyMock.expect(mockCurrentManagedArtifacts.put(EasyMock.eq(bundleFile), (Artifact)EasyMock.anyObject())).andReturn(null).times(1);
+
+        EasyMock.replay(new Object[]{mockBundleContext, mockBundle, mockCurrentManagedArtifacts});
+
+        props.put(DirectoryWatcher.DIR, watchedDirectoryPath);
+
+        dw = new DirectoryWatcher(props, mockBundleContext);
+        dw.noInitialDelay = true;
+        dw.currentManagedArtifacts = mockCurrentManagedArtifacts;
+        dw.scanner = scanner;
+        try {
+        dw.start();
+        }
+        catch(RuntimeException e)
+        {
+            assertEquals(e, expectedException);
+        }
+
+        EasyMock.verify(new Object[]{mockBundleContext, mockBundle, mockCurrentManagedArtifacts});
+    }
 
 }

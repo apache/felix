@@ -834,7 +834,23 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     // Let's try to interpret the location as a file path
                     uri = new File(location).toURI().normalize();
                 }
-                path = uri.getPath();
+                if( uri.isOpaque() && uri.getSchemeSpecificPart() != null)
+                {
+                    // blueprint:file:/tmp/foo/baa.jar -> file:/tmp/foo/baa.jar
+                    // blueprint:mvn:foo.baa/baa/0.0.1 -> mvn:foo.baa/baa/0.0.1
+                    final String schemeSpecificPart = uri.getSchemeSpecificPart();
+                    // extract content behind the last colon of scheme specific path
+                    final int offsetLastColon = schemeSpecificPart.lastIndexOf(':') + 1;
+                    // file:/tmp/foo/baa.jar -> /tmp/foo/baa.jar
+                    // mvn:foo.baa/baa/0.0.1 -> foo.baa/baa/0.0.1
+                    path = schemeSpecificPart.substring(offsetLastColon);
+                }
+                else
+                {
+                    // file:/tmp/foo/baa.jar -> /tmp/foo/baa.jar
+                    // mnv:foo.baa/baa/0.0.1 -> foo.baa/baa/0.0.1
+                    path = uri.getPath();
+                }
             }
             if (path == null)
             {
