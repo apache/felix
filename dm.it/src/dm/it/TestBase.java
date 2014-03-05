@@ -21,7 +21,7 @@ import org.osgi.service.log.LogService;
  */
 public abstract class TestBase extends TestCase implements LogService, FrameworkListener {
     // Default OSGI log service level.
-    private final static int LOG_LEVEL = LogService.LOG_WARNING;
+    protected final static int LOG_LEVEL = LogService.LOG_WARNING;
     
     // Flag used to check if some errors have been logged during the execution of a given test.
     private volatile boolean m_errorsLogged;
