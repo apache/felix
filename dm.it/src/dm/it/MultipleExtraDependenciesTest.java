@@ -171,7 +171,6 @@ public class MultipleExtraDependenciesTest extends TestBase {
         void init(Component c) {
             m_ensure.step(1);
             DependencyManager dm = c.getDependencyManager();
-            List l = new ArrayList();
             // Service3/xx currently available
             Dependency d1 = 
             		dm.createServiceDependency()
