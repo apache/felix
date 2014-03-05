@@ -9,4 +9,6 @@ Private-Package: \
 	dm.impl.metatype
 Export-Package: \
 	dm,\
-	tracker
+	tracker,\
+	dm.admin
+Bundle-Activator:dm.impl.Activator
