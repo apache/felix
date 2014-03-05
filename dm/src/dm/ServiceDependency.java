@@ -2,6 +2,8 @@ package dm;
 
 import org.osgi.framework.ServiceReference;
 
+import dm.admin.ComponentDependencyDeclaration;
+
 public interface ServiceDependency extends Dependency, ComponentDependencyDeclaration {
 	public ServiceDependency setCallbacks(String add, String remove);
 	public ServiceDependency setCallbacks(String add, String change, String remove);
