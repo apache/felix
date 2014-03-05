@@ -1,3 +1,9 @@
+Changes from 1.9.8 to 1.9.6
+---------------------------
+** Improvement
+    * [FELIX-4277] - The maven-scr-plugin generates false warnings when using @SlingServlet
+
+
 Changes from 1.9.6 to 1.9.4
 ---------------------------
 ** Improvement

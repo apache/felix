@@ -107,60 +107,43 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
         }
 
         // generate PropertyDescriptions
+
         // {@see org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_PATHS}
-        final String[] paths = (String[])cad.getValue("paths");
-        if ( paths != null ) {
-            final PropertyDescription pd = new PropertyDescription(cad);
-            pd.setName("sling.servlet.paths");
-            pd.setMultiValue(paths);
-            pd.setType(PropertyType.String);
-            pd.setPrivate(metatype);
-            classDescription.add(pd);
-        }
+        generateStringPropertyDescriptor(cad, classDescription, metatype, "paths", "sling.servlet.paths");
 
         // {@see org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES}
-        final String[] resourceTypes = (String[])cad.getValue("resourceTypes");
-        if ( resourceTypes != null ) {
-            final PropertyDescription pd = new PropertyDescription(cad);
-            pd.setName("sling.servlet.resourceTypes");
-            pd.setMultiValue(resourceTypes);
-            pd.setType(PropertyType.String);
-            pd.setPrivate(metatype);
-            classDescription.add(pd);
-        }
+        generateStringPropertyDescriptor(cad, classDescription, metatype, "resourceTypes",
+                "sling.servlet.resourceTypes");
 
         // {@see org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_SELECTORS}
-        final String[] selectors = (String[])cad.getValue("selectors");
-        if (selectors != null ) {
-            final PropertyDescription pd = new PropertyDescription(cad);
-            pd.setName("sling.servlet.selectors");
-            pd.setMultiValue(selectors);
-            pd.setType(PropertyType.String);
-            pd.setPrivate(metatype);
-            classDescription.add(pd);
-        }
+        generateStringPropertyDescriptor(cad, classDescription, metatype, "selectors", "sling.servlet.selectors");
 
         // {@see org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_EXTENSIONS}
-        final String[] extensions = (String[])cad.getValue("extensions");
-        if (extensions != null ) {
-            final PropertyDescription pd = new PropertyDescription(cad);
-            pd.setName("sling.servlet.extensions");
-            pd.setMultiValue(extensions);
-            pd.setType(PropertyType.String);
-            pd.setPrivate(metatype);
-            classDescription.add(pd);
-        }
+        generateStringPropertyDescriptor(cad, classDescription, metatype, "extensions", "sling.servlet.extensions");
 
         // {@see org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_METHODS}
-        final String[] methods = (String[])cad.getValue("methods");
-        if (methods != null ) {
-            final PropertyDescription pd = new PropertyDescription(cad);
-            pd.setName("sling.servlet.methods");
-            pd.setMultiValue(methods);
-            pd.setType(PropertyType.String);
-            pd.setPrivate(metatype);
-            classDescription.add(pd);
+        generateStringPropertyDescriptor(cad, classDescription, metatype, "methods", "sling.servlet.methods");
+    }
+
+    /**
+     * Generates a property descriptor of type {@link PropertyType#String}
+     */
+    private void generateStringPropertyDescriptor(final ClassAnnotation cad, final ClassDescription classDescription,
+            final boolean metatype, String annotationName, String propertyDescriptorName) {
+
+        final String[] values = (String[]) cad.getValue(annotationName);
+        if (values == null) {
+            return;
         }
+
+        final PropertyDescription pd = new PropertyDescription(cad);
+        pd.setName(propertyDescriptorName);
+        pd.setMultiValue(values);
+        pd.setType(PropertyType.String);
+        if (metatype) {
+            pd.setPrivate(true);
+        }
+        classDescription.add(pd);
     }
 
     /**
@@ -199,7 +182,9 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
         pd.setName("service.ranking");
         pd.setValue(String.valueOf(order));
         pd.setType(PropertyType.Integer);
-        pd.setPrivate(metatype);
+        if (metatype) {
+            pd.setPrivate(true);
+        }
         classDescription.add(pd);
 
         // property scope
@@ -208,7 +193,9 @@ public class SlingAnnotationProcessor implements AnnotationProcessor {
         pd2.setName("sling.filter.scope");
         pd2.setValue(scope);
         pd2.setType(PropertyType.String);
-        pd2.setPrivate(metatype);
+        if (metatype) {
+            pd2.setPrivate(true);
+        }
         classDescription.add(pd2);
     }
 }
