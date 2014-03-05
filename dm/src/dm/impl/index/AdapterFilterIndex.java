@@ -38,7 +38,7 @@ import tracker.ServiceTracker;
 import tracker.ServiceTrackerCustomizer;
 import dm.DependencyManager;
 import dm.FilterIndex;
-import dm.ServiceUtil;
+import dm.impl.ServiceUtil;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>

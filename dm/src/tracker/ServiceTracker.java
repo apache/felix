@@ -36,7 +36,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 
 import dm.DependencyManager;
-import dm.ServiceUtil;
+import dm.impl.ServiceUtil;
 
 /**
  * The <code>ServiceTracker</code> class simplifies using services from the

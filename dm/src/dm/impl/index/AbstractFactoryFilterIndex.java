@@ -27,7 +27,7 @@ import java.util.TreeSet;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
-import dm.ServiceUtil;
+import dm.impl.ServiceUtil;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>

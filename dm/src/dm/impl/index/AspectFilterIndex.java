@@ -30,6 +30,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 
 import dm.*;
+import dm.impl.ServiceUtil;
 import tracker.*;
 
 import org.osgi.framework.BundleContext;

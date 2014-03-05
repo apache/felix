@@ -23,10 +23,10 @@ import java.util.Hashtable;
 import junit.framework.Assert;
 
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import dm.DependencyManager;
-import dm.ServiceUtil;
 import tracker.ServiceTracker;
 
 public class ServiceTrackerTest extends TestBase {

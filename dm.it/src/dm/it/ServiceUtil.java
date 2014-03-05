@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package dm;
+package dm.it;
 
 import java.util.List;
 
@@ -24,8 +24,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
+import dm.DependencyManager;
+
 /**
- * OSGi service utilities.
+ * OSGi service utilities (copied from dependency manager implementation).
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
