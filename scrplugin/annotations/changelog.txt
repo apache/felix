@@ -2,7 +2,7 @@ Changes from 1.9.8 to 1.9.6
 ---------------------------
 ** Improvement
     * [FELIX-4277] - The maven-scr-plugin generates false warnings when using @SlingServlet
-
+    * [FELIX-4393] - @Property should accept empty name values on instance fields 
 
 Changes from 1.9.6 to 1.9.4
 ---------------------------

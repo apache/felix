@@ -403,9 +403,29 @@ public class SCRAnnotationProcessor implements AnnotationProcessor {
                         }
                     }
                 } else {
-                    final Object value = fieldAnnotation.getAnnotatedFieldValue();
-                    if (value != null) {
-                        name = value.toString();
+                    if ( Modifier.isStatic(fieldAnnotation.getAnnotatedField().getModifiers()) ) {
+                        final Object value = fieldAnnotation.getAnnotatedFieldValue();
+                        if (value != null) {
+                            name = value.toString();
+                        }
+                    } else {
+                        // non static, no name, no value (FELIX-4393)
+                        name = fieldAnnotation.getAnnotatedField().getName();
+                        final Object value = fieldAnnotation.getAnnotatedFieldValue();
+                        if (value != null) {
+                            if (value.getClass().isArray()) {
+                                final String[] newValues = new String[Array.getLength(value)];
+                                for (int i = 0; i < newValues.length; i++) {
+                                    newValues[i] = Array.get(value, i).toString();
+                                }
+                                prop.setMultiValue(newValues);
+                                prop.setType(PropertyType.from(fieldAnnotation.getAnnotatedField().getType().getComponentType()));
+                            } else {
+                                prop.setType(PropertyType.from(value.getClass()));
+                                prop.setValue(value.toString());
+                            }
+                        }
+
                     }
                 }
             }
