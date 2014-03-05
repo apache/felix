@@ -4,8 +4,8 @@ import java.util.Dictionary;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import dm.ComponentDependencyDeclaration;
 import dm.Dependency;
+import dm.admin.ComponentDependencyDeclaration;
 import dm.context.ComponentContext;
 import dm.context.DependencyContext;
 import dm.context.Event;
@@ -96,7 +96,10 @@ public class DependencyImpl implements Dependency, DependencyContext {
 			}
 			m_component.updateInstance(this);
 		}
-		m_component.handleChange();
+		if (isRequired()) {
+			// Only required dependencies may change state. 
+			m_component.handleChange();
+		}
 	}
 
 	protected void changeDependency(Event e) {
