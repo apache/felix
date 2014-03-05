@@ -6,12 +6,12 @@ import org.osgi.framework.Bundle;
 
 /**
  * Service for administering Dependency Manager components.
- * The main purpose of this interface is to provides access to the components declared by all 
+ * The main purpose of this interface is to provide access to the components declared by all 
  * dependency manager instances at runtime.
  */
 public interface ComponentAdmin {
 	/**
-	 * Returns components declared by all dependency managers instances. 
+	 * Returns components declared by all dependency manager instances. 
 	 * @return the list of components declared by all dependency managers instances.
 	 */
 	List<ComponentDeclaration> getComponents();
