@@ -53,7 +53,7 @@ public class CommandSessionImpl implements CommandSession, Converter
     PrintStream err;
     
     private final CommandProcessorImpl processor;
-    protected final Map<String, Object> variables = new ConcurrentHashMap<String, Object>();
+    protected final Map<String, Object> variables = new HashMap<String, Object>();
     private boolean closed;
 
     protected CommandSessionImpl(CommandProcessorImpl shell, InputStream in, PrintStream out, PrintStream err)
@@ -153,7 +153,10 @@ public class CommandSessionImpl implements CommandSession, Converter
 
     public void put(String name, Object value)
     {
-        variables.put(name, value);
+        synchronized (variables)
+        {
+            variables.put(name, value);
+        }
     }
 
     public PrintStream getConsole()
