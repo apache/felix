@@ -289,5 +289,10 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     @Override
     public void updateInstance(DependencyContext dependency) {
         m_component.updateInstance(dependency);
+    }
+
+    @Override
+    public boolean isInstantiated() {
+        return m_component.isInstantiated();
     };
 }
