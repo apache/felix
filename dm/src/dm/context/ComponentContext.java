@@ -11,7 +11,9 @@ public interface ComponentContext {
     public boolean isAvailable();
     public void handleChange();
     public List<DependencyContext> getDependencies(); // for testing only...
-    public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters);
+    public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters);
     public Object[] getInstances();
     public void updateInstance(DependencyContext dependency);
+    public String getAutoConfigInstance(Class<?> clazz);
+    public boolean getAutoConfig(Class<?> clazz);
 }
