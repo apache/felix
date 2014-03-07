@@ -21,6 +21,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import dm.Component;
 import dm.ComponentState;
+import static dm.ComponentState.*;
 import dm.ComponentStateListener;
 import dm.Dependency;
 import dm.DependencyManager;
@@ -239,33 +240,33 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
 	/** Based on the current state, calculate the new state. */
 	private ComponentState calculateNewState(ComponentState currentState) {
-		if (currentState == ComponentState.INACTIVE) {
+		if (currentState == INACTIVE) {
 			if (m_isStarted) {
-				return ComponentState.WAITING_FOR_REQUIRED;
+				return WAITING_FOR_REQUIRED;
 			}
 		}
-		if (currentState == ComponentState.WAITING_FOR_REQUIRED) {
+		if (currentState == WAITING_FOR_REQUIRED) {
 			if (!m_isStarted) {
-				return ComponentState.INACTIVE;
+				return INACTIVE;
 			}
 			if (allRequiredAvailable()) {
-				return ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED;
+				return INSTANTIATED_AND_WAITING_FOR_REQUIRED;
 			}
 		}
-		if (currentState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
+		if (currentState == INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
 			if (m_isStarted && allRequiredAvailable()) {
 				if (allInstanceBoundAvailable()) {
-					return ComponentState.TRACKING_OPTIONAL;
+					return TRACKING_OPTIONAL;
 				}
 				return currentState;
 			}
-			return ComponentState.WAITING_FOR_REQUIRED;
+			return WAITING_FOR_REQUIRED;
 		}
-		if (currentState == ComponentState.TRACKING_OPTIONAL) {
+		if (currentState == TRACKING_OPTIONAL) {
 			if (m_isStarted && allRequiredAvailable() && allInstanceBoundAvailable()) {
 				return currentState;
 			}
-			return ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED;
+			return INSTANTIATED_AND_WAITING_FOR_REQUIRED;
 		}
 		return currentState;
 	}
@@ -619,7 +620,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 
 	public boolean isAvailable() {
-		return m_state == ComponentState.TRACKING_OPTIONAL;
+		return m_state == TRACKING_OPTIONAL;
+	}
+	
+	public boolean isInstantiated() {
+	    return m_state == TRACKING_OPTIONAL || m_state == INSTANTIATED_AND_WAITING_FOR_REQUIRED;
 	}
 
 	@Override
