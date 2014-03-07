@@ -9,6 +9,7 @@ public interface ComponentContext {
     public void start();
     public void stop();
     public boolean isAvailable();
+    public boolean isInstantiated();
     public void handleChange();
     public List<DependencyContext> getDependencies(); // for testing only...
     public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters);
