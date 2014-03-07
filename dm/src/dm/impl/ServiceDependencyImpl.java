@@ -120,7 +120,6 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 	
 	public ServiceDependencyImpl(ServiceDependencyImpl prototype) {
 		super(prototype);
-		// TODO check if some fields have been forgotten
 		m_logger = prototype.m_logger;
 		m_context = prototype.m_context;	
         m_trackedServiceName = prototype.m_trackedServiceName;
@@ -145,6 +144,12 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 		return this;
 	}
 	
+    public ServiceDependency setCallbacks(String added, String changed, String removed, String swapped) {
+        setCallbacks(added, changed, removed);
+        // TODO handle the swapped parameter.
+        return this;
+    }
+	
 	public ServiceDependency setCallbacks(Object instance, String add, String remove) {
 		super.setCallbacks(instance, add, remove);
 		return this;
@@ -155,7 +160,13 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 		return this;
 	}
 	
-	public ServiceDependency setRequired(boolean required) {
+    public ServiceDependency setCallbacks(Object instance, String added, String changed, String removed, String swapped) {
+        setCallbacks(instance, added, changed, removed);
+        // TODO handle the swapped parameter
+        return this;
+    }
+
+    public ServiceDependency setRequired(boolean required) {
 		super.setRequired(required);
 		return this;
 	}
