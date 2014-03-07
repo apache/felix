@@ -7,8 +7,10 @@ import dm.admin.ComponentDependencyDeclaration;
 public interface ServiceDependency extends Dependency, ComponentDependencyDeclaration {
 	public ServiceDependency setCallbacks(String add, String remove);
 	public ServiceDependency setCallbacks(String add, String change, String remove);
+    public ServiceDependency setCallbacks(String added, String changed, String removed, String swapped);
 	public ServiceDependency setCallbacks(Object instance, String add, String remove);
 	public ServiceDependency setCallbacks(Object instance, String add, String change, String remove);
+    public ServiceDependency setCallbacks(Object instance, String added, String changed, String removed, String swapped);
 	public ServiceDependency setRequired(boolean required);
 	public ServiceDependency setAutoConfig(boolean autoConfig);
     public ServiceDependency setAutoConfig(String instanceName);
