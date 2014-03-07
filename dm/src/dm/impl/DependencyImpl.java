@@ -102,18 +102,19 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		}
 	}
 
-	protected void changeDependency(Event e) {
+	protected void changeDependency(Event e) {	    
 		m_dependencies.remove(e);
 		m_dependencies.add(e);
+        if (m_change != null && m_component.isInstantiated()) {
+            // invoke change only if state is in instantiated_waiting_for_required or tracking_optional
+            invoke(m_change, e);
+        } 
 		if (m_component.isAvailable()) {
-			if (m_change != null) {
-				invoke(m_change, e);
-			} 
 			m_component.updateInstance(this);
 		}
 		m_component.handleChange();
 	}
-	
+		
 	protected void removeDependency(Event e) {
 		m_available = !(m_dependencies.contains(e) && m_dependencies.size() == 1);
 		m_component.handleChange();
