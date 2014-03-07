@@ -24,6 +24,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceReference;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -123,5 +124,22 @@ public class ServiceReferenceUtils {
     public static boolean haveSameServiceId(ServiceReference ref1, ServiceReference ref2) {
         return !(ref1 == null || ref2 == null)
                 && ref1.getProperty(Constants.SERVICE_ID).equals(ref2.getProperty(Constants.SERVICE_ID));
+    }
+
+    public static String toString(Collection<? extends ServiceReference> references) {
+        if (references == null  || references.isEmpty()) {
+            return "[]";
+        } else {
+            StringBuilder buffer = new StringBuilder("[");
+            for (ServiceReference reference : references) {
+                if (buffer.length() == 1) {
+                    buffer.append(reference.getProperty(Constants.SERVICE_ID));
+                } else {
+                    buffer.append(", ").append(reference.getProperty(Constants.SERVICE_ID));
+                }
+            }
+            buffer.append("]");
+            return buffer.toString();
+        }
     }
 }
