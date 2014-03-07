@@ -37,7 +37,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private static final Class[] VOID = new Class[] {};
 	private final SerialExecutor m_executor = new SerialExecutor(new Logger(null));
 	private ComponentState m_state = ComponentState.INACTIVE;
-	private final List<DependencyContext> m_dependencies = new CopyOnWriteArrayList<>();
+	private final CopyOnWriteArrayList<DependencyContext> m_dependencies = new CopyOnWriteArrayList<>();
 	private final List<ComponentStateListener> m_listeners = new CopyOnWriteArrayList<>();
 	private boolean m_isStarted;
     private final Logger m_logger;
@@ -636,7 +636,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
 	@Override
 	public List<DependencyContext> getDependencies() {
-		return m_dependencies;
+		return (List<DependencyContext>) m_dependencies.clone();
 	}
 
 	@Override
@@ -941,5 +941,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     
     public int getState() {
         return (isAvailable() ? ComponentDeclaration.STATE_REGISTERED : ComponentDeclaration.STATE_UNREGISTERED);
+    }
+
+    public void ensureNotActive() {
+        // TODO Auto-generated method stub
     }
 }
