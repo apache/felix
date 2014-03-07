@@ -29,6 +29,7 @@ import org.apache.felix.ipojo.parser.FieldMetadata;
 import org.apache.felix.ipojo.parser.MethodMetadata;
 import org.apache.felix.ipojo.parser.PojoMetadata;
 import org.apache.felix.ipojo.util.Callback;
+import org.apache.felix.ipojo.util.Log;
 import org.apache.felix.ipojo.util.Property;
 import org.apache.felix.ipojo.util.SecurityHelper;
 import org.osgi.framework.Constants;
@@ -96,7 +97,11 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
     /**
      * The configuration listeners.
      */
-    private List<ConfigurationListener> m_listeners = new ArrayList<ConfigurationListener>();
+    private final Set<ConfigurationListener> m_listeners = new LinkedHashSet<ConfigurationListener>();
+    /**
+     * The last configuration sent to listeners.
+     */
+    private Map<String, Object> m_lastConfiguration;
 
     /**
      * Initialize the component type.
@@ -198,7 +203,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             String man = configurables[i].getAttribute("mandatory");
             mandatory = man != null && man.equalsIgnoreCase("true");
 
-            PropertyDescription pd = null;
+            PropertyDescription pd;
             if (value == null) {
                 pd = new PropertyDescription(name, type, null, false); // Cannot be immutable if we have no value.
             } else {
@@ -333,6 +338,7 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
             m_sr.unregister();
             m_sr = null;
         }
+        m_lastConfiguration = Collections.emptyMap();
     }
 
     /**
@@ -800,30 +806,27 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
 
     /**
      * Remove the given listener from the configuration handler's list of listeners.
+     * If the listeners is not registered, this method does nothing.
      *
      * @param listener the {@code ConfigurationListener} object to be removed
      * @throws NullPointerException   if {@code listener} is {@code null}
-     * @throws NoSuchElementException if {@code listener} wasn't present the in configuration handler's list of listeners
      */
     public void removeListener(ConfigurationListener listener) {
         if (listener == null) {
-            throw new NullPointerException("null listener");
+            throw new NullPointerException("The list of listener is null");
         }
         synchronized (m_listeners) {
             // We definitely cannot rely on listener's equals method...
             // ...so we need to manually search for the listener, using ==.
-            int i = -1;
-            for (int j = m_listeners.size() - 1; j >= 0; j--) {
-                if (m_listeners.get(j) == listener) {
-                    // Found!
-                    i = j;
+            ConfigurationListener found = null;
+            for (ConfigurationListener l : m_listeners) {
+                if (l == listener) {
+                    found = l;
                     break;
                 }
             }
-            if (i != -1) {
-                m_listeners.remove(i);
-            } else {
-                throw new NoSuchElementException("no such listener");
+            if (found != null) {
+                m_listeners.remove(found);
             }
         }
     }
@@ -834,17 +837,54 @@ public class ConfigurationHandler extends PrimitiveHandler implements ManagedSer
      * @param map the new configuration of the component instance.
      */
     private void notifyListeners(Map<String, Object> map) {
+
         // Get a snapshot of the listeners
+        // and check if we had a change in the map.
         List<ConfigurationListener> tmp;
         synchronized (m_listeners) {
             tmp = new ArrayList<ConfigurationListener>(m_listeners);
+
+            if (map == null) {
+                if (m_lastConfiguration == null) {
+                    // No change.
+                    return;
+                }
+                // Else trigger the change.
+            } else {
+                if (m_lastConfiguration != null && m_lastConfiguration.size() == map.size()) {
+                    // Must compare key by key
+                    boolean diff = false;
+                    for (String k : map.keySet()) {
+                        if (! map.get(k).equals(m_lastConfiguration.get(k))) {
+                            // Difference found, break;
+                            diff = true;
+                            break;
+                        }
+                    }
+                    if (! diff) {
+                        // no difference found, skip notification
+                        return;
+                    }
+                }
+                // Else difference found, triggers the change
+            }
+
+            if (map == null) {
+                m_lastConfiguration = Collections.emptyMap();
+            } else {
+                m_lastConfiguration = Collections.unmodifiableMap(map);
+            }
+
+        }
+        if (! tmp.isEmpty()) {
+            getLogger().log(Log.DEBUG, String.format(
+                    "[%s] Notifying configuration listener: %s", getInstanceManager().getInstanceName(), tmp));
         }
         // Protect the map.
-        map = Collections.unmodifiableMap(map);
         // Do notify, outside any lock
         for (ConfigurationListener l : tmp) {
             try {
-                l.configurationChanged(getInstanceManager(), map);
+                l.configurationChanged(getInstanceManager(), m_lastConfiguration);
             } catch (Throwable e) {
                 // Failure inside a listener: put a warning on the logger, and continue
                 warn(String.format(

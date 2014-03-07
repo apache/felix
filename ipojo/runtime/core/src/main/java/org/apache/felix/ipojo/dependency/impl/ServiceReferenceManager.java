@@ -125,8 +125,9 @@ public class ServiceReferenceManager implements TrackerCustomizer {
     }
 
     public void open() {
-        m_trackingInterceptorTracker = new Tracker(m_dependency.getBundleContext(),
-                ServiceTrackingInterceptor.class.getName(),
+        // The opening order matters, first binding, then ranking and finally tracking.
+        m_bindingInterceptorTracker = new Tracker(m_dependency.getBundleContext(),
+                ServiceBindingInterceptor.class.getName(),
                 new TrackerCustomizer() {
 
                     public boolean addingService(ServiceReference reference) {
@@ -134,11 +135,10 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                     }
 
                     public void addedService(ServiceReference reference) {
-                        ServiceTrackingInterceptor interceptor = (ServiceTrackingInterceptor) m_trackingInterceptorTracker
+                        ServiceBindingInterceptor interceptor = (ServiceBindingInterceptor) m_bindingInterceptorTracker
                                 .getService(reference);
-
                         if (interceptor != null) {
-                            addTrackingInterceptor(interceptor);
+                            addBindingInterceptor(interceptor);
                         } else {
                             m_dependency.getComponentInstance().getFactory().getLogger().log(Log.ERROR,
                                     "Cannot retrieve the interceptor object from service reference " + reference
@@ -148,20 +148,19 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                     }
 
                     public void modifiedService(ServiceReference reference, Object service) {
-                        // Not supported yet.
-                        // TODO it would be nice to support the modification of the interceptor TARGET property.
+                        // Not supported.
                     }
 
                     public void removedService(ServiceReference reference, Object service) {
-                        if (service != null && service instanceof ServiceTrackingInterceptor &&
-                                m_trackingInterceptors.contains(service)
-                        ) {
-                            removeTrackingInterceptor((ServiceTrackingInterceptor) service);
+                        if (service != null && service instanceof ServiceBindingInterceptor &&
+                                m_bindingInterceptors.contains(service)
+                                ) {
+                            removeBindingInterceptor((ServiceBindingInterceptor) service);
                         }
                     }
-                });
-
-        m_trackingInterceptorTracker.open();
+                }
+        );
+        m_bindingInterceptorTracker.open();
 
         // Initialize the service interceptor tracker.
         m_rankingInterceptorTracker = new Tracker(m_dependency.getBundleContext(), ServiceRankingInterceptor.class.getName(),
@@ -210,8 +209,8 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                 });
         m_rankingInterceptorTracker.open();
 
-        m_bindingInterceptorTracker = new Tracker(m_dependency.getBundleContext(),
-                ServiceBindingInterceptor.class.getName(),
+        m_trackingInterceptorTracker = new Tracker(m_dependency.getBundleContext(),
+                ServiceTrackingInterceptor.class.getName(),
                 new TrackerCustomizer() {
 
                     public boolean addingService(ServiceReference reference) {
@@ -219,10 +218,11 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                     }
 
                     public void addedService(ServiceReference reference) {
-                        ServiceBindingInterceptor interceptor = (ServiceBindingInterceptor) m_bindingInterceptorTracker
+                        ServiceTrackingInterceptor interceptor = (ServiceTrackingInterceptor) m_trackingInterceptorTracker
                                 .getService(reference);
+
                         if (interceptor != null) {
-                            addBindingInterceptor(interceptor);
+                            addTrackingInterceptor(interceptor);
                         } else {
                             m_dependency.getComponentInstance().getFactory().getLogger().log(Log.ERROR,
                                     "Cannot retrieve the interceptor object from service reference " + reference
@@ -232,19 +232,20 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                     }
 
                     public void modifiedService(ServiceReference reference, Object service) {
-                        // Not supported.
+                        // Not supported yet.
+                        // TODO it would be nice to support the modification of the interceptor TARGET property.
                     }
 
                     public void removedService(ServiceReference reference, Object service) {
-                        if (service != null && service instanceof ServiceBindingInterceptor &&
-                                m_bindingInterceptors.contains(service)
+                        if (service != null && service instanceof ServiceTrackingInterceptor &&
+                                m_trackingInterceptors.contains(service)
                                 ) {
-                            removeBindingInterceptor((ServiceBindingInterceptor) service);
+                            removeTrackingInterceptor((ServiceTrackingInterceptor) service);
                         }
                     }
-                }
-        );
-        m_bindingInterceptorTracker.open();
+                });
+
+        m_trackingInterceptorTracker.open();
     }
 
     private void addTrackingInterceptor(ServiceTrackingInterceptor interceptor) {
@@ -324,6 +325,8 @@ public class ServiceReferenceManager implements TrackerCustomizer {
     private ChangeSet computeChangesInMatchingServices() {
         if (m_dependency.getTracker() == null || m_dependency.getTracker().getServiceReferences() == null) {
             // Tracker closed, no problem
+            m_dependency.getComponentInstance().getFactory().getLogger().log(Logger.DEBUG,
+                    "Tracker closed when recomputing dependency " + m_dependency.getId());
             return new ChangeSet(Collections.<ServiceReference>emptyList(),
                     Collections.<ServiceReference>emptyList(),
                     Collections.<ServiceReference>emptyList(),
@@ -349,6 +352,9 @@ public class ServiceReferenceManager implements TrackerCustomizer {
                     }
                 }
             }
+            m_dependency.getComponentInstance().getFactory().getLogger().log(Logger.DEBUG,
+                    "Matching services have been recomputed: " + ServiceReferenceUtils.toString(m_matchingReferences.values()));
+
 
             // We have the new matching set.
             List<ServiceReference> beforeRanking = getSelectedServices();
@@ -358,6 +364,8 @@ public class ServiceReferenceManager implements TrackerCustomizer {
             if (allServices.isEmpty()) {
                 references = Collections.emptyList();
             } else {
+                m_dependency.getComponentInstance().getFactory().getLogger().log(Logger.DEBUG,
+                        "iPOJO >> Calling getServiceReferences on the interceptor " + m_rankingInterceptor);
                 references = m_rankingInterceptor.getServiceReferences(m_dependency, allServices);
             }
 
