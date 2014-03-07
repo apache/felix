@@ -33,6 +33,7 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 
 import dm.context.ComponentContext;
+import dm.impl.AdapterServiceImpl;
 import dm.impl.ComponentImpl;
 import dm.impl.ConfigurationDependencyImpl;
 import dm.impl.Logger;
@@ -153,10 +154,26 @@ public class DependencyManager {
     }
     
     public ConfigurationDependency createConfigurationDependency() {
-        return new ConfigurationDependencyImpl(m_context, m_logger); // TODO pass context and logger in the constructor
+        return new ConfigurationDependencyImpl(m_context, m_logger);
+    }
+    
+    public Component createAdapterService(Class serviceInterface, String serviceFilter, String autoConfig) {
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, autoConfig, null, null, null);
+    }
+
+    public Component createAdapterService(Class<?> serviceInterface, String serviceFilter) {
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, null, null, null);
     }
         
-    public List getComponents() {
+    public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove, String swap) {
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove, swap);
+    }
+
+    public Component createAdapterService(Class serviceInterface, String serviceFilter, String add, String change, String remove) {
+        return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove);
+    }
+
+    public List<Component> getComponents() {
         return m_components;
     }
 
