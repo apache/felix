@@ -19,13 +19,23 @@
 package dm.it;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 
 import dm.Component;
 import dm.DependencyManager;
 import junit.framework.Assert;
 
+/**
+ * This test does some injection tests on components being in INSTANTIATED_AND_WAITING_FOR_REQUIRED state.
+ */
 public class InstanceBoundDependencyTest extends TestBase {
     Ensure m_e;
     
@@ -33,91 +43,116 @@ public class InstanceBoundDependencyTest extends TestBase {
         DependencyManager m = new DependencyManager(context);
         m_e = new Ensure();
         
-        Component myComponent = m.createComponent().setImplementation(new MyComponent());
-        myComponent.add(m.createServiceDependency().setService(Service1.class).setRequired(true).setCallbacks("add", "change", "remove"));
-        m.add(myComponent);
+        // Create a "C" component: it depends on some S1 services, and on some S2 instance-bound services (declared from C.init() method)        
+        C cimpl = new C();
+        Component c = m.createComponent().setImplementation(cimpl);
+        c.add(m.createServiceDependency().setService(S1.class).setRequired(true).setCallbacks("addS1", "changeS1", "removeS1").setAutoConfig(true));
+        m.add(c);
         
-        Component s1_1 = m.createComponent().setImplementation(new Service1Impl()).setInterface(Service1.class.getName(), null);
+        // Add S1 (s1_1): C.add(S1 s1) is called, then init() is called where a dependency is declared on S2
+        Properties s1_1_props = new Properties();
+        s1_1_props.put("name", "s1_1");
+        s1_1_props.put(Constants.SERVICE_RANKING, new Integer(10));
+        S1Impl s1_1_impl = new S1Impl();
+        Component s1_1 = m.createComponent().setImplementation(s1_1_impl).setInterface(S1.class.getName(), s1_1_props);
         m.add(s1_1);
-        m_e.waitForStep(2, 5000);
-        Component s1_2 = m.createComponent().setImplementation(new Service1Impl()).setInterface(Service1.class.getName(), null);
+        m_e.waitForStep(1, 5000); // wait until C.init called
+        ServiceReference ref = cimpl.getS1("s1_1");
+        Assert.assertNotNull(ref);
+        Assert.assertNotNull(cimpl.getS1());
+        Assert.assertEquals(s1_1_impl, cimpl.getS1());
+        
+        // At this point, MyComponent is in INSTANTIATED_AND_WAITING_FOR_REQUIRED state. 
+        // add now add another higher ranked S1 (s1_2) instance. C.add(s1_2) method should be called (the S1 dependency 
+        // is not instance bound), and m_s1 autoconfig field should be updated.
+        Properties s1_2_props = new Properties();
+        s1_2_props.put(Constants.SERVICE_RANKING, new Integer(20));
+        s1_2_props.put("name", "s1_2");
+        S1Impl s1_2_impl = new S1Impl();
+        Component s1_2 = m.createComponent().setImplementation(s1_2_impl).setInterface(S1.class.getName(), s1_2_props);
         m.add(s1_2);
-        m_e.waitForStep(3, 5000);
-        s1_2.setServiceProperties(new Hashtable() {{ put("foo", "bar");}});
-        m_e.waitForStep(4, 5000);
-        m.remove(s1_2);
-        m_e.waitForStep(5, 5000);
-        Component s2_1 = m.createComponent().setImplementation(new Service2Impl()).setInterface(Service2.class.getName(), null);
-        m.add(s2_1);
-        m_e.waitForStep(6, 5000);
-        Component s2_2 = m.createComponent().setImplementation(new Service2Impl()).setInterface(Service2.class.getName(), null);
-        m.add(s2_2);
-        m_e.waitForStep(7, 5000);
-        s2_2.setServiceProperties(new Hashtable() {{ put("foo", "bar");}});
-        m_e.waitForStep(8, 5000);
-        m.remove(s2_2);
-        m_e.waitForStep(9, 5000);
-    }
-    
-    public interface Service1 {        
-    }
-    
-    public class Service1Impl implements Service1 {        
-    }
-    
-    public interface Service2 {        
-    }
-    
-    public class Service2Impl implements Service2 {        
-    }
-    
-    class MyComponent {
-        final List<Service1> m_service1List = new ArrayList();
-        final List<Service2> m_service2List = new ArrayList();
+        ref = cimpl.getS1("s1_2");
+        Assert.assertNotNull(ref);
+        Assert.assertNotNull(cimpl.getS1()); 
+        Assert.assertEquals(s1_2_impl, cimpl.getS1()); // must return s1_2 with ranking = 20
 
-        void add(Service1 s1) {
-            Assert.assertEquals(0, m_service2List.size());
-            m_service1List.add(s1);
-            if (m_service1List.size() == 1) {
-                m_e.step(1);
-            } else if (m_service1List.size() == 2) {
-                m_e.step(3);
-            }
+        // Now, change the s1_1 service properties: C.changed(s1_1) should be called, and C.m_s1AutoConfig should be updated
+        s1_1_props.put(Constants.SERVICE_RANKING, new Integer(30));
+        s1_1.setServiceProperties(s1_1_props);
+        ref = cimpl.getS1("s1_1");
+        Assert.assertNotNull(ref);
+        Assert.assertEquals(new Integer(30), ref.getProperty(Constants.SERVICE_RANKING));
+        Assert.assertNotNull(cimpl.getS1());
+        Assert.assertEquals(s1_1_impl, cimpl.getS1());
+        
+        // Now, remove the s1_1: C.remove(s1_1) should be called, and C.m_s1AutoConfig should be updated
+        m.remove(s1_1);
+        ref = cimpl.getS1("s1_1");
+        Assert.assertNull(cimpl.getS1("s1_1"));
+        Assert.assertNotNull(cimpl.getS1());
+        Assert.assertEquals(s1_2_impl, cimpl.getS1());
+        m.clear();
+    }
+    
+    // C component depends on some S1 required services
+    public interface S1 {
+    }
+    
+    public class S1Impl implements S1 {
+    }
+    
+    public interface S2 {        
+    }
+    
+    public class S2Impl implements S2 {        
+    }
+    
+    // Our "C" component: it depends on S1 (required) and S2 (required/instance bound)
+    class C {        
+        final Map<String, ServiceReference> m_s1Map = new HashMap();
+        final Map<String, ServiceReference> m_s2Map = new HashMap();
+        volatile S1 m_s1; // auto configured
+        
+        S1 getS1() {
+            return m_s1;
+        }
+
+        void addS1(ServiceReference s1) {
+            m_s1Map.put((String) s1.getProperty("name"), s1);
         }
         
-        void change(Service1 s1) {
-            m_e.step(4);
+        void changeS1(ServiceReference s1) {
+            m_s1Map.put((String) s1.getProperty("name"), s1);
         }
         
-        void remove(Service1 s1) {
-            m_service1List.remove(s1);
-            Assert.assertEquals(1,  m_service1List.size());
-            m_e.step(5);
+        void removeS1(ServiceReference s1) {
+            m_s1Map.remove((String) s1.getProperty("name"));
+        }
+        
+        void addS2(ServiceReference s2) {
+            m_s2Map.put((String) s2.getProperty("name"), s2);
+        }
+        
+        void changeS2(ServiceReference s2) {
+            m_s2Map.put((String) s2.getProperty("name"), s2);
+        }
+        
+        void removeS2(ServiceReference s2) {
+            m_s2Map.remove((String) s2.getProperty("name"));
+        }
+        
+        ServiceReference getS1(String name) {
+            return m_s1Map.get(name);
+        }
+        
+        ServiceReference getS2(String name) {
+            return m_s2Map.get(name);
         }
         
         void init(Component c) {
             DependencyManager m = c.getDependencyManager();
-            c.add(m.createServiceDependency().setService(Service2.class).setRequired(true).setCallbacks("add", "change", "remove"));
-            m_e.step(2);
-        }
-        
-        void add(Service2 s2) {
-            m_service2List.add(s2);
-            if (m_service2List.size() == 1) {
-                m_e.step(6);
-            } else if (m_service2List.size() == 2) {
-                m_e.step(7);
-            }  
-        }
-        
-        void change(Service2 s2) {
-            m_e.step(8);
-        }
-        
-        void remove(Service2 s2) {
-            m_service2List.remove(s2);
-            Assert.assertEquals(1, m_service2List.size());
-            m_e.step(9);
+            c.add(m.createServiceDependency().setService(S2.class).setRequired(true).setCallbacks("addS2", "changeS2", "removeS2"));
+            m_e.step(1);
         }
     }
 }
