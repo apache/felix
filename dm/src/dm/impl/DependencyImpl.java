@@ -88,6 +88,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	protected void addDependency(Event e) {
 		m_dependencies.add(e);
 		m_available = true;
+		
 		switch (m_component.getComponentState()) {
 		case WAITING_FOR_REQUIRED:
 		    if (isRequired()) {
@@ -100,6 +101,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		            if (m_add != null) {		       
 		                invoke(m_add, e);
 		            }
+		            m_component.updateInstance(this);
 		        } else {
 		            m_component.handleChange();
 		        }
@@ -122,7 +124,8 @@ public class DependencyImpl implements Dependency, DependencyContext {
         case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
             if (m_change != null && isRequired() && !isInstanceBound()) {
                 invoke(m_change, e);
-            }
+            }     
+            m_component.updateInstance(this);
             break;
         case TRACKING_OPTIONAL:
             if (m_change != null) {
@@ -145,6 +148,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
                 if (m_remove != null) {
                     invoke(m_remove, e);
                 }
+                m_component.updateInstance(this);
             }
             break;
         case TRACKING_OPTIONAL:
