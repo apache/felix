@@ -26,6 +26,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import dm.Component;
+import dm.ComponentState;
 import dm.ComponentStateListener;
 import dm.Dependency;
 import dm.DependencyManager;
@@ -292,7 +293,7 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
 
     @Override
-    public boolean isInstantiated() {
-        return m_component.isInstantiated();
-    };
+    public ComponentState getComponentState() {
+        return m_component.getComponentState();
+    }
 }
