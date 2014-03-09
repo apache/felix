@@ -355,7 +355,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 	
     private void startDependencies(List<DependencyContext> dependencies) {
-        // Start first optional dependencies, then start required dependencies.
+        // Start first optional dependencies first.
         List<DependencyContext> requiredDeps = new ArrayList();
         for (DependencyContext d : dependencies) {
             if (d.isRequired()) {
