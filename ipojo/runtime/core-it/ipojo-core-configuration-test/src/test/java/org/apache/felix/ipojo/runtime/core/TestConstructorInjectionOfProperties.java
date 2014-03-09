@@ -49,7 +49,7 @@ public class TestConstructorInjectionOfProperties extends Common {
                 "(instance.name=" + instance.getInstanceName() +")",
                 1000);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
         assertEquals(cs.getProps().getProperty("message"), "message");
     }
 
@@ -65,7 +65,7 @@ public class TestConstructorInjectionOfProperties extends Common {
                 "(instance.name=" + instance.getInstanceName() +")",
                 1000);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
         assertEquals(cs.getProps().getProperty("message"), "message");
     }
 
@@ -78,7 +78,7 @@ public class TestConstructorInjectionOfProperties extends Common {
                 "(instance.name=" + instance.getInstanceName() +")",
                 1000);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
         assertEquals(cs.getProps().getProperty("message"), "message");
     }
 
@@ -94,7 +94,7 @@ public class TestConstructorInjectionOfProperties extends Common {
                 "(instance.name=" + instance.getInstanceName() +")",
                 1000);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
         assertEquals(cs.getProps().getProperty("message"), "message");
         assertEquals(cs.getProps().getProperty("product"), "ipojo");
     }
@@ -111,7 +111,7 @@ public class TestConstructorInjectionOfProperties extends Common {
                 "(instance.name=" + instance.getInstanceName() +")",
                 1000);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
         assertEquals(cs.getProps().getProperty("message"), "message");
         assertNotNull(cs.getProps().get("context"));
         assertTrue(cs.getProps().get("context") instanceof BundleContext);

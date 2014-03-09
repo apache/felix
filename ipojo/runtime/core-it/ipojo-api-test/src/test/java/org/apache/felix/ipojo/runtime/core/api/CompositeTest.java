@@ -83,7 +83,7 @@ public class CompositeTest extends Common {
                 "(component.providedServiceSpecifications=" + Foo.class.getName() + ")");
         assertThat(refs.length, is(not(0)));
 
-        Factory factory = (Factory) osgiHelper.getServiceObject(refs[0]);
+        Factory factory = (Factory) osgiHelper.getRawServiceObject(refs[0]);
         System.out.println(factory.getComponentDescription().getDescription());
 
         CompositeComponentType type = new CompositeComponentType()

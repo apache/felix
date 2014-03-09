@@ -86,17 +86,17 @@ public class TestMultipleDependencies extends Common {
 	@Test public void testSimple() {
 		ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance1.getInstanceName());
 		assertNotNull("Check architecture availability", arch_ref);
-		InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance invalidity - 1", id.getState() == ComponentInstance.INVALID);
 		
 		fooProvider1.start();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 2", id.getState() == ComponentInstance.VALID);
 		
 		ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance1.getInstanceName());
 		assertNotNull("Check CheckService availability", cs_ref);
-		CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		Properties props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 1", ((Boolean)props.get("result")).booleanValue()); // True, a provider is here
@@ -111,10 +111,10 @@ public class TestMultipleDependencies extends Common {
 		assertEquals("Check FS invocation (double) - 1", ((Double)props.get("double")).doubleValue(), 1.0, 0);
 		
 		fooProvider2.start();
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 3", id.getState() == ComponentInstance.VALID);
 		
-		cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 2", ((Boolean)props.get("result")).booleanValue()); // True, two providers are here
@@ -130,10 +130,10 @@ public class TestMultipleDependencies extends Common {
 		
 		fooProvider1.stop();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 4", id.getState() == ComponentInstance.VALID);
 		
-		cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 3", ((Boolean)props.get("result")).booleanValue()); // True, two providers are here
@@ -148,7 +148,7 @@ public class TestMultipleDependencies extends Common {
 		assertEquals("Check FS invocation (double) - 3", ((Double)props.get("double")).doubleValue(), 1.0, 0);
 		
 		fooProvider2.stop();
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 5", id.getState() == ComponentInstance.INVALID);
 		
 		id = null;
@@ -160,17 +160,17 @@ public class TestMultipleDependencies extends Common {
 	@Test public void testVoid() {
 		ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance2.getInstanceName());
 		assertNotNull("Check architecture availability", arch_ref);
-		InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance invalidity - 1", id.getState() == ComponentInstance.INVALID);
 		
 		fooProvider1.start();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 2", id.getState() == ComponentInstance.VALID);
 		
 		ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
 		assertNotNull("Check CheckService availability", cs_ref);
-		CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		Properties props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 1", ((Boolean)props.get("result")).booleanValue()); // True, a provider is here
@@ -186,10 +186,10 @@ public class TestMultipleDependencies extends Common {
 		
 		fooProvider2.start();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 3", id.getState() == ComponentInstance.VALID);
 		
-		cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 2", ((Boolean)props.get("result")).booleanValue()); // True, two providers are here
@@ -205,10 +205,10 @@ public class TestMultipleDependencies extends Common {
 		
 		fooProvider1.stop();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 4", id.getState() == ComponentInstance.VALID);
 		
-		cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 3", ((Boolean)props.get("result")).booleanValue()); // True, two providers are here
@@ -224,7 +224,7 @@ public class TestMultipleDependencies extends Common {
 		
 		fooProvider2.stop();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 5", id.getState() == ComponentInstance.INVALID);
 		
 		id = null;
@@ -236,17 +236,17 @@ public class TestMultipleDependencies extends Common {
 	@Test public void testObject() {
 		ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance3.getInstanceName());
 		assertNotNull("Check architecture availability", arch_ref);
-		InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance invalidity - 1", id.getState() == ComponentInstance.INVALID);
 		
 		fooProvider1.start();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 2", id.getState() == ComponentInstance.VALID);
 		
 		ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
 		assertNotNull("Check CheckService availability", cs_ref);
-		CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		Properties props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 1", ((Boolean)props.get("result")).booleanValue()); // True, a provider is here
@@ -262,10 +262,10 @@ public class TestMultipleDependencies extends Common {
 		
 		fooProvider2.start();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 3", id.getState() == ComponentInstance.VALID);
 		
-		cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 2", ((Boolean)props.get("result")).booleanValue()); // True, two providers are here
@@ -281,10 +281,10 @@ public class TestMultipleDependencies extends Common {
 		
 		fooProvider1.stop();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 4", id.getState() == ComponentInstance.VALID);
 		
-		cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 3", ((Boolean)props.get("result")).booleanValue()); // True, two providers are here
@@ -300,7 +300,7 @@ public class TestMultipleDependencies extends Common {
 		
 		fooProvider2.stop();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 5", id.getState() == ComponentInstance.INVALID);
 		
 		id = null;
@@ -312,17 +312,17 @@ public class TestMultipleDependencies extends Common {
 	@Test public void testRef() {
 		ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance4.getInstanceName());
 		assertNotNull("Check architecture availability", arch_ref);
-		InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance invalidity - 1", id.getState() == ComponentInstance.INVALID);
 		
 		fooProvider1.start();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 2", id.getState() == ComponentInstance.VALID);
 		
 		ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance4.getInstanceName());
 		assertNotNull("Check CheckService availability", cs_ref);
-		CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		Properties props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 1", ((Boolean)props.get("result")).booleanValue()); // True, a provider is here
@@ -338,10 +338,10 @@ public class TestMultipleDependencies extends Common {
 		
 		fooProvider2.start();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 3", id.getState() == ComponentInstance.VALID);
 		
-		cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 2", ((Boolean)props.get("result")).booleanValue()); // True, two providers are here
@@ -357,10 +357,10 @@ public class TestMultipleDependencies extends Common {
 		
 		fooProvider1.stop();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 4", id.getState() == ComponentInstance.VALID);
 		
-		cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+		cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 		props = cs.getProps();
 		//Check properties
 		assertTrue("check CheckService invocation - 3", ((Boolean)props.get("result")).booleanValue()); // True, two providers are here
@@ -376,7 +376,7 @@ public class TestMultipleDependencies extends Common {
 		
 		fooProvider2.stop();
 		
-		id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+		id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 		assertTrue("Check instance validity - 5", id.getState() == ComponentInstance.INVALID);
 		
 		id = null;

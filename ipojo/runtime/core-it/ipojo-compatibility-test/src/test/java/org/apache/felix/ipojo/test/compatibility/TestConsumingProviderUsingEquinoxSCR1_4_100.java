@@ -38,11 +38,9 @@ import static org.ops4j.pax.exam.CoreOptions.maven;
  */
 public class TestConsumingProviderUsingEquinoxSCR1_4_100 extends Common {
 
-    public static String DS_URL = "http://www.dynamis-technologies.com/ipojo/bundles/org.eclipse.equinox.ds_1.4.100" +
-            ".v20130515-2026.jar";
+    public static String DS_URL = "http://people.apache.org/~clement/ipojo/bundle4tests/org.eclipse.equinox.ds_1.4.101.v20130813-1853.jar";
 
-    public static String UTILS_URL = "http://www.dynamis-technologies.com/ipojo/bundles/org.eclipse.equinox.util_1.0" +
-            ".500.v20130404-1337.jar";
+    public static String UTILS_URL = "http://people.apache.org/~clement/ipojo/bundle4tests/org.eclipse.equinox.util_1.0.500.v20130404-1337.jar";
 
     @Override
     public Option[] bundles() {

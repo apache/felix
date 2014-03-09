@@ -126,7 +126,7 @@ public class TestDependency extends Common {
 
         assertNotNull(ref);
 
-        CheckService svc = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService svc = (CheckService) osgiHelper.getRawServiceObject(ref);
         assertFalse(svc.check());
 
         // The following instantiation exposes the BarService required by instance.

@@ -42,7 +42,7 @@ public class Tools {
 
         if (ref != null) {
             // Get the factory
-            return (Factory) osgi.getServiceObject(ref);
+            return (Factory) osgi.getRawServiceObject(ref);
         } else {
             return null;
         }

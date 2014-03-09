@@ -82,7 +82,7 @@ public class TestListeners extends Common {
 
         // Get the service
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-42");
-        foo = (FooService) osgiHelper.getServiceObject(ref);
+        foo = (FooService) osgiHelper.getRawServiceObject(ref);
     }
 
     @After
@@ -194,9 +194,12 @@ public class TestListeners extends Common {
         fooConfig.addListener(null);
     }
 
-    @Test(expected = NoSuchElementException.class)
+    /**
+     * This test was initially expecting a NoSuchElementException, in 1.11.2, we changed the method to ignore missing
+     * listeners.
+     */
+    @Test
     public void testRemoveNonexistentProvidedServiceListener() {
-        // Should fail!
         fooConfig.removeListener(new ThrowingListener());
     }
 }

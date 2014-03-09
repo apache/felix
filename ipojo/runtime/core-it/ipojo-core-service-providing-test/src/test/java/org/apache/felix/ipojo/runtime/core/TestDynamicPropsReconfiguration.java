@@ -90,7 +90,7 @@ public class TestDynamicPropsReconfiguration extends Common {
 
         // Reconfiguration
         ServiceReference fact_ref = ipojoHelper.getServiceReferenceByName(Factory.class.getName(), "PS-FooProviderType-Dyn2");
-        Factory fact = (Factory) osgiHelper.getServiceObject(fact_ref);
+        Factory fact = (Factory) osgiHelper.getRawServiceObject(fact_ref);
         Properties p3 = new Properties();
         p3.put("instance.name", "FooProvider-3");
         p3.put("int", 1);
@@ -133,7 +133,7 @@ public class TestDynamicPropsReconfiguration extends Common {
         }
 
         // Invoke
-        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
         assertTrue("invoke fs", fs.foo());
 
         // Re-check the property (change)
@@ -157,7 +157,7 @@ public class TestDynamicPropsReconfiguration extends Common {
 
         //	Reconfiguration
         fact_ref = ipojoHelper.getServiceReferenceByName(Factory.class.getName(), "PS-FooProviderType-Dyn2");
-        fact = (Factory) osgiHelper.getServiceObject(fact_ref);
+        fact = (Factory) osgiHelper.getRawServiceObject(fact_ref);
         p3 = new Properties();
         p3.put("instance.name", "FooProvider-3");
         p3.put("int", 1);
@@ -232,7 +232,7 @@ public class TestDynamicPropsReconfiguration extends Common {
 
         // Reconfiguration
         ServiceReference fact_ref = ipojoHelper.getServiceReferenceByName(Factory.class.getName(), "PS-FooProviderType-Dyn2");
-        Factory fact = (Factory) osgiHelper.getServiceObject(fact_ref);
+        Factory fact = (Factory) osgiHelper.getRawServiceObject(fact_ref);
         Properties p3 = new Properties();
         p3.put("instance.name", "FooProvider-3");
         p3.put("int", "1");
@@ -275,7 +275,7 @@ public class TestDynamicPropsReconfiguration extends Common {
         }
 
         // Invoke
-        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
         assertTrue("invoke fs", fs.foo());
 
         // Re-check the property (change)
@@ -299,7 +299,7 @@ public class TestDynamicPropsReconfiguration extends Common {
 
         //	Reconfiguration
         fact_ref = ipojoHelper.getServiceReferenceByName(Factory.class.getName(), "PS-FooProviderType-Dyn2");
-        fact = (Factory) osgiHelper.getServiceObject(fact_ref);
+        fact = (Factory) osgiHelper.getRawServiceObject(fact_ref);
         p3 = new Properties();
         p3.put("instance.name", "FooProvider-3");
         p3.put("int", "1");
@@ -415,7 +415,7 @@ public class TestDynamicPropsReconfiguration extends Common {
         }
 
         // Invoke
-        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
         assertTrue("invoke fs", fs.foo());
 
         // Re-check the property (change)
@@ -552,7 +552,7 @@ public class TestDynamicPropsReconfiguration extends Common {
         }
 
         // Invoke
-        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
         assertTrue("invoke fs", fs.foo());
 
         // Re-check the property (change)
@@ -642,7 +642,7 @@ public class TestDynamicPropsReconfiguration extends Common {
 
         // Reconfiguration
         ServiceReference fact_ref = ipojoHelper.getServiceReferenceByName(Factory.class.getName(), "PS-FooProviderType-Dyn2");
-        Factory fact = (Factory) osgiHelper.getServiceObject(fact_ref);
+        Factory fact = (Factory) osgiHelper.getRawServiceObject(fact_ref);
         Properties p3 = new Properties();
         p3.put("instance.name", "FooProvider-4");
         p3.put("int", new Integer(1));
@@ -685,7 +685,7 @@ public class TestDynamicPropsReconfiguration extends Common {
         }
 
         // Invoke
-        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
         assertTrue("invoke fs", fs.foo());
 
         // Re-check the property (change)
@@ -709,7 +709,7 @@ public class TestDynamicPropsReconfiguration extends Common {
 
         //	Reconfiguration
         fact_ref = ipojoHelper.getServiceReferenceByName(Factory.class.getName(), "PS-FooProviderType-Dyn2");
-        fact = (Factory) osgiHelper.getServiceObject(fact_ref);
+        fact = (Factory) osgiHelper.getRawServiceObject(fact_ref);
         p3 = new Properties();
         p3.put("instance.name", "FooProvider-3");
         p3.put("int", new Integer(1));

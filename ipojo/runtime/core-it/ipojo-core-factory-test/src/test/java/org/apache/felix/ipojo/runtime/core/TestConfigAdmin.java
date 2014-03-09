@@ -62,8 +62,8 @@ public class TestConfigAdmin extends Common {
         conf.delete();
         grace();
 
-        ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
-        assertNull("Check instance deletion", ref);
+        boolean av = ipojoHelper.isServiceAvailableByName(FooService.class.getName(), pid);
+        assertFalse("Check instance deletion", av);
     }
 
     /**
@@ -92,8 +92,8 @@ public class TestConfigAdmin extends Common {
         conf.delete();
         grace();
 
-        ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
-        assertNull("Check instance deletion", ref);
+        boolean av = ipojoHelper.isServiceAvailableByName(FooService.class.getName(), pid);
+        assertFalse("Check instance deletion", av);
     }
 
     /**
@@ -130,8 +130,8 @@ public class TestConfigAdmin extends Common {
         conf.delete();
         grace();
 
-        ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
-        assertNull("Check instance deletion", ref);
+        boolean av = ipojoHelper.isServiceAvailableByName(FooService.class.getName(), pid);
+        assertFalse("Check instance deletion", av);
     }
 
     /**
@@ -167,8 +167,8 @@ public class TestConfigAdmin extends Common {
         conf.delete();
         grace();
 
-        ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), pid);
-        assertNull("Check instance deletion", ref);
+        boolean av = ipojoHelper.isServiceAvailableByName(FooService.class.getName(), pid);
+        assertFalse("Check instance deletion", av);
     }
 
 }

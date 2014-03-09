@@ -39,8 +39,8 @@
         <url.version>1.5.1</url.version>
 
         <felix.version>4.2.0</felix.version>
-        <equinox.version>3.9.0.v20130529-1710</equinox.version>
-        <knoperflerfish.version>6.0.2</knoperflerfish.version>
+        <equinox.version>3.9.1.v20130814-1242</equinox.version>
+        <knoperflerfish.version>7.0.1</knoperflerfish.version>
 
         <manipulator.version>1.11.1</manipulator.version>
     </properties>
@@ -260,7 +260,7 @@
         <dependency>
             <groupId>org.ow2.chameleon.testing</groupId>
             <artifactId>osgi-helpers</artifactId>
-            <version>0.6.1</version>
+            <version>0.6.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.osgi</groupId>

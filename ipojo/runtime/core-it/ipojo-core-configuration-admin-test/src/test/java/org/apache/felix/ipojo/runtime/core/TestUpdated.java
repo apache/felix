@@ -48,11 +48,10 @@ public class TestUpdated extends Common {
         Configuration configuration = admin.createFactoryConfiguration(factoryName, "?");
         configuration.update(props);
 
-        ServiceReference ref = osgiHelper.waitForService(FooService.class.getName(),
+        FooService fs = osgiHelper.waitForService(FooService.class,
                 "(instance.name=" + configuration.getPid() + ")",
                 1000);
 
-        FooService fs = (FooService) osgiHelper.getServiceObject(ref);
         assertEquals(fs.getInt(), 1);
 
         // Update the property
@@ -88,11 +87,10 @@ public class TestUpdated extends Common {
         Configuration configuration = admin.createFactoryConfiguration(factoryName, "?");
         configuration.update(props);
 
-        ServiceReference ref = osgiHelper.waitForService(FooService.class.getName(),
+        FooService fs = osgiHelper.waitForService(FooService.class,
                 "(instance.name=" + configuration.getPid() + ")",
                 1000);
 
-        FooService fs = (FooService) osgiHelper.getServiceObject(ref);
         assertEquals(fs.getInt(), 1);
 
         // Update the property using the managed service.

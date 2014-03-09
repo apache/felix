@@ -97,7 +97,6 @@ public class TestManifestLoggerInfo extends Common {
         ServiceReference r = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(),
                 "org.apache.felix.ipojo.runtime.core.components.MyComponent-0");
         Assert.assertNotNull(r);
-        System.out.println(((Architecture) osgiHelper.getServiceObject(r)).getInstanceDescription().getDescription());
 
         ServiceReference[] refs = bc.getAllServiceReferences(null, null);
         for (ServiceReference ref : refs) {

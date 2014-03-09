@@ -46,7 +46,7 @@ public class TestClass extends Common {
         ServiceReference ref1 = ipojoHelper.getServiceReferenceByName("org.apache.felix.ipojo.runtime.core.components.inherited.ProcessParentImplementation", "ci");
         assertNotNull("Check itself", ref1);
 
-        ProcessParentImplementation itself = (ProcessParentImplementation) osgiHelper.getServiceObject(ref1);
+        ProcessParentImplementation itself = (ProcessParentImplementation) osgiHelper.getRawServiceObject(ref1);
 
         itself.processChild();
     }
@@ -58,7 +58,7 @@ public class TestClass extends Common {
         ServiceReference ref1 = ipojoHelper.getServiceReferenceByName("org.apache.felix.ipojo.runtime.core.components.inherited.ProcessParentImplementation", "ci");
         assertNotNull("Check parent", ref1);
 
-        ProcessParentImplementation itself = (ProcessParentImplementation) osgiHelper.getServiceObject(ref1);
+        ProcessParentImplementation itself = (ProcessParentImplementation) osgiHelper.getRawServiceObject(ref1);
 
         itself.processChild();
 
@@ -71,7 +71,7 @@ public class TestClass extends Common {
         ServiceReference ref1 = ipojoHelper.getServiceReferenceByName("org.apache.felix.ipojo.runtime.core.components.inherited.ProcessParentImplementation", "ci");
         assertNotNull("Check parent-parent", ref1);
 
-        ProcessParentImplementation itself = (ProcessParentImplementation) osgiHelper.getServiceObject(ref1);
+        ProcessParentImplementation itself = (ProcessParentImplementation) osgiHelper.getRawServiceObject(ref1);
 
         itself.processChild();
     }
@@ -83,7 +83,7 @@ public class TestClass extends Common {
         ServiceReference ref1 = ipojoHelper.getServiceReferenceByName("org.apache.felix.ipojo.runtime.core.components.inherited.ProcessParentImplementation", "ci");
         assertNotNull("Check parent-parent", ref1);
 
-        ProcessParentImplementation itself = (ProcessParentImplementation) osgiHelper.getServiceObject(ref1);
+        ProcessParentImplementation itself = (ProcessParentImplementation) osgiHelper.getRawServiceObject(ref1);
 
         itself.processChild();
 

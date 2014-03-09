@@ -48,12 +48,6 @@ public class TestDeclarationBuilderService extends Common {
     private DeclarationBuilderService builder;
     private DeclarationHandle handle;
 
-    @Override
-    protected List<String> getExtraExports() {
-        // The important thing here is to make sure that this package is in the bundle
-        return Arrays.asList("org.apache.felix.ipojo.runtime.core.test.components");
-    }
-
     @Before
     public void setUp() {
         builder = osgiHelper.getServiceObject(DeclarationBuilderService.class);
@@ -142,6 +136,8 @@ public class TestDeclarationBuilderService extends Common {
                 .name("german-hello")
                 .build();
         instance.publish();
+
+        System.out.println(instance.getStatus().getMessage());
 
         String filter = format("(instance.name=%s)", "german-hello");
         osgiHelper.waitForService(HelloService.class, filter, 1000);
