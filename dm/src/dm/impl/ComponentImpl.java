@@ -133,9 +133,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 						instanceBoundDeps.add(dc);
 					}
 				}
-				for (DependencyContext dc : instanceBoundDeps) {
-					dc.start();
-				}
+				startDependencies(instanceBoundDeps);
 				handleChange();
 			}
 		});
@@ -310,12 +308,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	private boolean performTransition(ComponentState oldState, ComponentState newState) {
 //		System.out.println("transition from " + oldState + " to " + newState);
 		if (oldState == ComponentState.INACTIVE && newState == ComponentState.WAITING_FOR_REQUIRED) {
-			for (DependencyContext d : m_dependencies) {
-			    if (d.needsInstance()) {
-			        instantiateComponent();
-			    }
-				d.start();
-			}
+		    startDependencies(m_dependencies);
 			notifyListeners(newState);
 			return true;
 		}
@@ -353,9 +346,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			return true;
 		}
 		if (oldState == ComponentState.WAITING_FOR_REQUIRED && newState == ComponentState.INACTIVE) {
-			for (DependencyContext d : m_dependencies) {
-				d.stop();
-			}
+		    stopDependencies();
             destroyComponent();
 			notifyListeners(newState);
 			return true;
@@ -363,6 +354,34 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		return false;
 	}
 	
+    private void startDependencies(List<DependencyContext> dependencies) {
+        // Start first optional dependencies, then start required dependencies.
+        List<DependencyContext> requiredDeps = new ArrayList();
+        for (DependencyContext d : dependencies) {
+            if (d.isRequired()) {
+                requiredDeps.add(d);
+                continue;
+            }
+            if (d.needsInstance()) {
+                instantiateComponent();
+            }
+            d.start();
+        }
+        // now, start required dependencies.
+        for (DependencyContext d : requiredDeps) {
+            if (d.needsInstance()) {
+                instantiateComponent();
+            }
+            d.start();
+        }
+    }
+    
+    private void stopDependencies() {
+        for (DependencyContext d : m_dependencies) {
+            d.stop();
+        }
+    }
+
     private void registerService() {
         if (m_context != null && m_serviceName != null) {
             ServiceRegistrationImpl wrapper = new ServiceRegistrationImpl();
@@ -623,8 +642,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		return m_state == TRACKING_OPTIONAL;
 	}
 	
-	public boolean isInstantiated() {
-	    return m_state == TRACKING_OPTIONAL || m_state == INSTANTIATED_AND_WAITING_FOR_REQUIRED;
+	public ComponentState getComponentState() {
+	    return m_state;
 	}
 
 	@Override
