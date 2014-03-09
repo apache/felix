@@ -19,12 +19,10 @@
 
 package org.apache.felix.ipojo.runtime.core.test.declaration;
 
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.options.CompositeOption;
-import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.ow2.chameleon.testing.helpers.BaseTest;
 
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Bootstrap the test from this project
@@ -32,6 +30,16 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 public class Common extends BaseTest {
     @Override
     public boolean quiet() {
-        return false;
+        return true;
+    }
+
+
+
+    @Override
+    public List<String> getExtraExports() {
+        // The important thing here is to make sure that this package is in the bundle
+        return Arrays.asList(
+                "org.apache.felix.ipojo.runtime.core.test.components"
+        );
     }
 }

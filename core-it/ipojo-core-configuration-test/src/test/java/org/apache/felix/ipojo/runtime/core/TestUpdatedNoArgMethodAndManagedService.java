@@ -111,7 +111,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
-        ManagedService ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+        ManagedService ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -128,7 +128,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         assertEquals("Check baz equality -2", bazP, "zab");
 
         // Get Service
-        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
         Integer updated = (Integer) fs.fooProps().get("updated");
         assertEquals("Check updated", 1, updated.intValue());
     }
@@ -153,7 +153,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         conf.put("baz", "zab");
         conf.put("bar", new Integer(2));
         conf.put("foo", "foo");
-        ManagedService ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+        ManagedService ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -170,7 +170,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         assertEquals("Check baz equality -2", bazP, "zab");
 
         // Get Service
-        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
         Integer updated = (Integer) fs.fooProps().get("updated");
 
         assertEquals("Check updated", 1, updated.intValue());
@@ -178,7 +178,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         conf.put("baz", "zab2");
         conf.put("foo", "oof2");
         conf.put("bar", new Integer(0));
-        ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+        ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -211,7 +211,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
-        ManagedService ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+        ManagedService ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -229,7 +229,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
-        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -244,7 +244,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         conf.put("baz", "zab2");
         conf.put("foo", "oof2");
         conf.put("bar", new Integer(0));
-        ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+        ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -278,7 +278,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         conf.put("baz", "zab");
         conf.put("foo", "oof");
         conf.put("bar", new Integer(0));
-        ManagedService ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+        ManagedService ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {
@@ -296,7 +296,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
-        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -311,7 +311,7 @@ public class TestUpdatedNoArgMethodAndManagedService extends Common {
         conf.put("baz", "zab2");
         conf.put("foo", "oof2");
         conf.put("bar", new Integer(0));
-        ms = (ManagedService) osgiHelper.getServiceObject(msRef);
+        ms = (ManagedService) osgiHelper.getRawServiceObject(msRef);
         try {
             ms.updated(conf);
         } catch (ConfigurationException e) {

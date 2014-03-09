@@ -22,6 +22,7 @@ import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.HandlerManagerFactory;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.runtime.externalhandlers.services.CheckService;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
@@ -31,6 +32,7 @@ import java.util.Dictionary;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -65,7 +67,7 @@ public class HandlerTest extends Common {
 
         assertNotNull("Check the check service availability", sr);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(sr);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(sr);
         Dictionary<String, Object> p = cs.getProps();
         assertEquals("Assert 'simple' equality", p.get("Simple"), "simple");
         assertEquals("Assert 'a' equality", p.get("Map1"), "a");
@@ -88,7 +90,7 @@ public class HandlerTest extends Common {
         }
         assertNotNull("Check the check service availability", sr);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(sr);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(sr);
         Dictionary<String, Object> p = cs.getProps();
         assertEquals("Assert 'simple' equality", p.get("Simple"), "Simple");
         assertEquals("Assert 'a' equality", p.get("Map1"), "a");
@@ -109,7 +111,7 @@ public class HandlerTest extends Common {
         }
         assertNotNull("Check the check service availability", sr);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(sr);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(sr);
         Dictionary<String, Object> p = cs.getProps();
         assertEquals("Assert 'simple' equality", p.get("Simple"), "Simple");
         assertEquals("Size of p", 3, p.size()); // instance name, simple and changes.
@@ -131,13 +133,13 @@ public class HandlerTest extends Common {
         assertNotNull("Check the check service availability", sr);
 
         ServiceReference sr_arch = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "HandlerTest-1");
-        Architecture arch = (Architecture) osgiHelper.getServiceObject(sr_arch);
+        Architecture arch = (Architecture) osgiHelper.getRawServiceObject(sr_arch);
 
         System.out.println("===");
         Dumps.dumpArchitectures(context);
         assertEquals("Check instance validity - 0", arch.getInstanceDescription().getState(), ComponentInstance.VALID);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(sr);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(sr);
         Dictionary<String, Object> p = cs.getProps();
         Integer changes = (Integer) p.get("changes");
         assertNotNull("Check changes no null", changes);
@@ -174,18 +176,18 @@ public class HandlerTest extends Common {
         assertNotNull("Check the check service availability", sr);
 
         ServiceReference sr_arch = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "HandlerTest-1");
-        Architecture arch = (Architecture) osgiHelper.getServiceObject(sr_arch);
+        Architecture arch = (Architecture) osgiHelper.getRawServiceObject(sr_arch);
         assertEquals("Check validity", arch.getInstanceDescription().getState(), ComponentInstance.VALID);
 
         // Kill the handler factory
         HandlerManagerFactory f = (HandlerManagerFactory) ipojoHelper.getHandlerFactory("check");
         f.stop();
 
-        sr = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "HandlerTest-1");
-        assertNull("Check the check service unavailability", sr);
+        boolean av = ipojoHelper.isServiceAvailableByName(CheckService.class.getName(), "HandlerTest-1");
+        assertFalse("Check the check service unavailability", av);
 
-        sr_arch = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "HandlerTest-1");
-        assertNull("Check the architecture unavailability", sr_arch);
+        boolean av2 = ipojoHelper.isServiceAvailableByName(Architecture.class.getName(), "HandlerTest-1");
+        assertFalse("Check the architecture unavailability", av2);
 
         // The instance is disposed, restart the handler
         f.start();
@@ -204,7 +206,7 @@ public class HandlerTest extends Common {
         assertNotNull("Check the check service availability - 2", sr);
 
         sr_arch = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "HandlerTest-1");
-        arch = (Architecture) osgiHelper.getServiceObject(sr_arch);
+        arch = (Architecture) osgiHelper.getRawServiceObject(sr_arch);
         assertEquals("Check validity - 2", arch.getInstanceDescription().getState(), ComponentInstance.VALID);
     }
 

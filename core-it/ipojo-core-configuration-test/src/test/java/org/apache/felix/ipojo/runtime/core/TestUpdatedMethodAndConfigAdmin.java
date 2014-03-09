@@ -107,7 +107,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
         assertEquals("Check baz equality -2", bazP, "zab");
 
         // Get Service
-        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
         Integer updated = (Integer) fs.fooProps().get("updated");
         Dictionary dict = (Dictionary) fs.fooProps().get("lastupdated");
 
@@ -153,7 +153,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
         assertEquals("Check baz equality -2", bazP, "zab");
 
         // Get Service
-        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
         Integer updated = (Integer) fs.fooProps().get("updated");
         Dictionary dict = (Dictionary) fs.fooProps().get("lastupdated");
 
@@ -201,7 +201,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
-        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -255,7 +255,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
-        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");
@@ -312,7 +312,7 @@ public class TestUpdatedMethodAndConfigAdmin extends Common {
         assertEquals("Check baz equality", bazP, "zab");
 
         // Check field value
-        FooService fs = (FooService) osgiHelper.getServiceObject(fooRef);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(fooRef);
         Properties p = fs.fooProps();
         fooP = (String) p.get("foo");
         barP = (Integer) p.get("bar");

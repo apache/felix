@@ -64,7 +64,8 @@ public class TestImmediateCallback extends Common {
         // Check instance is invalid
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper
+                .getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_dep.getState() == ComponentInstance.INVALID);
         assertEquals("Check pojo count - 1", id_dep.getCreatedObjects().length, 0);
 
@@ -78,7 +79,7 @@ public class TestImmediateCallback extends Common {
         // Check service providing
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         assertEquals("Check pojo count - 2", id_dep.getCreatedObjects().length, 1);
@@ -102,7 +103,7 @@ public class TestImmediateCallback extends Common {
         // Check service providing
         cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check int property

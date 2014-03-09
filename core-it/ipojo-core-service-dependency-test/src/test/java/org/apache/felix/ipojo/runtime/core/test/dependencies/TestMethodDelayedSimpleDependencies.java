@@ -94,13 +94,13 @@ public class TestMethodDelayedSimpleDependencies extends Common {
         instance3.start();
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance3.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity", id.getState() == ComponentInstance.VALID);
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         Properties props = cs.getProps();
         //Check properties
         assertTrue("check CheckService invocation -1", ((Boolean) props.get("result")).booleanValue());
@@ -115,7 +115,7 @@ public class TestMethodDelayedSimpleDependencies extends Common {
 
         fooProvider.stop();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id.getState() == ComponentInstance.INVALID);
 
         id = null;
@@ -130,14 +130,14 @@ public class TestMethodDelayedSimpleDependencies extends Common {
         instance4.start();
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance4.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity", id.getState() == ComponentInstance.VALID);
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance4.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         Properties props = cs.getProps();
         //Check properties
         assertTrue("check CheckService invocation -1", ((Boolean) props.get("result")).booleanValue());
@@ -152,7 +152,7 @@ public class TestMethodDelayedSimpleDependencies extends Common {
 
         fooProvider.stop();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id.getState() == ComponentInstance.INVALID);
 
         id = null;
@@ -167,14 +167,14 @@ public class TestMethodDelayedSimpleDependencies extends Common {
         instance5.start();
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance5.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity", id.getState() == ComponentInstance.VALID);
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance5.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         Properties props = cs.getProps();
         //Check properties
         assertTrue("check CheckService invocation -1", ((Boolean) props.get("result")).booleanValue());
@@ -189,7 +189,7 @@ public class TestMethodDelayedSimpleDependencies extends Common {
 
         fooProvider.stop();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id.getState() == ComponentInstance.INVALID);
 
         id = null;
@@ -204,14 +204,14 @@ public class TestMethodDelayedSimpleDependencies extends Common {
         instance6.start();
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance6.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity", id.getState() == ComponentInstance.VALID);
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance6.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         Properties props = cs.getProps();
         //Check properties
         assertTrue("check CheckService invocation -1", ((Boolean) props.get("result")).booleanValue());
@@ -230,7 +230,7 @@ public class TestMethodDelayedSimpleDependencies extends Common {
 
         fooProvider.stop();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id.getState() == ComponentInstance.INVALID);
 
         id = null;
@@ -245,14 +245,14 @@ public class TestMethodDelayedSimpleDependencies extends Common {
         instance7.start();
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance7.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity", id.getState() == ComponentInstance.VALID);
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance7.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         Properties props = cs.getProps();
         //Check properties
         assertTrue("check CheckService invocation -1", ((Boolean) props.get("result")).booleanValue());
@@ -271,7 +271,7 @@ public class TestMethodDelayedSimpleDependencies extends Common {
 
         fooProvider.stop();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id.getState() == ComponentInstance.INVALID);
 
         id = null;

@@ -124,18 +124,15 @@ public class TestComplexConfigurations extends Common {
         TimeUtils.grace(500);
         osgiHelper.waitForService(FooService.class, null, 10000);
 
-        ServiceReference ref1 = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "complex1");
-        Assert.assertNotNull(ref1);
-        FooService fs1 = (FooService) osgiHelper.getServiceObject(ref1);
+        FooService fs1 = ipojoHelper.getServiceObjectByName(FooService.class, "complex1");
         Properties props1 = fs1.fooProps();
         Assert.assertTrue(((String)props1.get("content")).contains("I'm file 1"));
         Assert.assertEquals(((Bean)props1.get("bean")).getMessage(), "I'm 1");
         Assert.assertEquals(((Bean)props1.get("bean")).getCount(), 1);
         Assert.assertEquals(((Map<String, String>)props1.get("map")).get("a"), "b");
 
-        ServiceReference ref2 = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "complex2");
-        Assert.assertNotNull(ref2);
-        FooService fs2 = (FooService) osgiHelper.getServiceObject(ref2);
+        FooService fs2 = ipojoHelper.getServiceObjectByName(FooService.class, "complex2");
+        Assert.assertNotNull(fs2);
         Properties props2 = fs2.fooProps();
         Assert.assertTrue(((String)props2.get("content")).contains("I'm file 2"));
         Assert.assertEquals(((Bean)props2.get("bean")).getMessage(), "I'm 2");

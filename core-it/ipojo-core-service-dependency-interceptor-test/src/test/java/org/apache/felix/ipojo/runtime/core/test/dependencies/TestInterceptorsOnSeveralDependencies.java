@@ -67,8 +67,8 @@ public class TestInterceptorsOnSeveralDependencies extends Common {
         final ServiceReference ref2 = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(),
                 instance2.getInstanceName());
 
-        CheckService cs1 = (CheckService) osgiHelper.getServiceObject(ref1);
-        CheckService cs2 = (CheckService) osgiHelper.getServiceObject(ref2);
+        CheckService cs1 = (CheckService) osgiHelper.getRawServiceObject(ref1);
+        CheckService cs2 = (CheckService) osgiHelper.getRawServiceObject(ref2);
 
         @SuppressWarnings("unchecked") Map<String, ?> props1 = (Map<String, ?>) cs1.getProps().get("props");
         @SuppressWarnings("unchecked") Map<String, ?> props2 = (Map<String, ?>) cs2.getProps().get("props");

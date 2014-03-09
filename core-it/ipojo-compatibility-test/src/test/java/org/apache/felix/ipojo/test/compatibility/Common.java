@@ -109,7 +109,7 @@ public abstract class Common extends BaseTest {
         bundle.add(HelloServiceProvider.class);
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "iPOJO-Hello-Provider")
-                .set(Constants.IMPORT_PACKAGE, "*")
+                //.set(Constants.IMPORT_PACKAGE, "*")
                 .build(IPOJOStrategy.withiPOJO());
 
         try {
@@ -138,7 +138,7 @@ public abstract class Common extends BaseTest {
         bundle.add(HelloServiceConsumer.class);
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "iPOJO-Hello-Consumer")
-                .set(Constants.IMPORT_PACKAGE, "*")
+                //.set(Constants.IMPORT_PACKAGE, "*")
                 .build(IPOJOStrategy.withiPOJO());
 
         try {
@@ -175,7 +175,7 @@ public abstract class Common extends BaseTest {
 
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "hello-provider-scr")
-                .set(Constants.IMPORT_PACKAGE, "*")
+                //.set(Constants.IMPORT_PACKAGE, "*")
                 .set("Service-Component", "scr/provider.xml")
                 .build(withBnd());
 
@@ -210,7 +210,7 @@ public abstract class Common extends BaseTest {
 
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "hello-consumer-scr")
-                .set(Constants.IMPORT_PACKAGE, "*")
+               // .set(Constants.IMPORT_PACKAGE, "*")
                 .set("Service-Component", "scr/consumer.xml")
                 .build(withBnd());
 
@@ -248,7 +248,7 @@ public abstract class Common extends BaseTest {
 
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "hello-provider-blueprint")
-                .set(Constants.IMPORT_PACKAGE, "*")
+               // .set(Constants.IMPORT_PACKAGE, "*")
                 .set("Bundle-Blueprint", "blueprint/provider.xml")
                 .build(withBnd());
 
@@ -283,7 +283,7 @@ public abstract class Common extends BaseTest {
 
         InputStream inputStream = bundle
                 .set(Constants.BUNDLE_SYMBOLICNAME, "hello-consumer-blueprint")
-                .set(Constants.IMPORT_PACKAGE, "*")
+               // .set(Constants.IMPORT_PACKAGE, "*")
                 .set("Bundle-Blueprint", "blueprint/consumer.xml")
                 .build(withBnd());
 

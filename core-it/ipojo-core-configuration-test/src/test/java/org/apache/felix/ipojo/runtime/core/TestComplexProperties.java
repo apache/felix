@@ -44,7 +44,7 @@ public class TestComplexProperties extends Common {
     public void setUp() {
         m_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "complex");
         assertNotNull("Complex service availability", m_ref);
-        m_check = (CheckService) osgiHelper.getServiceObject(m_ref);
+        m_check = (CheckService) osgiHelper.getRawServiceObject(m_ref);
     }
 
     @After

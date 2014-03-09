@@ -20,9 +20,9 @@
 package org.apache.felix.ipojo.runtime.core.test.components;
 
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.runtime.core.test.services.HelloService;
+
+import javax.xml.parsers.SAXParser;
 
 /**
  * I intentionally left empty the component name plus the @Provides annotation.
@@ -30,6 +30,8 @@ import org.apache.felix.ipojo.runtime.core.test.services.HelloService;
  */
 @Component
 public class GermanHelloService implements HelloService {
+
+    SAXParser parser = null;
 
     @Override
     public String hello(final String name) {

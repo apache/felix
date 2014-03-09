@@ -41,14 +41,14 @@ public class DefaultImplementationTest extends Common {
         ServiceReference ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability", ref_cs);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
         assertTrue("Check invocation", cs.check());
 
         // Stop the provider.
         provider.stop();
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 2", ref_cs);
-        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+        cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
         boolean res = false;
         try {
             res = cs.check();
@@ -76,7 +76,7 @@ public class DefaultImplementationTest extends Common {
         ServiceReference ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability", ref_cs);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
         assertTrue("Check invocation", cs.check());
 
         // Stop the provider.
@@ -86,7 +86,7 @@ public class DefaultImplementationTest extends Common {
         long begin = System.currentTimeMillis();
         DelayedProvider dp = new DelayedProvider(provider, 200);
         dp.start();
-        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+        cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
         assertTrue("Check invocation - 2", cs.check());
         long end = System.currentTimeMillis();
 
@@ -94,7 +94,7 @@ public class DefaultImplementationTest extends Common {
 
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 3", ref_cs);
-        cs = (CheckService) osgiHelper.getServiceObject(ref_cs);
+        cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
         assertTrue("Check invocation - 3", cs.check());
 
         provider.stop();

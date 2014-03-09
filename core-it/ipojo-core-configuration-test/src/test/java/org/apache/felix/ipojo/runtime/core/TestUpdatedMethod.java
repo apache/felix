@@ -77,7 +77,7 @@ public class TestUpdatedMethod extends Common {
     public void testComponentTypeConfiguration() {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check FooService availability", ref);
-        FooService fs = (FooService) osgiHelper.getServiceObject(ref);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(ref);
         Properties toCheck = fs.fooProps();
 
         Integer intProp = (Integer) toCheck.get("intProp");
@@ -157,7 +157,7 @@ public class TestUpdatedMethod extends Common {
         ServiceReference sr = ipojoHelper.getServiceReferenceByName(FooService.class.getName(), "FooProvider-3");
         assertNotNull("Check the availability of the FS service", sr);
 
-        FooService fs = (FooService) osgiHelper.getServiceObject(sr);
+        FooService fs = (FooService) osgiHelper.getRawServiceObject(sr);
         Properties toCheck = fs.fooProps();
 
         // Check service properties

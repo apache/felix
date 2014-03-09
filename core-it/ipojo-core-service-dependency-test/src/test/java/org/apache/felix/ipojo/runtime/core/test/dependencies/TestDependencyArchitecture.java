@@ -127,7 +127,7 @@ public class TestDependencyArchitecture extends Common {
     public void testSimpleDependency() {
         ServiceReference arch_dep = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance1.getInstanceName());
         assertNotNull("Check architecture availability", arch_dep);
-        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_dep.getState() == ComponentInstance.INVALID);
 
         // Check dependency handler invalidity
@@ -146,10 +146,10 @@ public class TestDependencyArchitecture extends Common {
 
         ServiceReference arch_ps = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps);
-        PrimitiveInstanceDescription id_ps = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        PrimitiveInstanceDescription id_ps = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps.getState() == ComponentInstance.VALID);
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler validity", dhd.isValid());
@@ -157,30 +157,30 @@ public class TestDependencyArchitecture extends Common {
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance1.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        //id_ps = ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh = getPSDesc(id_ps);
         assertEquals("Check POJO creation", id_ps.getCreatedObjects().length, 1);
 
         fooProvider1.stop();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id_dep.getState() == ComponentInstance.INVALID);
         dhd = getDependencyDesc(id_dep);
         assertFalse("Check dependency handler invalidity", dhd.isValid());
 
         fooProvider1.start();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
         arch_ps = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps);
-        //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        //id_ps = ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps.getState() == ComponentInstance.VALID);
         psh = getPSDesc(id_ps);
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
@@ -190,19 +190,19 @@ public class TestDependencyArchitecture extends Common {
 
         cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance1.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        //id_ps = ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         psh = getPSDesc(id_ps);
 
 
         fooProvider1.stop();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id_dep.getState() == ComponentInstance.INVALID);
         dhd = getDependencyDesc(id_dep);
         assertFalse("Check dependency handler invalidity", dhd.isValid());
@@ -217,7 +217,7 @@ public class TestDependencyArchitecture extends Common {
     public void testProxiedSimpleDependency() {
         ServiceReference arch_dep = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance5.getInstanceName());
         assertNotNull("Check architecture availability", arch_dep);
-        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_dep.getState() == ComponentInstance.INVALID);
 
         // Check dependency handler invalidity
@@ -236,10 +236,10 @@ public class TestDependencyArchitecture extends Common {
 
         ServiceReference arch_ps = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps);
-        PrimitiveInstanceDescription id_ps = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        PrimitiveInstanceDescription id_ps = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps.getState() == ComponentInstance.VALID);
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler validity", dhd.isValid());
@@ -247,30 +247,30 @@ public class TestDependencyArchitecture extends Common {
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance5.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        //id_ps = ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh = getPSDesc(id_ps);
         assertEquals("Check POJO creation", id_ps.getCreatedObjects().length, 1);
 
         fooProvider1.stop();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id_dep.getState() == ComponentInstance.INVALID);
         dhd = getDependencyDesc(id_dep);
         assertFalse("Check dependency handler invalidity", dhd.isValid());
 
         fooProvider1.start();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
         arch_ps = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps);
-        //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        //id_ps = ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps.getState() == ComponentInstance.VALID);
         psh = getPSDesc(id_ps);
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
@@ -280,18 +280,18 @@ public class TestDependencyArchitecture extends Common {
 
         cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance5.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        //id_ps = ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         psh = getPSDesc(id_ps);
 
         fooProvider1.stop();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id_dep.getState() == ComponentInstance.INVALID);
         dhd = getDependencyDesc(id_dep);
         assertFalse("Check dependency handler invalidity", dhd.isValid());
@@ -306,7 +306,7 @@ public class TestDependencyArchitecture extends Common {
     public void testOptionalDependency() {
         ServiceReference arch_dep = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance2.getInstanceName());
         assertNotNull("Check architecture availability", arch_dep);
-        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_dep.getState() == ComponentInstance.VALID);
 
         // Check dependency handler invalidity
@@ -324,10 +324,10 @@ public class TestDependencyArchitecture extends Common {
 
         ServiceReference arch_ps = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps);
-        PrimitiveInstanceDescription id_ps = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        PrimitiveInstanceDescription id_ps = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps.getState() == ComponentInstance.VALID);
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler validity", dhd.isValid());
@@ -335,30 +335,30 @@ public class TestDependencyArchitecture extends Common {
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        //id_ps = ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh = getPSDesc(id_ps);
         assertEquals("Check POJO creation", id_ps.getCreatedObjects().length, 1);
 
         fooProvider1.stop();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler invalidity", dhd.isValid());
 
         fooProvider1.start();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
         arch_ps = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps);
-        //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        //id_ps = ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps.getState() == ComponentInstance.VALID);
         psh = getPSDesc(id_ps);
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
@@ -368,18 +368,18 @@ public class TestDependencyArchitecture extends Common {
 
         cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance2.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps = ((Architecture) osgiHelper.getServiceObject(arch_ps)).getInstanceDescription();
+        //id_ps = ((Architecture) osgiHelper.getRawServiceObject(arch_ps)).getInstanceDescription();
         psh = getPSDesc(id_ps);
 
         fooProvider1.stop();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler invalidity", dhd.isValid());
@@ -394,7 +394,7 @@ public class TestDependencyArchitecture extends Common {
     public void testMultipleDependency() {
         ServiceReference arch_dep = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance3.getInstanceName());
         assertNotNull("Check architecture availability", arch_dep);
-        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_dep.getState() == ComponentInstance.INVALID);
 
         // Check dependency handler invalidity
@@ -420,10 +420,10 @@ public class TestDependencyArchitecture extends Common {
 
         ServiceReference arch_ps1 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps1);
-        PrimitiveInstanceDescription id_ps1 = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        PrimitiveInstanceDescription id_ps1 = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         assertTrue("Check instance validity - 1", id_ps1.getState() == ComponentInstance.VALID);
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler validity", dhd.isValid());
@@ -432,13 +432,13 @@ public class TestDependencyArchitecture extends Common {
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh = getPSDesc(id_ps1);
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
 
@@ -449,12 +449,12 @@ public class TestDependencyArchitecture extends Common {
         ServiceReference arch_ps2 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider2.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps1);
         assertNotNull("Check architecture 2 availability", arch_ps2);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
-        PrimitiveInstanceDescription id_ps2 = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_ps2)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
+        PrimitiveInstanceDescription id_ps2 = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_ps2)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps1.getState() == ComponentInstance.VALID);
         assertTrue("Check instance 2 invalidity - 1", id_ps2.getState() == ComponentInstance.VALID);
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler validity", dhd.isValid());
@@ -463,14 +463,14 @@ public class TestDependencyArchitecture extends Common {
 
         cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
-        //id_ps2 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps2 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh1 = getPSDesc(id_ps1);
         ProvidedServiceHandlerDescription psh2 = getPSDesc(id_ps2);
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
@@ -481,10 +481,10 @@ public class TestDependencyArchitecture extends Common {
 
         arch_ps1 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps1);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         assertTrue("Check instance validity - 1", id_ps1.getState() == ComponentInstance.VALID);
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler validity", dhd.isValid());
@@ -493,31 +493,31 @@ public class TestDependencyArchitecture extends Common {
 
         cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         psh = getPSDesc(id_ps1);
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
         assertEquals("Check used ref - 5 ", dhd.getDependencies()[0].getUsedServices().size(), 1);
 
         fooProvider1.stop();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertFalse("Check instance invalidity - 2", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertFalse("Check dependency handler invalidity", dhd.isValid());
 
         fooProvider2.start();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
         arch_ps2 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider2.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps1);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
 
         assertTrue("Check instance invalidity - 1", id_ps2.getState() == ComponentInstance.VALID);
 
@@ -530,19 +530,19 @@ public class TestDependencyArchitecture extends Common {
 
         cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         psh = getPSDesc(id_ps2);
         assertEquals("Check used ref - 7 ", dhd.getDependencies()[0].getUsedServices().size(), 1);
 
         fooProvider2.stop();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertFalse("Check instance invalidity - 2", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertFalse("Check dependency handler invalidity", dhd.isValid());
@@ -557,7 +557,7 @@ public class TestDependencyArchitecture extends Common {
     public void testMultipleOptionalDependency() {
         ServiceReference arch_dep = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance4.getInstanceName());
         assertNotNull("Check architecture availability", arch_dep);
-        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        PrimitiveInstanceDescription id_dep = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_dep.getState() == ComponentInstance.VALID);
 
         // Check dependency handler invalidity
@@ -574,10 +574,10 @@ public class TestDependencyArchitecture extends Common {
 
         ServiceReference arch_ps1 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps1);
-        PrimitiveInstanceDescription id_ps1 = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        PrimitiveInstanceDescription id_ps1 = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps1.getState() == ComponentInstance.VALID);
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler validity", dhd.isValid());
@@ -585,13 +585,13 @@ public class TestDependencyArchitecture extends Common {
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance4.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh = getPSDesc(id_ps1);
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
 
@@ -602,12 +602,12 @@ public class TestDependencyArchitecture extends Common {
         ServiceReference arch_ps2 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider2.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps1);
         assertNotNull("Check architecture 2 availability", arch_ps2);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
-        PrimitiveInstanceDescription id_ps2 = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getServiceObject(arch_ps2)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
+        PrimitiveInstanceDescription id_ps2 = (PrimitiveInstanceDescription) ((Architecture) osgiHelper.getRawServiceObject(arch_ps2)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps1.getState() == ComponentInstance.VALID);
         assertTrue("Check instance 2 invalidity - 1", id_ps2.getState() == ComponentInstance.VALID);
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler validity", dhd.isValid());
@@ -615,14 +615,14 @@ public class TestDependencyArchitecture extends Common {
 
         cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance4.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
-        //id_ps2 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps2 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         ProvidedServiceHandlerDescription psh1 = getPSDesc(id_ps1);
         ProvidedServiceHandlerDescription psh2 = getPSDesc(id_ps2);
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
@@ -632,10 +632,10 @@ public class TestDependencyArchitecture extends Common {
 
         arch_ps1 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider1.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps1);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps1.getState() == ComponentInstance.VALID);
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler validity", dhd.isValid());
@@ -643,30 +643,30 @@ public class TestDependencyArchitecture extends Common {
 
         cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance4.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         psh = getPSDesc(id_ps1);
         assertEquals("Check POJO creation", id_ps1.getCreatedObjects().length, 1);
 
         fooProvider1.stop();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler invalidity", dhd.isValid());
 
         fooProvider2.start();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
         arch_ps2 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), fooProvider2.getInstanceName());
         assertNotNull("Check architecture availability", arch_ps2);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         assertTrue("Check instance invalidity - 1", id_ps2.getState() == ComponentInstance.VALID);
         psh = getPSDesc(id_ps2);
         assertTrue("Check instance validity", id_dep.getState() == ComponentInstance.VALID);
@@ -676,18 +676,18 @@ public class TestDependencyArchitecture extends Common {
 
         cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance4.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         assertTrue("check CheckService invocation", cs.check());
 
         // Check object graph 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         dhd = getDependencyDesc(id_dep);
-        //id_ps1 = ((Architecture) osgiHelper.getServiceObject(arch_ps1)).getInstanceDescription();
+        //id_ps1 = ((Architecture) osgiHelper.getRawServiceObject(arch_ps1)).getInstanceDescription();
         psh = getPSDesc(id_ps2);
 
         fooProvider2.stop();
 
-        //id_dep = ((Architecture) osgiHelper.getServiceObject(arch_dep)).getInstanceDescription();
+        //id_dep = ((Architecture) osgiHelper.getRawServiceObject(arch_dep)).getInstanceDescription();
         assertTrue("Check instance invalidity - 2", id_dep.getState() == ComponentInstance.VALID);
         dhd = getDependencyDesc(id_dep);
         assertTrue("Check dependency handler invalidity", dhd.isValid());

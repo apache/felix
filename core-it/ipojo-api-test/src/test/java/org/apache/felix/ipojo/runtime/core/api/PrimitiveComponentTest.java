@@ -19,16 +19,14 @@
 
 package org.apache.felix.ipojo.runtime.core.api;
 
-import org.apache.felix.ipojo.ComponentInstance;
-import org.apache.felix.ipojo.ConfigurationException;
-import org.apache.felix.ipojo.MissingHandlerException;
-import org.apache.felix.ipojo.UnacceptableConfiguration;
+import org.apache.felix.ipojo.*;
 import org.apache.felix.ipojo.api.Dependency;
 import org.apache.felix.ipojo.api.PrimitiveComponentType;
 import org.apache.felix.ipojo.api.Service;
 import org.apache.felix.ipojo.api.SingletonComponentType;
 import org.apache.felix.ipojo.runtime.core.api.components.FooImpl;
 import org.apache.felix.ipojo.runtime.core.api.components.MyComponentImpl;
+import org.apache.felix.ipojo.runtime.core.api.components.PlainHelloImpl;
 import org.apache.felix.ipojo.runtime.core.api.services.Foo;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,15 +77,13 @@ public class PrimitiveComponentTest extends Common {
         PrimitiveComponentType type = createAProvider();
         ci = type.createInstance();
         assertThat("Ci is valid", ci.getState(), is(ComponentInstance.VALID));
-        ServiceReference ref = ipojoHelper.getServiceReferenceByName(Foo.class
-                .getName(), ci.getInstanceName());
-        assertThat(ref, is(notNullValue()));
+        assertThat(ipojoHelper.isServiceAvailableByName(Foo.class.getName(), ci
+                .getInstanceName()), is(true));
         type.stop();
         assertThat("Ci is disposed", ci.getState(),
                 is(ComponentInstance.DISPOSED));
-        ref = ipojoHelper.getServiceReferenceByName(Foo.class.getName(), ci
-                .getInstanceName());
-        assertThat(ref, is(nullValue()));
+        assertThat(ipojoHelper.isServiceAvailableByName(Foo.class.getName(), ci
+                .getInstanceName()), is(false));
 
     }
 
@@ -132,6 +128,29 @@ public class PrimitiveComponentTest extends Common {
         prov.stop();
         assertThat("cons is invalid", cons1.getState(), is(ComponentInstance.INVALID));
         assertThat("cons2 is valid", cons2.getState(), is(ComponentInstance.VALID));
+    }
+
+    @Test
+    public void notManipulatedComponent() throws Exception {
+        assertThat(context, is(notNullValue()));
+        ComponentInstance ci;
+
+        PrimitiveComponentType x= new PrimitiveComponentType()
+                .setBundleContext(context)
+                .setClassName(PlainHelloImpl.class.getName())
+                .setValidateMethod("start")
+                .setInvalidateMethod("stop");
+
+        x.start();
+
+        assertThat(x, is(notNullValue()));
+        assertThat(x.getFactory().getState(), is(Factory.VALID));
+
+        ci = x.createInstance();
+        ci.start();
+        assertThat(ci.getState(), is(ComponentInstance.VALID));
+
+        x.stop();
     }
 
     private PrimitiveComponentType createAProvider() {

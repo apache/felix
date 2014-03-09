@@ -99,7 +99,7 @@ public class FactoryVersionTest extends Common {
         // Version 1.0
         ServiceReference refv1 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "instance-v1");
         Assert.assertNotNull(refv1);
-        Architecture archv1 = (Architecture) osgiHelper.getServiceObject(refv1);
+        Architecture archv1 = (Architecture) osgiHelper.getRawServiceObject(refv1);
 
         String version = archv1.getInstanceDescription().getComponentDescription().getVersion();
         Assert.assertEquals("1.0", version);
@@ -107,7 +107,7 @@ public class FactoryVersionTest extends Common {
         // Version 1.1
         ServiceReference refv11 = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "instance-v1.1");
         Assert.assertNotNull(refv11);
-        Architecture archv11 = (Architecture) osgiHelper.getServiceObject(refv11);
+        Architecture archv11 = (Architecture) osgiHelper.getRawServiceObject(refv11);
 
         String version11 = archv11.getInstanceDescription().getComponentDescription().getVersion();
         Assert.assertEquals("1.1", version11);
@@ -115,7 +115,7 @@ public class FactoryVersionTest extends Common {
         // No Version
         ServiceReference refany = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "instance-any");
         Assert.assertNotNull(refany);
-        Architecture archany = (Architecture) osgiHelper.getServiceObject(refany);
+        Architecture archany = (Architecture) osgiHelper.getRawServiceObject(refany);
 
         String any = archany.getInstanceDescription().getComponentDescription().getVersion();
         Assert.assertNotNull(any);
@@ -123,7 +123,7 @@ public class FactoryVersionTest extends Common {
         // No version set in the factory, so no version.
         ServiceReference refmci = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), "MyComponentInstance");
         Assert.assertNotNull(refmci);
-        Architecture archmcy = (Architecture) osgiHelper.getServiceObject(refmci);
+        Architecture archmcy = (Architecture) osgiHelper.getRawServiceObject(refmci);
 
         String mci = archmcy.getInstanceDescription().getComponentDescription().getVersion();
         Assert.assertNull(mci);

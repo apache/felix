@@ -90,12 +90,12 @@ public class TestMethodOptionalDependencies extends Common {
 
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance3.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 1", id.getState() == ComponentInstance.VALID);
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance3.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
 
         Properties props = cs.getProps();
 
@@ -112,11 +112,11 @@ public class TestMethodOptionalDependencies extends Common {
 
         fooProvider.start();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 2", id.getState() == ComponentInstance.VALID);
 
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         props = cs.getProps();
         // Check properties
         assertTrue("check CheckService invocation -2", ((Boolean) props.get("result")).booleanValue());
@@ -131,10 +131,10 @@ public class TestMethodOptionalDependencies extends Common {
 
         fooProvider.stop();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 3", id.getState() == ComponentInstance.VALID);
 
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         props = cs.getProps();
         // Check properties
         assertFalse("check CheckService invocation -3", ((Boolean) props.get("result")).booleanValue());
@@ -156,12 +156,12 @@ public class TestMethodOptionalDependencies extends Common {
     @Test public void testRef() {
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance4.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 1", id.getState() == ComponentInstance.VALID);
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance4.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         Properties props = cs.getProps();
         // Check properties
         assertFalse("check CheckService invocation -1", ((Boolean) props.get("result")).booleanValue()); // False is returned (nullable)
@@ -176,11 +176,11 @@ public class TestMethodOptionalDependencies extends Common {
 
         fooProvider.start();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 2", id.getState() == ComponentInstance.VALID);
 
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         props = cs.getProps();
         // Check properties
         assertTrue("check CheckService invocation -2", ((Boolean) props.get("result")).booleanValue());
@@ -195,10 +195,10 @@ public class TestMethodOptionalDependencies extends Common {
 
         fooProvider.stop();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 3", id.getState() == ComponentInstance.VALID);
 
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         props = cs.getProps();
         // Check properties
         assertFalse("check CheckService invocation -3", ((Boolean) props.get("result")).booleanValue());
@@ -220,12 +220,12 @@ public class TestMethodOptionalDependencies extends Common {
     @Test public void testBoth() {
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance5.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 1", id.getState() == ComponentInstance.VALID);
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance5.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         Properties props = cs.getProps();
         // Check properties
         assertFalse("check CheckService invocation -1", ((Boolean) props.get("result")).booleanValue()); // False is returned (nullable)
@@ -240,11 +240,11 @@ public class TestMethodOptionalDependencies extends Common {
 
         fooProvider.start();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 2", id.getState() == ComponentInstance.VALID);
 
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         props = cs.getProps();
         // Check properties
         assertTrue("check CheckService invocation -2", ((Boolean) props.get("result")).booleanValue());
@@ -259,10 +259,10 @@ public class TestMethodOptionalDependencies extends Common {
 
         fooProvider.stop();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 3", id.getState() == ComponentInstance.VALID);
 
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         props = cs.getProps();
         // Check properties
         assertFalse("check CheckService invocation -3", ((Boolean) props.get("result")).booleanValue());
@@ -284,12 +284,12 @@ public class TestMethodOptionalDependencies extends Common {
     @Test public void testMap() {
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance6.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 1", id.getState() == ComponentInstance.VALID);
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance6.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         Properties props = cs.getProps();
         // Check properties
         assertFalse("check CheckService invocation -1", ((Boolean) props.get("result")).booleanValue()); // False is returned (nullable)
@@ -308,11 +308,11 @@ public class TestMethodOptionalDependencies extends Common {
 
         fooProvider.start();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 2", id.getState() == ComponentInstance.VALID);
 
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         props = cs.getProps();
         // Check properties
         assertTrue("check CheckService invocation -2", ((Boolean) props.get("result")).booleanValue());
@@ -331,10 +331,10 @@ public class TestMethodOptionalDependencies extends Common {
 
         fooProvider.stop();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 3", id.getState() == ComponentInstance.VALID);
 
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         props = cs.getProps();
         // Check properties
         assertFalse("check CheckService invocation -3", ((Boolean) props.get("result")).booleanValue());
@@ -360,12 +360,12 @@ public class TestMethodOptionalDependencies extends Common {
     @Test public void testDict() {
         ServiceReference arch_ref = ipojoHelper.getServiceReferenceByName(Architecture.class.getName(), instance7.getInstanceName());
         assertNotNull("Check architecture availability", arch_ref);
-        InstanceDescription id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        InstanceDescription id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 1", id.getState() == ComponentInstance.VALID);
 
         ServiceReference cs_ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance7.getInstanceName());
         assertNotNull("Check CheckService availability", cs_ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         Properties props = cs.getProps();
         // Check properties
         assertFalse("check CheckService invocation -1", ((Boolean) props.get("result")).booleanValue()); // False is returned (nullable)
@@ -384,11 +384,11 @@ public class TestMethodOptionalDependencies extends Common {
 
         fooProvider.start();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 2", id.getState() == ComponentInstance.VALID);
 
         assertNotNull("Check CheckService availability", cs_ref);
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         props = cs.getProps();
         // Check properties
         assertTrue("check CheckService invocation -2", ((Boolean) props.get("result")).booleanValue());
@@ -407,10 +407,10 @@ public class TestMethodOptionalDependencies extends Common {
 
         fooProvider.stop();
 
-        id = ((Architecture) osgiHelper.getServiceObject(arch_ref)).getInstanceDescription();
+        id = ((Architecture) osgiHelper.getRawServiceObject(arch_ref)).getInstanceDescription();
         assertTrue("Check instance validity - 3", id.getState() == ComponentInstance.VALID);
 
-        cs = (CheckService) osgiHelper.getServiceObject(cs_ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(cs_ref);
         props = cs.getProps();
         // Check properties
         assertFalse("check CheckService invocation -3", ((Boolean) props.get("result")).booleanValue());

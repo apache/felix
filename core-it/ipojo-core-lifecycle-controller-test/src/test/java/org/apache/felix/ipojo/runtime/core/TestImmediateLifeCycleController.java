@@ -49,7 +49,7 @@ public class TestImmediateLifeCycleController extends Common {
         // The conf is correct, the PS must be provided
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under1");
         assertNotNull("Check service availability -1", ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
         assertTrue("Check state 1", cs.check());
         bc.ungetService(ref);
 
@@ -63,8 +63,8 @@ public class TestImmediateLifeCycleController extends Common {
         }
 
         // The instance should now be invalid 
-        ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under1");
-        assertNull("Check service availability -2", ref);
+        assertFalse("Check service availability -2",
+                ipojoHelper.isServiceAvailableByName(CheckService.class.getName(), "under1"));
 
         // Reconfigure the instance with a valid configuration
         props.put("conf", "foo"); // Bar is a bad conf
@@ -76,7 +76,7 @@ public class TestImmediateLifeCycleController extends Common {
 
         ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under1");
         assertNotNull("Check service availability -3", ref);
-        cs = (CheckService) osgiHelper.getServiceObject(ref);
+        cs = (CheckService) osgiHelper.getRawServiceObject(ref);
         assertTrue("Check state 2", cs.check());
         bc.ungetService(ref);
 
@@ -93,8 +93,8 @@ public class TestImmediateLifeCycleController extends Common {
         assertEquals("check under state", under.getState(), ComponentInstance.INVALID);
 
         // The conf is incorrect, the PS must not be provided
-        ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under2");
-        assertNull("Check service availability -1", ref);
+        assertFalse("Check service availability -2",
+                ipojoHelper.isServiceAvailableByName(CheckService.class.getName(), "under2"));
 
         // Reconfigure the instance with a correct configuration
         props.put("conf", "foo");
@@ -104,9 +104,9 @@ public class TestImmediateLifeCycleController extends Common {
             fail("The reconfiguration is not unacceptable and seems unacceptable : " + props);
         }
 
-        ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under2");
+        ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), "under2");
         assertNotNull("Check service availability -2", ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
         assertTrue("Check state ", cs.check());
         bc.ungetService(ref);
 

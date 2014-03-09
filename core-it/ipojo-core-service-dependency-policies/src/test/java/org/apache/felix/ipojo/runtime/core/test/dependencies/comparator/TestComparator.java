@@ -61,7 +61,7 @@ public class TestComparator extends Common {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), dynInstance.getInstanceName());
         assertNotNull("CS availability", ref);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
         Properties result = cs.getProps();
         int fsGrade = (Integer) result.get("fs");
         int fs2Grade = (Integer) result.get("fs2");
@@ -111,7 +111,7 @@ public class TestComparator extends Common {
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), dpInstance.getInstanceName());
         assertNotNull("CS availability", ref);
 
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
         Properties result = cs.getProps();
         int fsGrade = (Integer) result.get("fs");
         int fs2Grade = (Integer) result.get("fs2");

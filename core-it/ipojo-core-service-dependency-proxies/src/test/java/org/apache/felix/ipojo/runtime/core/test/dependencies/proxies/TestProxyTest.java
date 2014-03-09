@@ -52,7 +52,7 @@ public class TestProxyTest extends Common {
 
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance1.getInstanceName());
         assertNotNull(ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
 
         Properties props = cs.getProps();
         FooService helper = (FooService) props.get("helper.fs");
@@ -75,7 +75,7 @@ public class TestProxyTest extends Common {
 
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance1.getInstanceName());
         assertNotNull(ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
 
         Properties props = cs.getProps();
         FooService helper = (FooService) props.get("helper.fs");
@@ -103,7 +103,7 @@ public class TestProxyTest extends Common {
 
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance1.getInstanceName());
         assertNotNull(ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
 
         Properties props = cs.getProps();
         FooService helper = (FooService) props.get("helper.fs");
@@ -127,7 +127,7 @@ public class TestProxyTest extends Common {
 
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance1.getInstanceName());
         assertNotNull(ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
 
         Properties props = cs.getProps();
         FooService helper = (FooService) props.get("helper.fs");
@@ -156,7 +156,7 @@ public class TestProxyTest extends Common {
 
         ServiceReference ref = osgiHelper.getServiceReference(CheckService.class.getName(), "(service.pid=Helper)");
         assertNotNull(ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
 
         Properties props = cs.getProps();
         FooService helper = (FooService) props.get("helper.fs");
@@ -180,7 +180,7 @@ public class TestProxyTest extends Common {
 
         ServiceReference ref = osgiHelper.getServiceReference(CheckService.class.getName(), "(service.pid=Helper)");
         assertNotNull(ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
 
         try {
             cs.getProps();
@@ -213,7 +213,7 @@ public class TestProxyTest extends Common {
 
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance1.getInstanceName());
         assertNotNull(ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
 
         Properties props = cs.getProps();
         FooService helper = (FooService) props.get("helper.fs");
@@ -246,7 +246,7 @@ public class TestProxyTest extends Common {
 
         ServiceReference ref = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), instance1.getInstanceName());
         assertNotNull(ref);
-        CheckService cs = (CheckService) osgiHelper.getServiceObject(ref);
+        CheckService cs = (CheckService) osgiHelper.getRawServiceObject(ref);
 
         Properties props = cs.getProps();
         FooService helper = (FooService) props.get("helper.fs");
