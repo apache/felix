@@ -18,14 +18,8 @@
  */
 package org.apache.felix.ipojo;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.util.*;
-
 import org.apache.felix.ipojo.architecture.InstanceDescription;
+import org.apache.felix.ipojo.extender.internal.linker.InstanceBundleContextAware;
 import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.parser.FieldMetadata;
 import org.apache.felix.ipojo.parser.MethodMetadata;
@@ -33,12 +27,16 @@ import org.apache.felix.ipojo.util.Logger;
 import org.apache.felix.ipojo.util.Property;
 import org.osgi.framework.BundleContext;
 
+import java.lang.reflect.*;
+import java.util.*;
+
 /**
  * This class defines the container of primitive instances. It manages content initialization
  * and handlers cooperation.
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class InstanceManager implements ComponentInstance, InstanceStateListener {
+public class InstanceManager implements ComponentInstance, InstanceStateListener, InstanceBundleContextAware {
     /**
      * The name of the component instance.
      */
@@ -66,6 +64,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
     /**
      * The instance state listener list.
+     *
      * @see InstanceStateListener
      */
     protected List m_listeners = null;
@@ -150,10 +149,16 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      */
     private Map m_methods = new HashMap();
 
+    /**
+     * The instance's bundle context.
+     */
+    private BundleContext m_instanceContext;
+
 
     /**
      * Creates a new Component Manager.
      * The instance is not initialized.
+     *
      * @param factory  the factory managing the instance manager
      * @param context  the bundle context to give to the instance
      * @param handlers handler object array
@@ -167,7 +172,18 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     }
 
     /**
+     * Sets the instance bundle context.
+     *
+     * @param context the bundle context of the bundle having declared the instance
+     * @since 1.11.2
+     */
+    public void setInstanceBundleContext(BundleContext context) {
+        m_instanceContext = context;
+    }
+
+    /**
      * The instance logger.
+     *
      * @return the logger
      */
     public Logger getLogger() {
@@ -178,7 +194,8 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Configures the instance manager.
      * Sets the class name, and the instance name as well as the factory method.
      * Initializes handlers.
-     * @param metadata the component type metadata
+     *
+     * @param metadata      the component type metadata
      * @param configuration the configuration of the instance
      * @throws ConfigurationException if the metadata are not correct
      */
@@ -198,91 +215,92 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         // Get the factory method if presents.
         m_factoryMethod = (String) metadata.getAttribute("factory-method");
 
-        // Create the standard handlers and add these handlers to the list
-        for (int i = 0; i < m_handlers.length; i++) {
-            m_handlers[i].init(this, metadata, configuration);
+        // Check if we have an instance bundle context given as property, it should not be used,
+        // but it's a way to provide the instance bundle context when using the Factory service.
+        // The instance context is set only if it was not already set.
+        if (m_instanceContext == null) {
+            m_instanceContext = (BundleContext) configuration.get("instance.bundle.context");
         }
-        
+
+        // Create the standard handlers and add these handlers to the list
+        for (HandlerManager handler : m_handlers) {
+            handler.init(this, metadata, configuration);
+        }
+
+
         // Fix for Felix-3576
         handleBCInjections();
+
 
         // Check that the constructor parameter are continuous.
         if (m_constructorRegistration != null) {
             for (int i = 0; i < m_constructorRegistration.size(); i++) {
-                if (! m_constructorRegistration.containsKey(new Integer(i))) {
+                if (!m_constructorRegistration.containsKey(i)) {
                     throw new ConfigurationException("The constructor parameter " + i + " is not managed");
                 }
             }
         }
     }
-    
+
     /**
      * BundleContext injection is not registered with the InstanceManager.
      * We're iterating through factory's all constructors and register first
      * BundleContext parameter as constructor injection. So rest of the code
      * don't have to do anything to handle BundleContext mixed with other
      * injections.
-     * 
+     *
      * @throws ConfigurationException
      */
-    private void handleBCInjections() throws ConfigurationException
-    {
+    private void handleBCInjections() throws ConfigurationException {
         MethodMetadata[] constructors = getFactory().getPojoMetadata().getConstructors();
-        for(int i=0; i < constructors.length; i++ )
-        {
-        	String[] ctorArguments = constructors[i].getMethodArguments();
-        	
-        	for(int index = 0; index < ctorArguments.length; index++ )
-        	{
-        		if(ctorArguments[index].equals(BundleContext.class.getName()))
-        		{
-        			//Check if its used with only other injections.
-        			boolean injectionsConsistent = true;
-        			for(int siblingIndex = 0; siblingIndex < ctorArguments.length; siblingIndex++)
-        			{
-        				if(siblingIndex == index){
-        					continue;
-        				}
-        				
-        				String injectionType = ctorArguments[siblingIndex];
-        				if(m_constructorRegistration.containsKey(new Integer(siblingIndex)))
-        				{
-        					ConstructorInjector siblingInjector = 
-        							(ConstructorInjector)m_constructorRegistration.get(new Integer(siblingIndex));
-        					Class injectorClass = siblingInjector.getConstructorParameterType(siblingIndex);
-        					
-        					if(injectorClass != null && ! injectorClass.getName().equals(injectionType))
-        					{
-        						injectionsConsistent = false;
-        						break;
-        					}
-        				}
-        				else
-        				{
-        					injectionsConsistent = false;
-        					break;
-        				}
-        			}
-        			
-        			if(injectionsConsistent)
-        			{
-        				Property contextInjection = 
-            					new Property("__context", null, null, index, null, 
-            							BundleContext.class.getName(), this, null);
-            			
-            			contextInjection.setValue(getContext());        			
-            			register(index, contextInjection);
-            			
-            			// We register the first valid BC injection.
-            			break;
-        			}
-        		}
-        	}
+        for (MethodMetadata constructor : constructors) {
+            String[] ctorArguments = constructor.getMethodArguments();
+
+            for (int index = 0; index < ctorArguments.length; index++) {
+                if (ctorArguments[index].equals(BundleContext.class.getName())
+                        && (m_constructorRegistration == null || !m_constructorRegistration.containsKey(index))) {
+                    //Check if its used with only other injections.
+                    boolean injectionsConsistent = true;
+                    for (int siblingIndex = 0; siblingIndex < ctorArguments.length; siblingIndex++) {
+                        if (siblingIndex == index) {
+                            continue;
+                        }
+
+                        String injectionType = ctorArguments[siblingIndex];
+                        if (m_constructorRegistration != null && m_constructorRegistration.containsKey(siblingIndex)) {
+                            ConstructorInjector siblingInjector =
+                                    (ConstructorInjector) m_constructorRegistration.get(siblingIndex);
+                            Class injectorClass = siblingInjector.getConstructorParameterType(siblingIndex);
+
+                            if (injectorClass != null && !injectorClass.getName().equals(injectionType)) {
+                                injectionsConsistent = false;
+                                break;
+                            }
+                        } else {
+                            injectionsConsistent = false;
+                            break;
+                        }
+                    }
+
+                    if (injectionsConsistent) {
+                        Property contextInjection =
+                                new Property("__context", null, null, index, null,
+                                        BundleContext.class.getName(), this, null);
+
+                        contextInjection.setValue(getContext());
+                        register(index, contextInjection);
+
+                        // We register the first valid BC injection.
+                        break;
+                    }
+                }
+            }
         }
     }
 
     /**
      * Gets the description of the current instance.
+     *
      * @return the instance description.
      * @see org.apache.felix.ipojo.ComponentInstance#getInstanceDescription()
      */
@@ -293,6 +311,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     /**
      * Gets the list of handlers plugged (i.e. attached) on the instance.
      * This method does not need a synchronized block as the handler set is constant.
+     *
      * @return the handler array of plugged handlers.
      */
     public Handler[] getRegisteredHandlers() {
@@ -307,6 +326,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Returns a specified handler.
      * This method allows cross-handler interactions.
      * This must does not need a synchronized block as the handler set is constant.
+     *
      * @param name the class name of the handler to find or its qualified name (namespace:name)
      * @return the handler, or null if not found
      */
@@ -324,6 +344,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Gives access to a field value of the first created pojo.
      * This method processes by analyzing both managed fields and pojo fields (by reflection).
      * If no pojo were already created try only on managed fields.
+     *
      * @param fieldName the field name.
      * @return the field value, <code>null</code> is returned if the value is managed and not already set.
      */
@@ -339,8 +360,9 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Gives access to a field value to the given created pojo.
      * This method processes by analyzing both managed fields and pojo fields (by reflection).
      * If the given pojo is <code>null</code>, tries only on managed fields.
+     *
      * @param fieldName the field name.
-     * @param pojo  the pojo on which computing field value.
+     * @param pojo      the pojo on which computing field value.
      * @return the field value, <code>null</code> is returned if the value is managed and not already set.
      */
     public synchronized Object getFieldValue(String fieldName, Object pojo) {
@@ -405,7 +427,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         }
 
         // Is an object already contained (i.e. injected)
-        if (m_pojoObjects != null && ! m_pojoObjects.isEmpty()) {
+        if (m_pojoObjects != null && !m_pojoObjects.isEmpty()) {
             managedInjectedObject();
         }
 
@@ -464,6 +486,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * <li>Notifies listeners {@link InstanceStateListener} of the destruction</li>
      * <li>Disposes attached handlers</li>
      * <li>Clears structures</li>
+     *
      * @see org.apache.felix.ipojo.ComponentInstance#dispose()
      */
     public void dispose() {
@@ -506,6 +529,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * If the state changes, calls the {@link PrimitiveHandler#stateChanged(int)} method on the attached handlers.
      * This method has a reentrant mechanism. If in the flow of the first call the method is called another times,
      * the second call is stored and executed after the first one finished.
+     *
      * @param state the new state
      */
     public void setState(int state) {
@@ -578,6 +602,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * <li>{@link ComponentInstance#VALID}</li>
      * <li>{@link ComponentInstance#DISPOSED}</li>
      * <li>{@link ComponentInstance#STOPPED}</li>
+     *
      * @return the actual state of the component instance.
      * @see org.apache.felix.ipojo.ComponentInstance#getState()
      */
@@ -589,6 +614,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Checks if the instance is started.
      * An instance is started if the state is either
      * {@link ComponentInstance#VALID} or {@link ComponentInstance#INVALID}.
+     *
      * @return <code>true</code> if the instance is started.
      * @see org.apache.felix.ipojo.ComponentInstance#isStarted()
      */
@@ -598,6 +624,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
     /**
      * Registers an instance state listener.
+     *
      * @param listener the listener to register.
      * @see org.apache.felix.ipojo.ComponentInstance#addInstanceStateListener(org.apache.felix.ipojo.InstanceStateListener)
      */
@@ -610,6 +637,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
     /**
      * Unregisters an instance state listener.
+     *
      * @param listener the listener to unregister.
      * @see org.apache.felix.ipojo.ComponentInstance#removeInstanceStateListener(org.apache.felix.ipojo.InstanceStateListener)
      */
@@ -624,6 +652,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
     /**
      * Gets the factory which has created the current instance.
+     *
      * @return the factory of the component
      * @see org.apache.felix.ipojo.ComponentInstance#getFactory()
      */
@@ -646,6 +675,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
     /**
      * Gets the object array created by the instance.
+     *
      * @return the created content objects of the component instance.
      */
     public synchronized Object[] getPojoObjects() {
@@ -663,6 +693,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Otherwise, the methods uses the regular constructor.
      * All those methods can receive the {@link BundleContext} in
      * argument.
+     *
      * @return the created object or <code>null</code> if an error
      * occurs during the creation.
      */
@@ -688,7 +719,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                     // Iterate over the constructor injector
                     for (int i = 0; i < m_constructorRegistration.size(); i++) {
                         ConstructorInjector injector = (ConstructorInjector)
-                            m_constructorRegistration.get(new Integer(i));
+                                m_constructorRegistration.get(new Integer(i));
                         Object v = injector.getConstructorParameter(i);
                         if (v != null) {
                             values[i + 1] = v;
@@ -701,33 +732,33 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                     }
                     // Find the constructor.
                     Constructor cst = m_clazz.getDeclaredConstructor(types);
-                    if (! cst.isAccessible()) {
+                    if (!cst.isAccessible()) {
                         cst.setAccessible(true);
                     }
                     String methodId = MethodMetadata.computeMethodId(cst);
-                    onEntry(null, methodId,  values);
+                    onEntry(null, methodId, values);
                     instance = cst.newInstance(values);
                     onExit(instance, methodId, instance);
                 } else {
                     // Old semantic
                     // Try to find if there is a constructor with a bundle context as parameter :
                     try {
-                        Constructor cst = m_clazz.getDeclaredConstructor(new Class[] { InstanceManager.class, BundleContext.class });
-                        if (! cst.isAccessible()) {
+                        Constructor cst = m_clazz.getDeclaredConstructor(new Class[]{InstanceManager.class, BundleContext.class});
+                        if (!cst.isAccessible()) {
                             cst.setAccessible(true);
                         }
-                        Object[] args = new Object[] { this, m_context };
-                        onEntry(null, MethodMetadata.BC_CONSTRUCTOR_ID,  new Object[] {m_context});
+                        Object[] args = new Object[]{this, m_context};
+                        onEntry(null, MethodMetadata.BC_CONSTRUCTOR_ID, new Object[]{m_context});
                         instance = cst.newInstance(args);
                         onExit(instance, MethodMetadata.BC_CONSTRUCTOR_ID, instance);
                     } catch (NoSuchMethodException e) {
                         // Create an instance if no instance are already created with <init>()BundleContext
                         if (instance == null) {
-                            Constructor cst = m_clazz.getDeclaredConstructor(new Class[] { InstanceManager.class });
-                            if (! cst.isAccessible()) {
+                            Constructor cst = m_clazz.getDeclaredConstructor(new Class[]{InstanceManager.class});
+                            if (!cst.isAccessible()) {
                                 cst.setAccessible(true);
                             }
-                            Object[] args = new Object[] {this};
+                            Object[] args = new Object[]{this};
                             onEntry(null, MethodMetadata.EMPTY_CONSTRUCTOR_ID, new Object[0]);
                             instance = cst.newInstance(args);
                             onExit(instance, MethodMetadata.EMPTY_CONSTRUCTOR_ID, instance);
@@ -737,31 +768,33 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
             } catch (IllegalAccessException e) {
                 m_logger.log(Logger.ERROR,
-                                          "[" + m_name + "] createInstance -> The POJO constructor is not accessible : " + e.getMessage(), e);
+                        "[" + m_name + "] createInstance -> The POJO constructor is not accessible : " + e.getMessage(), e);
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor is not accessible", e);
             } catch (SecurityException e) {
                 m_logger.log(
-                                          Logger.ERROR,
-                                          "["
-                                                  + m_name
-                                                  + "] createInstance -> The POJO constructor is not accessible (security reason) : "
-                                                  + e.getMessage(), e);
+                        Logger.ERROR,
+                        "["
+                                + m_name
+                                + "] createInstance -> The POJO constructor is not accessible (security reason) : "
+                                + e.getMessage(), e
+                );
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor is not accessible", e);
             } catch (InvocationTargetException e) {
                 m_logger.log(
-                                          Logger.ERROR,
-                                          "["
-                                                  + m_name
-                                                  + "] createInstance -> Cannot invoke the constructor method - the constructor throws an exception : "
-                                                  + e.getTargetException().getMessage(), e.getTargetException());
+                        Logger.ERROR,
+                        "["
+                                + m_name
+                                + "] createInstance -> Cannot invoke the constructor method - the constructor throws an exception : "
+                                + e.getTargetException().getMessage(), e.getTargetException()
+                );
                 onError(null, m_className, e.getTargetException());
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor has thrown an exception", e.getTargetException());
             } catch (NoSuchMethodException e) {
                 m_logger.log(Logger.ERROR,
-                                          "[" + m_name + "] createInstance -> Cannot invoke the constructor (method not found) : " + e.getMessage(), e);
+                        "[" + m_name + "] createInstance -> Cannot invoke the constructor (method not found) : " + e.getMessage(), e);
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the POJO constructor cannot be found", e);
             } catch (Throwable e) {
@@ -777,18 +810,18 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 Method factory = null;
                 // Try with the bundle context
                 try {
-                    factory = m_clazz.getDeclaredMethod(m_factoryMethod, new Class[] { BundleContext.class });
-                    if (! factory.isAccessible()) {
+                    factory = m_clazz.getDeclaredMethod(m_factoryMethod, new Class[]{BundleContext.class});
+                    if (!factory.isAccessible()) {
                         factory.setAccessible(true);
                     }
-                    Object[] args = new Object[] { m_context };
+                    Object[] args = new Object[]{m_context};
                     onEntry(null, m_className, args);
-                    instance = factory.invoke(null, new Object[] { m_context });
+                    instance = factory.invoke(null, new Object[]{m_context});
                 } catch (NoSuchMethodException e1) {
                     // Try without the bundle context
                     try {
                         factory = m_clazz.getDeclaredMethod(m_factoryMethod, new Class[0]);
-                        if (! factory.isAccessible()) {
+                        if (!factory.isAccessible()) {
                             factory.setAccessible(true);
                         }
                         Object[] args = new Object[0];
@@ -797,11 +830,12 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                     } catch (NoSuchMethodException e2) {
                         // Error : factory-method not found
                         m_logger.log(
-                                                  Logger.ERROR,
-                                                  "["
-                                                          + m_name
-                                                          + "] createInstance -> Cannot invoke the factory-method (method not found) : "
-                                                          + e2.getMessage(), e2);
+                                Logger.ERROR,
+                                "["
+                                        + m_name
+                                        + "] createInstance -> Cannot invoke the factory-method (method not found) : "
+                                        + e2.getMessage(), e2
+                        );
                         stop();
                         throw new RuntimeException("Cannot create a POJO instance, the factory-method cannot be found", e2);
                     }
@@ -814,7 +848,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 while (declaringClass != null && method == null) {
                     try {
                         method = declaringClass.getDeclaredMethod("_setInstanceManager",
-                                new Class[] { InstanceManager.class });
+                                new Class[]{InstanceManager.class});
                     } catch (NoSuchMethodException e) {
                         //Do nothing
                     }
@@ -826,10 +860,11 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                     // Error : _setInstanceManager method is missing
                     m_logger
                             .log(
-                                 Logger.ERROR,
-                                 "["
-                                         + m_name
-                                         + "] createInstance -> Cannot invoke the factory-method (the _setInstanceManager method does not exist");
+                                    Logger.ERROR,
+                                    "["
+                                            + m_name
+                                            + "] createInstance -> Cannot invoke the factory-method (the _setInstanceManager method does not exist"
+                            );
                     stop();
                     throw new RuntimeException("Cannot create a POJO instance, the factory-method cannot be found");
                 }
@@ -837,13 +872,13 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                 if (!method.isAccessible()) {
                     method.setAccessible(true);
                 }
-                method.invoke(instance, new Object[] { this });
+                method.invoke(instance, new Object[]{this});
                 onExit(null, m_className, instance);
 
             } catch (InvocationTargetException e) {
                 // Error : invocation failed
                 m_logger.log(Logger.ERROR,
-                                          "[" + m_name + "] createInstance -> The factory-method throws an exception : " + e.getTargetException(), e.getTargetException());
+                        "[" + m_name + "] createInstance -> The factory-method throws an exception : " + e.getTargetException(), e.getTargetException());
                 onError(null, m_className, e.getTargetException());
                 stop();
                 throw new RuntimeException("Cannot create a POJO instance, the factory-method has thrown an exception", e.getTargetException());
@@ -865,6 +900,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * the created object to the {@link InstanceManager#m_pojoObjects} list. Then,
      * it calls the {@link PrimitiveHandler#onCreation(Object)} methods on attached
      * handlers.
+     *
      * @return a new instance or <code>null</code> if an error occurs during the
      * creation.
      */
@@ -889,6 +925,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
     /**
      * Deletes a POJO object.
+     *
      * @param pojo the pojo to remove from the list of created pojos.
      */
     public synchronized void deletePojoObject(Object pojo) {
@@ -911,6 +948,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * can receive the created object before the {@link PrimitiveHandler#onCreation(Object)}
      * calls.
      * </p>
+     *
      * @return the pojo object of the component instance to use for singleton component
      */
     public Object getPojoObject() {
@@ -944,6 +982,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Gets the manipulated class.
      * The method does not need to be synchronized.
      * Reassigning the internal class will use the same class object.
+     *
      * @return the manipulated class
      */
     public Class getClazz() {
@@ -959,22 +998,22 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     private void managedInjectedObject() {
         Object obj = m_pojoObjects.get(0); // Get first object.
 
-        if (! (obj instanceof Pojo)) {
+        if (!(obj instanceof Pojo)) {
             // Error, the injected object is not a POJO.
             throw new RuntimeException("The injected object in " + m_name + " is not a POJO");
         }
 
         load(); // Load the class.
 
-        if (! m_clazz.isInstance(obj)) {
+        if (!m_clazz.isInstance(obj)) {
             throw new RuntimeException("The injected object in " + m_name + " is not an instance of " + m_className);
         }
 
         // Call _setInstanceManager
         try {
-            Method setIM = m_clazz.getDeclaredMethod("_setInstanceManager", new Class[] {this.getClass()});
+            Method setIM = m_clazz.getDeclaredMethod("_setInstanceManager", new Class[]{this.getClass()});
             setIM.setAccessible(true); // Necessary as the method is private
-            setIM.invoke(obj, new Object[] {this});
+            setIM.invoke(obj, new Object[]{this});
         } catch (Exception e) {
             // If anything wrong happened...
             throw new RuntimeException("Cannot attach the injected object with the container of " + m_name, e);
@@ -993,8 +1032,9 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Registers an handler.
      * This methods is called by handler wanting to monitor
      * fields and/or methods of the implementation class.
+     *
      * @param handler the handler to register
-     * @param fields the field metadata list
+     * @param fields  the field metadata list
      * @param methods the method metadata list
      * @deprecated use {@link InstanceManager#register(FieldMetadata, FieldInterceptor)}
      * and {@link InstanceManager#register(MethodMetadata, MethodInterceptor)} instead.
@@ -1013,17 +1053,18 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Registers a field interceptor.
      * A field interceptor will be notified of field access of the
      * implementation class. Note that handlers are field interceptors.
-     * @param field the field to monitor
+     *
+     * @param field       the field to monitor
      * @param interceptor the field interceptor object
      */
     public void register(FieldMetadata field, FieldInterceptor interceptor) {
         if (m_fieldRegistration == null) {
             m_fieldRegistration = new HashMap();
-            m_fieldRegistration.put(field.getFieldName(), new FieldInterceptor[] { interceptor });
+            m_fieldRegistration.put(field.getFieldName(), new FieldInterceptor[]{interceptor});
         } else {
             FieldInterceptor[] list = (FieldInterceptor[]) m_fieldRegistration.get(field.getFieldName());
             if (list == null) {
-                m_fieldRegistration.put(field.getFieldName(), new FieldInterceptor[] { interceptor });
+                m_fieldRegistration.put(field.getFieldName(), new FieldInterceptor[]{interceptor});
             } else {
                 for (int j = 0; j < list.length; j++) {
                     if (list[j] == interceptor) {
@@ -1042,17 +1083,18 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Registers a method interceptor.
      * A method interceptor will be notified of method entries, exits
      * and errors. Note that handlers are method interceptors.
-     * @param method the field to monitor
+     *
+     * @param method      the field to monitor
      * @param interceptor the field interceptor object
      */
     public void register(MethodMetadata method, MethodInterceptor interceptor) {
         if (m_methodRegistration == null) {
             m_methodRegistration = new HashMap();
-            m_methodRegistration.put(method.getMethodIdentifier(), new MethodInterceptor[] { interceptor });
+            m_methodRegistration.put(method.getMethodIdentifier(), new MethodInterceptor[]{interceptor});
         } else {
             MethodInterceptor[] list = (MethodInterceptor[]) m_methodRegistration.get(method.getMethodIdentifier());
             if (list == null) {
-                m_methodRegistration.put(method.getMethodIdentifier(), new MethodInterceptor[] { interceptor });
+                m_methodRegistration.put(method.getMethodIdentifier(), new MethodInterceptor[]{interceptor});
             } else {
                 for (int j = 0; j < list.length; j++) {
                     if (list[j] == interceptor) {
@@ -1071,20 +1113,21 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Registers a method interceptor on a methods from an inner class.
      * A method interceptor will be notified of method entries, exits
      * and errors. Note that handlers are method interceptors.
-     * @param method the field to monitor
-     * @param innerClass the inner class name
+     *
+     * @param method      the field to monitor
+     * @param innerClass  the inner class name
      * @param interceptor the field interceptor object
      */
     public void register(MethodMetadata method, String innerClass, MethodInterceptor interceptor) {
         if (m_methodRegistration == null) {
             m_methodRegistration = new HashMap();
             m_methodRegistration.put(innerClass + "___" + method.getMethodIdentifier(),
-                    new MethodInterceptor[] { interceptor });
+                    new MethodInterceptor[]{interceptor});
         } else {
             MethodInterceptor[] list = (MethodInterceptor[]) m_methodRegistration.get(method.getMethodIdentifier());
             if (list == null) {
                 m_methodRegistration.put(innerClass + "___" + method.getMethodIdentifier(),
-                        new MethodInterceptor[] { interceptor });
+                        new MethodInterceptor[]{interceptor});
             } else {
                 for (int j = 0; j < list.length; j++) {
                     if (list[j] == interceptor) {
@@ -1103,22 +1146,23 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Registers a constructor injector.
      * The constructor injector will be called when a pojo object is going to be
      * created.
-     * @param index the index of the parameter. Only one injector per index can
-     * be registered.
+     *
+     * @param index    the index of the parameter. Only one injector per index can
+     *                 be registered.
      * @param injector the injector object.
      * @throws ConfigurationException if the given index is already injected by another
-     * injector
+     *                                injector
      */
     public void register(int index, ConstructorInjector injector) throws ConfigurationException {
-        Integer key = new Integer(index);
         if (m_constructorRegistration == null) {
             m_constructorRegistration = new HashMap();
         }
-        if (! m_constructorRegistration.containsKey(key)) {
-            m_constructorRegistration.put(key, injector);
+        if (!m_constructorRegistration.containsKey(index)) {
+            m_constructorRegistration.put(index, injector);
         } else {
             throw new ConfigurationException("Another constructor injector " +
-                    "manages the parameter " + index);
+                    "manages the parameter " + index + " : " + m_constructorRegistration.get(index) + ", so cannot " +
+                    "register " + injector);
         }
     }
 
@@ -1128,11 +1172,12 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * to be injected (i.e. returned) by invoking the {@link PrimitiveHandler#onGet(Object, String, Object)}
      * method. If the field value changes, this method call the {@link PrimitiveHandler#onSet(Object, String, Object)}
      * method on each field interceptor monitoring the field in order to advertize the new value.
-     * @param pojo the pojo object on which the field was get
+     *
+     * @param pojo      the pojo object on which the field was get
      * @param fieldName the field name on which the GETFIELD instruction is called
      * @return the value decided by the last asked handler (throws a warning if two fields decide two different values)
      */
-    public Object  onGet(Object pojo, String fieldName) {
+    public Object onGet(Object pojo, String fieldName) {
         Object initialValue = null;
         synchronized (this) { // Stack confinement.
             initialValue = m_fields.get(fieldName);
@@ -1151,9 +1196,10 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
                     //TODO analyze impact of removing conflict detection
                     if ((handlerResult != null && !handlerResult.equals(result)) || (result != null && handlerResult == null)) {
                         m_logger.log(
-                                                  Logger.WARNING,
-                                                  "A conflict was detected on the injection of "
-                                                          + fieldName);
+                                Logger.WARNING,
+                                "A conflict was detected on the injection of "
+                                        + fieldName
+                        );
                     }
                 }
                 result = handlerResult;
@@ -1178,9 +1224,10 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Dispatches entry method events on registered method interceptors.
      * This method calls the {@link MethodInterceptor#onEntry(Object, java.lang.reflect.Member, Object[])}
      * methods on method interceptors monitoring the method.
-     * @param pojo the pojo object on which method is invoked.
+     *
+     * @param pojo     the pojo object on which method is invoked.
      * @param methodId the method id used to compute the {@link Method} object.
-     * @param args the argument array
+     * @param args     the argument array
      */
     public void onEntry(Object pojo, String methodId, Object[] args) {
         if (m_methodRegistration == null) { // Immutable field.
@@ -1205,9 +1252,10 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * This method calls the {@link MethodInterceptor#onExit(Object, java.lang.reflect.Member, Object)} and the
      * {@link MethodInterceptor#onFinally(Object, java.lang.reflect.Member)} methods on method interceptors
      * monitoring the method.
-     * @param pojo the pojo object on which method was invoked.
+     *
+     * @param pojo     the pojo object on which method was invoked.
      * @param methodId the method id used to compute the {@link Method} object.
-     * @param result the returned object.
+     * @param result   the returned object.
      */
     public void onExit(Object pojo, String methodId, Object result) {
         if (m_methodRegistration == null) {
@@ -1229,9 +1277,10 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * This method calls the {@link MethodInterceptor#onError(Object, java.lang.reflect.Member, Throwable)} and the
      * {@link MethodInterceptor#onFinally(Object, java.lang.reflect.Member)} methods on method interceptors monitoring
      * the method.
-     * @param pojo the pojo object on which the method was invoked
+     *
+     * @param pojo     the pojo object on which the method was invoked
      * @param methodId the method id used to compute the {@link Method} object.
-     * @param error the Throwable object.
+     * @param error    the Throwable object.
      */
     public void onError(Object pojo, String methodId, Throwable error) {
         if (m_methodRegistration == null) {
@@ -1251,13 +1300,14 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Computes the {@link Method} object from the given id.
      * Once computes, a map is used as a cache to avoid to recompute for
      * the same id.
+     *
      * @param methodId the method id
      * @return the method object or <code>null</code> if the method cannot be found.
      */
     private Member getMethodById(String methodId) {
         // Used a synchronized map.
         Member member = (Member) m_methods.get(methodId);
-        if (! m_methods.containsKey(methodId) && m_clazz != null) {
+        if (!m_methods.containsKey(methodId) && m_clazz != null) {
             // Is it a inner class method
             if (methodId.contains("___")) { // Mark to detect a inner class method.
                 String[] split = methodId.split("___");
@@ -1330,8 +1380,9 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * interceptors monitoring this field.
      * This method can be invoked with a <code>null</code> pojo argument when the changes comes from another
      * handler.
-     * @param pojo the pojo object on which the field was set
-     * @param fieldName the field name on which the PUTFIELD instruction is called
+     *
+     * @param pojo        the pojo object on which the field was set
+     * @param fieldName   the field name on which the PUTFIELD instruction is called
      * @param objectValue the new value of the field
      */
     public void onSet(final Object pojo, final String fieldName, final Object objectValue) {
@@ -1346,7 +1397,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         FieldInterceptor[] list = (FieldInterceptor[]) m_fieldRegistration
                 .get(fieldName);
         for (int i = 0; list != null && i < list.length; i++) {
-             // The callback must be call outside the synchronization block.
+            // The callback must be call outside the synchronization block.
             list[i].onSet(pojo, fieldName, objectValue);
         }
     }
@@ -1354,6 +1405,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
     /**
      * Gets the bundle context used by this component instance.
+     *
      * @return the context of the component.
      * @see org.apache.felix.ipojo.ComponentInstance#getContext()
      */
@@ -1364,6 +1416,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
     /**
      * Gets the global bundle context. This is the bundle context
      * of the bundle declaring the component type.
+     *
      * @return the bundle context of the bundle declaring the component
      * type.
      */
@@ -1377,6 +1430,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * access to the 'local' service registry (the composite one).
      * If the instance lives in the global (i.e. OSGi) context,
      * this method returns <code>null</code>
+     *
      * @return the local service context or <code>null</code> if the
      * instance doesn't live in a composite.
      */
@@ -1386,6 +1440,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
 
     /**
      * Gets the instance name.
+     *
      * @return the instance name.
      * @see org.apache.felix.ipojo.ComponentInstance#getInstanceName()
      */
@@ -1402,11 +1457,12 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * methods on each attached handler, and then recompute the instance
      * state. Note that the reconfiguration process does not deactivate the
      * instance.
+     *
      * @param configuration the new configuration to push
      * @see org.apache.felix.ipojo.ComponentInstance#reconfigure(java.util.Dictionary)
      */
     public void reconfigure(Dictionary configuration) {
-         m_logger.log(Logger.INFO, "Reconfiguring " + getInstanceName());
+        m_logger.log(Logger.INFO, "Reconfiguring " + getInstanceName());
         for (int i = 0; i < m_handlers.length; i++) {
             m_handlers[i].getHandler().reconfigure(configuration);
         }
@@ -1432,6 +1488,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Gets the implementation class of the component type.
      * This method does not need to be synchronized as the
      * class name is constant once set.
+     *
      * @return the class name of the component implementation.
      */
     public String getClassName() {
@@ -1443,6 +1500,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * This method is called every time that a plugged handler becomes valid or invalid.
      * This method computes the new instance state and applies it (by calling the
      * {@link InstanceManager#setState(int)} method.
+     *
      * @param instance the handler becoming valid or invalid
      * @param newState the new state of the handler
      * @see org.apache.felix.ipojo.InstanceStateListener#stateChanged(org.apache.felix.ipojo.ComponentInstance, int)
@@ -1479,6 +1537,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Gets the list of registered fields (containing field names).
      * This method is invoked by the POJO itself during
      * its initialization.
+     *
      * @return the set of registered fields.
      */
     public Set getRegistredFields() {
@@ -1492,6 +1551,7 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
      * Gets the list of registered methods (containing method ids).
      * This method is invoked by the POJO itself during its
      * initialization.
+     *
      * @return the set of registered methods.
      */
     public Set getRegistredMethods() {
@@ -1500,5 +1560,15 @@ public class InstanceManager implements ComponentInstance, InstanceStateListener
         } else {
             return m_methodRegistration.keySet();
         }
+    }
+
+    /**
+     * Gets the bundle context of the instance, i.e. the bundle context of the bundle having declared this instance.
+     *
+     * @return the bundle context of the instance.
+     * @since 1.11.2
+     */
+    public BundleContext getInstanceContext() {
+        return m_instanceContext;
     }
 }
