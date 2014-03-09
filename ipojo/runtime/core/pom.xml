@@ -46,9 +46,12 @@
 
            1.11.1:
            * minor changes such as synchronization protocols
+
+           1.11.2:
+           * add the InstanceBundleContextAware interface
         -->
-        <ipojo.package.version>1.11.1</ipojo.package.version>
-        <ipojo.extender.version>1.11.1</ipojo.extender.version>
+        <ipojo.package.version>1.11.2</ipojo.package.version>
+        <ipojo.extender.version>1.11.2</ipojo.extender.version>
     </properties>
 
     <description>
@@ -80,6 +83,11 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.metadata</artifactId>
             <version>1.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo.annotations</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>asm</groupId>
@@ -176,6 +184,7 @@
                             org.apache.felix.ipojo.handlers.configuration; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.context; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.dependency.interceptors; version="${ipojo.package.version}",
+                            org.apache.felix.ipojo.annotations; version="${ipojo.package.version},
                             <!-- Compendium packages -->
                             org.osgi.service.cm; version=1.3,
                             org.osgi.service.log; version=1.3

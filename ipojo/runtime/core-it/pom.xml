@@ -42,7 +42,7 @@
         <equinox.version>3.9.1.v20130814-1242</equinox.version>
         <knoperflerfish.version>7.0.1</knoperflerfish.version>
 
-        <manipulator.version>1.11.1</manipulator.version>
+        <manipulator.version>1.11.2-SNAPSHOT</manipulator.version>
     </properties>
 
     <modules>
@@ -66,6 +66,7 @@
         <module>ipojo-core-service-dependency-timeout-test</module>
         <module>ipojo-core-service-dependency-interceptor-test</module>
         <module>ipojo-core-service-providing-test</module>
+        <module>ipojo-core-context-injection-test</module>
         <module>ipojo-api-test</module>
         <module>ipojo-compatibility-test</module>
     </modules>

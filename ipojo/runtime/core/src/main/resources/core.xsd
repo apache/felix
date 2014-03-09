@@ -408,6 +408,48 @@
             </xs:simpleType>
         </xs:attribute>
     </xs:complexType>
+    <xs:complexType name="ContextType">
+        <xs:annotation>
+            <xs:documentation>Allows injecting the OSGi bundle context into the component.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="method" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>Specifies the method receiving the bundle context.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="field" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>Specifies the field receiving the bundle context.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="constructor-parameter" type="xs:int" use="optional">
+            <xs:annotation>
+                <xs:documentation>Specifies the index of the parameter (0-based) receiving the bundle
+                    context.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+
+        <xs:attribute name="context" use="optional">
+            <xs:annotation>
+                <xs:documentation>Specifies the context source.
+                </xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:annotation>
+                    <xs:documentation>iPOJO supports two bundle context 'sources': component and instance. Component
+                        is the bundle context of the bundle declaring the component, while instance is the bundle
+                        context of the bundle declaring the instance. Obviously, they are the same when the instance
+                        is declared in the same bundle as the component. By default, it uses 'component'.
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="instance"/>
+                    <xs:enumeration value="component"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
     <xs:element name="provides" type="ProvidesType" id="provides"/>
     <xs:complexType name="ProvidesType">
         <xs:annotation>
@@ -539,6 +581,7 @@
         </xs:attribute>
     </xs:complexType>
     <xs:element name="callback" type="CallbackType" id="callback"/>
+    <xs:element name="context" type="ContextType" id="context"/>
     <xs:element name="controller" type="ControllerType" id="controller">
         <xs:annotation>
             <xs:documentation/>
@@ -635,7 +678,7 @@
         </xs:attribute>
         <xs:attribute name="id" type="xs:string" use="optional">
             <xs:annotation>
-                <xs:documentation>id of the service dependency. The id allows to indentify and to refert to
+                <xs:documentation>id of the service dependency. The id allows to identify and to refer to
                     this dependency.
                 </xs:documentation>
             </xs:annotation>

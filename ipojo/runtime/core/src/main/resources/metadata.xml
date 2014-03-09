@@ -27,6 +27,10 @@
             classname="org.apache.felix.ipojo.handlers.lifecycle.callback.LifecycleCallbackHandler"
             name="callback" level="2" architecture="false"/>
     <handler
+            classname="org.apache.felix.ipojo.handlers.context.BundleContextHandler"
+            name="context" level="0" architecture="false">
+    </handler>
+    <handler
             classname="org.apache.felix.ipojo.handlers.dependency.DependencyHandler"
             name="requires" level="0" architecture="false">
         <!-- <controller field="m_state"/>  -->
