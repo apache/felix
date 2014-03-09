@@ -20,6 +20,7 @@
 package org.apache.felix.ipojo.runtime.test.dependencies.timeout;
 
 import org.apache.felix.ipojo.ComponentInstance;
+import org.ow2.chameleon.testing.helpers.TimeUtils;
 
 public class DelayedProvider implements Runnable {
     
@@ -50,14 +51,15 @@ public class DelayedProvider implements Runnable {
     }
 
     public void run() {
-            System.out.println("Start sleeping for " + delay);
+            long d = delay * TimeUtils.TIME_FACTOR;
+            System.out.println("Start sleeping for " + d);
             long begin = System.currentTimeMillis();
             try {
-                Thread.sleep(delay);
+                Thread.sleep(d);
                 long end = System.currentTimeMillis();
-                if (end - begin < delay) {
+                if (end - begin < d) {
                 	// Wait for the remaining time
-                	Thread.sleep(delay - (end - begin));
+                	Thread.sleep(d - (end - begin));
                 }
             } catch (InterruptedException e) {
                 System.out.println("Interrupted ...");
