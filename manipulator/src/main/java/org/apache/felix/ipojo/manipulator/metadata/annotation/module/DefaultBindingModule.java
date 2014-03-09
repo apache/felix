@@ -271,7 +271,7 @@ public class DefaultBindingModule extends AbsBindingModule {
                     }
                 });
 
-        //bind(Context.class).to(new GenericVisitorFactory("context", ""));
+        bind(Context.class).to(new GenericVisitorFactory("context", ""));
     }
 
     private DocumentBuilder m_builder;
@@ -297,7 +297,7 @@ public class DefaultBindingModule extends AbsBindingModule {
             return m_builder;
         }
 
-        // The builder has to be reseted
+        // The builder has to be reset
         m_builder.reset();
 
         return m_builder;
