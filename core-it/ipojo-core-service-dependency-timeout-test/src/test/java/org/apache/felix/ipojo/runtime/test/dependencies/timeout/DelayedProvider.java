@@ -51,7 +51,7 @@ public class DelayedProvider implements Runnable {
     }
 
     public void run() {
-            long d = delay * TimeUtils.TIME_FACTOR;
+            long d = delay;
             System.out.println("Start sleeping for " + d);
             long begin = System.currentTimeMillis();
             try {
