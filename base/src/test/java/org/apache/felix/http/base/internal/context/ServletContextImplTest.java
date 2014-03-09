@@ -470,7 +470,7 @@ public class ServletContextImplTest
         URL url = getClass().getResource("resource.txt");
         Assert.assertNotNull(url);
 
-        Mockito.when(this.httpContext.getResource("resource.txt")).thenReturn(url);
+        Mockito.when(this.httpContext.getResource("/resource.txt")).thenReturn(url);
         Assert.assertNull(this.context.getResource("/notfound.txt"));
         Assert.assertEquals(url, this.context.getResource("/resource.txt"));
     }
@@ -481,7 +481,7 @@ public class ServletContextImplTest
         URL url = getClass().getResource("resource.txt");
         Assert.assertNotNull(url);
 
-        Mockito.when(this.httpContext.getResource("resource.txt")).thenReturn(url);
+        Mockito.when(this.httpContext.getResource("/resource.txt")).thenReturn(url);
         Assert.assertNull(this.context.getResourceAsStream("/notfound.txt"));
         Assert.assertNotNull(this.context.getResourceAsStream("/resource.txt"));
     }
