@@ -238,7 +238,7 @@ public class ServletContextImpl implements ExtServletContext
 
     public String getRealPath(String name)
     {
-        URL url = getResource(normalizePath(name));
+        URL url = getResource(name);
         if (url == null)
         {
             return null;
@@ -253,7 +253,7 @@ public class ServletContextImpl implements ExtServletContext
 
     public URL getResource(String path)
     {
-        return this.httpContext.getResource(normalizePath(path));
+        return this.httpContext.getResource(normalizeResourcePath(path));
     }
 
     public InputStream getResourceAsStream(String path)
@@ -416,11 +416,22 @@ public class ServletContextImpl implements ExtServletContext
             return null;
         }
 
-        String normalizedPath = path.trim().replaceAll("/+", "/");
+        String normalizedPath = normalizeResourcePath(path);
         if (normalizedPath.startsWith("/") && (normalizedPath.length() > 1))
         {
             normalizedPath = normalizedPath.substring(1);
         }
+
+        return normalizedPath;
+    }
+
+    private String normalizeResourcePath(String path)
+    {
+        if ( path == null)
+        {
+            return null;
+        }
+        String normalizedPath = path.trim().replaceAll("/+", "/");
 
         return normalizedPath;
     }
