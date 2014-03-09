@@ -51,7 +51,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		m_callbackInstance = prototype.m_callbackInstance;
 	}
 	
-	public synchronized void add(final Event e) {
+	public void add(final Event e) {
 		// since this method can be invoked by anyone from any thread, we need to
 		// pass on the event to a runnable that we execute using the component's
 		// executor
@@ -62,7 +62,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
 			}
 		});
 	}
-	public synchronized void change(final Event e) {
+	public void change(final Event e) {
 		// since this method can be invoked by anyone from any thread, we need to
 		// pass on the event to a runnable that we execute using the component's
 		// executor
@@ -73,7 +73,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
 			}
 		});
 	}
-	public synchronized void remove(final Event e) {
+	public void remove(final Event e) {
 		// since this method can be invoked by anyone from any thread, we need to
 		// pass on the event to a runnable that we execute using the component's
 		// executor
@@ -88,44 +88,74 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	protected void addDependency(Event e) {
 		m_dependencies.add(e);
 		m_available = true;
-		// if this is an optional dependency and the component is in an instantiated
-		// state, we can invoke the callback here
-		if (m_component.isAvailable()) {
-			if (m_add != null) {
-				invoke(m_add, e);
-			}
-			m_component.updateInstance(this);
-		}
-		if (isRequired()) {
-			// Only required dependencies may change state. 
-			m_component.handleChange();
+		switch (m_component.getComponentState()) {
+		case WAITING_FOR_REQUIRED:
+		    if (isRequired()) {
+		        m_component.handleChange();
+		    }
+		    break;
+		case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+		    if (isRequired()) {
+		        if (! isInstanceBound()) {
+		            if (m_add != null) {		       
+		                invoke(m_add, e);
+		            }
+		        } else {
+		            m_component.handleChange();
+		        }
+		    }
+		    break;
+		case TRACKING_OPTIONAL:
+		    if (m_add != null) {
+		        invoke(m_add, e);
+		    }
+		    m_component.updateInstance(this);
+		    break;
+		default:
 		}
 	}
 
 	protected void changeDependency(Event e) {	    
 		m_dependencies.remove(e);
 		m_dependencies.add(e);
-        if (m_change != null && m_component.isInstantiated()) {
-            // invoke change only if state is in instantiated_waiting_for_required or tracking_optional
-            invoke(m_change, e);
-        } 
-		if (m_component.isAvailable()) {
-			m_component.updateInstance(this);
-		}
-		m_component.handleChange();
+        switch (m_component.getComponentState()) {
+        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+            if (m_change != null && isRequired() && !isInstanceBound()) {
+                invoke(m_change, e);
+            }
+            break;
+        case TRACKING_OPTIONAL:
+            if (m_change != null) {
+                invoke(m_change, e);
+            }
+            m_component.updateInstance(this);
+            break;
+        default:
+        }
 	}
 		
-	protected void removeDependency(Event e) {
-		m_available = !(m_dependencies.contains(e) && m_dependencies.size() == 1);
-		m_component.handleChange();
-		m_dependencies.remove(e);
-		if (m_component.isAvailable()) {
-			if (m_remove != null) {
-				invoke(m_remove, e);
-			}
-			m_component.updateInstance(this);
-		}
-	}
+    protected void removeDependency(Event e) {
+        m_available = !(m_dependencies.contains(e) && m_dependencies.size() == 1);
+        m_component.handleChange();
+        m_dependencies.remove(e);
+        
+        switch (m_component.getComponentState()) {
+        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+            if (isRequired() && ! isInstanceBound()) {
+                if (m_remove != null) {
+                    invoke(m_remove, e);
+                }
+            }
+            break;
+        case TRACKING_OPTIONAL:
+            if (m_remove != null) {
+                invoke(m_remove, e);
+            }
+            m_component.updateInstance(this);
+            break;
+        default:
+        }
+    }
 
 	@Override
 	public synchronized void add(ComponentContext component) {
