@@ -7,9 +7,6 @@ Changes from the 1.11.1 to 1.11.2
  ** Improvement
      * [FELIX-4454] - Online manipulator should be able to take advantage of Stereotypes
 
- ** New Feature
-     * [FELIX-4276] - Let stereotypes have attributes
-
 Changes from the 1.11.0 to 1.11.1
 ---------------------------------
 
