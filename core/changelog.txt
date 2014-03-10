@@ -1,3 +1,17 @@
+Changes from 1.11.1 to 1.11.2
+-----------------------------
+
+** Bug
+    * [FELIX-4229] - Provide a way to obtain the component's BundleContext (other than constructor injection)
+    * [FELIX-4419] - Open access to InstanceDeclaration and TypeDeclaration
+    * [FELIX-4432] - DefaultServiceRankingInterceptor holds duplicate dependencies
+    * [FELIX-4448] - Invalid dynamism management when an interceptor implements both Tracking and Ranking interceptors
+    * [FELIX-4449] - The ConfigurationListener list contains duplicates and fires update on unchanged configurations
+
+** Improvement
+    * [FELIX-3931] - Provide a handler to inject the bundle context
+    * [FELIX-4160] - Create an Maven Parent POM for iPOJO
+
 Changes from 1.11.0 to 1.11.1
 -----------------------------
 
