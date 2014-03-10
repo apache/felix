@@ -111,12 +111,17 @@ public final class JettyConfig
     /** Felix specific property to set the list of path exclusions for Web Application Bundles */
     public static final String FELIX_HTTP_PATH_EXCLUSIONS = "org.apache.felix.http.path_exclusions";
 
+    /** Felix specific property to configure the excluded cipher suites. @deprecated use {@link #FELIX_JETTY_EXCLUDE_SUITES} instead. */
+    @Deprecated
+    public static final String FELIX_JETTY_EXCLUDED_SUITES_OLD = "org.apache.felix.https.jetty.cipersuites.excluded";
     /** Felix specific property to configure the excluded cipher suites */
-    public static final String FELIX_JETTY_EXCLUDED_SUITES = "org.apache.felix.https.jetty.cipersuites.excluded";
+    public static final String FELIX_JETTY_EXCLUDED_SUITES = "org.apache.felix.https.jetty.ciphersuites.excluded";
 
-    /** Felix specific property to configure the included cipher suites */
-    public static final String FELIX_JETTY_INCLUDED_SUITES = "org.apache.felix.https.jetty.cipersuites.included";
-
+    /** Felix specific property to configure the included cipher suites. @deprecated use {@link #FELIX_JETTY_INCLUDE_SUITES} instead. */
+    @Deprecated
+    public static final String FELIX_JETTY_INCLUDED_SUITES_OLD = "org.apache.felix.https.jetty.cipersuites.included";
+    /** Felix specific property to configure the included cipher suites. */
+    public static final String FELIX_JETTY_INCLUDED_SUITES = "org.apache.felix.https.jetty.ciphersuites.included";
 
     private static String validateContextPath(String ctxPath)
     {
@@ -185,7 +190,7 @@ public final class JettyConfig
 
     public String[] getExcludedCipherSuites()
     {
-        return getStringArrayProperty(FELIX_JETTY_EXCLUDED_SUITES, null);
+        return getStringArrayProperty(FELIX_JETTY_EXCLUDED_SUITES, getStringArrayProperty(FELIX_JETTY_EXCLUDED_SUITES_OLD, null));
     }
 
     public int getHeaderSize()
@@ -215,7 +220,7 @@ public final class JettyConfig
 
     public String[] getIncludedCipherSuites()
     {
-        return getStringArrayProperty(FELIX_JETTY_INCLUDED_SUITES, null);
+        return getStringArrayProperty(FELIX_JETTY_INCLUDED_SUITES, getStringArrayProperty(FELIX_JETTY_INCLUDED_SUITES_OLD, null));
     }
 
     /**
