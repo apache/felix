@@ -52,7 +52,7 @@ public class EmptyTest extends Common {
         provider.stop();
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 2", ref_cs);
-        DelayedProvider dp = new DelayedProvider(provider, 400);
+        DelayedProvider dp = new DelayedProvider(provider, 1000);
         dp.start();
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
         boolean res = false;
