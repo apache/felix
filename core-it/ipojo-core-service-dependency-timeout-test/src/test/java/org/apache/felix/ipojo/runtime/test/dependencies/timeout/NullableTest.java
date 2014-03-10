@@ -65,7 +65,6 @@ public class NullableTest extends Common {
         provider.dispose();
         under.stop();
         under.dispose();
-        return;
     }
 
     @Test

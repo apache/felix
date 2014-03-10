@@ -50,13 +50,13 @@ public class NullTest extends Common {
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 2", ref_cs);
         long begin = System.currentTimeMillis();
-        DelayedProvider dp = new DelayedProvider(provider, 400);
+        DelayedProvider dp = new DelayedProvider(provider, 200);
         dp.start();
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
         assertTrue("Check invocation - 2", cs.check());
         long end = System.currentTimeMillis();
 
-        assertTrue("Assert delay", (end - begin) >= 400);
+        assertTrue("Assert delay", (end - begin) >= 200);
 
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 3", ref_cs);
