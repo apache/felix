@@ -56,9 +56,9 @@
                             org.cometd.bayeux;version=${cometd.version};-split-package:=merge-first,
                             org.cometd.bayeux.client;version=${cometd.version};-split-package:=merge-first,
                             org.cometd.bayeux.server;version=${cometd.version};-split-package:=merge-first,
-                            org.apache.felix.http.api;version${http.api.version};-split-package:=merge-first,
+                            org.apache.felix.http.api;version=${http.api.version};-split-package:=merge-first,
                             org.apache.felix.http.cometd;version=${project.version};-split-package:=merge-first,
-                            org.eclipse.jetty.*;-split-package:=merge-first;version=${version;===;${jetty.version}}
+                            org.eclipse.jetty.*;version=${version;===;${jetty.version}};-split-package:=merge-first
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*;-split-package:=merge-first,
