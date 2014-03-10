@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,21 +17,29 @@
  * under the License.
  */
 
-package org.apache.felix.ipojo.manipulator.spi;
+package org.apache.felix.ipojo.test.online.module;
 
-import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.Binding;
+import org.apache.felix.ipojo.manipulator.spi.Module;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
- * A Module is the contributions from third party to the iPOJO manipulation process.
- * It is dedicated to Annotation binding support (executing a given ASM AnnotationVisitor
- * when a particular annotation is found).
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * User: guillaume
+ * Date: 27/02/2014
+ * Time: 14:31
  */
-public interface Module extends Iterable<Binding> {
+public class Activator implements BundleActivator {
 
-    /**
-     * Load the bindings provided by this module (only once).
-     * @since 1.12
-     */
-    void load();
+    private ServiceRegistration<Module> registration;
+
+    @Override
+    public void start(final BundleContext context) throws Exception {
+        registration = context.registerService(Module.class, new TypeModule(), null);
+    }
+
+    @Override
+    public void stop(final BundleContext context) throws Exception {
+        registration.unregister();
+    }
 }

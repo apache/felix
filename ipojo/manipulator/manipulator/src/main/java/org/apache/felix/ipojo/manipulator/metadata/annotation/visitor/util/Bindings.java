@@ -19,6 +19,7 @@
 
 package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util;
 
+import org.apache.felix.ipojo.manipulator.spi.ModuleProvider;
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.ResourceStore;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.DefaultBindingRegistry;
@@ -28,16 +29,14 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.MetaAnnot
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.BindingRegistry;
 import org.apache.felix.ipojo.manipulator.spi.Module;
 
-import java.util.ServiceLoader;
-
-import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.or;
-
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class Bindings {
 
-    public static BindingRegistry newBindingRegistry(Reporter reporter, ResourceStore store) {
+    public static BindingRegistry newBindingRegistry(final Reporter reporter,
+                                                     final ResourceStore store,
+                                                     final ModuleProvider provider) {
 
         // Build the registry by aggregation of the features we want
         // TODO We can enable/disable the legacy support easily here
@@ -46,18 +45,12 @@ public class Bindings {
         registry = new LegacyGenericBindingRegistry(registry, reporter);
         registry = new IgnoreAllBindingRegistry(registry, reporter);
 
-        ServiceLoader<Module> loader = ServiceLoader.load(Module.class, classloader());
-
         // Build each Module and add its contributed Bindings in the registry
-        for (Module module : loader) {
-            module.configure();
+        for (Module module : provider.findModules()) {
+            module.load();
             registry.addBindings(module);
         }
 
         return registry;
-    }
-
-    private static ClassLoader classloader() {
-        return Bindings.class.getClassLoader();
     }
 }

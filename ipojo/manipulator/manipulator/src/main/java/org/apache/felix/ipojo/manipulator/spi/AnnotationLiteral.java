@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.felix.ipojo.manipulator.metadata.annotation.model.literal;
+package org.apache.felix.ipojo.manipulator.spi;
 
 import static java.lang.String.format;
 
@@ -26,9 +26,16 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * User: guillaume
- * Date: 28/06/13
- * Time: 11:39
+ * Base annotation literal class to be extended when declaring stereotype bindings in a programmatic way.
+ * Usage example:
+ * <pre>
+ *     public class InstantiateLiteral extends AnnotationLiteral<Instantiate> implements Instantiate {
+ *         public String name() {
+ *             return "";
+ *         }
+ *     }
+ * </pre>
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public abstract class AnnotationLiteral<T extends Annotation> implements Annotation {
 

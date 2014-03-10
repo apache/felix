@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,9 +17,9 @@
  * under the License.
  */
 
-package org.apache.felix.ipojo.manipulator.metadata.annotation.model.literal;
+package org.apache.felix.ipojo.manipulator.spi;
 
-import org.apache.felix.ipojo.manipulator.metadata.annotation.model.literal.AnnotationLiteral;
+import org.apache.felix.ipojo.manipulator.spi.AnnotationLiteral;
 
 import junit.framework.TestCase;
 

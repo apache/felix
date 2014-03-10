@@ -26,8 +26,14 @@ import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.architecture.Architecture;
 import org.apache.felix.ipojo.architecture.InstanceDescription;
 import org.apache.felix.ipojo.test.online.components.Consumer;
+import org.apache.felix.ipojo.test.online.components.FrenchHelloService;
+import org.apache.felix.ipojo.test.online.components.GermanHelloService;
 import org.apache.felix.ipojo.test.online.components.MyProvider;
 import org.apache.felix.ipojo.test.online.components.MyProviderWithAnnotations;
+import org.apache.felix.ipojo.test.online.module.Activator;
+import org.apache.felix.ipojo.test.online.module.Type;
+import org.apache.felix.ipojo.test.online.module.Type2;
+import org.apache.felix.ipojo.test.online.module.TypeModule;
 import org.apache.felix.ipojo.test.online.services.Hello;
 import org.junit.After;
 import org.junit.Assert;
@@ -78,6 +84,8 @@ public class OnlineManipulatorTest {
         String providerWithoutMetadata = providerWithoutMetadata();
         String consumerWithMetadata = consumerWithMetadata();
         String consumerWithoutMetadata = consumerWithoutMetadata();
+        String providerUsingModules = providerUsingModules();
+        String providerUsingAnnotatedStereotype = providerUsingAnnotatedStereotype();
 
         return options(
                 cleanCaches(),
@@ -91,7 +99,8 @@ public class OnlineManipulatorTest {
                                 .add(Hello.class)
                                 .set(Constants.BUNDLE_SYMBOLICNAME, "ServiceInterface")
                                 .set(Constants.EXPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
-                                .build()
+                                .build(),
+                        moduleBundle()
                 ),
 
                 systemProperty("providerWithMetadata").value(providerWithMetadata),
@@ -100,10 +109,28 @@ public class OnlineManipulatorTest {
                 systemProperty("providerUsingAnnotations").value(providerUsingAnnotation()),
                 systemProperty("consumerWithMetadata").value(consumerWithMetadata),
                 systemProperty("consumerWithoutMetadata").value(consumerWithoutMetadata),
+                systemProperty("providerUsingModules").value(providerUsingModules),
+                systemProperty("providerUsingAnnotatedStereotype").value(providerUsingAnnotatedStereotype),
 
                 systemProperty("org.knopflerfish.osgi.registerserviceurlhandler").value("true")
         );
 
+    }
+
+    private InputStream moduleBundle() {
+        return TinyBundles.bundle()
+                .add(Activator.class)
+                .add(Type.class)
+                .add(Type2.class)
+                .add(TypeModule.class)
+                .set(Constants.BUNDLE_ACTIVATOR, Activator.class.getName())
+                .set(Constants.BUNDLE_SYMBOLICNAME, "Manipulator Module")
+                .set(Constants.IMPORT_PACKAGE,
+                        "org.osgi.framework," +
+                        "org.apache.felix.ipojo.manipulator.spi," +
+                        "org.apache.felix.ipojo.annotations")
+                .set(Constants.EXPORT_PACKAGE, "org.apache.felix.ipojo.test.online.module")
+                .build();
     }
 
     @Before
@@ -257,6 +284,38 @@ public class OnlineManipulatorTest {
         bundle2.uninstall();
     }
 
+    @Test
+    public void testManipulatorModuleRegisteredAsServicesAreLoaded() throws Exception {
+
+        String url = context.getProperty("providerUsingModules");
+        Assert.assertNotNull(url);
+        Bundle bundle = context.installBundle("ipojo:" + url);
+        bundle.start();
+        assertBundle("ProviderUsingModules");
+
+        helper.waitForService(Hello.class.getName(), null, 5000);
+        Assert.assertNotNull(context.getServiceReference(Hello.class.getName()));
+
+        bundle.uninstall();
+
+    }
+
+    @Test
+    public void testAnnotatedStereotypes() throws Exception {
+
+        String url = context.getProperty("providerUsingAnnotatedStereotype");
+        Assert.assertNotNull(url);
+        Bundle bundle = context.installBundle("ipojo:" + url);
+        bundle.start();
+        assertBundle("ProviderUsingAnnotatedStereotype");
+
+        helper.waitForService(Hello.class.getName(), null, 5000);
+        Assert.assertNotNull(context.getServiceReference(Hello.class.getName()));
+
+        bundle.uninstall();
+
+    }
+
     /**
      * Gets a regular bundle containing metadata file
      *
@@ -353,6 +412,37 @@ public class OnlineManipulatorTest {
                 .build();
 
         File out = getTemporaryFile("consumerWithMetadata");
+        StreamUtils.copyStream(is, new FileOutputStream(out), true);
+        return out.toURI().toURL().toExternalForm();
+    }
+
+    /**
+     * Gets a consumer bundle using annotation containing the instance
+     * declaration in the metadata.
+     *
+     * @return the url of the bundle
+     * @throws java.io.IOException
+     */
+    public static String providerUsingModules() throws IOException {
+        InputStream is = TinyBundles.bundle()
+                .add(FrenchHelloService.class)
+                .set(Constants.BUNDLE_SYMBOLICNAME, "ProviderUsingModules")
+                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
+                .build();
+
+        File out = getTemporaryFile("providerUsingModules");
+        StreamUtils.copyStream(is, new FileOutputStream(out), true);
+        return out.toURI().toURL().toExternalForm();
+    }
+
+    public static String providerUsingAnnotatedStereotype() throws IOException {
+        InputStream is = TinyBundles.bundle()
+                .add(GermanHelloService.class)
+                .set(Constants.BUNDLE_SYMBOLICNAME, "ProviderUsingAnnotatedStereotype")
+                .set(Constants.IMPORT_PACKAGE, "org.apache.felix.ipojo.test.online.services")
+                .build();
+
+        File out = getTemporaryFile("providerUsingAnnotatedStereotype");
         StreamUtils.copyStream(is, new FileOutputStream(out), true);
         return out.toURI().toURL().toExternalForm();
     }

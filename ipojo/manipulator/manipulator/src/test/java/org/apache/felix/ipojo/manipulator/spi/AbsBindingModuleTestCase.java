@@ -22,10 +22,8 @@ package org.apache.felix.ipojo.manipulator.spi;
 import junit.framework.TestCase;
 
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.HandlerBinding;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.manipulator.metadata.annotation.model.literal.AnnotationLiteral;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.Binding;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.GenericVisitorFactory;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.ignore.NullBinding;
@@ -36,7 +34,6 @@ import java.util.Iterator;
 
 import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.on;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.only;
 import static org.objectweb.asm.Type.getType;
 
 /**

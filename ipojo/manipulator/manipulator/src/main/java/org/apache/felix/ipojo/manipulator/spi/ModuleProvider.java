@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -19,19 +19,20 @@
 
 package org.apache.felix.ipojo.manipulator.spi;
 
-import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.Binding;
+import org.apache.felix.ipojo.manipulator.spi.Module;
 
 /**
- * A Module is the contributions from third party to the iPOJO manipulation process.
- * It is dedicated to Annotation binding support (executing a given ASM AnnotationVisitor
- * when a particular annotation is found).
+ * Discover {@link org.apache.felix.ipojo.manipulator.spi.Module}s available in the "environment".
+ * Environment is dependent of the implementation.
+ * @since 1.12
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public interface Module extends Iterable<Binding> {
+public interface ModuleProvider {
 
     /**
-     * Load the bindings provided by this module (only once).
-     * @since 1.12
+     * Discover a set of modules at a given time.
+     * Returned modules could disappear in the future.
+     * @return discovered modules (should <bold>NEVER</bold> returns {@literal null})
      */
-    void load();
+    Iterable<Module> findModules();
 }

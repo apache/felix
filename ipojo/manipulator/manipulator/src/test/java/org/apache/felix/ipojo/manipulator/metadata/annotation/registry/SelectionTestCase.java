@@ -78,7 +78,7 @@ public class SelectionTestCase extends TestCase {
     public void testSelectionOnClassNodeOnly() throws Exception {
 
         AbsBindingModule module = new MonoBindingModule(OnTypeOnly.class);
-        module.configure();
+        module.load();
         registry.addBindings(module);
 
         // Verifications
@@ -91,7 +91,7 @@ public class SelectionTestCase extends TestCase {
     public void testSelectionOnFieldNodeOnly() throws Exception {
 
         AbsBindingModule module = new MonoBindingModule(OnFieldOnly.class);
-        module.configure();
+        module.load();
         registry.addBindings(module);
 
         // Verifications
@@ -105,7 +105,7 @@ public class SelectionTestCase extends TestCase {
     public void testSelectionOnMethodNodeOnly() throws Exception {
 
         AbsBindingModule module = new MonoBindingModule(OnMethodOnly.class);
-        module.configure();
+        module.load();
         registry.addBindings(module);
 
         // Verifications
@@ -119,7 +119,7 @@ public class SelectionTestCase extends TestCase {
     public void testSelectionOnMethodParameterOnly() throws Exception {
 
         AbsBindingModule module = new MonoBindingModule(OnParameterOnly.class);
-        module.configure();
+        module.load();
         registry.addBindings(module);
 
         // Verifications
@@ -133,7 +133,7 @@ public class SelectionTestCase extends TestCase {
     public void testSelectionOBothMethodAndParameter() throws Exception {
 
         AbsBindingModule module = new MonoBindingModule(OnBothMethodAndParameter.class);
-        module.configure();
+        module.load();
         registry.addBindings(module);
 
         // Verifications

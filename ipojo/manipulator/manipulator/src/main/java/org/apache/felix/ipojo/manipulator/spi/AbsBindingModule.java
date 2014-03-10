@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.felix.ipojo.manipulator.metadata.annotation.model.AnnotationType;
-import org.apache.felix.ipojo.manipulator.metadata.annotation.model.literal.AnnotationLiteral;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.model.literal.AnnotationPlayback;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.Binding;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.GenericVisitorFactory;
@@ -47,7 +46,22 @@ public abstract class AbsBindingModule implements Module {
     /**
      * Build bindings.
      */
-    private List<Binding> bindings = new ArrayList<Binding>();
+    private final List<Binding> bindings = new ArrayList<Binding>();
+
+    private boolean loaded = false;
+
+    public synchronized void load() {
+        if (!loaded) {
+            configure();
+            loaded = true;
+        }
+    }
+
+    /**
+     * Configure the bindings provided by this module.
+     */
+    protected abstract void configure();
+
 
     public Iterator<Binding> iterator() {
         return bindings.iterator();
