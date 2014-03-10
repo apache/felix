@@ -105,11 +105,35 @@
         	<groupId>org.cometd.java</groupId>
         	<artifactId>cometd-java-server</artifactId>
         	<version>${cometd.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-continuation</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-jmx</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
         	<groupId>org.cometd.java</groupId>
         	<artifactId>cometd-java-client</artifactId>
         	<version>${cometd.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-io</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-http</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>        
         <dependency>
         	<groupId>org.cometd.java</groupId>
@@ -126,6 +150,36 @@
             <artifactId>org.apache.felix.http.base</artifactId>
             <version>${project.version}</version>
         </dependency>
-    </dependencies>
 
+    <!-- The dependencies below are newer versions of the transitive 
+         Jetty dependencies pulled in by cometd. It should be able to 
+         remove these once the cometd dependencies on Jetty line up 
+         with the ones that the Felix Http Service project uses. -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-client</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-continuation</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-http</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-io</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-jmx</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+
+    </dependencies>
 </project>
