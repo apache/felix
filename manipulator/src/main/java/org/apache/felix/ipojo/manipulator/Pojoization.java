@@ -33,6 +33,9 @@ import org.apache.felix.ipojo.manipulator.metadata.FileMetadataProvider;
 import org.apache.felix.ipojo.manipulator.metadata.StreamMetadataProvider;
 import org.apache.felix.ipojo.manipulator.render.MetadataRenderer;
 import org.apache.felix.ipojo.manipulator.reporter.SystemReporter;
+import org.apache.felix.ipojo.manipulator.spi.ModuleProvider;
+import org.apache.felix.ipojo.manipulator.spi.provider.CoreModuleProvider;
+import org.apache.felix.ipojo.manipulator.spi.provider.ServiceLoaderModuleProvider;
 import org.apache.felix.ipojo.manipulator.store.DirectoryResourceStore;
 import org.apache.felix.ipojo.manipulator.store.JarFileResourceStore;
 import org.apache.felix.ipojo.manipulator.store.builder.DefaultManifestBuilder;
@@ -67,14 +70,25 @@ public class Pojoization {
     /**
      * Reporter for error reporting.
      */
-    private Reporter m_reporter;
+    private final Reporter m_reporter;
+
+    private final ModuleProvider m_moduleProvider;
 
     public Pojoization() {
         this(new SystemReporter());
     }
 
+    public Pojoization(ModuleProvider provider) {
+        this(new SystemReporter(), provider);
+    }
+
     public Pojoization(Reporter reporter) {
+        this(reporter, new ServiceLoaderModuleProvider());
+    }
+
+    public Pojoization(Reporter reporter, final ModuleProvider moduleProvider) {
         m_reporter = reporter;
+        m_moduleProvider = moduleProvider;
         m_reporter.info("Apache Felix iPOJO Manipulator - " + Constants.getVersion());
     }
 
@@ -284,7 +298,7 @@ public class Pojoization {
             composite.addMetadataProvider(metadata);
 
             if (!m_ignoreAnnotations) {
-                composite.addMetadataProvider(new AnnotationMetadataProvider(store, m_reporter));
+                composite.addMetadataProvider(new AnnotationMetadataProvider(store, m_moduleProvider, m_reporter));
             }
 
             // Get metadata

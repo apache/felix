@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,21 +17,24 @@
  * under the License.
  */
 
-package org.apache.felix.ipojo.manipulator.spi;
+package org.apache.felix.ipojo.test.online.components;
 
-import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.Binding;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.test.online.module.Type2;
+import org.apache.felix.ipojo.test.online.services.Hello;
 
 /**
- * A Module is the contributions from third party to the iPOJO manipulation process.
- * It is dedicated to Annotation binding support (executing a given ASM AnnotationVisitor
- * when a particular annotation is found).
- * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * User: guillaume
+ * Date: 27/02/2014
+ * Time: 14:33
  */
-public interface Module extends Iterable<Binding> {
-
-    /**
-     * Load the bindings provided by this module (only once).
-     * @since 1.12
-     */
-    void load();
+@Type2
+@Instantiate
+@Provides
+public class GermanHelloService implements Hello {
+    @Override
+    public String sayHello() {
+        return "Hallo";
+    }
 }
