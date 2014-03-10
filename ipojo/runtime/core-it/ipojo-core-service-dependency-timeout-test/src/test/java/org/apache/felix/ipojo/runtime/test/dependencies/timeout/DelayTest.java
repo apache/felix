@@ -21,15 +21,26 @@ package org.apache.felix.ipojo.runtime.test.dependencies.timeout;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.runtime.test.dependencies.timeout.services.*;
+import org.junit.After;
 import org.junit.Test;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceReference;
+import org.ow2.chameleon.testing.helpers.TimeUtils;
 
 import static org.junit.Assert.*;
 
 @ExamReactorStrategy(PerMethod.class)
 public class DelayTest extends Common {
+
+    private DelayedProvider delayed;
+
+    @After
+    public void tearDown() {
+        if (delayed != null) {
+            delayed.stop();
+        }
+    }
 
     @Test
     public void testDelayTimeout() {
@@ -93,22 +104,25 @@ public class DelayTest extends Common {
         provider.stop();
         ref_cs = ipojoHelper.getServiceReferenceByName(CheckService.class.getName(), un);
         assertNotNull("Check cs availability - 2", ref_cs);
-        DelayedProvider dp = new DelayedProvider(provider, 1000);
-        dp.start();
+        delayed = new DelayedProvider(provider, 1000);
+        delayed.start();
         cs = (CheckService) osgiHelper.getRawServiceObject(ref_cs);
         try {
             cs.check();
         } catch (RuntimeException e) {
             // OK
-            dp.stop();
+            delayed.stop();
             provider.stop();
             provider.dispose();
             under.stop();
             under.dispose();
             return;
         }
-
-        fail("Timeout expected");
+        if (TimeUtils.TIME_FACTOR == 1) {
+            fail("Timeout expected");
+        } else {
+            System.err.println("A timeout was expected, however this test really depends on your CPU and IO speed");
+        }
     }
 
     @Test
