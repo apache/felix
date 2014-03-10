@@ -1,0 +1,65 @@
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<ipojo>
+    <component
+            classname="org.apache.felix.ipojo.runtime.core.components.ComponentUsingField"
+            name="CTX-Field-Component" architecture="true">
+        <provides/>
+        <!-- component is default -->
+        <context field="context"/>
+    </component>
+
+    <component
+            classname="org.apache.felix.ipojo.runtime.core.components.ComponentUsingField"
+            name="CTX-Field-Instance" architecture="true">
+        <provides/>
+        <context field="context" context="instance"/>
+    </component>
+
+    <component
+            classname="org.apache.felix.ipojo.runtime.core.components.ComponentUsingMethod"
+            name="CTX-Method-Component" architecture="true">
+        <provides/>
+        <!-- component is default -->
+        <context method="setContext"/>
+    </component>
+
+    <component
+            classname="org.apache.felix.ipojo.runtime.core.components.ComponentUsingMethod"
+            name="CTX-Method-Instance" architecture="true">
+        <provides/>
+        <!-- component is default -->
+        <context method="setContext" context="instance"/>
+    </component>
+
+    <component
+            classname="org.apache.felix.ipojo.runtime.core.components.ComponentUsingConstructor"
+            name="CTX-Constructor-Component" architecture="true">
+        <provides/>
+        <context constructor-parameter="0" context="component"/>
+    </component>
+
+    <component
+            classname="org.apache.felix.ipojo.runtime.core.components.ComponentUsingConstructor"
+            name="CTX-Constructor-Instance" architecture="true">
+        <provides/>
+        <context constructor-parameter="0" context="instance"/>
+    </component>
+</ipojo>
