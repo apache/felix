@@ -39,7 +39,7 @@ public class TypeModule extends AbsBindingModule {
                 .with(new ComponentLiteral());
     }
 
-    private static class ComponentLiteral extends AnnotationLiteral<Component> implements Component {
+    public static class ComponentLiteral extends AnnotationLiteral<Component> implements Component {
 
         public boolean public_factory() {
             return true;
