@@ -24,7 +24,7 @@ package org.apache.felix.ipojo.extender;
  * This class can be used to provide values for instance configuration.
  * Any object can be used as configuration values (List and Maps are accepted for example).
  *
- * @since 1.12
+ * @since 1.11.2
  */
 public interface ConfigurationBuilder {
 

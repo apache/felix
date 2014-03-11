@@ -24,7 +24,7 @@ package org.apache.felix.ipojo.extender;
  * It can be used to start and/or stop the underlying declaration as well as retrieving its
  * {@linkplain org.apache.felix.ipojo.extender.Status status} (bound or not).
  *
- * @since 1.12
+ * @since 1.11.2
  */
 public interface DeclarationHandle {
 

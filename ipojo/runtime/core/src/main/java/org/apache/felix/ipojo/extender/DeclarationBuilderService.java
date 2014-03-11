@@ -74,7 +74,7 @@ import org.apache.felix.ipojo.metadata.Element;
  * @see org.apache.felix.ipojo.extender.ConfigurationBuilder
  * @see org.apache.felix.ipojo.extender.DeclarationHandle
  *
- * @since 1.12
+ * @since 1.11.2
  */
 public interface DeclarationBuilderService {
 
