@@ -46,6 +46,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.ops4j.pax.tinybundles.core.InnerClassStrategy;
 import org.ops4j.pax.tinybundles.core.TinyBundles;
 import org.osgi.framework.*;
 import org.osgi.service.url.URLStreamHandlerService;
@@ -122,7 +123,8 @@ public class OnlineManipulatorTest {
                 .add(Activator.class)
                 .add(Type.class)
                 .add(Type2.class)
-                .add(TypeModule.class)
+                .add(TypeModule.class, InnerClassStrategy.ALL)
+                .add(TypeModule.ComponentLiteral.class)
                 .set(Constants.BUNDLE_ACTIVATOR, Activator.class.getName())
                 .set(Constants.BUNDLE_SYMBOLICNAME, "Manipulator Module")
                 .set(Constants.IMPORT_PACKAGE,
