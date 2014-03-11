@@ -27,7 +27,7 @@ import org.osgi.framework.BundleContext;
  * The {@link #context(org.osgi.framework.BundleContext)} method can be used to override the default
  * {@link org.osgi.framework.BundleContext} used for declaration service registration.
  *
- * @since 1.12
+ * @since 1.11.2
  */
 public interface InstanceBuilder {
 
