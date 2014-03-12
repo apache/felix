@@ -24,7 +24,7 @@ import org.apache.felix.ipojo.manipulator.spi.Module;
 /**
  * Discover {@link org.apache.felix.ipojo.manipulator.spi.Module}s available in the "environment".
  * Environment is dependent of the implementation.
- * @since 1.12
+ * @since 1.11.2
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public interface ModuleProvider {

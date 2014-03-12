@@ -23,7 +23,7 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.module.DefaultBind
 
 /**
  * Hardcoded provider for default core manipulation module.
- * @since 1.12
+ * @since 1.11.2
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class CoreModuleProvider extends DefaultModuleProvider {
