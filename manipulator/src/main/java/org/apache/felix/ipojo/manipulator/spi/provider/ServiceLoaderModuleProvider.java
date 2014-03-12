@@ -26,7 +26,7 @@ import org.apache.felix.ipojo.manipulator.spi.Module;
 
 /**
  * Find {@link org.apache.felix.ipojo.manipulator.spi.Module}s using the {@link java.util.ServiceLoader} mechanisms.
- * @since 1.12
+ * @since 1.11.2
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ServiceLoaderModuleProvider implements ModuleProvider {

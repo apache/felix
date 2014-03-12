@@ -28,7 +28,7 @@ import org.apache.felix.ipojo.manipulator.spi.Module;
 
 /**
  * Encapsulate other ModuleProviders in a single instance.
- * @since 1.12
+ * @since 1.11.2
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class CompositeModuleProvider implements ModuleProvider {

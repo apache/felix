@@ -31,7 +31,7 @@ public interface Module extends Iterable<Binding> {
 
     /**
      * Load the bindings provided by this module (only once).
-     * @since 1.12
+     * @since 1.11.2
      */
     void load();
 }
