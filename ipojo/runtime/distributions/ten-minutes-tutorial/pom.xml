@@ -223,7 +223,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.ant</artifactId>
-            <version>1.11.2</version>
+            <version>${ipojo.ant.version}</version>
         </dependency>
         <dependency>
             <groupId>biz.aQute</groupId>
@@ -250,7 +250,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>1.11.0</version>
+            <version>${ipojo.ant.version}</version>
         </dependency>
     </dependencies>
 </project>
