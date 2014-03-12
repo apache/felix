@@ -1,4 +1,4 @@
-Changes from 1.8.4 to 1.8.2
+Changes from 1.9.0 to 1.8.2
 ---------------------------
 ** Improvement
     * [FELIX-4378] - Generate a metatype properties file if label/description are missing on @Component or @Property
