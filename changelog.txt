@@ -1,3 +1,14 @@
+Changes from 1.10.0 to 1.9.0
+----------------------------
+** Improvement
+    * [FELIX-4378] - Generate a metatype properties file if label/description are missing on @Component or @Property
+** Bug
+    * [FELIX-4379] - Properties, references and services from inherited classes are only used if the class has the component annotation
+    * [FELIX-4383] - Metatype generation should use component name (and not classname)
+    * [FELIX-4441] - The default value is not escaped correctly.
+    * [FELIX-4442] - Lifecycle methods with wrong arguments should be treated as an error
+
+
 Changes from 1.9.0 to 1.8.0
 ---------------------------
 ** Improvement
