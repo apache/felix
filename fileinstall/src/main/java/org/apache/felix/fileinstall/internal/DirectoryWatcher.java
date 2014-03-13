@@ -43,7 +43,6 @@ import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
-
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.ArtifactListener;
 import org.apache.felix.fileinstall.ArtifactTransformer;
@@ -809,9 +808,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
      */
     private void initializeCurrentManagedBundles()
     {
-        Bundle[] bundles = this.context.getBundles();
-        String watchedDirPath = watchedDirectory.toURI().normalize().getPath();
-        Map /*<File, Long>*/ checksums = new HashMap/*<File, Long>*/();
+        final Bundle[] bundles = this.context.getBundles();
+        final String watchedDirPath = watchedDirectory.toURI().normalize().getPath();
+        final Map /*<File, Long>*/ checksums = new HashMap/*<File, Long>*/();
         for (int i = 0; i < bundles.length; i++)
         {
             // Convert to a URI because the location of a bundle
@@ -819,10 +818,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
             // autostart bundles and bundles installed by fileinstall.
             // Normalisation is needed to ensure that we don't treat (e.g.)
             // /tmp/foo and /tmp//foo differently.
-            String location = bundles[i].getLocation();
+            final String location = bundles[i].getLocation();
             String path = null;
-            if (location != null &&
-                    !location.equals(Constants.SYSTEM_BUNDLE_LOCATION))
+            if (location != null && !Constants.SYSTEM_BUNDLE_LOCATION.equals(location))
             {
                 URI uri;
                 try
@@ -839,11 +837,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     // blueprint:file:/tmp/foo/baa.jar -> file:/tmp/foo/baa.jar
                     // blueprint:mvn:foo.baa/baa/0.0.1 -> mvn:foo.baa/baa/0.0.1
                     final String schemeSpecificPart = uri.getSchemeSpecificPart();
-                    // extract content behind the last colon of scheme specific path
-                    final int offsetLastColon = schemeSpecificPart.lastIndexOf(':') + 1;
+                    // extract content behind the 'file:' protocol of scheme specific path
+                    final int lastIndexOfFileProtocol = schemeSpecificPart.lastIndexOf("file:");
+                    final int offsetFileProtocol = lastIndexOfFileProtocol > 0? lastIndexOfFileProtocol + "file:".length():0;
                     // file:/tmp/foo/baa.jar -> /tmp/foo/baa.jar
-                    // mvn:foo.baa/baa/0.0.1 -> foo.baa/baa/0.0.1
-                    path = schemeSpecificPart.substring(offsetLastColon);
+                    // mvn:foo.baa/baa/0.0.1 -> mvn:foo.baa/baa/0.0.1
+                    path = schemeSpecificPart.substring(offsetFileProtocol);
                 }
                 else
                 {
@@ -855,15 +854,14 @@ public class DirectoryWatcher extends Thread implements BundleListener
             if (path == null)
             {
                 // jar.getPath is null means we could not parse the location
-                // as a meaningful URI or file path. e.g., location
-                // represented an Opaque URI.
+                // as a meaningful URI or file path.
                 // We can't do any meaningful processing for this bundle.
                 continue;
             }
             final int index = path.lastIndexOf('/');
             if (index != -1 && path.startsWith(watchedDirPath))
             {
-                Artifact artifact = new Artifact();
+                final Artifact artifact = new Artifact();
                 artifact.setBundleId(bundles[i].getBundleId());
                 artifact.setChecksum(Util.loadChecksum(bundles[i], context));
                 artifact.setListener(null);

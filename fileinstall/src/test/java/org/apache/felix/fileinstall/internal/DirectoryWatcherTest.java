@@ -22,14 +22,18 @@ package org.apache.felix.fileinstall.internal;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
-
+import java.util.Set;
 import junit.framework.TestCase;
+import org.apache.felix.fileinstall.ArtifactListener;
 import org.easymock.EasyMock;
+import org.junit.Assert;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
@@ -255,7 +259,15 @@ public class DirectoryWatcherTest extends TestCase
         }
     }
 
-    public void testNonOpaqueURIOnBundleLocation() throws URISyntaxException
+    /**
+     * Test the {@link DirectoryWatcher#initializeCurrentManagedBundles()} in conjunction with a non opaque Bundle Location.
+     * Assert that a new created {@link Artifact} will be added into the {@link DirectoryWatcher#currentManagedArtifacts}.
+     * 
+     * The {@link DirectoryWatcher#process(java.util.Set)} execution will not be called.
+     * This test breaks the execution in {@link Scanner#initialize(java.util.Map)}.
+     * @throws URISyntaxException 
+     */
+    public void testInitializeCurrentManagedBundlesNonOpaqueURIOnBundleLocation() throws URISyntaxException
     {
         final RuntimeException expectedException = new RuntimeException("expected exception to break execution on defined point.");
         final File watchedDirectoryFile = new File("src/test/resources/watched");
@@ -266,7 +278,7 @@ public class DirectoryWatcherTest extends TestCase
         final String bundleLocation = "file:"+watchedDirectoryPath+'/'+bundleFileName;
 
         // break execution
-        Scanner scanner = new Scanner(watchedDirectoryFile)
+        final Scanner scanner = new Scanner(watchedDirectoryFile)
         {
             public void initialize(Map checksums)
             {
@@ -278,7 +290,7 @@ public class DirectoryWatcherTest extends TestCase
         EasyMock.expect(mockBundleContext.getBundles()).andReturn(new Bundle[]{mockBundle});
         EasyMock.expect(mockBundleContext.getDataFile((String) EasyMock.anyObject())).andReturn(null).anyTimes();
         EasyMock.expect(mockBundle.getLocation()).andReturn(bundleLocation).anyTimes();
-        Map mockCurrentManagedArtifacts = (Map)EasyMock.createNiceMock(Map.class);
+        final Map mockCurrentManagedArtifacts = (Map)EasyMock.createNiceMock(Map.class);
         EasyMock.expect(mockCurrentManagedArtifacts.put(EasyMock.eq(bundleFile), (Artifact)EasyMock.anyObject())).andReturn(null).times(1);
 
         EasyMock.replay(new Object[]{mockBundleContext, mockBundle, mockCurrentManagedArtifacts});
@@ -290,7 +302,7 @@ public class DirectoryWatcherTest extends TestCase
         dw.currentManagedArtifacts = mockCurrentManagedArtifacts;
         dw.scanner = scanner;
         try {
-        dw.start();
+            dw.start();
         }
         catch(RuntimeException e)
         {
@@ -300,7 +312,15 @@ public class DirectoryWatcherTest extends TestCase
         EasyMock.verify(new Object[]{mockBundleContext, mockBundle, mockCurrentManagedArtifacts});
     }
 
-    public void testOpaqueURIOnBundleLocation() throws URISyntaxException
+    /**
+     * Test the {@link DirectoryWatcher#initializeCurrentManagedBundles()} in conjunction with a opaque Bundle Location.
+     * Assert that a new created {@link Artifact} will be added into the {@link DirectoryWatcher#currentManagedArtifacts}.
+     * 
+     * The {@link DirectoryWatcher#process(java.util.Set)} execution will not be called.
+     * This test breaks the execution in {@link Scanner#initialize(java.util.Map)}.
+     * @throws URISyntaxException 
+     */
+    public void testInitializeCurrentManagedBundlesOpaqueURIOnBundleLocation() throws URISyntaxException
     {
         final RuntimeException expectedException = new RuntimeException("expected exception to break execution on defined point.");
         final File watchedDirectoryFile = new File("src/test/resources/watched");
@@ -343,6 +363,76 @@ public class DirectoryWatcherTest extends TestCase
         }
 
         EasyMock.verify(new Object[]{mockBundleContext, mockBundle, mockCurrentManagedArtifacts});
+    }
+
+    /**
+     * Test the {@link DirectoryWatcher#process(java.util.Set) } in conjunction with a opaque Bundle Location.
+     * Assert that no bundle refresh will be called.
+     * @throws URISyntaxException 
+     */
+    public void testProcessOpaqueURIOnBundleLocation() throws URISyntaxException
+    {
+        final RuntimeException expectedException = new RuntimeException("expected exception to break execution on defined point.");
+        final File watchedDirectoryFile = new File("src/test/resources/watched");
+        final String watchedDirectoryPath = watchedDirectoryFile.getAbsolutePath();
+
+        final String bundleFileName = "firstjar.jar";
+        final File bundleFile = new File(watchedDirectoryPath,bundleFileName);
+        final String bundleLocation = "blueprint:file:"+watchedDirectoryPath+'/'+bundleFileName;
+
+        final Scanner scanner = new Scanner(watchedDirectoryFile)
+        {
+            // bypass filesystem scan and return expected bundle file
+            public Set/*<File>*/ scan(boolean reportImmediately)
+            {
+                Set/*<File>*/ fileSet = new HashSet/*<File>*/(1);
+                fileSet.add(bundleFile);
+                return fileSet;
+            }
+        };
+
+        final ArtifactListener mockArtifactListener = (ArtifactListener) EasyMock.createNiceMock(ArtifactListener.class);
+        EasyMock.expect(Boolean.valueOf(mockArtifactListener.canHandle(bundleFile))).andReturn(Boolean.TRUE).anyTimes();
+        final ServiceReference mockServiceReference = (ServiceReference) EasyMock.createNiceMock(ServiceReference.class);
+
+        // simulate known/installed bundles
+        mockBundleContext.addBundleListener((BundleListener) org.easymock.EasyMock.anyObject());
+        EasyMock.expect(mockBundleContext.getBundles()).andReturn(new Bundle[]{mockBundle});
+        EasyMock.expect(mockBundleContext.getDataFile((String) EasyMock.anyObject())).andReturn(null).anyTimes();
+        EasyMock.expect(mockBundle.getLocation()).andReturn(bundleLocation).anyTimes();
+
+        EasyMock.replay(new Object[]{mockBundleContext, mockBundle,mockServiceReference, mockArtifactListener});
+
+        final Artifact artifact = new Artifact();
+        artifact.setBundleId(42);
+        artifact.setChecksum(0);
+        artifact.setListener(mockArtifactListener);
+        artifact.setPath(bundleFile);
+
+        FileInstall.listeners.put(mockServiceReference, mockArtifactListener);
+
+        props.put(DirectoryWatcher.DIR, watchedDirectoryPath);
+
+        dw = new DirectoryWatcher(props, mockBundleContext) {
+
+            void refresh(Bundle[] bundles) throws InterruptedException {
+                Assert.fail("bundle refresh called");
+            }
+            
+        };
+        dw.noInitialDelay = true;
+        // add expected bundle and artifact to the current managed artifacts
+        dw.currentManagedArtifacts.put(bundleFile, artifact);
+        dw.scanner = scanner;
+        try {
+            dw.start();
+        }
+        catch(RuntimeException e)
+        {
+            assertEquals(e, expectedException);
+        }
+
+        EasyMock.verify(new Object[]{mockBundleContext, mockBundle,mockServiceReference, mockArtifactListener});
     }
 
 }
