@@ -17,38 +17,38 @@
   under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>felix-parent</artifactId>
-        <version>2.1</version>
-        <relativePath>../../pom/pom.xml</relativePath>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>org.apache.felix.ipojo.manipulator-project</artifactId>
-    <version>1.11.3-SNAPSHOT</version>
-    <name>Apache Felix iPOJO Manipulator Project</name>
-    <packaging>pom</packaging>
+  <parent>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>felix-parent</artifactId>
+    <version>2.1</version>
+    <relativePath>../../pom/pom.xml</relativePath>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>org.apache.felix.ipojo.manipulator-project</artifactId>
+  <version>1.11.3-SNAPSHOT</version>
+  <name>Apache Felix iPOJO Manipulator Project</name>
+  <packaging>pom</packaging>
 
-    <description>
-        The iPOJO Manipulator project contains the iPOJO packaging process and
-        several front-ends for Ant, Maven and BND.
-    </description>
+  <description>
+    The iPOJO Manipulator project contains the iPOJO packaging process and
+    several front-ends for Ant, Maven and BND.
+  </description>
 
-    <modules>
-        <module>manipulator-bom</module>
-        <module>annotations</module>
-        <module>manipulator</module>
-        <module>manipulator-it</module>
-        <module>ipojo-ant-task</module>
-        <module>maven-ipojo-plugin</module>
-        <module>bnd-ipojo-plugin</module>
-        <module>online-manipulator</module>
-    </modules>
+  <modules>
+    <module>manipulator-bom</module>
+    <module>annotations</module>
+    <module>manipulator</module>
+    <module>manipulator-it</module>
+    <module>ipojo-ant-task</module>
+    <module>maven-ipojo-plugin</module>
+    <module>bnd-ipojo-plugin</module>
+    <module>online-manipulator</module>
+  </modules>
 
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/ipojo/manipulator</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/ipojo/manipulator</developerConnection>
-        <url>http://svn.apache.org/viewvc/felix/trunk/ipojo/manipulator</url>
-    </scm>
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/ipojo/manipulator</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/trunk/ipojo/manipulator</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/trunk/ipojo/manipulator</url>
+  </scm>
 
 </project>
