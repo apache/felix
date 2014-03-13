@@ -350,8 +350,10 @@ public class Properties extends AbstractMap<String, String> {
     protected void loadLayout(Reader in) throws IOException
     {
         PropertiesReader reader = new PropertiesReader(in);
+        boolean hasProperty = false;
         while (reader.nextProperty())
         {
+            hasProperty = true;
             storage.put(reader.getPropertyName(), reader.getPropertyValue());
             int idx = checkHeaderComment(reader.getCommentLines());
             layout.put(reader.getPropertyName(),
@@ -360,7 +362,11 @@ public class Properties extends AbstractMap<String, String> {
                                     null,
                                new ArrayList<String>(reader.getValueLines())));
         }
-        footer = new ArrayList<String>(reader.getCommentLines());
+        if (hasProperty) {
+            footer = new ArrayList<String>(reader.getCommentLines());
+        } else {
+            header = new ArrayList<String>(reader.getCommentLines());
+        }
         if (substitute)
         {
             substitute();
