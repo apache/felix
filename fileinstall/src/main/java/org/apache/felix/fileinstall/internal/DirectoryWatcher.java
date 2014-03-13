@@ -839,7 +839,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     final String schemeSpecificPart = uri.getSchemeSpecificPart();
                     // extract content behind the 'file:' protocol of scheme specific path
                     final int lastIndexOfFileProtocol = schemeSpecificPart.lastIndexOf("file:");
-                    final int offsetFileProtocol = lastIndexOfFileProtocol > 0? lastIndexOfFileProtocol + "file:".length():0;
+                    final int offsetFileProtocol = lastIndexOfFileProtocol >= 0? lastIndexOfFileProtocol + "file:".length():0;
                     // file:/tmp/foo/baa.jar -> /tmp/foo/baa.jar
                     // mvn:foo.baa/baa/0.0.1 -> mvn:foo.baa/baa/0.0.1
                     path = schemeSpecificPart.substring(offsetFileProtocol);
