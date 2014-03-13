@@ -75,7 +75,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-                                     Only style
+
   <dependencyManagement>
     <dependencies>
       <dependency>
