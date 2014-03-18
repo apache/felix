@@ -34,6 +34,7 @@ import dm.admin.ComponentDeclaration;
 import dm.admin.ComponentDependencyDeclaration;
 import dm.context.ComponentContext;
 import dm.context.DependencyContext;
+import dm.context.Event;
 
 /**
  * This class allows to filter a Component interface. All Aspect/Adapters extend this class
@@ -278,22 +279,26 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
 
     @Override
-    public void handleChange() {
-        m_component.handleChange();
+    public void handleAdded(DependencyContext dc, Event e) {
+        m_component.handleAdded(dc, e);
+    }
+
+    @Override
+    public void handleChanged(DependencyContext dc, Event e) {
+        m_component.handleChanged(dc, e);
+    }
+
+    @Override
+    public void handleRemoved(DependencyContext dc, Event e) {
+        m_component.handleRemoved(dc, e);
     }
 
     @Override
     public Object[] getInstances() {
         return m_component.getInstances();
     }
-
-    @Override
-    public void updateInstance(DependencyContext dependency) {
-        m_component.updateInstance(dependency);
-    }
-
-    @Override
-    public ComponentState getComponentState() {
-        return m_component.getComponentState();
+    
+    public Event getDependencyEvent(DependencyContext dc) {
+        return m_component.getDependencyEvent(dc);
     }
 }
