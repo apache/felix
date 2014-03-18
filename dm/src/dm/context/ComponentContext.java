@@ -10,12 +10,13 @@ public interface ComponentContext {
     public void start();
     public void stop();
     public boolean isAvailable();
-    public ComponentState getComponentState();
-    public void handleChange();
+    public void handleAdded(DependencyContext dc, Event e);
+    public void handleChanged(DependencyContext dc, Event e);
+    public void handleRemoved(DependencyContext dc, Event e);
     public List<DependencyContext> getDependencies(); // for testing only...
     public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters);
     public Object[] getInstances();
-    public void updateInstance(DependencyContext dependency);
     public String getAutoConfigInstance(Class<?> clazz);
     public boolean getAutoConfig(Class<?> clazz);
+    public Event getDependencyEvent(DependencyContext dc);
 }
