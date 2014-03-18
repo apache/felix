@@ -41,7 +41,7 @@ import dm.context.ComponentContext;
  */
 public abstract class AbstractDecorator  {
     protected volatile DependencyManager m_manager;
-    private final Map<Object, Component> m_services = new ConcurrentHashMap();
+    private final Map<Object, Component> m_services = new ConcurrentHashMap<>();
     
     public abstract Component createService(Object[] properties);
     
