@@ -14,10 +14,11 @@ import org.osgi.service.cm.ManagedService;
 import dm.ConfigurationDependency;
 import dm.PropertyMetaData;
 import dm.context.DependencyContext;
+import dm.context.Event;
 import dm.impl.metatype.MetaTypeProviderImpl;
 
 // Todo implements some methods from DependencyImpl (createCopy, etc ...)
-public class ConfigurationDependencyImpl extends DependencyImpl implements ConfigurationDependency, ManagedService {
+public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
     private Dictionary<?,?> m_settings;
     private String m_callback = "updated";
 	private final BundleContext m_context;
@@ -25,7 +26,6 @@ public class ConfigurationDependencyImpl extends DependencyImpl implements Confi
 	private String m_pid;
 	private ServiceRegistration m_registration;
     private MetaTypeProviderImpl m_metaType;
-    private boolean m_propagate;
 	private final AtomicBoolean m_updateInvokedCache = new AtomicBoolean();
 
     public ConfigurationDependencyImpl() {
@@ -43,7 +43,6 @@ public class ConfigurationDependencyImpl extends DependencyImpl implements Confi
 	    super(prototype);
 	    m_context = prototype.m_context;
 	    m_pid = prototype.m_pid;
-	    m_propagate = prototype.m_propagate;
 	    m_callback = prototype.m_callback;
 	    m_logger = prototype.m_logger;
 	}
@@ -57,11 +56,6 @@ public class ConfigurationDependencyImpl extends DependencyImpl implements Confi
         m_callback = callback;
         return this;
     }
-
-    @Override
-	public boolean isPropagated() {
-		return m_propagate;
-	}
 
     @Override
     public boolean needsInstance() {
@@ -94,12 +88,6 @@ public class ConfigurationDependencyImpl extends DependencyImpl implements Confi
 	public ConfigurationDependency setPid(String pid) {
 		// ensureNotActive(); TODO
 		m_pid = pid;
-		return this;
-	}
-
-	public ConfigurationDependency setPropagate(boolean propagate) {
-		// ensureNotActive(); TODO
-		m_propagate = propagate;
 		return this;
 	}
 		
@@ -200,7 +188,8 @@ public class ConfigurationDependencyImpl extends DependencyImpl implements Confi
         }
     }
 
-    public void invokeAdd() {
+    @Override
+    public void invokeAdd(Event event) {
 		try {
 			invokeUpdated(m_settings);
 		} catch (ConfigurationException e) {
@@ -208,11 +197,13 @@ public class ConfigurationDependencyImpl extends DependencyImpl implements Confi
 		}
     }
 
-    public void invokeChange() {
+    @Override
+    public void invokeChange(Event event) {
         // We already did that synchronously, from our updated method
     }
 
-    public void invokeRemove() {
+    @Override
+    public void invokeRemove(Event event) {
         // The state machine is stopping us. We have to invoke updated(null).
         try {
         	m_updateInvokedCache.set(false);
