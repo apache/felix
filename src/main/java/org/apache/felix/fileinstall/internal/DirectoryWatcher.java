@@ -147,6 +147,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
     // Represents artifacts that could not be installed
     Map/* <File, Artifact> */ installationFailures = new HashMap/* <File, Artifact> */();
 
+    // flag (acces to which must be synchronized) that indicates wheter there's a change in state of system,
+    // which may result in an attempt to start the watched bundles
+    private Boolean stateChanged = Boolean.FALSE;
+
     public DirectoryWatcher(Dictionary properties, BundleContext context)
     {
         super("fileinstall-" + getThreadName(properties));
@@ -335,7 +339,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     public void bundleChanged(BundleEvent bundleEvent)
     {
-        if (bundleEvent.getType() == BundleEvent.UNINSTALLED)
+        int type = bundleEvent.getType();
+        if (type == BundleEvent.UNINSTALLED)
         {
             for (Iterator it = getArtifacts().iterator(); it.hasNext();)
             {
@@ -348,6 +353,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     break;
                 }
             }
+        }
+        if (type == BundleEvent.INSTALLED || type == BundleEvent.RESOLVED || type == BundleEvent.UNINSTALLED ||
+            type == BundleEvent.UNRESOLVED || type == BundleEvent.UPDATED) {
+            setStateChanged(true);
         }
     }
 
@@ -510,10 +519,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
             {
                 // Refresh if any bundle got uninstalled or updated.
                 refresh((Bundle[]) toRefresh.toArray(new Bundle[toRefresh.size()]));
+                // set the state to reattempt starting managed bundles which aren't already STARTING or ACTIVE
+                setStateChanged(true);
             }
         }
 
-        if (startBundles)
+        if (startBundles && isStateChanged())
         {
             // Try to start all the bundles that are not persistently stopped
             startAllBundles();
@@ -522,6 +533,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
             delayedStart.removeAll(uninstalledBundles);
             // Try to start newly installed bundles, or bundles which we missed on a previous round
             startBundles(delayedStart);
+
+            // set the state as unchanged to not reattempt starting failed bundles
+            setStateChanged(false);
         }
     }
 
@@ -1488,6 +1502,18 @@ public class DirectoryWatcher extends Thread implements BundleListener
         synchronized (currentManagedArtifacts)
         {
             currentManagedArtifacts.remove(file);
+        }
+    }
+    
+    private void setStateChanged(boolean changed) {
+        synchronized (stateChanged) {
+            this.stateChanged = Boolean.valueOf(changed);
+        }
+    }
+
+    private boolean isStateChanged() {
+        synchronized (stateChanged) {
+            return stateChanged.booleanValue();
         }
     }
 
