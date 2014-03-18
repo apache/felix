@@ -4,8 +4,9 @@ import java.util.Dictionary;
 
 
 public interface DependencyContext {
-	public void invokeAdd();
-	public void invokeRemove();
+	public void invokeAdd(Event e);
+	public void invokeChange(Event e);
+	public void invokeRemove(Event e);
 	/** Whenever the dependency changes state, this method is invoked with the Event containing the new state information. */
 	public void add(final Event e);
 	public void change(final Event e);
@@ -18,6 +19,7 @@ public interface DependencyContext {
 	public void stop();
 	
 	public boolean isAvailable();
+	public void setAvailable(boolean available);
 	
 	public boolean isRequired();
 	
