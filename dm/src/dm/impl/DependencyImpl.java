@@ -1,17 +1,16 @@
 package dm.impl;
 
 import java.util.Dictionary;
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 import dm.Dependency;
+import dm.ServiceDependency;
 import dm.admin.ComponentDependencyDeclaration;
 import dm.context.ComponentContext;
 import dm.context.DependencyContext;
 import dm.context.Event;
 
-public class DependencyImpl implements Dependency, DependencyContext {
-	protected ComponentContext m_component;
+public class DependencyImpl<T extends Dependency> implements Dependency, DependencyContext {
+	protected volatile ComponentContext m_component;
 	protected volatile boolean m_available; // volatile because accessed by getState method
 	protected boolean m_instanceBound;
 	protected volatile boolean m_required; // volatile because accessed by getState method
@@ -23,12 +22,10 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	protected boolean m_autoConfigInvoked;
     private volatile boolean m_isStarted; // volatile because accessed by getState method
     private Object m_callbackInstance;
-    
-	// TODO when we start injecting the "highest" one, this needs to be sorted at
-	// some point in time (note that we could choose to only do that if the dependency is
-	// actually injected (auto config is on for it)
-	protected final ConcurrentSkipListSet<Event> m_dependencies = new ConcurrentSkipListSet();
-	
+    protected volatile boolean m_propagate;
+    protected volatile Object m_propagateCallbackInstance;
+    protected volatile String m_propagateCallbackMethod;
+
 	public DependencyImpl() {	
         this(true);
 	}
@@ -37,7 +34,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
         m_autoConfig = autoConfig;
 	}
 	
-	public DependencyImpl(DependencyImpl prototype) {
+	public DependencyImpl(DependencyImpl<T> prototype) {
 		m_component = prototype.m_component;
 		m_available = prototype.m_available;
 		m_instanceBound = prototype.m_instanceBound;
@@ -49,6 +46,9 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		m_autoConfigInstance = prototype.m_autoConfigInstance;
 		m_autoConfigInvoked = prototype.m_autoConfigInvoked;
 		m_callbackInstance = prototype.m_callbackInstance;
+        m_propagate = prototype.m_propagate;
+        m_propagateCallbackInstance = prototype.m_propagateCallbackInstance;
+        m_propagateCallbackMethod = prototype.m_propagateCallbackMethod;       
 	}
 	
 	public void add(final Event e) {
@@ -58,7 +58,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		m_component.getExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
-				addDependency(e);
+			    m_component.handleAdded(DependencyImpl.this, e);
 			}
 		});
 	}
@@ -69,10 +69,11 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		m_component.getExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
-				changeDependency(e);
+                m_component.handleChanged(DependencyImpl.this, e);
 			}
 		});
 	}
+	
 	public void remove(final Event e) {
 		// since this method can be invoked by anyone from any thread, we need to
 		// pass on the event to a runnable that we execute using the component's
@@ -80,89 +81,13 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		m_component.getExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
-				removeDependency(e);
+                m_component.handleRemoved(DependencyImpl.this, e);
 			}
 		});
 	}
 
-	protected void addDependency(Event e) {
-		m_dependencies.add(e);
-		m_available = true;
-		
-		switch (m_component.getComponentState()) {
-		case WAITING_FOR_REQUIRED:
-		    if (isRequired()) {
-		        m_component.handleChange();
-		    }
-		    break;
-		case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-		    if (isRequired()) {
-		        if (! isInstanceBound()) {
-		            if (m_add != null) {		       
-		                invoke(m_add, e);
-		            }
-		            m_component.updateInstance(this);
-		        } else {
-		            m_component.handleChange();
-		        }
-		    }
-		    break;
-		case TRACKING_OPTIONAL:
-		    if (m_add != null) {
-		        invoke(m_add, e);
-		    }
-		    m_component.updateInstance(this);
-		    break;
-		default:
-		}
-	}
-
-	protected void changeDependency(Event e) {	    
-		m_dependencies.remove(e);
-		m_dependencies.add(e);
-        switch (m_component.getComponentState()) {
-        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-            if (m_change != null && isRequired() && !isInstanceBound()) {
-                invoke(m_change, e);
-            }     
-            m_component.updateInstance(this);
-            break;
-        case TRACKING_OPTIONAL:
-            if (m_change != null) {
-                invoke(m_change, e);
-            }
-            m_component.updateInstance(this);
-            break;
-        default:
-        }
-	}
-		
-    protected void removeDependency(Event e) {
-        m_available = !(m_dependencies.contains(e) && m_dependencies.size() == 1);
-        m_component.handleChange();
-        m_dependencies.remove(e);
-        
-        switch (m_component.getComponentState()) {
-        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
-            if (isRequired() && ! isInstanceBound()) {
-                if (m_remove != null) {
-                    invoke(m_remove, e);
-                }
-                m_component.updateInstance(this);
-            }
-            break;
-        case TRACKING_OPTIONAL:
-            if (m_remove != null) {
-                invoke(m_remove, e);
-            }
-            m_component.updateInstance(this);
-            break;
-        default:
-        }
-    }
-
 	@Override
-	public synchronized void add(ComponentContext component) {
+	public void add(ComponentContext component) {
 		m_component = component;
 	}
 	
@@ -188,30 +113,50 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		return m_available;
 	}
 	
+    public T setPropagate(boolean propagate) {
+        ensureNotActive();
+        m_propagate = propagate;
+        return (T) this;
+    }
+
+    public T setPropagate(Object instance, String method) {
+        setPropagate(instance != null && method != null);
+        m_propagateCallbackInstance = instance;
+        m_propagateCallbackMethod = method;
+        return (T) this;
+    }
+    
+	@Override
+	public void setAvailable(boolean available) {
+	    m_available = available;
+	}
+	
 	@Override
 	public boolean isRequired() {
 		return m_required;
 	}
+	
 	public boolean isInstanceBound() {
 		return m_instanceBound;
 	}
+	
 	public void setInstanceBound(boolean instanceBound) {
 		m_instanceBound = instanceBound;
 	}
 	
-	public Dependency setCallbacks(String add, String remove) {
+	public T setCallbacks(String add, String remove) {
 	    return setCallbacks(add, null, remove);
 	}
 	
-	public Dependency setCallbacks(String add, String change, String remove) {
+	public T setCallbacks(String add, String change, String remove) {
 		return setCallbacks(null, add, change, remove);		
 	}
 	
-	public Dependency setCallbacks(Object instance, String add, String remove) {
+	public T setCallbacks(Object instance, String add, String remove) {
 		return setCallbacks(instance, add, null, remove);
 	}
 	
-	public Dependency setCallbacks(Object instance, String add, String change, String remove) {
+	public T setCallbacks(Object instance, String add, String change, String remove) {
         if ((add != null || change != null || remove != null) && !m_autoConfigInvoked) {
             setAutoConfig(false);
         }
@@ -219,30 +164,27 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		m_add = add;
 		m_change = change;
 		m_remove = remove;
-		return this;
+		return (T) this;
 	}
 	
-	public void invokeAdd() {
+	@Override
+	public void invokeAdd(Event e) {
 		if (m_add != null) {
-			for (Event e : m_dependencies) {
-				invoke(m_add, e);
-			}
+		    invoke(m_add, e);
 		}
 	}
 	
-	public void invokeChange() {
+    @Override	
+	public void invokeChange(Event e) {
 		if (m_change != null) {
-			for (Event e : m_dependencies) {
-				invoke(m_change, e);
-			}
+		    invoke(m_change, e);
 		}
 	}
 	
-	public void invokeRemove() {
+    @Override   
+    public void invokeRemove(Event e) {
 		if (m_remove != null) {
-			for (Event e : m_dependencies) {
-				invoke(m_remove, e);
-			}
+		    invoke(m_remove, e);
 		}
 	}
 	
@@ -260,9 +202,9 @@ public class DependencyImpl implements Dependency, DependencyContext {
 	}
 	
 	@Override
-	public Dependency setRequired(boolean required) {
+	public T setRequired(boolean required) {
 		m_required = required;
-		return this;
+		return (T) this;
 	}
 	
     @Override
@@ -271,7 +213,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
     }
     
     @Override
-    public Class getAutoConfigType() {
+    public Class<?> getAutoConfigType() {
         return null; // must be implemented by subclasses
     }
     
@@ -291,18 +233,18 @@ public class DependencyImpl implements Dependency, DependencyContext {
     }
     
     @Override
-    public Dependency setAutoConfig(boolean autoConfig) {
+    public T setAutoConfig(boolean autoConfig) {
         m_autoConfig = autoConfig;
         m_autoConfigInvoked = true;
-        return this;
+        return (T) this;
     }
     
     @Override
-    public Dependency setAutoConfig(String instanceName) {
+    public T setAutoConfig(String instanceName) {
         m_autoConfig = (instanceName != null);
         m_autoConfigInstance = instanceName;
         m_autoConfigInvoked = true;
-        return this;
+        return (T) this;
     }
     
     @Override
@@ -330,8 +272,7 @@ public class DependencyImpl implements Dependency, DependencyContext {
 
 	@Override
 	public boolean isPropagated() {
-		// specific for this type of dependency
-		return false;
+		return m_propagate;
 	}
 
 	@Override
@@ -339,4 +280,10 @@ public class DependencyImpl implements Dependency, DependencyContext {
 		// specific for this type of dependency
 		return null;
 	}
+	
+    protected void ensureNotActive() {
+        if (isStarted()) {
+            throw new IllegalStateException("Cannot modify state while active.");
+        }
+    }
 }
