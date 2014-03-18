@@ -12,7 +12,9 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,6 +31,7 @@ import dm.admin.ComponentDeclaration;
 import dm.admin.ComponentDependencyDeclaration;
 import dm.context.ComponentContext;
 import dm.context.DependencyContext;
+import dm.context.Event;
 
 public class ComponentImpl implements Component, ComponentContext, ComponentDeclaration {
 	private static final ServiceRegistration NULL_REGISTRATION = (ServiceRegistration) Proxy
@@ -54,6 +57,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private final Map m_autoConfigInstance = new ConcurrentHashMap();
     private final long m_id;
     private static AtomicLong m_idGenerator = new AtomicLong();
+    private final Map<DependencyContext, ConcurrentSkipListSet<Event>> m_dependencyEvents = new ConcurrentHashMap<>();
 
     // configuration (static)
     private volatile String m_callbackInit;
@@ -126,6 +130,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 				List<DependencyContext> instanceBoundDeps = new ArrayList();
 				for (Dependency d : dependencies) {
 					DependencyContext dc = (DependencyContext) d;
+					m_dependencyEvents.put(dc,  new ConcurrentSkipListSet<Event>());
 					m_dependencies.add(dc);
 					dc.add(ComponentImpl.this);
 					if (!(m_state == ComponentState.INACTIVE)) {
@@ -150,6 +155,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 					dc.stop();
 				}
 				m_dependencies.remove(d);
+                m_dependencyEvents.remove(d);
 				dc.remove(ComponentImpl.this);
 				handleChange();
 			}
@@ -165,7 +171,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 				handleChange();
 			}
 		});
-		
 	}
 	
 	public void stop() {
@@ -195,27 +200,92 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 
 	@Override
-	public void handleChange() {
-		ComponentState oldState;
-		ComponentState newState;
-		do {
-			oldState = m_state;
-			newState = calculateNewState(oldState);
-			m_state = newState;
-		}
-		while (performTransition(oldState, newState));
+	public void handleAdded(DependencyContext dc, Event e) {
+	    Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+	    dependencyEvents.add(e);
+	    dc.setAvailable(true);
+	    
+        switch (m_state) {
+        case WAITING_FOR_REQUIRED:
+            if (dc.isRequired())
+                handleChange();
+            break;
+        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+            if (!dc.isInstanceBound()) {
+                if (dc.isRequired()) {
+                    dc.invokeAdd(e);
+                }
+                updateInstance(dc);
+            }
+            else {
+                if (dc.isRequired())
+                    handleChange();
+            }
+            break;
+        case TRACKING_OPTIONAL:
+            dc.invokeAdd(e);
+            updateInstance(dc);
+            break;
+        default:
+        }
 	}
 	
-	@Override
-	public void updateInstance(DependencyContext d) {
-		if (d.isAutoConfig()) {
-            configureImplementation(d.getAutoConfigType(), d.getAutoConfigInstance(), d.getAutoConfigName());
-		}
-		if (d.isPropagated() && m_registration != null) {
-            m_registration.setProperties(calculateServiceProperties());
-		}
-	}
-	
+    @Override
+    public void handleChanged(DependencyContext dc, Event e) {
+        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+        dependencyEvents.remove(e);
+        dependencyEvents.add(e);
+        
+        switch (m_state) {
+        case TRACKING_OPTIONAL:
+            dc.invokeChange(e);
+            updateInstance(dc);
+            break;
+
+        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+            if (!dc.isInstanceBound()) {
+                dc.invokeChange(e);
+                updateInstance(dc);
+            }
+            break;
+        }
+    }
+
+    @Override
+    public void handleRemoved(DependencyContext dc, Event e) {
+        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+        dc.setAvailable(!(dependencyEvents.contains(e) && dependencyEvents.size() == 1));
+        handleChange();
+        
+        // Now, really remove the dependency event, because next, we'll possibly invoke updateInstance, which will
+        // trigger getAutoConfigInstance, and at this point, we don't want to return the removed service, which might
+        // be the highest ranked service.
+        dependencyEvents.remove(e);
+        
+        // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
+        switch (m_state) {
+        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+            if (! dc.isInstanceBound()) {
+                if (dc.isRequired()) {            
+                    dc.invokeRemove(e);
+                }
+                updateInstance(dc);
+            }
+            break;
+        case TRACKING_OPTIONAL:
+            dc.invokeRemove(e);
+            updateInstance(dc);
+            break;
+        default:
+        }
+    }
+	       
+    @Override
+    public Event getDependencyEvent(DependencyContext dc) {
+        ConcurrentSkipListSet<Event> events = m_dependencyEvents.get(dc);
+        return events.size() > 0 ? events.last() : null;
+    }
+    
     public Component setAutoConfig(Class clazz, boolean autoConfig) {
         m_autoConfig.put(clazz, Boolean.valueOf(autoConfig));
         return this;
@@ -236,6 +306,17 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         return (String) m_autoConfigInstance.get(clazz);
     }
 
+    private void handleChange() {
+        ComponentState oldState;
+        ComponentState newState;
+        do {
+            oldState = m_state;
+            newState = calculateNewState(oldState);
+            m_state = newState;
+        }
+        while (performTransition(oldState, newState));
+    }
+    
 	/** Based on the current state, calculate the new state. */
 	private ComponentState calculateNewState(ComponentState currentState) {
 		if (currentState == INACTIVE) {
@@ -269,41 +350,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		return currentState;
 	}
 
-	private boolean allRequiredAvailable() {
-		boolean available = true;
-		for (DependencyContext d : m_dependencies) {
-			if (d.isRequired() && !d.isInstanceBound()) {
-				if (!d.isAvailable()) {
-					available = false;
-					break;
-				}
-			}
-		}
-		return available;
-	}
-
-	private boolean allInstanceBoundAvailable() {
-		boolean available = true;
-		for (DependencyContext d : m_dependencies) {
-			if (d.isRequired() && d.isInstanceBound()) {
-				if (!d.isAvailable()) {
-					available = false;
-					break;
-				}
-			}
-		}
-		return available;
-	}
-
-    private boolean someDependenciesNeedInstance() {
-        for (DependencyContext d : m_dependencies) {
-            if (d.needsInstance()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 	/** Perform all the actions associated with state transitions. Returns true if a transition was performed. */
 	private boolean performTransition(ComponentState oldState, ComponentState newState) {
 //		System.out.println("transition from " + oldState + " to " + newState);
@@ -330,7 +376,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			return true;
 		}
 		if (oldState == ComponentState.TRACKING_OPTIONAL && newState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
-			unregisterService();
+		    unregisterService();
+		    invokeRemoveOptionalDependencies();
 			invoke(m_callbackStop);
 			invokeRemoveInstanceBoundDependencies();
 			notifyListeners(newState);
@@ -354,6 +401,50 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		return false;
 	}
 	
+    private boolean allRequiredAvailable() {
+        boolean available = true;
+        for (DependencyContext d : m_dependencies) {
+            if (d.isRequired() && !d.isInstanceBound()) {
+                if (!d.isAvailable()) {
+                    available = false;
+                    break;
+                }
+            }
+        }
+        return available;
+    }
+
+    private boolean allInstanceBoundAvailable() {
+        boolean available = true;
+        for (DependencyContext d : m_dependencies) {
+            if (d.isRequired() && d.isInstanceBound()) {
+                if (!d.isAvailable()) {
+                    available = false;
+                    break;
+                }
+            }
+        }
+        return available;
+    }
+
+    private boolean someDependenciesNeedInstance() {
+        for (DependencyContext d : m_dependencies) {
+            if (d.needsInstance()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateInstance(DependencyContext d) {
+        if (d.isAutoConfig()) {
+            configureImplementation(d.getAutoConfigType(), d.getAutoConfigInstance(), d.getAutoConfigName());
+        }
+        if (d.isPropagated() && m_registration != null) {
+            m_registration.setProperties(calculateServiceProperties());
+        }
+    }
+    
     private void startDependencies(List<DependencyContext> dependencies) {
         // Start first optional dependencies first.
         List<DependencyContext> requiredDeps = new ArrayList();
@@ -535,7 +626,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	private void invokeAddRequiredDependencies() {
 		for (DependencyContext d : m_dependencies) {
 			if (d.isRequired() && !d.isInstanceBound()) {
-				d.invokeAdd();
+			    for (Event e : m_dependencyEvents.get(d)) {
+			        d.invokeAdd(e);
+			    }
 			}
 		}
 	}
@@ -559,7 +652,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	private void invokeAddRequiredInstanceBoundDependencies() {
 		for (DependencyContext d : m_dependencies) {
 			if (d.isRequired() && d.isInstanceBound()) {
-				d.invokeAdd();
+	             for (Event e : m_dependencyEvents.get(d)) {
+	                 d.invokeAdd(e);
+	             }
 			}
 		}
 	}
@@ -567,23 +662,39 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private void invokeAddOptionalDependencies() {
         for (DependencyContext d : m_dependencies) {
             if (! d.isRequired()) {
-                d.invokeAdd();
+                for (Event e : m_dependencyEvents.get(d)) {
+                    d.invokeAdd(e);
+                }
             }
         }
     }
 
-	private void invokeRemoveRequiredDependencies() {
+    private void invokeRemoveRequiredDependencies() { 
 		for (DependencyContext d : m_dependencies) {
-			if (!d.isInstanceBound()) {
-				d.invokeRemove();
+			if (!d.isInstanceBound() && d.isRequired()) {
+                for (Event e : m_dependencyEvents.get(d)) {
+                    d.invokeRemove(e);
+                }
 			}
 		}
 	}
 
+    private void invokeRemoveOptionalDependencies() { 
+        for (DependencyContext d : m_dependencies) {
+            if (!d.isInstanceBound() && ! d.isRequired()) {
+                for (Event e : m_dependencyEvents.get(d)) {
+                    d.invokeRemove(e);
+                }
+            }
+        }
+    }
+
 	private void invokeRemoveInstanceBoundDependencies() {
 		for (DependencyContext d : m_dependencies) {
 			if (d.isInstanceBound()) {
-				d.invokeRemove();
+                for (Event e : m_dependencyEvents.get(d)) {
+                    d.invokeRemove(e);
+                }
 			}
 		}
 	}
@@ -642,10 +753,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 		return m_state == TRACKING_OPTIONAL;
 	}
 	
-	public ComponentState getComponentState() {
-	    return m_state;
-	}
-
 	@Override
 	public Component add(final ComponentStateListener l) {
 	    m_listeners.add(l);
