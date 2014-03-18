@@ -22,17 +22,14 @@ import dm.ServiceDependency;
 import dm.context.DependencyContext;
 import dm.context.Event;
 
-public class ServiceDependencyImpl extends DependencyImpl implements ServiceDependency, ServiceTrackerCustomizer {
-	private volatile ServiceTracker m_tracker;
-    private final BundleContext m_context;
+public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> implements ServiceDependency, ServiceTrackerCustomizer {
+	protected volatile ServiceTracker m_tracker;
+	protected final BundleContext m_context;
     private final Logger m_logger;
     protected volatile Class<?> m_trackedServiceName;
     private volatile String m_trackedServiceFilter;
     private volatile String m_trackedServiceFilterUnmodified;
     private volatile ServiceReference m_trackedServiceReference;
-    private volatile boolean m_propagate;
-    private volatile Object m_propagateCallbackInstance;
-    private volatile String m_propagateCallbackMethod;
     private volatile Object m_defaultImplementation;
     private volatile Object m_defaultImplementationInstance;
     private volatile Object m_nullObject;
@@ -133,54 +130,19 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
 	}
 	    	    
     // --- CREATION
-    
-	public ServiceDependency setCallbacks(String add, String remove) {
-		super.setCallbacks(add,  remove);
-		return this;
-	}
-	
-	public ServiceDependency setCallbacks(String add, String change, String remove) {
-		super.setCallbacks(add, change, remove);
-		return this;
-	}
-	
-    public ServiceDependency setCallbacks(String added, String changed, String removed, String swapped) {
-        setCallbacks(added, changed, removed);
-        // TODO handle the swapped parameter.
-        return this;
-    }
-	
-	public ServiceDependency setCallbacks(Object instance, String add, String remove) {
-		super.setCallbacks(instance, add, remove);
-		return this;
-	}
-	
-	public ServiceDependency setCallbacks(Object instance, String add, String change, String remove) {
-		super.setCallbacks(instance, add, change, remove);
-		return this;
-	}
-	
+    			
     public ServiceDependency setCallbacks(Object instance, String added, String changed, String removed, String swapped) {
         setCallbacks(instance, added, changed, removed);
         // TODO handle the swapped parameter
         return this;
     }
-
-    public ServiceDependency setRequired(boolean required) {
-		super.setRequired(required);
-		return this;
-	}
-	
-	public ServiceDependency setAutoConfig(boolean autoConfig) {
-		super.setAutoConfig(autoConfig);
-		return this;
-	}
-	
-    public ServiceDependency setAutoConfig(String instanceName) {
-    	super.setAutoConfig(instanceName);
-    	return this;
+    
+    public ServiceDependency setCallbacks(String added, String changed, String removed, String swapped) {
+        setCallbacks(added, changed, removed);
+        // TODO handle the swapped parameter
+        return this;
     }
-
+		
     @Override
     public ServiceDependency setDefaultImplementation(Object implementation) {
         ensureNotActive();
@@ -343,24 +305,9 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
     }
 
 	@Override
-	public ServiceDependency setPropagate(boolean propagate) {
-        ensureNotActive();
-        m_propagate = propagate;
-        return this;
-	}
-
-	@Override
-	public ServiceDependency setPropagate(Object instance, String method) {
-        setPropagate(instance != null && method != null);
-        m_propagateCallbackInstance = instance;
-        m_propagateCallbackMethod = method;
-        return this;
-	}
-	
-	@Override
     public Dictionary getProperties() {
         Object service = null;
-        ServiceEventImpl se = m_dependencies.size() > 0 ? (ServiceEventImpl) m_dependencies.first() : null;
+        ServiceEventImpl se = (ServiceEventImpl) m_component.getDependencyEvent(this);
         if (se != null) {
             if (m_propagateCallbackInstance != null && m_propagateCallbackMethod != null) {
                 try {
@@ -434,7 +381,7 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
     @Override
     protected Object getService() {
         Object service = null;
-        ServiceEventImpl se = m_dependencies.size() > 0 ? (ServiceEventImpl) m_dependencies.last() : null;
+        ServiceEventImpl se = (ServiceEventImpl) m_component.getDependencyEvent(this);
         if (se != null) {
             service = se.getService();
         } else if (isAutoConfig()) {
@@ -479,11 +426,5 @@ public class ServiceDependencyImpl extends DependencyImpl implements ServiceDepe
             }
         }
         return m_defaultImplementationInstance;
-    }
-
-    private void ensureNotActive() {
-        if (m_tracker != null) {
-            throw new IllegalStateException("Cannot modify state while active.");
-        }
     }
 }
