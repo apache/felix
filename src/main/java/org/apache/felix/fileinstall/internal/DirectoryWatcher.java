@@ -848,13 +848,33 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     // Let's try to interpret the location as a file path
                     uri = new File(location).toURI().normalize();
                 }
-                path = uri.getPath();
+                if (uri.isOpaque() && uri.getSchemeSpecificPart() != null)
+                {
+                    // blueprint:file:/tmp/foo/baa.jar -> file:/tmp/foo/baa.jar
+                    // blueprint:mvn:foo.baa/baa/0.0.1 -> mvn:foo.baa/baa/0.0.1
+                    // wrap:file:/tmp/foo/baa-1.0.jar$Symbolic-Name=baa&Version=1.0 -> file:/tmp/foo/baa-1.0.jar$Symbolic-Name=baa&Version1.0
+                    final String schemeSpecificPart = uri.getSchemeSpecificPart();
+                    // extract content behind the 'file:' protocol of scheme specific path
+                    final int lastIndexOfFileProtocol = schemeSpecificPart.lastIndexOf("file:");
+                    final int offsetFileProtocol = lastIndexOfFileProtocol >= 0 ? lastIndexOfFileProtocol + "file:".length() : 0;
+                    final int firstIndexOfDollar = schemeSpecificPart.indexOf("$");
+                    final int endOfPath = firstIndexOfDollar >= 0 ? firstIndexOfDollar : schemeSpecificPart.length();
+                    // file:/tmp/foo/baa.jar -> /tmp/foo/baa.jar
+                    // mvn:foo.baa/baa/0.0.1 -> mvn:foo.baa/baa/0.0.1
+                    // file:/tmp/foo/baa-1.0.jar$Symbolic-Name=baa&Version=1.0 -> /tmp/foo/baa-1.0.jar
+                    path = schemeSpecificPart.substring(offsetFileProtocol, endOfPath);
+                }
+                else
+                {
+                    // file:/tmp/foo/baa.jar -> /tmp/foo/baa.jar
+                    // mnv:foo.baa/baa/0.0.1 -> foo.baa/baa/0.0.1
+                    path = uri.getPath();
+                }
             }
             if (path == null)
             {
                 // jar.getPath is null means we could not parse the location
-                // as a meaningful URI or file path. e.g., location
-                // represented an Opaque URI.
+                // as a meaningful URI or file path.
                 // We can't do any meaningful processing for this bundle.
                 continue;
             }
