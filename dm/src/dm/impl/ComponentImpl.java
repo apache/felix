@@ -1,5 +1,10 @@
 package dm.impl;
 
+import static dm.ComponentState.INACTIVE;
+import static dm.ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED;
+import static dm.ComponentState.TRACKING_OPTIONAL;
+import static dm.ComponentState.WAITING_FOR_REQUIRED;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -8,6 +13,7 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +29,6 @@ import org.osgi.framework.ServiceRegistration;
 
 import dm.Component;
 import dm.ComponentState;
-import static dm.ComponentState.*;
 import dm.ComponentStateListener;
 import dm.Dependency;
 import dm.DependencyManager;
@@ -57,7 +62,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private final Map m_autoConfigInstance = new ConcurrentHashMap();
     private final long m_id;
     private static AtomicLong m_idGenerator = new AtomicLong();
-    private final Map<DependencyContext, ConcurrentSkipListSet<Event>> m_dependencyEvents = new ConcurrentHashMap<>();
+    private final Map<DependencyContext, ConcurrentSkipListSet<Event>> m_dependencyEvents = new HashMap<>();
 
     // configuration (static)
     private volatile String m_callbackInit;
