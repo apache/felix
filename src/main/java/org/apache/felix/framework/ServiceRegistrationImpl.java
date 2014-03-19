@@ -162,9 +162,8 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
         // Case 2.
         if ((m_factory != null)
-            && (m_factory.getClass().getClassLoader() instanceof BundleReference)
-            && !((BundleReference) m_factory.getClass()
-                .getClassLoader()).getBundle().equals(m_bundle))
+            && (Felix.m_secureAction.getClassLoader(m_factory.getClass()) instanceof BundleReference)
+            && !((BundleReference) Felix.m_secureAction.getClassLoader(m_factory.getClass())).getBundle().equals(m_bundle))
         {
             try
             {
