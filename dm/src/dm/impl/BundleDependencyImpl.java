@@ -22,7 +22,6 @@ import dm.context.Event;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class BundleDependencyImpl extends DependencyImpl<BundleDependency> implements BundleDependency, BundleTrackerCustomizer, ComponentDependencyDeclaration {
-    private final BundleContext m_context;
     private BundleTracker m_tracker;
     private int m_stateMask = Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE;
     private Bundle m_bundleInstance;
@@ -35,15 +34,13 @@ public class BundleDependencyImpl extends DependencyImpl<BundleDependency> imple
     private final Logger m_logger;
 
     public BundleDependencyImpl(BundleContext context, Logger logger) {
-        super(true /* autoconfig */);
-        m_context = context;
+        super(true /* autoconfig */, context);
         m_logger = logger;
     }
     
     public BundleDependencyImpl(BundleDependencyImpl prototype) {
         super(prototype);
         m_logger = prototype.m_logger;
-        m_context = prototype.m_context;
         m_stateMask = prototype.m_stateMask;
         m_nullObject = prototype.m_nullObject;
         m_bundleInstance = prototype.m_bundleInstance;

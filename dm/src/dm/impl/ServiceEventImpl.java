@@ -1,6 +1,6 @@
 package dm.impl;
 
-import org.osgi.framework.Constants;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 public class ServiceEventImpl extends EventImpl implements Comparable {
@@ -38,7 +38,15 @@ public class ServiceEventImpl extends EventImpl implements Comparable {
     	return getReference().compareTo(((ServiceEventImpl) b).getReference());
     }
         
+    @Override
     public String toString() {
     	return m_service.toString();
+    }
+
+    @Override
+    public void close(BundleContext context) {
+        if (context != null) {
+            context.ungetService(m_reference);
+        }
     }
 }

@@ -2,8 +2,9 @@ package dm.impl;
 
 import java.util.Dictionary;
 
+import org.osgi.framework.BundleContext;
+
 import dm.Dependency;
-import dm.ServiceDependency;
 import dm.admin.ComponentDependencyDeclaration;
 import dm.context.ComponentContext;
 import dm.context.DependencyContext;
@@ -25,13 +26,15 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
     protected volatile boolean m_propagate;
     protected volatile Object m_propagateCallbackInstance;
     protected volatile String m_propagateCallbackMethod;
+    protected final BundleContext m_context;
 
 	public DependencyImpl() {	
-        this(true);
+        this(true, null);
 	}
 
-	public DependencyImpl(boolean autoConfig) {	
+	public DependencyImpl(boolean autoConfig, BundleContext bc) {	
         m_autoConfig = autoConfig;
+        m_context = bc;
 	}
 	
 	public DependencyImpl(DependencyImpl<T> prototype) {
@@ -48,7 +51,8 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 		m_callbackInstance = prototype.m_callbackInstance;
         m_propagate = prototype.m_propagate;
         m_propagateCallbackInstance = prototype.m_propagateCallbackInstance;
-        m_propagateCallbackMethod = prototype.m_propagateCallbackMethod;       
+        m_propagateCallbackMethod = prototype.m_propagateCallbackMethod;
+        m_context = prototype.m_context;
 	}
 	
 	public void add(final Event e) {
@@ -81,7 +85,11 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 		m_component.getExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
-                m_component.handleRemoved(DependencyImpl.this, e);
+			    try {
+			        m_component.handleRemoved(DependencyImpl.this, e);	
+			    } finally {
+			        e.close(m_context);
+			    }
 			}
 		});
 	}

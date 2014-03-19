@@ -24,7 +24,6 @@ import dm.context.Event;
 
 public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> implements ServiceDependency, ServiceTrackerCustomizer {
 	protected volatile ServiceTracker m_tracker;
-	protected final BundleContext m_context;
     private final Logger m_logger;
     protected volatile Class<?> m_trackedServiceName;
     private volatile String m_trackedServiceFilter;
@@ -110,15 +109,13 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
     }
     
 	public ServiceDependencyImpl(BundleContext ctx, Logger logger) {
-		super(true /* autoconfig */);
-	    m_context = ctx;
+		super(true /* autoconfig */, ctx);
 	    m_logger = logger;
 	}
 	
 	public ServiceDependencyImpl(ServiceDependencyImpl prototype) {
 		super(prototype);
 		m_logger = prototype.m_logger;
-		m_context = prototype.m_context;	
         m_trackedServiceName = prototype.m_trackedServiceName;
         m_nullObject = prototype.m_nullObject;
         m_trackedServiceFilter = prototype.m_trackedServiceFilter;
@@ -211,8 +208,7 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
 
 	@Override
 	public Object addingService(ServiceReference reference) {
-		Object service = getBundleContext().getService(reference);
-		return service;
+		return getBundleContext().getService(reference);
 	}
 
 	@Override

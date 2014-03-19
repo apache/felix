@@ -21,21 +21,18 @@ import dm.context.Event;
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
 public class ResourceDependencyImpl extends DependencyImpl<ResourceDependency> implements ResourceDependency, ResourceHandler, ComponentDependencyDeclaration {
-    private volatile BundleContext m_context;
     private volatile ServiceRegistration m_registration;
     private volatile String m_resourceFilter;
     private volatile URL m_trackedResource;
     private final Logger m_logger;
 
     public ResourceDependencyImpl(BundleContext context, Logger logger) {
-        super(true /* autoconfig */);
-        m_context = context;
+        super(true /* autoconfig */, context);
         m_logger = logger;
     }
     
     public ResourceDependencyImpl(ResourceDependencyImpl prototype) {
         super(prototype);
-        m_context = prototype.m_context;
         m_resourceFilter = prototype.m_resourceFilter;
         m_trackedResource = prototype.m_trackedResource;
         m_logger = prototype.m_logger;

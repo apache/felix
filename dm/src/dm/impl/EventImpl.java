@@ -1,5 +1,7 @@
 package dm.impl;
 
+import org.osgi.framework.BundleContext;
+
 import dm.context.Event;
 
 /* in real life, this event might contain a service reference and service instance
@@ -41,5 +43,9 @@ public class EventImpl implements Event, Comparable {
         } else {
             return 1;
         }
+    }
+    
+    @Override
+    public void close(BundleContext m_context) {
     }
 }
