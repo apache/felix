@@ -681,7 +681,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
     private void invokeRemoveOptionalDependencies() { 
         for (DependencyContext d : m_dependencies) {
-            if (!d.isInstanceBound() && ! d.isRequired()) {
+            if (! d.isRequired()) {
                 for (Event e : m_dependencyEvents.get(d)) {
                     d.invokeRemove(e);
                 }
