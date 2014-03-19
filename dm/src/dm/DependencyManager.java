@@ -170,8 +170,8 @@ public class DependencyManager {
         return new ResourceDependencyImpl(m_context, m_logger);
     }
 
-    public TemporalServiceDependency createTemporalServiceDependency() {
-        return new TemporalServiceDependencyImpl(m_context, m_logger);
+    public ServiceDependency createTemporalServiceDependency(long timeout) {
+        return new TemporalServiceDependencyImpl(m_context, m_logger, timeout);
     }
 
     public Component createAdapterService(Class serviceInterface, String serviceFilter, String autoConfig) {

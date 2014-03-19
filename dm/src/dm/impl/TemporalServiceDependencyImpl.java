@@ -1,8 +1,5 @@
 package dm.impl;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -12,7 +9,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import dm.ServiceDependency;
-import dm.TemporalServiceDependency;
 
 /**
  * Temporal Service dependency implementation, used to hide temporary service dependency "outage".
@@ -20,18 +16,15 @@ import dm.TemporalServiceDependency;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class TemporalServiceDependencyImpl extends ServiceDependencyImpl implements TemporalServiceDependency, InvocationHandler {
+public class TemporalServiceDependencyImpl extends ServiceDependencyImpl implements ServiceDependency, InvocationHandler {
     // Max millis to wait for service availability.
-    private long m_timeout = 30000;
-    
-    // Dependency service currently used (with highest rank or highest service id).
-    private volatile Object m_cachedService;
-    
+    private final long m_timeout;
+        
     // Framework bundle (we use it to detect if the framework is stopping)
     private final Bundle m_frameworkBundle;
 
     // The service proxy, which blocks when service is not available.
-    private Object m_serviceInstance;
+    private volatile Object m_serviceInstance;
 
     /**
      * Creates a new Temporal Service Dependency.
@@ -40,26 +33,14 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
      * @param logger the logger our Internal logger for logging events.
      * @see DependencyActivatorBase#createTemporalServiceDependency()
      */
-    public TemporalServiceDependencyImpl(BundleContext context, Logger logger) {
+    public TemporalServiceDependencyImpl(BundleContext context, Logger logger, long timeout) {
         super(context, logger);
         super.setRequired(true);
-        m_frameworkBundle = context.getBundle(0);
-    }
-
-    /**
-     * Sets the timeout for this temporal dependency. Specifying a timeout value of zero means that there is no timeout period,
-     * and an invocation on a missing service will fail immediately.
-     * 
-     * @param timeout the dependency timeout value greater or equals to 0
-     * @throws IllegalArgumentException if the timeout is negative
-     * @return this temporal dependency
-     */
-    public synchronized TemporalServiceDependency setTimeout(long timeout) {
         if (timeout < 0) {
             throw new IllegalArgumentException("Invalid timeout value: " + timeout);
         }
         m_timeout = timeout;
-        return this;
+        m_frameworkBundle = context.getBundle(0);
     }
 
     /**
@@ -79,7 +60,7 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
         super.setRequired(required);
         return this;
     }
-
+    
     /**
      * The ServiceTracker calls us here in order to inform about a service arrival.
      */
@@ -87,16 +68,17 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
     public void addedService(ServiceReference ref, Object service) {
         // Update our service cache, using the tracker. We do this because the
         // just added service might not be the service with the highest rank ...
-        m_cachedService = m_tracker.getService(); 
-        boolean makeAvailable = ! isAvailable();
-        if (makeAvailable) {
-            m_serviceInstance = Proxy.newProxyInstance(m_trackedServiceName.getClassLoader(), new Class[] { m_trackedServiceName }, this);
-        }
-        add(new ServiceEventImpl(ref, service));
-        if (!makeAvailable) {
-            synchronized (this) {
-                notifyAll();
+        boolean makeAvailable = false;
+        synchronized (this) {
+            if (m_serviceInstance == null) {
+                m_serviceInstance = Proxy.newProxyInstance(m_trackedServiceName.getClassLoader(), new Class[] { m_trackedServiceName }, this);
+                makeAvailable = true;
             }
+        }
+        if (makeAvailable) {
+            add(new ServiceEventImpl(ref, m_serviceInstance));
+        } else {
+            // This added will possibly unblock our invoke() method (if it's blocked in m_tracker.waitForService method).
         }
     }
 
@@ -122,49 +104,35 @@ public class TemporalServiceDependencyImpl extends ServiceDependencyImpl impleme
             // our "invoke" method won't use the tracker to get the service dependency (because at this point, 
             // the tracker has withdrawn its reference to the lost service). So, you will see that the "invoke" 
             // method will use the "m_cachedService" instead ...
-            super.removedService(ref, service);
+            boolean makeUnavailable = false;
+            synchronized (this) {
+                if (m_tracker.getService() == null) {
+                    makeUnavailable = true;
+                }
+            }
+            if (makeUnavailable) {
+                remove(new ServiceEventImpl(ref, m_serviceInstance)); // will unget the service ref
+            }
         } else {
             // Unget what we got in addingService (see ServiceTracker 701.4.1)
             m_context.ungetService(ref);
-            // Now, ask the service tracker if there is another available service (with a lower rank).
-            // If no more service dependencies are available, the tracker will then return null;
-            // and our invoke method will block the service method invocation, until another service
-            // becomes available.
-            m_cachedService = m_tracker.getService();
+            // if there is no available services, the next call to invoke() method will block until another service
+            // becomes available. Else the next call to invoke() will return that highest ranked available service.
         }
-    }
-
-    /**
-     * @returns our dependency instance. Unlike in ServiceDependency, we always returns our proxy.
-     */
-    @Override
-    protected synchronized Object getService() {
-        return m_serviceInstance;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Object service = m_cachedService;
-        if (service == null) {
-            synchronized (this) {
-                long start = System.currentTimeMillis();
-                long waitTime = m_timeout;
-                while (service == null) {
-                    if (waitTime <= 0) {
-                        throw new IllegalStateException("Service unavailable: " + m_trackedServiceName.getName());
-                    }
-                    try {
-                        wait(waitTime);
-                    }
-                    catch (InterruptedException e) {
-                        throw new IllegalStateException("Service unavailable: " + m_trackedServiceName.getName());
-                    }
-                    waitTime = m_timeout - (System.currentTimeMillis() - start);
-                    service = m_cachedService;
-                }
-                
-            }
+        Object service = null;
+        try {
+            service = m_tracker.waitForService(m_timeout);
+        } catch (InterruptedException e) {            
         }
+        
+        if (service == null) {
+            throw new IllegalStateException("Service unavailable: " + m_trackedServiceName.getName());
+        }
+        
         try {
             return method.invoke(service, args);
         }
