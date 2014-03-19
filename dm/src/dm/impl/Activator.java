@@ -14,7 +14,7 @@ public class Activator implements BundleActivator {
     private volatile ServiceRegistration m_adminReg;
 
     public void start(BundleContext context) throws Exception {
-        context.registerService(ComponentAdmin.class.getName(), new ComponentAdminImpl(), null);
+        m_adminReg = context.registerService(ComponentAdmin.class.getName(), new ComponentAdminImpl(), null);
     }
 
     public void stop(BundleContext context) throws Exception {
