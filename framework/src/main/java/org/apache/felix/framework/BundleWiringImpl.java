@@ -1857,24 +1857,33 @@ public class BundleWiringImpl implements BundleWiring
 
     public static class BundleClassLoaderJava5 extends BundleClassLoader
     {
+        static final boolean m_isParallel;
         static
         {
+            boolean registered = false;
             try
             {
                 Method method = BundleRevisionImpl.getSecureAction()
                     .getDeclaredMethod(ClassLoader.class, "registerAsParallelCapable", null);
 
-                 BundleRevisionImpl.getSecureAction().setAccesssible(method);
+                BundleRevisionImpl.getSecureAction().setAccesssible(method);
 
-                 method.invoke(null);
+                registered = ((Boolean) method.invoke(null)).booleanValue();
             }
             catch (Throwable th)
             {
                 // This is OK on older java versions
             }
+
+            m_isParallel = registered;
         }
 
-        private BundleWiringImpl m_wiring;
+        protected boolean isParallel()
+        {
+            return m_isParallel;
+        }
+
+        private final BundleWiringImpl m_wiring;
 
         public BundleClassLoaderJava5(BundleWiringImpl wiring, ClassLoader parent)
         {
@@ -1928,7 +1937,7 @@ public class BundleWiringImpl implements BundleWiring
         private static final int LIBNAME_IDX = 0;
         private static final int LIBPATH_IDX = 1;
         private final Map<String, Thread> m_classLocks = new HashMap<String, Thread>();
-        private BundleWiringImpl m_wiring;
+        private final BundleWiringImpl m_wiring;
 
         public BundleClassLoader(BundleWiringImpl wiring, ClassLoader parent)
         {
@@ -1942,6 +1951,11 @@ public class BundleWiringImpl implements BundleWiring
                 m_jarContentToDexFile = null;
             }
             m_wiring = wiring;
+        }
+
+        protected boolean isParallel()
+        {
+            return false;
         }
 
         public boolean isActivationTriggered()
@@ -1961,7 +1975,8 @@ public class BundleWiringImpl implements BundleWiring
             Class clazz;
 
             // Make sure the class was not already loaded.
-            synchronized (m_classLocks)
+            Object lock = (isParallel()) ? m_classLocks : this;
+            synchronized (lock)
             {
                 clazz = findLoadedClass(name);
             }
@@ -2105,14 +2120,15 @@ public class BundleWiringImpl implements BundleWiring
                     // Before we actually attempt to define the class, grab
                     // the lock for this class loader and make sure than no
                     // other thread has defined this class in the meantime.
-                    synchronized (m_classLocks)
+                    Object lock = (isParallel()) ? m_classLocks : this;
+                    synchronized (lock)
                     {
                         Thread me = Thread.currentThread();
                         while (m_classLocks.containsKey(name) && (m_classLocks.get(name) != me))
                         {
                             try
                             {
-                                m_classLocks.wait();
+                                lock.wait();
                             }
                             catch (InterruptedException e)
                             {
@@ -2324,10 +2340,10 @@ public class BundleWiringImpl implements BundleWiring
                             wci.complete(wovenClass, wovenBytes, wovenImports);
                         }
 
-                        synchronized (m_classLocks)
+                        synchronized (lock)
                         {
                             m_classLocks.remove(name);
-                            m_classLocks.notifyAll();
+                            lock.notifyAll();
                         }
                     }
 
