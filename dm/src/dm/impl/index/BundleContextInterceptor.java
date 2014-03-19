@@ -110,7 +110,7 @@ public class BundleContextInterceptor extends BundleContextInterceptorBase {
 	        		m_logger.log(Logger.LOG_DEBUG, "Indexed filter exceeds lookup time treshold (" + duration + "ms.): " + clazz + " " + filter);
 	        	}
             }
-            if (result == null || result.size() == 0) {
+            if (result.size() == 0) {
                 return null;
             }
             return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);

@@ -183,7 +183,7 @@ public class ServiceRaceTest extends TestBase {
 
     public class Client {
         final Ensure m_step;
-        volatile int m_dependencies;
+        int m_dependencies;
         volatile Dictionary m_conf;
         
         public Client(Ensure step) {
@@ -200,14 +200,14 @@ public class ServiceRaceTest extends TestBase {
             }
         }
         
-        void add() {
+        synchronized void add() {
             m_step.step();
-            m_dependencies ++;
+            m_dependencies++;
         }
         
-        void remove() {
+        synchronized void remove() {
             m_step.step();
-            m_dependencies --;
+            m_dependencies--;
         }
                 
         void start() {
@@ -222,7 +222,7 @@ public class ServiceRaceTest extends TestBase {
             m_step.step((DEPENDENCIES + 1) /* deps + conf */ + 1 /* start */ + 1 /* stop */  + 1 /* destroy */);
         }
         
-        int getDependencies() {
+        synchronized int getDependencies() {
             return m_dependencies;
         }
         

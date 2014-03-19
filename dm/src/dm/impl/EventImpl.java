@@ -23,7 +23,9 @@ public class EventImpl implements Event, Comparable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof EventImpl) {
+		// an instanceof check here is not "strong" enough with subclasses overriding the
+		// equals: we need to be sure that a.equals(b) == b.equals(a) at all times
+		if (obj != null && obj.getClass().equals(EventImpl.class)) {
 			return ((EventImpl) obj).m_id == m_id;
 		}
 		return false;

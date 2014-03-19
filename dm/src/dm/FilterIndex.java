@@ -36,7 +36,7 @@ public interface FilterIndex {
     public void close();
     /** Determines if the combination of class and filter is applicable for this filter index. */
     public boolean isApplicable(String clazz, String filter);
-    /** Returns all service references that match the specified class and filter. */
+    /** Returns all service references that match the specified class and filter. Never returns null. */
     public List /* <ServiceReference> */ getAllServiceReferences(String clazz, String filter);
     /** Invoked whenever a service event occurs. */
     public void serviceChanged(ServiceEvent event);

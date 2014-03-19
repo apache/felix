@@ -29,19 +29,13 @@ public class ResourceEventImpl extends EventImpl implements Comparable {
             if (match) {
                 Dictionary<?,?> d1 = getResourceProperties();
                 Dictionary<?,?> d2 = r2.getResourceProperties();
-
-                if (d1 == null && d2 == null) {
-                    return match;
-                }
                 
-                if (d1 == null && d2 != null) {
-                    return false;
+                if (d1 == null) {
+                	return d2 == null ? match : false;
                 }
-                
-                if (d1 != null && d2 == null) {
-                    return false;
+                else {
+                	return d1.equals(d2);
                 }
-                return d1.equals(d2);
             }
         }
         return false;

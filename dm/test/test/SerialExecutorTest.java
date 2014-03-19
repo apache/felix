@@ -47,13 +47,14 @@ public class SerialExecutorTest extends TestBase {
             System.out.println("Performed " + TESTS + " tests in " + (now - timeStamp) + " ms.");
             timeStamp = now;
         }
-
         catch (Throwable t) {
             t.printStackTrace();
             Assert.fail("Test failed: " + t.getMessage());
         }
         finally {
-            shutdown(threadPool);
+        	if (threadPool != null) {
+        		shutdown(threadPool);
+        	}
         }
     }
 

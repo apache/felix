@@ -40,7 +40,7 @@ public class ComponentAdminImpl implements ComponentAdmin {
 
 	@Override
 	public List<ComponentDeclaration> getComponents(Bundle bundle) {
-    	return getComponents(bundle);
+    	return getComponents(bundle, -1);
 	}
 	
 	private List<ComponentDeclaration> getComponents(Bundle bundle, long componentId) {

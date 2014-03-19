@@ -224,7 +224,7 @@ public class AspectFilterIndex extends AbstractFactoryFilterIndex implements Fil
                 				listeners.remove(listener);
                 			}
                 			// cleanup 
-                			if (listeners.isEmpty()) {
+                			if (listeners != null && listeners.isEmpty()) {
                 				rankingToListenersMap.remove(Integer.valueOf(data.ranking));
                 			}
                 			if (rankingToListenersMap.isEmpty()) {
