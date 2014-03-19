@@ -21,7 +21,6 @@ import dm.impl.metatype.MetaTypeProviderImpl;
 public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
     private Dictionary<?,?> m_settings;
     private String m_callback = "updated";
-	private final BundleContext m_context;
 	private final Logger m_logger;
 	private String m_pid;
 	private ServiceRegistration m_registration;
@@ -33,15 +32,13 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
     }
     
     public ConfigurationDependencyImpl(BundleContext context, Logger logger) {
-    	super(false /* not autoconfig */);
-    	m_context = context;
+    	super(false /* not autoconfig */, context);
     	m_logger = logger;
         setRequired(true);
     }
     
 	public ConfigurationDependencyImpl(ConfigurationDependencyImpl prototype) {
 	    super(prototype);
-	    m_context = prototype.m_context;
 	    m_pid = prototype.m_pid;
 	    m_callback = prototype.m_callback;
 	    m_logger = prototype.m_logger;
@@ -112,21 +109,21 @@ public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDep
     {
         createMetaTypeImpl();
         m_metaType.add(properties);
-       return this;
+        return this;
     }
 
     public ConfigurationDependency setDescription(String description)
     {
         createMetaTypeImpl();
         m_metaType.setDescription(description);
-       return this;
+        return this;
     }
 
     public ConfigurationDependency setHeading(String heading)
     {
         createMetaTypeImpl();
         m_metaType.setName(heading);
-       return this;
+        return this;
     }
     
     public ConfigurationDependency setLocalization(String path)
