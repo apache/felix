@@ -29,6 +29,7 @@ public class TemporalServiceDependencyTest extends TestBase {
         m.remove(sc);
         // ensure we executed all steps inside the component instance
         e.step(6);
+        m.clear();
     }
 
     static interface TemporalServiceInterface {

@@ -74,6 +74,7 @@ public class ResourceDependencyTest extends TestBase {
         
         // validate that all consumed resources are "unconsumed" again
         c.ensure();
+        m.clear();
     }
     
     class ResourceConsumer {
