@@ -227,33 +227,19 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     {
         if (this.config.isUseHttp() || this.config.isUseHttps())
         {
-            StringBuffer message = new StringBuffer("Started Jetty ").append(getJettyVersion()).append(" at port(s)");
-            HashLoginService realm = new HashLoginService("OSGi HTTP Service Realm");
+            final String version = fixJettyVersion();
             this.server = new Server();
             this.server.addLifeCycleListener(this);
 
             // HTTP/1.1 requires Date header if possible (it is)
             this.server.setSendDateHeader(true);
 
-            this.server.addBean(realm);
-
-            if (this.config.isUseHttp())
-            {
-                initializeHttp();
-                message.append(" HTTP:").append(this.config.getHttpPort());
-            }
-
-            if (this.config.isUseHttps())
-            {
-                initializeHttps();
-                message.append(" HTTPS:").append(this.config.getHttpsPort());
-            }
+            this.server.addBean(new HashLoginService("OSGi HTTP Service Realm"));
 
             this.parent = new ContextHandlerCollection();
 
             ServletContextHandler context = new ServletContextHandler(this.parent, this.config.getContextPath(), ServletContextHandler.SESSIONS);
 
-            message.append(" on context path ").append(this.config.getContextPath());
             configureSessionManager(context);
             context.addEventListener(eventDispatcher);
             context.getSessionHandler().addEventListener(eventDispatcher);
@@ -269,17 +255,45 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
             this.server.setHandler(this.parent);
             this.server.start();
-            SystemLogger.info(message.toString());
+
+            StringBuffer message = new StringBuffer("Started Jetty ").append(version).append(" at port(s)");
+
+            if (this.config.isUseHttp() && initializeHttp())
+            {
+                message.append(" HTTP:").append(this.config.getHttpPort());
+            }
+
+            if (this.config.isUseHttps() && initializeHttps())
+            {
+                message.append(" HTTPS:").append(this.config.getHttpsPort());
+            }
+
+            if (this.server.getConnectors() != null && this.server.getConnectors().length > 0)
+            {
+                message.append(" on context path ").append(this.config.getContextPath());
+                SystemLogger.info(message.toString());
+                publishServiceProperties();
+            }
+            else
+            {
+                try
+                {
+                    this.server.stop();
+                }
+                catch (Exception e)
+                {
+                    // should log
+                }
+                SystemLogger.error("Jetty stopped (no connectors available)", null);
+            }
         }
         else
         {
-            SystemLogger.info("Jetty not started (HTTP and HTTPS disabled)");
+            SystemLogger.warning("Jetty not started (HTTP and HTTPS disabled)", null);
         }
-
-        publishServiceProperties();
     }
 
-    private String getJettyVersion()
+    private String fixJettyVersion()
     {
         // FELIX-4311: report the real version of Jetty...
         Dictionary headers = this.context.getBundle().getHeaders();
@@ -295,19 +309,19 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         return version;
     }
 
-    private void initializeHttp() throws Exception
+    private boolean initializeHttp()
     {
         Connector connector = this.config.isUseHttpNio() ? new SelectChannelConnector() : new SocketConnector();
         configureConnector(connector, this.config.getHttpPort());
-        this.server.addConnector(connector);
+        return startConnector(connector);
     }
 
-    private void initializeHttps() throws Exception
+    private boolean initializeHttps()
     {
         SslConnector connector = this.config.isUseHttpsNio() ? new SslSelectChannelConnector() : new SslSocketConnector();
         configureConnector(connector, this.config.getHttpsPort());
         configureSslConnector(connector);
-        this.server.addConnector(connector);
+        return startConnector(connector);
     }
 
     @SuppressWarnings("deprecation")
@@ -394,6 +408,23 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         cookieConfig.setDomain(this.config.getProperty(SessionManager.__SessionDomainProperty, SessionManager.__DefaultSessionDomain));
         cookieConfig.setPath(this.config.getProperty(SessionManager.__SessionPathProperty, context.getContextPath()));
         cookieConfig.setMaxAge(this.config.getIntProperty(SessionManager.__MaxAgeProperty, -1));
+    }
+
+    private boolean startConnector(Connector connector)
+    {
+        this.server.addConnector(connector);
+        try
+        {
+            connector.start();
+            return true;
+        }
+        catch (Exception e)
+        {
+            this.server.removeConnector(connector);
+            SystemLogger.error("Failed to start Connector: " + connector, e);
+        }
+
+        return false;
     }
 
     private String getEndpoint(final Connector listener, final InetAddress ia)
