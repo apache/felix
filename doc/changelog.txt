@@ -1,3 +1,33 @@
+Changes from 4.2.1 to 4.4.0
+---------------------------
+** Bug
+    * [FELIX-1131] - ServiceReference.isAssignableTo fails when using a factory that can not see the exported class and the bundle exporting the service does not have a direct wire to this class
+    * [FELIX-3992] - Classloader access outside of a privileged block
+    * [FELIX-4190] - The framework should not hold any lock while calling ServiceFactory#unget
+    * [FELIX-4283] - actually throw exception if method not found
+    * [FELIX-4331] - [Core R5] Support BundleContext and Framework adaptations
+    * [FELIX-4353] - [Core R5] BundleWiringTests OSGi CT test failures
+    * [FELIX-4354] - [Core R5] ResolverHookTests OSGi CT test failures
+    * [FELIX-4355] - [Core R5] org.osgi.test.cases.framework.launch OSGi CT test failure
+    * [FELIX-4365] - Input stream not properly closed on org.apache.felix.framework.Felix.getFrameworkVersion
+    * [FELIX-4388] - Initial start level not considered when bundle.start() is called
+    * [FELIX-4462] - Classloader deadlock in Java6 between two bundles
+
+** Improvement
+    * [FELIX-4128] - [Core R5] Provide an OSGi R5 compliant framework implementation
+    * [FELIX-4284] - remove dead allocation
+
+** Task
+    * [FELIX-4080] - [Core R5] Add support for org.osgi.framework.UnfilteredServiceListener
+    * [FELIX-4082] - [Core R5] Update org.osgi.framework.bsnversion framework property
+    * [FELIX-4083] - [Core R5] Support for valueOf when evaluating a Filter
+    * [FELIX-4084] - [Core R5] Enhance Bundle.adapt() to provider AccessControlContext.
+    * [FELIX-4085] - [Core R5] Implement updates to the Bundle Hook Specification
+    * [FELIX-4324] - [Core R5] Implement osgi.identity namespace for fragments
+
+** Wish
+    * [FELIX-3868] - Adding osgi.identity namespace to bundles (resources)
+
 Changes from 4.2.0 to 4.2.1
 ---------------------------
 ** Bug
