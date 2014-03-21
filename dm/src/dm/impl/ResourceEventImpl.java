@@ -57,6 +57,6 @@ public class ResourceEventImpl extends EventImpl implements Comparable {
         }
         
         // Sort by resource name.
-        return getResource().toString().compareTo(that.toString());
+        return getResource().toString().compareTo(((ResourceEventImpl) that).getResource().toString());
     }
 }
