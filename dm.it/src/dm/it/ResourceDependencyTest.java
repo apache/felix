@@ -23,7 +23,6 @@ import dm.ResourceUtil;
 
 public class ResourceDependencyTest extends TestBase {
     public void testResourceDependency() {
-        if (true) return;
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
