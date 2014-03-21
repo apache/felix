@@ -53,7 +53,7 @@ public class ServiceRaceTest extends TestBase {
             .setImplementation(this)
             .setCallbacks(null, "start", null, null)
             .add(m_dm.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true)));
-        m_done.waitForStep(1, 30000);
+        m_done.waitForStep(1, 60000);
         m_dm.clear();
         Assert.assertFalse(super.errorsLogged());
     }
