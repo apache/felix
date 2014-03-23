@@ -25,6 +25,7 @@ import dm.context.Event;
 public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> implements ServiceDependency, ServiceTrackerCustomizer {
 	protected volatile ServiceTracker m_tracker;
     private final Logger m_logger;
+    protected String m_swap;
     protected volatile Class<?> m_trackedServiceName;
     private volatile String m_trackedServiceFilter;
     private volatile String m_trackedServiceFilterUnmodified;
@@ -130,13 +131,13 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
     			
     public ServiceDependency setCallbacks(Object instance, String added, String changed, String removed, String swapped) {
         setCallbacks(instance, added, changed, removed);
-        // TODO handle the swapped parameter
+        m_swap = swapped;
         return this;
     }
     
     public ServiceDependency setCallbacks(String added, String changed, String removed, String swapped) {
         setCallbacks(added, changed, removed);
-        // TODO handle the swapped parameter
+        m_swap = swapped;
         return this;
     }
 		
@@ -423,4 +424,17 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
         }
         return m_defaultImplementationInstance;
     }
+
+	@Override
+	public void swappedService(ServiceReference reference, Object service,
+			ServiceReference newReference, Object newService) {
+		System.out.println("### SWAPPED");
+		if (m_swap != null) {
+			// TODO: invoke swap callback
+		} else {
+			addedService(newReference, newService);
+			removedService(newReference, newService);
+		}
+	}
+
 }

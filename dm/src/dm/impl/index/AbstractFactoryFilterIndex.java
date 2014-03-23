@@ -49,6 +49,12 @@ public abstract class AbstractFactoryFilterIndex {
         remove(reference);
     }
     
+	public void swappedService(ServiceReference reference, Object service,
+			ServiceReference newReference, Object newService) {
+		addedService(newReference, newService);
+		removedService(reference, service);
+	}
+    
     public void add(ServiceReference reference) {
         Long sid = ServiceUtil.getServiceIdObject(reference);
         synchronized (m_sidToServiceReferencesMap) {

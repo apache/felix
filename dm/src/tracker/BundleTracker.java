@@ -474,5 +474,32 @@ public class BundleTracker implements BundleTrackerCustomizer {
 			customizer.removedBundle((Bundle) item, (BundleEvent) related,
 					object);
 		}
+
+		@Override
+		AbstractCustomizerActionSet createCustomizerActionSet() {
+			return new AbstractCustomizerActionSet() {
+				
+				@Override
+				public void addCustomizerAdded(Object item, Object related, Object object) {
+					customizerAdded(item, related, object);
+				}
+
+				@Override
+				public void addCustomizerModified(Object item, Object related,
+						Object object) {
+					customizerModified(item, related, object);
+				}
+				@Override
+				public void addCustomizerRemoved(Object item, Object related,
+						Object object) {
+					customizerRemoved(item, related, object);
+				}
+						
+				@Override
+				void execute() {
+					// nothing to be done here, since this actionSet executes the actions immediately.
+				}
+			};
+		}
 	}
 }

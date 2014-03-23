@@ -81,6 +81,25 @@ public interface ServiceTrackerCustomizer {
 	 * @param service The service object for the specified referenced service.
 	 */
 	public void modifiedService(ServiceReference reference, Object service);
+	
+	/**
+	 * A service tracked by the <code>ServiceTracker</code> has an aspect service 
+	 * added or removed for a tracked service.
+	 * 
+	 * <p>
+	 * This method is called when an aspect service has been either added or removed 
+	 * for a tracked service. This method will only be called when there's a new 
+	 * highest ranked service as result of adding or removal of the aspect service.
+	 * In this case the previously highest ranked service is 'swapped' for the new
+	 * highest ranked service ensuring the client always gets the highest ranked
+	 * aspect. 
+	 * 
+	 * @param reference The reference for the old highest ranked service.
+	 * @param service The service object for the old highest ranked service.
+	 * @param newReference The reference to the new highest ranked service.
+	 * @param newService The service object for the new highest ranked service.
+	 */
+	public void swappedService(ServiceReference reference, Object service, ServiceReference newReference, Object newService);
 
 	/**
 	 * A service tracked by the <code>ServiceTracker</code> has been removed.

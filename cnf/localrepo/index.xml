@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<repository increment='1394059141126' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
+<repository increment='1395387986388' name='Local' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
   <resource>
     <capability namespace='osgi.identity'>
       <attribute name='osgi.identity' value='org.apache.felix.configadmin'/>
@@ -78,6 +78,263 @@
     <requirement namespace='osgi.service'>
       <directive name='filter' value='(objectClass=org.osgi.service.log.LogService)'/>
       <directive name='effective' value='active'/>
+    </requirement>
+  </resource>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='org.mockito.mockito-all'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='b2a63307d1dce3aa1623fdaacb2327a4cd7795b0066f31bf542b1e8f2683239e'/>
+      <attribute name='url' value='org.mockito.mockito-all/org.mockito.mockito-all-1.9.5.jar'/>
+      <attribute name='size' type='Long' value='1581066'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.exceptions'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito.invocation,org.mockito.exceptions.base,org.mockito.mock,org.mockito.listeners,org.mockito.exceptions.misusing,org.mockito.exceptions.verification'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.exceptions.stacktrace'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.stubbing.answers'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.listeners'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito.invocation'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.runners'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.junit.runner,org.junit.runner.notification,org.junit.runner.manipulation'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.exceptions.base'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.plugins'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito.mock,org.mockito,org.mockito.invocation,org.mockito.exceptions.stacktrace'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.mock'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito,org.mockito.stubbing'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.exceptions.verification'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito.exceptions.base'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.configuration'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito,org.mockito.stubbing'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.invocation'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito,org.mockito.exceptions'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.exceptions.verification.junit'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='junit.framework'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito.stubbing,org.hamcrest,org.mockito.verification,org.mockito.listeners,org.mockito.exceptions.base,org.mockito.exceptions,org.mockito.configuration,org.mockito.invocation'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.exceptions.misusing'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito.exceptions.base'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.verification'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito.exceptions'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.mockito.stubbing'/>
+      <attribute name='version' type='Version' value='1.9.5'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.mockito.invocation'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.hamcrest'/>
+      <attribute name='version' type='Version' value='1.1.0'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.hamcrest.core'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.hamcrest.core'/>
+      <attribute name='version' type='Version' value='1.1.0'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+      <directive name='uses' value='org.hamcrest'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='org.objenesis'/>
+      <attribute name='version' type='Version' value='1.0.0'/>
+      <attribute name='bundle-symbolic-name' value='org.mockito.mockito-all'/>
+      <attribute name='bundle-version' type='Version' value='1.9.5'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=COM.jrockit.reflect)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=jrockit.vm)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=junit.framework)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.apache.tools.ant)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.apache.tools.ant.types)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.hamcrest)(version&gt;=1.0.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.junit)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.junit.internal.runners)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.junit.runner)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.junit.runner.manipulation)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.junit.runner.notification)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.junit.runners)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=org.junit.runners.model)'/>
+      <directive name='resolution' value='optional'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.configuration)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.exceptions)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.exceptions.base)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.exceptions.misusing)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.exceptions.stacktrace)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.exceptions.verification)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.exceptions.verification.junit)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.invocation)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.listeners)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.mock)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.plugins)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.runners)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.stubbing)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.stubbing.answers)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.mockito.verification)(version&gt;=1.9.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=org.objenesis)(version&gt;=1.0.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(osgi.wiring.package=sun.reflect)'/>
+      <directive name='resolution' value='optional'/>
     </requirement>
   </resource>
 </repository>

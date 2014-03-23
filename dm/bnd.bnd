@@ -1,6 +1,6 @@
--buildpath: \
-	osgi.cmpn,\
-	osgi.core;version=4.2
+-buildpath: osgi.cmpn,\
+	osgi.core;version=4.2,\
+	org.mockito.mockito-all
 Private-Package: \
 	dm.impl,\
 	dm.context,\

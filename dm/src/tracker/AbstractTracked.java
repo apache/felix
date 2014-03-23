@@ -184,7 +184,7 @@ abstract class AbstractTracked {
 			if (DEBUG) {
 				System.out.println("AbstractTracked.trackInitial: " + item); //$NON-NLS-1$
 			}
-			trackAdding(item, null); /*
+			trackAdding(item, null).execute(); /*
 									 * Begin tracking it. We call trackAdding
 									 * since we have already put the item in the
 									 * adding list.
@@ -199,17 +199,20 @@ abstract class AbstractTracked {
 		closed = true;
 	}
 
+	abstract AbstractCustomizerActionSet createCustomizerActionSet();
+	
 	/**
 	 * Begin to track an item.
 	 * 
 	 * @param item Item to be tracked.
 	 * @param related Action related object.
 	 */
-	void track(final Object item, final Object related) {
+	AbstractCustomizerActionSet track(final Object item, final Object related) {
 		final Object object;
+		final AbstractCustomizerActionSet actionSet = createCustomizerActionSet();
 		synchronized (this) {
 			if (closed) {
-				return;
+				return actionSet;
 			}
 			object = tracked.get(item);
 			if (object == null) { /* we are not tracking the item */
@@ -219,7 +222,7 @@ abstract class AbstractTracked {
 						System.out
 								.println("AbstractTracked.track[already adding]: " + item); //$NON-NLS-1$
 					}
-					return;
+					return actionSet;
 				}
 				adding.add(item); /* mark this item is being added */
 			}
@@ -233,16 +236,17 @@ abstract class AbstractTracked {
 		}
 
 		if (object == null) { /* we are not tracking the item */
-			trackAdding(item, related);
+			actionSet.appendActionSet(trackAdding(item, related));
 		}
 		else {
 			/* Call customizer outside of synchronized region */
-			customizerModified(item, related, object);
+			actionSet.addCustomizerModified(item, related, object);
 			/*
 			 * If the customizer throws an unchecked exception, it is safe to
 			 * let it propagate
 			 */
 		}
+		return actionSet;
 	}
 
 	/**
@@ -253,7 +257,8 @@ abstract class AbstractTracked {
 	 * @param item Item to be tracked.
 	 * @param related Action related object.
 	 */
-	private void trackAdding(final Object item, final Object related) {
+	private AbstractCustomizerActionSet trackAdding(final Object item, final Object related) {
+		final AbstractCustomizerActionSet actionSet = createCustomizerActionSet();
 		if (DEBUG) {
 			System.out.println("AbstractTracked.trackAdding: " + item); //$NON-NLS-1$
 		}
@@ -287,7 +292,7 @@ abstract class AbstractTracked {
 				}
 			}
 			if (needToCallback) {
-				customizerAdded(item, related, object);
+				actionSet.addCustomizerAdded(item, related, object);
 			}
 		}
 		/*
@@ -299,12 +304,13 @@ abstract class AbstractTracked {
 						.println("AbstractTracked.trackAdding[removed]: " + item); //$NON-NLS-1$
 			}
 			/* Call customizer outside of synchronized region */
-			customizerRemoved(item, related, object);
+			actionSet.addCustomizerRemoved(item, related, object);
 			/*
 			 * If the customizer throws an unchecked exception, it is safe to
 			 * let it propagate
 			 */
 		}
+		return actionSet;
 	}
 
 	/**
@@ -313,7 +319,8 @@ abstract class AbstractTracked {
 	 * @param item Item to be untracked.
 	 * @param related Action related object.
 	 */
-	void untrack(final Object item, final Object related) {
+	AbstractCustomizerActionSet untrack(final Object item, final Object related) {
+		AbstractCustomizerActionSet actionSet = createCustomizerActionSet();
 		final Object object;
 		synchronized (this) {
 			if (initial.remove(item)) { /*
@@ -324,7 +331,7 @@ abstract class AbstractTracked {
 					System.out
 							.println("AbstractTracked.untrack[removed from initial]: " + item); //$NON-NLS-1$
 				}
-				return; /*
+				return actionSet; /*
 						 * we have removed it from the list and it will not be
 						 * processed
 						 */
@@ -338,7 +345,7 @@ abstract class AbstractTracked {
 					System.out
 							.println("AbstractTracked.untrack[being added]: " + item); //$NON-NLS-1$
 				}
-				return; /*
+				return actionSet; /*
 						 * in case the item is untracked while in the process of
 						 * adding
 						 */
@@ -348,7 +355,7 @@ abstract class AbstractTracked {
 											 * calling customizer callback
 											 */
 			if (object == null) { /* are we actually tracking the item */
-				return;
+				return actionSet;
 			}
 			modified(); /* increment modification count */
 		}
@@ -356,11 +363,12 @@ abstract class AbstractTracked {
 			System.out.println("AbstractTracked.untrack[removed]: " + item); //$NON-NLS-1$
 		}
 		/* Call customizer outside of synchronized region */
-		customizerRemoved(item, related, object);
+		actionSet.addCustomizerRemoved(item, related, object);
 		/*
 		 * If the customizer throws an unchecked exception, it is safe to let it
 		 * propagate
 		 */
+		return actionSet;
 	}
 
 	/**

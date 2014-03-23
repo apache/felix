@@ -484,4 +484,11 @@ public class MultiPropertyFilterIndex implements FilterIndex, ServiceTrackerCust
         sb.append("]");
         return sb.toString();
     }
+
+	@Override
+	public void swappedService(ServiceReference reference, Object service,
+			ServiceReference newReference, Object newService) {
+		addedService(newReference, newService);
+		removedService(reference, service);
+	}
 }

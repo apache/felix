@@ -20,6 +20,7 @@ import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -444,7 +445,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		}
 		if (references != null) {
 			for (int i = 0; i < references.length; i++) {
-				outgoing.untrack(references[i], null);
+				outgoing.untrack(references[i], null).execute();
 			}
 		}
 		if (DEBUG) {
@@ -797,7 +798,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		if (t == null) { /* if ServiceTracker is not open */
 			return;
 		}
-		t.untrack(reference, null);
+		t.untrack(reference, null).execute();
 	}
 
 	/**
@@ -1052,38 +1053,43 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		    if (list == null) {
 		        return;
 		    }
-		    Map highestRankedServiceMap = new HashMap(); // <Long, RankedService>
-		    for (int i = 0; i < list.length; i++) {
-		    	ServiceReference sr = (ServiceReference) list[i];
-		    	if (sr != null) {
-			    	Long serviceId = ServiceUtil.getServiceIdAsLong(sr);
-			    	int ranking = ServiceUtil.getRanking(sr);
-			    	
-			    	RankedService rs = (RankedService) highestRankedServiceMap.get(serviceId);
-			    	if (rs == null) {
-			    	    // the service did not exist yet in our map
-			    	    highestRankedServiceMap.put(serviceId, new RankedService(ranking, sr));
+		    if (m_trackAllAspects) {
+		    	// not hiding aspects
+		    	super.setInitial(list);
+		    } else { 
+			    Map highestRankedServiceMap = new HashMap(); // <Long, RankedService>
+			    for (int i = 0; i < list.length; i++) {
+			    	ServiceReference sr = (ServiceReference) list[i];
+			    	if (sr != null) {
+				    	Long serviceId = ServiceUtil.getServiceIdAsLong(sr);
+				    	int ranking = ServiceUtil.getRanking(sr);
+				    	
+				    	RankedService rs = (RankedService) highestRankedServiceMap.get(serviceId);
+				    	if (rs == null) {
+				    	    // the service did not exist yet in our map
+				    	    highestRankedServiceMap.put(serviceId, new RankedService(ranking, sr));
+				    	}
+				    	else if (ranking > rs.getRanking()) {
+	                        // the service replaces a lower ranked one
+				    	    hide(rs.getServiceReference());
+				    	    rs.update(ranking, sr);
+				    	}
+				    	else {
+	                        // the service does NOT replace a lower ranked one
+				    	    hide(sr);
+				    	}
 			    	}
-			    	else if (ranking > rs.getRanking()) {
-                        // the service replaces a lower ranked one
-			    	    hide(rs.getServiceReference());
-			    	    rs.update(ranking, sr);
-			    	}
-			    	else {
-                        // the service does NOT replace a lower ranked one
-			    	    hide(sr);
-			    	}
-		    	}
-		    }
-		    if (highestRankedServiceMap.size() > 0) {
-		        Object[] result = new Object[highestRankedServiceMap.size()];
-		        int index = 0;
-		        for(Iterator it = highestRankedServiceMap.entrySet().iterator(); it.hasNext(); ) {
-		        	Entry entry = (Entry) it.next();
-		        	result[index] = ((RankedService)entry.getValue()).getServiceReference();
-		        	index++;
-		        }
-		        super.setInitial(result);	    	
+			    }
+			    if (highestRankedServiceMap.size() > 0) {
+			        Object[] result = new Object[highestRankedServiceMap.size()];
+			        int index = 0;
+			        for(Iterator it = highestRankedServiceMap.entrySet().iterator(); it.hasNext(); ) {
+			        	Entry entry = (Entry) it.next();
+			        	result[index] = ((RankedService)entry.getValue()).getServiceReference();
+			        	index++;
+			        }
+			        super.setInitial(result);	    	
+			    }
 		    }
 		}
 
@@ -1123,7 +1129,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
                 case ServiceEvent.MODIFIED :
                     if (listenerFilter != null) { // service listener added with
                         // filter
-                        track(reference, event);
+                        track(reference, event).execute();
                         /*
                          * If the customizer throws an unchecked exception, it
                          * is safe to let it propagate
@@ -1131,14 +1137,14 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
                     }
                     else { // service listener added without filter
                         if (filter.match(reference)) {
-                            track(reference, event);
+                            track(reference, event).execute();
                             /*
                              * If the customizer throws an unchecked exception,
                              * it is safe to let it propagate
                              */
                         }
                         else {
-                            untrack(reference, event);
+                            untrack(reference, event).execute();
                             /*
                              * If the customizer throws an unchecked exception,
                              * it is safe to let it propagate
@@ -1148,13 +1154,17 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
                     break;
                 case 8 /* ServiceEvent.MODIFIED_ENDMATCH */ :
                 case ServiceEvent.UNREGISTERING :
-                    untrack(reference, event);
+                    untrack(reference, event).execute();
                     /*
                      * If the customizer throws an unchecked exception, it is
                      * safe to let it propagate
                      */
                     break;
             }
+        }
+        
+        private boolean isModifiedEndmatchSupported() {
+        	return listenerFilter != null;
         }
 		
 		public void serviceChangedHideAspects(final ServiceEvent event) {
@@ -1176,119 +1186,43 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			switch (event.getType()) {
 				case ServiceEvent.REGISTERED :
 				case ServiceEvent.MODIFIED :
-				    ServiceReference higher = null;
-				    ServiceReference lower = null;
-				    ServiceReference sr = highestTrackedCache(sid);
-				    if (sr != null) {
+				    ServiceReference higherRankedReference = null;
+				    ServiceReference lowerRankedReference = null;
+				    ServiceReference highestTrackedReference = highestTrackedCache(sid);
+				    if (highestTrackedReference != null) {
 				        int ranking = ServiceUtil.getRanking(reference);
-				        int trackedRanking = ServiceUtil.getRanking(sr);
-				        if (ranking > trackedRanking) {
+				        int highestTrackedRanking = ServiceUtil.getRanking(highestTrackedReference);
+				        if (ranking > highestTrackedRanking) {
 				            // found a higher ranked one!
 				            if (DEBUG) {
-				                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a higher ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(sr));
+				                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a higher ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(highestTrackedReference));
 				            }
-				            higher = sr;
+				            higherRankedReference = highestTrackedReference;
 				        }
-				        else if (ranking < trackedRanking) {
+				        else if (ranking < highestTrackedRanking) {
 				            // found lower ranked one!
                             if (DEBUG) {
-                                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a lower ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(sr));
+                                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a lower ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(highestTrackedReference));
                             }
-				            lower = sr;
+				            lowerRankedReference = highestTrackedReference;
 				        }
 				    }
 				    
-					if (listenerFilter != null) { // service listener added with filter
-					    if (lower != null) {
-					        hide(reference);
-					    }
-					    else {
-					        try {
-					            track(reference, event);
-					        }
-					        finally {
-    					        if (higher != null) {
-    					            try {
-    					                untrack(higher, null);
-    					            }
-    					            finally {
-    					                hide(higher);
-    					            }
-    					        }
-					        }
-					    }
-						/*
-						 * If the customizer throws an unchecked exception, it
-						 * is safe to let it propagate
-						 */
+					if (isModifiedEndmatchSupported()) { // either registered or modified
+					    registerOrUpdate(event, reference, higherRankedReference, lowerRankedReference);
 					}
 					else { // service listener added without filter
 						if (filter.match(reference)) {
-	                        if (lower != null) {
-	                            hide(reference);
-	                        }
-	                        else {
-	                            try {
-	                                track(reference, event);
-	                            }
-	                            finally {
-    	                            if (higher != null) {
-    	                                try {
-    	                                    untrack(higher, null);
-    	                                }
-    	                                finally {
-    	                                    hide(higher);
-    	                                }
-    	                            }
-	                            }
-	                        }
-							/*
-							 * If the customizer throws an unchecked exception,
-							 * it is safe to let it propagate
-							 */
+	                        registerOrUpdate(event, reference, higherRankedReference, lowerRankedReference);
 						}
 						else {
-		                    ServiceReference ht = highestTrackedCache(sid);
-		                    if (reference.equals(ht)) {
-		                        try {
-		                            ServiceReference hh = highestHiddenCache(sid);
-		                            if (hh != null) {
-		                                unhide(hh);
-		                                track(hh, null);
-		                            }
-		                        }
-		                        finally {
-		                            untrack(reference, event);
-		                        }
-		                    }
-		                    else {
-		                        unhide(reference);
-		                    }
-							/*
-							 * If the customizer throws an unchecked exception,
-							 * it is safe to let it propagate
-							 */
+		                    unregister(event, reference, sid);
 						}
 					}
 					break;
-                case 8 /* ServiceEvent.MODIFIED_ENDMATCH */ :
+                case 8 /* ServiceEvent.MODIFIED_ENDMATCH */ : // handle as unregister
 				case ServiceEvent.UNREGISTERING :
-				    ServiceReference ht = highestTrackedCache(sid);
-				    if (reference.equals(ht)) {
-				        try {
-				            ServiceReference hh = highestHiddenCache(sid);
-    				        if (hh != null) {
-    				            unhide(hh);
-    				            track(hh, null);
-    				        }
-				        }
-				        finally {
-				            untrack(reference, event);
-				        }
-				    }
-				    else {
-				        unhide(reference);
-				    }
+					unregister(event, reference, sid);
 					/*
 					 * If the customizer throws an unchecked exception, it is
 					 * safe to let it propagate
@@ -1296,6 +1230,50 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 					break;
 			}
 		}
+
+		private void registerOrUpdate(final ServiceEvent event,
+				final ServiceReference reference, ServiceReference higher,
+				ServiceReference lower) {
+			if (lower != null) {
+			    hide(reference);
+			}
+			else {
+				AbstractCustomizerActionSet actionSet = track(reference, event);
+		        if (higher != null) {
+	                actionSet.appendActionSet(untrack(higher, null));
+	                hide(higher);
+			    }
+		        actionSet.execute();
+			}
+			/*
+			 * If the customizer throws an unchecked exception, it
+			 * is safe to let it propagate
+			 */
+		}
+
+		private void unregister(final ServiceEvent event,
+				final ServiceReference reference, long sid) {
+			ServiceReference ht = highestTrackedCache(sid);
+			if (reference.equals(ht)) {
+		        ServiceReference hh = highestHiddenCache(sid);
+		        AbstractCustomizerActionSet actionSet = null;
+		        if (hh != null) {
+		            unhide(hh);
+		            actionSet = track(hh, null);
+		        }
+		        if (actionSet == null) {
+		        	actionSet = untrack(reference, event);
+		        } else {
+		        	actionSet.appendActionSet(untrack(reference, event));
+		        }
+		        actionSet.execute();
+			}
+			else {
+			    unhide(reference);
+			}
+		}
+		
+		
 
 		/**
 		 * Increment the tracking count and tell the tracker there was a
@@ -1352,7 +1330,7 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			customizer.removedService((ServiceReference) item, object);
 		}
 		
-		class HashMapCache extends HashMap {
+		class HashMapCache extends LinkedHashMap {
 		    public Object put(Object key, Object value) {
 		        addHighestTrackedCache((ServiceReference) key);
 		        return super.put(key, value);
@@ -1376,6 +1354,44 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		        super.clear();
 		    }
 		}
+
+		@Override
+		AbstractCustomizerActionSet createCustomizerActionSet() {
+			// This actions set deliberately postpones invocation of the customizer methods to be able to combine added and removed
+			// into a single swap call.
+			return new AbstractCustomizerActionSet() {
+				@Override
+				void execute() {
+					// inspect the actions and check whether we should perform a swap
+					List<CustomizerAction> actions = getActions();
+					if (actions.size() == 2 && actions.get(0).getType() == Type.ADDED && actions.get(1).getType() == Type.REMOVED) {
+						// ignore related
+						// item = ServiceReference
+						// object = service
+						customizer.swappedService((ServiceReference)actions.get(1).getItem(), actions.get(1).getObject(), (ServiceReference)actions.get(0).getItem(), actions.get(0).getObject());
+					} else {
+						// just sequentially call the customizer methods
+						for (CustomizerAction action : getActions()) {
+							try {
+								switch (action.getType()) {
+									case ADDED: 
+										customizerAdded(action.getItem(), action.getRelated(), action.getObject());
+										break;
+									case MODIFIED:
+										customizerModified(action.getItem(), action.getRelated(), action.getObject());
+										break;
+									case REMOVED:
+										customizerRemoved(action.getItem(), action.getRelated(), action.getObject());
+								}
+							} catch (Exception e) {
+								// just continue. log messages will be printed elsewhere.
+							}
+						}
+					}
+				}
+			};
+		}
+
 	}
 
 	/**
@@ -1419,5 +1435,16 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		public ServiceReference getServiceReference() {
 			return m_serviceReference;
 		}
+	}
+
+	@Override
+	public void swappedService(ServiceReference reference, Object service,
+			ServiceReference newReference, Object newService) {
+		
+	}
+
+	// Package private, used for unit testing Tracked
+	Tracked getTracked() {
+		return tracked;
 	}
 }
