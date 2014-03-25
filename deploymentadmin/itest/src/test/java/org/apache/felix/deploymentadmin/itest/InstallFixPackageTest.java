@@ -36,16 +36,17 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
  * Provides test cases regarding the use of "fix-packages" in DeploymentAdmin.
  */
 @RunWith(PaxExam.class)
-public class InstallFixPackageTest extends BaseIntegrationTest {
+public class InstallFixPackageTest extends BaseIntegrationTest
+{
 
     /**
      * Tests that we can install a new bundle through a fix-package.
      */
     @Test
-    public void testInstallBundleWithDependencyInFixPackageUpdateOk() throws Exception {
+    public void testInstallBundleWithDependencyInFixPackageUpdateOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -58,10 +59,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         assertEquals(Bundle.INSTALLED, bundle.getState());
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
 
         DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp2);
@@ -81,10 +79,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that it is not possible to install a fix package if it specifies a fix-version range that falls outside the installed target deployment package.
      */
     @Test
-    public void testInstallFixPackageOutsideLowerTargetRangeFail() throws Exception {
+    public void testInstallFixPackageOutsideLowerTargetRangeFail() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -97,16 +95,16 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         assertEquals(Bundle.INSTALLED, bundle.getState());
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("(1.0,2.0)") // should not include version 1.0.0!
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("(1.0,2.0)") // should not include version 1.0.0!
+        .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
 
-        try {
+        try
+        {
             m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
             fail("Succeeded into installing fix package for undefined target package?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             // Ok; expected
             assertDeploymentException(CODE_MISSING_FIXPACK_TARGET, exception);
         }
@@ -116,10 +114,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that it is not possible to install a fix package if it specifies a fix-version range that falls outside the installed target deployment package.
      */
     @Test
-    public void testInstallFixPackageOutsideUpperTargetRangeFail() throws Exception {
+    public void testInstallFixPackageOutsideUpperTargetRangeFail() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -132,16 +130,16 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         assertEquals(Bundle.INSTALLED, bundle.getState());
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[0.9,1.0)") // should not include version 1.0.0!
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[0.9,1.0)") // should not include version 1.0.0!
+        .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
 
-        try {
+        try
+        {
             m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
             fail("Succeeded into installing fix package for undefined target package?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             // Ok; expected
             assertDeploymentException(CODE_MISSING_FIXPACK_TARGET, exception);
         }
@@ -151,18 +149,18 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that a fix package can only be installed after at least one version of the denoted target package is installed.
      */
     @Test
-    public void testInstallFixPackageWithoutTargetFail() throws Exception {
+    public void testInstallFixPackageWithoutTargetFail() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
-        try {
+        try
+        {
             m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
             fail("Should not be able to install fix package without target?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             // Ok; expected
             assertDeploymentException(CODE_MISSING_FIXPACK_TARGET, exception);
         }
@@ -172,10 +170,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that installing a fix-package causes the original target package to be replaced.
      */
     @Test
-    public void testInstallFixPackageReplacesOriginalTargetPackageOk() throws Exception {
+    public void testInstallFixPackageReplacesOriginalTargetPackageOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -185,10 +183,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         awaitRefreshPackagesEvent();
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
 
         DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp2);
@@ -202,11 +197,11 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that installing a fix-package that mentions a bundle that is not in the target package fails.
      */
     @Test
-    public void testInstallFixPackageWithMissingTargetBundleFail() throws Exception {
+    public void testInstallFixPackageWithMissingTargetBundleFail() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // missed valid-bundle1 as dependency...
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -216,16 +211,15 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         awaitRefreshPackagesEvent();
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
 
-        try {
+        try
+        {
             m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
             fail("Succeeded into installing a fix-package with a missing bundle on target?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             assertDeploymentException(CODE_MISSING_BUNDLE, exception);
         }
     }
@@ -234,10 +228,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that installing a fix-package that mentions a resource that is not in the target package fails.
      */
     @Test
-    public void testInstallFixPackageWithMissingTargetResourceFail() throws Exception {
+    public void testInstallFixPackageWithMissingTargetResourceFail() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -247,16 +241,16 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         awaitRefreshPackagesEvent();
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
-            .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1"))).add(
+            dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")).setMissing());
 
-        try {
+        try
+        {
             m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
             fail("Succeeded into installing a fix-package with a missing bundle on target?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             assertDeploymentException(CODE_MISSING_RESOURCE, exception);
         }
     }
@@ -265,10 +259,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that installing a fix-package that mentions a resource processor that is not in the target package fails.
      */
     @Test
-    public void testInstallFixPackageWithMissingTargetResourceProcessorFail() throws Exception {
+    public void testInstallFixPackageWithMissingTargetResourceProcessorFail() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -278,16 +272,16 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         awaitRefreshPackagesEvent();
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")).setMissing())
-            .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")).setMissing()).add(
+            dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
-        try {
+        try
+        {
             m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
             fail("Succeeded into installing a fix-package with a missing bundle on target?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             assertDeploymentException(CODE_MISSING_BUNDLE, exception);
         }
     }
@@ -296,10 +290,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that installing a fix-package that mentions a bundle that does exist (in another DP), but is not in the target package fails.
      */
     @Test
-    public void testInstallFixPackageWithMissingTargetBundleFromOtherPackageFail() throws Exception {
+    public void testInstallFixPackageWithMissingTargetBundleFromOtherPackageFail() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -309,8 +303,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         assertEquals("Expected only a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
 
         dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp2);
@@ -320,16 +313,15 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         assertEquals("Expected only a single deployment package?!", 2, m_deploymentAdmin.listDeploymentPackages().length);
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")).setMissing())
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")).setMissing()).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
 
-        try {
+        try
+        {
             m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
             fail("Succeeded into installing a fix-package with a missing bundle on target?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             assertDeploymentException(CODE_BUNDLE_SHARING_VIOLATION, exception);
         }
     }
@@ -338,10 +330,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that only in a fix-package bundle can be marked as missing.
      */
     @Test
-    public void testMissingBundlesOnlyInFixPackageFail() throws Exception {
+    public void testMissingBundlesOnlyInFixPackageFail() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -354,16 +346,15 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         assertEquals(Bundle.INSTALLED, bundle.getState());
 
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .disableVerification()
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.disableVerification().add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
 
-        try {
+        try
+        {
             m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
             fail("Failed to install missing bundle?!");
         }
-        catch (DeploymentException exception) {
+        catch (DeploymentException exception)
+        {
             // Ok; expected...
             assertEquals("Invalid exception code?!", CODE_BAD_HEADER, exception.getCode());
         }
@@ -373,11 +364,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests the removal of a bundle through a fix package.
      */
     @Test
-    public void testRemoveBundleInFixPackageUpdateOk() throws Exception {
+    public void testRemoveBundleInFixPackageUpdateOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -391,9 +381,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
 
         // valid-bundle2 is to be removed by this fix package...
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")).setMissing());
 
         DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp2);
@@ -408,10 +396,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that we can uninstall a fix-package.
      */
     @Test
-    public void testUninstallBundleAddedInFixPackageOk() throws Exception {
+    public void testUninstallBundleAddedInFixPackageOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -420,10 +408,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
 
         // Add valid-bundle1 through fix-package...
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
 
         DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp2);
@@ -451,11 +436,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that we can uninstall a fix-package.
      */
     @Test
-    public void testUninstallBundleRemovedInFixPackageOk() throws Exception {
+    public void testUninstallBundleRemovedInFixPackageOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -464,9 +448,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
 
         // remove valid-bundle1 through fix package...
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
 
         DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp2);
@@ -494,10 +476,10 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
      * Tests that we can uninstall a fix-package and that this will only uninstall the bundles installed by the fix-package.
      */
     @Test
-    public void testUninstallFixPackageOnlyRemovesOwnArtifactsOk() throws Exception {
+    public void testUninstallFixPackageOnlyRemovesOwnArtifactsOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -505,8 +487,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
 
         dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp2);
@@ -517,10 +498,7 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
 
         // add bundle2 through fix package...
         dpBuilder = createDeploymentPackageBuilder(dpBuilder.getSymbolicName(), "1.0.1");
-        dpBuilder
-            .setFixPackage("[1.0,2.0)")
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
+        dpBuilder.setFixPackage("[1.0,2.0)").add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3"))).add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")).setMissing());
 
         DeploymentPackage dp3 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp3);
@@ -546,14 +524,15 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         // The bundle installed in another deployment package should still remain...
         assertBundleExists(getSymbolicName("bundle1"), "1.0.0");
     }
-    
-    @Test
-    public void testInstallAndUpdateImplementationBundleWithSeparateAPIBundle_FELIX4184() throws Exception {
-    	String value = System.getProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle");
-    	System.setProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", "false");
-    	// first, install a deployment package with implementation and api bundles in version 1.0.0
 
-    	DeploymentPackageBuilder dpBuilder = createDeploymentPackageBuilder("a", "1.0.0");
+    @Test
+    public void testInstallAndUpdateImplementationBundleWithSeparateAPIBundle_FELIX4184() throws Exception
+    {
+        String value = System.getProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle");
+        System.setProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", "false");
+        // first, install a deployment package with implementation and api bundles in version 1.0.0
+
+        DeploymentPackageBuilder dpBuilder = createDeploymentPackageBuilder("a", "1.0.0");
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl", "1.0.0")));
         dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")));
 
@@ -576,8 +555,49 @@ public class InstallFixPackageTest extends BaseIntegrationTest {
         assertBundleExists(getSymbolicName("bundleapi"), "2.0.0");
         assertBundleNotExists(getSymbolicName("bundleimpl"), "1.0.0");
         assertBundleNotExists(getSymbolicName("bundleapi"), "1.0.0");
-        if (value != null) {
-        	System.setProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", value);
+        if (value != null)
+        {
+            System.setProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", value);
         }
+    }
+
+    /**
+     * Tests that if we try to update with a DP containing a duplicate bundle (of which one is already installed in 
+     * an earlier DP) that this will fail the installation. See FELIX-4463.
+     */
+    @Test
+    public void testUpdateWithDuplicateBundleFail() throws Exception
+    {
+        DeploymentPackageBuilder dpBuilder = createDeploymentPackageBuilder("c", "1.0.0");
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")));
+
+        // Should succeed, as the DP is correct... 
+        DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        assertNotNull("No deployment package returned?!", dp1);
+
+        // then, install a fix package with implementation and api bundles in version 2.0.0, but *also* containing the original implementation 
+        // bundle, which is incorrect (no bundles with the same BSN may exist in a DP)...
+        dpBuilder = createDeploymentPackageBuilder("c", "2.0.0").setFixPackage("[1.0.0,2.0.0]");
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl2", "bundleimpl", "2.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl", "1.0.0")));
+
+        try
+        {
+            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            fail("DeploymentException expected!");
+        }
+        catch (DeploymentException e)
+        {
+            // Ok; expected...
+            assertEquals(DeploymentException.CODE_OTHER_ERROR, e.getCode());
+        }
+
+        awaitRefreshPackagesEvent();
+
+        // Nothing should be updated...
+        assertBundleExists(getSymbolicName("bundleimpl"), "1.0.0");
+        assertBundleExists(getSymbolicName("bundleapi"), "1.0.0");
     }
 }

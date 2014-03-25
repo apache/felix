@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
+import org.osgi.service.deploymentadmin.BundleInfo;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 
@@ -30,13 +31,14 @@ import org.osgi.service.deploymentadmin.DeploymentPackage;
  * Provides test cases regarding the use of "normal" deployment packages in DeploymentAdmin.
  */
 @RunWith(PaxExam.class)
-public class InstallDeploymentPackageTest extends BaseIntegrationTest {
-
+public class InstallDeploymentPackageTest extends BaseIntegrationTest
+{
     /**
-     * FELIX-4409/4410 - test the installation of an invalid deployment package.
+     * FELIX-4409/4410/4463 - test the installation of an invalid deployment package.
      */
     @Test
-    public void testInstallInvalidDeploymentPackageFail() throws Exception {
+    public void testInstallInvalidDeploymentPackageFail() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA spec...
         dpBuilder
@@ -52,21 +54,44 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         {
             // Ok; expected...
         }
-        
+
         // Verify that none of the bundles are installed...
         assertBundleNotExists("testbundles.bundleapi", "1.0.0");
         assertBundleNotExists("testbundles.bundleapi", "2.0.0");
     }
 
     /**
+     * FELIX-1835 - test whether we can install bundles with a non-root path inside the DP.
+     */
+    @Test
+    public void testInstallBundlesWithPathsOk() throws Exception
+    {
+        DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
+        // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA spec...
+        dpBuilder
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")).setFilename("bundles/bundleapi1.jar"))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl", "1.0.0")).setFilename("bundles/bundleimpl1.jar"));
+
+        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        assertNotNull(dp);
+
+        BundleInfo[] bundleInfos = dp.getBundleInfos();
+        assertEquals(2, bundleInfos.length);
+
+        // Verify that none of the bundles are installed...
+        assertBundleExists("testbundles.bundleapi", "1.0.0");
+        assertBundleExists("testbundles.bundleimpl", "1.0.0");
+    }
+
+    /**
      * Tests that adding the dependency for a bundle in an update package causes the depending bundle to be resolved and started.
      */
     @Test
-    public void testInstallBundleWithDependencyInPackageUpdateOk() throws Exception {
+    public void testInstallBundleWithDependencyInPackageUpdateOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // missing bundle1 as dependency...
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -96,10 +121,10 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
      * Tests that installing a bundle with a dependency installed by another deployment package is not started, but is resolved.
      */
     @Test
-    public void testInstallBundleWithDependencyInSeparatePackageOk() throws Exception {
+    public void testInstallBundleWithDependencyInSeparatePackageOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -115,8 +140,7 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
 
         dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // as missing bundle1...
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
 
         DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp2);
@@ -137,7 +161,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
      * Tests that if an exception is thrown in the start method of a bundle, the installation is not rolled back.
      */
     @Test
-    public void testInstallBundleWithExceptionThrownInStartCausesNoRollbackOk() throws Exception {
+    public void testInstallBundleWithExceptionThrownInStartCausesNoRollbackOk() throws Exception
+    {
         System.setProperty("bundle3", "start");
 
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
@@ -164,7 +189,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
      * Tests that installing a bundle along with a fragment bundle succeeds (DA should not try to start the fragment, see FELIX-4167).
      */
     @Test
-    public void testInstallBundleWithFragmentOk() throws Exception {
+    public void testInstallBundleWithFragmentOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
@@ -188,10 +214,10 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
      * Tests that installing a bundle whose dependencies cannot be met, is installed, but not started.
      */
     @Test
-    public void testInstallBundleWithMissingDependencyOk() throws Exception {
+    public void testInstallBundleWithMissingDependencyOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle2")));
 
         DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp);
@@ -206,18 +232,16 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
         assertTrue(isBundleInstalled(dp.getBundle(getSymbolicName("bundle2"))));
     }
 
-
     /**
      * Tests that installing a bundle along with other (non-bundle) artifacts succeeds.
      */
     @Test
-    public void testInstallBundleWithOtherArtifactsOk() throws Exception {
+    public void testInstallBundleWithOtherArtifactsOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
-            .add(
-                dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1)
-                    .setUrl(getTestResource("test-config1.xml")))
+            .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
 
         DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
@@ -236,10 +260,10 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
      * Tests that installing a new bundle works as expected.
      */
     @Test
-    public void testInstallSingleValidBundleOk() throws Exception {
+    public void testInstallSingleValidBundleOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
-        dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")));
 
         DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp);
@@ -256,7 +280,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
      * Tests that installing two bundles works as expected.
      */
     @Test
-    public void testInstallTwoValidBundlesOk() throws Exception {
+    public void testInstallTwoValidBundlesOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
@@ -280,7 +305,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
      * Tests that if an exception is thrown during the uninstall of a bundle, the installation/update continues and succeeds.
      */
     @Test
-    public void testUninstallBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception {
+    public void testUninstallBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
@@ -317,7 +343,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest {
      * Tests that if an exception is thrown during the stop of a bundle, the installation/update continues and succeeds.
      */
     @Test
-    public void testUpdateBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception {
+    public void testUpdateBundleWithExceptionThrownInStopCauseNoRollbackOk() throws Exception
+    {
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         dpBuilder
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
