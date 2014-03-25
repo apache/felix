@@ -75,7 +75,7 @@ public class ConfigurationDependencyTest extends TestBase {
     }
 
 
-    static class ConfigurationCreator {
+    class ConfigurationCreator {
         private volatile ConfigurationAdmin m_ca;
         private final Ensure m_ensure;
         Configuration m_conf;
@@ -86,6 +86,7 @@ public class ConfigurationDependencyTest extends TestBase {
 
         public void init() {
             try {
+                warn("ConfigurationCreator.init");
             	Assert.assertNotNull(m_ca);
                 m_ensure.step(1);
                 m_conf = m_ca.getConfiguration("test", null);
@@ -99,6 +100,7 @@ public class ConfigurationDependencyTest extends TestBase {
         }
         
         public void destroy() throws IOException {
+            warn("ConfigurationCreator.destroy");
         	m_conf.delete();  
         	m_ensure.step();
         }
