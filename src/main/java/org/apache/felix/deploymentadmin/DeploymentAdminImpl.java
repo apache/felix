@@ -277,9 +277,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
                 	succeeded = false;
                 }
             }
-        	if (source != null) {
-        	    sendCompleteEvent(source, target, succeeded);
-        	}
+    	    sendCompleteEvent(source, target, succeeded);
             m_semaphore.release();
         }
     }
@@ -366,9 +364,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
             succeeded = true;
         }
         finally {
-            if (source != null) {
-                sendCompleteEvent(source, target, succeeded);
-            }
+            sendCompleteEvent(source, target, succeeded);
             m_semaphore.release();
         }
     }
