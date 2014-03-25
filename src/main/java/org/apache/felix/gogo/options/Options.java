@@ -470,16 +470,15 @@ public class Options implements Option {
                     }
                 }
                 else {
-                    int i = 0;
-                    for (String c : arg.substring(1).split("")) {
-                        if (i++ == 0)
-                            continue;
+                    for (int i = 1; i < arg.length(); i++) {
+                        String c = String.valueOf(arg.charAt(i));
                         if (optName.containsKey(c)) {
                             String name = optName.get(c);
                             optSet.put(name, true);
                             if (optArg.containsKey(name)) {
-                                if (i < arg.length()) {
-                                    addArg(name, arg.substring(i));
+                                int k = i + 1;
+                                if (k < arg.length()) {
+                                    addArg(name, arg.substring(k));
                                 }
                                 else {
                                     needOpt = c;
