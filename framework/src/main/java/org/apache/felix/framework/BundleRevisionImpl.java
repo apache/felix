@@ -371,7 +371,11 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         List<Content> fragmentContents = null;
         if (m_wiring != null)
         {
-            fragments = Util.getFragments(m_wiring);
+            // Get fragments and their contents from the wiring.
+            // Note that we don't use Util.getFragments() here because
+            // the wiring returns parallel arrays and the utility method
+            // doesn't necessarily return the correct order.
+            fragments = m_wiring.getFragments();
             fragmentContents = m_wiring.getFragmentContents();
         }
         if (fragments != null)
