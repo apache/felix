@@ -501,6 +501,11 @@ public class BundleWiringImpl implements BundleWiring
         return m_importedPkgs.get(pkgName);
     }
 
+    List<BundleRevision> getFragments()
+    {
+        return m_fragments;
+    }
+
     List<Content> getFragmentContents()
     {
         return m_fragmentContents;
