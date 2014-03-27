@@ -533,8 +533,8 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         // first, install a deployment package with implementation and api bundles in version 1.0.0
 
         DeploymentPackageBuilder dpBuilder = createDeploymentPackageBuilder("a", "1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl", "1.0.0")));
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")));
 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp1);
@@ -543,8 +543,8 @@ public class InstallFixPackageTest extends BaseIntegrationTest
 
         // then, install a fix package with implementation and api bundles in version 2.0.0
         dpBuilder = createDeploymentPackageBuilder("a", "2.0.0").setFixPackage("[1.0.0,2.0.0]");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl2", "bundleimpl", "2.0.0")));
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi", "2.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl2", "bundleimpl2", "2.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi2", "2.0.0")));
 
         DeploymentPackage dp2 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull("No deployment package returned?!", dp2);
@@ -569,8 +569,8 @@ public class InstallFixPackageTest extends BaseIntegrationTest
     public void testUpdateWithDuplicateBundleFail() throws Exception
     {
         DeploymentPackageBuilder dpBuilder = createDeploymentPackageBuilder("c", "1.0.0");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl", "1.0.0")));
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")));
 
         // Should succeed, as the DP is correct... 
         DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
@@ -579,9 +579,9 @@ public class InstallFixPackageTest extends BaseIntegrationTest
         // then, install a fix package with implementation and api bundles in version 2.0.0, but *also* containing the original implementation 
         // bundle, which is incorrect (no bundles with the same BSN may exist in a DP)...
         dpBuilder = createDeploymentPackageBuilder("c", "2.0.0").setFixPackage("[1.0.0,2.0.0]");
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")));
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl2", "bundleimpl", "2.0.0")));
-        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl2", "bundleimpl2", "2.0.0")));
+        dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")));
 
         try
         {

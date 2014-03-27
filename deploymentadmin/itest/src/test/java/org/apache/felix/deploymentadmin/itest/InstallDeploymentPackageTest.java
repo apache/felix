@@ -42,8 +42,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA spec...
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi", "2.0.0")));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi2", "2.0.0")));
 
         try
         {
@@ -69,8 +69,8 @@ public class InstallDeploymentPackageTest extends BaseIntegrationTest
         DeploymentPackageBuilder dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
         // incluse two different versions of the same bundle (with the same BSN), this is *not* allowed per the DA spec...
         dpBuilder
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi", "1.0.0")).setFilename("bundles/bundleapi1.jar"))
-            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl", "1.0.0")).setFilename("bundles/bundleimpl1.jar"));
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")).setFilename("bundles/bundleapi1.jar"))
+            .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")).setFilename("bundles/bundleimpl1.jar"));
 
         DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
         assertNotNull(dp);
