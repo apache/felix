@@ -20,7 +20,7 @@
 	</parent>
 	<name>Apache Felix DeploymentAdmin API Bundle 1</name>
 	<version>1.0.0</version>
-	<artifactId>org.apache.felix.deploymentadmin.test.bundleapi</artifactId>
+	<artifactId>org.apache.felix.deploymentadmin.test.bundleapi1</artifactId>
 	<packaging>bundle</packaging>
 	<dependencies>
 		<dependency>
