@@ -1,3 +1,11 @@
+Release 0.9.6
+-------------
+FELIX-1835 Installing of deployment package fails if has it's bundles in subdirectory
+FELIX-4409 Improve exception messages to be more explicit and helpful
+FELIX-4410 Exceptions during rollback are not always properly handled
+FELIX-4463 DA does not consistently handle non-unique resources
+FELIX-4466 Deployment Admin does not always fire events
+
 Release 0.9.4
 -------------
 
