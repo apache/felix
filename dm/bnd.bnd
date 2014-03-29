@@ -11,4 +11,4 @@ Export-Package: \
 	dm,\
 	tracker,\
 	dm.admin
-Bundle-Activator:dm.impl.Activator
+#Import-Package: !org.junit,!org.mockito.*,*
