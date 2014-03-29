@@ -11,4 +11,4 @@ Export-Package: \
 	dm,\
 	tracker,\
 	dm.admin
-#Import-Package: !org.junit,!org.mockito.*,*
+Import-Package: !org.junit,!org.mockito.*,*
