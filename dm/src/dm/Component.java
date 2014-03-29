@@ -20,7 +20,7 @@ public interface Component {
     public Component setAutoConfig(Class<?> clazz, String instanceName);
     public ServiceRegistration getServiceRegistration();
     public Object getService();
-    public Dictionary<?,?> getServiceProperties();
+    public Dictionary getServiceProperties();
     public Component setServiceProperties(Dictionary<?,?> serviceProperties);
     public Component setCallbacks(String init, String start, String stop, String destroy);
     public Component setCallbacks(Object instance, String init, String start, String stop, String destroy);
@@ -29,4 +29,5 @@ public interface Component {
 	public Component setComposition(Object instance, String getMethod);
 	public Component setComposition(String getMethod);
 	public DependencyManager getDependencyManager();
+	public ComponentDeclaration getComponentDeclaration();
 }
