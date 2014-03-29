@@ -9,6 +9,5 @@ Private-Package: \
 	dm.impl.metatype
 Export-Package: \
 	dm,\
-	tracker,\
-	dm.admin
+	tracker
 Import-Package: !org.junit,!org.mockito.*,*
