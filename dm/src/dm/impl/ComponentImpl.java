@@ -28,12 +28,12 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import dm.Component;
+import dm.ComponentDeclaration;
+import dm.ComponentDependencyDeclaration;
 import dm.ComponentState;
 import dm.ComponentStateListener;
 import dm.Dependency;
 import dm.DependencyManager;
-import dm.admin.ComponentDeclaration;
-import dm.admin.ComponentDependencyDeclaration;
 import dm.context.ComponentContext;
 import dm.context.DependencyContext;
 import dm.context.Event;
@@ -1081,5 +1081,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
     public void ensureNotActive() {
         // TODO Auto-generated method stub
+    }
+    
+    public ComponentDeclaration getComponentDeclaration() {
+        return this;
     }
 }
