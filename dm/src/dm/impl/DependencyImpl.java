@@ -4,8 +4,8 @@ import java.util.Dictionary;
 
 import org.osgi.framework.BundleContext;
 
+import dm.ComponentDependencyDeclaration;
 import dm.Dependency;
-import dm.admin.ComponentDependencyDeclaration;
 import dm.context.ComponentContext;
 import dm.context.DependencyContext;
 import dm.context.Event;

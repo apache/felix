@@ -11,9 +11,9 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
 import dm.Component;
+import dm.ComponentDependencyDeclaration;
 import dm.ResourceDependency;
 import dm.ResourceHandler;
-import dm.admin.ComponentDependencyDeclaration;
 import dm.context.DependencyContext;
 import dm.context.Event;
 

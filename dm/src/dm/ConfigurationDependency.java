@@ -1,6 +1,5 @@
 package dm;
 
-import dm.admin.ComponentDependencyDeclaration;
 
 public interface ConfigurationDependency extends Dependency, ComponentDependencyDeclaration {
 	ConfigurationDependency setCallback(String callback);

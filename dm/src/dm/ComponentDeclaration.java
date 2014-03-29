@@ -16,13 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package dm.admin;
+package dm;
 
 import java.util.Dictionary;
 
 import org.osgi.framework.BundleContext;
-
-import dm.DependencyManager;
 
 /**
  * Describes a component. Component declarations form descriptions of components

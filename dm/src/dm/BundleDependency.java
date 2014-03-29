@@ -2,8 +2,6 @@ package dm;
 
 import org.osgi.framework.Bundle;
 
-import dm.admin.ComponentDependencyDeclaration;
-
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */

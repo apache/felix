@@ -2,8 +2,6 @@ package dm;
 
 import java.net.URL;
 
-import dm.admin.ComponentDependencyDeclaration;
-
 /**
  * A resource dependency is a dependency on a resource. A resource in this context is an object that is
  * identified by a URL. Resources should somehow be provided by an external component, the resource

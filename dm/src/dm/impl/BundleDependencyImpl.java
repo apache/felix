@@ -14,7 +14,7 @@ import org.osgi.service.log.LogService;
 import tracker.BundleTracker;
 import tracker.BundleTrackerCustomizer;
 import dm.BundleDependency;
-import dm.admin.ComponentDependencyDeclaration;
+import dm.ComponentDependencyDeclaration;
 import dm.context.DependencyContext;
 import dm.context.Event;
 
