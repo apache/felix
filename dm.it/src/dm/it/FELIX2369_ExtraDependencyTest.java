@@ -48,6 +48,7 @@ public class FELIX2369_ExtraDependencyTest extends TestBase
         // remove MyClient (it should not be invoked in its stop() method because it should not be active, since MyService2 is not there.
         m.remove(sc);
         e.waitForStep(2, 5000);
+        m.clear();
     }
     
     public interface MyService1 {

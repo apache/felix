@@ -51,6 +51,7 @@ public class AdapterWithInstanceBoundDependencyTest extends TestBase {
         m.remove(sp2);
         m.remove(sp);
         m.remove(sc);
+        m.clear();
     }
     
     static interface ServiceInterface {

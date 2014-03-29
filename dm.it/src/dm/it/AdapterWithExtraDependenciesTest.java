@@ -57,6 +57,7 @@ public class AdapterWithExtraDependenciesTest extends TestBase {
         
         m.remove(s1);
         m.remove(sa);
+        m.clear();
     }
     
     static interface S1 {

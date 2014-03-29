@@ -44,6 +44,7 @@ public class AbstractServiceDependencyTest extends TestBase {
        m.remove(sp);
        // ensure we executed all steps inside the component instance
        e.step(8);
+       m.clear();
    }
 
    static abstract class ServiceAbstract {

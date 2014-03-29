@@ -42,6 +42,7 @@ public class ComponentTest extends TestBase {
         dm.remove(provider1); 
         dm.remove(provider2);    
         m_ensure.waitForStep(5, 5000);
+        dm.clear();
     }
     
     public static interface Provider {    	

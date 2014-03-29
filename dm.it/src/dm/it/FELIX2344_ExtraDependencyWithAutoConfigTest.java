@@ -51,7 +51,8 @@ public class FELIX2344_ExtraDependencyWithAutoConfigTest extends TestBase {
         
         // Add consumer sc2 (optional dependency over provider)
         m.add(sc2);
-        e.waitForStep(4, 5000);     
+        e.waitForStep(4, 5000);    
+        m.clear();
     }
 
     public interface ProviderInterface {
