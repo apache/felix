@@ -1,15 +1,13 @@
-Test-Cases: \
-	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
 -runbundles: \
 	dm;version=latest,\
 	org.apache.felix.metatype;version=1.0.4,\
 	org.mockito.mockito-all;version=1.9.0,\
 	junit.osgi,\
 	org.apache.felix.configadmin;version=1.8.1,\
-	osgi.cmpn;version=4.3.0
-Private-Package: \
-	dm.it
--runee:JavaSE-1.6
+	osgi.cmpn;version=4.3.0,\
+	org.apache.felix.gogo.runtime;version=0.10.0,\
+	dm.shell;version=latest
+-runee:JavaSE-1.7
 -runvm:-ea
 -runfw:org.apache.felix.framework
 -buildpath: \
@@ -17,7 +15,9 @@ Private-Package: \
 	osgi.cmpn,\
 	org.mockito.mockito-all,\
 	dm;version=latest,\
-	junit.osgi;version=3.8
-Bundle-Version:0.0.0.${tstamp}
+	junit.osgi;version=3.8,\
+	org.apache.felix.gogo.runtime;version=0.10
 -runsystempackages: \
 	sun.reflect
+-sub: \
+	*.bnd

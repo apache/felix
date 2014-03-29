@@ -1,0 +1,3 @@
+Private-Package: \
+	dm.it.testbundle
+Bundle-Activator:dm.it.testbundle.Activator
