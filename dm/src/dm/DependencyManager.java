@@ -114,7 +114,7 @@ public class DependencyManager {
         }
     }
     
-    public static List getDependencyManagers() {
+    public static List<DependencyManager> getDependencyManagers() {
         List /* DependencyManager */ result = new ArrayList();
         synchronized (m_dependencyManagers) {
             Iterator iterator = m_dependencyManagers.iterator();
@@ -190,7 +190,7 @@ public class DependencyManager {
         return new AdapterServiceImpl(this, serviceInterface, serviceFilter, null, add, change, remove);
     }
 
-    public Component createAdapterFactoryConfigurationService(String factoryPid, String update, boolean propagate) {
+    public Component createFactoryConfigurationAdapterService(String factoryPid, String update, boolean propagate) {
         return new FactoryConfigurationAdapterImpl(this, factoryPid, update, propagate);
     }
 
