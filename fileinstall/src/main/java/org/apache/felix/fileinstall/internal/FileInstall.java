@@ -20,21 +20,27 @@ package org.apache.felix.fileinstall.internal;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.ArtifactListener;
 import org.apache.felix.fileinstall.ArtifactTransformer;
 import org.apache.felix.fileinstall.ArtifactUrlTransformer;
 import org.apache.felix.fileinstall.internal.Util.Logger;
-import org.apache.felix.utils.collections.DictionaryAsMap;
 import org.apache.felix.utils.properties.InterpolationHelper;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
@@ -44,34 +50,25 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * fragment).
  *
  */
-public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, FrameworkListener
+public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
 {
-    static ServiceTracker padmin;
-    static ServiceTracker startLevel;
     static Runnable cmSupport;
-    static final Map /* <ServiceReference, ArtifactListener> */ listeners = new TreeMap /* <ServiceReference, ArtifactListener> */();
+    static final Map<ServiceReference, ArtifactListener> listeners = new TreeMap<ServiceReference, ArtifactListener>();
     static final BundleTransformer bundleTransformer = new BundleTransformer();
     BundleContext context;
-    Map watchers = new HashMap();
+    final Map<String, DirectoryWatcher> watchers = new HashMap<String, DirectoryWatcher>();
     ServiceTracker listenersTracker;
     static boolean initialized;
     static final Object barrier = new Object();
-    static final Object refreshLock = new Object();
     ServiceRegistration urlHandlerRegistration;
 
     public void start(BundleContext context) throws Exception
     {
         this.context = context;
-        context.addFrameworkListener(this);
 
-        Hashtable props = new Hashtable();
+        Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put("url.handler.protocol", JarDirUrlHandler.PROTOCOL);
         urlHandlerRegistration = context.registerService(org.osgi.service.url.URLStreamHandlerService.class.getName(), new JarDirUrlHandler(), props);
-
-        padmin = new ServiceTracker(context, PackageAdmin.class.getName(), null);
-        padmin.open();
-        startLevel = new ServiceTracker(context, StartLevel.class.getName(), null);
-        startLevel.open();
 
         String flt = "(|(" + Constants.OBJECTCLASS + "=" + ArtifactInstaller.class.getName() + ")"
                      + "(" + Constants.OBJECTCLASS + "=" + ArtifactTransformer.class.getName() + ")"
@@ -90,7 +87,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
         }
 
         // Created the initial configuration
-        Hashtable ht = new Hashtable();
+        Hashtable<String, String> ht = new Hashtable<String, String>();
 
         set(ht, DirectoryWatcher.POLL);
         set(ht, DirectoryWatcher.DIR);
@@ -103,7 +100,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
         set(ht, DirectoryWatcher.START_LEVEL);
 
         // check if dir is an array of dirs
-        String dirs = (String)ht.get(DirectoryWatcher.DIR);
+        String dirs = ht.get(DirectoryWatcher.DIR);
         if ( dirs != null && dirs.indexOf(',') != -1 )
         {
             StringTokenizer st = new StringTokenizer(dirs, ",");
@@ -115,7 +112,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
 
                 String name = "initial";
                 if ( index > 0 ) name = name + index;
-                updated(name, new Hashtable(ht));
+                updated(name, new Hashtable<String, String>(ht));
 
                 index++;
             }
@@ -149,9 +146,9 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
     }
 
     // Adapted for FELIX-524
-    private void set(Hashtable ht, String key)
+    private void set(Hashtable<String, String> ht, String key)
     {
-        Object o = context.getProperty(key);
+        String o = context.getProperty(key);
         if (o == null)
         {
            o = System.getProperty(key.toUpperCase().replace('.', '_'));
@@ -169,18 +166,17 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
             initialized = false;
         }
         urlHandlerRegistration.unregister();
-        List /*<DirectoryWatcher>*/ toClose = new ArrayList /*<DirectoryWatcher>*/();
+        List<DirectoryWatcher> toClose = new ArrayList<DirectoryWatcher>();
         synchronized (watchers)
         {
             toClose.addAll(watchers.values());
             watchers.clear();
         }
-        for (Iterator w = toClose.iterator(); w.hasNext();)
+        for (DirectoryWatcher aToClose : toClose)
         {
             try
             {
-                DirectoryWatcher dir = (DirectoryWatcher) w.next();
-                dir.close();
+                aToClose.close();
             }
             catch (Exception e)
             {
@@ -195,10 +191,6 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
         {
             cmSupport.run();
         }
-        if (padmin != null)
-        {
-            padmin.close();
-        }
     }
 
     public void deleted(String pid)
@@ -206,7 +198,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
         DirectoryWatcher watcher;
         synchronized (watchers)
         {
-            watcher = (DirectoryWatcher) watchers.remove(pid);
+            watcher = watchers.remove(pid);
         }
         if (watcher != null)
         {
@@ -214,13 +206,13 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
         }
     }
 
-    public void updated(String pid, Dictionary properties)
+    public void updated(String pid, Map<String, String> properties)
     {
-        InterpolationHelper.performSubstitution(new DictionaryAsMap(properties), context);
-        DirectoryWatcher watcher = null;
+        InterpolationHelper.performSubstitution(properties, context);
+        DirectoryWatcher watcher;
         synchronized (watchers)
         {
-            watcher = (DirectoryWatcher) watchers.get(pid);
+            watcher = watchers.get(pid);
             if (watcher != null && watcher.getProperties().equals(properties))
             {
                 return;
@@ -241,14 +233,13 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
 
     public void updateChecksum(File file)
     {
-        List /*<DirectoryWatcher>*/ toUpdate = new ArrayList /*<DirectoryWatcher>*/();
+        List<DirectoryWatcher> toUpdate = new ArrayList<DirectoryWatcher>();
         synchronized (watchers)
         {
             toUpdate.addAll(watchers.values());
         }
-        for (Iterator w = toUpdate.iterator(); w.hasNext();)
+        for (DirectoryWatcher watcher : toUpdate)
         {
-            DirectoryWatcher watcher = (DirectoryWatcher) w.next();
             watcher.scanner.updateChecksum(file);
         }
     }
@@ -262,15 +253,14 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
         
         long currentStamp = reference.getBundle().getLastModified();
 
-        List /*<DirectoryWatcher>*/ toNotify = new ArrayList /*<DirectoryWatcher>*/();
+        List<DirectoryWatcher> toNotify = new ArrayList<DirectoryWatcher>();
         synchronized (watchers)
         {
             toNotify.addAll(watchers.values());
         }
-        for (Iterator w = toNotify.iterator(); w.hasNext();)
+        for (DirectoryWatcher dir : toNotify)
         {
-            DirectoryWatcher dir = (DirectoryWatcher) w.next();
-            dir.addListener( listener, currentStamp );
+            dir.addListener(listener, currentStamp);
         }
     }
 
@@ -280,23 +270,22 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
         {
             listeners.remove(reference);
         }
-        List /*<DirectoryWatcher>*/ toNotify = new ArrayList /*<DirectoryWatcher>*/();
+        List<DirectoryWatcher> toNotify = new ArrayList<DirectoryWatcher>();
         synchronized (watchers)
         {
             toNotify.addAll(watchers.values());
         }
-        for (Iterator w = toNotify.iterator(); w.hasNext();)
+        for (DirectoryWatcher dir : toNotify)
         {
-            DirectoryWatcher dir = (DirectoryWatcher) w.next();
             dir.removeListener(listener);
         }
     }
 
-    static List getListeners()
+    static List<ArtifactListener> getListeners()
     {
         synchronized (listeners)
         {
-            List l = new ArrayList(listeners.values());
+            List<ArtifactListener> l = new ArrayList<ArtifactListener>(listeners.values());
             Collections.reverse(l);
             l.add(bundleTransformer);
             return l;
@@ -306,64 +295,16 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
     /**
      * Convenience to refresh the packages
      */
-    static void refresh(Bundle[] bundles) throws InterruptedException
+    static void refresh(BundleContext context, Collection<Bundle> bundles) throws InterruptedException
     {
-        PackageAdmin padmin = getPackageAdmin();
-        if (padmin != null)
-        {
-            synchronized (refreshLock) {
-                padmin.refreshPackages(bundles);
-                refreshLock.wait(30000);
+        final CountDownLatch latch = new CountDownLatch(1);
+        FrameworkWiring wiring = context.getBundle(0).adapt(FrameworkWiring.class);
+        wiring.refreshBundles(bundles, new FrameworkListener() {
+            public void frameworkEvent(FrameworkEvent event) {
+                latch.countDown();
             }
-        }
-    }
-
-    public void frameworkEvent(FrameworkEvent event)
-    {
-        if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED
-                || event.getType() == FrameworkEvent.ERROR)
-        {
-            synchronized (refreshLock)
-            {
-                refreshLock.notifyAll();
-            }
-        }
-    }
-
-    static PackageAdmin getPackageAdmin()
-    {
-        return getPackageAdmin(10000);
-    }
-
-    static PackageAdmin getPackageAdmin(long timeout)
-    {
-        try
-        {
-            return (PackageAdmin) padmin.waitForService(timeout);
-        }
-        catch (InterruptedException e)
-        {
-            Thread.currentThread().interrupt();
-            return null;
-        }
-    }
-
-    static StartLevel getStartLevel()
-    {
-        return getStartLevel(10000);
-    }
-
-    static StartLevel getStartLevel(long timeout)
-    {
-        try
-        {
-            return (StartLevel) startLevel.waitForService(timeout);
-        }
-        catch (InterruptedException e)
-        {
-            Thread.currentThread().interrupt();
-            return null;
-        }
+        });
+        latch.await();
     }
 
     private static class ConfigAdminSupport implements Runnable
@@ -374,7 +315,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
         private ConfigAdminSupport(BundleContext context, FileInstall fileInstall)
         {
             tracker = new Tracker(context, fileInstall);
-            Hashtable props = new Hashtable();
+            Hashtable<String, Object> props = new Hashtable<String, Object>();
             props.put(Constants.SERVICE_PID, tracker.getName());
             registration = context.registerService(ManagedServiceFactory.class.getName(), tracker, props);
             tracker.open();
@@ -386,10 +327,10 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
             tracker.close();
         }
 
-        private class Tracker extends ServiceTracker implements ManagedServiceFactory {
+        private class Tracker extends ServiceTracker<ConfigurationAdmin, ConfigurationAdmin> implements ManagedServiceFactory {
 
             private final FileInstall fileInstall;
-            private final Set configs = Collections.synchronizedSet(new HashSet());
+            private final Set<String> configs = Collections.synchronizedSet(new HashSet<String>());
             private ConfigInstaller configInstaller;
 
             private Tracker(BundleContext bundleContext, FileInstall fileInstall)
@@ -403,10 +344,15 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
                 return "org.apache.felix.fileinstall";
             }
 
-            public void updated(String s, Dictionary dictionary) throws ConfigurationException
+            public void updated(String s, Dictionary<String, ?> dictionary) throws ConfigurationException
             {
                 configs.add(s);
-                fileInstall.updated(s, dictionary);
+                Map<String, String> props = new HashMap<String, String>();
+                for (Enumeration<String> e = dictionary.keys(); e.hasMoreElements();) {
+                    String k = e.nextElement();
+                    props.put(k, dictionary.get(k).toString());
+                }
+                fileInstall.updated(s, props);
             }
 
             public void deleted(String s)
@@ -415,15 +361,15 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer, F
                 fileInstall.deleted(s);
             }
 
-            public Object addingService(ServiceReference serviceReference)
+            public ConfigurationAdmin addingService(ServiceReference<ConfigurationAdmin> serviceReference)
             {
-                ConfigurationAdmin cm = (ConfigurationAdmin) super.addingService(serviceReference);
+                ConfigurationAdmin cm = super.addingService(serviceReference);
                 configInstaller = new ConfigInstaller(this.context, cm, fileInstall);
                 configInstaller.init();
                 return cm;
             }
 
-            public void removedService(ServiceReference serviceReference, Object o)
+            public void removedService(ServiceReference<ConfigurationAdmin> serviceReference, ConfigurationAdmin o)
             {
                 Iterator iterator = configs.iterator();
                 while (iterator.hasNext()) {

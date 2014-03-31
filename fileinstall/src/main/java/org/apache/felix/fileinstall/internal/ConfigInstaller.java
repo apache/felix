@@ -53,14 +53,13 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     {
         if (registration == null)
         {
-            Properties props = new Properties();
             registration = this.context.registerService(
                     new String[] {
                         ConfigurationListener.class.getName(),
                         ArtifactListener.class.getName(),
                         ArtifactInstaller.class.getName()
                     },
-                    this, props);
+                    this, null);
         }
     }
 
@@ -168,26 +167,14 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
     boolean shouldSaveConfig()
     {
-        Object obj = this.context.getProperty( DirectoryWatcher.ENABLE_CONFIG_SAVE );
-        if (obj instanceof String)
+        String str = this.context.getProperty( DirectoryWatcher.ENABLE_CONFIG_SAVE );
+        if (str == null)
         {
-            obj = Boolean.valueOf((String) obj);
+            str = this.context.getProperty( DirectoryWatcher.DISABLE_CONFIG_SAVE );
         }
-        if (Boolean.FALSE.equals( obj ))
+        if (str != null)
         {
-            return false;
-        }
-        else if ( !Boolean.TRUE.equals( obj ))
-        {
-            obj = this.context.getProperty( DirectoryWatcher.DISABLE_CONFIG_SAVE );
-            if (obj instanceof String)
-            {
-                obj = Boolean.valueOf((String) obj);
-            }
-            if( Boolean.FALSE.equals( obj ) )
-            {
-                return false;
-            }
+            return Boolean.valueOf(str);
         }
         return true;
     }
@@ -202,12 +189,12 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
      *
      * @param f
      *            Configuration file
-     * @return
+     * @return <code>true</code> if the configuration has been updated
      * @throws Exception
      */
     boolean setConfig(final File f) throws Exception
     {
-        final Hashtable ht = new Hashtable();
+        final Hashtable<String, Object> ht = new Hashtable<String, Object>();
         final InputStream in = new BufferedInputStream(new FileInputStream(f));
         try
         {
@@ -222,8 +209,12 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 } else {
                     p.load(in);
                 }
-                InterpolationHelper.performSubstitution((Map) p, context);
-                ht.putAll(p);
+                Map<String, String> strMap = new HashMap<String, String>();
+                for (Object k : p.keySet()) {
+                    strMap.put(k.toString(), p.getProperty(k.toString()));
+                }
+                InterpolationHelper.performSubstitution(strMap, context);
+                ht.putAll(strMap);
             }
             else if ( f.getName().endsWith( ".config" ) )
             {
@@ -232,7 +223,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
                 while ( i.hasMoreElements() )
                 {
                     final Object key = i.nextElement();
-                    ht.put(key, config.get(key));
+                    ht.put(key.toString(), config.get(key));
                 }
             }
         }
@@ -244,8 +235,8 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         String pid[] = parsePid(f.getName());
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
 
-        Dictionary props = config.getProperties();
-        Hashtable old = props != null ? new Hashtable(new DictionaryAsMap(props)) : null;
+        Dictionary<String, Object> props = config.getProperties();
+        Hashtable<String, Object> old = props != null ? new Hashtable<String, Object>(new DictionaryAsMap<String, Object>(props)) : null;
         if (old != null) {
         	old.remove( DirectoryWatcher.FILENAME );
         	old.remove( Constants.SERVICE_PID );
@@ -272,8 +263,8 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
      * Remove the configuration.
      *
      * @param f
-     *            File where the configuration in whas defined.
-     * @return
+     *            File where the configuration in was defined.
+     * @return <code>true</code>
      * @throws Exception
      */
     boolean deleteConfig(File f) throws Exception

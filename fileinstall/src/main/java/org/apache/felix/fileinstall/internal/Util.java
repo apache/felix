@@ -50,7 +50,7 @@ public class Util
      */
     public static int getGlobalLogLevel(BundleContext context)
     {
-        String s = (String) context.getProperty(DirectoryWatcher.LOG_LEVEL);
+        String s = context.getProperty(DirectoryWatcher.LOG_LEVEL);
         s = (s == null)
             ? System.getProperty(DirectoryWatcher.LOG_LEVEL.toUpperCase().replace('.', '_'))
             : s;
@@ -62,6 +62,7 @@ public class Util
         }
         catch (NumberFormatException ex)
         {
+            // Ignore
         }
         return logLevel;
     }
@@ -179,11 +180,10 @@ public class Util
 
         private LogService getLogService()
         {
-            ServiceReference ref = context.getServiceReference(LogService.class.getName());
+            ServiceReference<LogService> ref = context.getServiceReference(LogService.class);
             if (ref != null)
             {
-                LogService log = (LogService) context.getService(ref);
-                return log;
+                return context.getService(ref);
             }
             return null;
         }
@@ -191,10 +191,6 @@ public class Util
 
     /**
      * Jar up a directory
-     *
-     * @param directory
-     * @param zipName
-     * @throws IOException
      */
     public static void jarDir(File directory, File zipName) throws IOException
     {
@@ -236,22 +232,17 @@ public class Util
 
     /**
      * Zip up a directory path
-     * @param directory
-     * @param zos
-     * @param path
-     * @param exclusions
-     * @throws IOException
      */
-    public static void zipDir(File directory, ZipOutputStream zos, String path, Set/* <String> */ exclusions) throws IOException
+    public static void zipDir(File directory, ZipOutputStream zos, String path, Set<String> exclusions) throws IOException
     {
         // get a listing of the directory content
         File[] dirList = directory.listFiles();
         byte[] readBuffer = new byte[8192];
-        int bytesIn = 0;
+        int bytesIn;
         // loop through dirList, and zip the files
-        for (int i = 0; i < dirList.length; i++)
+        assert dirList != null;
+        for (File f : dirList)
         {
-            File f = dirList[i];
             if (f.isDirectory())
             {
                 String prefix = path + f.getName() + "/";
@@ -347,6 +338,7 @@ public class Util
                 }
                 catch ( IOException e )
                 {
+                    // Ignore
                 }
             }
         }

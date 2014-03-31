@@ -21,7 +21,6 @@ package org.apache.felix.fileinstall.internal;
 import java.io.File;
 
 import junit.framework.TestCase;
-import org.apache.felix.fileinstall.internal.BundleTransformer;
 
 /**
  * Test for the BundleTransformer
