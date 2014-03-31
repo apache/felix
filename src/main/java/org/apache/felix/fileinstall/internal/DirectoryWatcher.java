@@ -254,79 +254,67 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         // We must wait for FileInstall to complete initialisation
         // to avoid race conditions observed in FELIX-2791
-        synchronized (fileInstall.barrier)
+        try
         {
-            while (!fileInstall.initialized)
-            {
-                try
-                {
-                    fileInstall.barrier.wait(0);
-                }
-                catch (InterruptedException e)
-                {
-                    Thread.currentThread().interrupt();
-                    log(Logger.LOG_INFO, "Watcher for " + watchedDirectory + " exiting because of interruption.", e);
+            fileInstall.lock.readLock().lockInterruptibly();
+        }
+        catch (InterruptedException e)
+        {
+            Thread.currentThread().interrupt();
+            log(Logger.LOG_INFO, "Watcher for " + watchedDirectory + " exiting because of interruption.", e);
+            return;
+        }
+        try {
+            log(Logger.LOG_DEBUG,
+                    "{" + POLL + " (ms) = " + poll + ", "
+                            + DIR + " = " + watchedDirectory.getAbsolutePath() + ", "
+                            + LOG_LEVEL + " = " + logLevel + ", "
+                            + START_NEW_BUNDLES + " = " + startBundles + ", "
+                            + TMPDIR + " = " + tmpDir + ", "
+                            + FILTER + " = " + filter + ", "
+                            + START_LEVEL + " = " + startLevel + "}", null
+            );
+
+            if (!noInitialDelay) {
+                try {
+                    // enforce a delay before the first directory scan
+                    Thread.sleep(poll);
+                } catch (InterruptedException e) {
+                    log(Logger.LOG_DEBUG, "Watcher for " + watchedDirectory + " was interrupted while waiting "
+                            + poll + " milliseconds for initial directory scan.", e);
                     return;
                 }
+                initializeCurrentManagedBundles();
             }
         }
-        log(Logger.LOG_DEBUG,
-            "{" + POLL + " (ms) = " + poll + ", "
-                + DIR + " = " + watchedDirectory.getAbsolutePath() + ", "
-                + LOG_LEVEL + " = " + logLevel + ", "
-                + START_NEW_BUNDLES + " = " + startBundles + ", "
-                + TMPDIR + " = " + tmpDir + ", "
-                + FILTER + " = " + filter + ", "
-                + START_LEVEL + " = " + startLevel + "}", null);
-
-        if (!noInitialDelay)
+        finally
         {
+            fileInstall.lock.readLock().unlock();
+        }
+
+        while (!interrupted()) {
             try {
-                // enforce a delay before the first directory scan
-                Thread.sleep(poll);
-            } catch (InterruptedException e) {
-                log(Logger.LOG_DEBUG, "Watcher for " + watchedDirectory + " was interrupted while waiting "
-                    + poll + " milliseconds for initial directory scan.", e);
-                return;
-            }
-            initializeCurrentManagedBundles();
-        }
-
-        while (!interrupted())
-        {
-            try
-            {
                 FrameworkStartLevel startLevelSvc = context.getBundle(0).adapt(FrameworkStartLevel.class);
                 // Don't access the disk when the framework is still in a startup phase.
                 if (startLevelSvc.getStartLevel() >= activeLevel
-                        && context.getBundle(0).getState() == Bundle.ACTIVE)
-                {
+                        && context.getBundle(0).getState() == Bundle.ACTIVE) {
                     Set<File> files = scanner.scan(false);
                     // Check that there is a result.  If not, this means that the directory can not be listed,
                     // so it's presumably not a valid directory (it may have been deleted by someone).
                     // In such case, just sleep
-                    if (files != null)
-                    {
+                    if (files != null) {
                         process(files);
                     }
                 }
-                synchronized (this)
-                {
+                synchronized (this) {
                     wait(poll);
                 }
-            }
-            catch (InterruptedException e)
-            {
+            } catch (InterruptedException e) {
                 return;
-            }
-            catch (Throwable e)
-            {
-                try
-                {
+            } catch (Throwable e) {
+                try {
                     context.getBundle();
-                }
-                catch (IllegalStateException t)
-                {
+                } catch (IllegalStateException t) {
                     // FileInstall bundle has been uninstalled, exiting loop
                     return;
                 }
@@ -359,6 +347,19 @@ public class DirectoryWatcher extends Thread implements BundleListener
     }
 
     private void process(Set<File> files) throws InterruptedException
+    {
+        fileInstall.lock.readLock().lockInterruptibly();
+        try
+        {
+            doProcess(files);
+        }
+        finally
+        {
+            fileInstall.lock.readLock().unlock();
+        }
+    }
+
+    private void doProcess(Set<File> files) throws InterruptedException
     {
         List<ArtifactListener> listeners = fileInstall.getListeners();
         List<Artifact> deleted = new ArrayList<Artifact>();

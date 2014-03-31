@@ -21,6 +21,8 @@ package org.apache.felix.fileinstall.internal;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.ArtifactListener;
@@ -58,74 +60,77 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
     BundleContext context;
     final Map<String, DirectoryWatcher> watchers = new HashMap<String, DirectoryWatcher>();
     ServiceTracker listenersTracker;
-    boolean initialized;
-    final Object barrier = new Object();
+    final ReadWriteLock lock = new ReentrantReadWriteLock();
     ServiceRegistration urlHandlerRegistration;
 
     public void start(BundleContext context) throws Exception
     {
         this.context = context;
-
-        Hashtable<String, Object> props = new Hashtable<String, Object>();
-        props.put("url.handler.protocol", JarDirUrlHandler.PROTOCOL);
-        urlHandlerRegistration = context.registerService(org.osgi.service.url.URLStreamHandlerService.class.getName(), new JarDirUrlHandler(), props);
-
-        String flt = "(|(" + Constants.OBJECTCLASS + "=" + ArtifactInstaller.class.getName() + ")"
-                     + "(" + Constants.OBJECTCLASS + "=" + ArtifactTransformer.class.getName() + ")"
-                     + "(" + Constants.OBJECTCLASS + "=" + ArtifactUrlTransformer.class.getName() + "))";
-        listenersTracker = new ServiceTracker(context, FrameworkUtil.createFilter(flt), this);
-        listenersTracker.open();
+        lock.writeLock().lock();
 
         try
         {
-            cmSupport = new ConfigAdminSupport(context, this);
-        }
-        catch (NoClassDefFoundError e)
-        {
-            Util.log(context, Util.getGlobalLogLevel(context), Logger.LOG_DEBUG,
-                "ConfigAdmin is not available, some features will be disabled", e);
-        }
+            Hashtable<String, Object> props = new Hashtable<String, Object>();
+            props.put("url.handler.protocol", JarDirUrlHandler.PROTOCOL);
+            urlHandlerRegistration = context.registerService(org.osgi.service.url.URLStreamHandlerService.class.getName(), new JarDirUrlHandler(), props);
 
-        // Created the initial configuration
-        Hashtable<String, String> ht = new Hashtable<String, String>();
+            String flt = "(|(" + Constants.OBJECTCLASS + "=" + ArtifactInstaller.class.getName() + ")"
+                    + "(" + Constants.OBJECTCLASS + "=" + ArtifactTransformer.class.getName() + ")"
+                    + "(" + Constants.OBJECTCLASS + "=" + ArtifactUrlTransformer.class.getName() + "))";
+            listenersTracker = new ServiceTracker(context, FrameworkUtil.createFilter(flt), this);
+            listenersTracker.open();
 
-        set(ht, DirectoryWatcher.POLL);
-        set(ht, DirectoryWatcher.DIR);
-        set(ht, DirectoryWatcher.LOG_LEVEL);
-        set(ht, DirectoryWatcher.FILTER);
-        set(ht, DirectoryWatcher.TMPDIR);
-        set(ht, DirectoryWatcher.START_NEW_BUNDLES);
-        set(ht, DirectoryWatcher.USE_START_TRANSIENT);
-        set(ht, DirectoryWatcher.NO_INITIAL_DELAY);
-        set(ht, DirectoryWatcher.START_LEVEL);
-
-        // check if dir is an array of dirs
-        String dirs = ht.get(DirectoryWatcher.DIR);
-        if ( dirs != null && dirs.indexOf(',') != -1 )
-        {
-            StringTokenizer st = new StringTokenizer(dirs, ",");
-            int index = 0;
-            while ( st.hasMoreTokens() )
+            try
             {
-                final String dir = st.nextToken().trim();
-                ht.put(DirectoryWatcher.DIR, dir);
+                cmSupport = new ConfigAdminSupport(context, this);
+            }
+            catch (NoClassDefFoundError e)
+            {
+                Util.log(context, Util.getGlobalLogLevel(context), Logger.LOG_DEBUG,
+                        "ConfigAdmin is not available, some features will be disabled", e);
+            }
 
-                String name = "initial";
-                if ( index > 0 ) name = name + index;
-                updated(name, new Hashtable<String, String>(ht));
+            // Created the initial configuration
+            Hashtable<String, String> ht = new Hashtable<String, String>();
 
-                index++;
+            set(ht, DirectoryWatcher.POLL);
+            set(ht, DirectoryWatcher.DIR);
+            set(ht, DirectoryWatcher.LOG_LEVEL);
+            set(ht, DirectoryWatcher.FILTER);
+            set(ht, DirectoryWatcher.TMPDIR);
+            set(ht, DirectoryWatcher.START_NEW_BUNDLES);
+            set(ht, DirectoryWatcher.USE_START_TRANSIENT);
+            set(ht, DirectoryWatcher.NO_INITIAL_DELAY);
+            set(ht, DirectoryWatcher.START_LEVEL);
+
+            // check if dir is an array of dirs
+            String dirs = ht.get(DirectoryWatcher.DIR);
+            if (dirs != null && dirs.indexOf(',') != -1)
+            {
+                StringTokenizer st = new StringTokenizer(dirs, ",");
+                int index = 0;
+                while (st.hasMoreTokens())
+                {
+                    final String dir = st.nextToken().trim();
+                    ht.put(DirectoryWatcher.DIR, dir);
+
+                    String name = "initial";
+                    if (index > 0) name = name + index;
+                    updated(name, new Hashtable<String, String>(ht));
+
+                    index++;
+                }
+            }
+            else
+            {
+                updated("initial", ht);
             }
         }
-        else
+        finally
         {
-            updated("initial", ht);
-        }
-        // now notify all the directory watchers to proceed
-        // We need this to avoid race conditions observed in FELIX-2791
-        synchronized (barrier) {
-            initialized = true;
-            barrier.notifyAll();
+            // now notify all the directory watchers to proceed
+            // We need this to avoid race conditions observed in FELIX-2791
+            lock.writeLock().unlock();
         }
     }
 
@@ -162,34 +167,39 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
 
     public void stop(BundleContext context) throws Exception
     {
-        synchronized (barrier) {
-            initialized = false;
-        }
-        urlHandlerRegistration.unregister();
-        List<DirectoryWatcher> toClose = new ArrayList<DirectoryWatcher>();
-        synchronized (watchers)
+        lock.writeLock().lock();
+        try
         {
-            toClose.addAll(watchers.values());
-            watchers.clear();
-        }
-        for (DirectoryWatcher aToClose : toClose)
-        {
-            try
+            urlHandlerRegistration.unregister();
+            List<DirectoryWatcher> toClose = new ArrayList<DirectoryWatcher>();
+            synchronized (watchers)
             {
-                aToClose.close();
+                toClose.addAll(watchers.values());
+                watchers.clear();
             }
-            catch (Exception e)
+            for (DirectoryWatcher aToClose : toClose)
             {
-                // Ignore
+                try
+                {
+                    aToClose.close();
+                }
+                catch (Exception e)
+                {
+                    // Ignore
+                }
+            }
+            if (listenersTracker != null)
+            {
+                listenersTracker.close();
+            }
+            if (cmSupport != null)
+            {
+                cmSupport.run();
             }
         }
-        if (listenersTracker != null)
+        finally
         {
-            listenersTracker.close();
-        }
-        if (cmSupport != null)
-        {
-            cmSupport.run();
+            lock.writeLock().unlock();
         }
     }
 
@@ -307,7 +317,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
         latch.await();
     }
 
-    private static class ConfigAdminSupport implements Runnable
+    private class ConfigAdminSupport implements Runnable
     {
         private Tracker tracker;
         private ServiceRegistration registration;
@@ -323,15 +333,15 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
 
         public void run()
         {
-            registration.unregister();
             tracker.close();
+            registration.unregister();
         }
 
         private class Tracker extends ServiceTracker<ConfigurationAdmin, ConfigurationAdmin> implements ManagedServiceFactory {
 
             private final FileInstall fileInstall;
             private final Set<String> configs = Collections.synchronizedSet(new HashSet<String>());
-            private ConfigInstaller configInstaller;
+            private final Map<Long, ConfigInstaller> configInstallers = new HashMap<Long, ConfigInstaller>();
 
             private Tracker(BundleContext bundleContext, FileInstall fileInstall)
             {
@@ -363,26 +373,46 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
 
             public ConfigurationAdmin addingService(ServiceReference<ConfigurationAdmin> serviceReference)
             {
-                ConfigurationAdmin cm = super.addingService(serviceReference);
-                configInstaller = new ConfigInstaller(this.context, cm, fileInstall);
-                configInstaller.init();
-                return cm;
+                lock.writeLock().lock();
+                try
+                {
+                    ConfigurationAdmin cm = super.addingService(serviceReference);
+                    long id = (Long) serviceReference.getProperty(Constants.SERVICE_ID);
+                    ConfigInstaller configInstaller = new ConfigInstaller(this.context, cm, fileInstall);
+                    configInstaller.init();
+                    configInstallers.put(id, configInstaller);
+                    return cm;
+                }
+                finally
+                {
+                    lock.writeLock().unlock();
+                }
             }
 
             public void removedService(ServiceReference<ConfigurationAdmin> serviceReference, ConfigurationAdmin o)
             {
-                Iterator iterator = configs.iterator();
-                while (iterator.hasNext()) {
-                    String s = (String) iterator.next();
-                    fileInstall.deleted(s);
-                    iterator.remove();
-                }
-                if (configInstaller != null)
+                lock.writeLock().lock();
+                try
                 {
-                    configInstaller.destroy();
-                    configInstaller = null;
+                    Iterator iterator = configs.iterator();
+                    while (iterator.hasNext())
+                    {
+                        String s = (String) iterator.next();
+                        fileInstall.deleted(s);
+                        iterator.remove();
+                    }
+                    long id = (Long) serviceReference.getProperty(Constants.SERVICE_ID);
+                    ConfigInstaller configInstaller = configInstallers.remove(id);
+                    if (configInstaller != null)
+                    {
+                        configInstaller.destroy();
+                    }
+                    super.removedService(serviceReference, o);
                 }
-                super.removedService(serviceReference, o);
+                finally
+                {
+                    lock.writeLock().unlock();
+                }
             }
         }
     }
