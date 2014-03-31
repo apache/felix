@@ -52,14 +52,14 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  */
 public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
 {
-    static Runnable cmSupport;
-    static final Map<ServiceReference, ArtifactListener> listeners = new TreeMap<ServiceReference, ArtifactListener>();
-    static final BundleTransformer bundleTransformer = new BundleTransformer();
+    Runnable cmSupport;
+    final Map<ServiceReference, ArtifactListener> listeners = new TreeMap<ServiceReference, ArtifactListener>();
+    final BundleTransformer bundleTransformer = new BundleTransformer();
     BundleContext context;
     final Map<String, DirectoryWatcher> watchers = new HashMap<String, DirectoryWatcher>();
     ServiceTracker listenersTracker;
-    static boolean initialized;
-    static final Object barrier = new Object();
+    boolean initialized;
+    final Object barrier = new Object();
     ServiceRegistration urlHandlerRegistration;
 
     public void start(BundleContext context) throws Exception
@@ -222,7 +222,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
         {
             watcher.close();
         }
-        watcher = new DirectoryWatcher(properties, context);
+        watcher = new DirectoryWatcher(this, properties, context);
         watcher.setDaemon(true);
         synchronized (watchers)
         {
@@ -281,7 +281,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
         }
     }
 
-    static List<ArtifactListener> getListeners()
+    List<ArtifactListener> getListeners()
     {
         synchronized (listeners)
         {

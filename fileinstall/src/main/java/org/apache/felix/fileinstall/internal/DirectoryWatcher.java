@@ -114,6 +114,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     final File javaIoTmpdir = new File(System.getProperty("java.io.tmpdir"));
 
+    final FileInstall fileInstall;
+
     Map<String, String> properties;
     File watchedDirectory;
     File tmpDir;
@@ -152,9 +154,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
     // which may result in an attempt to start the watched bundles
     private AtomicBoolean stateChanged = new AtomicBoolean();
 
-    public DirectoryWatcher(Map<String, String> properties, BundleContext context)
+    public DirectoryWatcher(FileInstall fileInstall, Map<String, String> properties, BundleContext context)
     {
         super("fileinstall-" + getThreadName(properties));
+        this.fileInstall = fileInstall;
         this.properties = properties;
         this.context = context;
         poll = getLong(properties, POLL, 2000);
@@ -251,13 +254,13 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         // We must wait for FileInstall to complete initialisation
         // to avoid race conditions observed in FELIX-2791
-        synchronized (FileInstall.barrier)
+        synchronized (fileInstall.barrier)
         {
-            while (!FileInstall.initialized)
+            while (!fileInstall.initialized)
             {
                 try
                 {
-                    FileInstall.barrier.wait(0);
+                    fileInstall.barrier.wait(0);
                 }
                 catch (InterruptedException e)
                 {
@@ -357,7 +360,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     private void process(Set<File> files) throws InterruptedException
     {
-        List<ArtifactListener> listeners = FileInstall.getListeners();
+        List<ArtifactListener> listeners = fileInstall.getListeners();
         List<Artifact> deleted = new ArrayList<Artifact>();
         List<Artifact> modified = new ArrayList<Artifact>();
         List<Artifact> created = new ArrayList<Artifact>();
@@ -1040,7 +1043,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
             // Find a listener for this artifact if needed
             if (artifact.getListener() == null)
             {
-                artifact.setListener(findListener(path, FileInstall.getListeners()));
+                artifact.setListener(findListener(path, fileInstall.getListeners()));
             }
             // Forget this artifact
             removeArtifact(path);
