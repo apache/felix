@@ -51,24 +51,21 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
     public void init()
     {
-        if (registration == null)
-        {
-            registration = this.context.registerService(
-                    new String[] {
-                        ConfigurationListener.class.getName(),
-                        ArtifactListener.class.getName(),
-                        ArtifactInstaller.class.getName()
-                    },
-                    this, null);
-        }
+        registration = this.context.registerService(
+                new String[] {
+                    ConfigurationListener.class.getName(),
+                    ArtifactListener.class.getName(),
+                    ArtifactInstaller.class.getName()
+                },
+                this, null);
     }
 
     public void destroy()
     {
-        if (registration != null)
-        {
+        try {
             registration.unregister();
-            registration = null;
+        } catch (IllegalStateException e) {
+            // Ignore
         }
     }
 
