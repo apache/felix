@@ -21,7 +21,6 @@ package org.apache.felix.fileinstall.internal;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -42,7 +41,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
-import java.util.regex.Pattern;
 
 import org.apache.felix.fileinstall.ArtifactInstaller;
 import org.apache.felix.fileinstall.ArtifactListener;
@@ -106,6 +104,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String UPDATE_WITH_LISTENERS = "felix.fileinstall.bundles.updateWithListeners";
     public final static String OPTIONAL_SCOPE = "felix.fileinstall.optionalImportRefreshScope";
     public final static String FRAGMENT_SCOPE = "felix.fileinstall.fragmentRefreshScope";
+    public final static String DISABLE_NIO2 = "felix.fileinstall.disableNio2";
 
     public final static String SCOPE_NONE = "none";
     public final static String SCOPE_MANAGED = "managed";
@@ -132,6 +131,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     boolean updateWithListeners;
     String fragmentScope;
     String optionalScope;
+    boolean disableNio2;
 
     // Map of all installed artifacts
     final Map<File, Artifact> currentManagedArtifacts = new HashMap<File, Artifact>();
@@ -174,25 +174,18 @@ public class DirectoryWatcher extends Thread implements BundleListener
         updateWithListeners = getBoolean(properties, UPDATE_WITH_LISTENERS, false); // Do not update bundles when listeners are updated
         fragmentScope = properties.get(FRAGMENT_SCOPE);
         optionalScope = properties.get(OPTIONAL_SCOPE);
+        disableNio2 = getBoolean(properties, DISABLE_NIO2, false);
         this.context.addBundleListener(this);
 
-        FilenameFilter flt;
-        if (filter != null && filter.length() > 0)
-        {
-            flt = new FilenameFilter()
-            {
-                Pattern pattern = Pattern.compile(filter);
-                public boolean accept(File dir, String name)
-                {
-                    return pattern.matcher(name).matches();
-                }
-            };
+        if (disableNio2) {
+            scanner = new Scanner(watchedDirectory, filter);
+        } else {
+            try {
+                scanner = new WatcherScanner(context, watchedDirectory, filter);
+            } catch (Throwable t) {
+                scanner = new Scanner(watchedDirectory, filter);
+            }
         }
-        else
-        {
-            flt = null;
-        }
-        scanner = new Scanner(watchedDirectory, flt);
     }
 
     private void verifyWatchedDir()
@@ -766,6 +759,14 @@ public class DirectoryWatcher extends Thread implements BundleListener
         for (Artifact artifact : getArtifacts()) {
             deleteTransformedFile(artifact);
             deleteJaredDirectory(artifact);
+        }
+        try
+        {
+            scanner.close();
+        }
+        catch (IOException e)
+        {
+            // Ignore
         }
         try
         {

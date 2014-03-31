@@ -18,6 +18,7 @@
  */
 package org.apache.felix.fileinstall.internal;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
 /**
@@ -40,7 +42,7 @@ import java.util.zip.CRC32;
  * the change on this file.  This allows to not report the change until
  * a big copy if complete for example.
  */
-public class Scanner {
+public class Scanner implements Closeable {
 
     final File directory;
     final FilenameFilter filter;
@@ -63,12 +65,26 @@ public class Scanner {
      * Create a scanner for the specified directory and file filter
      *
      * @param directory the directory to scan
-     * @param filter a filter for file names
+     * @param filterString a filter for file names
      */
-    public Scanner(File directory, FilenameFilter filter)
+    public Scanner(File directory, final String filterString)
     {
         this.directory = canon(directory);
-        this.filter = filter;
+        if (filterString != null && filterString.length() > 0)
+        {
+            this.filter = new FilenameFilter()
+            {
+                Pattern pattern = Pattern.compile(filterString);
+                public boolean accept(File dir, String name)
+                {
+                    return pattern.matcher(name).matches();
+                }
+            };
+        }
+        else
+        {
+            this.filter = null;
+        }
     }
 
     /**
@@ -125,6 +141,9 @@ public class Scanner {
             storedChecksums.remove(file);
         }
         return files;
+    }
+
+    public void close() throws IOException {
     }
 
     private static File canon(File file)
