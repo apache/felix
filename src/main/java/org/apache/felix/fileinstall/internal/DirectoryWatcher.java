@@ -32,7 +32,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
@@ -60,8 +60,9 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
+import org.osgi.framework.startlevel.BundleStartLevel;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
+import org.osgi.framework.wiring.BundleRevision;
 
 /**
  * -DirectoryWatcher-
@@ -114,7 +115,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     final File javaIoTmpdir = new File(System.getProperty("java.io.tmpdir"));
 
-    Dictionary properties;
+    Map<String, String> properties;
     File watchedDirectory;
     File tmpDir;
     long poll;
@@ -133,32 +134,32 @@ public class DirectoryWatcher extends Thread implements BundleListener
     String optionalScope;
 
     // Map of all installed artifacts
-    Map/* <File, Artifact> */ currentManagedArtifacts = new HashMap/* <File, Artifact> */();
+    final Map<File, Artifact> currentManagedArtifacts = new HashMap<File, Artifact>();
 
     // The scanner to report files changes
     Scanner scanner;
 
     // Represents files that could not be processed because of a missing artifact listener
-    Set/* <File> */ processingFailures = new HashSet/* <File> */();
+    final Set<File> processingFailures = new HashSet<File>();
     
     // Represents installed artifacts which need to be started later because they failed to start
-    Set/* <Artifact> */ delayedStart = new HashSet/* <Artifact> */();
+    Set<Bundle> delayedStart = new HashSet<Bundle>();
 
     // Represents artifacts that could not be installed
-    Map/* <File, Artifact> */ installationFailures = new HashMap/* <File, Artifact> */();
+    final Map<File, Artifact> installationFailures = new HashMap<File, Artifact>();
 
     // flag (acces to which must be synchronized) that indicates wheter there's a change in state of system,
     // which may result in an attempt to start the watched bundles
-    private Boolean stateChanged = Boolean.FALSE;
+    private AtomicBoolean stateChanged = new AtomicBoolean();
 
-    public DirectoryWatcher(Dictionary properties, BundleContext context)
+    public DirectoryWatcher(Map<String, String> properties, BundleContext context)
     {
         super("fileinstall-" + getThreadName(properties));
         this.properties = properties;
         this.context = context;
         poll = getLong(properties, POLL, 2000);
         logLevel = getInt(properties, LOG_LEVEL, Util.getGlobalLogLevel(context));
-        originatingFileName = (String) properties.get(FILENAME);
+        originatingFileName = properties.get(FILENAME);
         watchedDirectory = getFile(properties, DIR, new File("./load"));
         verifyWatchedDir();
         tmpDir = getFile(properties, TMPDIR, null);
@@ -166,13 +167,13 @@ public class DirectoryWatcher extends Thread implements BundleListener
         startBundles = getBoolean(properties, START_NEW_BUNDLES, true);  // by default, we start bundles.
         useStartTransient = getBoolean(properties, USE_START_TRANSIENT, false);  // by default, we start bundles persistently.
         useStartActivationPolicy = getBoolean(properties, USE_START_ACTIVATION_POLICY, true);  // by default, we start bundles using activation policy.
-        filter = (String) properties.get(FILTER);
+        filter = properties.get(FILTER);
         noInitialDelay = getBoolean(properties, NO_INITIAL_DELAY, false);
         startLevel = getInt(properties, START_LEVEL, 0);    // by default, do not touch start level
         activeLevel = getInt(properties, ACTIVE_LEVEL, 0);    // by default, always scan
         updateWithListeners = getBoolean(properties, UPDATE_WITH_LISTENERS, false); // Do not update bundles when listeners are updated
-        fragmentScope = (String) properties.get(FRAGMENT_SCOPE);
-        optionalScope = (String) properties.get(OPTIONAL_SCOPE);
+        fragmentScope = properties.get(FRAGMENT_SCOPE);
+        optionalScope = properties.get(OPTIONAL_SCOPE);
         this.context.addBundleListener(this);
 
         FilenameFilter flt;
@@ -216,12 +217,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
         }
     }
 
-    public static String getThreadName(Dictionary properties)
+    public static String getThreadName(Map<String, String> properties)
     {
-        return (properties.get(DIR) != null ? properties.get(DIR) : "./load").toString();
+        return (properties.get(DIR) != null ? properties.get(DIR) : "./load");
     }
 
-    public Dictionary getProperties()
+    public Map<String, String> getProperties()
     {
         return properties;
     }
@@ -232,7 +233,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         {
             log(Logger.LOG_DEBUG, "Starting initial scan", null);
             initializeCurrentManagedBundles();
-            Set/*<File>*/ files = scanner.scan(true);
+            Set<File> files = scanner.scan(true);
             if (files != null)
             {
                 try
@@ -299,11 +300,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
         {
             try
             {
+                FrameworkStartLevel startLevelSvc = context.getBundle(0).adapt(FrameworkStartLevel.class);
                 // Don't access the disk when the framework is still in a startup phase.
-                if (FileInstall.getStartLevel().getStartLevel() >= activeLevel
+                if (startLevelSvc.getStartLevel() >= activeLevel
                         && context.getBundle(0).getState() == Bundle.ACTIVE)
                 {
-                    Set/*<File>*/ files = scanner.scan(false);
+                    Set<File> files = scanner.scan(false);
                     // Check that there is a result.  If not, this means that the directory can not be listed,
                     // so it's presumably not a valid directory (it may have been deleted by someone).
                     // In such case, just sleep
@@ -360,12 +362,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
         }
     }
 
-    private void process(Set files) throws InterruptedException
+    private void process(Set<File> files) throws InterruptedException
     {
-        List/*<ArtifactListener>*/ listeners = FileInstall.getListeners();
-        List/*<Artifact>*/ deleted = new ArrayList/*<Artifact>*/();
-        List/*<Artifact>*/ modified = new ArrayList/*<Artifact>*/();
-        List/*<Artifact>*/ created = new ArrayList/*<Artifact>*/();
+        List<ArtifactListener> listeners = FileInstall.getListeners();
+        List<Artifact> deleted = new ArrayList<Artifact>();
+        List<Artifact> modified = new ArrayList<Artifact>();
+        List<Artifact> created = new ArrayList<Artifact>();
 
         // Try to process again files that could not be processed
         synchronized (processingFailures)
@@ -374,68 +376,52 @@ public class DirectoryWatcher extends Thread implements BundleListener
             processingFailures.clear();
         }
 
-        for (Iterator it = files.iterator(); it.hasNext(); )
-        {
-            File file = (File) it.next();
+        for (File file : files) {
             boolean exists = file.exists();
             Artifact artifact = getArtifact(file);
             // File has been deleted
-            if (!exists)
-            {
-                if (artifact != null)
-                {
+            if (!exists) {
+                if (artifact != null) {
                     deleteJaredDirectory(artifact);
                     deleteTransformedFile(artifact);
                     deleted.add(artifact);
                 }
             }
             // File exists
-            else
-            {
-                File jar  = file;
+            else {
+                File jar = file;
                 URL jaredUrl = null;
-                try
-                {
+                try {
                     jaredUrl = file.toURI().toURL();
-                }
-                catch (MalformedURLException e)
-                {
+                } catch (MalformedURLException e) {
                     // Ignore, can't happen
                 }
                 // Jar up the directory if needed
-                if (file.isDirectory())
-                {
+                if (file.isDirectory()) {
                     prepareTempDir();
-                    try
-                    {
+                    try {
                         jar = new File(tmpDir, file.getName() + ".jar");
                         Util.jarDir(file, jar);
                         jaredUrl = new URL(JarDirUrlHandler.PROTOCOL, null, file.getPath());
 
-                    }
-                    catch (IOException e)
-                    {
+                    } catch (IOException e) {
                         // Notify user of problem, won't retry until the dir is updated.
                         log(Logger.LOG_ERROR,
-                            "Unable to create jar for: " + file.getAbsolutePath(), e);
+                                "Unable to create jar for: " + file.getAbsolutePath(), e);
                         continue;
                     }
                 }
                 // File has been modified
-                if (artifact != null)
-                {
+                if (artifact != null) {
                     artifact.setChecksum(scanner.getChecksum(file));
                     // If there's no listener, this is because this artifact has been installed before
                     // fileinstall has been restarted.  In this case, try to find a listener.
-                    if (artifact.getListener() == null)
-                    {
+                    if (artifact.getListener() == null) {
                         ArtifactListener listener = findListener(jar, listeners);
                         // If no listener can handle this artifact, we need to defer the
                         // processing for this artifact until one is found
-                        if (listener == null)
-                        {
-                            synchronized (processingFailures)
-                            {
+                        if (listener == null) {
+                            synchronized (processingFailures) {
                                 processingFailures.add(file);
                             }
                             continue;
@@ -444,40 +430,30 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     }
                     // If the listener can not handle this file anymore,
                     // uninstall the artifact and try as if is was new
-                    if (!listeners.contains(artifact.getListener()) || !artifact.getListener().canHandle(jar))
-                    {
+                    if (!listeners.contains(artifact.getListener()) || !artifact.getListener().canHandle(jar)) {
                         deleted.add(artifact);
-                        artifact = null;
                     }
                     // The listener is still ok
-                    else
-                    {
+                    else {
                         deleteTransformedFile(artifact);
                         artifact.setJaredDirectory(jar);
                         artifact.setJaredUrl(jaredUrl);
-                        if (transformArtifact(artifact))
-                        {
+                        if (transformArtifact(artifact)) {
                             modified.add(artifact);
-                        }
-                        else
-                        {
+                        } else {
                             deleteJaredDirectory(artifact);
                             deleted.add(artifact);
                         }
-                        continue;
                     }
                 }
                 // File has been added
-                else
-                {
+                else {
                     // Find the listener
                     ArtifactListener listener = findListener(jar, listeners);
                     // If no listener can handle this artifact, we need to defer the
                     // processing for this artifact until one is found
-                    if (listener == null)
-                    {
-                        synchronized (processingFailures)
-                        {
+                    if (listener == null) {
+                        synchronized (processingFailures) {
                             processingFailures.add(file);
                         }
                         continue;
@@ -489,12 +465,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     artifact.setJaredUrl(jaredUrl);
                     artifact.setListener(listener);
                     artifact.setChecksum(scanner.getChecksum(file));
-                    if (transformArtifact(artifact))
-                    {
+                    if (transformArtifact(artifact)) {
                         created.add(artifact);
-                    }
-                    else
-                    {
+                    } else {
                         deleteJaredDirectory(artifact);
                     }
                 }
@@ -503,13 +476,13 @@ public class DirectoryWatcher extends Thread implements BundleListener
         // Handle deleted artifacts
         // We do the operations in the following order:
         // uninstall, update, install, refresh & start.
-        Collection uninstalledBundles = uninstall(deleted);
-        Collection updatedBundles = update(modified);
-        Collection installedBundles = install(created);
+        Collection<Bundle> uninstalledBundles = uninstall(deleted);
+        Collection<Bundle> updatedBundles = update(modified);
+        Collection<Bundle> installedBundles = install(created);
 
         if (!uninstalledBundles.isEmpty() || !updatedBundles.isEmpty() || !installedBundles.isEmpty())
         {
-            Set toRefresh = new HashSet();
+            Set<Bundle> toRefresh = new HashSet<Bundle>();
             toRefresh.addAll(uninstalledBundles);
             toRefresh.addAll(updatedBundles);
             toRefresh.addAll(installedBundles);
@@ -518,7 +491,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
             if (toRefresh.size() > 0)
             {
                 // Refresh if any bundle got uninstalled or updated.
-                refresh((Bundle[]) toRefresh.toArray(new Bundle[toRefresh.size()]));
+                refresh(toRefresh);
                 // set the state to reattempt starting managed bundles which aren't already STARTING or ACTIVE
                 setStateChanged(true);
             }
@@ -539,13 +512,10 @@ public class DirectoryWatcher extends Thread implements BundleListener
         }
     }
 
-    ArtifactListener findListener(File artifact, List/* <ArtifactListener> */ listeners)
+    ArtifactListener findListener(File artifact, List<ArtifactListener> listeners)
     {
-        for (Iterator itL = listeners.iterator(); itL.hasNext();)
-        {
-            ArtifactListener listener = (ArtifactListener) itL.next();
-            if (listener.canHandle(artifact))
-            {
+        for (ArtifactListener listener : listeners) {
+            if (listener.canHandle(artifact)) {
                 return listener;
             }
         }
@@ -688,26 +658,19 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     /**
      * Check if a bundle is a fragment.
-     *
-     * @param bundle
-     * @return
      */
     boolean isFragment(Bundle bundle)
     {
-        PackageAdmin padmin = FileInstall.getPackageAdmin();
-        if (padmin != null)
-        {
-            return padmin.getBundleType(bundle) == PackageAdmin.BUNDLE_TYPE_FRAGMENT;
-        }
-        return false;
+        BundleRevision rev = bundle.adapt(BundleRevision.class);
+        return (rev.getTypes() & BundleRevision.TYPE_FRAGMENT) != 0;
     }
 
     /**
      * Convenience to refresh the packages
      */
-    void refresh(Bundle[] bundles) throws InterruptedException
+    void refresh(Collection<Bundle> bundles) throws InterruptedException
     {
-        FileInstall.refresh(bundles);
+        FileInstall.refresh(context, bundles);
     }
 
     /**
@@ -718,9 +681,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
      * @param dflt the default value
      * @return the property as a long or the default value
      */
-    int getInt(Dictionary properties, String property, int dflt)
+    int getInt(Map<String, String> properties, String property, int dflt)
     {
-        String value = (String) properties.get(property);
+        String value = properties.get(property);
         if (value != null)
         {
             try
@@ -743,9 +706,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
      * @param dflt the default value
      * @return the property as a long or the default value
      */
-    long getLong(Dictionary properties, String property, long dflt)
+    long getLong(Map<String, String> properties, String property, long dflt)
     {
-        String value = (String) properties.get(property);
+        String value = properties.get(property);
         if (value != null)
         {
             try
@@ -768,9 +731,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
      * @param dflt the default value
      * @return the property as a File or the default value
      */
-    File getFile(Dictionary properties, String property, File dflt)
+    File getFile(Map<String, String> properties, String property, File dflt)
     {
-        String value = (String) properties.get(property);
+        String value = properties.get(property);
         if (value != null)
         {
             return new File(value);
@@ -786,12 +749,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
      * @param dflt the default value
      * @return the property as a boolean or the default value
      */
-    boolean getBoolean(Dictionary properties, String property, boolean dflt)
+    boolean getBoolean(Map<String, String> properties, String property, boolean dflt)
     {
-        String value = (String) properties.get(property);
+        String value = properties.get(property);
         if (value != null)
         {
-            return Boolean.valueOf(value).booleanValue();
+            return Boolean.valueOf(value);
         }
         return dflt;
     }
@@ -800,9 +763,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         this.context.removeBundleListener(this);
         interrupt();
-        for (Iterator iter = getArtifacts().iterator(); iter.hasNext();)
-        {
-            Artifact artifact = (Artifact) iter.next();
+        for (Artifact artifact : getArtifacts()) {
             deleteTransformedFile(artifact);
             deleteJaredDirectory(artifact);
         }
@@ -825,31 +786,25 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         Bundle[] bundles = this.context.getBundles();
         String watchedDirPath = watchedDirectory.toURI().normalize().getPath();
-        Map /*<File, Long>*/ checksums = new HashMap/*<File, Long>*/();
-        for (int i = 0; i < bundles.length; i++)
-        {
+        Map<File, Long> checksums = new HashMap<File, Long>();
+        for (Bundle bundle : bundles) {
             // Convert to a URI because the location of a bundle
             // is typically a URI. At least, that's the case for
             // autostart bundles and bundles installed by fileinstall.
             // Normalisation is needed to ensure that we don't treat (e.g.)
             // /tmp/foo and /tmp//foo differently.
-            String location = bundles[i].getLocation();
+            String location = bundle.getLocation();
             String path = null;
             if (location != null &&
-                    !location.equals(Constants.SYSTEM_BUNDLE_LOCATION))
-            {
+                    !location.equals(Constants.SYSTEM_BUNDLE_LOCATION)) {
                 URI uri;
-                try
-                {
-                    uri = new URI(bundles[i].getLocation()).normalize();
-                }
-                catch (URISyntaxException e)
-                {
+                try {
+                    uri = new URI(bundle.getLocation()).normalize();
+                } catch (URISyntaxException e) {
                     // Let's try to interpret the location as a file path
                     uri = new File(location).toURI().normalize();
                 }
-                if (uri.isOpaque() && uri.getSchemeSpecificPart() != null)
-                {
+                if (uri.isOpaque() && uri.getSchemeSpecificPart() != null) {
                     // blueprint:file:/tmp/foo/baa.jar -> file:/tmp/foo/baa.jar
                     // blueprint:mvn:foo.baa/baa/0.0.1 -> mvn:foo.baa/baa/0.0.1
                     // wrap:file:/tmp/foo/baa-1.0.jar$Symbolic-Name=baa&Version=1.0 -> file:/tmp/foo/baa-1.0.jar$Symbolic-Name=baa&Version1.0
@@ -863,31 +818,27 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     // mvn:foo.baa/baa/0.0.1 -> mvn:foo.baa/baa/0.0.1
                     // file:/tmp/foo/baa-1.0.jar$Symbolic-Name=baa&Version=1.0 -> /tmp/foo/baa-1.0.jar
                     path = schemeSpecificPart.substring(offsetFileProtocol, endOfPath);
-                }
-                else
-                {
+                } else {
                     // file:/tmp/foo/baa.jar -> /tmp/foo/baa.jar
                     // mnv:foo.baa/baa/0.0.1 -> foo.baa/baa/0.0.1
                     path = uri.getPath();
                 }
             }
-            if (path == null)
-            {
+            if (path == null) {
                 // jar.getPath is null means we could not parse the location
                 // as a meaningful URI or file path.
                 // We can't do any meaningful processing for this bundle.
                 continue;
             }
             final int index = path.lastIndexOf('/');
-            if (index != -1 && path.startsWith(watchedDirPath))
-            {
+            if (index != -1 && path.startsWith(watchedDirPath)) {
                 Artifact artifact = new Artifact();
-                artifact.setBundleId(bundles[i].getBundleId());
-                artifact.setChecksum(Util.loadChecksum(bundles[i], context));
+                artifact.setBundleId(bundle.getBundleId());
+                artifact.setChecksum(Util.loadChecksum(bundle, context));
                 artifact.setListener(null);
                 artifact.setPath(new File(path));
                 setArtifact(new File(path), artifact);
-                checksums.put(new File(path), new Long(artifact.getChecksum()));
+                checksums.put(new File(path), artifact.getChecksum());
             }
         }
         scanner.initialize(checksums);
@@ -898,15 +849,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
      * @param artifacts Collection of {@link Artifact}s to be installed
      * @return List of Bundles just installed
      */
-    private Collection/* <Bundle> */ install(Collection/* <Artifact> */ artifacts)
+    private Collection<Bundle> install(Collection<Artifact> artifacts)
     {
-        List bundles = new ArrayList();
-        for (Iterator iter = artifacts.iterator(); iter.hasNext();)
-        {
-            Artifact artifact = (Artifact) iter.next();
+        List<Bundle> bundles = new ArrayList<Bundle>();
+        for (Artifact artifact : artifacts) {
             Bundle bundle = install(artifact);
-            if (bundle != null)
-            {
+            if (bundle != null) {
                 bundles.add(bundle);
             }
         }
@@ -918,15 +866,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
      * @param artifacts Collection of {@link Artifact}s to be uninstalled
      * @return Collection of Bundles that got uninstalled
      */
-    private Collection/* <Bundle> */ uninstall(Collection/* <Artifact> */ artifacts)
+    private Collection<Bundle> uninstall(Collection<Artifact> artifacts)
     {
-        List bundles = new ArrayList();
-        for (Iterator iter = artifacts.iterator(); iter.hasNext();)
-        {
-            Artifact artifact = (Artifact) iter.next();
+        List<Bundle> bundles = new ArrayList<Bundle>();
+        for (Artifact artifact : artifacts) {
             Bundle bundle = uninstall(artifact);
-            if (bundle != null)
-            {
+            if (bundle != null) {
                 bundles.add(bundle);
             }
         }
@@ -939,15 +884,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
      * @param artifacts    Collection of {@link Artifact}s to be updated.
      * @return Collection of bundles that got updated
      */
-    private Collection/* <Bundle> */ update(Collection/* <Artifact> */ artifacts)
+    private Collection<Bundle> update(Collection<Artifact> artifacts)
     {
-        List bundles = new ArrayList();
-        for (Iterator iter = artifacts.iterator(); iter.hasNext(); )
-        {
-            Artifact artifact = (Artifact) iter.next();
+        List<Bundle> bundles = new ArrayList<Bundle>();
+        for (Artifact artifact : artifacts) {
             Bundle bundle = update(artifact);
-            if (bundle != null)
-            {
+            if (bundle != null) {
                 bundles.add(bundle);
             }
         }
@@ -981,7 +923,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
             // if the listener is an url transformer
             else if (artifact.getListener() instanceof ArtifactUrlTransformer)
             {
-                Artifact badArtifact = (Artifact) installationFailures.get(path);
+                Artifact badArtifact = installationFailures.get(path);
                 if (badArtifact != null && badArtifact.getChecksum() == artifact.getChecksum())
                 {
                     return null; // Don't attempt to install it; nothing has changed.
@@ -1002,7 +944,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
             // if the listener is an artifact transformer
             else if (artifact.getListener() instanceof ArtifactTransformer)
             {
-                Artifact badArtifact = (Artifact) installationFailures.get(path);
+                Artifact badArtifact = installationFailures.get(path);
                 if (badArtifact != null && badArtifact.getChecksum() == artifact.getChecksum())
                 {
                     return null; // Don't attempt to install it; nothing has changed.
@@ -1052,22 +994,18 @@ public class DirectoryWatcher extends Thread implements BundleListener
         String vStr = m.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
         Version v = vStr == null ? Version.emptyVersion : Version.parseVersion(vStr);
         Bundle[] bundles = context.getBundles();
-        for (int i = 0; i < bundles.length; i++)
-        {
-            Bundle b = bundles[i];
-            if (b.getSymbolicName() != null && b.getSymbolicName().equals(sn))
-            {
-                vStr = (String) b.getHeaders().get(Constants.BUNDLE_VERSION);
+        for (Bundle b : bundles) {
+            if (b.getSymbolicName() != null && b.getSymbolicName().equals(sn)) {
+                vStr = b.getHeaders().get(Constants.BUNDLE_VERSION);
                 Version bv = vStr == null ? Version.emptyVersion : Version.parseVersion(vStr);
-                if (v.equals(bv))
-                {
+                if (v.equals(bv)) {
                     is.reset();
-                    if (Util.loadChecksum(b, context) != checksum)
-                    {
+                    if (Util.loadChecksum(b, context) != checksum) {
                         log(Logger.LOG_WARNING,
-                            "A bundle with the same symbolic name ("
-                            + sn + ") and version (" + vStr
-                            + ") is already installed.  Updating this bundle instead.", null);
+                                "A bundle with the same symbolic name ("
+                                        + sn + ") and version (" + vStr
+                                        + ") is already installed.  Updating this bundle instead.", null
+                        );
                         stopTransient(b);
                         Util.storeChecksum(b, checksum, context);
                         b.update(is);
@@ -1083,7 +1021,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         // Set default start level at install time, the user can override it if he wants
         if (startLevel != 0)
         {
-            FileInstall.getStartLevel().setBundleStartLevel(b, startLevel);
+            b.adapt(BundleStartLevel.class).setStartLevel(startLevel);
         }
         
         return b;
@@ -1237,19 +1175,15 @@ public class DirectoryWatcher extends Thread implements BundleListener
      */
     private void startAllBundles()
     {
-        List bundles = new ArrayList();
-        for (Iterator it = getArtifacts().iterator(); it.hasNext();)
-        {
-            Artifact artifact = (Artifact) it.next();
-            if (artifact.getBundleId() > 0)
-            {
+        FrameworkStartLevel startLevelSvc = context.getBundle(0).adapt(FrameworkStartLevel.class);
+        List<Bundle> bundles = new ArrayList<Bundle>();
+        for (Artifact artifact : getArtifacts()) {
+            if (artifact.getBundleId() > 0) {
                 Bundle bundle = context.getBundle(artifact.getBundleId());
-                if (bundle != null)
-                {
+                if (bundle != null) {
                     if (bundle.getState() != Bundle.STARTING && bundle.getState() != Bundle.ACTIVE
-                        && (useStartTransient || FileInstall.getStartLevel().isBundlePersistentlyStarted(bundle))
-                        && FileInstall.getStartLevel().getStartLevel() >= FileInstall.getStartLevel().getBundleStartLevel(bundle))
-                    {
+                            && (useStartTransient || bundle.adapt(BundleStartLevel.class).isPersistentlyStarted())
+                            && startLevelSvc.getStartLevel() >= bundle.adapt(BundleStartLevel.class).getStartLevel()) {
                         bundles.add(bundle);
                     }
                 }
@@ -1260,13 +1194,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
      /**
       * Starts a bundle and removes it from the Collection when successfully started.
-      * @param bundles
       */
-    private void startBundles(Collection/* <Bundle> */ bundles)
+    private void startBundles(Collection<Bundle> bundles)
     {
-        for (Iterator b = bundles.iterator(); b.hasNext(); )
+        for (Iterator<Bundle> b = bundles.iterator(); b.hasNext(); )
         {
-            if (startBundle((Bundle) b.next()))
+            if (startBundle(b.next()))
             {
                 b.remove();
             }
@@ -1280,7 +1213,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
       */
     private boolean startBundle(Bundle bundle)
     {
-        StartLevel startLevelSvc = FileInstall.getStartLevel();
+        FrameworkStartLevel startLevelSvc = context.getBundle(0).adapt(FrameworkStartLevel.class);
         // Fragments can never be started.
         // Bundles can only be started transient when the start level of the framework is high
         // enough. Persistent (i.e. non-transient) starts will simply make the framework start the
@@ -1288,7 +1221,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
         if (startBundles
                 && bundle.getState() != Bundle.UNINSTALLED
                 && !isFragment(bundle)
-                && startLevelSvc.getStartLevel() >= startLevelSvc.getBundleStartLevel(bundle))
+                && startLevelSvc.getStartLevel() >= bundle.adapt(BundleStartLevel.class).getStartLevel())
         {
             try
             {
@@ -1307,16 +1240,15 @@ public class DirectoryWatcher extends Thread implements BundleListener
         return false;
     }
 
-    protected Set getScopedBundles(String scope) {
+    protected Set<Bundle> getScopedBundles(String scope) {
         // No bundles to check
         if (SCOPE_NONE.equals(scope)) {
-            return new HashSet();
+            return new HashSet<Bundle>();
         }
         // Go through managed bundles
         else if (SCOPE_MANAGED.equals(scope)) {
-            Set bundles = new HashSet();
-            for (Iterator it = getArtifacts().iterator(); it.hasNext();) {
-                Artifact artifact = (Artifact) it.next();
+            Set<Bundle> bundles = new HashSet<Bundle>();
+            for (Artifact artifact : getArtifacts()) {
                 if (artifact.getBundleId() > 0) {
                     Bundle bundle = context.getBundle(artifact.getBundleId());
                     if (bundle != null) {
@@ -1327,29 +1259,27 @@ public class DirectoryWatcher extends Thread implements BundleListener
             return bundles;
         // Go through all bundles
         } else {
-            return new HashSet(Arrays.asList(context.getBundles()));
+            return new HashSet<Bundle>(Arrays.asList(context.getBundles()));
         }
     }
 
-    protected void findBundlesWithFragmentsToRefresh(Set toRefresh) {
-        Set fragments = new HashSet();
-        Set bundles = getScopedBundles(fragmentScope);
-        for (Iterator iterator = toRefresh.iterator(); iterator.hasNext();) {
-            Bundle b = (Bundle) iterator.next();
+    protected void findBundlesWithFragmentsToRefresh(Set<Bundle> toRefresh) {
+        Set<Bundle> fragments = new HashSet<Bundle>();
+        Set<Bundle> bundles = getScopedBundles(fragmentScope);
+        for (Bundle b : toRefresh) {
             if (b.getState() != Bundle.UNINSTALLED) {
-                String hostHeader = (String) b.getHeaders().get(Constants.FRAGMENT_HOST);
+                String hostHeader = b.getHeaders().get(Constants.FRAGMENT_HOST);
                 if (hostHeader != null) {
                     Clause[] clauses = Parser.parseHeader(hostHeader);
                     if (clauses != null && clauses.length > 0) {
                         Clause path = clauses[0];
-                        for (Iterator it = bundles.iterator(); it.hasNext();) {
-                            Bundle hostBundle = (Bundle) it.next();
+                        for (Bundle hostBundle : bundles) {
                             if (hostBundle.getSymbolicName() != null &&
                                     hostBundle.getSymbolicName().equals(path.getName())) {
                                 String ver = path.getAttribute(Constants.BUNDLE_VERSION_ATTRIBUTE);
                                 if (ver != null) {
                                     VersionRange v = VersionRange.parseVersionRange(ver);
-                                    if (v.contains(VersionTable.getVersion((String) hostBundle.getHeaders().get(Constants.BUNDLE_VERSION)))) {
+                                    if (v.contains(VersionTable.getVersion(hostBundle.getHeaders().get(Constants.BUNDLE_VERSION)))) {
                                         fragments.add(hostBundle);
                                     }
                                 } else {
@@ -1364,19 +1294,19 @@ public class DirectoryWatcher extends Thread implements BundleListener
         toRefresh.addAll(fragments);
     }
 
-    protected void findBundlesWithOptionalPackagesToRefresh(Set toRefresh) {
-        Set bundles = getScopedBundles(optionalScope);
+    protected void findBundlesWithOptionalPackagesToRefresh(Set<Bundle> toRefresh) {
+        Set<Bundle> bundles = getScopedBundles(optionalScope);
         // First pass: include all bundles contained in these features
         bundles.removeAll(toRefresh);
         if (bundles.isEmpty()) {
             return;
         }
         // Second pass: for each bundle, check if there is any unresolved optional package that could be resolved
-        Map imports = new HashMap();
-        for (Iterator it = bundles.iterator(); it.hasNext(); ) {
-            Bundle b = (Bundle) it.next();
-            String importsStr = (String) b.getHeaders().get(Constants.IMPORT_PACKAGE);
-            List importsList = getOptionalImports(importsStr);
+        Map<Bundle, List<Clause>> imports = new HashMap<Bundle, List<Clause>>();
+        for (Iterator<Bundle> it = bundles.iterator(); it.hasNext(); ) {
+            Bundle b = it.next();
+            String importsStr = b.getHeaders().get(Constants.IMPORT_PACKAGE);
+            List<Clause> importsList = getOptionalImports(importsStr);
             if (importsList.isEmpty()) {
                 it.remove();
             } else {
@@ -1388,25 +1318,23 @@ public class DirectoryWatcher extends Thread implements BundleListener
         }
         // Third pass: compute a list of packages that are exported by our bundles and see if
         //             some exported packages can be wired to the optional imports
-        List exports = new ArrayList();
-        for (Iterator iterator = toRefresh.iterator(); iterator.hasNext();) {
-            Bundle b = (Bundle) iterator.next();
+        List<Clause> exports = new ArrayList<Clause>();
+        for (Bundle b : toRefresh) {
             if (b.getState() != Bundle.UNINSTALLED) {
-                String exportsStr = (String) b.getHeaders().get(Constants.EXPORT_PACKAGE);
+                String exportsStr = b.getHeaders().get(Constants.EXPORT_PACKAGE);
                 if (exportsStr != null) {
                     Clause[] exportsList = Parser.parseHeader(exportsStr);
                     exports.addAll(Arrays.asList(exportsList));
                 }
             }
         }
-        for (Iterator it = bundles.iterator(); it.hasNext(); ) {
-            Bundle b = (Bundle) it.next();
-            List importsList = (List) imports.get(b);
-            for (Iterator itpi = importsList.iterator(); itpi.hasNext(); ) {
-                Clause pi = (Clause) itpi.next();
+        for (Iterator<Bundle> it = bundles.iterator(); it.hasNext(); ) {
+            Bundle b = it.next();
+            List<Clause> importsList = imports.get(b);
+            for (Iterator<Clause> itpi = importsList.iterator(); itpi.hasNext(); ) {
+                Clause pi = itpi.next();
                 boolean matching = false;
-                for (Iterator itcl = exports.iterator(); itcl.hasNext(); ) {
-                    Clause pe = (Clause) itcl.next();
+                for (Clause pe : exports) {
                     if (pi.getName().equals(pe.getName())) {
                         String evStr = pe.getAttribute(Constants.VERSION_ATTRIBUTE);
                         String ivStr = pi.getAttribute(Constants.VERSION_ATTRIBUTE);
@@ -1435,13 +1363,16 @@ public class DirectoryWatcher extends Thread implements BundleListener
         toRefresh.addAll(bundles);
     }
 
-    protected List getOptionalImports(String importsStr) {
+    protected List<Clause> getOptionalImports(String importsStr)
+    {
         Clause[] imports = Parser.parseHeader(importsStr);
-        List result = new LinkedList();
-        for (int i = 0; i < imports.length; i++) {
-            String resolution = imports[i].getDirective(Constants.RESOLUTION_DIRECTIVE);
-            if (Constants.RESOLUTION_OPTIONAL.equals(resolution)) {
-                result.add(imports[i]);
+        List<Clause> result = new LinkedList<Clause>();
+        for (Clause anImport : imports)
+        {
+            String resolution = anImport.getDirective(Constants.RESOLUTION_DIRECTIVE);
+            if (Constants.RESOLUTION_OPTIONAL.equals(resolution))
+            {
+                result.add(anImport);
             }
         }
         return result;
@@ -1451,9 +1382,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         if (updateWithListeners)
         {
-            for (Iterator it = getArtifacts().iterator(); it.hasNext(); )
+            for (Artifact artifact : getArtifacts())
             {
-                Artifact artifact = (Artifact) it.next();
                 if (artifact.getListener() == null && artifact.getBundleId() > 0)
                 {
                     Bundle bundle = context.getBundle(artifact.getBundleId());
@@ -1479,9 +1409,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
 
     public void removeListener(ArtifactListener listener)
     {
-        for (Iterator it = getArtifacts().iterator(); it.hasNext(); )
+        for (Artifact artifact : getArtifacts())
         {
-            Artifact artifact = (Artifact) it.next();
             if (artifact.getListener() == listener)
             {
                 artifact.setListener(null);
@@ -1497,15 +1426,15 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         synchronized (currentManagedArtifacts)
         {
-            return (Artifact) currentManagedArtifacts.get(file);
+            return currentManagedArtifacts.get(file);
         }
     }
 
-    private List getArtifacts()
+    private List<Artifact> getArtifacts()
     {
         synchronized (currentManagedArtifacts)
         {
-            return new ArrayList(currentManagedArtifacts.values());
+            return new ArrayList<Artifact>(currentManagedArtifacts.values());
         }
     }
 
@@ -1526,15 +1455,11 @@ public class DirectoryWatcher extends Thread implements BundleListener
     }
     
     private void setStateChanged(boolean changed) {
-        synchronized (stateChanged) {
-            this.stateChanged = Boolean.valueOf(changed);
-        }
+        this.stateChanged.set(changed);
     }
 
     private boolean isStateChanged() {
-        synchronized (stateChanged) {
-            return stateChanged.booleanValue();
-        }
+        return stateChanged.get();
     }
 
 }

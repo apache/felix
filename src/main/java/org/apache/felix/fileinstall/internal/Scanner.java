@@ -23,7 +23,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.CRC32;
@@ -47,8 +46,8 @@ public class Scanner {
     final FilenameFilter filter;
 
     // Store checksums of files or directories
-    Map/* <File, Long> */ lastChecksums = new HashMap/* <File, Long> */();
-    Map/* <File, Long> */ storedChecksums = new HashMap/* <File, Long> */();
+    Map<File, Long> lastChecksums = new HashMap<File, Long>();
+    Map<File, Long> storedChecksums = new HashMap<File, Long>();
 
     /**
      * Create a scanner for the specified directory
@@ -80,7 +79,7 @@ public class Scanner {
      *
      * @param checksums a map of checksums
      */
-    public void initialize(Map/*<File, Long>*/ checksums)
+    public void initialize(Map<File, Long> checksums)
     {
         storedChecksums.putAll(checksums);
     }
@@ -95,33 +94,30 @@ public class Scanner {
      * @param reportImmediately report all files immediately without waiting for the checksum to be stable
      * @return a list of changes on the files included in the directory
      */
-    public Set/*<File>*/ scan(boolean reportImmediately)
+    public Set<File> scan(boolean reportImmediately)
     {
         File[] list = directory.listFiles(filter);
         if (list == null)
         {
             return null;
         }
-        Set/*<File>*/ files = new HashSet/*<File>*/();
-        Set/*<File>*/ removed = new HashSet/*<File>*/(storedChecksums.keySet());
-        for (int i = 0; i < list.length; i++)
+        Set<File> files = new HashSet<File>();
+        Set<File> removed = new HashSet<File>(storedChecksums.keySet());
+        for (File file : list)
         {
-            File file  = list[i];
-            long lastChecksum = lastChecksums.get(file) != null ? ((Long) lastChecksums.get(file)).longValue() : 0;
-            long storedChecksum = storedChecksums.get(file) != null ? ((Long) storedChecksums.get(file)).longValue() : 0;
+            long lastChecksum = lastChecksums.get(file) != null ? (Long) lastChecksums.get(file) : 0;
+            long storedChecksum = storedChecksums.get(file) != null ? (Long) storedChecksums.get(file) : 0;
             long newChecksum = checksum(file);
-            lastChecksums.put(file, new Long(newChecksum));
+            lastChecksums.put(file, newChecksum);
             // Only handle file when it does not change anymore and it has changed since last reported
-            if ((newChecksum == lastChecksum || reportImmediately) && newChecksum != storedChecksum)
-            {
-                storedChecksums.put(file, new Long(newChecksum));
+            if ((newChecksum == lastChecksum || reportImmediately) && newChecksum != storedChecksum) {
+                storedChecksums.put(file, newChecksum);
                 files.add(file);
             }
             removed.remove(file);
         }
-        for (Iterator it = removed.iterator(); it.hasNext();)
+        for (File file : removed)
         {
-            File file = (File) it.next();
             // Make sure we'll handle a file that has been deleted
             files.addAll(removed);
             // Remove no longer used checksums
@@ -151,21 +147,19 @@ public class Scanner {
      */
     public long getChecksum(File file)
     {
-        Long c = (Long) storedChecksums.get(file);
-        return c != null ? c.longValue() : 0;
+        Long c = storedChecksums.get(file);
+        return c != null ? c : 0;
     }
 
     /**
       * Update the checksum of a file if that file is already known locally.
-      *
-      * @param file
       */
     public void updateChecksum(File file)
     {
         if (file != null && storedChecksums.containsKey(file))
         {
             long newChecksum = checksum(file);
-            storedChecksums.put(file, new Long(newChecksum));
+            storedChecksums.put(file, newChecksum);
         }
     }
 
@@ -196,9 +190,9 @@ public class Scanner {
             File[] children = file.listFiles();
             if (children != null)
             {
-                for (int i = 0; i < children.length; i++)
+                for (File aChildren : children)
                 {
-                    checksum(children[i], crc);
+                    checksum(aChildren, crc);
                 }
             }
         }
