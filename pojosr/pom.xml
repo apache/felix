@@ -1,0 +1,144 @@
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <packaging>bundle</packaging>
+  <name>Pojo Service Registry</name>
+  <groupId>com.googlecode.pojosr</groupId>
+  <artifactId>de.kalpatec.pojosr.framework</artifactId>
+  <version>0.3.0-SNAPSHOT</version>
+  <description>A service registry that enables OSGi style service registry programs without using an OSGi framework.</description>
+  <url>http://pojosr.googlecode.com/</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>http://pojosr.googlecode.com/svn/trunk/</url>
+    <connection>scm:svn:http://pojosr.googlecode.com/svn/trunk/framework/</connection>
+    <developerConnection>scm:svn:https://pojosr.googlecode.com/svn/trunk/framework/</developerConnection>
+  </scm>
+  <developers>
+    <developer>
+      <id>karlpauls</id>
+      <name>Karl Pauls</name>
+      <email>karlpauls@gmail.com</email>
+    </developer>
+  </developers>
+  <dependencies>
+      <dependency>
+          <groupId>org.osgi</groupId>
+          <artifactId>org.osgi.core</artifactId>
+          <version>4.3.1</version>
+      </dependency>
+      <dependency>
+          <groupId>org.osgi</groupId>
+          <artifactId>org.osgi.compendium</artifactId>
+          <version>4.2.0</version>
+      </dependency> 
+  </dependencies>
+  <repositories />
+  <pluginRepositories />
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <tagBase>https://pojosr.googlecode.com/svn/tags</tagBase>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <target>1.5</target>
+          <source>1.5</source>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.1.2</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.8</version>
+        <executions>
+          <execution>
+            <id>attach-javadoc</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.3.4</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>de.kalpatec.pojosr.framework</Bundle-SymbolicName>
+            <Bundle-Name>Pojo Service Registry</Bundle-Name>
+            <Bundle-Vendor>Apache Software Foundation</Bundle-Vendor>
+            <Private-Package>org.osgi.framework.*, org.osgi.service.url, org.osgi.service.packageadmin, org.osgi.service.startlevel, org.osgi.util.tracker, de.kalpatec.pojosr.framework.*</Private-Package>
+            <Import-Package>!*</Import-Package>
+            <Include-Resource>META-INF/LICENSE=LICENSE,META-INF/NOTICE=NOTICE,META-INF/DEPENDENCIES=DEPENDENCIES,{src/main/resources/}</Include-Resource> 
+            <Main-Class>de.kalpatec.pojosr.framework.PojoSR</Main-Class>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+     <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+      <directory>.</directory>
+      <targetPath>META-INF</targetPath>
+      <includes>
+        <include>LICENSE*</include>
+        <include>NOTICE*</include>
+        <include>DEPENDENCIES*</include>
+      </includes>
+    </resource>
+    </resources> 
+  </build>
+</project>
