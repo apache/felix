@@ -150,8 +150,7 @@ public class WatcherScanner extends Scanner {
 
         protected void log(int level, String message, Object... args) {
             String msg = String.format(message, args);
-            Util.log(bundleContext, Util.getGlobalLogLevel(bundleContext),
-                    level, msg, null);
+            Util.log(bundleContext, level, msg, null);
         }
 
     }

@@ -86,7 +86,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
             }
             catch (NoClassDefFoundError e)
             {
-                Util.log(context, Util.getGlobalLogLevel(context), Logger.LOG_DEBUG,
+                Util.log(context, Logger.LOG_DEBUG,
                         "ConfigAdmin is not available, some features will be disabled", e);
             }
 
