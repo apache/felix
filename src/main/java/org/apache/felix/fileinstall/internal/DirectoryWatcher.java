@@ -91,6 +91,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String POLL = "felix.fileinstall.poll";
     public final static String DIR = "felix.fileinstall.dir";
     public final static String LOG_LEVEL = "felix.fileinstall.log.level";
+    public final static String LOG_DEFAULT = "felix.fileinstall.log.default";
     public final static String TMPDIR = "felix.fileinstall.tmpdir";
     public final static String FILTER = "felix.fileinstall.filter";
     public final static String START_NEW_BUNDLES = "felix.fileinstall.bundles.new.start";
@@ -109,6 +110,9 @@ public class DirectoryWatcher extends Thread implements BundleListener
     public final static String SCOPE_NONE = "none";
     public final static String SCOPE_MANAGED = "managed";
     public final static String SCOPE_ALL = "all";
+
+    public final static String LOG_STDOUT = "stdout";
+    public final static String LOG_JUL = "jul";
 
     static final SecureRandom random = new SecureRandom();
 
