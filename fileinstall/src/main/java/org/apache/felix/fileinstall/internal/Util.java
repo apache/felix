@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+import java.util.logging.Level;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -99,7 +100,7 @@ public class Util
         }
         catch (Throwable t)
         {
-            logger = new StdOutLogger();
+            logger = new DefaultLogger(context);
         }
         return logger;
     }
@@ -117,8 +118,21 @@ public class Util
         void log(int logLevel, int msgLevel, String message, Throwable throwable);
     }
 
-    static class StdOutLogger implements Logger
+    static class DefaultLogger implements Logger
     {
+        protected BundleContext context;
+        private final String logDefault;
+
+        DefaultLogger(BundleContext context)
+        {
+            this.context = context;
+            String s = context.getProperty(DirectoryWatcher.LOG_DEFAULT);
+            s = (s == null)
+                    ? System.getProperty(DirectoryWatcher.LOG_DEFAULT.toUpperCase().replace('.', '_'))
+                    : s;
+            logDefault = (s == null) ? DirectoryWatcher.LOG_STDOUT : s;
+        }
+
         public boolean isValidLogger(BundleContext context)
         {
             return true;
@@ -131,22 +145,37 @@ public class Util
             // level.
             if ((logLevel > 0) && (msgLevel <= logLevel))
             {
-                System.out.println(message + ((throwable == null) ? "" : ": " + throwable));
-                if (throwable != null)
+                if (DirectoryWatcher.LOG_JUL.equals(logDefault))
                 {
-                    throwable.printStackTrace(System.out);
+                    Level lvl;
+                    switch (msgLevel)
+                    {
+                        case 1:  lvl = Level.SEVERE; break;
+                        case 2:  lvl = Level.WARNING; break;
+                        case 3:  lvl = Level.INFO; break;
+                        case 4:  lvl = Level.FINE; break;
+                        default: lvl = Level.FINEST; break;
+                    }
+                    java.util.logging.Logger logger = java.util.logging.Logger.getLogger("fileinstall");
+                    logger.log(lvl, message, throwable);
+                }
+                else
+                {
+                    System.out.println(message + ((throwable == null) ? "" : ": " + throwable));
+                    if (throwable != null)
+                    {
+                        throwable.printStackTrace(System.out);
+                    }
                 }
             }
         }
     }
 
-    static class OsgiLogger extends StdOutLogger
+    static class OsgiLogger extends DefaultLogger
     {
-        private BundleContext context;
-
         OsgiLogger(BundleContext context)
         {
-            this.context = context;
+            super(context);
             // Now make sure we can access the LogService class
             try
             {
