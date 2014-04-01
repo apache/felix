@@ -76,8 +76,12 @@ public class Util
      * @param e
      *            The throwable to log
      */
-    public static void log(BundleContext context, int logLevel,
-        int msgLevel, String message, Throwable e)
+    public static void log(BundleContext context, int msgLevel, String message, Throwable e)
+    {
+        getLogger(context).log(getGlobalLogLevel(context), msgLevel, message, e);
+    }
+
+    public static void log(BundleContext context, int logLevel, int msgLevel, String message, Throwable e)
     {
         getLogger(context).log(logLevel, msgLevel, message, e);
     }

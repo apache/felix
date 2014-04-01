@@ -969,7 +969,6 @@ public class DirectoryWatcher extends Thread implements BundleListener
             }
             installationFailures.remove(path);
             setArtifact(path, artifact);
-            log(Logger.LOG_INFO, "Installed " + path, null);
         }
         catch (Exception e)
         {
@@ -1020,6 +1019,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
             }
         }
         is.reset();
+        Util.log(context, Logger.LOG_INFO, "Installing bundle " + sn
+                + " / " + v, null);
         Bundle b = context.installBundle(bundleLocation, is);
         Util.storeChecksum(b, checksum, context);
         
@@ -1069,13 +1070,12 @@ public class DirectoryWatcher extends Thread implements BundleListener
                         + ". The bundle has already been uninstalled", null);
                     return null;
                 }
-                log(Logger.LOG_DEBUG,
+                log(Logger.LOG_INFO,
                     "Uninstalling bundle "
                     + bundle.getBundleId() + " ("
                     + bundle.getSymbolicName() + ")", null);
                 bundle.uninstall();
             }
-            log(Logger.LOG_INFO, "Uninstalled " + path, null);
         }
         catch (Exception e)
         {
@@ -1109,6 +1109,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
                         + ". The bundle has been uninstalled", null);
                     return null;
                 }
+                Util.log(context, Logger.LOG_INFO, "Updating bundle " + bundle.getSymbolicName()
+                        + " / " + bundle.getVersion(), null);
                 stopTransient(bundle);
                 Util.storeChecksum(bundle, artifact.getChecksum(), context);
                 InputStream in = (transformed != null)
@@ -1137,6 +1139,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
                         + ". The bundle has been uninstalled", null);
                     return null;
                 }
+                Util.log(context, Logger.LOG_INFO, "Updating bundle " + bundle.getSymbolicName()
+                        + " / " + bundle.getVersion(), null);
                 stopTransient(bundle);
                 Util.storeChecksum(bundle, artifact.getChecksum(), context);
                 InputStream in = new FileInputStream(transformed != null ? transformed : path);
@@ -1149,7 +1153,6 @@ public class DirectoryWatcher extends Thread implements BundleListener
                     in.close();
                 }
             }
-            log(Logger.LOG_INFO, "Updated " + path, null);
         }
         catch (Throwable t)
         {

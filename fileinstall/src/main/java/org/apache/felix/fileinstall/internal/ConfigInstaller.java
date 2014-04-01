@@ -157,7 +157,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             }
             catch (Exception e)
             {
-                Util.log( context, Util.getGlobalLogLevel(context), Logger.LOG_INFO, "Unable to save configuration", e );
+                Util.log( context, Logger.LOG_INFO, "Unable to save configuration", e );
             }
         }
     }
@@ -247,6 +247,13 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
             {
                 config.setBundleLocation(null);
             }
+            if (old == null) {
+                Util.log(context, Logger.LOG_INFO, "Creating configuration from " + pid[0]
+                        + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
+            } else {
+                Util.log(context, Logger.LOG_INFO, "Updating configuration from " + pid[0]
+                        + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
+            }
             config.update(ht);
             return true;
         }
@@ -267,6 +274,8 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
     boolean deleteConfig(File f) throws Exception
     {
         String pid[] = parsePid(f.getName());
+        Util.log(context, Logger.LOG_INFO, "Deleting configuration from " + pid[0]
+                + (pid[1] == null ? "" : "-" + pid[1]) + ".cfg", null);
         Configuration config = getConfiguration(toConfigKey(f), pid[0], pid[1]);
         config.delete();
         return true;
@@ -308,9 +317,6 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
         Configuration oldConfiguration = findExistingConfiguration(fileName);
         if (oldConfiguration != null)
         {
-            Util.log(context, Util.getGlobalLogLevel(context),
-                Logger.LOG_DEBUG, "Updating configuration from " + pid
-                + (factoryPid == null ? "" : "-" + factoryPid) + ".cfg", null);
             return oldConfiguration;
         }
         else
