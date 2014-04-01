@@ -62,6 +62,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
     ServiceTracker listenersTracker;
     final ReadWriteLock lock = new ReentrantReadWriteLock();
     ServiceRegistration urlHandlerRegistration;
+    volatile boolean stopped;
 
     public void start(BundleContext context) throws Exception
     {
@@ -199,6 +200,7 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
         }
         finally
         {
+            stopped = true;
             lock.writeLock().unlock();
         }
     }
@@ -376,6 +378,9 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
                 lock.writeLock().lock();
                 try
                 {
+                    if (stopped) {
+                        return null;
+                    }
                     ConfigurationAdmin cm = super.addingService(serviceReference);
                     long id = (Long) serviceReference.getProperty(Constants.SERVICE_ID);
                     ConfigInstaller configInstaller = new ConfigInstaller(this.context, cm, fileInstall);
@@ -394,6 +399,9 @@ public class FileInstall implements BundleActivator, ServiceTrackerCustomizer
                 lock.writeLock().lock();
                 try
                 {
+                    if (stopped) {
+                        return;
+                    }
                     Iterator iterator = configs.iterator();
                     while (iterator.hasNext())
                     {

@@ -62,11 +62,7 @@ public class ConfigInstaller implements ArtifactInstaller, ConfigurationListener
 
     public void destroy()
     {
-        try {
-            registration.unregister();
-        } catch (IllegalStateException e) {
-            // Ignore
-        }
+        registration.unregister();
     }
 
     public boolean canHandle(File artifact)
