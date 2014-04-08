@@ -922,6 +922,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
     {
         File path = artifact.getPath();
         Bundle bundle = null;
+        AtomicBoolean modified = new AtomicBoolean();
         try
         {
             // If the listener is an installer, ask for an update
@@ -942,7 +943,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 BufferedInputStream in = new BufferedInputStream(transformed.openStream());
                 try
                 {
-                    bundle = installOrUpdateBundle(location, in, artifact.getChecksum());
+                    bundle = installOrUpdateBundle(location, in, artifact.getChecksum(), modified);
                 }
                 finally
                 {
@@ -963,7 +964,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 BufferedInputStream in = new BufferedInputStream(new FileInputStream(transformed != null ? transformed : path));
                 try
                 {
-                    bundle = installOrUpdateBundle(location, in, artifact.getChecksum());
+                    bundle = installOrUpdateBundle(location, in, artifact.getChecksum(), modified);
                 }
                 finally
                 {
@@ -983,11 +984,11 @@ public class DirectoryWatcher extends Thread implements BundleListener
             // jar has been modified.
             installationFailures.put(path, artifact);
         }
-        return bundle;
+        return modified.get() ? bundle : null;
     }
 
     private Bundle installOrUpdateBundle(
-        String bundleLocation, BufferedInputStream is, long checksum)
+        String bundleLocation, BufferedInputStream is, long checksum, AtomicBoolean modified)
         throws IOException, BundleException
     {
         is.mark(256 * 1024);
@@ -1017,6 +1018,7 @@ public class DirectoryWatcher extends Thread implements BundleListener
                         stopTransient(b);
                         Util.storeChecksum(b, checksum, context);
                         b.update(is);
+                        modified.set(true);
                     }
                     return b;
                 }
@@ -1027,7 +1029,8 @@ public class DirectoryWatcher extends Thread implements BundleListener
                 + " / " + v, null);
         Bundle b = context.installBundle(bundleLocation, is);
         Util.storeChecksum(b, checksum, context);
-        
+        modified.set(true);
+
         // Set default start level at install time, the user can override it if he wants
         if (startLevel != 0)
         {
