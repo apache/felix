@@ -19,7 +19,9 @@
 package org.apache.felix.bundlerepository.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.bundlerepository.Capability;
@@ -200,7 +202,7 @@ public class SpecXMLPullParser
         PullParser.sanityCheckEndElement(reader, event, parentTag);
     }
 
-    private static Object getTypedValue(String type, String value)
+    private static Object getTypedValue(String type, String value) throws IOException
     {
         if (type == null)
             return value;
@@ -212,7 +214,85 @@ public class SpecXMLPullParser
             return Long.parseLong(value);
         else if ("Double".equals(type))
             return Double.parseDouble(value);
+        else if ("List<String>".equals(type))
+            return parseStringList(value);
+        else if ("List<Version>".equals(type))
+            return parseVersionList(value);
+        else if ("List<Long>".equals(type))
+            return parseLongList(value);
+        else if ("List<Double>".equals(type))
+            return parseDoubleList(value);
         return value;
+    }
+
+    private static List<String> parseStringList(String value)
+    {
+        List<String> l = new ArrayList<String>();
+        StringBuilder sb = new StringBuilder();
+
+        boolean escaped = false;
+        for (char c : value.toCharArray())
+        {
+            if (escaped)
+            {
+                sb.append(c);
+                escaped = false;
+            }
+            else
+            {
+                switch (c)
+                {
+                    case '\\':
+                        escaped = true;
+                        break;
+                    case ',':
+                        l.add(sb.toString().trim());
+                        sb.setLength(0);
+                        break;
+                    default:
+                        sb.append(c);
+                }
+            }
+        }
+
+        if (sb.length() > 0)
+            l.add(sb.toString().trim());
+
+        return l;
+    }
+
+    private static List<Version> parseVersionList(String value)
+    {
+        List<Version> l = new ArrayList<Version>();
+
+        // Version strings cannot contain a comma, as it's not an allowed character in it anywhere
+        for (String v : value.split(","))
+        {
+            l.add(Version.parseVersion(v.trim()));
+        }
+        return l;
+    }
+
+    private static List<Long> parseLongList(String value)
+    {
+        List<Long> l = new ArrayList<Long>();
+
+        for (String x : value.split(","))
+        {
+            l.add(Long.parseLong(x.trim()));
+        }
+        return l;
+    }
+
+    private static List<Double> parseDoubleList(String value)
+    {
+        List<Double> l = new ArrayList<Double>();
+
+        for (String d : value.split(","))
+        {
+            l.add(Double.parseDouble(d.trim()));
+        }
+        return l;
     }
 
     private static Requirement parseRequirement(XmlPullParser reader) throws Exception
