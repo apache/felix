@@ -202,7 +202,7 @@ public class SpecXMLPullParser
         PullParser.sanityCheckEndElement(reader, event, parentTag);
     }
 
-    private static Object getTypedValue(String type, String value) throws IOException
+    private static Object getTypedValue(String type, String value)
     {
         if (type == null)
             return value;
