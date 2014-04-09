@@ -13,21 +13,14 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.felix.bundlerepository.Property;
 import org.osgi.framework.Version;
 
- class FelixPropertyAdapter implements Property
+class FelixPropertyAdapter implements Property
 {
-    private static Set<?> asSet(List<?> list)
-    {
-        return new HashSet<Object>(list);
-    }
-
     private final String name;
     private final Object value;
 
@@ -48,8 +41,6 @@ import org.osgi.framework.Version;
 
     public Object getConvertedValue()
     {
-        if (value instanceof List)
-            return asSet((List<?>) value);
         return value;
     }
 
