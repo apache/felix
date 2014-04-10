@@ -225,36 +225,12 @@
       -->
       <!--<version>1.11.1</version>-->
       <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.osgi</groupId>
-          <artifactId>org.osgi.core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.osgi</groupId>
-          <artifactId>org.osgi.compendium</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo.manipulator.online</artifactId>
       <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.osgi</groupId>
-          <artifactId>org.osgi.core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.osgi</groupId>
-          <artifactId>org.osgi.compendium</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>org.apache.felix.ipojo</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <!-- End of tested version -->
