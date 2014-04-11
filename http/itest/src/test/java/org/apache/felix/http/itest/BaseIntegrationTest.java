@@ -85,6 +85,11 @@ public abstract class BaseIntegrationTest
         private final CountDownLatch m_initLatch;
         private final CountDownLatch m_destroyLatch;
 
+        public TestFilter()
+        {
+            this(null, null);
+        }
+        
         public TestFilter(CountDownLatch initLatch, CountDownLatch destroyLatch)
         {
             m_initLatch = initLatch;
@@ -125,6 +130,11 @@ public abstract class BaseIntegrationTest
         private final CountDownLatch m_initLatch;
         private final CountDownLatch m_destroyLatch;
 
+        public TestServlet()
+        {
+            this(null, null);
+        }
+        
         public TestServlet(CountDownLatch initLatch, CountDownLatch destroyLatch)
         {
             m_initLatch = initLatch;
