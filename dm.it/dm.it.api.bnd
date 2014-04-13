@@ -1,5 +1,5 @@
 Bundle-Version:0.0.0.${tstamp}
-Private-Package: \
-	dm.it
 Test-Cases: \
 	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
+Export-Package: \
+	dm.it
