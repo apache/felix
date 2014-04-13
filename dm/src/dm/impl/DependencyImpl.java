@@ -209,7 +209,6 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 		m_component.invokeCallbackMethod(getInstances(), method, new Class[][] {{}}, new Object[][] {{}});
 	}
 	
-	@Override
 	public T setRequired(boolean required) {
 		m_required = required;
 		return (T) this;
@@ -240,14 +239,12 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
         return m_autoConfigInstance;
     }
     
-    @Override
     public T setAutoConfig(boolean autoConfig) {
         m_autoConfig = autoConfig;
         m_autoConfigInvoked = true;
         return (T) this;
     }
     
-    @Override
     public T setAutoConfig(String instanceName) {
         m_autoConfig = (instanceName != null);
         m_autoConfigInstance = instanceName;
