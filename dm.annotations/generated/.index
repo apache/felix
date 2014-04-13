@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='utf-8'?>
+<repository increment='1397409663223' name='dm.annotations' xmlns='http://www.osgi.org/xmlns/repository/v1.0.0'>
+  <resource>
+    <capability namespace='osgi.identity'>
+      <attribute name='osgi.identity' value='dm.annotations'/>
+      <attribute name='type' value='osgi.bundle'/>
+      <attribute name='version' type='Version' value='0.0.0.201404131721'/>
+    </capability>
+    <capability namespace='osgi.content'>
+      <attribute name='osgi.content' value='112a107e0a22cf96ffe4fb7848f66ecefa9d1bc6891837f4200aad04fd2de0e8'/>
+      <attribute name='url' value='generated/dm.annotations.jar'/>
+      <attribute name='size' type='Long' value='149052'/>
+      <attribute name='mime' value='application/vnd.osgi.bundle'/>
+    </capability>
+    <capability namespace='osgi.wiring.bundle'>
+      <attribute name='osgi.wiring.bundle' value='dm.annotations'/>
+      <attribute name='bundle-version' type='Version' value='0.0.0.201404131721'/>
+    </capability>
+    <capability namespace='osgi.wiring.host'>
+      <attribute name='osgi.wiring.host' value='dm.annotations'/>
+      <attribute name='bundle-version' type='Version' value='0.0.0.201404131721'/>
+    </capability>
+    <capability namespace='osgi.wiring.package'>
+      <attribute name='osgi.wiring.package' value='dm.annotation.api'/>
+      <attribute name='version' type='Version' value='1.0.0'/>
+      <attribute name='bundle-symbolic-name' value='dm.annotations'/>
+      <attribute name='bundle-version' type='Version' value='0.0.0.201404131721'/>
+    </capability>
+    <capability namespace='bndtools.workspace'>
+      <attribute name='bndtools.workspace' value='file:/home/nxuser/workspace/SANDBOX_PDEROP'/>
+      <attribute name='project.path' value='/dm.annotations'/>
+    </capability>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=aQute.bnd.osgi)(version&gt;=2.1.0)(!(version&gt;=3.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=aQute.bnd.service)(version&gt;=4.0.0)(!(version&gt;=5.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=aQute.service.reporter)(version&gt;=1.0.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.wiring.package'>
+      <directive name='filter' value='(&amp;(osgi.wiring.package=dm.annotation.api)(version&gt;=1.0.0)(!(version&gt;=2.0.0)))'/>
+    </requirement>
+    <requirement namespace='osgi.ee'>
+      <directive name='filter' value='(&amp;(osgi.ee=JavaSE)(version=1.7))'/>
+    </requirement>
+  </resource>
+</repository>
