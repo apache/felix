@@ -218,8 +218,28 @@ public class DependencyManager {
         return new ResourceAdapterImpl(this, resourceFilter, propagateCallbackInstance, propagateCallbackMethod, callbackInstance, callbackSet, callbackChanged);
     }
     
-   public List<Component> getComponents() {
+    public List<Component> getComponents() {
         return m_components;
+    }
+
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
+        // TODO
+        return null;
+    }
+    
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking) {
+        // TODO
+        return null;
+    }
+    
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove) {
+        // TODO
+        return null;
+    }
+    
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove, String swap) {
+        // TODO
+        return null;	
     }
 
     public void clear() {
