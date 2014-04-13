@@ -17,7 +17,6 @@ import dm.context.DependencyContext;
 import dm.context.Event;
 import dm.impl.metatype.MetaTypeProviderImpl;
 
-// Todo implements some methods from DependencyImpl (createCopy, etc ...)
 public class ConfigurationDependencyImpl extends DependencyImpl<ConfigurationDependency> implements ConfigurationDependency, ManagedService {
     private Dictionary<?,?> m_settings;
     private String m_callback = "updated";
