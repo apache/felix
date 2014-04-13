@@ -215,6 +215,11 @@ public abstract class DependencyActivatorBase implements BundleActivator {
         return null;
     }
 
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove, String swap) {    
+        // TODO
+        return null;
+    }
+    	
     /**
      * Creates a new adapter service.
      * 
