@@ -3,11 +3,11 @@
 	org.mockito.mockito-all
 Private-Package: \
 	dm.impl,\
-	dm.context,\
 	dm.impl.index,\
 	dm.impl.index.multiproperty,\
 	dm.impl.metatype
 Export-Package: \
 	dm,\
-	tracker
+	tracker,\
+	dm.context
 Import-Package: !org.junit,!org.mockito.*,*
