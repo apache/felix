@@ -1,12 +1,11 @@
 package dm.context;
 
 import java.util.List;
+import java.util.concurrent.Executor;
 
-import dm.ComponentState;
-import dm.impl.SerialExecutor;
-
+//TODO should this interface extend Component ?
 public interface ComponentContext {
-    public SerialExecutor getExecutor(); // shared between a component and its dependencies
+    public Executor getExecutor(); // shared between a component and its dependencies
     public void start();
     public void stop();
     public boolean isAvailable();
