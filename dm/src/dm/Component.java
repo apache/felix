@@ -19,7 +19,8 @@ public interface Component {
     public Component setAutoConfig(Class<?> clazz, boolean autoConfig);
     public Component setAutoConfig(Class<?> clazz, String instanceName);
     public ServiceRegistration getServiceRegistration();
-    public Object getService();
+    public Object getService(); // TODO do we really need this method (getInstances[0] returns the main component instance) ?
+    public Object[] getInstances();
     public Dictionary getServiceProperties();
     public Component setServiceProperties(Dictionary<?,?> serviceProperties);
     public Component setCallbacks(String init, String start, String stop, String destroy);
