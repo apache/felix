@@ -1,0 +1,27 @@
+-buildpath: \
+	osgi.core;version='[4.2,5)',\
+	osgi.cmpn,\
+	org.mockito.mockito-all,\
+	dm;version=latest,\
+	dm.annotations;version=latest,\
+	dm.it.api;version=latest,\
+	junit.osgi;version=3.8
+-runbundles: \
+	org.mockito.mockito-all,\
+	dm;version=latest,\
+	dm.runtime;version=latest,\
+	dm.it.api;version=latest,\
+	org.apache.felix.configadmin;version=1.8.1,\
+	org.apache.felix.metatype;version=1.0.4,\
+	osgi.cmpn;version=4.3.0,\
+	org.apache.felix.gogo.runtime;version=0.10.0,\
+	dm.runtime.it.components;version=latest,\
+	dm.runtime.it.tests;version=latest
+-runee:JavaSE-1.6
+-runfw:org.apache.felix.framework
+-runsystempackages: \
+	sun.reflect
+-runvm:-ea
+-sub: \
+	*.bnd
+-plugin: dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;path:=${workspace}/dm.annotations/generated/dm.annotations.jar
