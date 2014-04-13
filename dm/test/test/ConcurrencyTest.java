@@ -28,7 +28,7 @@ public class ConcurrencyTest {
 		final ComponentImpl c = new ComponentImpl();
 		final DependencyImpl d = new DependencyImpl();
 		d.setRequired(true);
-		final Dependency d2 = new DependencyImpl();
+		final DependencyImpl d2 = new DependencyImpl();
 		d2.setRequired(true);
 		final Thread t = new Thread() {
 			public void run() {
@@ -86,7 +86,7 @@ public class ConcurrencyTest {
 			e.execute(new Runnable() {
 				@Override
 				public void run() {
-					Dependency d = new DependencyImpl();
+				    DependencyImpl d = new DependencyImpl();
 					d.setRequired(true);
 					c.add(d);
 //					d.changed(new EventImpl(true));
