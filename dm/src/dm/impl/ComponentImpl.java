@@ -367,8 +367,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			instantiateComponent();
 			invokeAddRequiredDependencies();
 			invokeAutoConfigDependencies();
-	        invoke(m_callbackInit);
-			notifyListeners(newState);
+			ComponentState stateBeforeCallingInit = m_state;
+	        invoke(m_callbackInit); // may change current state if some available dependencies are added !
+	        if (stateBeforeCallingInit == m_state) {
+	            notifyListeners(newState); // init did not change current state, we can notify about this new state
+	        }
 			return true;
 		}
 		if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.TRACKING_OPTIONAL) {
@@ -708,16 +711,16 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         if (name != null) {
             // if a callback instance was specified, look for the method there, if not,
             // ask the service for its composition instances
-        	
-            invokeCallbackMethod(getInstances(), name, 
+            Object[] instances = m_callbackInstance != null ? new Object[] { m_callbackInstance } : getCompositionInstances();
+
+            invokeCallbackMethod(instances, name, 
                 new Class[][] {{ Component.class }, {}}, 
                 new Object[][] {{ this }, {}});
         }
     }
     
     public Object[] getInstances() {
-    	Object[] instances = m_callbackInstance != null ? new Object[] { m_callbackInstance } : getCompositionInstances();
-    	return instances;
+    	return getCompositionInstances();
     }
     
     public void invokeCallbackMethod(Object[] instances, String methodName, Class[][] signatures, Object[][] parameters) {
