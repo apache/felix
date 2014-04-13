@@ -7,7 +7,7 @@ import dm.context.Event;
 /* in real life, this event might contain a service reference and service instance
  * or something similar
  */
-public class EventImpl implements Event, Comparable {
+public class EventImpl implements Event {
 	private final int m_id;
 
 	public EventImpl() {
