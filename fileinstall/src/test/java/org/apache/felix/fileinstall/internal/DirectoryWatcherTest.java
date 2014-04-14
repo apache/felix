@@ -29,6 +29,7 @@ import java.util.Set;
 import junit.framework.TestCase;
 import org.apache.felix.fileinstall.ArtifactListener;
 import org.easymock.EasyMock;
+import org.easymock.IMocksControl;
 import org.junit.Assert;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -54,11 +55,15 @@ public class DirectoryWatcherTest extends TestCase
     protected void setUp() throws Exception
     {
         super.setUp();
-        mockBundleContext = EasyMock.createMock(BundleContext.class);
+        IMocksControl ctrl = EasyMock.createControl();
+        ctrl.makeThreadSafe(true);
+        mockBundleContext = ctrl.createMock(BundleContext.class);
         mockBundle = EasyMock.createNiceMock(Bundle.class);
         props.put( DirectoryWatcher.DIR, new File( "target/load" ).getAbsolutePath() );
 
         // Might get called, but most of the time it doesn't matter whether they do or don't.
+        EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_DEFAULT))
+                        .andStubReturn(null);
         EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL))
                         .andStubReturn(null);
         EasyMock.expect(mockBundleContext.getServiceReference(LogService.class.getName()))
