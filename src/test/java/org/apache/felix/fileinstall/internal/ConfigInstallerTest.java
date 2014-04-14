@@ -122,6 +122,8 @@ public class ConfigInstallerTest extends TestCase {
     public void testDeleteConfig() throws Exception
     {
         mockConfiguration.delete();
+        EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_DEFAULT)).andReturn(null);
+        EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL)).andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.listConfigurations((String) EasyMock.anyObject()))
                         .andReturn(null);
         EasyMock.expect(mockConfigurationAdmin.getConfiguration("pid", null ))
@@ -138,6 +140,8 @@ public class ConfigInstallerTest extends TestCase {
 
     public void testSetConfiguration() throws Exception
     {
+        EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_DEFAULT)).andReturn(null);
+        EasyMock.expect(mockBundleContext.getProperty(DirectoryWatcher.LOG_LEVEL)).andReturn(null);
         EasyMock.expect(mockConfiguration.getBundleLocation()).andReturn(null);
         EasyMock.expect(mockConfiguration.getProperties()).andReturn(new Hashtable<String, Object>());
         EasyMock.reportMatcher(new IArgumentMatcher()
