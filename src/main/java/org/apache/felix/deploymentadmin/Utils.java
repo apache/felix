@@ -33,12 +33,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.jar.Attributes.Name;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class Utils {
+    private static final String MANIFEST_NAME = JarFile.MANIFEST_NAME;
+
     public static Manifest readManifest(File manifestFile) throws IOException {
         InputStream is = null;
         Manifest mf = null;
@@ -50,14 +53,6 @@ public class Utils {
             closeSilently(is);
         }
         return mf;
-    }
-    
-    public static void readUntilEndOfStream(InputStream is) throws IOException {
-        byte[] buffer = new byte[1024];
-        int c = is.read(buffer);
-        while (c != -1) {
-            c = is.read(buffer);
-        }
     }
 
     public static boolean replace(File target, File source) {
@@ -153,7 +148,7 @@ public class Utils {
 
         for (Iterator i = result.iterator(); i.hasNext();) {
             String targetFile = (String) i.next();
-            if (!"META-INF/MANIFEST.MF".equals(targetFile) && !resultManifest.getEntries().containsKey(targetFile)) {
+            if (!MANIFEST_NAME.equals(targetFile) && !resultManifest.getEntries().containsKey(targetFile)) {
                 i.remove();
             }
         }
@@ -193,7 +188,7 @@ public class Utils {
             }
         }
 
-        GZIPOutputStream outputStream = new GZIPOutputStream(new FileOutputStream(new File(target, "META-INF/MANIFEST.MF")));
+        GZIPOutputStream outputStream = new GZIPOutputStream(new FileOutputStream(new File(target, MANIFEST_NAME)));
         try {
             resultManifest.write(outputStream);
         } finally {

@@ -131,8 +131,8 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
         return m_packageAdmin;
     }
 
-    public DeploymentPackage installDeploymentPackage(InputStream input) throws DeploymentException {
-        if (input == null) {
+    public DeploymentPackage installDeploymentPackage(InputStream sourceInput) throws DeploymentException {
+        if (sourceInput == null) {
             throw new IllegalArgumentException("Inputstream may not be null");
         }
 
@@ -163,7 +163,6 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
                 tempIndex = new File(tempPackage, PACKAGEINDEX_FILE);
                 tempContents = new File(tempPackage, PACKAGECONTENTS_DIR);
                 tempContents.mkdirs();
-                input = new ExplodingOutputtingInputStream(input, tempIndex, tempContents);
             }
             catch (IOException e) {
                 m_log.log(LogService.LOG_ERROR, "Error writing package to disk", e);
@@ -171,7 +170,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
             }
 
             try {
-                jarInput = new JarInputStream(input);
+                jarInput = new ContentCopyingJarInputStream(sourceInput, tempIndex, tempContents);
                 
                 if (jarInput.getManifest() == null) {
                     m_log.log(LogService.LOG_ERROR, "Stream does not contain a valid deployment package: missing manifest!");
@@ -206,31 +205,12 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
                 verifySourcePackage(source);
             }
 
-            // To keep track whether or not we're masking an exception during the close of the input stream...
-            boolean installFailed = false;
-            
             try {
                 m_session = new DeploymentSessionImpl(source, target, createInstallCommandChain(), this);
                 m_session.call(false /* ignoreExceptions */);
             }
             catch (DeploymentException de) {
-                installFailed = true;
                 throw de;
-            } finally {
-                try {
-                    // make sure we've read until the end-of-stream, so the explodingoutput-wrapper can process all bytes
-                    Utils.readUntilEndOfStream(input);
-
-                    // note that calling close on this stream will wait until asynchronous processing is done
-                    input.close();
-                }
-                catch (IOException e) {
-                    m_log.log(LogService.LOG_ERROR, "Could not close stream properly", e);
-                    // Do not mask out any originally thrown exceptions...
-                    if (!installFailed) {
-                        throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not close stream properly", e);
-                    }
-                }
             }
 
             String dpInstallBaseDirectory = PACKAGE_DIR + File.separator + dpSymbolicName;
@@ -277,6 +257,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
                 	succeeded = false;
                 }
             }
+
     	    sendCompleteEvent(source, target, succeeded);
             m_semaphore.release();
         }
