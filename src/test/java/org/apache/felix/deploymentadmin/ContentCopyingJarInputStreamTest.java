@@ -39,19 +39,20 @@ public class ContentCopyingJarInputStreamTest extends TestCase
 {
     private static final String MANIFEST_NAME = JarFile.MANIFEST_NAME;
     private static final String INDEX_NAME = "META-INF/INDEX.LIST";
-    
+
     private File m_tempDir;
     private File m_jarFile;
 
     /**
-     * Tests that we can copy a simple {@link JarInputStream}. 
+     * Tests that we can copy a {@link JarInputStream} containing only a manifest. 
      */
-    public void disabledTestCopyEmptyJarOk() throws Exception
+    public void testCopyEmptyJarWithManifestOnlyOk() throws Exception
     {
-        // DISABLED because it fails on JDK6, but succeeds on JDK7?!
-        createEmptyJar();
+        Manifest man = createManifest();
 
-        assertJarContents(null);
+        createEmptyJar(man);
+
+        assertJarContents(man);
     }
 
     /**
@@ -145,7 +146,7 @@ public class ContentCopyingJarInputStreamTest extends TestCase
 
                 // Without reading the actual contents, the copy should already exist...
                 assertTrue(entry.getName() + " does not exist?!", f.exists());
-                
+
                 int size = (INDEX_NAME.equals(entry.getName()) ? 33 : 1024);
 
                 byte[] input = new byte[size];
@@ -166,10 +167,11 @@ public class ContentCopyingJarInputStreamTest extends TestCase
             jis.close();
         }
     }
-    
-    private void createEmptyJar() throws IOException {
+
+    private void createEmptyJar(Manifest man) throws IOException
+    {
         FileOutputStream fos = new FileOutputStream(m_jarFile);
-        JarOutputStream jos = new JarOutputStream(fos);
+        JarOutputStream jos = new JarOutputStream(fos, man);
         jos.close();
     }
 
