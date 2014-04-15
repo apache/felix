@@ -18,14 +18,11 @@
  */
 package org.apache.felix.deploymentadmin.itest;
 
-import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
-import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
-import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.*;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -53,6 +50,7 @@ import org.osgi.framework.Version;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentException;
+import org.osgi.service.deploymentadmin.DeploymentPackage;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -68,7 +66,7 @@ public abstract class BaseIntegrationTest extends TestCase {
     @Inject
     protected volatile BundleContext m_context;
     @Inject
-    protected volatile DeploymentAdmin m_deploymentAdmin;
+    private volatile DeploymentAdmin m_deploymentAdmin;
 
     protected volatile AtomicInteger m_gate = new AtomicInteger(0);
     protected volatile String m_testBundleBasePath;
@@ -176,6 +174,24 @@ public abstract class BaseIntegrationTest extends TestCase {
             tracker.close();
         }
         return result;
+    }
+    
+    protected final DeploymentPackage installDeploymentPackage(DeploymentPackageBuilder dpBuilder) throws Exception {
+        InputStream is = dpBuilder.generate();
+        try {
+            return m_deploymentAdmin.installDeploymentPackage(is);
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                // Nothing we can do about this, but log it...
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    protected final int countDeploymentPackages() {
+        return m_deploymentAdmin.listDeploymentPackages().length;
     }
 
     protected DeploymentPackageBuilder createNewDeploymentPackageBuilder(String version) {

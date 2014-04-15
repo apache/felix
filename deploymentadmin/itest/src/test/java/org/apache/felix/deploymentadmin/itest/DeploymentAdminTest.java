@@ -48,7 +48,7 @@ public class DeploymentAdminTest extends BaseIntegrationTest {
             );
         
         try {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a bundle with a fake symbolic name?!");
         }
         catch (DeploymentException exception) {
@@ -70,7 +70,7 @@ public class DeploymentAdminTest extends BaseIntegrationTest {
             );
         
         try {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a bundle with a fake version?!");
         }
         catch (DeploymentException exception) {
@@ -92,7 +92,7 @@ public class DeploymentAdminTest extends BaseIntegrationTest {
             );
         
         try {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a bundle with a fake symbolic name?!");
         }
         catch (DeploymentException exception) {
@@ -114,7 +114,7 @@ public class DeploymentAdminTest extends BaseIntegrationTest {
             );
         
         try {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a bundle with a fake version?!");
         }
         catch (DeploymentException exception) {

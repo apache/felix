@@ -51,14 +51,14 @@ public class ResourceSharingTest extends BaseIntegrationTest {
                 .setUrl(getTestBundle("bundle1"))
             );
 
-        DeploymentPackage dp1 = m_deploymentAdmin.installDeploymentPackage(dpBuilder1.generate());
+        DeploymentPackage dp1 = installDeploymentPackage(dpBuilder1);
         assertNotNull("No deployment package returned?!", dp1);
 
         awaitRefreshPackagesEvent();
 
         try {
             // should fail: valid-bundle1 belongs to another DP...
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder2.generate());
+            installDeploymentPackage(dpBuilder2);
             fail("Expected a DeploymentException with code " + DeploymentException.CODE_BUNDLE_SHARING_VIOLATION);
         }
         catch (DeploymentException exception) {
@@ -86,7 +86,7 @@ public class ResourceSharingTest extends BaseIntegrationTest {
 
         try {
             // should fail: valid-bundle1 is installed, but does not belong to any DP...
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("Expected a DeploymentException with code " + DeploymentException.CODE_BUNDLE_SHARING_VIOLATION);
         }
         catch (DeploymentException exception) {
@@ -118,7 +118,7 @@ public class ResourceSharingTest extends BaseIntegrationTest {
             );
         
         // should succeed: valid-bundle1 is installed, but has a different version than the one in our DP...
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
 
         awaitRefreshPackagesEvent();
 

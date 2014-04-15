@@ -51,7 +51,7 @@ public class CustomizerTest extends BaseIntegrationTest {
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -60,7 +60,7 @@ public class CustomizerTest extends BaseIntegrationTest {
         assertBundleExists(getSymbolicName("rp1"), "1.0.0");
         assertBundleExists(getSymbolicName("bundle3"), "1.0.0");
 
-        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
     }
 
     /**
@@ -76,7 +76,7 @@ public class CustomizerTest extends BaseIntegrationTest {
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         try {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a failing deployment package?!");
         }
         catch (DeploymentException exception) {
@@ -86,7 +86,7 @@ public class CustomizerTest extends BaseIntegrationTest {
 
         assertTrue("No bundles should be started!", getCurrentBundles().isEmpty());
 
-        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 0, countDeploymentPackages());
     }
 
     /**
@@ -102,7 +102,7 @@ public class CustomizerTest extends BaseIntegrationTest {
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         try {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a failing deployment package?!");
         }
         catch (DeploymentException exception) {
@@ -112,7 +112,7 @@ public class CustomizerTest extends BaseIntegrationTest {
 
         assertTrue("No bundles should be started!", getCurrentBundles().isEmpty());
 
-        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 0, countDeploymentPackages());
     }
 
     /**
@@ -127,14 +127,14 @@ public class CustomizerTest extends BaseIntegrationTest {
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
 
         assertTrue("One bundle should be started!", getCurrentBundles().size() == 1);
 
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 1, countDeploymentPackages());
     }
 
     /**
@@ -151,7 +151,7 @@ public class CustomizerTest extends BaseIntegrationTest {
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
 
         try {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a failing RP?!");
         }
         catch (DeploymentException exception) {
@@ -159,7 +159,7 @@ public class CustomizerTest extends BaseIntegrationTest {
             assertDeploymentException(CODE_OTHER_ERROR, exception);
         }
 
-        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 0, countDeploymentPackages());
         assertTrue("Expected no artifacts to be installed?!", getCurrentBundles().isEmpty());
     }
 
@@ -172,11 +172,11 @@ public class CustomizerTest extends BaseIntegrationTest {
         dpBuilder
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")));
 
-        m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        installDeploymentPackage(dpBuilder);
 
         awaitRefreshPackagesEvent();
         
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 1, countDeploymentPackages());
         assertBundleExists(getSymbolicName("rp1"), "1.0.0");
 
         dpBuilder = createNewDeploymentPackageBuilder("1.0.0");
@@ -185,7 +185,7 @@ public class CustomizerTest extends BaseIntegrationTest {
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
         try {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a resource with an non-existing RP?!");
         }
         catch (DeploymentException exception) {
@@ -193,7 +193,7 @@ public class CustomizerTest extends BaseIntegrationTest {
             assertDeploymentException(CODE_FOREIGN_CUSTOMIZER, exception);
         }
 
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 1, countDeploymentPackages());
         assertTrue("Expected no additional artifacts to be installed?!", getCurrentBundles().size() == 1);
     }
 
@@ -208,7 +208,7 @@ public class CustomizerTest extends BaseIntegrationTest {
             .add(dpBuilder.createResource().setResourceProcessorPID("my.unknown.rp").setUrl(getTestResource("test-config1.xml")));
 
         try {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("Succeeded into installing a resource with an non-existing RP?!");
         }
         catch (DeploymentException exception) {
@@ -216,7 +216,7 @@ public class CustomizerTest extends BaseIntegrationTest {
             assertDeploymentException(CODE_PROCESSOR_NOT_FOUND, exception);
         }
 
-        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 0, countDeploymentPackages());
         assertTrue("Expected no artifacts to be installed?!", getCurrentBundles().isEmpty());
     }
 

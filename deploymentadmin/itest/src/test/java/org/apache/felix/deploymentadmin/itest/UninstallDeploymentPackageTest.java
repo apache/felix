@@ -47,7 +47,7 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -59,13 +59,16 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
 
         assertTrue("One bundle should be started!", getCurrentBundles().size() == 1);
 
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 1, countDeploymentPackages());
 
         assertTrue(dp.uninstallForced());
+
+        // FELIX-4484: after a forced uninstall, the DP should be marked as stale...
+        assertTrue(dp.isStale());
         
         assertTrue("No bundle should be started!", getCurrentBundles().isEmpty());
 
-        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 0, countDeploymentPackages());
     }
 
     /**
@@ -78,7 +81,7 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("fragment1")));
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -92,7 +95,7 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
         // Should succeed...
         dp.uninstall();
 
-        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 0, countDeploymentPackages());
 
         // Both bundles should be uninstalled...
         assertBundleNotExists(getSymbolicName("bundle1"), "1.0.0");
@@ -112,7 +115,7 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
                     .setUrl(getTestResource("test-config1.xml")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -121,12 +124,12 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
         assertBundleExists(getSymbolicName("rp1"), "1.0.0");
         assertBundleExists(getSymbolicName("bundle3"), "1.0.0");
 
-        assertEquals("Expected a single deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
 
         // Should succeed...
         dp.uninstall();
 
-        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 0, countDeploymentPackages());
 
         assertBundleNotExists(getSymbolicName("rp1"), "1.0.0");
         assertBundleNotExists(getSymbolicName("bundle3"), "1.0.0");
@@ -143,14 +146,14 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
         
         assertTrue("Two bundles should be started!", getCurrentBundles().size() == 2);
 
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 1, countDeploymentPackages());
         
         System.setProperty("rp1", "commit");
 
@@ -158,7 +161,7 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
 
         assertTrue("No bundles should be started! " + getCurrentBundles(), getCurrentBundles().isEmpty());
 
-        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 0, countDeploymentPackages());
     }
 
     /**
@@ -172,14 +175,14 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
         
         assertTrue("Two bundles should be started!", getCurrentBundles().size() == 2);
 
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 1, countDeploymentPackages());
         
         System.setProperty("rp1", "dropAllResources");
 
@@ -191,10 +194,13 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
             // Ok; expected
             assertDeploymentException(CODE_OTHER_ERROR, exception);
         }
+
+        // FELIX-4484: only after a successful uninstall, the DP should be marked as stale...
+        assertFalse(dp.isStale());
         
         assertTrue("Two bundles should be started!", getCurrentBundles().size() == 2);
 
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 1, countDeploymentPackages());
     }
 
     /**
@@ -208,14 +214,14 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
         
         assertTrue("Two bundles should be started!", getCurrentBundles().size() == 2);
 
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 1, countDeploymentPackages());
         
         System.setProperty("rp1", "prepare");
 
@@ -230,7 +236,7 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
         
         assertTrue("Two bundles should be started!", getCurrentBundles().size() == 2);
 
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 1, countDeploymentPackages());
     }
 
     /**
@@ -243,7 +249,7 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle1")))
             .add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundle3")));
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -252,11 +258,14 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
 
         System.setProperty("bundle3", "stop");
         
-        dp.uninstall();
+        dp.uninstall(); // should succeed.
+
+        // FELIX-4484: only after a successful uninstall, the DP should be marked as stale...
+        assertTrue(dp.isStale());
 
         awaitRefreshPackagesEvent();
 
-        assertEquals("Expected no deployment package?!", 0, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 0, countDeploymentPackages());
         
         assertTrue("Expected no bundles to remain?!", getCurrentBundles().isEmpty());
     }
@@ -272,7 +281,7 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
             .add(dpBuilder.createResourceProcessorResource().setUrl(getTestBundle("rp1")))
             .add(dpBuilder.createResource().setResourceProcessorPID(TEST_FAILING_BUNDLE_RP1).setUrl(getTestResource("test-config1.xml")));
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
@@ -284,7 +293,7 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
 
         assertTrue("One bundle should be started!", getCurrentBundles().size() == 1);
 
-        assertEquals("Expected no deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected no deployment package?!", 1, countDeploymentPackages());
 
         try {
             dp.uninstall();
@@ -297,6 +306,6 @@ public class UninstallDeploymentPackageTest extends BaseIntegrationTest {
         
         assertTrue("One bundle should be started!", getCurrentBundles().size() == 1);
 
-        assertEquals("Expected one deployment package?!", 1, m_deploymentAdmin.listDeploymentPackages().length);
+        assertEquals("Expected one deployment package?!", 1, countDeploymentPackages());
     }
 }

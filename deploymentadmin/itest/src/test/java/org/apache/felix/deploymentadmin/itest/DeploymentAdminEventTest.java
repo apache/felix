@@ -82,7 +82,7 @@ public class DeploymentAdminEventTest extends BaseIntegrationTest
 
         try
         {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
             fail("DeploymentException expected!");
         }
         catch (DeploymentException e)
@@ -146,7 +146,7 @@ public class DeploymentAdminEventTest extends BaseIntegrationTest
 
         try
         {
-            m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+            installDeploymentPackage(dpBuilder);
 
             assertTrue("Not all events were received in time?!", cdl.await(5, TimeUnit.SECONDS));
             
@@ -198,7 +198,7 @@ public class DeploymentAdminEventTest extends BaseIntegrationTest
             }
         };
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull(dp);
         
         awaitRefreshPackagesEvent();
@@ -263,7 +263,7 @@ public class DeploymentAdminEventTest extends BaseIntegrationTest
             }
         };
 
-        DeploymentPackage dp = m_deploymentAdmin.installDeploymentPackage(dpBuilder.generate());
+        DeploymentPackage dp = installDeploymentPackage(dpBuilder);
         assertNotNull("No deployment package returned?!", dp);
 
         awaitRefreshPackagesEvent();
