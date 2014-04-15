@@ -76,26 +76,15 @@ public abstract class BaseIntegrationTest extends TestCase {
     
     @Configuration
     public Option[] config() throws Exception {
-        File f = new File("src/test/resources/logback.xml");
-        if (!f.exists()) {
-            throw new RuntimeException("No log configuration...!");
-        }
         return options(
             bootDelegationPackage("sun.*"),
-            cleanCaches(),
-            systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("WARN"),
-            
-            mavenBundle("org.slf4j", "slf4j-api").version("1.7.5"),
-            mavenBundle("ch.qos.logback", "logback-core").version("1.0.13"),
-            mavenBundle("ch.qos.logback", "logback-classic").version("1.0.13"),
-            systemProperty("logback.configurationFile").value(f.toURI().toASCIIString()),
+            systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("ERROR"),
 
             mavenBundle("org.apache.felix", "org.apache.felix.metatype").versionAsInProject(),
             mavenBundle("org.apache.felix", "org.apache.felix.dependencymanager").versionAsInProject(),
             mavenBundle("org.apache.felix", "org.apache.felix.deploymentadmin").versionAsInProject(),
             mavenBundle("org.apache.felix", "org.apache.felix.eventadmin").versionAsInProject(),
             mavenBundle("org.apache.felix", "org.apache.felix.configadmin").versionAsInProject(),
-            mavenBundle("org.apache.felix", "org.apache.felix.log").versionAsInProject(),
             
             junitBundles()
         );
