@@ -36,6 +36,7 @@ import org.osgi.service.deploymentadmin.BundleInfo;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
 import org.osgi.service.deploymentadmin.spi.ResourceProcessor;
+import org.osgi.service.log.LogService;
 
 /**
  * Base class for various types of deployment packages. Indifferent in regard to
@@ -279,9 +280,7 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
             return null;
         } else {
             try {
-                // TODO spec states this must be a local resource, but we don't
-// make
-                // sure of that yet
+                // TODO spec states this must be a local resource, but we don't make sure of that yet
                 return new URL(icon);
             }
             catch (MalformedURLException e) {
@@ -315,7 +314,7 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
                     }
                 }
                 catch (InvalidSyntaxException e) {
-                    // TODO: log this
+                    m_deploymentAdmin.getLog().log(LogService.LOG_WARNING, "Invalid resource processor name: " + processor, e);
                     return null;
                 }
             }
@@ -361,24 +360,24 @@ public abstract class AbstractDeploymentPackage implements DeploymentPackage {
 
     public void uninstall() throws DeploymentException {
         if (isStale()) {
-            throw new IllegalStateException("Deployment package is stale, cannot uninstall.");
+            throw new IllegalStateException("Deployment package is stale, cannot uninstall!");
         }
-        try {
-            m_deploymentAdmin.uninstallDeploymentPackage(this, false /* force */);
-        }
-        finally {
-            setStale(true);
-        }
+
+        m_deploymentAdmin.uninstallDeploymentPackage(this, false /* force */);
+        // FELIX-4484: only mark a DP as stale when it is *successfully* uninstalled...
+        setStale(true);
     }
 
     public boolean uninstallForced() throws DeploymentException {
         if (isStale()) {
-            throw new IllegalStateException("Deployment package is stale, cannot uninstall.");
+            throw new IllegalStateException("Deployment package is stale, cannot force uninstallation!");
         }
+
         try {
             m_deploymentAdmin.uninstallDeploymentPackage(this, true /* force */);
         }
         finally {
+            // FELIX-4484: this is a best-effort method, if it fails, we cannot do anything about it anymore...
             setStale(true);
         }
         return true;
