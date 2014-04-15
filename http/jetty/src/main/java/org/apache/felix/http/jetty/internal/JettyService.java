@@ -603,6 +603,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
                 try
                 {
+                	context.getServletContext().setAttribute(OSGI_BUNDLE_CONTEXT, webAppBundle.getBundleContext());
+
                     JettyService.this.parent.addHandler(context);
                     context.start();
 
@@ -611,8 +613,6 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
                     props.put(WEB_VERSION, webAppBundle.getVersion());
                     props.put(WEB_CONTEXT_PATH, deployment.getContextPath());
                     deployment.setRegistration(webAppBundle.getBundleContext().registerService(ServletContext.class.getName(), context.getServletContext(), props));
-
-                    context.getServletContext().setAttribute(OSGI_BUNDLE_CONTEXT, webAppBundle.getBundleContext());
 
                     postEvent(WebEvent.DEPLOYED(webAppBundle, extenderBundle));
                 }
