@@ -48,6 +48,8 @@ import org.apache.felix.deploymentadmin.spi.UpdateCommand;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
+import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
@@ -56,7 +58,9 @@ import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
-public class DeploymentAdminImpl implements DeploymentAdmin {
+public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
+    /** Configuration PID used to dynamically configure DA at runtime. */
+    public static final String PID = "org.apache.felix.deploymentadmin";
 
     public static final String PACKAGE_DIR = "packages";
     public static final String TEMP_DIR = "temp";
@@ -66,19 +70,31 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
     public static final String TEMP_POSTFIX = "";
 
     private static final long TIMEOUT = 10000;
+    /** Configuration key used for dynamic configuration of DA. */
+    public static final String KEY_STOP_UNAFFECTED_BUNDLE = "stopUnaffectedBundle";
 
     private volatile BundleContext m_context;       /* will be injected by dependencymanager */
     private volatile PackageAdmin m_packageAdmin;   /* will be injected by dependencymanager */
     private volatile EventAdmin m_eventAdmin;       /* will be injected by dependencymanager */
     private volatile LogService m_log;              /* will be injected by dependencymanager */
     private volatile DeploymentSessionImpl m_session = null;
+    private volatile Boolean m_stopUnaffectedBundles = null;
+    
     private final Map m_packages = new HashMap();
     private final Semaphore m_semaphore = new Semaphore();
 
     /**
-     * Create new instance of this <code>DeploymentAdmin</code>.
+     * Creates a new {@link DeploymentAdminImpl} instance.
      */
     public DeploymentAdminImpl() {
+        // Nop
+    }
+    
+    /**
+     * Creates a new {@link DeploymentAdminImpl} instance.
+     */
+    DeploymentAdminImpl(BundleContext context) {
+        m_context = context;
     }
 
     public boolean cancel() {
@@ -348,6 +364,37 @@ public class DeploymentAdminImpl implements DeploymentAdmin {
             sendCompleteEvent(source, target, succeeded);
             m_semaphore.release();
         }
+    }
+    
+    public void updated(Dictionary properties) throws ConfigurationException {
+        Boolean stopUnaffectedBundles = null;
+        if (properties != null) {
+            Object value = properties.get(KEY_STOP_UNAFFECTED_BUNDLE);
+            if (value == null || !(value instanceof String || value instanceof Boolean)) {
+                throw new ConfigurationException(KEY_STOP_UNAFFECTED_BUNDLE, "missing value!");
+            }
+
+            if (value instanceof Boolean) {
+                stopUnaffectedBundles = (Boolean) value;
+            } else {
+                stopUnaffectedBundles = Boolean.valueOf(value.toString());
+            }
+        }
+        m_stopUnaffectedBundles = stopUnaffectedBundles;
+    }
+    
+    public boolean isStopUnaffectedBundles() {
+        Boolean stopUnaffectedBundles = m_stopUnaffectedBundles;
+        if (stopUnaffectedBundles == null) {
+            String prop = m_context.getProperty(PID + "." + KEY_STOP_UNAFFECTED_BUNDLE);
+            if (prop == null) {
+                prop = m_context.getProperty(PID + "." + KEY_STOP_UNAFFECTED_BUNDLE.toLowerCase());
+            }
+            if (prop != null) {
+                stopUnaffectedBundles = Boolean.valueOf(prop);
+            }
+        }
+        return (stopUnaffectedBundles == null) ? true : stopUnaffectedBundles.booleanValue();
     }
     
     private List createInstallCommandChain() {
