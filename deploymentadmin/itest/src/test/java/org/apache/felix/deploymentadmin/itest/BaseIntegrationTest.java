@@ -48,6 +48,7 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.Version;
 import org.osgi.framework.wiring.FrameworkWiring;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentException;
 import org.osgi.service.deploymentadmin.DeploymentPackage;
@@ -66,7 +67,9 @@ public abstract class BaseIntegrationTest extends TestCase {
     @Inject
     protected volatile BundleContext m_context;
     @Inject
-    private volatile DeploymentAdmin m_deploymentAdmin;
+    protected volatile DeploymentAdmin m_deploymentAdmin;
+    @Inject
+    protected volatile ConfigurationAdmin m_configAdmin;
 
     protected volatile AtomicInteger m_gate = new AtomicInteger(0);
     protected volatile String m_testBundleBasePath;

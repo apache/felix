@@ -196,4 +196,8 @@ public class DeploymentSessionImpl implements DeploymentSession {
     public AbstractDeploymentPackage getSourceAbstractDeploymentPackage() {
         return m_source;
     }
+    
+    public boolean isStopUnaffectedBundles() {
+        return m_admin.isStopUnaffectedBundles();
+    }
 }

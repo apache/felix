@@ -21,19 +21,70 @@ package org.apache.felix.deploymentadmin.itest;
 import static org.osgi.service.deploymentadmin.DeploymentException.CODE_BUNDLE_NAME_ERROR;
 import static org.osgi.service.deploymentadmin.DeploymentException.CODE_OTHER_ERROR;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder;
 import org.apache.felix.deploymentadmin.itest.util.DeploymentPackageBuilder.JarManifestManipulatingFilter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.osgi.service.cm.Configuration;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 import org.osgi.service.deploymentadmin.DeploymentException;
+import org.osgi.service.deploymentadmin.DeploymentPackage;
 
 /**
  * Generic tests for {@link DeploymentAdmin}.
  */
 @RunWith(PaxExam.class)
 public class DeploymentAdminTest extends BaseIntegrationTest {
+
+    /**
+     * Tests that we can update the configuration of {@link DeploymentAdmin} at runtime. Based on the test case for FELIX-4184, see 
+     * {@link org.apache.felix.deploymentadmin.itest.InstallFixPackageTest#testInstallAndUpdateImplementationBundleWithSeparateAPIBundle_FELIX4184()}
+     */
+    @Test
+    public void testUpdateConfigurationOk() throws Exception
+    {
+        Dictionary props = new Hashtable();
+        props.put("stopUnaffectedBundle", Boolean.FALSE);
+        
+        Configuration config = m_configAdmin.getConfiguration("org.apache.felix.deploymentadmin", null);
+        config.update(props);
+
+        Thread.sleep(100);
+
+        // This test case will only work if stopUnaffectedBundle is set to 'false'...
+        try {
+            // first, install a deployment package with implementation and api bundles in version 1.0.0
+            DeploymentPackageBuilder dpBuilder = createDeploymentPackageBuilder("a", "1.0.0");
+            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl1", "bundleimpl1", "1.0.0")));
+            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi1", "bundleapi1", "1.0.0")));
+    
+            DeploymentPackage dp1 = installDeploymentPackage(dpBuilder);
+            assertNotNull("No deployment package returned?!", dp1);
+    
+            assertEquals("Expected a single deployment package?!", 1, countDeploymentPackages());
+    
+            // then, install a fix package with implementation and api bundles in version 2.0.0
+            dpBuilder = createDeploymentPackageBuilder("a", "2.0.0").setFixPackage("[1.0.0,2.0.0]");
+            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleimpl2", "bundleimpl2", "2.0.0")));
+            dpBuilder.add(dpBuilder.createBundleResource().setUrl(getTestBundle("bundleapi2", "bundleapi2", "2.0.0")));
+
+            DeploymentPackage dp2 = installDeploymentPackage(dpBuilder);
+            assertNotNull("No deployment package returned?!", dp2);
+
+            awaitRefreshPackagesEvent();
+
+            assertBundleExists(getSymbolicName("bundleimpl"), "2.0.0");
+            assertBundleExists(getSymbolicName("bundleapi"), "2.0.0");
+            assertBundleNotExists(getSymbolicName("bundleimpl"), "1.0.0");
+            assertBundleNotExists(getSymbolicName("bundleapi"), "1.0.0");
+        } finally {
+            config.delete();
+        }
+    }
 
     @Test
     public void testBundleSymbolicNameMustMatchManifestEntry() throws Exception {

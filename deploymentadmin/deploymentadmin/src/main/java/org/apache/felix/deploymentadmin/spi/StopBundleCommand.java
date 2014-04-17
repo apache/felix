@@ -41,8 +41,6 @@ import org.osgi.service.log.LogService;
 public class StopBundleCommand extends Command {
 
     protected void doExecute(DeploymentSessionImpl session) throws Exception {
-        String stopUnaffectedBundle = System.getProperty("org.apache.felix.deploymentadmin.stopunaffectedbundle", "true");
-
         LogService log = session.getLog();
 
         AbstractDeploymentPackage target = session.getTargetAbstractDeploymentPackage();
@@ -54,7 +52,7 @@ public class StopBundleCommand extends Command {
             String symbolicName = bundleInfos[i].getSymbolicName();
             Bundle bundle = target.getBundle(symbolicName);
             if (bundle != null) {
-                if ("false".equalsIgnoreCase(stopUnaffectedBundle) && omitBundleStop(session, symbolicName)) {
+                if (omitBundleStop(session, symbolicName)) {
                     continue;
                 }
                 if (isFragmentBundle(bundle)) {
@@ -87,7 +85,9 @@ public class StopBundleCommand extends Command {
      *         deployment package. Returns <code>false</code> otherwise.
      */
     private boolean omitBundleStop(DeploymentSessionImpl session, String symbolicName) {
-        boolean result = false;
+        boolean stopUnaffectedBundle = session.isStopUnaffectedBundles();
+
+        boolean result = stopUnaffectedBundle;
         BundleInfoImpl sourceBundleInfo = session.getSourceAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
         BundleInfoImpl targetBundleInfo = session.getTargetAbstractDeploymentPackage().getBundleInfoByName(symbolicName);
         boolean fixPackageMissing = sourceBundleInfo != null && sourceBundleInfo.isMissing();
