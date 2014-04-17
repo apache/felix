@@ -1344,6 +1344,8 @@ public class BundlesServlet extends SimpleWebConsolePlugin implements OsgiManage
             {
                 val.append( " and overwritten by Boot Delegation" );
             }
+            
+            val.append(".");
         }
 
         if ( marker != null ) {
