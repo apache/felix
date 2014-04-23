@@ -33,24 +33,30 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationException;
 
 /**
- * Test cases for {@link DeploymentAdminImpl}.
+ * Test cases for {@link DeploymentAdminConfig}.
  */
-public class DeploymentAdminImplTest extends TestCase
+public class DeploymentAdminConfigTest extends TestCase
 {
-    private static final String CONF_KEY = DeploymentAdminImpl.KEY_STOP_UNAFFECTED_BUNDLE;
-    private static final String SYS_PROP = DeploymentAdminImpl.PID + "." + CONF_KEY.toLowerCase();
-    private static final String SYS_PROP_LOWERCASE = DeploymentAdminImpl.PID + "." + CONF_KEY.toLowerCase();
+    private static final String KEY_STOP_UNAFFECTED_BUNDLE = DeploymentAdminConfig.KEY_STOP_UNAFFECTED_BUNDLE;
+    private static final String KEY_ALLOW_FOREIGN_CUSTOMIZERS = DeploymentAdminConfig.KEY_ALLOW_FOREIGN_CUSTOMIZERS;
+    
+    private static final boolean DEFAULT_STOP_UNAFFECTED_BUNDLE = DeploymentAdminConfig.DEFAULT_STOP_UNAFFECTED_BUNDLE;
+    private static final boolean DEFAULT_ALLOW_FOREIGN_CUSTOMIZERS = DeploymentAdminConfig.DEFAULT_ALLOW_FOREIGN_CUSTOMIZERS;
+
+    private static final String SYS_PROP = DeploymentAdminImpl.PID + "." + KEY_STOP_UNAFFECTED_BUNDLE.toLowerCase();
+    private static final String SYS_PROP_LOWERCASE = DeploymentAdminImpl.PID + "." + KEY_STOP_UNAFFECTED_BUNDLE.toLowerCase();
 
     private final Map m_fwProperties = new HashMap();
 
     /**
      * Tests the configuration values of {@link DeploymentAdminImpl} without any explicit configuration.
      */
-    public void testDefaultConfigurationOk()
+    public void testDefaultConfigurationOk() throws ConfigurationException
     {
-        DeploymentAdminImpl da = createDeploymentAdmin();
+        DeploymentAdminConfig config = createDeploymentAdminConfig(null);
 
-        assertTrue(da.isStopUnaffectedBundles());
+        assertEquals(DEFAULT_STOP_UNAFFECTED_BUNDLE, config.isStopUnaffectedBundles());
+        assertEquals(DEFAULT_ALLOW_FOREIGN_CUSTOMIZERS, config.isAllowForeignCustomizers());
     }
 
     /**
@@ -59,18 +65,14 @@ public class DeploymentAdminImplTest extends TestCase
     public void testExplicitConfigurationOk() throws ConfigurationException
     {
         Dictionary dict = new Hashtable();
-        dict.put(CONF_KEY, "false");
+        dict.put(KEY_STOP_UNAFFECTED_BUNDLE, "false");
+        dict.put(KEY_ALLOW_FOREIGN_CUSTOMIZERS, "true");
 
-        DeploymentAdminImpl da = createDeploymentAdmin();
-        da.updated(dict);
+        DeploymentAdminConfig config = createDeploymentAdminConfig(dict);
 
         // Should use the explicit configured value...
-        assertFalse(da.isStopUnaffectedBundles());
-
-        da.updated(null);
-
-        // Should use the system wide value...
-        assertTrue(da.isStopUnaffectedBundles());
+        assertFalse(config.isStopUnaffectedBundles());
+        assertTrue(config.isAllowForeignCustomizers());
     }
 
     /**
@@ -79,43 +81,57 @@ public class DeploymentAdminImplTest extends TestCase
     public void testExplicitConfigurationWithMissingValueFail() throws ConfigurationException
     {
         Dictionary dict = new Hashtable();
+        dict.put(KEY_ALLOW_FOREIGN_CUSTOMIZERS, "true");
 
-        DeploymentAdminImpl da = createDeploymentAdmin();
         try
         {
-            da.updated(dict);
+            createDeploymentAdminConfig(dict);
             fail("ConfigurationException expected!");
         }
         catch (ConfigurationException e)
         {
-            assertEquals(CONF_KEY, e.getProperty());
+            assertEquals(KEY_STOP_UNAFFECTED_BUNDLE, e.getProperty());
+        }
+        
+        dict = new Hashtable();
+        dict.put(KEY_STOP_UNAFFECTED_BUNDLE, "true");
+
+        try
+        {
+            createDeploymentAdminConfig(dict);
+            fail("ConfigurationException expected!");
+        }
+        catch (ConfigurationException e)
+        {
+            assertEquals(KEY_ALLOW_FOREIGN_CUSTOMIZERS, e.getProperty());
         }
     }
 
     /**
      * Tests the configuration values of {@link DeploymentAdminImpl} without any explicit configuration.
      */
-    public void testFrameworkConfigurationOk()
+    public void testFrameworkConfigurationOk() throws ConfigurationException
     {
         m_fwProperties.put(SYS_PROP, "false");
 
-        DeploymentAdminImpl da = createDeploymentAdmin();
+        DeploymentAdminConfig config = createDeploymentAdminConfig(null);
 
-        assertFalse(da.isStopUnaffectedBundles());
+        assertEquals(false, config.isStopUnaffectedBundles());
+        assertEquals(DEFAULT_ALLOW_FOREIGN_CUSTOMIZERS, config.isAllowForeignCustomizers());
     }
 
     /**
      * Tests the configuration values of {@link DeploymentAdminImpl} without any explicit configuration.
      */
-    public void testSystemConfigurationOk()
+    public void testSystemConfigurationOk() throws ConfigurationException
     {
         System.setProperty(SYS_PROP, "false");
 
         try
         {
-            DeploymentAdminImpl da = createDeploymentAdmin();
+            DeploymentAdminConfig config = createDeploymentAdminConfig(null);
 
-            assertFalse(da.isStopUnaffectedBundles());
+            assertFalse(config.isStopUnaffectedBundles());
         }
         finally
         {
@@ -126,9 +142,9 @@ public class DeploymentAdminImplTest extends TestCase
 
         try
         {
-            DeploymentAdminImpl da = createDeploymentAdmin();
+            DeploymentAdminConfig config = createDeploymentAdminConfig(null);
 
-            assertFalse(da.isStopUnaffectedBundles());
+            assertFalse(config.isStopUnaffectedBundles());
         }
         finally
         {
@@ -141,9 +157,9 @@ public class DeploymentAdminImplTest extends TestCase
         m_fwProperties.clear();
     }
 
-    private DeploymentAdminImpl createDeploymentAdmin()
+    private DeploymentAdminConfig createDeploymentAdminConfig(Dictionary dict) throws ConfigurationException
     {
-        return new DeploymentAdminImpl(createMockBundleContext());
+        return new DeploymentAdminConfig(createMockBundleContext(), dict);
     }
 
     private BundleContext createMockBundleContext()

@@ -85,7 +85,7 @@ public class StopBundleCommand extends Command {
      *         deployment package. Returns <code>false</code> otherwise.
      */
     private boolean omitBundleStop(DeploymentSessionImpl session, String symbolicName) {
-        boolean stopUnaffectedBundle = session.isStopUnaffectedBundles();
+        boolean stopUnaffectedBundle = session.getConfiguration().isStopUnaffectedBundles();
 
         boolean result = stopUnaffectedBundle;
         BundleInfoImpl sourceBundleInfo = session.getSourceAbstractDeploymentPackage().getBundleInfoByName(symbolicName);

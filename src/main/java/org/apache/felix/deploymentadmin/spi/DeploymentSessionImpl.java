@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.apache.felix.deploymentadmin.AbstractDeploymentPackage;
+import org.apache.felix.deploymentadmin.DeploymentAdminConfig;
 import org.apache.felix.deploymentadmin.DeploymentAdminImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -43,15 +44,18 @@ public class DeploymentSessionImpl implements DeploymentSession {
     private final AbstractDeploymentPackage m_source;
     private final List m_commands;
     private final DeploymentAdminImpl m_admin;
+    private final DeploymentAdminConfig m_config;
 
     private volatile Command m_currentCommand = null;
     private volatile boolean m_cancelled;
 
-    public DeploymentSessionImpl(AbstractDeploymentPackage source, AbstractDeploymentPackage target, List commands, DeploymentAdminImpl admin) {
+    public DeploymentSessionImpl(AbstractDeploymentPackage source, AbstractDeploymentPackage target, List commands,
+        DeploymentAdminImpl admin) {
         m_source = source;
         m_target = target;
         m_commands = commands;
         m_admin = admin;
+        m_config = new DeploymentAdminConfig(m_admin.getConfiguration());
     }
 
     /**
@@ -91,13 +95,6 @@ public class DeploymentSessionImpl implements DeploymentSession {
         m_currentCommand = null;
     }
 
-    private void rollback(List executedCommands) {
-        for (ListIterator i = executedCommands.listIterator(executedCommands.size()); i.hasPrevious();) {
-            Command command = (Command) i.previous();
-            command.rollback(this);
-        }
-    }
-
     /**
      * Cancels the session if it is in progress.
      * 
@@ -117,6 +114,22 @@ public class DeploymentSessionImpl implements DeploymentSession {
     }
 
     /**
+     * Returns the bundle context of the bundle this class is part of.
+     * 
+     * @return The <code>BundleContext</code>.
+     */
+    public BundleContext getBundleContext() {
+        return m_admin.getBundleContext();
+    }
+
+    /**
+     * @return the configuration for this session, is guaranteed to remain stable during this session, never <code>null</code>.
+     */
+    public DeploymentAdminConfig getConfiguration() {
+        return m_config;
+    }
+
+    /**
      * Retrieve the base directory of the persistent storage area according to
      * OSGi Core R4 6.1.6.10 for the given <code>BundleContext</code>.
      * 
@@ -130,7 +143,8 @@ public class DeploymentSessionImpl implements DeploymentSession {
         BundleContext context = bundle.getBundleContext();
         if (context != null) {
             result = context.getDataFile("");
-        } else {
+        }
+        else {
             // TODO this method should not return null or throw an exception; we
             // need to resolve this...
             throw new IllegalStateException("Could not retrieve valid bundle context from bundle " + bundle.getSymbolicName());
@@ -140,23 +154,6 @@ public class DeploymentSessionImpl implements DeploymentSession {
             throw new IllegalStateException("Could not retrieve base directory for bundle " + bundle.getSymbolicName());
         }
         return result;
-    }
-
-    public DeploymentPackage getSourceDeploymentPackage() {
-        return m_source;
-    }
-
-    public DeploymentPackage getTargetDeploymentPackage() {
-        return m_target;
-    }
-
-    /**
-     * Returns the bundle context of the bundle this class is part of.
-     * 
-     * @return The <code>BundleContext</code>.
-     */
-    public BundleContext getBundleContext() {
-        return m_admin.getBundleContext();
     }
 
     /**
@@ -178,6 +175,20 @@ public class DeploymentSessionImpl implements DeploymentSession {
     }
 
     /**
+     * Returns the source deployment package as an
+     * <code>AbstractDeploymentPackage</code>.
+     * 
+     * @return The source deployment packge of the session.
+     */
+    public AbstractDeploymentPackage getSourceAbstractDeploymentPackage() {
+        return m_source;
+    }
+
+    public DeploymentPackage getSourceDeploymentPackage() {
+        return m_source;
+    }
+
+    /**
      * Returns the target deployment package as an
      * <code>AbstractDeploymentPackage</code>.
      * 
@@ -187,17 +198,14 @@ public class DeploymentSessionImpl implements DeploymentSession {
         return m_target;
     }
 
-    /**
-     * Returns the source deployment package as an
-     * <code>AbstractDeploymentPackage</code>.
-     * 
-     * @return The source deployment packge of the session.
-     */
-    public AbstractDeploymentPackage getSourceAbstractDeploymentPackage() {
-        return m_source;
+    public DeploymentPackage getTargetDeploymentPackage() {
+        return m_target;
     }
-    
-    public boolean isStopUnaffectedBundles() {
-        return m_admin.isStopUnaffectedBundles();
+
+    private void rollback(List executedCommands) {
+        for (ListIterator i = executedCommands.listIterator(executedCommands.size()); i.hasPrevious();) {
+            Command command = (Command) i.previous();
+            command.rollback(this);
+        }
     }
 }
