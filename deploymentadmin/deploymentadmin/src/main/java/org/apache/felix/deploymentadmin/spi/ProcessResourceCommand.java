@@ -72,8 +72,6 @@ public class ProcessResourceCommand extends Command {
         }
 
         try {
-            String allowForeignCustomerizers = System.getProperty("org.apache.felix.deploymentadmin.allowforeigncustomizers", "false");
-
             while (!expectedResources.isEmpty()) {
                 AbstractInfo jarEntry = source.getNextEntry();
                 if (jarEntry == null) {
@@ -88,38 +86,48 @@ public class ProcessResourceCommand extends Command {
                 }
 
                 ServiceReference ref = source.getResourceProcessor(name);
-                if (ref != null) {
-                    String serviceOwnerSymName = ref.getBundle().getSymbolicName();
-                    if (source.getBundleInfoByName(serviceOwnerSymName) != null || "true".equals(allowForeignCustomerizers)) {
-                        ResourceProcessor resourceProcessor = (ResourceProcessor) context.getService(ref);
-                        if (resourceProcessor != null) {
-                            try {
-                                if (m_commitCommand.addResourceProcessor(resourceProcessor)) {
-                                    resourceProcessor.begin(session);
-                                }
-                                resourceProcessor.process(name, source.getCurrentEntryStream());
-                            }
-                            catch (ResourceProcessorException rpe) {
-                                if (rpe.getCode() == ResourceProcessorException.CODE_RESOURCE_SHARING_VIOLATION) {
-                                    throw new DeploymentException(DeploymentException.CODE_RESOURCE_SHARING_VIOLATION, "Sharing violation while processing resource '" + name + "'", rpe);
-                                } else {
-                                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Error while processing resource '" + name + "'", rpe);
-                                }
-                            }
-                        } else {
-                            throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "No resource processor for resource: '" + name + "'");
-                        }
-                    } else {
-                        throw new DeploymentException(DeploymentException.CODE_FOREIGN_CUSTOMIZER, "Resource processor for resource '" + name + "' belongs to foreign deployment package");
-                    }
-                } else {
+                if (ref == null) {
                     throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "No resource processor for resource: '" + name + "'");
+                }
+                if (!isValidCustomizer(session, ref)) {
+                    throw new DeploymentException(DeploymentException.CODE_FOREIGN_CUSTOMIZER, "Resource processor for resource '" + name + "' belongs to foreign deployment package");
+                }
+
+                ResourceProcessor resourceProcessor = (ResourceProcessor) context.getService(ref);
+                if (resourceProcessor == null) {
+                    throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "No resource processor for resource: '" + name + "'");
+                }
+
+                try {
+                    if (m_commitCommand.addResourceProcessor(resourceProcessor)) {
+                        resourceProcessor.begin(session);
+                    }
+                    resourceProcessor.process(name, source.getCurrentEntryStream());
+                }
+                catch (ResourceProcessorException rpe) {
+                    if (rpe.getCode() == ResourceProcessorException.CODE_RESOURCE_SHARING_VIOLATION) {
+                        throw new DeploymentException(DeploymentException.CODE_RESOURCE_SHARING_VIOLATION, "Sharing violation while processing resource '" + name + "'", rpe);
+                    } else {
+                        throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Error while processing resource '" + name + "'", rpe);
+                    }
                 }
             }
         }
         catch (IOException e) {
             throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Problem while reading stream", e);
         }
+    }
+    
+    private boolean isValidCustomizer(DeploymentSessionImpl session, ServiceReference ref) {
+        if (session.getConfiguration().isAllowForeignCustomizers()) {
+            // If foreign customizers are allowed, any non-null customizer will do...
+            return ref != null;
+        }
+
+        AbstractDeploymentPackage source = session.getSourceAbstractDeploymentPackage();
+        String serviceOwnerSymName = ref.getBundle().getSymbolicName();
+        // If only local customizers are allowed, we must be able to find this customizer in our DP...
+        return source.getBundleInfoByName(serviceOwnerSymName) != null;
     }
 
     private class RollbackCommitAction extends AbstractAction {

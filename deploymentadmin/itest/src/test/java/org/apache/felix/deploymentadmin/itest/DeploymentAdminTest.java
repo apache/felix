@@ -49,7 +49,8 @@ public class DeploymentAdminTest extends BaseIntegrationTest {
     {
         Dictionary props = new Hashtable();
         props.put("stopUnaffectedBundle", Boolean.FALSE);
-        
+        props.put("allowForeignCustomizers", Boolean.FALSE);
+
         Configuration config = m_configAdmin.getConfiguration("org.apache.felix.deploymentadmin", null);
         config.update(props);
 

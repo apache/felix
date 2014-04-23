@@ -70,15 +70,13 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
     public static final String TEMP_POSTFIX = "";
 
     private static final long TIMEOUT = 10000;
-    /** Configuration key used for dynamic configuration of DA. */
-    public static final String KEY_STOP_UNAFFECTED_BUNDLE = "stopUnaffectedBundle";
 
     private volatile BundleContext m_context;       /* will be injected by dependencymanager */
     private volatile PackageAdmin m_packageAdmin;   /* will be injected by dependencymanager */
     private volatile EventAdmin m_eventAdmin;       /* will be injected by dependencymanager */
     private volatile LogService m_log;              /* will be injected by dependencymanager */
-    private volatile DeploymentSessionImpl m_session = null;
-    private volatile Boolean m_stopUnaffectedBundles = null;
+    private volatile DeploymentSessionImpl m_session;
+    private volatile DeploymentAdminConfig m_config;
     
     private final Map m_packages = new HashMap();
     private final Semaphore m_semaphore = new Semaphore();
@@ -115,6 +113,13 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
         return m_context;
     }
 
+    /**
+     * @return the configuration for this {@link DeploymentAdmin} instance, never <code>null</code>.
+     */
+    public DeploymentAdminConfig getConfiguration() {
+        return m_config;
+    }
+
     public DeploymentPackage getDeploymentPackage(Bundle bundle) {
         if (bundle == null) {
             throw new IllegalArgumentException("Bundle can not be null");
@@ -147,7 +152,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
         return m_packageAdmin;
     }
 
-    public DeploymentPackage installDeploymentPackage(InputStream sourceInput) throws DeploymentException {
+	public DeploymentPackage installDeploymentPackage(InputStream sourceInput) throws DeploymentException {
         if (sourceInput == null) {
             throw new IllegalArgumentException("Inputstream may not be null");
         }
@@ -279,7 +284,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
         }
     }
 
-	public DeploymentPackage[] listDeploymentPackages() {
+    public DeploymentPackage[] listDeploymentPackages() {
         Collection packages = m_packages.values();
         return (DeploymentPackage[]) packages.toArray(new DeploymentPackage[packages.size()]);
     }
@@ -288,6 +293,9 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
      * Called by dependency manager upon start of this component.
      */
     public void start() throws DeploymentException {
+        // Create a default configuration...
+        m_config = new DeploymentAdminConfig(m_context);
+        
         File packageDir = m_context.getDataFile(PACKAGE_DIR);
         if (packageDir == null) {
             throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not create directories needed for deployment package persistence");
@@ -315,8 +323,10 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
      */
     public void stop() {
     	cancel();
-    }
 
+    	m_config = null;
+    }
+    
     /**
      * Uninstalls the given deployment package from the system.
      * 
@@ -367,69 +377,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
     }
     
     public void updated(Dictionary properties) throws ConfigurationException {
-        Boolean stopUnaffectedBundles = null;
-        if (properties != null) {
-            Object value = properties.get(KEY_STOP_UNAFFECTED_BUNDLE);
-            if (value == null || !(value instanceof String || value instanceof Boolean)) {
-                throw new ConfigurationException(KEY_STOP_UNAFFECTED_BUNDLE, "missing value!");
-            }
-
-            if (value instanceof Boolean) {
-                stopUnaffectedBundles = (Boolean) value;
-            } else {
-                stopUnaffectedBundles = Boolean.valueOf(value.toString());
-            }
-        }
-        m_stopUnaffectedBundles = stopUnaffectedBundles;
-    }
-    
-    public boolean isStopUnaffectedBundles() {
-        Boolean stopUnaffectedBundles = m_stopUnaffectedBundles;
-        if (stopUnaffectedBundles == null) {
-            String prop = m_context.getProperty(PID + "." + KEY_STOP_UNAFFECTED_BUNDLE);
-            if (prop == null) {
-                prop = m_context.getProperty(PID + "." + KEY_STOP_UNAFFECTED_BUNDLE.toLowerCase());
-            }
-            if (prop != null) {
-                stopUnaffectedBundles = Boolean.valueOf(prop);
-            }
-        }
-        return (stopUnaffectedBundles == null) ? true : stopUnaffectedBundles.booleanValue();
-    }
-    
-    private List createInstallCommandChain() {
-        List commandChain = new ArrayList();
-
-        GetStorageAreaCommand getStorageAreaCommand = new GetStorageAreaCommand();
-        commandChain.add(getStorageAreaCommand);
-        commandChain.add(new StopBundleCommand());
-        commandChain.add(new SnapshotCommand(getStorageAreaCommand));
-        commandChain.add(new UpdateCommand());
-        commandChain.add(new StartCustomizerCommand());
-        CommitResourceCommand commitCommand = new CommitResourceCommand();
-        commandChain.add(new ProcessResourceCommand(commitCommand));
-        commandChain.add(new DropResourceCommand(commitCommand));
-        commandChain.add(new DropBundleCommand());
-        commandChain.add(commitCommand);
-        commandChain.add(new StartBundleCommand());
-        
-        return commandChain;
-    }
-    
-    private List createUninstallCommandChain() {
-        List commandChain = new ArrayList();
-
-        GetStorageAreaCommand getStorageAreaCommand = new GetStorageAreaCommand();
-        commandChain.add(getStorageAreaCommand);
-        commandChain.add(new StopBundleCommand());
-        commandChain.add(new SnapshotCommand(getStorageAreaCommand));
-        commandChain.add(new StartCustomizerCommand());
-        CommitResourceCommand commitCommand = new CommitResourceCommand();
-        commandChain.add(new DropAllResourcesCommand(commitCommand));
-        commandChain.add(commitCommand);
-        commandChain.add(new DropAllBundlesCommand());
-        
-        return commandChain;
+        m_config = new DeploymentAdminConfig(m_context, properties);
     }
 
     /**
@@ -457,6 +405,41 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
             props.put(Constants.EVENTPROPERTY_DEPLOYMENTPACKAGE_CURRENTVERSION, target.getVersion());
         }
         return props;
+    }
+    
+    private List createInstallCommandChain() {
+        List commandChain = new ArrayList();
+
+        GetStorageAreaCommand getStorageAreaCommand = new GetStorageAreaCommand();
+        commandChain.add(getStorageAreaCommand);
+        commandChain.add(new StopBundleCommand());
+        commandChain.add(new SnapshotCommand(getStorageAreaCommand));
+        commandChain.add(new UpdateCommand());
+        commandChain.add(new StartCustomizerCommand());
+        CommitResourceCommand commitCommand = new CommitResourceCommand();
+        commandChain.add(new ProcessResourceCommand(commitCommand));
+        commandChain.add(new DropResourceCommand(commitCommand));
+        commandChain.add(new DropBundleCommand());
+        commandChain.add(commitCommand);
+        commandChain.add(new StartBundleCommand());
+        
+        return commandChain;
+    }
+
+    private List createUninstallCommandChain() {
+        List commandChain = new ArrayList();
+
+        GetStorageAreaCommand getStorageAreaCommand = new GetStorageAreaCommand();
+        commandChain.add(getStorageAreaCommand);
+        commandChain.add(new StopBundleCommand());
+        commandChain.add(new SnapshotCommand(getStorageAreaCommand));
+        commandChain.add(new StartCustomizerCommand());
+        CommitResourceCommand commitCommand = new CommitResourceCommand();
+        commandChain.add(new DropAllResourcesCommand(commitCommand));
+        commandChain.add(commitCommand);
+        commandChain.add(new DropAllBundlesCommand());
+        
+        return commandChain;
     }
     
     /**
