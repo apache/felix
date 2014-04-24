@@ -18,8 +18,6 @@
  */
 package org.apache.felix.deploymentadmin.test.fragment1.impl;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
 
 /**
  * Empty pojo, for testing FELIX-4167.
