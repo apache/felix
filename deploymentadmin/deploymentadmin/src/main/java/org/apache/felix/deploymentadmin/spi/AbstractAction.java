@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.felix.deploymentadmin.spi;
 
 /**
@@ -26,8 +25,7 @@ package org.apache.felix.deploymentadmin.spi;
  */
 abstract class AbstractAction implements Runnable {
     /**
-     * Runs this action by calling {@link #doRun()} and in case of failure,
-     * {@link #onFailure(Exception)}.
+     * Runs this action by calling {@link #doRun()} and in case of failure, {@link #onFailure(Exception)}.
      */
     public final void run() {
         try {

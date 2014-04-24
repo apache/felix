@@ -70,7 +70,7 @@ public class Semaphore {
      *
      * @param timeout the number of milliseconds to wait
      * @return <code>true</code> if the semaphore was acquired, <code>false</code> if it was
-     *     not after waiting for the specified amount of time
+     *         not after waiting for the specified amount of time
      * @throws InterruptedException when the thread is interrupted
      */
     public boolean tryAcquire(long timeout) throws InterruptedException {

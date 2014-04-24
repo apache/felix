@@ -32,7 +32,7 @@ import org.osgi.service.deploymentadmin.DeploymentException;
  * This class represents a manifest file used to describe the contents of a deployment package. It can verify the correctness of a
  * deployment package manifest and can interpret the various manifest entries and headers the OSGi specification defines.
  */
-public class DeploymentPackageManifest {
+public class DeploymentPackageManifest implements Constants {
 
     private final Manifest m_manifest;
     private final Version m_version;
@@ -50,36 +50,38 @@ public class DeploymentPackageManifest {
      */
     public DeploymentPackageManifest(Manifest manifest) throws DeploymentException {
         if ((manifest == null) || (manifest.getMainAttributes() == null)) {
-            throw new DeploymentException(DeploymentException.CODE_BAD_HEADER);
+            throw new DeploymentException(CODE_BAD_HEADER);
         }
         m_manifest = manifest;
 
         Attributes mainAttributes = m_manifest.getMainAttributes();
 
         // TODO: verify symbolic name and entry-names for valid format/chars
-        m_symbolicName = getNonNullHeader(mainAttributes.getValue(Constants.DEPLOYMENTPACKAGE_SYMBOLICMAME));
+        m_symbolicName = getNonNullHeader(mainAttributes.getValue(DEPLOYMENTPACKAGE_SYMBOLICMAME));
 
-        String version = getNonNullHeader(mainAttributes.getValue(Constants.DEPLOYMENTPACKAGE_VERSION));
+        String version = getNonNullHeader(mainAttributes.getValue(DEPLOYMENTPACKAGE_VERSION));
         try {
             m_version = new Version(version);
-        } catch (IllegalArgumentException e) {
-            throw new DeploymentException(DeploymentException.CODE_BAD_HEADER);
+        }
+        catch (IllegalArgumentException e) {
+            throw new DeploymentException(CODE_BAD_HEADER);
         }
 
-        String fixPackage = mainAttributes.getValue(Constants.DEPLOYMENTPACKAGE_FIXPACK);
+        String fixPackage = mainAttributes.getValue(DEPLOYMENTPACKAGE_FIXPACK);
         if (fixPackage != null) {
             try {
                 m_fixPackage = VersionRange.parse(fixPackage);
             }
             catch (IllegalArgumentException iae) {
-                throw new DeploymentException(DeploymentException.CODE_BAD_HEADER, "Invalid version range for header: " + Constants.DEPLOYMENTPACKAGE_FIXPACK);
+                throw new DeploymentException(CODE_BAD_HEADER, "Invalid version range for header: " + DEPLOYMENTPACKAGE_FIXPACK);
             }
-        } else {
+        }
+        else {
             m_fixPackage = null;
         }
 
         Map entries = m_manifest.getEntries();
-        for(Iterator i = entries.keySet().iterator(); i.hasNext(); ) {
+        for (Iterator i = entries.keySet().iterator(); i.hasNext();) {
             String key = (String) i.next();
             processEntry(key, (Attributes) entries.get(key), (m_fixPackage != null));
         }
@@ -115,6 +117,7 @@ public class DeploymentPackageManifest {
 
     /**
      * Determines the version of the deployment package.
+     * 
      * @return Version of the deployment package.
      */
     public Version getVersion() {
@@ -143,20 +146,22 @@ public class DeploymentPackageManifest {
         if (BundleInfoImpl.isBundleResource(attributes)) {
             BundleInfoImpl bundleInfo = new BundleInfoImpl(key, attributes);
             if (bundleInfo.isMissing() && !isFixPack) {
-                throw new DeploymentException(DeploymentException.CODE_BAD_HEADER, "Header '" + Constants.DEPLOYMENTPACKAGE_MISSING + "' for manifest " +
-                    "entry '" + key + "' may only be 'true' if " + Constants.DEPLOYMENTPACKAGE_FIXPACK + " manifest header is 'true'");
+                throw new DeploymentException(CODE_BAD_HEADER, "Header '" + DEPLOYMENTPACKAGE_MISSING + "' for manifest entry '" + key + "' may only be 'true' if " + DEPLOYMENTPACKAGE_FIXPACK
+                    + " manifest header is 'true'");
             }
             m_bundleInfos.add(bundleInfo);
-        } else {
+        }
+        else {
             m_resourceInfos.add(new ResourceInfoImpl(key, attributes));
         }
     }
 
     private String getNonNullHeader(String header) throws DeploymentException {
         if (header == null) {
-            throw new DeploymentException(DeploymentException.CODE_MISSING_HEADER);
-        } else if(header.trim().equals("")) {
-            throw new DeploymentException(DeploymentException.CODE_BAD_HEADER);
+            throw new DeploymentException(CODE_MISSING_HEADER);
+        }
+        else if ("".equals(header.trim())) {
+            throw new DeploymentException(CODE_BAD_HEADER);
         }
         return header;
     }

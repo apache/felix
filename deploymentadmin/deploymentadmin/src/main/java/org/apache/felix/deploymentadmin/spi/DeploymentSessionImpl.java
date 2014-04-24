@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.apache.felix.deploymentadmin.AbstractDeploymentPackage;
+import org.apache.felix.deploymentadmin.Constants;
 import org.apache.felix.deploymentadmin.DeploymentAdminConfig;
 import org.apache.felix.deploymentadmin.DeploymentAdminImpl;
 import org.osgi.framework.Bundle;
@@ -38,7 +39,7 @@ import org.osgi.service.packageadmin.PackageAdmin;
 /**
  * Represents a running deployment session.
  */
-public class DeploymentSessionImpl implements DeploymentSession {
+public class DeploymentSessionImpl implements DeploymentSession, Constants {
 
     private final AbstractDeploymentPackage m_target;
     private final AbstractDeploymentPackage m_source;
@@ -49,8 +50,7 @@ public class DeploymentSessionImpl implements DeploymentSession {
     private volatile Command m_currentCommand = null;
     private volatile boolean m_cancelled;
 
-    public DeploymentSessionImpl(AbstractDeploymentPackage source, AbstractDeploymentPackage target, List commands,
-        DeploymentAdminImpl admin) {
+    public DeploymentSessionImpl(AbstractDeploymentPackage source, AbstractDeploymentPackage target, List commands, DeploymentAdminImpl admin) {
         m_source = source;
         m_target = target;
         m_commands = commands;
@@ -73,7 +73,7 @@ public class DeploymentSessionImpl implements DeploymentSession {
             if (m_cancelled) {
                 // previous command did not pick up on cancel
                 rollback(executedCommands);
-                throw new DeploymentException(DeploymentException.CODE_CANCELLED);
+                throw new DeploymentException(CODE_CANCELLED);
             }
             m_currentCommand = (Command) i.next();
             try {

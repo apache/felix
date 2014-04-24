@@ -44,28 +44,31 @@ public class BundleInfoImpl extends AbstractInfo implements BundleInfo {
     public BundleInfoImpl(String path, Attributes attributes) throws DeploymentException {
         super(path, attributes);
 
-        String bundleSymbolicName = attributes.getValue(org.osgi.framework.Constants.BUNDLE_SYMBOLICNAME);
+        String bundleSymbolicName = attributes.getValue(BUNDLE_SYMBOLICNAME);
         if (bundleSymbolicName == null) {
-            throw new DeploymentException(DeploymentException.CODE_MISSING_HEADER, "Missing '" + org.osgi.framework.Constants.BUNDLE_SYMBOLICNAME + "' header for manifest entry '" + getPath() + "'");
-        } else if (bundleSymbolicName.trim().equals("")) {
-            throw new DeploymentException(DeploymentException.CODE_BAD_HEADER, "Invalid '" + org.osgi.framework.Constants.BUNDLE_SYMBOLICNAME + "' header for manifest entry '" + getPath() + "'");
-        } else {
+            throw new DeploymentException(CODE_MISSING_HEADER, "Missing '" + BUNDLE_SYMBOLICNAME + "' header for manifest entry '" + getPath() + "'");
+        }
+        else if (bundleSymbolicName.trim().equals("")) {
+            throw new DeploymentException(CODE_BAD_HEADER, "Invalid '" + BUNDLE_SYMBOLICNAME + "' header for manifest entry '" + getPath() + "'");
+        }
+        else {
             m_symbolicName = parseSymbolicName(bundleSymbolicName);
         }
 
-        String version = attributes.getValue(org.osgi.framework.Constants.BUNDLE_VERSION);
+        String version = attributes.getValue(BUNDLE_VERSION);
         if (version == null || version == "") {
-            throw new DeploymentException(DeploymentException.CODE_BAD_HEADER, "Invalid '" + org.osgi.framework.Constants.BUNDLE_VERSION + "' header for manifest entry '" + getPath() + "'");
+            throw new DeploymentException(CODE_BAD_HEADER, "Invalid '" + BUNDLE_VERSION + "' header for manifest entry '" + getPath() + "'");
         }
         try {
             m_version = Version.parseVersion(version);
-        } catch (IllegalArgumentException e) {
-            throw new DeploymentException(DeploymentException.CODE_BAD_HEADER, "Invalid '" + org.osgi.framework.Constants.BUNDLE_VERSION + "' header for manifest entry '" + getPath() + "'");
+        }
+        catch (IllegalArgumentException e) {
+            throw new DeploymentException(CODE_BAD_HEADER, "Invalid '" + BUNDLE_VERSION + "' header for manifest entry '" + getPath() + "'");
         }
 
-        m_customizer = parseBooleanHeader(attributes, Constants.DEPLOYMENTPACKAGE_CUSTOMIZER);
+        m_customizer = parseBooleanHeader(attributes, DEPLOYMENTPACKAGE_CUSTOMIZER);
     }
-    
+
     /**
      * Strips parameters from the bundle symbolic name such as "foo;singleton:=true".
      * 
@@ -103,7 +106,7 @@ public class BundleInfoImpl extends AbstractInfo implements BundleInfo {
      * @return true if the attributes describe a bundle resource, false otherwise
      */
     public static boolean isBundleResource(Attributes attributes) {
-        return (attributes.getValue(org.osgi.framework.Constants.BUNDLE_SYMBOLICNAME) != null);
+        return (attributes.getValue(BUNDLE_SYMBOLICNAME) != null);
     }
 
 }

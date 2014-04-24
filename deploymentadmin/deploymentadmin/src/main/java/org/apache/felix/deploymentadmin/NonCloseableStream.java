@@ -29,77 +29,74 @@ import java.io.InputStream;
  */
 public class NonCloseableStream extends InputStream {
 
-	private final InputStream m_input;
-	private boolean m_closed;
+    private final InputStream m_input;
+    private boolean m_closed;
 
-	public NonCloseableStream(InputStream m_input) {
-		this.m_input = m_input;
-	}
+    public NonCloseableStream(InputStream m_input) {
+        this.m_input = m_input;
+    }
 
-	
-	// stream should not be actually closed, subsequent calls to read methods will throw an exception though
-	
-	public void close() throws IOException {
-		if (m_closed) {
-			throw new IOException("Unable to read, stream is closed.");
-		}
-		m_closed = true;
-	}
-	
-	public int read() throws IOException {
-		return m_input.read();
-	}
-	
-	public int read(byte[] b, int off, int len) throws IOException {
-		if (m_closed) {
-			throw new IOException("Unable to read, stream is closed.");
-		}
-		return m_input.read(b, off, len);
-	}
+    // stream should not be actually closed, subsequent calls to read methods will throw an exception though
 
-	public int read(byte[] b) throws IOException {
-		if (m_closed) {
-			throw new IOException("Unable to read, stream is closed.");
-		}
-		return m_input.read(b);
-	}
+    public void close() throws IOException {
+        if (m_closed) {
+            throw new IOException("Unable to read, stream is closed.");
+        }
+        m_closed = true;
+    }
 
-	
-	// No mark & reset support
-	
-	public boolean markSupported() {
-		return false;
-	}
+    public int read() throws IOException {
+        return m_input.read();
+    }
 
-	public void mark(int readlimit) {
-		// do nothing
-	}
+    public int read(byte[] b, int off, int len) throws IOException {
+        if (m_closed) {
+            throw new IOException("Unable to read, stream is closed.");
+        }
+        return m_input.read(b, off, len);
+    }
 
-	public void reset() throws IOException {
-		throw new IOException("Mark and reset are not available on this type of stream.");
-	}
+    public int read(byte[] b) throws IOException {
+        if (m_closed) {
+            throw new IOException("Unable to read, stream is closed.");
+        }
+        return m_input.read(b);
+    }
 
+    // No mark & reset support
 
-	// Unaffected methods
+    public boolean markSupported() {
+        return false;
+    }
 
-	public int available() throws IOException {
-		return m_input.available();
-	}
+    public void mark(int readlimit) {
+        // do nothing
+    }
 
-	public int hashCode() {
-		return m_input.hashCode();
-	}
+    public void reset() throws IOException {
+        throw new IOException("Mark and reset are not available on this type of stream.");
+    }
 
-	public long skip(long n) throws IOException {
-		return m_input.skip(n);
-	}
+    // Unaffected methods
 
-	public boolean equals(Object obj) {
-		return m_input.equals(obj);
-	}
+    public int available() throws IOException {
+        return m_input.available();
+    }
 
-	public String toString() {
-		return m_input.toString();
-	}
+    public int hashCode() {
+        return m_input.hashCode();
+    }
+
+    public long skip(long n) throws IOException {
+        return m_input.skip(n);
+    }
+
+    public boolean equals(Object obj) {
+        return m_input.equals(obj);
+    }
+
+    public String toString() {
+        return m_input.toString();
+    }
 
 }

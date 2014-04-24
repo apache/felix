@@ -58,7 +58,7 @@ import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 
-public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
+public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService, Constants {
     /** Configuration PID used to dynamically configure DA at runtime. */
     public static final String PID = "org.apache.felix.deploymentadmin";
 
@@ -71,14 +71,14 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
 
     private static final long TIMEOUT = 10000;
 
-    private volatile BundleContext m_context;       /* will be injected by dependencymanager */
-    private volatile PackageAdmin m_packageAdmin;   /* will be injected by dependencymanager */
-    private volatile EventAdmin m_eventAdmin;       /* will be injected by dependencymanager */
-    private volatile LogService m_log;              /* will be injected by dependencymanager */
+    private volatile BundleContext m_context; /* will be injected by dependencymanager */
+    private volatile PackageAdmin m_packageAdmin; /* will be injected by dependencymanager */
+    private volatile EventAdmin m_eventAdmin; /* will be injected by dependencymanager */
+    private volatile LogService m_log; /* will be injected by dependencymanager */
     private volatile DeploymentSessionImpl m_session;
     private volatile DeploymentAdminConfig m_config;
-    
-    private final Map m_packages = new HashMap();
+
+    private final Map /* BSN -> DeploymentPackage */m_packages = new HashMap();
     private final Semaphore m_semaphore = new Semaphore();
 
     /**
@@ -87,7 +87,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
     public DeploymentAdminImpl() {
         // Nop
     }
-    
+
     /**
      * Creates a new {@link DeploymentAdminImpl} instance.
      */
@@ -152,18 +152,18 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
         return m_packageAdmin;
     }
 
-	public DeploymentPackage installDeploymentPackage(InputStream sourceInput) throws DeploymentException {
+    public DeploymentPackage installDeploymentPackage(InputStream sourceInput) throws DeploymentException {
         if (sourceInput == null) {
             throw new IllegalArgumentException("Inputstream may not be null");
         }
 
         try {
             if (!m_semaphore.tryAcquire(TIMEOUT)) {
-                throw new DeploymentException(DeploymentException.CODE_TIMEOUT, "Timeout exceeded while waiting to install deployment package (" + TIMEOUT + " ms)");
+                throw new DeploymentException(CODE_TIMEOUT, "Timeout exceeded while waiting to install deployment package (" + TIMEOUT + " ms)");
             }
         }
         catch (InterruptedException ie) {
-            throw new DeploymentException(DeploymentException.CODE_TIMEOUT, "Thread interrupted");
+            throw new DeploymentException(CODE_TIMEOUT, "Thread interrupted");
         }
 
         File tempPackage = null;
@@ -187,42 +187,43 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
             }
             catch (IOException e) {
                 m_log.log(LogService.LOG_ERROR, "Error writing package to disk", e);
-                throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Error writing package to disk", e);
+                throw new DeploymentException(CODE_OTHER_ERROR, "Error writing package to disk", e);
             }
 
             try {
                 jarInput = new ContentCopyingJarInputStream(sourceInput, tempIndex, tempContents);
-                
+
                 if (jarInput.getManifest() == null) {
                     m_log.log(LogService.LOG_ERROR, "Stream does not contain a valid deployment package: missing manifest!");
-                    throw new DeploymentException(DeploymentException.CODE_MISSING_HEADER, "No manifest present in deployment package!");
+                    throw new DeploymentException(CODE_MISSING_HEADER, "No manifest present in deployment package!");
                 }
             }
             catch (IOException e) {
                 m_log.log(LogService.LOG_ERROR, "Stream does not contain a valid Jar", e);
-                throw new DeploymentException(DeploymentException.CODE_NOT_A_JAR, "Stream does not contain a valid Jar", e);
+                throw new DeploymentException(CODE_NOT_A_JAR, "Stream does not contain a valid Jar", e);
             }
 
             source = new StreamDeploymentPackage(jarInput, m_context, this);
             String dpSymbolicName = source.getName();
-            
+
             target = getExistingOrEmptyDeploymentPackage(dpSymbolicName);
-            
-            // Fire an event that we're about to install a new package 
+
+            // Fire an event that we're about to install a new package
             sendStartedEvent(source, target);
 
             // Assert that:
-            //   the source has no bundles that exists in other packages than the target.
+            // the source has no bundles that exists in other packages than the target.
             verifyNoResourcesShared(source, target);
-            
+
             if (source.isFixPackage()) {
                 // Assert that:
-                //   a. the version of the target matches the required fix-package range;
-                //   b. all missing source bundles are present in the target.
+                // a. the version of the target matches the required fix-package range;
+                // b. all missing source bundles are present in the target.
                 verifyFixPackage(source, target);
-            } else {
+            }
+            else {
                 // Assert that:
-                //   no missing resources or bundles are declared.
+                // no missing resources or bundles are declared.
                 verifySourcePackage(source);
             }
 
@@ -245,17 +246,17 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
                 }
                 catch (IOException e) {
                     m_log.log(LogService.LOG_ERROR, "Could not merge source fix package with target deployment package", e);
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not merge source fix package with target deployment package", e);
+                    throw new DeploymentException(CODE_OTHER_ERROR, "Could not merge source fix package with target deployment package", e);
                 }
             }
             else {
                 File targetPackage = m_context.getDataFile(dpInstallBaseDirectory);
                 targetPackage.mkdirs();
                 if (!Utils.replace(targetPackage, tempPackage)) {
-                	throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not replace " + targetPackage + " with " + tempPackage);
+                    throw new DeploymentException(CODE_OTHER_ERROR, "Could not replace " + targetPackage + " with " + tempPackage);
                 }
             }
-            
+
             FileDeploymentPackage fileDeploymentPackage = null;
             try {
                 fileDeploymentPackage = new FileDeploymentPackage(targetIndex, targetContents, m_context, this);
@@ -263,7 +264,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
             }
             catch (IOException e) {
                 m_log.log(LogService.LOG_ERROR, "Could not create installed deployment package from disk", e);
-                throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not create installed deployment package from disk", e);
+                throw new DeploymentException(CODE_OTHER_ERROR, "Could not create installed deployment package from disk", e);
             }
 
             // Since we're here, it means everything went OK, so we might as well raise our success flag...
@@ -274,12 +275,12 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
         finally {
             if (tempPackage != null) {
                 if (!Utils.delete(tempPackage, true)) {
-                	m_log.log(LogService.LOG_ERROR, "Could not delete temporary deployment package from disk");
-                	succeeded = false;
+                    m_log.log(LogService.LOG_ERROR, "Could not delete temporary deployment package from disk");
+                    succeeded = false;
                 }
             }
 
-    	    sendCompleteEvent(source, target, succeeded);
+            sendCompleteEvent(source, target, succeeded);
             m_semaphore.release();
         }
     }
@@ -295,24 +296,27 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
     public void start() throws DeploymentException {
         // Create a default configuration...
         m_config = new DeploymentAdminConfig(m_context);
-        
+
         File packageDir = m_context.getDataFile(PACKAGE_DIR);
         if (packageDir == null) {
-            throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not create directories needed for deployment package persistence");
-        } else {
-            packageDir.mkdirs();
-            File[] packages = packageDir.listFiles();
-            for(int i = 0; i < packages.length; i++) {
-                if (packages[i].isDirectory()) {
-                    try {
-                        File index = new File(packages[i], PACKAGEINDEX_FILE);
-                        File contents = new File(packages[i], PACKAGECONTENTS_DIR);
-                        FileDeploymentPackage dp = new FileDeploymentPackage(index, contents, m_context, this);
-                        m_packages.put(dp.getName(), dp);
-                    }
-                    catch (IOException e) {
-                        m_log.log(LogService.LOG_WARNING, "Could not read deployment package from disk, skipping: '" + packages[i].getAbsolutePath() + "'");
-                    }
+            throw new DeploymentException(CODE_OTHER_ERROR, "Could not create directories needed for deployment package persistence");
+        }
+        else if (packageDir.isDirectory()) {
+            File[] dpPackages = packageDir.listFiles();
+            for (int i = 0; i < dpPackages.length; i++) {
+                File dpPackageDir = dpPackages[i];
+                if (!dpPackageDir.isDirectory()) {
+                    continue;
+                }
+
+                try {
+                    File index = new File(dpPackageDir, PACKAGEINDEX_FILE);
+                    File contents = new File(dpPackageDir, PACKAGECONTENTS_DIR);
+                    FileDeploymentPackage dp = new FileDeploymentPackage(index, contents, m_context, this);
+                    m_packages.put(dp.getName(), dp);
+                }
+                catch (IOException e) {
+                    m_log.log(LogService.LOG_WARNING, "Could not read deployment package from disk, skipping: '" + dpPackageDir.getAbsolutePath() + "'");
                 }
             }
         }
@@ -322,11 +326,11 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
      * Called by dependency manager when stopping this component.
      */
     public void stop() {
-    	cancel();
+        cancel();
 
-    	m_config = null;
+        m_config = null;
     }
-    
+
     /**
      * Uninstalls the given deployment package from the system.
      * 
@@ -337,13 +341,13 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
     public void uninstallDeploymentPackage(DeploymentPackage dp, boolean forced) throws DeploymentException {
         try {
             if (!m_semaphore.tryAcquire(TIMEOUT)) {
-                throw new DeploymentException(DeploymentException.CODE_TIMEOUT, "Timeout exceeded while waiting to uninstall deployment package (" + TIMEOUT + " ms)");
+                throw new DeploymentException(CODE_TIMEOUT, "Timeout exceeded while waiting to uninstall deployment package (" + TIMEOUT + " ms)");
             }
         }
         catch (InterruptedException ie) {
-            throw new DeploymentException(DeploymentException.CODE_TIMEOUT, "Thread interrupted");
+            throw new DeploymentException(CODE_TIMEOUT, "Thread interrupted");
         }
-        
+
         boolean succeeded = false;
         AbstractDeploymentPackage source = AbstractDeploymentPackage.EMPTY_PACKAGE;
         AbstractDeploymentPackage target = (AbstractDeploymentPackage) dp;
@@ -362,10 +366,10 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
 
             File targetPackage = m_context.getDataFile(PACKAGE_DIR + File.separator + source.getName());
             if (!Utils.delete(targetPackage, true)) {
-            	m_log.log(LogService.LOG_ERROR, "Could not delete deployment package from disk");
-            	throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not delete deployment package from disk");
+                m_log.log(LogService.LOG_ERROR, "Could not delete deployment package from disk");
+                throw new DeploymentException(CODE_OTHER_ERROR, "Could not delete deployment package from disk");
             }
-            
+
             m_packages.remove(dp.getName());
 
             succeeded = true;
@@ -375,7 +379,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
             m_semaphore.release();
         }
     }
-    
+
     public void updated(Dictionary properties) throws ConfigurationException {
         m_config = new DeploymentAdminConfig(m_context, properties);
     }
@@ -395,18 +399,18 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
                 displayName = source.getName();
             }
 
-            props.put(Constants.EVENTPROPERTY_DEPLOYMENTPACKAGE_NAME, source.getName());
-            props.put(Constants.EVENTPROPERTY_DEPLOYMENTPACKAGE_READABLENAME, displayName);
+            props.put(EVENTPROPERTY_DEPLOYMENTPACKAGE_NAME, source.getName());
+            props.put(EVENTPROPERTY_DEPLOYMENTPACKAGE_READABLENAME, displayName);
             if (!source.isNew()) {
-                props.put(Constants.EVENTPROPERTY_DEPLOYMENTPACKAGE_NEXTVERSION, source.getVersion());
+                props.put(EVENTPROPERTY_DEPLOYMENTPACKAGE_NEXTVERSION, source.getVersion());
             }
         }
         if ((target != null) && !target.isNew()) {
-            props.put(Constants.EVENTPROPERTY_DEPLOYMENTPACKAGE_CURRENTVERSION, target.getVersion());
+            props.put(EVENTPROPERTY_DEPLOYMENTPACKAGE_CURRENTVERSION, target.getVersion());
         }
         return props;
     }
-    
+
     private List createInstallCommandChain() {
         List commandChain = new ArrayList();
 
@@ -422,7 +426,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
         commandChain.add(new DropBundleCommand());
         commandChain.add(commitCommand);
         commandChain.add(new StartBundleCommand());
-        
+
         return commandChain;
     }
 
@@ -438,19 +442,19 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
         commandChain.add(new DropAllResourcesCommand(commitCommand));
         commandChain.add(commitCommand);
         commandChain.add(new DropAllBundlesCommand());
-        
+
         return commandChain;
     }
-    
+
     /**
      * Searches for a deployment package that contains a bundle with the given symbolic name.
      * 
      * @param symbolicName the symbolic name of the <em>bundle</em> to return the containing deployment package for, cannot be <code>null</code>.
      * @return the deployment package containing the given bundle, or <code>null</code> if no deployment package contained such bundle.
      */
-    private DeploymentPackage getDeploymentPackageContainingBundleWithSymbolicName(String symbolicName) {
+    private AbstractDeploymentPackage getDeploymentPackageContainingBundleWithSymbolicName(String symbolicName) {
         for (Iterator i = m_packages.values().iterator(); i.hasNext();) {
-            DeploymentPackage dp = (DeploymentPackage) i.next();
+            AbstractDeploymentPackage dp = (AbstractDeploymentPackage) i.next();
             if (dp.getBundle(symbolicName) != null) {
                 return dp;
             }
@@ -465,7 +469,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
      * @return a deployment package, never <code>null</code>.
      */
     private AbstractDeploymentPackage getExistingOrEmptyDeploymentPackage(String symbolicName) {
-        AbstractDeploymentPackage result = (AbstractDeploymentPackage) getDeploymentPackage(symbolicName);
+        AbstractDeploymentPackage result = (AbstractDeploymentPackage) m_packages.get(symbolicName);
         if (result == null) {
             result = AbstractDeploymentPackage.EMPTY_PACKAGE;
         }
@@ -473,18 +477,18 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
     }
 
     /**
-     * Returns all bundles that are not present in any deployment package. Ultimately, this should only 
+     * Returns all bundles that are not present in any deployment package. Ultimately, this should only
      * be one bundle, the system bundle, but this is not enforced in any way by the specification.
      * 
      * @return an array of non-deployment packaged bundles, never <code>null</code>.
      */
     private Bundle[] getNonDeploymentPackagedBundles() {
         List result = new ArrayList(Arrays.asList(m_context.getBundles()));
-        
+
         Iterator iter = result.iterator();
         while (iter.hasNext()) {
             Bundle suspect = (Bundle) iter.next();
-            if (suspect.getLocation().startsWith(Constants.BUNDLE_LOCATION_PREFIX)) {
+            if (suspect.getLocation().startsWith(BUNDLE_LOCATION_PREFIX)) {
                 iter.remove();
             }
         }
@@ -493,7 +497,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
     }
 
     /**
-     * Sends out an event that the {@link #installDeploymentPackage(InputStream)} is 
+     * Sends out an event that the {@link #installDeploymentPackage(InputStream)} is
      * completed its installation of a deployment package.
      * 
      * @param source the source package being installed;
@@ -502,13 +506,13 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
      */
     private void sendCompleteEvent(AbstractDeploymentPackage source, AbstractDeploymentPackage target, boolean success) {
         Dictionary props = createEventProperties(source, target);
-        props.put(Constants.EVENTPROPERTY_SUCCESSFUL, Boolean.valueOf(success));
-        
-        m_eventAdmin.postEvent(new Event(Constants.EVENTTOPIC_COMPLETE, props));
+        props.put(EVENTPROPERTY_SUCCESSFUL, Boolean.valueOf(success));
+
+        m_eventAdmin.postEvent(new Event(EVENTTOPIC_COMPLETE, props));
     }
 
     /**
-     * Sends out an event that the {@link #installDeploymentPackage(InputStream)} is about 
+     * Sends out an event that the {@link #installDeploymentPackage(InputStream)} is about
      * to install a new deployment package.
      * 
      * @param source the source package being installed;
@@ -517,11 +521,11 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
     private void sendStartedEvent(AbstractDeploymentPackage source, AbstractDeploymentPackage target) {
         Dictionary props = createEventProperties(source, target);
 
-        m_eventAdmin.postEvent(new Event(Constants.EVENTTOPIC_INSTALL, props));
+        m_eventAdmin.postEvent(new Event(EVENTTOPIC_INSTALL, props));
     }
 
     /**
-     * Sends out an event that the {@link #uninstallDeploymentPackage(DeploymentPackage)} is about 
+     * Sends out an event that the {@link #uninstallDeploymentPackage(DeploymentPackage)} is about
      * to uninstall a deployment package.
      * 
      * @param source the source package being uninstalled;
@@ -530,11 +534,11 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
     private void sendUninstallEvent(AbstractDeploymentPackage source, AbstractDeploymentPackage target) {
         Dictionary props = createEventProperties(source, target);
 
-        m_eventAdmin.postEvent(new Event(Constants.EVENTTOPIC_UNINSTALL, props));
+        m_eventAdmin.postEvent(new Event(EVENTTOPIC_UNINSTALL, props));
     }
 
     /**
-     * Verifies that the version of the target matches the required source version range, and 
+     * Verifies that the version of the target matches the required source version range, and
      * whether all missing source resources are available in the target.
      * 
      * @param source the fix-package source to verify;
@@ -547,7 +551,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
         // Verify whether the target package exists, and if so, falls in the requested fix-package range...
         if (newPackage || (!source.getVersionRange().isInRange(target.getVersion()))) {
             m_log.log(LogService.LOG_ERROR, "Target package version '" + target.getVersion() + "' is not in source range '" + source.getVersionRange() + "'");
-            throw new DeploymentException(DeploymentException.CODE_MISSING_FIXPACK_TARGET, "Target package version '" + target.getVersion() + "' is not in source range '" + source.getVersionRange() + "'");
+            throw new DeploymentException(CODE_MISSING_FIXPACK_TARGET, "Target package version '" + target.getVersion() + "' is not in source range '" + source.getVersionRange() + "'");
         }
 
         // Verify whether all missing bundles are available in the target package...
@@ -558,7 +562,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
                 BundleInfoImpl targetBundleInfo = target.getBundleInfoByPath(bundleInfos[i].getPath());
                 if (targetBundleInfo == null) {
                     m_log.log(LogService.LOG_ERROR, "Missing bundle '" + bundleInfos[i].getSymbolicName() + "/" + bundleInfos[i].getVersion() + " does not exist in target package!");
-                    throw new DeploymentException(DeploymentException.CODE_MISSING_BUNDLE, "Missing bundle '" + bundleInfos[i].getSymbolicName() + "/" + bundleInfos[i].getVersion() + " does not exist in target package!");
+                    throw new DeploymentException(CODE_MISSING_BUNDLE, "Missing bundle '" + bundleInfos[i].getSymbolicName() + "/" + bundleInfos[i].getVersion() + " does not exist in target package!");
                 }
             }
         }
@@ -571,14 +575,14 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
                 ResourceInfoImpl targetResourceInfo = target.getResourceInfoByPath(resourceInfos[i].getPath());
                 if (targetResourceInfo == null) {
                     m_log.log(LogService.LOG_ERROR, "Missing resource '" + resourceInfos[i].getPath() + " does not exist in target package!");
-                    throw new DeploymentException(DeploymentException.CODE_MISSING_RESOURCE, "Missing resource '" + resourceInfos[i].getPath() + " does not exist in target package!");
+                    throw new DeploymentException(CODE_MISSING_RESOURCE, "Missing resource '" + resourceInfos[i].getPath() + " does not exist in target package!");
                 }
             }
         }
     }
 
     /**
-     * Verifies whether none of the mentioned resources in the source package are present in 
+     * Verifies whether none of the mentioned resources in the source package are present in
      * deployment packages other than the given target.
      * 
      * @param source the source package to verify;
@@ -587,7 +591,7 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
      */
     private void verifyNoResourcesShared(AbstractDeploymentPackage source, AbstractDeploymentPackage target) throws DeploymentException {
         Bundle[] foreignBundles = getNonDeploymentPackagedBundles();
-        
+
         // Verify whether all source bundles are available in the target package or absent...
         BundleInfoImpl[] bundleInfos = source.getBundleInfoImpls();
         for (int i = 0; i < bundleInfos.length; i++) {
@@ -598,26 +602,26 @@ public class DeploymentAdminImpl implements DeploymentAdmin, ManagedService {
             // If found, it should match the given target DP; not found is also ok...
             if ((targetPackage != null) && !targetPackage.equals(target)) {
                 m_log.log(LogService.LOG_ERROR, "Bundle '" + symbolicName + "/" + version + " already present in other deployment packages!");
-                throw new DeploymentException(DeploymentException.CODE_BUNDLE_SHARING_VIOLATION, "Bundle '" + symbolicName + "/" + version + " already present in other deployment packages!");
+                throw new DeploymentException(CODE_BUNDLE_SHARING_VIOLATION, "Bundle '" + symbolicName + "/" + version + " already present in other deployment packages!");
             }
-            
+
             if (targetPackage == null) {
                 // Maybe the bundle is installed without deployment admin...
                 for (int j = 0; j < foreignBundles.length; j++) {
                     if (symbolicName.equals(foreignBundles[j].getSymbolicName()) && version.equals(foreignBundles[j].getVersion())) {
                         m_log.log(LogService.LOG_ERROR, "Bundle '" + symbolicName + "/" + version + " already present!");
-                        throw new DeploymentException(DeploymentException.CODE_BUNDLE_SHARING_VIOLATION, "Bundle '" + symbolicName + "/" + version + " already present!");
+                        throw new DeploymentException(CODE_BUNDLE_SHARING_VIOLATION, "Bundle '" + symbolicName + "/" + version + " already present!");
                     }
                 }
             }
         }
-        
+
         // TODO verify other resources as well...
     }
 
     private void verifySourcePackage(AbstractDeploymentPackage source) throws DeploymentException {
         // TODO this method should do a X-ref check between DP-manifest and JAR-entries...
-//        m_log.log(LogService.LOG_ERROR, "Missing bundle '" + symbolicName + "/" + bundleInfos[i].getVersion() + " does not exist in target package!");
-//        throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Missing bundle '" + symbolicName + "/" + bundleInfos[i].getVersion() + " is not part of target package!");
+// m_log.log(LogService.LOG_ERROR, "Missing bundle '" + symbolicName + "/" + bundleInfos[i].getVersion() + " does not exist in target package!");
+// throw new DeploymentException(CODE_OTHER_ERROR, "Missing bundle '" + symbolicName + "/" + bundleInfos[i].getVersion() + " is not part of target package!");
     }
 }

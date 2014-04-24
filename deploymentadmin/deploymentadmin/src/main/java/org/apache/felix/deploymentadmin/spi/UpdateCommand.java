@@ -26,7 +26,6 @@ import java.util.Map;
 import org.apache.felix.deploymentadmin.AbstractDeploymentPackage;
 import org.apache.felix.deploymentadmin.AbstractInfo;
 import org.apache.felix.deploymentadmin.BundleInfoImpl;
-import org.apache.felix.deploymentadmin.Constants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
@@ -60,13 +59,13 @@ public class UpdateCommand extends Command {
             while (!expectedBundles.isEmpty()) {
                 AbstractInfo entry = source.getNextEntry();
                 if (entry == null) {
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Expected more bundles in the stream: " + expectedBundles.keySet());
+                    throw new DeploymentException(CODE_OTHER_ERROR, "Expected more bundles in the stream: " + expectedBundles.keySet());
                 }
 
                 String name = entry.getPath();
                 BundleInfoImpl bundleInfo = (BundleInfoImpl) expectedBundles.remove(name);
                 if (bundleInfo == null) {
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Resource '" + name + "' is not described in the manifest.");
+                    throw new DeploymentException(CODE_OTHER_ERROR, "Resource '" + name + "' is not described in the manifest.");
                 }
 
                 String bsn = bundleInfo.getSymbolicName();
@@ -76,9 +75,10 @@ public class UpdateCommand extends Command {
                 try {
                     if (bundle == null) {
                         // new bundle, install it
-                        bundle = context.installBundle(Constants.BUNDLE_LOCATION_PREFIX + bsn, new BundleInputStream(source.getCurrentEntryStream()));
+                        bundle = context.installBundle(BUNDLE_LOCATION_PREFIX + bsn, new BundleInputStream(source.getCurrentEntryStream()));
                         addRollback(new UninstallBundleRunnable(bundle, log));
-                    } else {
+                    }
+                    else {
                         // existing bundle, update it
                         Version currentVersion = getVersion(bundle);
                         if (!sourceVersion.equals(currentVersion)) {
@@ -91,26 +91,27 @@ public class UpdateCommand extends Command {
                     if (isCancelled()) {
                         return;
                     }
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not install new bundle '" + name + "' (" + bsn + ")", be);
+                    throw new DeploymentException(CODE_OTHER_ERROR, "Could not install new bundle '" + name + "' (" + bsn + ")", be);
                 }
 
                 if (!bundle.getSymbolicName().equals(bsn)) {
-                    throw new DeploymentException(DeploymentException.CODE_BUNDLE_NAME_ERROR, "Installed/updated bundle symbolicname (" + bundle.getSymbolicName() + ") do not match what was installed/updated: " + bsn);
+                    throw new DeploymentException(CODE_BUNDLE_NAME_ERROR, "Installed/updated bundle symbolicname (" + bundle.getSymbolicName() + ") do not match what was installed/updated: " + bsn);
                 }
 
                 Version targetVersion = getVersion(bundle);
                 if (!sourceVersion.equals(targetVersion)) {
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Installed/updated bundle version (" + targetVersion + ") do not match what was installed/updated: " + sourceVersion + ", offending bundle = " + bsn);
+                    throw new DeploymentException(CODE_OTHER_ERROR, "Installed/updated bundle version (" + targetVersion + ") do not match what was installed/updated: " + sourceVersion
+                        + ", offending bundle = " + bsn);
                 }
             }
         }
         catch (IOException e) {
-            throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Problem while reading stream", e);
+            throw new DeploymentException(CODE_OTHER_ERROR, "Problem while reading stream", e);
         }
     }
 
     private Version getVersion(Bundle bundle) {
-        return Version.parseVersion((String) bundle.getHeaders().get(org.osgi.framework.Constants.BUNDLE_VERSION));
+        return Version.parseVersion((String) bundle.getHeaders().get(BUNDLE_VERSION));
     }
 
     private static class UninstallBundleRunnable extends AbstractAction {
@@ -148,7 +149,8 @@ public class UpdateCommand extends Command {
                 is = m_targetPackage.getBundleStream(m_bundle.getSymbolicName());
                 if (is != null) {
                     m_bundle.update(is);
-                } else {
+                }
+                else {
                     throw new RuntimeException("Unable to get inputstream for bundle " + m_bundle.getSymbolicName());
                 }
             }

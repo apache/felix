@@ -38,7 +38,7 @@ public class ResourceInfoImpl extends AbstractInfo {
      */
     public ResourceInfoImpl(String path, Attributes attributes) throws DeploymentException {
         super(path, attributes);
-        m_resourceProcessor = attributes.getValue(Constants.RESOURCE_PROCESSOR);
+        m_resourceProcessor = attributes.getValue(RESOURCE_PROCESSOR);
     }
 
     /**

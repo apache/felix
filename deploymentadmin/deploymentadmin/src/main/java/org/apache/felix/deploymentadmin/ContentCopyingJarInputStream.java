@@ -33,19 +33,17 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 
 /**
- * Provides a custom {@link JarInputStream} that copies all entries read from the original 
- * {@link InputStream} to a given directory and index file. It does this by tracking the
- * common usage of the {@link JarInputStream} API. For each entry that is read it streams
- * all read bytes to a separate file compressing it on the fly. The caller does not notice
- * anything, although it might be that the {@link #read(byte[], int, int)} is blocked for
- * a little while during the writing of the file contents.
+ * Provides a custom {@link JarInputStream} that copies all entries read from the original {@link InputStream} to a
+ * given directory and index file. It does this by tracking thecommon usage of the {@link JarInputStream} API. For each
+ * entry that is read it streams all read bytes to a separate file compressing it on the fly. The caller does not notice
+ * anything, although it might be that the {@link #read(byte[], int, int)} is blocked for a little while during the
+ * writing of the file contents.
  * <p>
  * This implementation replaces the old <tt>ExplodingOutputtingInputStream</tt> that used
  * at least two threads and was difficult to understand and maintain. See FELIX-4486.
  * </p>
  */
-class ContentCopyingJarInputStream extends JarInputStream
-{
+class ContentCopyingJarInputStream extends JarInputStream {
     private static final String MANIFEST_FILE = JarFile.MANIFEST_NAME;
 
     private final File m_contentDir;
@@ -54,8 +52,7 @@ class ContentCopyingJarInputStream extends JarInputStream
     /** Used to copy the contents of the *next* entry. */
     private OutputStream m_entryOS;
 
-    public ContentCopyingJarInputStream(InputStream in, File indexFile, File contentDir) throws IOException
-    {
+    public ContentCopyingJarInputStream(InputStream in, File indexFile, File contentDir) throws IOException {
         super(in);
 
         m_contentDir = contentDir;
@@ -65,35 +62,29 @@ class ContentCopyingJarInputStream extends JarInputStream
 
         // the manifest of the JAR is already read by JarInputStream, so we need to write this one as well...
         Manifest manifest = getManifest();
-        if (manifest != null)
-        {
+        if (manifest != null) {
             copyManifest(manifest);
         }
     }
 
-    public void close() throws IOException
-    {
+    public void close() throws IOException {
         closeCopy();
         closeIndex();
         super.close();
     }
 
-    public void closeEntry() throws IOException
-    {
+    public void closeEntry() throws IOException {
         closeCopy();
         super.closeEntry();
     }
 
-    public ZipEntry getNextEntry() throws IOException
-    {
+    public ZipEntry getNextEntry() throws IOException {
         closeCopy();
 
         ZipEntry entry = super.getNextEntry();
-        if (entry != null)
-        {
+        if (entry != null) {
             File current = new File(m_contentDir, entry.getName());
-            if (!entry.isDirectory())
-            {
+            if (!entry.isDirectory()) {
                 addToIndex(entry.getName());
 
                 m_entryOS = createOutputStream(current);
@@ -103,52 +94,41 @@ class ContentCopyingJarInputStream extends JarInputStream
         return entry;
     }
 
-    public int read(byte[] b, int off, int len) throws IOException
-    {
+    public int read(byte[] b, int off, int len) throws IOException {
         int r = super.read(b, off, len);
-        if (m_entryOS != null)
-        {
-            if (r > 0)
-            {
+        if (m_entryOS != null) {
+            if (r > 0) {
                 m_entryOS.write(b, off, r);
             }
-            else
-            {
+            else {
                 closeCopy();
             }
         }
         return r;
     }
 
-    private void addToIndex(String name) throws IOException
-    {
+    private void addToIndex(String name) throws IOException {
         m_indexFileWriter.println(name);
         m_indexFileWriter.flush();
     }
 
-    private void closeCopy()
-    {
+    private void closeCopy() {
         closeSilently(m_entryOS);
         m_entryOS = null;
     }
 
-    private void closeIndex()
-    {
+    private void closeIndex() {
         closeSilently(m_indexFileWriter);
         m_indexFileWriter = null;
     }
 
-    private void closeSilently(Closeable resource)
-    {
-        try
-        {
-            if (resource != null)
-            {
+    private void closeSilently(Closeable resource) {
+        try {
+            if (resource != null) {
                 resource.close();
             }
         }
-        catch (IOException e)
-        {
+        catch (IOException e) {
             // Ignore, not much we can do about this...
         }
     }
@@ -156,30 +136,24 @@ class ContentCopyingJarInputStream extends JarInputStream
     /**
      * Creates a verbatim copy of the manifest, when it is read from the original JAR.
      */
-    private void copyManifest(Manifest manifest) throws IOException
-    {
+    private void copyManifest(Manifest manifest) throws IOException {
         addToIndex(MANIFEST_FILE);
 
         OutputStream os = createOutputStream(new File(m_contentDir, MANIFEST_FILE));
-        try
-        {
+        try {
             manifest.write(os);
         }
-        finally
-        {
+        finally {
             closeSilently(os);
         }
     }
 
-    private OutputStream createOutputStream(File file) throws IOException
-    {
+    private OutputStream createOutputStream(File file) throws IOException {
         File parent = file.getParentFile();
-        if (parent != null)
-        {
+        if (parent != null) {
             parent.mkdirs();
         }
-        if (!file.createNewFile())
-        {
+        if (!file.createNewFile()) {
             throw new IOException("Attempt to overwrite file: " + file);
         }
         return new GZIPOutputStream(new FileOutputStream(file));

@@ -90,10 +90,10 @@ public class Utils {
                 return false;
             }
             finally {
-                if (!closeSilently(output)) { 
+                if (!closeSilently(output)) {
                     result = false;
                 }
-                if (!closeSilently(input)) { 
+                if (!closeSilently(input)) {
                     result = false;
                 }
             }
@@ -166,7 +166,7 @@ public class Utils {
                 result.add(path);
             }
             if (!rename(from, to)) {
-                throw new IOException("Could not rename " + from + " to "  + to);
+                throw new IOException("Could not rename " + from + " to " + to);
             }
         }
 
@@ -191,7 +191,8 @@ public class Utils {
         GZIPOutputStream outputStream = new GZIPOutputStream(new FileOutputStream(new File(target, MANIFEST_NAME)));
         try {
             resultManifest.write(outputStream);
-        } finally {
+        }
+        finally {
             outputStream.close();
         }
         writeIndex(targetIndex, result);
@@ -211,7 +212,7 @@ public class Utils {
             closeSilently(reader);
         }
     }
-    
+
     static boolean closeSilently(Closeable closeable) {
         if (closeable != null) {
             try {

@@ -52,7 +52,7 @@ public class SnapshotCommand extends Command {
         Map storageAreas = m_getStorageAreaCommand.getStorageAreas();
         for (int i = 0; i < infos.length; i++) {
             if (isCancelled()) {
-                throw new DeploymentException(DeploymentException.CODE_CANCELLED);
+                throw new DeploymentException(CODE_CANCELLED);
             }
 
             String symbolicName = infos[i].getSymbolicName();
@@ -73,7 +73,8 @@ public class SnapshotCommand extends Command {
                         session.getLog().log(LogService.LOG_WARNING, "Could not access storage area of bundle '" + symbolicName + "'!", e);
                         snapshot.delete();
                     }
-                } else {
+                }
+                else {
                     session.getLog().log(LogService.LOG_WARNING, "Could not retrieve storage area of bundle '" + symbolicName + "', skipping it.");
                 }
             }
@@ -102,7 +103,8 @@ public class SnapshotCommand extends Command {
             for (int i = 0; i < childs.length; i++) {
                 storeRecursive(childs[i], new File(path, childs[i].getName()), output);
             }
-        } else {
+        }
+        else {
             InputStream input = null;
             try {
                 input = new FileInputStream(current);
@@ -181,7 +183,8 @@ public class SnapshotCommand extends Command {
                 for (ZipEntry entry = input.getNextEntry(); entry != null; entry = input.getNextEntry()) {
                     if (entry.isDirectory()) {
                         (new File(target, entry.getName())).mkdirs();
-                    } else {
+                    }
+                    else {
                         OutputStream output = null;
                         try {
                             output = new FileOutputStream(target);
