@@ -122,10 +122,9 @@ public class ResolverImpl implements Resolver
         // Make copies of arguments in case we want to modify them.
         Collection<Resource> mandatoryResources = new ArrayList(rc.getMandatoryResources());
         Collection<Resource> optionalResources = new ArrayList(rc.getOptionalResources());
-// TODO: RFC-112 - Need impl-specific type.
-//        Collection<Resource> ondemandFragments = (rc instanceof ResolveContextImpl)
-//            ? ((ResolveContextImpl) rc).getOndemandResources() : Collections.EMPTY_LIST;
-        Collection<Resource> ondemandFragments = Collections.EMPTY_LIST;
+        // keeps track of valid on demand fragments that we have seen.
+        // a null value or TRUE indicate it is valid
+        Map<Resource, Boolean> validOnDemandResources = new HashMap<Resource, Boolean>(0);
 
         boolean retry;
         do
@@ -134,7 +133,7 @@ public class ResolverImpl implements Resolver
             try
             {
                 // Create object to hold all candidates.
-                Candidates allCandidates = new Candidates();
+                Candidates allCandidates = new Candidates(validOnDemandResources);
 
                 // Populate mandatory resources; since these are mandatory
                 // resources, failure throws a resolve exception.
@@ -160,17 +159,6 @@ public class ResolverImpl implements Resolver
                     if (isFragment || (rc.getWirings().get(resource) == null))
                     {
                         allCandidates.populate(rc, resource, Candidates.OPTIONAL);
-                    }
-                }
-
-                // Populate ondemand fragments; since these are optional
-                // resources, failure does not throw a resolve exception.
-                for (Resource resource : ondemandFragments)
-                {
-                    boolean isFragment = Util.isFragment(resource);
-                    if (isFragment)
-                    {
-                        allCandidates.populate(rc, resource, Candidates.ON_DEMAND);
                     }
                 }
 
@@ -302,7 +290,16 @@ public class ResolverImpl implements Resolver
                 {
                     if (faultyResources != null) {
                     	Set<Resource> resourceKeys = faultyResources.keySet();
-                        retry = (optionalResources.removeAll(resourceKeys) || ondemandFragments.removeAll(resourceKeys));
+                        retry = (optionalResources.removeAll(resourceKeys));
+                        for (Resource faultyResource : resourceKeys) {
+							Boolean valid = validOnDemandResources.get(faultyResource);
+							if (valid != null && valid.booleanValue()) {
+								// This was an ondemand resource.
+								// Invalidate it and try again.
+								validOnDemandResources.put(faultyResource, Boolean.FALSE);
+								retry = true;
+							}
+						}
                         // log all the resolution exceptions for the uses constraint violations
                         for (Map.Entry<Resource, ResolutionException> usesError : faultyResources.entrySet()) {
     						m_logger.logUsesConstraintViolation(usesError.getKey(), usesError.getValue());
@@ -379,8 +376,6 @@ public class ResolverImpl implements Resolver
      * @param host the hosting resource
      * @param dynamicReq the dynamic requirement
      * @param matches a list of matching capabilities
-     * @param ondemandFragments collection of on demand fragments that will
-     * attach to any host that is a candidate
      * @return The new resources and wires required to satisfy the specified
      * dynamic requirement. The returned map is the property of the caller and
      * can be modified by the caller.
@@ -388,7 +383,7 @@ public class ResolverImpl implements Resolver
      */
     public Map<Resource, List<Wire>> resolve(
         ResolveContext rc, Resource host, Requirement dynamicReq,
-        List<Capability> matches, Collection<Resource> ondemandFragments)
+        List<Capability> matches)
         throws ResolutionException
     {
         ResolveSession session = new ResolveSession(rc);
@@ -413,15 +408,11 @@ public class ResolverImpl implements Resolver
                 }
             }
 
-            // Make copy of args in case we want to modify them.
-            ondemandFragments = new ArrayList<Resource>(ondemandFragments);
 
-            // Create all candidates pre-populated with the single candidate set
-            // for the resolving dynamic import of the host.
-            Candidates allCandidates = new Candidates();
-            allCandidates.populateDynamic(rc, host, dynamicReq, matches);
+
 
             Map<Resource, Packages> resourcePkgMap = new HashMap<Resource, Packages>();
+            Map<Resource, Boolean> onDemandResources = new HashMap<Resource, Boolean>();
 
             boolean retry;
             do
@@ -430,15 +421,10 @@ public class ResolverImpl implements Resolver
 
                 try
                 {
-                    // Try to populate optional fragments.
-                    for (Resource r : ondemandFragments)
-                    {
-                        if (Util.isFragment(r))
-                        {
-                            allCandidates.populate(rc, r, Candidates.ON_DEMAND);
-                        }
-                    }
-
+                    // Create all candidates pre-populated with the single candidate set
+                    // for the resolving dynamic import of the host.
+                    Candidates allCandidates = new Candidates(onDemandResources);
+                    allCandidates.populateDynamic(rc, host, dynamicReq, matches);
                     // Merge any fragments into hosts.
                     allCandidates.prepare(rc);
 
@@ -508,15 +494,13 @@ public class ResolverImpl implements Resolver
                                 ((WrappedRequirement) faultyReq)
                                 .getDeclaredRequirement().getResource();
                         }
-                        // Try to ignore the faulty resource if it is not mandatory.
-                        if (ondemandFragments.remove(faultyResource))
-                        {
-                            retry = true;
-                        }
-                        else
-                        {
+						Boolean valid = onDemandResources.get(faultyResource);
+						if (valid != null && valid.booleanValue()) {
+							onDemandResources.put(faultyResource, Boolean.FALSE);
+							retry = true;
+						} else {
                             throw rethrow;
-                        }
+						}
                     }
                     // If there is no exception to rethrow, then this was a clean
                     // resolve, so populate the wire map.
