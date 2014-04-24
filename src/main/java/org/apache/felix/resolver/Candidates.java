@@ -473,6 +473,9 @@ class Candidates
                             // a reference to a synthesized resource with attached
                             // fragments so we can correctly calculate its package
                             // space.
+                            // Must remove the fragment candidate because we must
+                            // only use hosted capabilities for package namespace
+                            candidates.remove(fragCand);
                             rc.insertHostedCapability(
                                 candidates,
                                 new WrappedCapability(
