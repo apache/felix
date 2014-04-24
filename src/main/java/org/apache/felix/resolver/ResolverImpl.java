@@ -1237,11 +1237,15 @@ public class ResolverImpl implements Resolver
                             // requirement; there may be no candidates if the resource
                             // associated with the requirement is already resolved.
                             List<Capability> candidates = permutation.getCandidates(req);
-                            if ((candidates != null) && (candidates.size() > 1))
+                            if ((candidates != null) && (candidates.size() > 1 || Util.isOptional(req)))
                             {
                                 mutated.add(req);
                                 // Remove the conflicting candidate.
                                 candidates.remove(0);
+                                if (candidates.isEmpty())
+                                {
+                                    permutation.clearCandidates(req);
+                                }
                                 // Continue with the next uses constraint.
                                 break;
                             }
@@ -1346,11 +1350,15 @@ public class ResolverImpl implements Resolver
                             // requirement; there may be no candidates if the resource
                             // associated with the requirement is already resolved.
                             List<Capability> candidates = permutation.getCandidates(req);
-                            if ((candidates != null) && (candidates.size() > 1))
+                            if ((candidates != null) && (candidates.size() > 1 || Util.isOptional(req)))
                             {
                                 mutated.add(req);
                                 // Remove the conflicting candidate.
                                 candidates.remove(0);
+                                if (candidates.isEmpty())
+                                {
+                                    permutation.clearCandidates(req);
+                                }
                                 // Continue with the next uses constraint.
                                 break;
                             }
@@ -1470,11 +1478,15 @@ public class ResolverImpl implements Resolver
         if (!Util.isMultiple(req))
         {
             List<Capability> candidates = allCandidates.getCandidates(req);
-            if ((candidates != null) && (candidates.size() > 1))
+            if ((candidates != null) && (candidates.size() > 1 || Util.isOptional(req)))
             {
                 Candidates perm = allCandidates.copy();
                 candidates = perm.getCandidates(req);
                 candidates.remove(0);
+                if (candidates.isEmpty())
+                {
+                    perm.clearCandidates(req);
+                }
                 permutations.add(perm);
             }
         }
