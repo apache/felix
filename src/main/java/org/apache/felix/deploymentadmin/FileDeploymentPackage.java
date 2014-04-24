@@ -56,17 +56,6 @@ public class FileDeploymentPackage extends AbstractDeploymentPackage {
         m_contentsDir = packageDir;
     }
 
-    public BundleInfoImpl[] getOrderedBundleInfos() {
-        List result = new ArrayList();
-        for(Iterator i = m_index.iterator(); i.hasNext();) {
-            AbstractInfo bundleInfo = getBundleInfoByPath((String) i.next());
-            if (bundleInfo != null) {
-                result.add(bundleInfo);
-            }
-        }
-        return (BundleInfoImpl[]) result.toArray(new BundleInfoImpl[result.size()]);
-    }
-
     public InputStream getBundleStream(String symbolicName) throws IOException {
         BundleInfoImpl bundleInfo = getBundleInfoByName(symbolicName);
         if (bundleInfo != null) {
@@ -75,22 +64,33 @@ public class FileDeploymentPackage extends AbstractDeploymentPackage {
         return null;
     }
 
-    public ResourceInfoImpl[] getOrderedResourceInfos() {
-        List result = new ArrayList();
-        for(Iterator i = m_index.iterator(); i.hasNext();) {
-            AbstractInfo resourceInfo = getResourceInfoByPath((String) i.next());
-            if (resourceInfo != null) {
-                result.add(resourceInfo);
-            }
-        }
-        return (ResourceInfoImpl[]) result.toArray(new ResourceInfoImpl[result.size()]);
-    }
-
     public InputStream getCurrentEntryStream() {
         throw new UnsupportedOperationException("Not implemented for file-based deployment package");
     }
 
     public AbstractInfo getNextEntry() throws IOException {
         throw new UnsupportedOperationException("Not implemented for file-based deployment package");
+    }
+
+    public BundleInfoImpl[] getOrderedBundleInfos() {
+        List result = new ArrayList();
+        for (Iterator i = m_index.iterator(); i.hasNext();) {
+            AbstractInfo bundleInfo = getBundleInfoByPath((String) i.next());
+            if (bundleInfo != null) {
+                result.add(bundleInfo);
+            }
+        }
+        return (BundleInfoImpl[]) result.toArray(new BundleInfoImpl[result.size()]);
+    }
+
+    public ResourceInfoImpl[] getOrderedResourceInfos() {
+        List result = new ArrayList();
+        for (Iterator i = m_index.iterator(); i.hasNext();) {
+            AbstractInfo resourceInfo = getResourceInfoByPath((String) i.next());
+            if (resourceInfo != null) {
+                result.add(resourceInfo);
+            }
+        }
+        return (ResourceInfoImpl[]) result.toArray(new ResourceInfoImpl[result.size()]);
     }
 }

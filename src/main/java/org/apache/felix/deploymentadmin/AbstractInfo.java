@@ -27,28 +27,24 @@ import org.osgi.service.deploymentadmin.DeploymentException;
  * Objects of this class represent the meta data for a resource from a deployment package, this
  * can be either bundle resources or processed resources.
  */
-public class AbstractInfo {
+public class AbstractInfo implements Constants {
 
     private static final BitSet VALID_RESOURCE_PATH_CHARS;
-    static
-    {
+    static {
         VALID_RESOURCE_PATH_CHARS = new BitSet();
-        for ( int i = 'a'; i <= 'z'; i++ )
-        {
-            VALID_RESOURCE_PATH_CHARS.set( i );
+        for (int i = 'a'; i <= 'z'; i++) {
+            VALID_RESOURCE_PATH_CHARS.set(i);
         }
-        for ( int i = 'A'; i <= 'Z'; i++ )
-        {
-            VALID_RESOURCE_PATH_CHARS.set( i );
+        for (int i = 'A'; i <= 'Z'; i++) {
+            VALID_RESOURCE_PATH_CHARS.set(i);
         }
-        for ( int i = '0'; i <= '9'; i++ )
-        {
-            VALID_RESOURCE_PATH_CHARS.set( i );
+        for (int i = '0'; i <= '9'; i++) {
+            VALID_RESOURCE_PATH_CHARS.set(i);
         }
-        VALID_RESOURCE_PATH_CHARS.set( '.' );
-        VALID_RESOURCE_PATH_CHARS.set( '-' );
-        VALID_RESOURCE_PATH_CHARS.set( '_' );
-        VALID_RESOURCE_PATH_CHARS.set( '/' );
+        VALID_RESOURCE_PATH_CHARS.set('.');
+        VALID_RESOURCE_PATH_CHARS.set('-');
+        VALID_RESOURCE_PATH_CHARS.set('_');
+        VALID_RESOURCE_PATH_CHARS.set('/');
     }
 
     private final String m_path;
@@ -66,7 +62,7 @@ public class AbstractInfo {
         verifyEntryName(path);
         m_path = path;
         m_attributes = attributes;
-        m_missing = parseBooleanHeader(attributes, Constants.DEPLOYMENTPACKAGE_MISSING);
+        m_missing = parseBooleanHeader(attributes, DEPLOYMENTPACKAGE_MISSING);
     }
 
     /**
@@ -78,6 +74,7 @@ public class AbstractInfo {
 
     /**
      * Return the value of a header for this resource
+     * 
      * @param header Name of the header
      * @return Value of the header specified by the given header name
      */
@@ -88,17 +85,19 @@ public class AbstractInfo {
     private void verifyEntryName(String name) throws DeploymentException {
         byte[] bytes = name.getBytes();
         boolean delimiterSeen = false;
-        for(int j = 0; j < bytes.length; j++) {
-            if(!VALID_RESOURCE_PATH_CHARS.get(bytes[j])) {
-                throw new DeploymentException(DeploymentException.CODE_BAD_HEADER, "Resource ID '" + name +"' contains invalid character(s)");
+        for (int j = 0; j < bytes.length; j++) {
+            if (!VALID_RESOURCE_PATH_CHARS.get(bytes[j])) {
+                throw new DeploymentException(CODE_BAD_HEADER, "Resource ID '" + name + "' contains invalid character(s)");
             }
             if (bytes[j] == '/') {
                 if (delimiterSeen) {
-                    throw new DeploymentException(DeploymentException.CODE_BAD_HEADER, "Resource ID '" + name +"' contains multiple consequetive path seperators");
-                } else {
+                    throw new DeploymentException(CODE_BAD_HEADER, "Resource ID '" + name + "' contains multiple consequetive path seperators");
+                }
+                else {
                     delimiterSeen = true;
                 }
-            } else {
+            }
+            else {
                 delimiterSeen = false;
             }
         }
@@ -106,6 +105,7 @@ public class AbstractInfo {
 
     /**
      * Determine if a resource is missing or not
+     * 
      * @return True if the actual data for this resource is not present, false otherwise
      */
     public boolean isMissing() {
@@ -125,11 +125,12 @@ public class AbstractInfo {
         if (value != null) {
             if ("true".equals(value)) {
                 return true;
-            } else if ("false".equals(value)){
+            }
+            else if ("false".equals(value)) {
                 return false;
-            } else {
-                throw new DeploymentException(DeploymentException.CODE_BAD_HEADER, "Invalid '" + header + "' header for manifest " +
-                    "entry '" + getPath() + "' header, should be either 'true' or 'false' or not present");
+            }
+            else {
+                throw new DeploymentException(CODE_BAD_HEADER, "Invalid '" + header + "' header for manifest " + "entry '" + getPath() + "' header, should be either 'true' or 'false' or not present");
             }
         }
         return false;

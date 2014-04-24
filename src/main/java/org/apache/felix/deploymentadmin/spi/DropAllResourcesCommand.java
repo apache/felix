@@ -76,13 +76,13 @@ public class DropAllResourcesCommand extends Command {
             ServiceReference ref = target.getResourceProcessor(path);
             if (ref == null) {
                 log.log(LogService.LOG_ERROR, "Failed to find resource processor for '" + rpName + "'!");
-                throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "Failed to find resource processor '" + rpName + "'!");
+                throw new DeploymentException(CODE_PROCESSOR_NOT_FOUND, "Failed to find resource processor '" + rpName + "'!");
             }
 
             ResourceProcessor resourceProcessor = (ResourceProcessor) context.getService(ref);
             if (resourceProcessor == null) {
                 log.log(LogService.LOG_ERROR, "Failed to find resource processor for '" + rpName + "'!");
-                throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "Failed to find resource processor '" + rpName + "'!");
+                throw new DeploymentException(CODE_PROCESSOR_NOT_FOUND, "Failed to find resource processor '" + rpName + "'!");
             }
 
             try {
@@ -93,7 +93,7 @@ public class DropAllResourcesCommand extends Command {
             }
             catch (Exception e) {
                 log.log(LogService.LOG_ERROR, "Failed to drop all resources for resource processor '" + rpName + "'!", e);
-                throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Failed to drop all resources for resource processor '" + rpName + "'!", e);
+                throw new DeploymentException(CODE_OTHER_ERROR, "Failed to drop all resources for resource processor '" + rpName + "'!", e);
             }
         }
     }

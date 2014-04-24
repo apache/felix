@@ -47,8 +47,9 @@ public class StopBundleCommand extends Command {
         BundleInfo[] bundleInfos = target.getOrderedBundleInfos();
         for (int i = 0; i < bundleInfos.length; i++) {
             if (isCancelled()) {
-                throw new DeploymentException(DeploymentException.CODE_CANCELLED);
+                throw new DeploymentException(CODE_CANCELLED);
             }
+
             String symbolicName = bundleInfos[i].getSymbolicName();
             Bundle bundle = target.getBundle(symbolicName);
             if (bundle != null) {
@@ -57,7 +58,8 @@ public class StopBundleCommand extends Command {
                 }
                 if (isFragmentBundle(bundle)) {
                     log.log(LogService.LOG_INFO, "Skipping fragment bundle '" + symbolicName + "'");
-                } else {
+                }
+                else {
                     addRollback(new StartBundleRunnable(session, bundle));
                     try {
                         bundle.stop();
@@ -66,7 +68,8 @@ public class StopBundleCommand extends Command {
                         log.log(LogService.LOG_WARNING, "Could not stop bundle '" + symbolicName + "'", e);
                     }
                 }
-            } else {
+            }
+            else {
                 log.log(LogService.LOG_WARNING, "Could not stop bundle '" + symbolicName + "' because it was not present in the framework");
             }
         }

@@ -75,27 +75,27 @@ public class ProcessResourceCommand extends Command {
             while (!expectedResources.isEmpty()) {
                 AbstractInfo jarEntry = source.getNextEntry();
                 if (jarEntry == null) {
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Expected more resources in the stream: " + expectedResources.keySet());
+                    throw new DeploymentException(CODE_OTHER_ERROR, "Expected more resources in the stream: " + expectedResources.keySet());
                 }
 
                 String name = jarEntry.getPath();
 
                 ResourceInfoImpl resourceInfo = (ResourceInfoImpl) expectedResources.remove(name);
                 if (resourceInfo == null) {
-                    throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Resource '" + name + "' is not described in the manifest.");
+                    throw new DeploymentException(CODE_OTHER_ERROR, "Resource '" + name + "' is not described in the manifest.");
                 }
 
                 ServiceReference ref = source.getResourceProcessor(name);
                 if (ref == null) {
-                    throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "No resource processor for resource: '" + name + "'");
+                    throw new DeploymentException(CODE_PROCESSOR_NOT_FOUND, "No resource processor for resource: '" + name + "'");
                 }
                 if (!isValidCustomizer(session, ref)) {
-                    throw new DeploymentException(DeploymentException.CODE_FOREIGN_CUSTOMIZER, "Resource processor for resource '" + name + "' belongs to foreign deployment package");
+                    throw new DeploymentException(CODE_FOREIGN_CUSTOMIZER, "Resource processor for resource '" + name + "' belongs to foreign deployment package");
                 }
 
                 ResourceProcessor resourceProcessor = (ResourceProcessor) context.getService(ref);
                 if (resourceProcessor == null) {
-                    throw new DeploymentException(DeploymentException.CODE_PROCESSOR_NOT_FOUND, "No resource processor for resource: '" + name + "'");
+                    throw new DeploymentException(CODE_PROCESSOR_NOT_FOUND, "No resource processor for resource: '" + name + "'");
                 }
 
                 try {
@@ -106,18 +106,19 @@ public class ProcessResourceCommand extends Command {
                 }
                 catch (ResourceProcessorException rpe) {
                     if (rpe.getCode() == ResourceProcessorException.CODE_RESOURCE_SHARING_VIOLATION) {
-                        throw new DeploymentException(DeploymentException.CODE_RESOURCE_SHARING_VIOLATION, "Sharing violation while processing resource '" + name + "'", rpe);
-                    } else {
-                        throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Error while processing resource '" + name + "'", rpe);
+                        throw new DeploymentException(CODE_RESOURCE_SHARING_VIOLATION, "Sharing violation while processing resource '" + name + "'", rpe);
+                    }
+                    else {
+                        throw new DeploymentException(CODE_OTHER_ERROR, "Error while processing resource '" + name + "'", rpe);
                     }
                 }
             }
         }
         catch (IOException e) {
-            throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Problem while reading stream", e);
+            throw new DeploymentException(CODE_OTHER_ERROR, "Problem while reading stream", e);
         }
     }
-    
+
     private boolean isValidCustomizer(DeploymentSessionImpl session, ServiceReference ref) {
         if (session.getConfiguration().isAllowForeignCustomizers()) {
             // If foreign customizers are allowed, any non-null customizer will do...

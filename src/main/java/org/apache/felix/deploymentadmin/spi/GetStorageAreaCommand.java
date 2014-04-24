@@ -41,7 +41,7 @@ public class GetStorageAreaCommand extends Command {
         BundleInfo[] infos = target.getBundleInfos();
         for (int i = 0; i < infos.length; i++) {
             if (isCancelled()) {
-                throw new DeploymentException(DeploymentException.CODE_CANCELLED);
+                throw new DeploymentException(CODE_CANCELLED);
             }
             Bundle bundle = target.getBundle(infos[i].getSymbolicName());
             if (bundle != null) {

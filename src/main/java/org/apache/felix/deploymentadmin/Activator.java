@@ -39,10 +39,10 @@ public class Activator extends DependencyActivatorBase {
 
     public void init(BundleContext context, DependencyManager manager) throws Exception {
         String[] ifaces = { DeploymentAdmin.class.getName(), ManagedService.class.getName() };
-        
+
         Dictionary props = new Hashtable();
         props.put(Constants.SERVICE_PID, DeploymentAdminImpl.PID);
-        
+
         manager.add(createComponent()
             .setInterface(ifaces, props)
             .setImplementation(DeploymentAdminImpl.class)

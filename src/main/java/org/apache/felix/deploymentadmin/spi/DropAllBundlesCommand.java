@@ -69,7 +69,8 @@ public class DropAllBundlesCommand extends Command {
                 is = m_target.getBundleStream(m_bundle.getSymbolicName());
                 if (is != null) {
                     m_bundle.update(is);
-                } else {
+                }
+                else {
                     throw new RuntimeException("Unable to get inputstream for bundle '" + m_bundle.getSymbolicName() + "'");
                 }
             }

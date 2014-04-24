@@ -52,31 +52,8 @@ public class StreamDeploymentPackage extends AbstractDeploymentPackage {
         throw new UnsupportedOperationException("Not applicable for stream-based deployment package");
     }
 
-    // This only works for those resources that have been read from the stream already, no guarantees for remainder of stream
-    public BundleInfoImpl[] getOrderedBundleInfos() {
-        List result = new ArrayList();
-
-        // add all bundle resources ordered by location in stream
-        for(Iterator i = m_names.iterator(); i.hasNext();) {
-            String indexEntry = (String) i.next();
-            AbstractInfo bundleInfo = getBundleInfoByPath(indexEntry);
-            if (bundleInfo != null) {
-                result.add(bundleInfo);
-            }
-        }
-
-        // add bundle resources marked missing to the end of the result
-        BundleInfoImpl[] bundleInfoImpls = getBundleInfoImpls();
-        for (int i = 0; i < bundleInfoImpls.length; i++) {
-            if(bundleInfoImpls[i].isMissing()) {
-                result.add(bundleInfoImpls[i]);
-            }
-        }
-        return (BundleInfoImpl[]) result.toArray(new BundleInfoImpl[result.size()]);
-    }
-
-    public ResourceInfoImpl[] getOrderedResourceInfos() {
-        throw new UnsupportedOperationException("Not applicable for stream-based deployment package");
+    public InputStream getCurrentEntryStream() {
+        return new NonCloseableStream(m_input);
     }
 
     public AbstractInfo getNextEntry() throws IOException {
@@ -90,7 +67,30 @@ public class StreamDeploymentPackage extends AbstractDeploymentPackage {
         return abstractInfoByPath;
     }
 
-    public InputStream getCurrentEntryStream() {
-        return new NonCloseableStream(m_input);
+    // This only works for those resources that have been read from the stream already, no guarantees for remainder of stream
+    public BundleInfoImpl[] getOrderedBundleInfos() {
+        List result = new ArrayList();
+
+        // add all bundle resources ordered by location in stream
+        for (Iterator i = m_names.iterator(); i.hasNext();) {
+            String indexEntry = (String) i.next();
+            AbstractInfo bundleInfo = getBundleInfoByPath(indexEntry);
+            if (bundleInfo != null) {
+                result.add(bundleInfo);
+            }
+        }
+
+        // add bundle resources marked missing to the end of the result
+        BundleInfoImpl[] bundleInfoImpls = getBundleInfoImpls();
+        for (int i = 0; i < bundleInfoImpls.length; i++) {
+            if (bundleInfoImpls[i].isMissing()) {
+                result.add(bundleInfoImpls[i]);
+            }
+        }
+        return (BundleInfoImpl[]) result.toArray(new BundleInfoImpl[result.size()]);
+    }
+
+    public ResourceInfoImpl[] getOrderedResourceInfos() {
+        throw new UnsupportedOperationException("Not applicable for stream-based deployment package");
     }
 }

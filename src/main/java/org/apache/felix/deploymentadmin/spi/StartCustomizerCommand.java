@@ -70,7 +70,7 @@ public class StartCustomizerCommand extends Command {
                 bundle.start();
             }
             catch (Exception be) {
-                throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Could not start customizer bundle '" + bundle.getSymbolicName() + "'", be);
+                throw new DeploymentException(CODE_OTHER_ERROR, "Could not start customizer bundle '" + bundle.getSymbolicName() + "'", be);
             }
             addRollback(new StopCustomizerRunnable(session, bundle));
         }

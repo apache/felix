@@ -55,7 +55,8 @@ public class StartBundleCommand extends Command {
                 if (bundle != null) {
                     if (isFragmentBundle(bundle)) {
                         log.log(LogService.LOG_INFO, "Skipping fragment bundle '" + symbolicName + "'");
-                    } else {
+                    }
+                    else {
                         try {
                             bundle.start();
                         }
@@ -63,7 +64,8 @@ public class StartBundleCommand extends Command {
                             log.log(LogService.LOG_WARNING, "Could not start bundle '" + symbolicName + "'", be);
                         }
                     }
-                } else {
+                }
+                else {
                     log.log(LogService.LOG_WARNING, "Could not start bundle '" + symbolicName + "' because it is not present in the framework");
                 }
             }
@@ -105,12 +107,12 @@ public class StartBundleCommand extends Command {
                 try {
                     wait(REFRESH_TIMEOUT);
                 }
-                catch (InterruptedException ie) {
-                }
+                catch (InterruptedException ie) {}
                 finally {
                     m_alreadyNotified = false;
                 }
-            } else {
+            }
+            else {
                 // just reset the misted notification variable, this Monitor
                 // object might be reused.
                 m_alreadyNotified = false;

@@ -34,7 +34,7 @@ import org.osgi.service.deploymentadmin.DeploymentException;
  * and a command that is currently in progress can be signaled to stop it's
  * activities by canceling it.
  */
-public abstract class Command {
+public abstract class Command implements Constants {
 
     private final List m_rollback = new ArrayList();
     private final List m_commit = new ArrayList();
@@ -58,7 +58,7 @@ public abstract class Command {
             if (e instanceof DeploymentException) {
                 throw (DeploymentException) e;
             }
-            throw new DeploymentException(DeploymentException.CODE_OTHER_ERROR, "Command failed!", e);
+            throw new DeploymentException(CODE_OTHER_ERROR, "Command failed!", e);
         }
     }
 
@@ -169,10 +169,10 @@ public abstract class Command {
      *         bundle, <code>false</code> otherwise.
      */
     static final boolean isFragmentBundle(Bundle bundle) {
-        Object fragmentHost = bundle.getHeaders().get(Constants.FRAGMENT_HOST);
+        Object fragmentHost = bundle.getHeaders().get(FRAGMENT_HOST);
         return fragmentHost != null;
     }
-    
+
     static final void closeSilently(Closeable resource) {
         if (resource != null) {
             try {
