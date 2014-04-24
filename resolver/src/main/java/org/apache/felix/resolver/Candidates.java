@@ -19,6 +19,7 @@
 package org.apache.felix.resolver;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,7 +45,6 @@ class Candidates
 {
     public static final int MANDATORY = 0;
     public static final int OPTIONAL = 1;
-    public static final int ON_DEMAND = 2;
 
     private final Set<Resource> m_mandatoryResources;
     // Maps a capability to requirements that match it.
@@ -60,6 +60,8 @@ class Candidates
     // Flag to signal if fragments are present in the candidate map.
     private boolean m_fragmentsPresent = false;
 
+    private final Map<Resource, Boolean> m_validOnDemandResources;
+
     /**
      * Private copy constructor used by the copy() method.
      * @param dependentMap the capability dependency map.
@@ -72,7 +74,8 @@ class Candidates
         Map<Capability, Set<Requirement>> dependentMap,
         Map<Requirement, List<Capability>> candidateMap,
         Map<Resource, WrappedResource> wrappedHosts, Map<Resource, Object> populateResultCache,
-        boolean fragmentsPresent)
+        boolean fragmentsPresent,
+        Map<Resource, Boolean> onDemandResources)
     {
         m_mandatoryResources = mandatoryResources;
         m_dependentMap = dependentMap;
@@ -80,18 +83,20 @@ class Candidates
         m_allWrappedHosts = wrappedHosts;
         m_populateResultCache = populateResultCache;
         m_fragmentsPresent = fragmentsPresent;
+        m_validOnDemandResources = onDemandResources;
     }
 
     /**
      * Constructs an empty Candidates object.
     **/
-    public Candidates()
+    public Candidates(Map<Resource, Boolean> validOnDemandResources)
     {
         m_mandatoryResources = new HashSet<Resource>();
         m_dependentMap = new HashMap<Capability, Set<Requirement>>();
         m_candidateMap = new HashMap<Requirement, List<Capability>>();
         m_allWrappedHosts = new HashMap<Resource, WrappedResource>();
         m_populateResultCache = new HashMap<Resource, Object>();
+        m_validOnDemandResources = validOnDemandResources;
     }
 
     /**
@@ -137,28 +142,22 @@ class Candidates
             return;
         }
 
-        // Always attempt to populate mandatory or optional revisions.
-        // However, for on-demand fragments only populate if their host
-        // is already populated.
-        if ((resolution != ON_DEMAND)
-            || (isFragment && populateFragmentOndemand(rc, resource)))
+
+        if (resolution == MANDATORY)
         {
+            m_mandatoryResources.add(resource);
+        }
+        try
+        {
+            // Try to populate candidates for the optional revision.
+            populateResource(rc, resource);
+        }
+        catch (ResolutionException ex)
+        {
+            // Only throw an exception if resolution is mandatory.
             if (resolution == MANDATORY)
             {
-                m_mandatoryResources.add(resource);
-            }
-            try
-            {
-                // Try to populate candidates for the optional revision.
-                populateResource(rc, resource);
-            }
-            catch (ResolutionException ex)
-            {
-                // Only throw an exception if resolution is mandatory.
-                if (resolution == MANDATORY)
-                {
-                    throw ex;
-                }
+                throw ex;
             }
         }
     }
@@ -304,68 +303,28 @@ class Candidates
         {
             // Record that the revision was successfully populated.
             m_populateResultCache.put(resource, Boolean.TRUE);
-
             // Merge local candidate map into global candidate map.
             if (localCandidateMap.size() > 0)
             {
                 add(localCandidateMap);
             }
-        }
-    }
-
-    private boolean populateFragmentOndemand(ResolveContext rc, Resource resource)
-        throws ResolutionException
-    {
-        // Create a modifiable list of the revision's requirements.
-        List<Requirement> remainingReqs =
-            new ArrayList(resource.getRequirements(null));
-        // Find the host requirement.
-        Requirement hostReq = null;
-        for (Iterator<Requirement> it = remainingReqs.iterator();
-            it.hasNext(); )
-        {
-            Requirement r = it.next();
-            if (r.getNamespace().equals(HostNamespace.HOST_NAMESPACE))
-            {
-                hostReq = r;
-                it.remove();
-                break;
+            if ((rc instanceof FelixResolveContext) && !Util.isFragment(resource)) {
+            	Collection<Resource> ondemandFragments = ((FelixResolveContext) rc).getOndemandResources(resource);
+            	for (Resource fragment : ondemandFragments) {
+            		Boolean valid = m_validOnDemandResources.get(fragment);
+            		if (valid == null) {
+            			// Mark this resource as a valid on demand resource
+            			m_validOnDemandResources.put(fragment, Boolean.TRUE);
+            			valid = Boolean.TRUE;
+            		}
+            		if (valid) {
+            			// This resource is a valid on demand resource;
+            			// populate it now, consider it optional
+            			populate(rc, fragment, OPTIONAL);
+            		}
+				}
             }
         }
-        // Get candidates hosts and keep any that have been populated.
-        List<Capability> hosts = rc.findProviders(hostReq);
-        for (Iterator<Capability> it = hosts.iterator(); it.hasNext(); )
-        {
-            Capability host = it.next();
-            if (!isPopulated(host.getResource()))
-            {
-                it.remove();
-            }
-        }
-        // If there aren't any populated hosts, then we can just
-        // return since this fragment isn't needed.
-        if (hosts.isEmpty())
-        {
-            return false;
-        }
-
-        // If there are populated host candidates, then prepopulate
-        // the result cache with the work we've done so far.
-        // Record cycle count, but start at -1 since it will
-        // be incremented again in populate().
-        Integer cycleCount = new Integer(-1);
-        // Create a local map for populating candidates first, just in case
-        // the revision is not resolvable.
-        Map<Requirement, List<Capability>> localCandidateMap =
-            new HashMap<Requirement, List<Capability>>();
-        // Add the discovered host candidates to the local candidate map.
-        localCandidateMap.put(hostReq, hosts);
-        // Add these value to the result cache so we know we are
-        // in the middle of populating candidates for the current
-        // revision.
-        m_populateResultCache.put(resource,
-            new Object[] { cycleCount, localCandidateMap, remainingReqs });
-        return true;
     }
 
     public void populateDynamic(
@@ -1004,7 +963,7 @@ class Candidates
 
         return new Candidates(
             m_mandatoryResources, dependentMap, candidateMap,
-            m_allWrappedHosts, m_populateResultCache, m_fragmentsPresent);
+            m_allWrappedHosts, m_populateResultCache, m_fragmentsPresent, m_validOnDemandResources);
     }
 
     public void dump(ResolveContext rc)
