@@ -218,7 +218,18 @@ public class ResolverImpl implements Resolver
                         ? usesPermutations.remove(0)
                         : importPermutations.remove(0);
 //allCandidates.dump();
+
                     Map<Resource, ResolutionException> currentFaultyResources = null;
+                    try
+                    {
+                        allCandidates.checkSubstitutes(importPermutations);
+                    }
+                    catch (ResolutionException e)
+                    {
+                        rethrow = e;
+                        continue;
+                    }
+
                     // Reuse a resultCache map for checking package consistency
                     // for all resources.
                     Map<Resource, Object> resultCache =
@@ -448,6 +459,15 @@ public class ResolverImpl implements Resolver
                             : importPermutations.remove(0);
 //allCandidates.dump();
 
+                        try
+                        {
+                            allCandidates.checkSubstitutes(importPermutations);
+                        }
+                        catch (ResolutionException e)
+                        {
+                            rethrow = e;
+                            continue;
+                        }
                         // For a dynamic import, the instigating resource
                         // will never be a fragment since fragments never
                         // execute code, so we don't need to check for
@@ -1460,7 +1480,7 @@ public class ResolverImpl implements Resolver
         }
     }
 
-    private static void permutateIfNeeded(
+    static void permutateIfNeeded(
         Candidates allCandidates, Requirement req, List<Candidates> permutations)
     {
         List<Capability> candidates = allCandidates.getCandidates(req);
