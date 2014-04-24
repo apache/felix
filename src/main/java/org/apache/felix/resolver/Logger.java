@@ -18,6 +18,10 @@
  */
 package org.apache.felix.resolver;
 
+import org.osgi.resource.Resource;
+
+import org.osgi.service.resolver.ResolutionException;
+
 /**
  * <p>
  * This class mimics the standard OSGi <tt>LogService</tt> interface. An
@@ -46,10 +50,6 @@ public class Logger
 
     private int m_logLevel = 1;
 
-    private final static int LOGGER_OBJECT_IDX = 0;
-    private final static int LOGGER_METHOD_IDX = 1;
-    private Object[] m_logger = null;
-
     public Logger(int i)
     {
         m_logLevel = i;
@@ -77,6 +77,10 @@ public class Logger
 
     protected void doLog(int level, String msg, Throwable throwable)
     {
+    	if (level > m_logLevel)
+    	{
+    		return;
+    	}
         String s = "";
         s = s + msg;
         if (throwable != null)
@@ -110,13 +114,13 @@ public class Logger
         int level,
         String msg, Throwable throwable)
     {
-        // Save our own copy just in case it changes. We could try to do
-        // more conservative locking here, but let's be optimistic.
-        Object[] logger = m_logger;
-
         if (m_logLevel >= level)
         {
             doLog(level, msg, throwable);
         }
+    }
+
+    public void logUsesConstraintViolation(Resource resource, ResolutionException error) {
+        // do nothing by default
     }
 }
