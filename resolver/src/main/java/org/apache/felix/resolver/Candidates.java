@@ -276,6 +276,12 @@ class Candidates
             // not optional, then record and throw a resolve exception.
             else if (candidates.isEmpty() && !Util.isOptional(req))
             {
+                if (Util.isFragment(resource) && rc.getWirings().containsKey(resource))
+                {
+                    // This is a fragment that is already resolved and there is no unresolved hosts to attach it to.
+                	m_populateResultCache.put(resource, Boolean.TRUE);
+                	return;
+            	}
                 String msg = "Unable to resolve " + resource
                     + ": missing requirement " + req;
                 if (rethrow != null)
