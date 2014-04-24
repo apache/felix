@@ -63,12 +63,15 @@ class Candidates
 
     private final Map<Resource, Boolean> m_validOnDemandResources;
 
+    private final Map<Capability, Requirement> m_subtitutableMap;
+
     /**
      * Private copy constructor used by the copy() method.
      * @param dependentMap the capability dependency map.
      * @param candidateMap the requirement candidate map.
      * @param hostFragments the fragment map.
      * @param wrappedHosts the wrapped hosts map.
+     * @param substitutableMap 
     **/
     private Candidates(
         Set<Resource> mandatoryResources,
@@ -76,7 +79,8 @@ class Candidates
         Map<Requirement, List<Capability>> candidateMap,
         Map<Resource, WrappedResource> wrappedHosts, Map<Resource, Object> populateResultCache,
         boolean fragmentsPresent,
-        Map<Resource, Boolean> onDemandResources)
+        Map<Resource, Boolean> onDemandResources,
+        Map<Capability, Requirement> substitutableMap)
     {
         m_mandatoryResources = mandatoryResources;
         m_dependentMap = dependentMap;
@@ -85,6 +89,7 @@ class Candidates
         m_populateResultCache = populateResultCache;
         m_fragmentsPresent = fragmentsPresent;
         m_validOnDemandResources = onDemandResources;
+        m_subtitutableMap = substitutableMap;
     }
 
     /**
@@ -98,6 +103,7 @@ class Candidates
         m_allWrappedHosts = new HashMap<Resource, WrappedResource>();
         m_populateResultCache = new HashMap<Resource, Object>();
         m_validOnDemandResources = validOnDemandResources;
+        m_subtitutableMap = new HashMap<Capability, Requirement>();
     }
 
     /**
@@ -334,7 +340,187 @@ class Candidates
         }
     }
 
-    public void populateDynamic(
+    private void populateSubstitutables() {
+        for (Map.Entry<Resource, Object> populated : m_populateResultCache.entrySet())
+        {
+            if (populated.getValue() instanceof Boolean)
+            {
+                populateSubstitutables(populated.getKey());
+            }
+        }
+    }
+
+    private void populateSubstitutables(Resource resource)
+    {
+        // Collect the package names exported
+        List<Capability> packageExports = resource.getCapabilities(PackageNamespace.PACKAGE_NAMESPACE);
+        if (packageExports.isEmpty())
+        {
+            return;
+        }
+        List<Requirement> packageImports = resource.getRequirements(PackageNamespace.PACKAGE_NAMESPACE);
+        if (packageImports.isEmpty())
+        {
+            return;
+        }
+        Map<String, Collection<Capability>> exportNames = new HashMap<String, Collection<Capability>>();
+        for (Capability packageExport : packageExports)
+        {
+        	String packageName = (String) packageExport.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
+        	Collection<Capability> caps = exportNames.get(packageName);
+        	if (caps == null)
+        	{
+        		caps = new ArrayList<Capability>(1);
+        		exportNames.put(packageName, caps);
+        	}
+        	caps.add(packageExport);
+        }
+        // Check if any requirements substitute one of the exported packages
+        for (Requirement req : packageImports)
+        {
+            List<Capability> substitutes = m_candidateMap.get(req);
+            if (substitutes != null && !substitutes.isEmpty())
+            {
+                String packageName = (String) substitutes.iterator().next().getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE);
+                Collection<Capability> exportedPackages = exportNames.get(packageName);
+                if (exportedPackages != null) {
+                    // The package is exported;
+                	// Check if the requirement only has the bundle's own export as candidates
+                	substitutes = new ArrayList<Capability>(substitutes);
+                    for (Capability exportedPackage : exportedPackages)
+                    {
+                        substitutes.remove(exportedPackage);
+                    }
+                    if (!substitutes.isEmpty()) {
+                        for (Capability exportedPackage : exportedPackages)
+                        {
+                            m_subtitutableMap.put(exportedPackage, req);
+                        }
+                    }
+                }
+            }
+        }
+	}
+
+    private static final int UNPROCESSED = 0;
+    private static final int PROCESSING = 1;
+    private static final int SUBSTITUTED = 2;
+    private static final int EXPORTED = 3;
+    void checkSubstitutes(List<Candidates> importPermutations) throws ResolutionException
+    {
+        Map<Capability, Integer> substituteStatuses = new HashMap<Capability, Integer>(m_subtitutableMap.size());
+        for (Capability substitutable : m_subtitutableMap.keySet()) {
+            // initialize with unprocessed
+            substituteStatuses.put(substitutable, UNPROCESSED);
+        }
+        // note we are iterating over the original unmodified map by design
+        for (Capability substitutable : m_subtitutableMap.keySet()) {
+            isSubstituted(substitutable, substituteStatuses);
+        }
+
+        // Remove any substituted exports from candidates
+        for (Map.Entry<Capability, Integer> substituteStatus : substituteStatuses.entrySet()) {
+            if (substituteStatus.getValue() == SUBSTITUTED)
+            {
+                if (m_dependentMap.isEmpty())
+                {
+                    // make sure the dependents are populated
+                    populateDependents();
+                }
+            }
+            // add a permutation that imports a different candidate for the substituted if possible
+            Requirement substitutedReq = m_subtitutableMap.get(substituteStatus.getKey());
+            if (substitutedReq != null)
+            {
+                ResolverImpl.permutateIfNeeded(this, substitutedReq, importPermutations);
+            }
+            Set<Requirement> dependents = m_dependentMap.get(substituteStatus.getKey());
+            if (dependents != null)
+            {
+                for (Requirement dependent : dependents) {
+                    List<Capability> candidates = m_candidateMap.get(dependent);
+                    if (candidates != null) {
+                        candidates: for (Iterator<Capability> iCandidates = candidates.iterator(); iCandidates.hasNext();)
+                        {
+                            Capability candidate = iCandidates.next();
+                            Integer candidateStatus = substituteStatuses.get(candidate);
+                            if (candidateStatus == null)
+                            {
+                                candidateStatus = EXPORTED;
+                            }
+                            switch (candidateStatus) {
+								case EXPORTED :
+	                                // non-substituted candidate hit before the substituted one; do not continue
+	                            	break candidates;
+								case SUBSTITUTED :
+								default :
+									// Need to remove any substituted that comes before an exported candidate
+	                            	iCandidates.remove();
+	                            	// continue to next candidate
+									break;
+							}
+                        }
+                    }
+				}
+            }
+        }
+    }
+
+    private boolean isSubstituted(Capability substitutableCap, Map<Capability, Integer> substituteStatuses) throws ResolutionException 
+    {
+        Integer substituteState = substituteStatuses.get(substitutableCap);
+    	if (substituteState == null)
+    	{
+    	    return false;
+    	}
+
+        switch (substituteState.intValue()) {
+			case PROCESSING :
+	            // found a cycle mark the initiator as not substituted
+	        	substituteStatuses.put(substitutableCap, EXPORTED);
+	        	return false;
+			case SUBSTITUTED :
+			    return true;
+			case EXPORTED :
+			    return false;
+			default :
+				break;
+		}
+
+        Requirement substitutableReq = m_subtitutableMap.get(substitutableCap);
+        if (substitutableReq == null)
+        {
+            // this should never happen.
+            return false;
+        }
+        // mark as processing to detect cycles
+        substituteStatuses.put(substitutableCap, PROCESSING);
+        // discover possible substitutes
+        List<Capability> substitutes = m_candidateMap.get(substitutableReq);
+        if (substitutes != null)
+        {
+            for (Iterator<Capability> iSubstitutes = substitutes.iterator(); iSubstitutes.hasNext();)
+            {
+                Capability substituteCandidate = iSubstitutes.next();
+                if (substituteCandidate.getResource().equals(substitutableCap.getResource()))
+                {
+                    substituteStatuses.put(substitutableCap, EXPORTED);
+                    return false;
+                }
+                if (!isSubstituted(substituteCandidate, substituteStatuses))
+                {
+                    // The resource's exported package is substituted for this permutation.
+                    substituteStatuses.put(substitutableCap, SUBSTITUTED);
+                	return true;
+                }
+			}
+        }
+        // if we get here then the export is not substituted
+        substituteStatuses.put(substitutableCap, EXPORTED);
+        return false;
+    }
+
+	public void populateDynamic(
         ResolveContext rc, Resource resource,
         Requirement req, List<Capability> candidates) throws ResolutionException
     {
@@ -782,6 +968,8 @@ class Candidates
                 throw getResolveException(resource);
             }
         }
+
+        populateSubstitutables();
     }
 
     // Maps a host capability to a map containing its potential fragments;
@@ -978,7 +1166,8 @@ class Candidates
 
         return new Candidates(
             m_mandatoryResources, dependentMap, candidateMap,
-            m_allWrappedHosts, m_populateResultCache, m_fragmentsPresent, m_validOnDemandResources);
+            m_allWrappedHosts, m_populateResultCache, m_fragmentsPresent, m_validOnDemandResources,
+            m_subtitutableMap);
     }
 
     public void dump(ResolveContext rc)
