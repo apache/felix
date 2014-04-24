@@ -746,6 +746,11 @@ class Candidates
         return m_candidateMap.get(req);
     }
 
+    public void clearCandidates(Requirement req)
+    {
+        m_candidateMap.remove(req);
+    }
+
     /**
      * Merges fragments into their hosts. It does this by wrapping all host
      * modules and attaching their selected fragments, removing all unselected
