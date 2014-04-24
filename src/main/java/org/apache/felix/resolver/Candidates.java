@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import org.osgi.framework.Version;
 import org.osgi.framework.namespace.HostNamespace;
+import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
@@ -433,18 +434,23 @@ class Candidates
         {
             for (Capability fragCand : fragmentCands)
             {
+            	String fragCandName = fragCand.getNamespace();
+            	if (IdentityNamespace.IDENTITY_NAMESPACE.equals(fragCandName)) {
+            		// no need to wrap identity namespace ever
+            		continue;
+            	}
                 // Only necessary for resolved fragments.
                 Wiring wiring = rc.getWirings().get(fragCand.getResource());
                 if (wiring != null)
                 {
                     // Fragments only have host wire, so each wire represents
                     // an attached host.
-                    for (Wire wire : wiring.getRequiredResourceWires(null))
+                    for (Wire wire : wiring.getRequiredResourceWires(HostNamespace.HOST_NAMESPACE))
                     {
                         // If the capability is a package, then make sure the
                         // host actually provides it in its resolved capabilities,
                         // since it may be a substitutable export.
-                        if (!fragCand.getNamespace().equals(PackageNamespace.PACKAGE_NAMESPACE)
+                        if (!fragCandName.equals(PackageNamespace.PACKAGE_NAMESPACE)
                             || rc.getWirings().get(wire.getProvider())
                                 .getResourceCapabilities(null).contains(fragCand))
                         {
