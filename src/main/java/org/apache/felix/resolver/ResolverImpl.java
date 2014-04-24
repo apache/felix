@@ -131,7 +131,6 @@ public class ResolverImpl implements Resolver
         do
         {
             retry = false;
-
             try
             {
                 // Create object to hold all candidates.
@@ -215,6 +214,7 @@ public class ResolverImpl implements Resolver
                     }
                 }
 
+                Collection<Resource> faultyResources = null;
                 do
                 {
                     rethrow = null;
@@ -230,6 +230,7 @@ public class ResolverImpl implements Resolver
                         ? usesPermutations.remove(0)
                         : importPermutations.remove(0);
 //allCandidates.dump();
+                    Collection<Resource> currentFaultyResources = null;
                     // Reuse a resultCache map for checking package consistency
                     // for all resources.
                     Map<Resource, Object> resultCache =
@@ -264,7 +265,19 @@ public class ResolverImpl implements Resolver
                         catch (ResolutionException ex)
                         {
                             rethrow = ex;
+                            if (currentFaultyResources == null) {
+                            	currentFaultyResources = new ArrayList();
+                            }
+                           	currentFaultyResources.add(resource);
                         }
+                    }
+                    if (currentFaultyResources != null) {
+                    	if (faultyResources == null) {
+                    		faultyResources = currentFaultyResources;
+                    	} else if (faultyResources.size() > currentFaultyResources.size()) {
+                    		// save the optimal faultyResources which has less
+                    		faultyResources = currentFaultyResources;
+                    	}
                     }
                 }
                 while ((rethrow != null)
@@ -276,31 +289,10 @@ public class ResolverImpl implements Resolver
                 // again; otherwise, rethrow the resolve exception.
                 if (rethrow != null)
                 {
-                    Collection<Requirement> exReqs = rethrow.getUnresolvedRequirements();
-                    Requirement faultyReq = ((exReqs == null) || (exReqs.isEmpty()))
-                        ? null : exReqs.iterator().next();
-                    Resource faultyResource = (faultyReq == null)
-                        ? null : getDeclaredResource(faultyReq.getResource());
-                    // If the faulty requirement is wrapped, then it may
-                    // be from a fragment, so consider the fragment faulty
-                    // instead of the host.
-                    if (faultyReq instanceof WrappedRequirement)
-                    {
-                        faultyResource =
-                            ((WrappedRequirement) faultyReq)
-                            .getDeclaredRequirement().getResource();
+                    if (faultyResources != null) {
+                        retry = (optionalResources.removeAll(faultyResources) || ondemandFragments.removeAll(faultyResources));
                     }
-                    // Try to ignore the faulty resource if it is not mandatory.
-                    if (optionalResources.remove(faultyResource))
-                    {
-                        retry = true;
-                    }
-                    else if (ondemandFragments.remove(faultyResource))
-                    {
-                        retry = true;
-                    }
-                    else
-                    {
+                    if (!retry) {
                         throw rethrow;
                     }
                 }
@@ -1170,7 +1162,7 @@ public class ResolverImpl implements Resolver
             }
             for (UsedBlames usedBlames : pkgs.m_usedPkgs.get(pkgName))
             {
-                if (!isCompatible(session, exportBlame.m_cap, usedBlames.m_cap, resourcePkgMap))
+                if (!isCompatible(session, Collections.singletonList(exportBlame), usedBlames.m_cap, resourcePkgMap))
                 {
                     for (Blame usedBlame : usedBlames.m_blames)
                     {
@@ -1261,85 +1253,86 @@ public class ResolverImpl implements Resolver
             new HashMap<String, List<Blame>>(pkgs.m_requiredPkgs);
         allImportRequirePkgs.putAll(pkgs.m_importedPkgs);
 
-        for (Entry<String, List<Blame>> pkgEntry : allImportRequirePkgs.entrySet())
+        for (Entry<String, List<Blame>> requirementBlames : allImportRequirePkgs.entrySet())
         {
-            String pkgName = pkgEntry.getKey();
-            for (Blame requirementBlame : pkgEntry.getValue())
+            String pkgName = requirementBlames.getKey();
+        	if (!pkgs.m_usedPkgs.containsKey(pkgName))
             {
-                if (!pkgs.m_usedPkgs.containsKey(pkgName))
+                continue;
+            }
+
+            for (UsedBlames usedBlames : pkgs.m_usedPkgs.get(pkgName))
+            {
+                if (!isCompatible(session, requirementBlames.getValue(), usedBlames.m_cap, resourcePkgMap))
                 {
-                    continue;
-                }
-                for (UsedBlames usedBlames : pkgs.m_usedPkgs.get(pkgName))
-                {
-                    if (!isCompatible(session, requirementBlame.m_cap, usedBlames.m_cap, resourcePkgMap))
+                	// Split packages, need to think how to get a good message for split packages (sigh)
+                	// For now we just use the first requirement that brings in the package that conflicts
+                	Blame requirementBlame = requirementBlames.getValue().get(0);
+                    for (Blame usedBlame : usedBlames.m_blames)
                     {
-                        for (Blame usedBlame : usedBlames.m_blames)
+                        if (checkMultiple(session, usedBlames, usedBlame, allCandidates))
                         {
-                            if (checkMultiple(session, usedBlames, usedBlame, allCandidates))
+                            // Continue to the next usedBlame, if possible we
+                            // removed the conflicting candidates.
+                            continue;
+                        }
+                        // Create a candidate permutation that eliminates all candidates
+                        // that conflict with existing selected candidates.
+                        permutation = (permutation != null)
+                            ? permutation
+                            : allCandidates.copy();
+                        rethrow = (rethrow != null)
+                            ? rethrow
+                            : new ResolutionException(
+                            "Uses constraint violation. Unable to resolve resource "
+                            + Util.getSymbolicName(resource)
+                            + " [" + resource
+                            + "] because it is exposed to package '"
+                            + pkgName
+                            + "' from resources "
+                            + Util.getSymbolicName(requirementBlame.m_cap.getResource())
+                            + " [" + requirementBlame.m_cap.getResource()
+                            + "] and "
+                            + Util.getSymbolicName(usedBlame.m_cap.getResource())
+                            + " [" + usedBlame.m_cap.getResource()
+                            + "] via two dependency chains.\n\nChain 1:\n"
+                            + toStringBlame(session.getContext(), allCandidates, requirementBlame)
+                            + "\n\nChain 2:\n"
+                            + toStringBlame(session.getContext(), allCandidates, usedBlame),
+                            null,
+                            null);
+
+                        mutated = (mutated != null)
+                            ? mutated
+                            : new HashSet<Requirement>();
+
+                        for (int reqIdx = usedBlame.m_reqs.size() - 1; reqIdx >= 0; reqIdx--)
+                        {
+                            Requirement req = usedBlame.m_reqs.get(reqIdx);
+                            // Sanity check for multiple.
+                            if (Util.isMultiple(req))
                             {
-                                // Continue to the next usedBlame, if possible we
-                                // removed the conflicting candidates.
                                 continue;
                             }
-                            // Create a candidate permutation that eliminates all candidates
-                            // that conflict with existing selected candidates.
-                            permutation = (permutation != null)
-                                ? permutation
-                                : allCandidates.copy();
-                            rethrow = (rethrow != null)
-                                ? rethrow
-                                : new ResolutionException(
-                                "Uses constraint violation. Unable to resolve resource "
-                                + Util.getSymbolicName(resource)
-                                + " [" + resource
-                                + "] because it is exposed to package '"
-                                + pkgName
-                                + "' from resources "
-                                + Util.getSymbolicName(requirementBlame.m_cap.getResource())
-                                + " [" + requirementBlame.m_cap.getResource()
-                                + "] and "
-                                + Util.getSymbolicName(usedBlame.m_cap.getResource())
-                                + " [" + usedBlame.m_cap.getResource()
-                                + "] via two dependency chains.\n\nChain 1:\n"
-                                + toStringBlame(session.getContext(), allCandidates, requirementBlame)
-                                + "\n\nChain 2:\n"
-                                + toStringBlame(session.getContext(), allCandidates, usedBlame),
-                                null,
-                                null);
-
-                            mutated = (mutated != null)
-                                ? mutated
-                                : new HashSet<Requirement>();
-
-                            for (int reqIdx = usedBlame.m_reqs.size() - 1; reqIdx >= 0; reqIdx--)
+                            // If we've already permutated this requirement in another
+                            // uses constraint, don't permutate it again just continue
+                            // with the next uses constraint.
+                            if (mutated.contains(req))
                             {
-                                Requirement req = usedBlame.m_reqs.get(reqIdx);
-                                // Sanity check for multiple.
-                                if (Util.isMultiple(req))
-                                {
-                                    continue;
-                                }
-                                // If we've already permutated this requirement in another
-                                // uses constraint, don't permutate it again just continue
-                                // with the next uses constraint.
-                                if (mutated.contains(req))
-                                {
-                                    break;
-                                }
+                                break;
+                            }
 
-                                // See if we can permutate the candidates for blamed
-                                // requirement; there may be no candidates if the resource
-                                // associated with the requirement is already resolved.
-                                List<Capability> candidates = permutation.getCandidates(req);
-                                if ((candidates != null) && (candidates.size() > 1))
-                                {
-                                    mutated.add(req);
-                                    // Remove the conflicting candidate.
-                                    candidates.remove(0);
-                                    // Continue with the next uses constraint.
-                                    break;
-                                }
+                            // See if we can permutate the candidates for blamed
+                            // requirement; there may be no candidates if the resource
+                            // associated with the requirement is already resolved.
+                            List<Capability> candidates = permutation.getCandidates(req);
+                            if ((candidates != null) && (candidates.size() > 1))
+                            {
+                                mutated.add(req);
+                                // Remove the conflicting candidate.
+                                candidates.remove(0);
+                                // Continue with the next uses constraint.
+                                break;
                             }
                         }
                     }
@@ -1362,15 +1355,18 @@ public class ResolverImpl implements Resolver
                     // Try to permutate the candidate for the original
                     // import requirement; only permutate it if we haven't
                     // done so already.
-                    Requirement req = requirementBlame.m_reqs.get(0);
-                    if (!mutated.contains(req))
-                    {
-                        // Since there may be lots of uses constraint violations
-                        // with existing import decisions, we may end up trying
-                        // to permutate the same import a lot of times, so we should
-                        // try to check if that the case and only permutate it once.
-                        permutateIfNeeded(allCandidates, req, importPermutations);
-                    }
+                    for (Blame requirementBlame : requirementBlames.getValue()) {
+                        Requirement req = requirementBlame.m_reqs.get(0);
+                        if (!mutated.contains(req))
+                        {
+                            // Since there may be lots of uses constraint violations
+                            // with existing import decisions, we may end up trying
+                            // to permutate the same import a lot of times, so we should
+                            // try to check if that the case and only permutate it once.
+                            permutateIfNeeded(allCandidates, req, importPermutations);
+                        }
+					}
+
 
                     m_logger.log(
                         Logger.LOG_DEBUG,
@@ -1562,21 +1558,40 @@ public class ResolverImpl implements Resolver
     }
 
     private boolean isCompatible(
-        ResolveSession session, Capability currentCap, Capability candCap,
+        ResolveSession session, List<Blame> currentBlames, Capability candCap,
         Map<Resource, Packages> resourcePkgMap)
     {
-        if ((currentCap != null) && (candCap != null))
+        if ((!currentBlames.isEmpty()) && (candCap != null))
         {
-            if (currentCap.equals(candCap))
+            List<Capability> currentSources;
+        	// quick check for single source package
+            if (currentBlames.size() == 1)
             {
-                return true;
+                Capability currentCap = currentBlames.get(0).m_cap;
+            	if (currentCap.equals(candCap)) {
+                    return true;
+                }
+            	currentSources =
+                    getPackageSources(
+                    session,
+                    currentCap,
+                    resourcePkgMap);
+            } else {
+                currentSources = new ArrayList<Capability>(currentBlames.size());
+                for (Blame currentBlame : currentBlames) {
+				    List<Capability> blameSources =
+				       getPackageSources(
+				       session,
+				       currentBlame.m_cap,
+				       resourcePkgMap);
+				    for (Capability blameSource : blameSources) {
+					    if (!currentSources.contains(blameSource)) {
+					        currentSources.add(blameSource);
+					    }
+					}
+				}
             }
 
-            List<Capability> currentSources =
-                getPackageSources(
-                session,
-                currentCap,
-                resourcePkgMap);
             List<Capability> candSources =
                 getPackageSources(
                 session,
@@ -1649,10 +1664,9 @@ public class ResolverImpl implements Resolver
                     // for that case and wrap them.
                     if (!cap.getResource().equals(sourceCap.getResource()))
                     {
-                        sources.add(new WrappedCapability(cap.getResource(), sourceCap));
+                        sourceCap = new WrappedCapability(cap.getResource(), sourceCap);
                     }
-                    else
-                    {
+                    if (!sources.contains(sourceCap)) {
                         sources.add(sourceCap);
                     }
                 }
