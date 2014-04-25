@@ -20,26 +20,25 @@
 import java.util.Collection;
 import org.osgi.resource.Resource;
 
-public interface FelixResolveContext {
-
-	/**
-	 * Return the resources that the resolver should attempt to resolve on
-	 * demand for specified resource which is being resolved. Inability to 
-	 * resolve one of the on demand resources will not result in a 
-	 * resolution exception.
-	 * 
-	 * <p>
-	 * The resolver will ask for on demand resources for each resource that 
-	 * is getting pulled into a resolve operation.
-	 * An example of an on demand resource is a fragment.  When a host
-	 * is being resolved the resolve context will be asked if any additional
-	 * resources should be added to the resolve operation.  The resolve context
-	 * may decide that the potential fragments of the host should be resolved
-	 * along with the host.
-	 * 
-	 * @return A collection of the resources that the resolver should attempt to
-	 *         resolve for this resolve context. May be empty if there are no
-	 *         on demand resources. The returned collection may be unmodifiable.
-	 */
-	public Collection<Resource> getOndemandResources(Resource host);
+public interface FelixResolveContext
+{
+    /**
+     * Return the resources that the resolver should attempt to resolve on
+     * demand for specified resource which is being resolved. Inability to
+     * resolve one of the on demand resources will not result in a resolution
+     * exception.
+     *
+     * <p>
+     * The resolver will ask for on demand resources for each resource that is
+     * getting pulled into a resolve operation. An example of an on demand
+     * resource is a fragment. When a host is being resolved the resolve context
+     * will be asked if any additional resources should be added to the resolve
+     * operation. The resolve context may decide that the potential fragments of
+     * the host should be resolved along with the host.
+     *
+     * @return A collection of the resources that the resolver should attempt to
+     * resolve for this resolve context. May be empty if there are no on demand
+     * resources. The returned collection may be unmodifiable.
+     */
+    public Collection<Resource> getOndemandResources(Resource host);
 }

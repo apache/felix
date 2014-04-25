@@ -26,21 +26,21 @@ import org.osgi.service.resolver.ResolutionException;
  * <p>
  * This class mimics the standard OSGi <tt>LogService</tt> interface. An
  * instance of this class is used by the framework for all logging. By default
- * this class logs messages to standard out. The log level can be set to
- * control the amount of logging performed, where a higher number results in
- * more logging. A log level of zero turns off logging completely.
+ * this class logs messages to standard out. The log level can be set to control
+ * the amount of logging performed, where a higher number results in more
+ * logging. A log level of zero turns off logging completely.
  * </p>
  * <p>
- * The log levels match those specified in the OSGi Log Service (i.e., 1 = error,
- * 2 = warning, 3 = information, and 4 = debug). The default value is 1.
+ * The log levels match those specified in the OSGi Log Service (i.e., 1 =
+ * error, 2 = warning, 3 = information, and 4 = debug). The default value is 1.
  * </p>
  * <p>
- * This class also uses the System Bundle's context to track log services
- * and will use the highest ranking log service, if present, as a back end
- * instead of printing to standard out. The class uses reflection to invoking
- * the log service's method to avoid a dependency on the log interface.
+ * This class also uses the System Bundle's context to track log services and
+ * will use the highest ranking log service, if present, as a back end instead
+ * of printing to standard out. The class uses reflection to invoking the log
+ * service's method to avoid a dependency on the log interface.
  * </p>
-**/
+ */
 public class Logger
 {
     public static final int LOG_ERROR = 1;
@@ -77,10 +77,10 @@ public class Logger
 
     protected void doLog(int level, String msg, Throwable throwable)
     {
-    	if (level > m_logLevel)
-    	{
-    		return;
-    	}
+        if (level > m_logLevel)
+        {
+            return;
+        }
         String s = "";
         s = s + msg;
         if (throwable != null)
@@ -120,7 +120,8 @@ public class Logger
         }
     }
 
-    public void logUsesConstraintViolation(Resource resource, ResolutionException error) {
+    public void logUsesConstraintViolation(Resource resource, ResolutionException error)
+    {
         // do nothing by default
     }
 }
