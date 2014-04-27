@@ -50,7 +50,7 @@ public class ScrManagedService implements ManagedService
         this.scrConfiguration = scrConfiguration;
     }
 
-    public void updated(Dictionary properties) throws ConfigurationException
+    public void updated(Dictionary<String, ?> properties) throws ConfigurationException
     {
         this.scrConfiguration.configure(properties);
     }

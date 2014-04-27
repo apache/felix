@@ -51,7 +51,7 @@ public class Activator extends AbstractExtender
     static final String PACKAGEADMIN_CLASS = "org.osgi.service.packageadmin.PackageAdmin";
 
     // Our configuration from bundle context properties and Config Admin
-    private static ScrConfiguration m_configuration = new ScrConfiguration();
+    private static ScrConfiguration m_configuration;
 
     // this bundle's context
     private static BundleContext m_context;
@@ -75,6 +75,7 @@ public class Activator extends AbstractExtender
     private ComponentActorThread m_componentActor;
 
     public Activator() {
+        m_configuration = new ScrConfiguration( this );
         setSynchronous(true);
     }
 
@@ -89,20 +90,53 @@ public class Activator extends AbstractExtender
     {
         m_context = context;
         m_bundle = context.getBundle();
-        super.start(context);
-    }
-
-    protected void doStart() throws Exception {
         // require the log service
         m_logService = new ServiceTracker( m_context, LOGSERVICE_CLASS, null );
         m_logService.open();
+        // get the configuration
+        m_configuration.start( m_context ); //this will call restart, which calls super.start.
+    }
+    
+    public void restart( boolean globalExtender )
+    {
+        BundleContext context;
+        if ( globalExtender )
+        {
+            context = m_context.getBundle( 0 ).getBundleContext();
+        }
+        else
+        {
+            context = m_context;
+        }
+        if ( m_packageAdmin != null )
+        {
+            //this really is a restart, not the initial start
+            try
+            {
+                super.stop(context);
+            }
+            catch ( Exception e )
+            {
+                log( LogService.LOG_ERROR, m_bundle, "Exception stopping during restart", e );
+            }
+        }
+        try
+        {
+            super.start( context );
+        }
+        catch ( Exception e )
+        {
+            log( LogService.LOG_ERROR, m_bundle, "Exception starting during restart", e );
+        }
+        
+    }
+
+    protected void doStart() throws Exception {
 
         // prepare component registry
         m_componentBundles = new HashMap<Long, BundleComponentActivator>();
         m_componentRegistry = new ComponentRegistry( m_context );
 
-        // get the configuration
-        m_configuration.start( m_context );
 
         // log SCR startup
         log( LogService.LOG_INFO, m_bundle, " Version = {0}",
@@ -119,6 +153,13 @@ public class Activator extends AbstractExtender
         // register the Gogo and old Shell commands
         ScrCommand scrCommand = ScrCommand.register(m_context, m_componentRegistry, m_configuration);
         m_configuration.setScrCommand( scrCommand );
+    }
+    
+    public void stop(BundleContext context) throws Exception
+    {
+        super.stop(context);
+        m_configuration.stop();
+        m_configuration = null;
     }
 
 
@@ -349,7 +390,7 @@ public class Activator extends AbstractExtender
      */
     public static boolean isLogEnabled( int level )
     {
-        return m_configuration.getLogLevel() >= level;
+        return m_configuration == null || m_configuration.getLogLevel() >= level;
     }
 
     /**
