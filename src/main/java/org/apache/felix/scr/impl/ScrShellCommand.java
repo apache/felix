@@ -113,7 +113,7 @@ class ScrShellCommand implements Command
 
     private void help(PrintStream out, String command)
     {
-        if (command.equals(LIST_CMD))
+        if (LIST_CMD.equals( command ))
         {
             out.println("");
             out.println("scr " + LIST_CMD + " [ <bundleId> ]");
@@ -122,7 +122,7 @@ class ScrShellCommand implements Command
                 + "added, only the components of the selected bundles are listed.");
             out.println("");
         }
-        else if (command.equals(INFO_CMD))
+        else if (INFO_CMD.equals( command ))
         {
             out.println("");
             out.println("scr " + INFO_CMD + " <componentId>");
@@ -131,7 +131,7 @@ class ScrShellCommand implements Command
                 + "component ID is given as command argument.");
             out.println("");
         }
-        else if (command.equals(ENABLE_CMD))
+        else if (ENABLE_CMD.equals( command ))
         {
             out.println("");
             out.println("scr " + ENABLE_CMD + " <componentId>");
@@ -139,7 +139,7 @@ class ScrShellCommand implements Command
             out.println("This command enables the component whose component ID\n" + "is given as command argument.");
             out.println("");
         }
-        else if (command.equals(DISABLE_CMD))
+        else if (DISABLE_CMD.equals( command ))
         {
             out.println("");
             out.println("scr " + DISABLE_CMD + " <componentId>");
@@ -147,7 +147,7 @@ class ScrShellCommand implements Command
             out.println("This command disables the component whose component ID\n" + "is given as command argument.");
             out.println("");
         }
-        else if (command.equals(CONFIG_CMD))
+        else if (CONFIG_CMD.equals( command ))
         {
             out.println("");
             out.println("scr " + CONFIG_CMD);
