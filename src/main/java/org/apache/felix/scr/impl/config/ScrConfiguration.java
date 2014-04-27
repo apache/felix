@@ -22,10 +22,12 @@ package org.apache.felix.scr.impl.config;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.felix.scr.impl.Activator;
 import org.apache.felix.scr.impl.ScrCommand;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 
 
@@ -85,6 +87,10 @@ public class ScrConfiguration
     private static final String PROP_SHOWTRACE = "ds.showtrace";
 
     private static final String PROP_SHOWERRORS = "ds.showerrors";
+    
+    public static final String PROP_GLOBAL_EXTENDER="ds.global.extender";
+    
+    private final Activator activator;
 
     private int logLevel;
 
@@ -97,32 +103,38 @@ public class ScrConfiguration
     private long lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
 
     private long stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
+    
+    private Boolean globalExtender;
 
     private BundleContext bundleContext;
 
-    private ServiceRegistration managedService;
+    private ServiceRegistration<ManagedService> managedService;
     
     private ScrCommand scrCommand;
 
-    public ScrConfiguration( )
+    public ScrConfiguration( Activator activator )
     {
-        // default configuration
-        configure( null );
+        this.activator = activator;
     }
 
-    public void start(final BundleContext bundleContext){
+    @SuppressWarnings("unchecked")
+    public void start(final BundleContext bundleContext) 
+    {
         this.bundleContext = bundleContext;
 
-        // reconfigure from bundle context properties
-        configure( null );
-
         // listen for Configuration Admin configuration
-        Dictionary props = new Hashtable();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, PID);
         props.put(Constants.SERVICE_DESCRIPTION, "SCR Configurator");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        managedService = bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
+        managedService = ( ServiceRegistration<ManagedService> ) bundleContext.registerService("org.osgi.service.cm.ManagedService", new ScrManagedServiceServiceFactory(this),
             props);
+        
+        if ( globalExtender == null)  //no config admin or no configuration
+        {
+            // configure from bundle context properties
+            configure( null );            
+        }
     }
 
     public void stop() {
@@ -141,8 +153,9 @@ public class ScrConfiguration
     }
 
     // Called from the ScrManagedService.updated method to reconfigure
-    void configure( Dictionary config )
+    void configure( Dictionary<String, ?> config )
     {
+        Boolean oldGlobalExtender = globalExtender;
         if ( config == null )
         {
             if ( this.bundleContext == null )
@@ -153,6 +166,7 @@ public class ScrConfiguration
                 infoAsService = false;
                 lockTimeout = DEFAULT_LOCK_TIMEOUT_MILLISECONDS;
                 stopTimeout = DEFAULT_STOP_TIMEOUT_MILLISECONDS;
+                globalExtender = false;
             }
             else
             {
@@ -162,6 +176,7 @@ public class ScrConfiguration
                 infoAsService = getDefaultInfoAsService();
                 lockTimeout = getDefaultLockTimeout();
                 stopTimeout = getDefaultStopTimeout();
+                globalExtender = getDefaultGlobalExtender();
             }
         }
         else
@@ -174,10 +189,15 @@ public class ScrConfiguration
             lockTimeout = timeout == null? DEFAULT_LOCK_TIMEOUT_MILLISECONDS: timeout;
             timeout = ( Long ) config.get( PROP_STOP_TIMEOUT );
             stopTimeout = timeout == null? DEFAULT_STOP_TIMEOUT_MILLISECONDS: timeout;
+            globalExtender = VALUE_TRUE.equalsIgnoreCase( String.valueOf( config.get( PROP_GLOBAL_EXTENDER) ) );
         }
         if ( scrCommand != null )
         {
             scrCommand.update( infoAsService() );
+        }
+        if ( globalExtender != oldGlobalExtender )
+        {
+            activator.restart( globalExtender );
         }
     }
 
@@ -259,6 +279,11 @@ public class ScrConfiguration
         return Long.parseLong( val );
     }
 
+
+    private boolean getDefaultGlobalExtender()
+    {
+        return VALUE_TRUE.equalsIgnoreCase( bundleContext.getProperty( PROP_GLOBAL_EXTENDER) );
+    }
 
     private int getLogLevel( final Object levelObject )
     {

@@ -99,7 +99,7 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
                     + "Declarative Services specifications suggests that instances of delayed components are disposed off "
                     + "if there is not used any longer. Setting this flag causes the components to not be disposed off "
                     + "and thus prevent them from being constantly recreated if often used. Examples of such components "
-                    + "may be EventHandler services. The default is to dispose off unused components.", this
+                    + "may be EventHandler services. The default is to dispose of unused components.", this
                     .getScrConfiguration().keepInstances() ) );
 
         adList.add( new AttributeDefinitionImpl(
@@ -115,6 +115,20 @@ class ScrManagedServiceMetaTypeProvider extends ScrManagedService
                 AttributeDefinition.LONG,
                 new String[] { String.valueOf(this.getScrConfiguration().lockTimeout())}, 
                 0, null, null) );
+
+        adList.add( new AttributeDefinitionImpl(
+                ScrConfiguration.PROP_STOP_TIMEOUT,
+                "Stop timeout milliseconds",
+                "How long stopping a bundle is waited for before continuing due to suspected deadlock", 
+                AttributeDefinition.LONG,
+                new String[] { String.valueOf(this.getScrConfiguration().stopTimeout())}, 
+                0, null, null) );
+
+        adList.add( new AttributeDefinitionImpl(
+                ScrConfiguration.PROP_GLOBAL_EXTENDER,
+                "Global Extender",
+                "Whether to extend all bundles whether or not visible to this bundle.", 
+                false ) );
 
         return new ObjectClassDefinition()
         {
