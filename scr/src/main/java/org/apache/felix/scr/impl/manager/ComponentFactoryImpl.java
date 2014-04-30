@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.Component;
+import org.apache.felix.scr.component.ExtFactoryComponentInstance;
 import org.apache.felix.scr.impl.BundleComponentActivator;
 import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.config.ComponentHolder;
@@ -93,14 +94,30 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     
     protected TargetedPID m_targetedPID;
 
+    /**
+     * True if this is a R5 spec component factory
+     * False if this is a persistent component factory.
+     */
+    private boolean m_nonPersistentFactory;
+
     public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
         super( activator, metadata, new ComponentMethods() );
         m_componentInstances = new IdentityHashMap<SingleComponentManager<S>, SingleComponentManager<S>>();
         m_configuration = new Hashtable<String, Object>();
+        m_nonPersistentFactory = true;
     }
 
 
+    protected boolean verifyDependencyManagers()
+    {
+        if (m_nonPersistentFactory)
+        {
+            return super.verifyDependencyManagers();
+        }
+        return true;    
+    }
+    
     @Override
     public boolean isFactory()
     {
@@ -126,7 +143,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         cm.activateInternal( getTrackingCount().get() );
 
         instance = cm.getComponentInstance();
-        if ( instance == null || instance.getInstance() == null )
+        if ( instance == null || (m_nonPersistentFactory && instance.getInstance() == null) )
         {
             // activation failed, clean up component manager
             cm.dispose( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
@@ -137,8 +154,42 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         {
             m_componentInstances.put( cm, cm );
         }
+        
+        if ( !m_nonPersistentFactory ) 
+        {
+            instance = new ModifyComponentInstance(cm);
+        }
 
         return instance;
+    }
+    
+    private static class ModifyComponentInstance implements ExtFactoryComponentInstance
+    {
+        private final SingleComponentManager cm;
+        private long changeCount = 0;
+
+        public ModifyComponentInstance(SingleComponentManager cm)
+        {
+            this.cm = cm;
+        }
+
+        public void dispose()
+        {
+            cm.getComponentInstance().dispose();            
+        }
+
+        public Object getInstance()
+        {
+            final ComponentInstance componentInstance = cm.getComponentInstance();
+            return componentInstance == null? null: componentInstance.getInstance();
+        }
+
+        public void modify(Dictionary<String, ?> properties)
+        {
+            cm.setFactoryProperties( properties );
+            cm.reconfigure();            
+        }
+        
     }
 
     /**
@@ -153,7 +204,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      *         {@code ComponentFactoryImpl} and is equal to this object;
      *         {@code false} otherwise.
      */
-   public boolean equals(Object object)
+    public boolean equals(Object object)
     {
         if (!(object instanceof ComponentFactoryImpl))
         {
@@ -234,7 +285,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         return props;
     }
     
-    public void setServiceProperties( Dictionary serviceProperties )
+    public void setServiceProperties( Dictionary<String, Object> serviceProperties )
     {
         throw new IllegalStateException( "ComponentFactory service properties are immutable" );
     }
@@ -492,7 +543,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      */
     private SingleComponentManager<S> createComponentManager()
     {
-        return new ComponentFactoryNewInstance<S>( getActivator(), this, getComponentMetadata(), getComponentMethods() );
+        return new SingleComponentManager<S>( getActivator(), this, getComponentMetadata(), getComponentMethods(), m_nonPersistentFactory );
     }
 
 
@@ -505,16 +556,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
                 componentManagers.addAll( componentMap.values() );
             }
         }
-    }
-
-    static class ComponentFactoryNewInstance<S> extends SingleComponentManager<S> {
-
-        public ComponentFactoryNewInstance( BundleComponentActivator activator, ComponentHolder componentHolder,
-                ComponentMetadata metadata, ComponentMethods componentMethods )
-        {
-            super( activator, componentHolder, metadata, componentMethods, true );
-        }
-
     }
 
     public TargetedPID getConfigurationTargetedPID(TargetedPID pid)

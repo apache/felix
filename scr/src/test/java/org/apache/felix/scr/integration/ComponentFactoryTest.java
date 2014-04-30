@@ -667,5 +667,11 @@ public class ComponentFactoryTest extends ComponentTestBase
         
         s1.drop();
     }
+    
+    private Object getComponentManagerFromExtComponentInstance( Object extIinstance )
+    {
+        return getFieldValue( extIinstance, "cm");
+    }
+
 
 }
