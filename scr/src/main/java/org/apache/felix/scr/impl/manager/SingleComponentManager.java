@@ -405,7 +405,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
     }
 
-    protected void setFactoryProperties( Dictionary<String, Object> dictionary )
+    protected void setFactoryProperties( Dictionary<String, ?> dictionary )
     {
         m_factoryProperties = copyTo( null, dictionary );
     }
@@ -936,7 +936,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     private boolean keepInstances()
     {
-        return getActivator() != null && getActivator().getConfiguration().keepInstances();
+        return getComponentMetadata().isDelayedKeepInstances();
     }
 
     public long getChangeCount()

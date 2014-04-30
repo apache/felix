@@ -1389,7 +1389,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      *      <code>source</code> is <code>null</code> or empty and
      *      <code>target</code> was <code>null</code>.
      */
-    protected static Dictionary<String, Object> copyTo( Dictionary<String, Object> target, Dictionary<String, Object> source )
+    protected static Dictionary<String, Object> copyTo( Dictionary<String, Object> target, Dictionary<String, ?> source )
     {
         return copyTo( target, source, true );
     }
@@ -1413,7 +1413,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
      *         <code>target</code> was <code>null</code> or all properties are
      *         private and had not to be copied
      */
-    protected static Dictionary<String, Object> copyTo( Dictionary<String, Object> target, final Dictionary<String, Object> source, final boolean allProps )
+    protected static Dictionary<String, Object> copyTo( Dictionary<String, Object> target, final Dictionary<String, ?> source, final boolean allProps )
     {
         if ( target == null )
         {

@@ -38,7 +38,7 @@ import org.apache.felix.scr.impl.metadata.ComponentMetadata;
  * {@link org.apache.felix.scr.impl.BundleComponentActivator} and the
  * {@link org.apache.felix.scr.impl.ComponentRegistry}.
  */
-public interface ComponentHolder
+public interface ComponentHolder<S>
 {
 
     /**
@@ -125,5 +125,5 @@ public interface ComponentHolder
      * Informs the holder that the component has been disposed as a result of
      * calling the dispose method.
      */
-    void disposed( SingleComponentManager component );
+    void disposed( SingleComponentManager<S> component );
 }

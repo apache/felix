@@ -34,7 +34,8 @@ public class ServiceMetadata {
 	// 112.4.6 Flag that indicates if the service is a ServiceFactory
 	private Boolean m_serviceFactory;
 	
-	private Scope m_scope;
+	private String m_scopeName;
+	private Scope m_scope = Scope.singleton;
 
 	// List of provided interfaces
 	private List<String> m_provides = new ArrayList<String>();
@@ -55,11 +56,11 @@ public class ServiceMetadata {
 		m_serviceFactory = serviceFactory;
 	}
 	
-	public void setScope(Scope scope) {
+	public void setScope(String scopeName) {
 		if(m_validated) {
 			return;
 		}
-		this.m_scope = scope;
+		this.m_scopeName = scopeName;
 	}
 
 	
@@ -101,10 +102,6 @@ public class ServiceMetadata {
             throw componentMetadata
                 .validationFailure( "At least one provided interface must be declared in the service element" );
         }
-        if (m_scope != null && componentMetadata.getNamespaceCode() < XmlHandler.DS_VERSION_1_3)
-        {
-        	throw componentMetadata.validationFailure("scope can only be specified in version 1.3 and later");
-        }
         if (m_serviceFactory != null)
         {
         	if (componentMetadata.getNamespaceCode() >= XmlHandler.DS_VERSION_1_3)
@@ -113,9 +110,20 @@ public class ServiceMetadata {
         	}
         	m_scope = m_serviceFactory? Scope.bundle: Scope.singleton;
         }
-        if (m_scope == null) 
+        if ( m_scopeName != null )
         {
-        	m_scope = Scope.singleton;
+        	if (componentMetadata.getNamespaceCode() < XmlHandler.DS_VERSION_1_3)
+        	{
+            	throw componentMetadata.validationFailure("service scope can only be specified in version 1.3 and later");
+        	}
+        	try
+        	{
+        		m_scope = Scope.valueOf(m_scopeName);
+        	}
+        	catch (IllegalArgumentException e)
+        	{
+            	throw componentMetadata.validationFailure("Service scope may be only 'singleton' 'bundle' or 'prototype' not " + m_scopeName);
+        	}
         }
         m_validated = true;
     }

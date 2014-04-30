@@ -35,20 +35,14 @@ import org.osgi.framework.Constants;
 import org.osgi.service.log.LogService;
 
 /**
- * The <code>ComponentFactoryImpl</code> extends the {@link org.apache.felix.scr.impl.manager.AbstractComponentManager}
- * class to implement the component factory functionality. As such the
- * OSGi Declarative Services <code>ComponentFactory</code> interface is
- * implemented.
- * <p>
- * In addition the {@link org.apache.felix.scr.impl.config.ComponentHolder} interface is implemented to use this
- * class directly as the holder for component instances created by the
- * {@link #newInstance(java.util.Dictionary)} method.
- * <p>
- * Finally, if the <code>ds.factory.enabled</code> bundle context property is
- * set to <code>true</code>, component instances can be created by factory
- * configurations. This functionality is present for backwards compatibility
- * with earlier releases of the Apache Felix Declarative Services implementation.
- * But keep in mind, that this is non-standard behaviour.
+ * This class implements the Felix non-standard and obsolete extended compponent factory
+ * that allows factory instances to be created through config admin using the component factory pid
+ * as a factory pid.  Do not use this for new code, use a plain component instead.
+ * Use of this behavior can be turned on globally with the framework config or config admin
+ * property <code>ds.factory.enabled</code> bundle context property
+ * set to <code>true</code> or turned on per-component with a component descriptor attribute
+ * xmlns:felix="http://felix.apache.org/xmlns/scr/extensions/v1.0.0"
+ * felix:obsoleteFactoryComponentFactory='true'
  */
 public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S>
 {

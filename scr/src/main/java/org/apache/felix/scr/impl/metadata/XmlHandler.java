@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.apache.felix.scr.impl.helper.Logger;
+import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.apache.felix.scr.impl.parser.KXml2SAXHandler;
 import org.apache.felix.scr.impl.parser.KXml2SAXParser.Attributes;
 import org.apache.felix.scr.impl.parser.ParseException;
@@ -78,6 +79,8 @@ public class XmlHandler implements KXml2SAXHandler
     
     public static final String CONFIGURE_WITH_INTERFACES = "configureWithInterfaces";
 
+    public static final String DELAYED_KEEP_INSTANCES = "delayedKeepInstances";
+
     // namespace code for non-DS namespace
     public static final int DS_VERSION_NONE = -1;
 
@@ -107,6 +110,10 @@ public class XmlHandler implements KXml2SAXHandler
 
     // logger for any messages
     private final Logger m_logger;
+    
+    private final boolean m_globalObsoleteFactoryComponentFactory;
+    
+    private final boolean m_globalDelayedKeepInstances;
 
     // A reference to the current component
     private ComponentMetadata m_currentComponent;
@@ -144,10 +151,12 @@ public class XmlHandler implements KXml2SAXHandler
 
     // creates an instance with the bundle owning the component descriptor
     // file parsed by this instance
-    public XmlHandler( Bundle bundle, Logger logger )
+    public XmlHandler( Bundle bundle, Logger logger, boolean globalObsoleteFactoryComponentFactory, boolean globalDelayedKeepInstances )
     {
         m_bundle = bundle;
         m_logger = logger;
+        m_globalObsoleteFactoryComponentFactory = globalObsoleteFactoryComponentFactory;
+        m_globalDelayedKeepInstances = globalDelayedKeepInstances;
     }
 
 
@@ -270,8 +279,9 @@ public class XmlHandler implements KXml2SAXHandler
                     m_currentComponent.setConfigurableServiceProperties("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURABLE_SERVICE_PROPERTIES)));
                     m_currentComponent.setPersistentFactoryComponent("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, PERSISTENT_FACTORY_COMPONENT)));
                     m_currentComponent.setDeleteCallsModify("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, DELETE_CALLS_MODIFY)));
-                    m_currentComponent.setObsoleteFactoryComponentFactory("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, OBSOLETE_FACTORY_COMPONENT_FACTORY)));
+                    m_currentComponent.setObsoleteFactoryComponentFactory(m_globalObsoleteFactoryComponentFactory ||  "true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, OBSOLETE_FACTORY_COMPONENT_FACTORY)));
                     m_currentComponent.setConfigureWithInterfaces("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURE_WITH_INTERFACES)));
+                    m_currentComponent.setDelayedKeepInstances(m_globalDelayedKeepInstances || "true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, DELAYED_KEEP_INSTANCES)));
 
                     // Add this component to the list
                     m_components.add( m_currentComponent );
@@ -333,6 +343,11 @@ public class XmlHandler implements KXml2SAXHandler
                     {
                         m_currentService.setServiceFactory( attributes.getAttribute( "servicefactory" ).equals( "true" ) );
                     }
+                    
+                    if ( attributes.getAttribute( "scope" ) != null )
+                    {
+                    	m_currentService.setScope( attributes.getAttribute( "scope" ) );
+                    }
 
                     m_currentComponent.setService( m_currentService );
                 }
@@ -368,6 +383,11 @@ public class XmlHandler implements KXml2SAXHandler
                     if ( attributes.getAttribute( "policy-option" ) != null )
                     {
                         ref.setPolicyOption( attributes.getAttribute( "policy-option" ) );
+                    }
+
+                    if ( attributes.getAttribute( "scope" ) != null )
+                    {
+                        ref.setScope( attributes.getAttribute( "scope" ) );
                     }
 
                     //if

@@ -52,13 +52,12 @@ import org.osgi.service.log.LogService;
  * class directly as the holder for component instances created by the
  * {@link #newInstance(Dictionary)} method.
  * <p>
- * Finally, if the <code>ds.factory.enabled</code> bundle context property is
- * set to <code>true</code>, component instances can be created by factory
- * configurations. This functionality is present for backwards compatibility
- * with earlier releases of the Apache Felix Declarative Services implementation.
- * But keep in mind, that this is non-standard behaviour.
+ * This class implements spec-compliant component factories and the felix 
+ * "persistent" component factory, where the factory is always registered whether or
+ * not all dependencies are present and the created components also persist whether or 
+ * not the dependencies are present to allow the component instance to exist.
  */
-public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> implements ComponentFactory, ComponentHolder
+public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> implements ComponentFactory, ComponentHolder<S>
 {
 
     /**
@@ -94,12 +93,6 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     
     protected TargetedPID m_targetedPID;
 
-    /**
-     * True if this is a R5 spec component factory
-     * False if this is a persistent component factory.
-     */
-    private boolean m_nonPersistentFactory;
-
     public ComponentFactoryImpl( BundleComponentActivator activator, ComponentMetadata metadata )
     {
         super( activator, metadata, new ComponentMethods() );
@@ -132,8 +125,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         log( LogService.LOG_DEBUG, "Creating new instance from component factory {0} with configuration {1}",
                 new Object[] {getComponentMetadata().getName(), dictionary}, null );
 
-        ComponentInstance instance;
-        cm.setFactoryProperties( ( Dictionary<String, Object> ) dictionary );
+        cm.setFactoryProperties( dictionary );
         //configure the properties
         cm.reconfigure( m_configuration, m_changeCount, m_targetedPID );
         // enable
@@ -141,12 +133,20 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         //activate immediately
         cm.activateInternal( getTrackingCount().get() );
 
-        instance = cm.getComponentInstance();
-        if ( instance == null || (!getComponentMetadata().isPersistentFactoryComponent() && instance.getInstance() == null) )
+        ComponentInstance instance;
+        if ( getComponentMetadata().isPersistentFactoryComponent() ) 
         {
-            // activation failed, clean up component manager
-            cm.dispose( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
-            throw new ComponentException( "Failed activating component" );
+            instance = new ModifyComponentInstance<S>(cm);
+        }
+        else
+        {
+        	instance = cm.getComponentInstance();
+        	if ( instance == null ||  instance.getInstance() == null )
+        	{
+        		// activation failed, clean up component manager
+        		cm.dispose( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
+        		throw new ComponentException( "Failed activating component" );
+        	}
         }
 
         synchronized ( m_componentInstances )
@@ -154,27 +154,21 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             m_componentInstances.put( cm, cm );
         }
         
-        if ( getComponentMetadata().isPersistentFactoryComponent() ) 
-        {
-            instance = new ModifyComponentInstance(cm);
-        }
-
         return instance;
     }
     
-    private static class ModifyComponentInstance implements ExtFactoryComponentInstance
+    private static class ModifyComponentInstance<S> implements ExtFactoryComponentInstance
     {
-        private final SingleComponentManager cm;
-        private long changeCount = 0;
+        private final SingleComponentManager<S> cm;
 
-        public ModifyComponentInstance(SingleComponentManager cm)
+        public ModifyComponentInstance(SingleComponentManager<S> cm)
         {
             this.cm = cm;
         }
 
         public void dispose()
         {
-            cm.getComponentInstance().dispose();            
+            cm.dispose();            
         }
 
         public Object getInstance()
@@ -205,12 +199,12 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      */
     public boolean equals(Object object)
     {
-        if (!(object instanceof ComponentFactoryImpl))
+        if (!(object instanceof ComponentFactoryImpl<?>))
         {
             return false;
         }
 
-        ComponentFactoryImpl other = (ComponentFactoryImpl) object;
+        ComponentFactoryImpl<?> other = (ComponentFactoryImpl<?>) object;
         return getComponentMetadata().getName().equals(other.getComponentMetadata().getName());
     }
     
@@ -355,7 +349,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
             // So far, we were configured: clear the current configuration.
             m_hasConfiguration = false;
-            m_configuration = new Hashtable();
+            m_configuration = new Hashtable<String, Object>();
 
             log( LogService.LOG_DEBUG, "Current component factory state={0}", new Object[] {getState()}, null );
 
@@ -507,7 +501,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     {
         List<AbstractComponentManager<S>> cms = new ArrayList<AbstractComponentManager<S>>( );
         getComponentManagers( m_componentInstances, cms );
-        for ( AbstractComponentManager acm: cms )
+        for ( AbstractComponentManager<S> acm: cms )
         {
             acm.dispose( reason );
         }
@@ -522,7 +516,8 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    public void disposed( SingleComponentManager component )
+    @Override
+    public void disposed( SingleComponentManager<S> component )
     {
         synchronized ( m_componentInstances )
         {

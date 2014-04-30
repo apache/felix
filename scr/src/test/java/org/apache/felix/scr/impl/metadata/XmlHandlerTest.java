@@ -382,7 +382,7 @@ public class XmlHandlerTest extends TestCase
         {
             final KXml2SAXParser parser = new KXml2SAXParser( reader );
 
-            XmlHandler handler = new XmlHandler( new MockBundle(), logger );
+            XmlHandler handler = new XmlHandler( new MockBundle(), logger, false, false );
             parser.parseXML( handler );
 
             return handler.getComponentMetadataList();
