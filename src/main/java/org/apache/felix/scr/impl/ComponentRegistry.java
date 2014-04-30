@@ -544,7 +544,7 @@ public class ComponentRegistry implements ScrService, ServiceListener
             // 112.2.4 SCR must register a Component Factory
             // service on behalf of the component
             // as soon as the component factory is satisfied
-            if ( !activator.getConfiguration().isFactoryEnabled() )
+            if ( !metadata.isObsoleteFactoryComponentFactory() )
             {
                 holder = new ComponentFactoryImpl(activator, metadata );
             }

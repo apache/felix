@@ -29,6 +29,8 @@ import org.apache.felix.scr.impl.helper.Logger;
  */
 public class ReferenceMetadata
 {
+	public enum ReferenceScope {bundle, prototype}
+	
     // constant for option single reference - 0..1
     public static final String CARDINALITY_0_1 = "0..1";
 
@@ -42,7 +44,7 @@ public class ReferenceMetadata
     public static final String CARDINALITY_1_N = "1..n";
 
     // set of valid cardinality settings
-    private static final Set CARDINALITY_VALID;
+    private static final Set<String> CARDINALITY_VALID;
 
     // constant for static policy
     public static final String POLICY_STATIC = "static";
@@ -51,7 +53,7 @@ public class ReferenceMetadata
     public static final String POLICY_DYNAMIC = "dynamic";
 
     // set of valid policy settings
-    private static final Set POLICY_VALID;
+    private static final Set<String> POLICY_VALID;
 
     // constant for reluctant policy option
     public static final String POLICY_OPTION_RELUCTANT = "reluctant";
@@ -60,7 +62,7 @@ public class ReferenceMetadata
     public static final String POLICY_OPTION_GREEDY = "greedy";
 
     // set of valid policy option settings
-    private static final Set POLICY_OPTION_VALID;
+    private static final Set<String> POLICY_OPTION_VALID;
 
     // Name for the reference (required)
     private String m_name = null;
@@ -88,9 +90,9 @@ public class ReferenceMetadata
 
     // Policy option attribute (optional, default = reluctant)
     private String m_policy_option = null;
-
-    // Flag that is set once the component is verified (its properties cannot be changed)
-    private boolean m_validated = false;
+    
+    private String m_scopeName;
+    private ReferenceScope m_scope = ReferenceScope.bundle;
 
     // Flags that store the values passed as strings
     private boolean m_isStatic = true;
@@ -98,19 +100,22 @@ public class ReferenceMetadata
     private boolean m_isMultiple = false;
     private boolean m_isReluctant = true;
 
+    // Flag that is set once the component is verified (its properties cannot be changed)
+    private boolean m_validated = false;
+
     static
     {
-        CARDINALITY_VALID = new TreeSet();
+        CARDINALITY_VALID = new TreeSet<String>();
         CARDINALITY_VALID.add( CARDINALITY_0_1 );
         CARDINALITY_VALID.add( CARDINALITY_0_N );
         CARDINALITY_VALID.add( CARDINALITY_1_1 );
         CARDINALITY_VALID.add( CARDINALITY_1_N );
 
-        POLICY_VALID = new TreeSet();
+        POLICY_VALID = new TreeSet<String>();
         POLICY_VALID.add( POLICY_DYNAMIC );
         POLICY_VALID.add( POLICY_STATIC );
 
-        POLICY_OPTION_VALID = new TreeSet();
+        POLICY_OPTION_VALID = new TreeSet<String>();
         POLICY_OPTION_VALID.add( POLICY_OPTION_RELUCTANT );
         POLICY_OPTION_VALID.add( POLICY_OPTION_GREEDY );
     }
@@ -272,10 +277,18 @@ public class ReferenceMetadata
         m_unbind = unbind;
     }
 
+	public void setScope(String scopeName) {
+        if ( m_validated )
+        {
+            return;
+        }
+		this.m_scopeName = scopeName;
+	}
+
 
     /////////////////////////////////////////////// getters ///////////////////////////////////
 
-    /**
+	/**
      * Returns the name of the reference
      *
      * @return A string containing the reference's name
@@ -441,6 +454,10 @@ public class ReferenceMetadata
     }
 
 
+    public ReferenceScope getScope() {
+		return m_scope;
+	}
+
     /**
      *  Method used to verify if the semantics of this metadata are correct
      *
@@ -502,6 +519,21 @@ public class ReferenceMetadata
             throw componentMetadata.validationFailure( "updated method declaration requires DS 1.2 or later namespace " );
         }
 
+        if (m_scopeName != null) {
+        	if (componentMetadata.getNamespaceCode() < XmlHandler.DS_VERSION_1_3)
+        	{
+        		throw componentMetadata.validationFailure( "reference scope can be set only for DS >= 1.3");
+        	}
+        	try 
+        	{
+        		m_scope = ReferenceScope.valueOf(m_scopeName);
+        	}
+        	catch (IllegalArgumentException e)
+        	{
+        		throw componentMetadata.validationFailure( "reference scope must be 'bundle' or 'prototype' not " + m_scopeName);
+       		
+        	}
+        }
         m_validated = true;
     }
 

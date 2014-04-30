@@ -54,7 +54,7 @@ import org.osgi.service.log.LogService;
  * <code>service.factoryPid</code> equals the component name.</li>
  * </ul>
  */
-public class ConfigurableComponentHolder<S> implements ComponentHolder, SimpleLogger
+public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, SimpleLogger
 {
 
     /**

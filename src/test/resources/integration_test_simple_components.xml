@@ -121,5 +121,17 @@
         </service>
     </scr:component>
 
+    <scr:component name="DelayedKeepInstancesServiceComponent"
+        enabled="false" immediate="false"
+        configuration-policy="ignore" 
+        xmlns:felix="http://felix.apache.org/xmlns/scr/extensions/v1.0.0"
+        felix:delayedKeepInstances="true" >
+        <implementation class="org.apache.felix.scr.integration.components.SimpleComponent"/>
+        <property name="service.pid" value="ServiceComponent" />
+        <service>
+            <provide interface="java.lang.Object" />
+        </service>
+    </scr:component>
+
 
 </components>

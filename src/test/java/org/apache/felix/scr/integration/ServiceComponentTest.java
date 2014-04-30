@@ -42,7 +42,7 @@ public class ServiceComponentTest extends ComponentTestBase
     static
     {
         // uncomment to enable debugging of this test class
-        // paxRunnerVmOption = DEBUG_VM_OPTION;
+//         paxRunnerVmOption = DEBUG_VM_OPTION;
     }
 
 
@@ -181,17 +181,17 @@ public class ServiceComponentTest extends ComponentTestBase
     public void test_DelayedSimpleComponent_service_keep_instance() throws IOException
     {
         // configure SCR to keep instances
-        Configuration scrConfig = getConfigurationAdmin().getConfiguration( ScrConfiguration.PID, null );
-        Dictionary props = scrConfig.getProperties();
-        if ( props == null )
-        {
-            props = new Hashtable();
-        }
-        props.put( ScrConfiguration.PROP_DELAYED_KEEP_INSTANCES, Boolean.TRUE.toString() );
-        scrConfig.update( props );
-        delay();
+//        Configuration scrConfig = getConfigurationAdmin().getConfiguration( ScrConfiguration.PID, null );
+//        Dictionary props = scrConfig.getProperties();
+//        if ( props == null )
+//        {
+//            props = new Hashtable();
+//        }
+//        props.put( ScrConfiguration.PROP_DELAYED_KEEP_INSTANCES, Boolean.TRUE.toString() );
+//        scrConfig.update( props );
+//        delay();
 
-        final String pid = "DelayedServiceComponent";
+        final String pid = "DelayedKeepInstancesServiceComponent";
 
         // one single component exists without configuration
         final Component component = findComponentByName( pid );
@@ -228,6 +228,6 @@ public class ServiceComponentTest extends ComponentTestBase
         TestCase.assertNotNull( SimpleComponent.INSTANCE );
 
         // delete the SCR configuration again
-        scrConfig.delete();
+//        scrConfig.delete();
     }
 }

@@ -23,7 +23,9 @@ import java.io.Reader;
 import java.util.Properties;
 import java.util.Stack;
 
+import org.apache.felix.scr.impl.helper.Logger;
 import org.kxml2.io.KXmlParser;
+import org.osgi.service.log.LogService;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -161,5 +163,6 @@ public class KXml2SAXParser extends KXmlParser
     	public String getAttribute(String uri, String name) {
     		return getAttributeValue(uri, name);
     	}
+
     }
 }

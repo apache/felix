@@ -118,6 +118,7 @@ public class ComponentMetadata
     private boolean m_deleteCallsModify;
     private boolean m_obsoleteFactoryComponentFactory;
     private boolean m_configureWithInterfaces;
+    private boolean m_delayedKeepInstances;
 
     // Flag that is set once the component is verified (its properties cannot be changed)
     private boolean m_validated = false;
@@ -394,11 +395,15 @@ public class ComponentMetadata
 	}
 
 	public void setConfigureWithInterfaces(boolean configureWithInterfaces) {
+		this.m_configureWithInterfaces = configureWithInterfaces;
+	}
+
+	public void setDelayedKeepInstances(boolean delayedKeepInstances) {
         if ( m_validated )
         {
             return;
         }
-		this.m_configureWithInterfaces = configureWithInterfaces;
+		this.m_delayedKeepInstances = delayedKeepInstances;
 	}
 
     
@@ -756,6 +761,10 @@ public class ComponentMetadata
 
 	public boolean isConfigureWithInterfaces() {
 		return m_configureWithInterfaces;
+	}
+
+	public boolean isDelayedKeepInstances() {
+		return m_delayedKeepInstances;
 	}
 
 	/**
