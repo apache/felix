@@ -463,6 +463,16 @@ public class ComponentMetadata
     {
         return getNamespaceCode() >= XmlHandler.DS_VERSION_1_2_FELIX;
     }
+    
+    /**
+     * Returns <code>true</code> if the metadata declaration has used the
+     * Declarative Services version 1.3 namespace or a later namespace.
+     */
+    public boolean isDS13()
+    {
+        return getNamespaceCode() >= XmlHandler.DS_VERSION_1_3;
+    }
+    
 
 
     /**

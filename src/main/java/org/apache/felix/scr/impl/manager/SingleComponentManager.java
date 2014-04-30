@@ -667,6 +667,12 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
 
     private boolean modify()
     {
+    	//0 SCR 112.7.1 If configuration is deleted, and version is < 1.3 and no flag set, then deactivate unconditionally.
+    	// For version 1.3 and later, or with a flag, more sensible behavior is allowed.
+    	if ( m_configurationProperties == null && !getComponentMetadata().isDeleteCallsModify()){
+    		return false;
+    	}
+    	
         // 1. no live update if there is no declared method
         if ( getComponentMetadata().getModified() == null )
         {

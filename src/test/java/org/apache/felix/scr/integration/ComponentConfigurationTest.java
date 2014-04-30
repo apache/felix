@@ -183,7 +183,29 @@ public class ComponentConfigurationTest extends ComponentTestBase
     public void test_SimpleComponent_dynamic_configuration()
     {
         final String pid = "DynamicConfigurationComponent";
-        final Component component = findComponentByName( pid );
+        boolean pre13 = true;
+        dynamicConfigTest(pid, pre13);
+    }
+
+    @Test
+    public void test_SimpleComponent_dynamic_configuration_13()
+    {
+        final String pid = "DynamicConfigurationComponent13";
+        boolean pre13 = false;
+        dynamicConfigTest(pid, pre13);
+    }
+    
+    @Test
+    public void test_SimpleComponent_dynamic_configuration_flag()
+    {
+        final String pid = "DynamicConfigurationComponentFlag";
+        boolean pre13 = false;
+        dynamicConfigTest(pid, pre13);
+    }
+
+
+	private void dynamicConfigTest(final String pid, boolean pre13) {
+		final Component component = findComponentByName( pid );
 
         deleteConfig( pid );
         delay();
@@ -216,7 +238,14 @@ public class ComponentConfigurationTest extends ComponentTestBase
         delay();
 
         TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
-        TestCase.assertSame( instance, SimpleComponent.INSTANCE );
+        if (pre13)
+        {
+            TestCase.assertNotSame( instance, SimpleComponent.INSTANCE );
+        }
+        else
+        {
+            TestCase.assertSame( instance, SimpleComponent.INSTANCE );
+        }
         TestCase.assertNull( SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );
         TestCase.assertEquals( pid, SimpleComponent.INSTANCE.getProperty( Constants.SERVICE_PID ) );
 
@@ -225,7 +254,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
         TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
-    }
+	}
 
 
     @Test
@@ -486,7 +515,7 @@ public class ComponentConfigurationTest extends ComponentTestBase
 
             // optional ref missing --> component active
             TestCase.assertEquals( Component.STATE_ACTIVE, component.getState() );
-            TestCase.assertEquals( instance, SimpleComponent.INSTANCE );
+            TestCase.assertNotSame( instance, SimpleComponent.INSTANCE );
             TestCase.assertNull( SimpleComponent.INSTANCE.m_singleRef );
 
             component.disable();
