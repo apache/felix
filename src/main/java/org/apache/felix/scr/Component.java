@@ -183,7 +183,10 @@ public interface Component
      * the <code>service</code> element. If the component has no service
      * element, this method returns <code>false</code>.
      */
+    @Deprecated
     boolean isServiceFactory();
+    
+    String getServiceScope();
 
 
     /**

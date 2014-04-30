@@ -105,13 +105,12 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         super( activator, metadata, new ComponentMethods() );
         m_componentInstances = new IdentityHashMap<SingleComponentManager<S>, SingleComponentManager<S>>();
         m_configuration = new Hashtable<String, Object>();
-        m_nonPersistentFactory = true;
     }
 
 
     protected boolean verifyDependencyManagers()
     {
-        if (m_nonPersistentFactory)
+        if (!getComponentMetadata().isPersistentFactoryComponent())
         {
             return super.verifyDependencyManagers();
         }
@@ -143,7 +142,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
         cm.activateInternal( getTrackingCount().get() );
 
         instance = cm.getComponentInstance();
-        if ( instance == null || (m_nonPersistentFactory && instance.getInstance() == null) )
+        if ( instance == null || (!getComponentMetadata().isPersistentFactoryComponent() && instance.getInstance() == null) )
         {
             // activation failed, clean up component manager
             cm.dispose( ComponentConstants.DEACTIVATION_REASON_DISPOSED );
@@ -155,7 +154,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
             m_componentInstances.put( cm, cm );
         }
         
-        if ( !m_nonPersistentFactory ) 
+        if ( getComponentMetadata().isPersistentFactoryComponent() ) 
         {
             instance = new ModifyComponentInstance(cm);
         }
@@ -543,7 +542,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
      */
     private SingleComponentManager<S> createComponentManager()
     {
-        return new SingleComponentManager<S>( getActivator(), this, getComponentMetadata(), getComponentMethods(), m_nonPersistentFactory );
+        return new SingleComponentManager<S>( getActivator(), this, getComponentMetadata(), getComponentMethods(), !getComponentMetadata().isPersistentFactoryComponent() );
     }
 
 

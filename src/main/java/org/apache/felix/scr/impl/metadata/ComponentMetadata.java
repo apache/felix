@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.felix.scr.impl.helper.Logger;
+import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.log.LogService;
 
@@ -111,6 +112,12 @@ public class ComponentMetadata
 
     // List of service references, (required services 0..*)
     private List<ReferenceMetadata> m_references = new ArrayList<ReferenceMetadata>();
+    
+    private boolean m_configurableServiceProperties;
+    private boolean m_persistentFactoryComponent;
+    private boolean m_deleteCallsModify;
+    private boolean m_obsoleteFactoryComponentFactory;
+    private boolean m_configureWithInterfaces;
 
     // Flag that is set once the component is verified (its properties cannot be changed)
     private boolean m_validated = false;
@@ -354,10 +361,51 @@ public class ComponentMetadata
         m_references.add( newReference );
     }
 
+    public void setConfigurableServiceProperties( boolean configurableServiceProperties) {
+        if ( m_validated )
+        {
+            return;
+        }
+		this.m_configurableServiceProperties = configurableServiceProperties;
+	}
+
+	public void setPersistentFactoryComponent(boolean persistentFactoryComponent) {
+        if ( m_validated )
+        {
+            return;
+        }
+		this.m_persistentFactoryComponent = persistentFactoryComponent;
+	}
+
+	public void setDeleteCallsModify(boolean deleteCallsModify) {
+        if ( m_validated )
+        {
+            return;
+        }
+		this.m_deleteCallsModify = deleteCallsModify;
+	}
+
+	public void setObsoleteFactoryComponentFactory( boolean obsoleteFactoryComponentFactory) {
+        if ( m_validated )
+        {
+            return;
+        }
+		this.m_obsoleteFactoryComponentFactory = obsoleteFactoryComponentFactory;
+	}
+
+	public void setConfigureWithInterfaces(boolean configureWithInterfaces) {
+        if ( m_validated )
+        {
+            return;
+        }
+		this.m_configureWithInterfaces = configureWithInterfaces;
+	}
+
+    
 
     /////////////////////////////////////////// GETTERS //////////////////////////////////////
 
-    /**
+	/**
      * Returns the namespace code of the namespace of the component element
      * declaring this component. This is one of the XmlHandler.DS_VERSION_*
      * constants.
@@ -604,6 +652,15 @@ public class ComponentMetadata
     {
         return m_service;
     }
+    
+    public Scope getServiceScope()
+    {
+    	if (m_service == null) 
+    	{
+    		return Scope.singleton;
+    	}
+    	return m_service.getScope();
+    }
 
 
     /**
@@ -681,7 +738,27 @@ public class ComponentMetadata
     }
 
 
-    /**
+    public boolean isConfigurableServiceProperties() {
+		return m_configurableServiceProperties;
+	}
+
+	public boolean isPersistentFactoryComponent() {
+		return m_persistentFactoryComponent;
+	}
+
+	public boolean isDeleteCallsModify() {
+		return m_deleteCallsModify;
+	}
+
+	public boolean isObsoleteFactoryComponentFactory() {
+		return m_obsoleteFactoryComponentFactory;
+	}
+
+	public boolean isConfigureWithInterfaces() {
+		return m_configureWithInterfaces;
+	}
+
+	/**
      * Method used to verify if the semantics of this metadata are correct
      */
     public void validate( Logger logger )
@@ -763,10 +840,8 @@ public class ComponentMetadata
         }
 
         // Next check if the properties are valid (and extract property values)
-        Iterator propertyIterator = m_propertyMetaData.iterator();
-        while ( propertyIterator.hasNext() )
+        for ( PropertyMetadata propMeta: m_propertyMetaData )
         {
-            PropertyMetadata propMeta = ( PropertyMetadata ) propertyIterator.next();
             propMeta.validate( this );
             m_properties.put( propMeta.getName(), propMeta.getValue() );
         }
@@ -783,11 +858,9 @@ public class ComponentMetadata
         }
 
         // Check that the references are ok
-        HashSet refs = new HashSet();
-        Iterator referenceIterator = m_references.iterator();
-        while ( referenceIterator.hasNext() )
+        Set<String> refs = new HashSet<String>();
+        for  ( ReferenceMetadata refMeta: m_references )
         {
-            ReferenceMetadata refMeta = ( ReferenceMetadata ) referenceIterator.next();
             refMeta.validate( this, logger );
 
             // flag duplicates
@@ -824,11 +897,33 @@ public class ComponentMetadata
         // the component is a factory component or an immediate component
         if ( m_service != null )
         {
-            if ( m_service.isServiceFactory() && ( isFactory() || isImmediate() ) )
+            if ( (m_service.getScope() != ServiceMetadata.Scope.singleton) && ( isFactory() || isImmediate() ) )
             {
-                throw validationFailure( "ServiceFactory cannot be factory or immediate" );
+                throw validationFailure( "factory or immediate must be scope singleton not " +  m_service.getScope());
             }
         }
+        
+        if (m_namespaceCode == XmlHandler.DS_VERSION_1_2_FELIX) 
+        {
+        	m_configurableServiceProperties = true;
+        }
+        if (m_namespaceCode >= XmlHandler.DS_VERSION_1_3)
+        {
+        	m_deleteCallsModify = true; //spec behavior as of 1.3
+        }
+        if (m_namespaceCode < XmlHandler.DS_VERSION_1_3 && m_configureWithInterfaces)
+        {
+        	throw validationFailure("Configuration with interfaces or annotations only possible with version 1.3 or later");
+        }
+        if (m_namespaceCode >= XmlHandler.DS_VERSION_1_3 && m_obsoleteFactoryComponentFactory)
+        {
+        	throw validationFailure("Configuration of component factory instances through config admin factory pids supported only through the 1.2 namespace");
+        }
+        if (m_persistentFactoryComponent && !isFactory())
+        {
+        	throw validationFailure("Only a factory component can be a persistent factory component");
+        }
+        
 
         m_validated = true;
     }

@@ -535,8 +535,8 @@ public abstract class ComponentTestBase
                     out.print( "          " );
                     out.println( services[i] );
                 }
-                out.print( "Service Type: " );
-                out.println( component.isServiceFactory() ? "service factory" : "service" );
+                out.print( "Service Scope: " );
+                out.println( component.getServiceScope() );
             }
 
             Reference[] refs = component.getReferences();

@@ -51,6 +51,7 @@ import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
+import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -165,8 +166,8 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
             if ( metadata.getServiceMetadata() != null )
             {
-                log( LogService.LOG_DEBUG, "Component {0} Services: servicefactory={1}, services={2}", new Object[]
-                    { metadata.getName(), Boolean.valueOf( metadata.getServiceMetadata().isServiceFactory() ),
+                log( LogService.LOG_DEBUG, "Component {0} Services: scope={1}, services={2}", new Object[]
+                    { metadata.getName(), metadata.getServiceScope(),
                         Arrays.asList( metadata.getServiceMetadata().getProvides() ) }, null );
             }
 
@@ -714,8 +715,12 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
 
     public boolean isServiceFactory()
     {
-        return m_componentMetadata.getServiceMetadata() != null
-                && m_componentMetadata.getServiceMetadata().isServiceFactory();
+        return m_componentMetadata.getServiceScope() == Scope.bundle;
+    }
+    
+    public String getServiceScope()
+    {
+    	return m_componentMetadata.getServiceScope().name();
     }
 
     public boolean isFactory()

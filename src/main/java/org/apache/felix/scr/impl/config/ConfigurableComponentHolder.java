@@ -33,6 +33,7 @@ import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogService;
 
@@ -120,9 +121,15 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder, SimpleLo
         {
             throw new IllegalArgumentException( "Cannot create component factory for " + m_componentMetadata.getName() );
         }
-        else if ( m_componentMetadata.getServiceMetadata() != null && m_componentMetadata.getServiceMetadata().isServiceFactory() )
+        else if ( m_componentMetadata.getServiceScope() == Scope.bundle )
         {
             manager = new ServiceFactoryComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
+        }
+
+        else if ( m_componentMetadata.getServiceScope() == Scope.prototype )
+        {
+        	manager = null;// NYI
+//            manager = new ServiceFactoryComponentManager<S>( m_activator, this, m_componentMetadata, m_componentMethods );
         }
 
         else
