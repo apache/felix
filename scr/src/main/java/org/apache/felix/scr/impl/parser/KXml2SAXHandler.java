@@ -20,6 +20,8 @@ package org.apache.felix.scr.impl.parser;
 
 import java.util.Properties;
 
+import org.apache.felix.scr.impl.parser.KXml2SAXParser.Attributes;
+
 /**
  * Interface for a SAX like handler with kXML
  */
@@ -38,13 +40,13 @@ public interface KXml2SAXHandler {
 	*
 	* @param   uri
 	* @param   localName
-	* @param   attrib
+	* @param   attributes
 	* @exception   ParseException
 	*/
 	void startElement(
 		String uri,
 		String localName,
-		Properties attrib)
+		Attributes attributes)
 		throws ParseException;
 
    /**

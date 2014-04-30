@@ -270,8 +270,9 @@ public class XmlHandlerTest extends TestCase
 
         // service setup
         final ServiceMetadata sm = cm10.getServiceMetadata();
+        sm.validate( cm10 ); // service metadata requires validation to set scope properly
         assertNotNull( "service", sm );
-        assertEquals( "servicefactory", true, sm.isServiceFactory() );
+        assertEquals( "servicefactory", ServiceMetadata.Scope.bundle, sm.getScope() );
         assertEquals( "1 interface", 1, sm.getProvides().length );
         assertEquals( "service interface", "components.all.service", sm.getProvides()[0] );
 

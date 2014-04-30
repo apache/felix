@@ -60,8 +60,9 @@ public class KXml2SAXParser extends KXmlParser
     public void parseXML( KXml2SAXHandler handler ) throws Exception
     {
 
-        final Stack openElements = new Stack();
+        final Stack<XmlElement> openElements = new Stack<XmlElement>();
         XmlElement currentElement = null;
+        final Attributes attributes = new Attributes();
 
         while ( next() != XmlPullParser.END_DOCUMENT )
         {
@@ -73,13 +74,7 @@ public class KXml2SAXParser extends KXmlParser
                 currentElement = new XmlElement( getNamespace(), getName(), getLineNumber(), getColumnNumber() );
                 openElements.push( currentElement );
 
-                Properties props = new Properties();
-                for ( int i = 0; i < getAttributeCount(); i++ )
-                {
-                    props.put( getAttributeName( i ), getAttributeValue( i ) );
-                }
-
-                handler.startElement( getNamespace(), getName(), props );
+                handler.startElement( getNamespace(), getName(), attributes );
             }
             else if ( getEventType() == XmlPullParser.END_TAG )
             {
@@ -155,5 +150,16 @@ public class KXml2SAXParser extends KXmlParser
         {
             return name + "@" + line + ":" + col;
         }
+    }
+    
+    public class Attributes {
+    	
+    	public String getAttribute(String name) {
+    		return getAttributeValue("", name);
+    	}
+    	
+    	public String getAttribute(String uri, String name) {
+    		return getAttributeValue(uri, name);
+    	}
     }
 }

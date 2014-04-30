@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Properties;
 import org.apache.felix.scr.impl.helper.Logger;
 import org.apache.felix.scr.impl.parser.KXml2SAXHandler;
+import org.apache.felix.scr.impl.parser.KXml2SAXParser.Attributes;
 import org.apache.felix.scr.impl.parser.ParseException;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
@@ -60,6 +61,23 @@ public class XmlHandler implements KXml2SAXHandler
     // Namespace URI of DS 1.2-felix (see FELIX-3377)
     public static final String NAMESPACE_URI_1_2_FELIX = "http://felix.apache.org/xmlns/scr/v1.2.0-felix";
 
+    // Namespace URI of DS 1.3
+    public static final String NAMESPACE_URI_1_3 = "http://www.osgi.org/xmlns/scr/v1.3.0";
+
+    // Namespace URI of felis DS extensions 1.0
+    public static final String NAMESPACE_URI_1_0_FELIX_EXTENSIONS = "http://felix.apache.org/xmlns/scr/extensions/v1.0.0";
+    
+    //extension features
+    public static final String CONFIGURABLE_SERVICE_PROPERTIES = "configurableServiceProperties";
+
+    public static final String PERSISTENT_FACTORY_COMPONENT = "persistentFactoryComponent";
+    
+    public static final String DELETE_CALLS_MODIFY = "deleteCallsModify";
+    
+    public static final String OBSOLETE_FACTORY_COMPONENT_FACTORY = "obsoleteFactoryComponentFactory";
+    
+    public static final String CONFIGURE_WITH_INTERFACES = "configureWithInterfaces";
+
     // namespace code for non-DS namespace
     public static final int DS_VERSION_NONE = -1;
 
@@ -78,8 +96,11 @@ public class XmlHandler implements KXml2SAXHandler
     // namespace code for the DS 1.2-felix specification
     public static final int DS_VERSION_1_2_FELIX = 4;
 
+    // namespace code for the DS 1.3 specification
+    public static final int DS_VERSION_1_3 = 5;
+
     // mapping of namespace URI to namespace code
-    private static final Map NAMESPACE_CODE_MAP;
+    private static final Map<String, Integer> NAMESPACE_CODE_MAP;
 
     // the bundle containing the XML resource being parsed
     private final Bundle m_bundle;
@@ -94,7 +115,7 @@ public class XmlHandler implements KXml2SAXHandler
     private ServiceMetadata m_currentService;
 
     // A list of component descriptors contained in the file
-    private List m_components = new ArrayList();
+    private List<ComponentMetadata> m_components = new ArrayList<ComponentMetadata>();
 
     // PropertyMetaData whose value attribute is missing, hence has element data
     private PropertyMetadata m_pendingProperty;
@@ -110,13 +131,14 @@ public class XmlHandler implements KXml2SAXHandler
 
     static
     {
-        NAMESPACE_CODE_MAP = new HashMap();
+        NAMESPACE_CODE_MAP = new HashMap<String, Integer>();
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_EMPTY, DS_VERSION_1_0 );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI, DS_VERSION_1_0 );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1, DS_VERSION_1_1 );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_1_FELIX, DS_VERSION_1_1_FELIX );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2, DS_VERSION_1_2 );
         NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_2_FELIX, DS_VERSION_1_2_FELIX );
+        NAMESPACE_CODE_MAP.put( NAMESPACE_URI_1_3, DS_VERSION_1_3 );
     }
 
 
@@ -134,7 +156,7 @@ public class XmlHandler implements KXml2SAXHandler
     *
     * @return   A list of service descriptors
     */
-    public List getComponentMetadataList()
+    public List<ComponentMetadata> getComponentMetadataList()
     {
         return m_components;
     }
@@ -145,10 +167,10 @@ public class XmlHandler implements KXml2SAXHandler
      *
      * @param   uri
      * @param   localName
-     * @param   attrib
+     * @param   attributes
      * @exception   ParseException
     **/
-    public void startElement( String uri, String localName, Properties attrib ) throws ParseException
+    public void startElement( String uri, String localName, Attributes attributes ) throws ParseException
     {
         // according to the spec, the elements should have the namespace,
         // except when the root element is the "component" element
@@ -192,58 +214,64 @@ public class XmlHandler implements KXml2SAXHandler
                     m_currentComponent = new ComponentMetadata( namespaceCode.intValue() );
 
                     // name attribute is optional (since DS 1.1)
-                    if ( attrib.getProperty( "name" ) != null )
+                    if ( attributes.getAttribute( "name" ) != null )
                     {
-                        m_currentComponent.setName( attrib.getProperty( "name" ) );
+                        m_currentComponent.setName( attributes.getAttribute( "name" ) );
                     }
 
                     // enabled attribute is optional
-                    if ( attrib.getProperty( "enabled" ) != null )
+                    if ( attributes.getAttribute( "enabled" ) != null )
                     {
-                        m_currentComponent.setEnabled( attrib.getProperty( "enabled" ).equals( "true" ) );
+                        m_currentComponent.setEnabled( attributes.getAttribute( "enabled" ).equals( "true" ) );
                     }
 
                     // immediate attribute is optional
-                    if ( attrib.getProperty( "immediate" ) != null )
+                    if ( attributes.getAttribute( "immediate" ) != null )
                     {
-                        m_currentComponent.setImmediate( attrib.getProperty( "immediate" ).equals( "true" ) );
+                        m_currentComponent.setImmediate( attributes.getAttribute( "immediate" ).equals( "true" ) );
                     }
 
                     // factory attribute is optional
-                    if ( attrib.getProperty( "factory" ) != null )
+                    if ( attributes.getAttribute( "factory" ) != null )
                     {
-                        m_currentComponent.setFactoryIdentifier( attrib.getProperty( "factory" ) );
+                        m_currentComponent.setFactoryIdentifier( attributes.getAttribute( "factory" ) );
                     }
 
                     // configuration-policy is optional (since DS 1.1)
-                    if ( attrib.getProperty( "configuration-policy" ) != null )
+                    if ( attributes.getAttribute( "configuration-policy" ) != null )
                     {
-                        m_currentComponent.setConfigurationPolicy( attrib.getProperty( "configuration-policy" ) );
+                        m_currentComponent.setConfigurationPolicy( attributes.getAttribute( "configuration-policy" ) );
                     }
 
                     // activate attribute is optional (since DS 1.1)
-                    if ( attrib.getProperty( "activate" ) != null )
+                    if ( attributes.getAttribute( "activate" ) != null )
                     {
-                        m_currentComponent.setActivate( attrib.getProperty( "activate" ) );
+                        m_currentComponent.setActivate( attributes.getAttribute( "activate" ) );
                     }
 
                     // deactivate attribute is optional (since DS 1.1)
-                    if ( attrib.getProperty( "deactivate" ) != null )
+                    if ( attributes.getAttribute( "deactivate" ) != null )
                     {
-                        m_currentComponent.setDeactivate( attrib.getProperty( "deactivate" ) );
+                        m_currentComponent.setDeactivate( attributes.getAttribute( "deactivate" ) );
                     }
 
                     // modified attribute is optional (since DS 1.1)
-                    if ( attrib.getProperty( "modified" ) != null )
+                    if ( attributes.getAttribute( "modified" ) != null )
                     {
-                        m_currentComponent.setModified( attrib.getProperty( "modified" ) );
+                        m_currentComponent.setModified( attributes.getAttribute( "modified" ) );
                     }
 
                     // configuration-pid attribute is optional (since DS 1.2)
-                    if (attrib.getProperty("configuration-pid") != null)
+                    if (attributes.getAttribute("configuration-pid") != null)
                     {
-                        m_currentComponent.setConfigurationPid( attrib.getProperty( "configuration-pid" ) );
+                        m_currentComponent.setConfigurationPid( attributes.getAttribute( "configuration-pid" ) );
                     }
+                    
+                    m_currentComponent.setConfigurableServiceProperties("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURABLE_SERVICE_PROPERTIES)));
+                    m_currentComponent.setPersistentFactoryComponent("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, PERSISTENT_FACTORY_COMPONENT)));
+                    m_currentComponent.setDeleteCallsModify("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, DELETE_CALLS_MODIFY)));
+                    m_currentComponent.setObsoleteFactoryComponentFactory("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, OBSOLETE_FACTORY_COMPONENT_FACTORY)));
+                    m_currentComponent.setConfigureWithInterfaces("true".equals(attributes.getAttribute(NAMESPACE_URI_1_0_FELIX_EXTENSIONS, CONFIGURE_WITH_INTERFACES)));
 
                     // Add this component to the list
                     m_components.add( m_currentComponent );
@@ -261,7 +289,7 @@ public class XmlHandler implements KXml2SAXHandler
                 else if ( localName.equals( "implementation" ) )
                 {
                     // Set the implementation class name (mandatory)
-                    m_currentComponent.setImplementationClassName( attrib.getProperty( "class" ) );
+                    m_currentComponent.setImplementationClassName( attributes.getAttribute( "class" ) );
                 }
                 // 112.4.5 [...] Property Elements
                 else if ( localName.equals( "property" ) )
@@ -269,18 +297,18 @@ public class XmlHandler implements KXml2SAXHandler
                     PropertyMetadata prop = new PropertyMetadata();
 
                     // name attribute is mandatory
-                    prop.setName( attrib.getProperty( "name" ) );
+                    prop.setName( attributes.getAttribute( "name" ) );
 
                     // type attribute is optional
-                    if ( attrib.getProperty( "type" ) != null )
+                    if ( attributes.getAttribute( "type" ) != null )
                     {
-                        prop.setType( attrib.getProperty( "type" ) );
+                        prop.setType( attributes.getAttribute( "type" ) );
                     }
 
                     // 112.4.5: If the value attribute is specified, the body of the element is ignored.
-                    if ( attrib.getProperty( "value" ) != null )
+                    if ( attributes.getAttribute( "value" ) != null )
                     {
-                        prop.setValue( attrib.getProperty( "value" ) );
+                        prop.setValue( attributes.getAttribute( "value" ) );
                         m_currentComponent.addProperty( prop );
                     }
                     else
@@ -292,7 +320,7 @@ public class XmlHandler implements KXml2SAXHandler
                 // 112.4.5 Properties [...] Elements
                 else if ( localName.equals( "properties" ) )
                 {
-                    readPropertiesEntry( attrib.getProperty( "entry" ) );
+                    readPropertiesEntry( attributes.getAttribute( "entry" ) );
                 }
                 // 112.4.6 Service Element
                 else if ( localName.equals( "service" ) )
@@ -301,16 +329,16 @@ public class XmlHandler implements KXml2SAXHandler
                     m_currentService = new ServiceMetadata();
 
                     // servicefactory attribute is optional
-                    if ( attrib.getProperty( "servicefactory" ) != null )
+                    if ( attributes.getAttribute( "servicefactory" ) != null )
                     {
-                        m_currentService.setServiceFactory( attrib.getProperty( "servicefactory" ).equals( "true" ) );
+                        m_currentService.setServiceFactory( attributes.getAttribute( "servicefactory" ).equals( "true" ) );
                     }
 
                     m_currentComponent.setService( m_currentService );
                 }
                 else if ( localName.equals( "provide" ) )
                 {
-                    m_currentService.addProvide( attrib.getProperty( "interface" ) );
+                    m_currentService.addProvide( attributes.getAttribute( "interface" ) );
                 }
 
                 // 112.4.7 Reference element
@@ -319,34 +347,34 @@ public class XmlHandler implements KXml2SAXHandler
                     ReferenceMetadata ref = new ReferenceMetadata();
 
                     // name attribute is optional (since DS 1.1)
-                    if ( attrib.getProperty( "name" ) != null )
+                    if ( attributes.getAttribute( "name" ) != null )
                     {
-                        ref.setName( attrib.getProperty( "name" ) );
+                        ref.setName( attributes.getAttribute( "name" ) );
                     }
 
-                    ref.setInterface( attrib.getProperty( "interface" ) );
+                    ref.setInterface( attributes.getAttribute( "interface" ) );
 
                     // Cardinality
-                    if ( attrib.getProperty( "cardinality" ) != null )
+                    if ( attributes.getAttribute( "cardinality" ) != null )
                     {
-                        ref.setCardinality( attrib.getProperty( "cardinality" ) );
+                        ref.setCardinality( attributes.getAttribute( "cardinality" ) );
                     }
 
-                    if ( attrib.getProperty( "policy" ) != null )
+                    if ( attributes.getAttribute( "policy" ) != null )
                     {
-                        ref.setPolicy( attrib.getProperty( "policy" ) );
+                        ref.setPolicy( attributes.getAttribute( "policy" ) );
                     }
 
-                    if ( attrib.getProperty( "policy-option" ) != null )
+                    if ( attributes.getAttribute( "policy-option" ) != null )
                     {
-                        ref.setPolicyOption( attrib.getProperty( "policy-option" ) );
+                        ref.setPolicyOption( attributes.getAttribute( "policy-option" ) );
                     }
 
                     //if
-                    ref.setTarget( attrib.getProperty( "target" ) );
-                    ref.setBind( attrib.getProperty( "bind" ) );
-                    ref.setUpdated( attrib.getProperty( "updated" ) );
-                    ref.setUnbind( attrib.getProperty( "unbind" ) );
+                    ref.setTarget( attributes.getAttribute( "target" ) );
+                    ref.setBind( attributes.getAttribute( "bind" ) );
+                    ref.setUpdated( attributes.getAttribute( "updated" ) );
+                    ref.setUnbind( attributes.getAttribute( "unbind" ) );
 
                     m_currentComponent.addDependency( ref );
                 }
@@ -504,9 +532,8 @@ public class XmlHandler implements KXml2SAXHandler
         }
 
         // create PropertyMetadata for the properties from the file
-        for ( Iterator pi = props.entrySet().iterator(); pi.hasNext(); )
+        for ( Map.Entry<Object, Object> pEntry: props.entrySet() )
         {
-            Map.Entry pEntry = ( Map.Entry ) pi.next();
             PropertyMetadata prop = new PropertyMetadata();
             prop.setName( String.valueOf( pEntry.getKey() ) );
             prop.setValue( String.valueOf( pEntry.getValue() ) );
