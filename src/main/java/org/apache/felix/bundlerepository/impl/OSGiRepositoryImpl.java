@@ -25,7 +25,6 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,7 +40,6 @@ import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Namespace;
 import org.osgi.resource.Requirement;
-import org.osgi.resource.Resource;
 import org.osgi.service.repository.ContentNamespace;
 import org.osgi.service.repository.Repository;
 
@@ -107,28 +105,21 @@ class OSGiRepositoryImpl implements Repository
     private void addResourceForIdentity(final org.apache.felix.bundlerepository.Resource res, Filter filter, List<Capability> caps)
         throws Exception
     {
-        OSGiCapabilityImpl idCap = newOSGiIdentityCapability(res);
+        List<Capability> idCaps = new FelixResourceAdapter(res).getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE);
+        if (idCaps.size() == 0)
+            return;
+
+        Capability idCap = idCaps.get(0); // there should only be one osgi.identity anyway
         if (filter != null)
         {
             if (!filter.matches(idCap.getAttributes()))
                 return;
         }
-
-        OSGiCapabilityImpl contentCap = newOSGiContentCapability(res.getURI(), res.getSize());
-
-        List<OSGiCapabilityImpl> capabilities = Arrays.<OSGiCapabilityImpl>asList(idCap, contentCap);
-        Resource resource =
-            new OSGiResourceImpl(capabilities, Collections.<Requirement>emptyList());
-
-        for (OSGiCapabilityImpl c : capabilities)
-        {
-            c.setResource(resource);
-        }
-
         caps.add(idCap);
     }
 
-    static OSGiCapabilityImpl newOSGiIdentityCapability(org.apache.felix.bundlerepository.Resource res) {
+    static OSGiCapabilityImpl newOSGiIdentityCapability(org.apache.felix.bundlerepository.Resource res)
+    {
         @SuppressWarnings("unchecked")
         Map<String, Object> idAttrs = new HashMap<String, Object>(res.getProperties());
 
@@ -144,7 +135,8 @@ class OSGiRepositoryImpl implements Repository
     static OSGiCapabilityImpl newOSGiContentCapability(final String uri, long size)
     {
         LazyValue<String, Object> lazyValue =
-            new LazyValue<String, Object>(ContentNamespace.CONTENT_NAMESPACE, new Callable<Object>() {
+            new LazyValue<String, Object>(ContentNamespace.CONTENT_NAMESPACE, new Callable<Object>()
+            {
                 public Object call() throws Exception
                 {
                     // This is expensive to do, so only compute it when actually obtained...

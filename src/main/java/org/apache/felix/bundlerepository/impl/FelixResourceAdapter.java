@@ -16,7 +16,6 @@ package org.apache.felix.bundlerepository.impl;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -38,25 +37,23 @@ public class FelixResourceAdapter implements Resource, RepositoryContent
 
     public List<Capability> getCapabilities(String namespace)
     {
+        ArrayList<Capability> result = new ArrayList<Capability>();
+
         if (namespace == null || namespace.equals(IdentityNamespace.IDENTITY_NAMESPACE))
         {
-            // TODO cater for null request
-            Object type = resource.getProperties().get(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE);
             OSGiCapabilityImpl c = OSGiRepositoryImpl.newOSGiIdentityCapability(resource);
             c.setResource(this);
-            return Collections.<Capability>singletonList(c);
+            result.add(c);
         }
-        if (namespace.equals(ContentNamespace.CONTENT_NAMESPACE))
+        if (namespace == null || namespace.equals(ContentNamespace.CONTENT_NAMESPACE))
         {
-            // TODO cater for null request
             OSGiCapabilityImpl c = OSGiRepositoryImpl.newOSGiContentCapability(resource.getURI(), resource.getSize());
             c.setResource(this);
-            return Collections.<Capability>singletonList(c);
+            result.add(c);
         }
 
         namespace = NamespaceTranslator.getFelixNamespace(namespace);
         org.apache.felix.bundlerepository.Capability[] capabilities = resource.getCapabilities();
-        ArrayList<Capability> result = new ArrayList<Capability>(capabilities.length);
         for (org.apache.felix.bundlerepository.Capability capability : capabilities)
         {
             if (namespace != null && !capability.getName().equals(namespace))
