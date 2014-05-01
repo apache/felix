@@ -34,7 +34,9 @@ import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Version;
+import org.osgi.framework.namespace.BundleNamespace;
 import org.osgi.framework.namespace.IdentityNamespace;
+import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Requirement;
 import org.osgi.resource.Resource;
@@ -44,7 +46,7 @@ import org.osgi.service.repository.RepositoryContent;
 
 public class OSGiRepositoryImplTest extends TestCase
 {
-    public void testIdentityAndContentCapabilities() throws Exception
+    public void testCapabilities() throws Exception
     {
         RepositoryAdminImpl repoAdmin = createRepositoryAdmin();
         URL url = getClass().getResource("/another_repository.xml");
@@ -74,7 +76,10 @@ public class OSGiRepositoryImplTest extends TestCase
         assertEquals(0, res.getRequirements(null).size());
         assertEquals(1, res.getCapabilities(IdentityNamespace.IDENTITY_NAMESPACE).size());
         assertEquals(1, res.getCapabilities(ContentNamespace.CONTENT_NAMESPACE).size());
-        assertEquals(2, res.getCapabilities(null).size());
+        assertEquals(1, res.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE).size());
+        assertEquals(8, res.getCapabilities(PackageNamespace.PACKAGE_NAMESPACE).size());
+        assertEquals(1, res.getCapabilities("foo").size());
+        assertEquals(12, res.getCapabilities(null).size());
 
         Capability contentCap = res.getCapabilities(ContentNamespace.CONTENT_NAMESPACE).iterator().next();
         assertEquals("4b68ab3847feda7d6c62c1fbcbeebfa35eab7351ed5e78f4ddadea5df64b8015",
@@ -83,6 +88,21 @@ public class OSGiRepositoryImplTest extends TestCase
                 contentCap.getAttributes().get(ContentNamespace.CAPABILITY_URL_ATTRIBUTE));
         assertEquals(1L, contentCap.getAttributes().get(ContentNamespace.CAPABILITY_SIZE_ATTRIBUTE));
         assertEquals("application/vnd.osgi.bundle", contentCap.getAttributes().get(ContentNamespace.CAPABILITY_MIME_ATTRIBUTE));
+
+        Capability bundleCap = res.getCapabilities(BundleNamespace.BUNDLE_NAMESPACE).iterator().next();
+        assertEquals("2", bundleCap.getAttributes().get("manifestversion"));
+        assertEquals("dummy", bundleCap.getAttributes().get(BundleNamespace.BUNDLE_NAMESPACE));
+        assertEquals(Version.parseVersion("1.0.0.SNAPSHOT"), bundleCap.getAttributes().get(BundleNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE));
+        assertEquals("Unnamed - dummy", bundleCap.getAttributes().get("presentationname"));
+
+        Capability packageCap = res.getCapabilities(PackageNamespace.PACKAGE_NAMESPACE).get(7);
+        assertEquals("org.apache.commons.logging", packageCap.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE));
+        assertEquals(Version.parseVersion("1.0.4"), packageCap.getAttributes().get(PackageNamespace.CAPABILITY_VERSION_ATTRIBUTE));
+        assertEquals("dummy", packageCap.getAttributes().get(PackageNamespace.CAPABILITY_BUNDLE_SYMBOLICNAME_ATTRIBUTE));
+        assertEquals(Version.parseVersion("1.0.0.SNAPSHOT"), packageCap.getAttributes().get(PackageNamespace.CAPABILITY_BUNDLE_VERSION_ATTRIBUTE));
+
+        Capability fooCap = res.getCapabilities("foo").iterator().next();
+        assertEquals("someVal", fooCap.getAttributes().get("someKey"));
     }
 
     public void testIdentityCapabilityFilter() throws Exception
