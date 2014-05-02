@@ -74,4 +74,12 @@ public interface Capability
      * @return a Map<String,Object>
      */
     Map<String, Object> getPropertiesAsMap();
+
+    /**
+     * Return the directives of this capability. The returned map
+     * can not be modified.
+     *
+     * @return a Map of directives or an empty map there are no directives.
+     */
+    Map<String, String> getDirectives();
 }
