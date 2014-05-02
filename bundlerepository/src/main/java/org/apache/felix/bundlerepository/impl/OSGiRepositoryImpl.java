@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.felix.bundlerepository.RepositoryAdmin;
+import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.bundlerepository.impl.LazyHashMap.LazyValue;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
@@ -132,8 +133,9 @@ class OSGiRepositoryImpl implements Repository
         return new OSGiCapabilityImpl(IdentityNamespace.IDENTITY_NAMESPACE, idAttrs, Collections.<String, String> emptyMap());
     }
 
-    static OSGiCapabilityImpl newOSGiContentCapability(final String uri, long size)
+    static OSGiCapabilityImpl newOSGiContentCapability(Resource resource)
     {
+        final String uri = resource.getURI();
         LazyValue<String, Object> lazyValue =
             new LazyValue<String, Object>(ContentNamespace.CONTENT_NAMESPACE, new Callable<Object>()
             {
@@ -143,9 +145,14 @@ class OSGiRepositoryImpl implements Repository
                     return OSGiRepositoryImpl.getSHA256(uri);
                 }
             });
+
+        Object mime = resource.getProperties().get("mime");
+        if (mime == null)
+            mime = "application/vnd.osgi.bundle";
+
         Map<String, Object> contentAttrs = new LazyHashMap<String, Object>(Collections.singleton(lazyValue));
-        contentAttrs.put(ContentNamespace.CAPABILITY_MIME_ATTRIBUTE, "application/vnd.osgi.bundle"); // TODO support other types
-        contentAttrs.put(ContentNamespace.CAPABILITY_SIZE_ATTRIBUTE, size);
+        contentAttrs.put(ContentNamespace.CAPABILITY_MIME_ATTRIBUTE, mime);
+        contentAttrs.put(ContentNamespace.CAPABILITY_SIZE_ATTRIBUTE, resource.getSize());
         contentAttrs.put(ContentNamespace.CAPABILITY_URL_ATTRIBUTE, uri);
         return new OSGiCapabilityImpl(ContentNamespace.CONTENT_NAMESPACE, contentAttrs, Collections.<String, String> emptyMap());
     }
