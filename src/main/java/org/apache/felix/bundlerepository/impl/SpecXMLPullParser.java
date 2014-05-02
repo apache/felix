@@ -129,8 +129,14 @@ public class SpecXMLPullParser
         }
         if (ContentNamespace.CONTENT_NAMESPACE.equals(namespace))
         {
-            parseContentNamespace(reader, resource);
-            return null;
+            if (resource.getURI() == null)
+            {
+                parseContentNamespace(reader, resource);
+                return null;
+            }
+            // if the URI is already set, this is a second osgi.content capability.
+            // The first content capability, which is the main one, is stored in the Resource.
+            // Subsequent content capabilities are stored are ordinary capabilities.
         }
 
         CapabilityImpl capability = new CapabilityImpl();
