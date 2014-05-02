@@ -1,3 +1,9 @@
+Changes from 1.11.0 to 1.10.0
+-----------------------------
+** Improvement
+    * [FELIX-4461] - Update to ASM 5 for Java 8 compatibility
+
+
 Changes from 1.10.0 to 1.9.0
 ----------------------------
 ** Improvement
