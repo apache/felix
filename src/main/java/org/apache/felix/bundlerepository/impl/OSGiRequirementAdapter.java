@@ -13,6 +13,9 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Requirement;
 import org.osgi.framework.Constants;
@@ -21,10 +24,40 @@ import org.osgi.resource.Namespace;
 class OSGiRequirementAdapter implements Requirement
 {
     private final org.osgi.resource.Requirement requirement;
+    private final HashMap<String, String> cleanedDirectives;
+    private final String filter;
 
     public OSGiRequirementAdapter(org.osgi.resource.Requirement requirement)
     {
         this.requirement = requirement;
+
+        String f = requirement.getDirectives().get(Constants.FILTER_DIRECTIVE);
+        if (f != null)
+        {
+            for (String ns : NamespaceTranslator.getTranslatedOSGiNamespaces())
+            {
+                f = f.replaceAll("[(][ ]*" + ns + "[ ]*=",
+                    "(" + NamespaceTranslator.getFelixNamespace(ns) + "=");
+            }
+        }
+        filter = f;
+
+        cleanedDirectives = new HashMap<String, String>(requirement.getDirectives());
+        // Remove directives that are represented as APIs on this class.
+        cleanedDirectives.remove(Constants.FILTER_DIRECTIVE);
+        cleanedDirectives.remove(Namespace.REQUIREMENT_CARDINALITY_DIRECTIVE);
+        cleanedDirectives.remove(Constants.RESOLUTION_DIRECTIVE);
+    }
+
+    public Map<String, Object> getAttributes()
+    {
+        return requirement.getAttributes();
+    }
+
+    public Map<String, String> getDirectives()
+    {
+
+        return cleanedDirectives;
     }
 
     public String getComment()
@@ -34,7 +67,7 @@ class OSGiRequirementAdapter implements Requirement
 
     public String getFilter()
     {
-        return requirement.getDirectives().get(Constants.FILTER_DIRECTIVE);
+        return filter;
     }
 
     public String getName()

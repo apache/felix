@@ -19,6 +19,7 @@
 package org.apache.felix.bundlerepository.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +30,9 @@ import org.apache.felix.bundlerepository.Property;
 public class CapabilityImpl implements Capability
 {
     private String m_name = null;
-    private final Map<String, Object> m_map = new HashMap<String, Object>();
-    private final List<Property> m_list = new ArrayList<Property>();
+    private final Map<String, Object> m_attributes = new HashMap<String, Object>();
+    private final Map<String, String> m_directives = new HashMap<String, String>();
+    private final List<Property> m_propList = new ArrayList<Property>();
 
     public CapabilityImpl()
     {
@@ -62,12 +64,12 @@ public class CapabilityImpl implements Capability
 
     public Map<String, Object> getPropertiesAsMap()
     {
-        return m_map;
+        return m_attributes;
     }
 
     public Property[] getProperties()
     {
-        return m_list.toArray(new Property[m_list.size()]);
+        return m_propList.toArray(new Property[m_propList.size()]);
     }
 
     public void addProperty(Property prop)
@@ -75,8 +77,8 @@ public class CapabilityImpl implements Capability
         // m_map.put(prop.getName().toLowerCase(), prop.getConvertedValue()); // TODO is toLowerCase() on the key the right thing to do?
         // However if we definitely need to re-enable the to-lowercasing, the Felix Util FilterImpl supports treating filters
         // case-insensitively
-        m_map.put(prop.getName(), prop.getConvertedValue());
-        m_list.add(prop);
+        m_attributes.put(prop.getName(), prop.getConvertedValue());
+        m_propList.add(prop);
     }
 
     public void addProperty(String name, String value)
@@ -91,6 +93,14 @@ public class CapabilityImpl implements Capability
 
     public String toString()
     {
-        return m_name  + ":" + m_map.toString();
+        return m_name  + ":" + m_attributes.toString();
+    }
+
+    public void addDirective(String key, String value) {
+        m_directives.put(key, value);
+    }
+
+    public Map<String, String> getDirectives() {
+        return Collections.unmodifiableMap(m_directives);
     }
 }

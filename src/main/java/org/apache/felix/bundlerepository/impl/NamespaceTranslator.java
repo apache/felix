@@ -13,6 +13,8 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +35,7 @@ class NamespaceTranslator
         result.put(ServiceNamespace.SERVICE_NAMESPACE, org.apache.felix.bundlerepository.Capability.SERVICE);
         result.put(BundleNamespace.BUNDLE_NAMESPACE, org.apache.felix.bundlerepository.Capability.BUNDLE);
         result.put(HostNamespace.HOST_NAMESPACE, org.apache.felix.bundlerepository.Capability.FRAGMENT);
-        return result;
+        return Collections.unmodifiableMap(result);
     }
 
     private static Map<String, String> fillFelixToOSGiMap()
@@ -43,7 +45,7 @@ class NamespaceTranslator
         result.put(org.apache.felix.bundlerepository.Capability.SERVICE, ServiceNamespace.SERVICE_NAMESPACE);
         result.put(org.apache.felix.bundlerepository.Capability.BUNDLE, BundleNamespace.BUNDLE_NAMESPACE);
         result.put(org.apache.felix.bundlerepository.Capability.FRAGMENT, HostNamespace.HOST_NAMESPACE);
-        return result;
+        return Collections.unmodifiableMap(result);
     }
 
     public static String getFelixNamespace(String osgiNamespace)
@@ -55,6 +57,11 @@ class NamespaceTranslator
             return result;
     }
 
+    public static Collection<String> getTranslatedFelixNamespaces()
+    {
+        return felixToOSGiMap.keySet();
+    }
+
     public static String getOSGiNamespace(String felixNamespace)
     {
         String result = felixToOSGiMap.get(felixNamespace);
@@ -62,5 +69,10 @@ class NamespaceTranslator
             return felixNamespace;
         else
             return result;
+    }
+
+    public static Collection<String> getTranslatedOSGiNamespaces()
+    {
+        return osgiToFelixMap.keySet();
     }
 }

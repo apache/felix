@@ -13,7 +13,6 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +79,7 @@ public class FelixCapabilityAdapter implements Capability
 
     public Map<String, String> getDirectives()
     {
-        return Collections.emptyMap();
+        return capability.getDirectives();
     }
 
     public String getNamespace()

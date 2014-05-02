@@ -15,6 +15,7 @@ package org.apache.felix.bundlerepository.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,6 +63,10 @@ public class OSGiCapabilityAdapter implements Capability
         Map<String, Object> result = new HashMap<String, Object>(capability.getAttributes());
         result.put(getName(), result.get(capability.getNamespace()));
         return result;
+    }
+
+    public Map<String, String> getDirectives() {
+        return Collections.unmodifiableMap(capability.getDirectives());
     }
 
     @Override

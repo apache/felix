@@ -18,6 +18,8 @@
  */
 package org.apache.felix.bundlerepository.impl;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.felix.bundlerepository.Capability;
@@ -37,14 +39,35 @@ public class RequirementImpl implements Requirement
     private boolean m_optional = false;
     private FilterImpl m_filter = null;
     private String m_comment = null;
+    private Map<String, Object> m_attributes;
+    private Map<String, String> m_directives;
 
     public RequirementImpl()
     {
     }
 
-    public RequirementImpl(String name) 
+    public RequirementImpl(String name)
     {
         setName(name);
+    }
+
+    public Map<String, Object> getAttributes()
+    {
+        return m_attributes;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        m_attributes = Collections.unmodifiableMap(attributes);
+    }
+
+    public Map<String, String> getDirectives()
+    {
+        return m_directives;
+    }
+
+    public void setDirectives(Map<String, String> directives)
+    {
+        m_directives = Collections.unmodifiableMap(directives);
     }
 
     public String getName()

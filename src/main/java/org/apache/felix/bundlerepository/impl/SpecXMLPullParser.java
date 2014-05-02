@@ -139,11 +139,16 @@ public class SpecXMLPullParser
 
         capability.setName(NamespaceTranslator.getFelixNamespace(namespace));
         Map<String, Object> attributes = new HashMap<String, Object>();
-        parseAttributesDirectives(reader, attributes, CAPABILITY);
+        Map<String, String> directives = new HashMap<String, String>();
+        parseAttributesDirectives(reader, attributes, directives, CAPABILITY);
 
         for (Map.Entry<String, Object> entry : attributes.entrySet())
         {
             capability.addProperty(new FelixPropertyAdapter(entry.getKey(), entry.getValue()));
+        }
+        for (Map.Entry<String, String> entry : directives.entrySet())
+        {
+            capability.addDirective(entry.getKey(), entry.getValue());
         }
 
         return capability;
@@ -152,7 +157,8 @@ public class SpecXMLPullParser
     private static void parseIdentityNamespace(XmlPullParser reader, ResourceImpl resource) throws Exception
     {
         Map<String, Object> attributes = new HashMap<String, Object>();
-        parseAttributesDirectives(reader, attributes, CAPABILITY);
+        parseAttributesDirectives(reader, attributes, new HashMap<String, String>(), CAPABILITY);
+        // TODO need to cater for the singleton directive...
 
         for (Map.Entry<String, Object> entry : attributes.entrySet())
         {
@@ -166,7 +172,7 @@ public class SpecXMLPullParser
     private static void parseContentNamespace(XmlPullParser reader, ResourceImpl resource) throws Exception
     {
         Map<String, Object> attributes = new HashMap<String, Object>();
-        parseAttributesDirectives(reader, attributes, CAPABILITY);
+        parseAttributesDirectives(reader, attributes, new HashMap<String, String>(), CAPABILITY);
 
         for (Map.Entry<String, Object> entry : attributes.entrySet())
         {
@@ -180,7 +186,7 @@ public class SpecXMLPullParser
         }
     }
 
-    private static void parseAttributesDirectives(XmlPullParser reader, Map<String, Object> attributes, String parentTag) throws XmlPullParserException, IOException
+    private static void parseAttributesDirectives(XmlPullParser reader, Map<String, Object> attributes, Map<String, String> directives, String parentTag) throws XmlPullParserException, IOException
     {
         int event;
         while ((event = reader.nextTag()) == XmlPullParser.START_TAG)
@@ -193,6 +199,13 @@ public class SpecXMLPullParser
                 String value = reader.getAttributeValue(null, "value");
                 attributes.put(name, getTypedValue(type, value));
                 PullParser.sanityCheckEndElement(reader, reader.nextTag(), ATTRIBUTE);
+            }
+            else if (DIRECTIVE.equals(element))
+            {
+                String name = reader.getAttributeValue(null, "name");
+                String value = reader.getAttributeValue(null, "value");
+                directives.put(name, value);
+                PullParser.sanityCheckEndElement(reader, reader.nextTag(), DIRECTIVE);
             }
             else
             {
@@ -304,33 +317,26 @@ public class SpecXMLPullParser
 
         requirement.setName(NamespaceTranslator.getFelixNamespace(namespace));
 
+        Map<String, Object> attributes = new HashMap<String, Object>();
         Map<String, String> directives = new HashMap<String, String>();
-        int event;
-        while ((event = reader.nextTag()) == XmlPullParser.START_TAG)
+        parseAttributesDirectives(reader, attributes, directives, REQUIREMENT);
+        requirement.setAttributes(attributes);
+
+        String filter = directives.remove(Namespace.REQUIREMENT_FILTER_DIRECTIVE);
+        for (String ns : NamespaceTranslator.getTranslatedOSGiNamespaces())
         {
-            String element = reader.getName();
-            if (DIRECTIVE.equals(element))
-            {
-                String name = reader.getAttributeValue(null, "name");
-                String value = reader.getAttributeValue(null, "value");
-                directives.put(name, value);
-                PullParser.sanityCheckEndElement(reader, reader.nextTag(), DIRECTIVE);
-            }
-            else
-            {
-                PullParser.ignoreTag(reader);
-            }
+            filter = filter.replaceAll("[(][ ]*" + ns + "[ ]*=",
+                    "(" + NamespaceTranslator.getFelixNamespace(ns) + "=");
         }
+        requirement.setFilter(filter);
+        requirement.setMultiple(Namespace.CARDINALITY_MULTIPLE.equals(
+            directives.remove(Namespace.REQUIREMENT_CARDINALITY_DIRECTIVE)));
+        requirement.setOptional(Namespace.RESOLUTION_OPTIONAL.equals(
+            directives.remove(Namespace.REQUIREMENT_RESOLUTION_DIRECTIVE)));
+        requirement.setDirectives(directives);
 
         requirement.setExtend(false);
-        // TODO transform the namespaces in the filter!
-        requirement.setFilter(directives.get(Namespace.REQUIREMENT_FILTER_DIRECTIVE));
-        requirement.setMultiple(Namespace.CARDINALITY_MULTIPLE.equals(
-            directives.get(Namespace.REQUIREMENT_CARDINALITY_DIRECTIVE)));
-        requirement.setOptional(Namespace.RESOLUTION_OPTIONAL.equals(
-            directives.get(Namespace.REQUIREMENT_RESOLUTION_DIRECTIVE)));
 
-        PullParser.sanityCheckEndElement(reader, event, REQUIREMENT);
         return requirement;
     }
 }
