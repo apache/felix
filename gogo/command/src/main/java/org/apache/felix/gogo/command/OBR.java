@@ -18,20 +18,28 @@
  */
 package org.apache.felix.gogo.command;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.net.URL;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.apache.felix.bundlerepository.Capability;
 import org.apache.felix.bundlerepository.Reason;
-
 import org.apache.felix.bundlerepository.RepositoryAdmin;
 import org.apache.felix.bundlerepository.Requirement;
 import org.apache.felix.bundlerepository.Resolver;
 import org.apache.felix.bundlerepository.Resource;
 import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Parameter;
-import org.osgi.framework.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.Version;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class OBR
@@ -580,9 +588,13 @@ public class OBR
 
     private void printResource(PrintStream out, Resource resource)
     {
-        System.out.println(Util.getUnderlineString(resource.getPresentationName().length()));
-        out.println(resource.getPresentationName());
-        System.out.println(Util.getUnderlineString(resource.getPresentationName().length()));
+        String presentationName = resource.getPresentationName();
+        if (presentationName == null)
+            presentationName = resource.getSymbolicName();
+
+        System.out.println(Util.getUnderlineString(presentationName.length()));
+        out.println(presentationName);
+        System.out.println(Util.getUnderlineString(presentationName.length()));
 
         Map map = resource.getProperties();
         for (Iterator iter = map.entrySet().iterator(); iter.hasNext(); )
