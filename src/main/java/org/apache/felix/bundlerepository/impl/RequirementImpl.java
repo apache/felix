@@ -39,8 +39,8 @@ public class RequirementImpl implements Requirement
     private boolean m_optional = false;
     private FilterImpl m_filter = null;
     private String m_comment = null;
-    private Map<String, Object> m_attributes;
-    private Map<String, String> m_directives;
+    private Map<String, Object> m_attributes = Collections.emptyMap();
+    private Map<String, String> m_directives = Collections.emptyMap();
 
     public RequirementImpl()
     {
