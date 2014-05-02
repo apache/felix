@@ -49,7 +49,7 @@
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-all</artifactId>
-            <version>4.0</version>
+            <version>5.0.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
