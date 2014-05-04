@@ -36,7 +36,7 @@ import org.objectweb.asm.tree.LocalVariableNode;
  * This class adapt the visited class to link the class with the container.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class MethodCreator extends ClassVisitor implements Opcodes {
+public class ClassManipulator extends ClassVisitor implements Opcodes {
 
     /**
      * Instance Manager Field.
@@ -140,7 +140,7 @@ public class MethodCreator extends ClassVisitor implements Opcodes {
      * @param visitor : class visitor.
      * @param manipulator : the manipulator having analyzed the class.
      */
-    public MethodCreator(ClassVisitor visitor, Manipulator manipulator) {
+    public ClassManipulator(ClassVisitor visitor, Manipulator manipulator) {
         super(Opcodes.ASM5, visitor);
         m_manipulator = manipulator;
         m_fields = manipulator.getFields().keySet();
@@ -245,7 +245,7 @@ public class MethodCreator extends ClassVisitor implements Opcodes {
     /**
      * Gets the method descriptor for the specified name and descriptor.
      * The method descriptor is looked inside the
-     * {@link MethodCreator#m_visitedMethods}
+     * {@link ClassManipulator#m_visitedMethods}
      * @param name the name of the method
      * @param desc the descriptor of the method
      * @return the method descriptor or <code>null</code> if not found.
@@ -384,6 +384,7 @@ public class MethodCreator extends ClassVisitor implements Opcodes {
                                       List<LocalVariableNode> localVariables, List<AnnotationDescriptor> annotations,
                                       Map<Integer, List<AnnotationDescriptor>> paramAnnotations) {
         GeneratorAdapter mv = new GeneratorAdapter(cv.visitMethod(access, name, desc, signature, exceptions), access, name, desc);
+        mv.visitCode();
 
         // If we have variables, we wraps the code within labels. The `lifetime` of the variables are bound to those
         // two variables.
@@ -646,17 +647,7 @@ public class MethodCreator extends ClassVisitor implements Opcodes {
         } else {
             itfs = interfaces;
         }
-        
-        // If version = 1.7, use 1.6 if the ipojo.downgrade.classes system property is either
-        // not set of set to true.
-        int theVersion = version;
-        //TODO HACK HERE !!!!
-        String downgrade = System.getProperty("ipojo.downgrade.classes");
-        if ((downgrade == null  || "true".equals(downgrade))  && version == Opcodes.V1_7) {
-            theVersion = Opcodes.V1_6;
-        }
-
-        cv.visit(theVersion, access, name, signature, superName, itfs);
+        cv.visit(version, access, name, signature, superName, itfs);
     }
 
     /**

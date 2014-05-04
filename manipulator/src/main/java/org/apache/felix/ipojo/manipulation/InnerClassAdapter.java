@@ -80,19 +80,6 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
         m_fields = manipulator.getFields().keySet();
     }
 
-    @Override
-    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        // If version = 1.7, use 1.6 if the ipojo.downgrade.classes system property is either
-        // not set of set to true.
-        int theVersion = version;
-        String downgrade = System.getProperty("ipojo.downgrade.classes");
-        //TODO FRAME HACK HERE
-        if ((downgrade == null  || "true".equals(downgrade))  && version == Opcodes.V1_7) {
-            theVersion = Opcodes.V1_6;
-        }
-        super.visit(theVersion, access, name, signature, superName, interfaces);
-    }
-
     /**
      * Visits a method.
      * This methods create a code visitor manipulating outer class field accesses.
@@ -140,16 +127,16 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
             }
 
             // The new name is the method name prefixed by the PREFIX.
-            MethodVisitor mv = super.visitMethod(access, MethodCreator.PREFIX + name, desc, signature,
+            MethodVisitor mv = super.visitMethod(access, ClassManipulator.PREFIX + name, desc, signature,
                     exceptions);
-            return new MethodCodeAdapter(mv, m_outer, access,  MethodCreator.PREFIX + name, desc, m_fields);
+            return new MethodCodeAdapter(mv, m_outer, access,  ClassManipulator.PREFIX + name, desc, m_fields);
         } else {
             return super.visitMethod(access, name, desc, signature, exceptions);
         }
     }
 
     private String getMethodFlagName(String name, String desc) {
-        return MethodCreator.METHOD_FLAG_PREFIX + getMethodId(name, desc);
+        return ClassManipulator.METHOD_FLAG_PREFIX + getMethodId(name, desc);
     }
 
     private String getMethodId(String name, String desc) {
@@ -236,7 +223,7 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
 
         mv.visitVarInsn(ALOAD, 0);
         mv.loadArgs();
-        mv.visitMethodInsn(INVOKESPECIAL, m_name, MethodCreator.PREFIX + name, desc, false);
+        mv.visitMethodInsn(INVOKESPECIAL, m_name, ClassManipulator.PREFIX + name, desc, false);
         mv.visitInsn(returnType.getOpcode(IRETURN));
 
         // end of the non intercepted method invocation.
@@ -245,18 +232,18 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
 
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, m_name, "this$0", "L" + m_outer + ";");
-        mv.visitFieldInsn(GETFIELD, m_outer, MethodCreator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
+        mv.visitFieldInsn(GETFIELD, m_outer, ClassManipulator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(getMethodId(name, desc));
         mv.loadArgArray();
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.ENTRY,
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", ClassManipulator.ENTRY,
                 "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)V", false);
 
         mv.visitVarInsn(ALOAD, 0);
 
         // Do not allow argument modification : just reload arguments.
         mv.loadArgs();
-        mv.visitMethodInsn(INVOKESPECIAL, m_name, MethodCreator.PREFIX + name, desc, false);
+        mv.visitMethodInsn(INVOKESPECIAL, m_name, ClassManipulator.PREFIX + name, desc, false);
 
         if (returnType.getSort() != Type.VOID) {
             mv.visitVarInsn(returnType.getOpcode(ISTORE), result);
@@ -264,7 +251,7 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
 
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, m_name, "this$0", "L" + m_outer + ";");
-        mv.visitFieldInsn(GETFIELD, m_outer, MethodCreator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
+        mv.visitFieldInsn(GETFIELD, m_outer, ClassManipulator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(getMethodId(name, desc));
         if (returnType.getSort() != Type.VOID) {
@@ -274,7 +261,7 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
             mv.visitInsn(ACONST_NULL);
         }
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager",
-                MethodCreator.EXIT, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V", false);
+                ClassManipulator.EXIT, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V", false);
 
         mv.visitLabel(l1);
         Label l7 = new Label();
@@ -284,11 +271,11 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
         mv.visitVarInsn(ASTORE, exception);
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, m_name, "this$0", "L" + m_outer + ";");
-        mv.visitFieldInsn(GETFIELD, m_outer, MethodCreator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
+        mv.visitFieldInsn(GETFIELD, m_outer, ClassManipulator.IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(getMethodId(name, desc));
         mv.visitVarInsn(ALOAD, exception);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.ERROR,
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", ClassManipulator.ERROR,
                 "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Throwable;)V", false);
         mv.visitVarInsn(ALOAD, exception);
         mv.visitInsn(ATHROW);
@@ -337,7 +324,7 @@ public class InnerClassAdapter extends ClassVisitor implements Opcodes {
     /**
      * Gets the method descriptor for the specified name and descriptor.
      * The method descriptor is looked inside the
-     * {@link MethodCreator#m_visitedMethods}
+     * {@link ClassManipulator#m_visitedMethods}
      * @param name the name of the method
      * @param desc the descriptor of the method
      * @return the method descriptor or <code>null</code> if not found.

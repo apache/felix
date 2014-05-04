@@ -24,6 +24,7 @@ import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.util.CheckClassAdapter;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -118,9 +119,8 @@ public class Manipulator {
         if (!m_alreadyManipulated) {
             InputStream is2 = new ByteArrayInputStream(origin);
             ClassReader reader = new ClassReader(is2);
-            ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-            //CheckClassAdapter ch = new CheckClassAdapter(writer);
-            MethodCreator process = new MethodCreator(writer, this);
+            ClassWriter writer = new NoClassLoaderClassWriter(ClassWriter.COMPUTE_FRAMES);
+            ClassManipulator process = new ClassManipulator(new CheckClassAdapter(writer, false), this);
             if (m_version >= Opcodes.V1_6) {
                 reader.accept(process, ClassReader.EXPAND_FRAMES);
             } else {
@@ -262,7 +262,7 @@ public class Manipulator {
             InputStream is1 = new ByteArrayInputStream(bytecode);
 
             ClassReader cr = new ClassReader(is1);
-            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            ClassWriter cw = new NoClassLoaderClassWriter(ClassWriter.COMPUTE_FRAMES);
             InnerClassAdapter adapter = new InnerClassAdapter(inner, cw, m_className, this);
             if (m_version >= Opcodes.V1_6) {
                 cr.accept(adapter, ClassReader.EXPAND_FRAMES);
