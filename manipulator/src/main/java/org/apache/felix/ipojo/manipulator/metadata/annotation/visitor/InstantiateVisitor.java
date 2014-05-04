@@ -23,28 +23,31 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Parse the @Instantitate annotation.
- * @see org.apache.felix.ipojo.annotations.Instantiate
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * @see org.apache.felix.ipojo.annotations.Instantiate
  */
-public class InstantiateVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class InstantiateVisitor extends AnnotationVisitor {
 
     private Element instance = new Element("instance", "");
 
     private ComponentWorkbench workbench;
 
     public InstantiateVisitor(ComponentWorkbench workbench) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
     }
 
     /**
      * Visit an annotation attribute.
-     * @param name the attribute name
+     *
+     * @param name  the attribute name
      * @param value the attribute value
-     * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+     * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
      */
     public void visit(String name, Object value) {
         if (name.equals("name")) {
@@ -54,7 +57,8 @@ public class InstantiateVisitor extends EmptyVisitor implements AnnotationVisito
 
     /**
      * End of the visit. Creates the instance element.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+     *
+     * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
      */
     public void visitEnd() {
         // We set the instance's component attribute to the class name, if the component type has a custom name,

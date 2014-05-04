@@ -117,17 +117,17 @@ public class Manipulator {
     public byte[] manipulate(byte[] origin) throws IOException {
         if (!m_alreadyManipulated) {
             InputStream is2 = new ByteArrayInputStream(origin);
-            ClassReader cr0 = new ClassReader(is2);
-            ClassWriter cw0 = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-            //CheckClassAdapter ch = new CheckClassAdapter(cw0);
-            MethodCreator process = new MethodCreator(cw0, this);
+            ClassReader reader = new ClassReader(is2);
+            ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            //CheckClassAdapter ch = new CheckClassAdapter(writer);
+            MethodCreator process = new MethodCreator(writer, this);
             if (m_version >= Opcodes.V1_6) {
-                cr0.accept(process, ClassReader.EXPAND_FRAMES);
+                reader.accept(process, ClassReader.EXPAND_FRAMES);
             } else {
-                cr0.accept(process, 0);
+                reader.accept(process, 0);
             }
             is2.close();
-            return cw0.toByteArray();
+            return writer.toByteArray();
         } else {
             return origin;
         }

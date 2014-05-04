@@ -24,14 +24,15 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Parses the @Handler annotation.
- * @see org.apache.felix.ipojo.annotations.Handler
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * @see org.apache.felix.ipojo.annotations.Handler
  */
-public class HandlerVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class HandlerVisitor extends AnnotationVisitor {
 
     private Element handler = new Element("handler", "");
 
@@ -40,15 +41,17 @@ public class HandlerVisitor extends EmptyVisitor implements AnnotationVisitor {
     private Reporter reporter;
 
     public HandlerVisitor(ComponentWorkbench workbench, Reporter reporter) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
         this.reporter = reporter;
     }
 
     /**
      * Visit @Handler annotation attributes.
-     * @param name : annotation attribute name
+     *
+     * @param name  : annotation attribute name
      * @param value : annotation attribute value
-     * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+     * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
      */
     public void visit(String name, Object value) {
         if (name.equals("name")) {
@@ -72,7 +75,8 @@ public class HandlerVisitor extends EmptyVisitor implements AnnotationVisitor {
     /**
      * End of the visit.
      * Append to the "component" element computed attribute.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+     *
+     * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
      */
     public void visitEnd() {
 

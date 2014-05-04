@@ -24,18 +24,19 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.RequiresVi
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.EmptyVisitor;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public abstract class AbstractBindVisitor extends EmptyVisitor implements AnnotationVisitor {
+public abstract class AbstractBindVisitor extends AnnotationVisitor {
 
     protected ComponentWorkbench workbench;
     protected Action action;
 
     public AbstractBindVisitor(ComponentWorkbench workbench, Action action) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
         this.action = action;
     }
@@ -81,9 +82,9 @@ public abstract class AbstractBindVisitor extends EmptyVisitor implements Annota
     /**
      * Visit annotation's attributes.
      *
-     * @param name : annotation name
+     * @param name  : annotation name
      * @param value : annotation value
-     * @see org.objectweb.asm.commons.EmptyVisitor#visit(String, Object)
+     * @see org.objectweb.asm.AnnotationVisitor#visit(String, Object)
      */
     public void visit(String name, Object value) {
         if (name.equals("filter")) {
@@ -100,7 +101,7 @@ public abstract class AbstractBindVisitor extends EmptyVisitor implements Annota
         }
         if (name.equals("specification")) {
             // Detect whether it's an internal class name.
-            if (value.toString().startsWith("L")  && value.toString().endsWith(";")) {
+            if (value.toString().startsWith("L") && value.toString().endsWith(";")) {
                 Type type = Type.getType(value.toString());
                 m_specification = type.getClassName();
             } else {
@@ -134,7 +135,7 @@ public abstract class AbstractBindVisitor extends EmptyVisitor implements Annota
     @Override
     public void visitEnum(String name, String desc, String value) {
         if (name.equals("policy")) {
-            m_policy = RequiresVisitor.getPolicy(value.toString());
+            m_policy = RequiresVisitor.getPolicy(value);
         }
     }
 
@@ -157,32 +158,15 @@ public abstract class AbstractBindVisitor extends EmptyVisitor implements Annota
     }
 
     protected boolean completeExistingRequires(Element requires) {
-
-        if (!completeAttribute(requires, "specification", m_specification))
-            return false;
-
-        if (!completeAttribute(requires, "optional", m_optional))
-            return false;
-
-        if (!completeAttribute(requires, "aggregate", m_aggregate))
-            return false;
-
-        if (!completeAttribute(requires, "filter", m_filter))
-            return false;
-
-        if (!completeAttribute(requires, "policy", m_policy))
-            return false;
-
-        if (!completeAttribute(requires, "comparator", m_comparator))
-            return false;
-
-        if (!completeAttribute(requires, "from", m_from))
-            return false;
-
-        if(!completeAttribute(requires, "proxy", m_proxy))
-            return false;
-
-        return true;
+        return
+                completeAttribute(requires, "specification", m_specification)
+                        && completeAttribute(requires, "optional", m_optional)
+                        && completeAttribute(requires, "aggregate", m_aggregate)
+                        && completeAttribute(requires, "filter", m_filter)
+                        && completeAttribute(requires, "policy", m_policy)
+                        && completeAttribute(requires, "comparator", m_comparator)
+                        && completeAttribute(requires, "from", m_from)
+                        && completeAttribute(requires, "proxy", m_proxy);
     }
 
     private boolean completeAttribute(Element requires, String name, String value) {

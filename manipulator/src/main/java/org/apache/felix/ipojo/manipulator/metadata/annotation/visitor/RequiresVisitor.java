@@ -23,15 +23,15 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.EmptyVisitor;
 
 /**
  * AnnotationVisitor parsing the @Requires annotation.
  * @see org.apache.felix.ipojo.annotations.Requires
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class RequiresVisitor extends AnnotationVisitor {
 
 
     private ComponentWorkbench workbench;
@@ -106,6 +106,7 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
      * @param name : field name.
      */
     public RequiresVisitor(ComponentWorkbench workbench, String name) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
         this.m_field = name;
     }
@@ -188,7 +189,7 @@ public class RequiresVisitor extends EmptyVisitor implements AnnotationVisitor {
      * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
      */
     public void visitEnd() {
-        Element requires = null;
+        Element requires;
         if (m_id == null) {
             requires = workbench.getIds().get(m_field);
         } else {

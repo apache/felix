@@ -19,13 +19,6 @@
 
 package org.apache.felix.ipojo.manipulator.metadata.annotation.registry;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.alwaysTrue;
-
-import java.util.List;
-import java.util.regex.Pattern;
-
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.FieldGenericVisitor;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.generic.MethodGenericVisitor;
@@ -36,9 +29,13 @@ import org.apache.felix.ipojo.manipulator.spi.AnnotationVisitorFactory;
 import org.apache.felix.ipojo.manipulator.spi.BindingContext;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
+
+import java.util.List;
+import java.util.regex.Pattern;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.apache.felix.ipojo.manipulator.spi.helper.Predicates.alwaysTrue;
 
 /**
  * User: guillaume
@@ -61,25 +58,25 @@ public class LegacyGenericBindingRegistry extends CompletableBindingRegistry {
             binding.setFactory(new AnnotationVisitorFactory() {
                 // Need to build a new Element instance for each created visitor
                 public AnnotationVisitor newAnnotationVisitor(BindingContext context) {
-                    if (context.getNode() instanceof ClassNode) {
+                    if (context.getClassNode() != null) {
                         return new TypeGenericVisitor(context.getWorkbench(),
-                                                      Elements.buildElement(type));
-                    } else if (context.getNode() instanceof FieldNode) {
+                                Elements.buildElement(type));
+                    } else if (context.getFieldNode() != null) {
                         return new FieldGenericVisitor(context.getWorkbench(),
-                                                       Elements.buildElement(type),
-                                                       (FieldNode) context.getNode());
+                                Elements.buildElement(type),
+                                context.getFieldNode());
 
-                    } else if ((context.getNode() instanceof MethodNode) &&
+                    } else if ((context.getMethodNode() != null) &&
                             (context.getParameterIndex() == BindingContext.NO_INDEX)) {
                         return new MethodGenericVisitor(context.getWorkbench(),
-                                                        Elements.buildElement(type),
-                                                        (MethodNode) context.getNode());
+                                Elements.buildElement(type),
+                                context.getMethodNode());
                     } else {
                         // last case: method parameter annotation
                         return new ParameterGenericVisitor(context.getWorkbench(),
-                                                           Elements.buildElement(type),
-                                                           (MethodNode) context.getNode(),
-                                                           context.getParameterIndex());
+                                Elements.buildElement(type),
+                                context.getMethodNode(),
+                                context.getParameterIndex());
                     }
                 }
 

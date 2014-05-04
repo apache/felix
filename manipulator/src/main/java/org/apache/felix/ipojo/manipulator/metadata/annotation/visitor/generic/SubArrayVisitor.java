@@ -23,13 +23,13 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Eleme
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.EmptyVisitor;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class SubArrayVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class SubArrayVisitor extends AnnotationVisitor {
 
     /**
      * Parent element.
@@ -49,19 +49,22 @@ public class SubArrayVisitor extends EmptyVisitor implements AnnotationVisitor {
 
     /**
      * Constructor.
+     *
      * @param elem : element element.
      * @param name : attribute name.
      */
     public SubArrayVisitor(Element elem, String name) {
+        super(Opcodes.ASM5);
         m_elem = elem;
         m_name = name;
     }
 
     /**
      * Visit a 'simple' element of the visited array.
-     * @param name : null
+     *
+     * @param name  : null
      * @param value : element value.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visit(String, Object)
+     * @see org.objectweb.asm.AnnotationVisitor#visit(String, Object)
      */
     public void visit(String name, Object value) {
         if (m_acc == null) {
@@ -83,8 +86,9 @@ public class SubArrayVisitor extends EmptyVisitor implements AnnotationVisitor {
 
     /**
      * Visits an enumeration attribute.
-     * @param name the attribute name
-     * @param desc the enumeration descriptor
+     *
+     * @param name  the attribute name
+     * @param desc  the enumeration descriptor
      * @param value the attribute value
      */
     public void visitEnum(String name, String desc, String value) {
@@ -98,10 +102,11 @@ public class SubArrayVisitor extends EmptyVisitor implements AnnotationVisitor {
 
     /**
      * Visit an annotation element of the visited array.
+     *
      * @param name : null
      * @param desc : annotation to visit
      * @return the visitor which will visit the annotation
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitAnnotation(String, String)
+     * @see org.objectweb.asm.AnnotationVisitor#visitAnnotation(String, String)
      */
     public AnnotationVisitor visitAnnotation(String name, String desc) {
         // Sub annotations are map to sub-elements
@@ -112,7 +117,8 @@ public class SubArrayVisitor extends EmptyVisitor implements AnnotationVisitor {
 
     /**
      * End of the visit.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+     *
+     * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
      */
     public void visitEnd() {
         if (m_acc != null) {

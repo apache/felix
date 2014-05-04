@@ -146,8 +146,7 @@ public class MetaAnnotationBindingRegistry extends CompletableBindingRegistry {
                 (handler.getValue() == null)) {
             // No attributes specified, use annotation type as element's source
             element = Elements.buildElement(type);
-        } else if ((handler.getNamespace() == null) &&
-                (handler.getValue() != null)) {
+        } else if ((handler.getNamespace() == null)) {
             // Namespace attribute is omitted
             element = Elements.buildElement(handler.getValue());
         } else {

@@ -28,7 +28,7 @@ import org.objectweb.asm.tree.MethodNode;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ParameterPropertyVisitor extends MethodPropertyVisitor implements AnnotationVisitor {
+public class ParameterPropertyVisitor extends MethodPropertyVisitor {
 
     /**
      * If this is a parameter annotation, the index of the parameter.
@@ -54,7 +54,7 @@ public class ParameterPropertyVisitor extends MethodPropertyVisitor implements A
      * End of the visit.
      * Append the computed element to the element element.
      *
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+     * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
      */
     public void visitEnd() {
         Element prop = visitEndCommon();

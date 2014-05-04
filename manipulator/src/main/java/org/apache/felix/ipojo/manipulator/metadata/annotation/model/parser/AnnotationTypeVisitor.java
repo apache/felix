@@ -23,17 +23,19 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.model.AnnotationTy
 import org.apache.felix.ipojo.manipulator.metadata.annotation.model.parser.replay.AnnotationVisitorPlayback;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.EmptyVisitor;
 
 /**
- * User: guillaume
- * Date: 01/07/13
- * Time: 15:59
+ *
  */
-public class AnnotationTypeVisitor extends EmptyVisitor implements ClassVisitor {
+public class AnnotationTypeVisitor extends ClassVisitor {
 
     private AnnotationType annotationType;
+
+    public AnnotationTypeVisitor() {
+        super(Opcodes.ASM5);
+    }
 
     @Override
     public void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {

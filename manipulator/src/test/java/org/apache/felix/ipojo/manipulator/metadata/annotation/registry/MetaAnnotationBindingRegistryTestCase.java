@@ -54,7 +54,7 @@ import junit.framework.TestCase;
  */
 public class MetaAnnotationBindingRegistryTestCase extends TestCase {
 
-    public static final String DESCRIPTOR = "[unknown;";
+    public static final String DESCRIPTOR = "[Lunknown;";
     public static final Type TYPE = Type.getType(DESCRIPTOR);
 
     @Mock

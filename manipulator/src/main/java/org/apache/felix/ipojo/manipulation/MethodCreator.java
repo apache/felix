@@ -22,7 +22,6 @@ package org.apache.felix.ipojo.manipulation;
 import java.util.*;
 
 import org.apache.felix.ipojo.manipulation.ClassChecker.AnnotationDescriptor;
-import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
@@ -31,14 +30,13 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.tree.LocalVariableNode;
-import org.objectweb.asm.tree.MethodNode;
 
 /**
  * iPOJO Class Adapter.
  * This class adapt the visited class to link the class with the container.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class MethodCreator extends ClassAdapter implements Opcodes {
+public class MethodCreator extends ClassVisitor implements Opcodes {
 
     /**
      * Instance Manager Field.
@@ -139,11 +137,11 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
     /**
      * Constructor.
-     * @param arg0 : class visitor.
+     * @param visitor : class visitor.
      * @param manipulator : the manipulator having analyzed the class.
      */
-    public MethodCreator(ClassVisitor arg0, Manipulator manipulator) {
-        super(arg0);
+    public MethodCreator(ClassVisitor visitor, Manipulator manipulator) {
+        super(Opcodes.ASM5, visitor);
         m_manipulator = manipulator;
         m_fields = manipulator.getFields().keySet();
         m_visitedMethods = manipulator.getMethods();
@@ -160,7 +158,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * @param signature : signature
      * @param superName : parent class
      * @param interfaces : implemented interface
-     * @see org.objectweb.asm.ClassAdapter#visit(int, int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
+     * @see org.objectweb.asm.ClassVisitor#visit(int, int, java.lang.String, java.lang.String, java.lang.String,
+     * java.lang.String[])
      */
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         m_owner = name;
@@ -182,7 +181,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * @param signature : signature
      * @param exceptions : declared exceptions.
      * @return the MethodVisitor wich will visit the method code.
-     * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
+     * @see org.objectweb.asm.ClassVisitor#visitMethod(int, java.lang.String, java.lang.String, java.lang.String,
+     * java.lang.String[])
      */
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         // Avoid manipulating special methods
@@ -281,11 +281,11 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
             if (type.getSort() == Type.ARRAY) {
                 String gDesc = "()" + desc;
-                createArrayGetter(name, gDesc, type);
+                createArrayGetter(name, gDesc);
 
                 // Generates setter method
                 String sDesc = "(" + desc + ")V";
-                createArraySetter(name, sDesc, type);
+                createArraySetter(name, sDesc);
 
             } else {
                 // Generate the getter method
@@ -331,28 +331,24 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
          mv.visitVarInsn(ALOAD, 0);
          mv.visitInsn(ACONST_NULL);
          mv.loadArgs();
-         mv.visitMethodInsn(INVOKESPECIAL, m_owner, "<init>", newDesc);
+         mv.visitMethodInsn(INVOKESPECIAL, m_owner, "<init>", newDesc, false);
          mv.visitInsn(RETURN);
          Label stop = new Label();
          mv.visitLabel(stop);
 
          // Move annotations
          if (annotations != null) {
-             for (int i = 0; i < annotations.size(); i++) {
-                 AnnotationDescriptor ad = annotations.get(i);
+             for (AnnotationDescriptor ad : annotations) {
                  ad.visitAnnotation(mv);
              }
          }
 
          // Move parameter annotations if any
          if (paramAnnotations != null  && ! paramAnnotations.isEmpty()) {
-             Iterator<Integer> ids = paramAnnotations.keySet().iterator();
-             while(ids.hasNext()) {
-                 Integer id = ids.next();
+             for (Integer id : paramAnnotations.keySet()) {
                  List<AnnotationDescriptor> ads = paramAnnotations.get(id);
-                 for (int i = 0; i < ads.size(); i++) {
-                     AnnotationDescriptor ad = ads.get(i);
-                     ad.visitParameterAnnotation(id.intValue(), mv);
+                 for (AnnotationDescriptor ad : ads) {
+                     ad.visitParameterAnnotation(id, mv);
                  }
              }
          }
@@ -404,7 +400,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
         // Compute result and exception stack location
         int result = -1;
-        int exception = -1;
+        int exception;
 
         //int arguments = mv.newLocal(Type.getType((new Object[0]).getClass()));
 
@@ -428,7 +424,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
         mv.visitVarInsn(ALOAD, 0);
         mv.loadArgs();
-        mv.visitMethodInsn(INVOKESPECIAL, m_owner, PREFIX + name, desc);
+        mv.visitMethodInsn(INVOKESPECIAL, m_owner, PREFIX + name, desc, false);
         mv.visitInsn(returnType.getOpcode(IRETURN));
 
         // end of the non intercepted method invocation.
@@ -440,13 +436,14 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(generateMethodId(name, desc));
         mv.loadArgArray();
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", ENTRY, "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)V");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", ENTRY,
+                "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)V", false);
 
         mv.visitVarInsn(ALOAD, 0);
 
         // Do not allow argument modification : just reload arguments.
         mv.loadArgs();
-        mv.visitMethodInsn(INVOKESPECIAL, m_owner, PREFIX + name, desc);
+        mv.visitMethodInsn(INVOKESPECIAL, m_owner, PREFIX + name, desc, false);
 
         if (returnType.getSort() != Type.VOID) {
             mv.visitVarInsn(returnType.getOpcode(ISTORE), result);
@@ -462,7 +459,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         } else {
             mv.visitInsn(ACONST_NULL);
         }
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", EXIT, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", EXIT,
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V", false);
 
         mv.visitLabel(l1);
         Label l7 = new Label();
@@ -475,7 +473,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(generateMethodId(name, desc));
         mv.visitVarInsn(ALOAD, exception);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", ERROR, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Throwable;)V");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", ERROR,
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Throwable;)V", false);
         mv.visitVarInsn(ALOAD, exception);
         mv.visitInsn(ATHROW);
 
@@ -494,21 +493,17 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
         // Move annotations
         if (annotations != null) {
-            for (int i = 0; i < annotations.size(); i++) {
-                AnnotationDescriptor ad = annotations.get(i);
+            for (AnnotationDescriptor ad : annotations) {
                 ad.visitAnnotation(mv);
             }
         }
 
         // Move parameter annotations
         if (paramAnnotations != null  && ! paramAnnotations.isEmpty()) {
-            Iterator<Integer> ids = paramAnnotations.keySet().iterator();
-            while(ids.hasNext()) {
-                Integer id = ids.next();
+            for (Integer id : paramAnnotations.keySet()) {
                 List<AnnotationDescriptor> ads = paramAnnotations.get(id);
-                for (int i = 0; i < ads.size(); i++) {
-                    AnnotationDescriptor ad = ads.get(i);
-                    ad.visitParameterAnnotation(id.intValue(), mv);
+                for (AnnotationDescriptor ad : ads) {
+                    ad.visitParameterAnnotation(id, mv);
                 }
             }
         }
@@ -638,17 +633,15 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         // Add the POJO interface to the interface list
         // Check that the POJO interface is not already in the list
         boolean found = false;
-        for (int i = 0; i < interfaces.length; i++) {
-            if (interfaces[i].equals(POJO)) {
+        for (String anInterface : interfaces) {
+            if (anInterface.equals(POJO)) {
                 found = true;
             }
         }
         String[] itfs;
         if (!found) {
             itfs = new String[interfaces.length + 1];
-            for (int i = 0; i < interfaces.length; i++) {
-                itfs[i] = interfaces[i];
-            }
+            System.arraycopy(interfaces, 0, itfs, 0, interfaces.length);
             itfs[interfaces.length] = POJO;
         } else {
             itfs = interfaces;
@@ -657,6 +650,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         // If version = 1.7, use 1.6 if the ipojo.downgrade.classes system property is either
         // not set of set to true.
         int theVersion = version;
+        //TODO HACK HERE !!!!
         String downgrade = System.getProperty("ipojo.downgrade.classes");
         if ((downgrade == null  || "true".equals(downgrade))  && version == Opcodes.V1_7) {
             theVersion = Opcodes.V1_6;
@@ -668,7 +662,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
     /**
      * Visit end.
      * Create helper methods.
-     * @see org.objectweb.asm.ClassAdapter#visitEnd()
+     * @see org.objectweb.asm.ClassVisitor#visitEnd()
      */
     public void visitEnd() {
         // Create the component manager setter method
@@ -700,13 +694,13 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
         // Super call
         mv.visitVarInsn(ALOAD, 0);
-        mv.visitMethodInsn(INVOKESPECIAL, m_superclass, "<init>", "()V");
+        mv.visitMethodInsn(INVOKESPECIAL, m_superclass, "<init>", "()V", false);
 
         // Call set instance manager
         mv.visitVarInsn(ALOAD, 0);
         mv.visitVarInsn(ALOAD, 1);
         mv.visitMethodInsn(INVOKEVIRTUAL, m_owner, "_setInstanceManager",
-                "(Lorg/apache/felix/ipojo/InstanceManager;)V");
+                "(Lorg/apache/felix/ipojo/InstanceManager;)V", false);
 
         mv.visitInsn(RETURN);
         mv.visitMaxs(0, 0);
@@ -733,18 +727,17 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, m_owner, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", "getRegistredFields", "()Ljava/util/Set;");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", "getRegistredFields",
+                "()Ljava/util/Set;", false);
         mv.visitVarInsn(ASTORE, 2);
 
         mv.visitVarInsn(ALOAD, 2);
         Label endif = new Label();
         mv.visitJumpInsn(IFNULL, endif);
-        Iterator<String> it = m_fields.iterator();
-        while (it.hasNext()) {
-            String field = it.next();
+        for (String field : m_fields) {
             mv.visitVarInsn(ALOAD, 2);
             mv.visitLdcInsn(field);
-            mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "contains", "(Ljava/lang/Object;)Z");
+            mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "contains", "(Ljava/lang/Object;)Z", true);
             Label l3 = new Label();
             mv.visitJumpInsn(IFEQ, l3);
             mv.visitVarInsn(ALOAD, 0);
@@ -756,19 +749,19 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
 
         mv.visitVarInsn(ALOAD, 0);
         mv.visitFieldInsn(GETFIELD, m_owner, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", "getRegistredMethods", "()Ljava/util/Set;");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", "getRegistredMethods",
+                "()Ljava/util/Set;", false);
         mv.visitVarInsn(ASTORE, 2);
 
         mv.visitVarInsn(ALOAD, 2);
         Label endif2 = new Label();
         mv.visitJumpInsn(IFNULL, endif2);
 
-        for (int i = 0; i < m_methods.size(); i++) {
-            String methodId = m_methods.get(i);
+        for (String methodId : m_methods) {
             if (!methodId.equals("<init>")) {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitLdcInsn(methodId);
-                mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "contains", "(Ljava/lang/Object;)Z");
+                mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "contains", "(Ljava/lang/Object;)Z", true);
                 Label l3 = new Label();
                 mv.visitJumpInsn(IFEQ, l3);
                 mv.visitVarInsn(ALOAD, 0);
@@ -802,9 +795,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * Create a getter method for an array.
      * @param name : field name
      * @param desc : method description
-     * @param type : contained type (inside the array)
      */
-    private void createArraySetter(String name, String desc, Type type) {
+    private void createArraySetter(String name, String desc) {
         MethodVisitor mv = cv.visitMethod(0, "__set" + name, desc, null, null);
         mv.visitCode();
 
@@ -829,7 +821,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(name);
         mv.visitVarInsn(ALOAD, 1);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", SET, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", SET,
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V", false);
 
         mv.visitInsn(RETURN);
 
@@ -842,9 +835,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
      * Create a setter method for an array.
      * @param name : field name
      * @param desc : method description
-     * @param type : contained type (inside the array)
      */
-    private void createArrayGetter(String name, String desc, Type type) {
+    private void createArrayGetter(String name, String desc) {
         String methodName = "__get" + name;
         MethodVisitor mv = cv.visitMethod(0, methodName, desc, null, null);
         mv.visitCode();
@@ -864,7 +856,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
         mv.visitFieldInsn(GETFIELD, m_owner, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(name);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", GET,
+                "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", false);
         mv.visitTypeInsn(CHECKCAST, internalType);
         mv.visitInsn(ARETURN);
 
@@ -912,7 +905,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitFieldInsn(GETFIELD, m_owner, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitLdcInsn(name);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager",
+                        GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", false);
                 mv.visitVarInsn(ASTORE, 1);
 
                 mv.visitVarInsn(ALOAD, 1);
@@ -920,7 +914,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitVarInsn(ASTORE, 2);
 
                 mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(INVOKEVIRTUAL, boxingType, unboxingMethod, "()" + internalName);
+                mv.visitMethodInsn(INVOKEVIRTUAL, boxingType, unboxingMethod, "()" + internalName, false);
                 mv.visitInsn(type.getOpcode(IRETURN));
                 break;
 
@@ -944,7 +938,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitFieldInsn(GETFIELD, m_owner, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitLdcInsn(name);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager",
+                        GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", false);
                 mv.visitVarInsn(ASTORE, 1);
 
                 mv.visitVarInsn(ALOAD, 1);
@@ -952,7 +947,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitVarInsn(ASTORE, 2);
 
                 mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(INVOKEVIRTUAL, boxingType, unboxingMethod, "()" + internalName);
+                mv.visitMethodInsn(INVOKEVIRTUAL, boxingType, unboxingMethod, "()" + internalName, false);
                 mv.visitInsn(LRETURN);
 
                 break;
@@ -977,7 +972,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitFieldInsn(GETFIELD, m_owner, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitLdcInsn(name);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager",
+                        GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", false);
                 mv.visitVarInsn(ASTORE, 1);
 
                 mv.visitVarInsn(ALOAD, 1);
@@ -985,7 +981,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitVarInsn(ASTORE, 2);
 
                 mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(INVOKEVIRTUAL, boxingType, unboxingMethod, "()" + internalName);
+                mv.visitMethodInsn(INVOKEVIRTUAL, boxingType, unboxingMethod, "()" + internalName, false);
                 mv.visitInsn(DRETURN);
 
                 break;
@@ -1010,7 +1006,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitFieldInsn(GETFIELD, m_owner, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitLdcInsn(name);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager",
+                        GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", false);
                 mv.visitVarInsn(ASTORE, 1);
 
                 mv.visitVarInsn(ALOAD, 1);
@@ -1018,7 +1015,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitVarInsn(ASTORE, 2);
 
                 mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(INVOKEVIRTUAL, boxingType, unboxingMethod, "()" + internalName);
+                mv.visitMethodInsn(INVOKEVIRTUAL, boxingType, unboxingMethod, "()" + internalName, false);
                 mv.visitInsn(FRETURN);
 
                 break;
@@ -1039,7 +1036,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitFieldInsn(GETFIELD, m_owner, IM_FIELD, "Lorg/apache/felix/ipojo/InstanceManager;");
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitLdcInsn(name);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager",
+                        GET, "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", false);
                 mv.visitTypeInsn(CHECKCAST, type.getInternalName());
                 mv.visitInsn(ARETURN);
 
@@ -1091,7 +1089,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitTypeInsn(NEW, boxingType);
                 mv.visitInsn(DUP);
                 mv.visitVarInsn(type.getOpcode(ILOAD), 1);
-                mv.visitMethodInsn(INVOKESPECIAL, boxingType, "<init>", "(" + internalName + ")V");
+                mv.visitMethodInsn(INVOKESPECIAL, boxingType, "<init>", "(" + internalName + ")V", false);
                 mv.visitVarInsn(ASTORE, 2);
 
                 Label l2 = new Label();
@@ -1101,7 +1099,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitLdcInsn(name);
                 mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", SET, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", SET,
+                        "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V", false);
 
                 Label l3 = new Label();
                 mv.visitLabel(l3);
@@ -1130,7 +1129,7 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitTypeInsn(NEW, boxingType);
                 mv.visitInsn(DUP);
                 mv.visitVarInsn(type.getOpcode(ILOAD), 1);
-                mv.visitMethodInsn(INVOKESPECIAL, boxingType, "<init>", "(" + internalName + ")V");
+                mv.visitMethodInsn(INVOKESPECIAL, boxingType, "<init>", "(" + internalName + ")V", false);
                 mv.visitVarInsn(ASTORE, 3); // Double space
 
                 l2 = new Label();
@@ -1140,7 +1139,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitLdcInsn(name);
                 mv.visitVarInsn(ALOAD, 3);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", SET, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager",
+                        SET, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V", false);
 
                 l3 = new Label();
                 mv.visitLabel(l3);
@@ -1164,7 +1164,8 @@ public class MethodCreator extends ClassAdapter implements Opcodes {
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitLdcInsn(name);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", SET, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", SET,
+                        "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V", false);
 
                 mv.visitInsn(RETURN);
                 break;

@@ -22,21 +22,27 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation.model.discovery;
 import org.apache.felix.ipojo.annotations.HandlerBinding;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.model.AnnotationDiscovery;
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.EmptyVisitor;
 
 /**
- * User: guillaume
- * Date: 09/07/13
- * Time: 14:52
+ * The annotation visitor responsible for parsing the {@link org.apache.felix.ipojo.annotations.HandlerBinding}
+ * annotation.
  */
-public class HandlerBindingDiscovery extends EmptyVisitor implements AnnotationDiscovery {
+public class HandlerBindingDiscovery extends AnnotationVisitor implements AnnotationDiscovery {
 
     public static final String HANDLER_BINDING_DESCRIPTOR = Type.getType(HandlerBinding.class).getDescriptor();
 
     private boolean m_handlerBinding = false;
     private String m_value = null;
     private String m_namespace = null;
+
+    /**
+     * Constructs a new {@link org.objectweb.asm.AnnotationVisitor}.
+     */
+    public HandlerBindingDiscovery() {
+        super(Opcodes.ASM5);
+    }
 
     public AnnotationVisitor visitAnnotation(final String desc) {
         if (HANDLER_BINDING_DESCRIPTOR.equals(desc)) {

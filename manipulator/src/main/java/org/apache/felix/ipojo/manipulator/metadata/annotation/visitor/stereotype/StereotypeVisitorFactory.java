@@ -26,9 +26,6 @@ import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
 
 /**
 * User: guillaume
@@ -43,14 +40,14 @@ public class StereotypeVisitorFactory implements AnnotationVisitorFactory {
     }
 
     public AnnotationVisitor newAnnotationVisitor(BindingContext context) {
-        if (context.getNode() instanceof ClassNode) {
+        if (context.getClassNode() != null) {
             return new TypeStereotypeVisitor((ClassVisitor) context.getVisitor(),
                                              m_annotationType);
-        } else if (context.getNode() instanceof FieldNode) {
+        } else if (context.getFieldNode() != null) {
             return new FieldStereotypeVisitor((FieldVisitor) context.getVisitor(),
                                               m_annotationType);
 
-        } else if ((context.getNode() instanceof MethodNode) &&
+        } else if ((context.getMethodNode() != null) &&
                 (context.getParameterIndex() == BindingContext.NO_INDEX)) {
             return new MethodStereotypeVisitor((MethodVisitor) context.getVisitor(),
                                                m_annotationType);

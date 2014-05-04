@@ -23,27 +23,28 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Parses the @Controller annotation.
  * @see org.apache.felix.ipojo.annotations.Controller
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ControllerVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class ControllerVisitor extends AnnotationVisitor {
 
     private ComponentWorkbench workbench;
 
     private String field;
 
     public ControllerVisitor(ComponentWorkbench workbench, String field) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
         this.field = field;
     }
 
     /**
      * Visit @Handler annotation attributes.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visit(String, Object)
+     * @see org.objectweb.asm.AnnotationVisitor#visit(String, Object)
      */
     public void visitEnd() {
         Element controller = new Element("controller", "");
