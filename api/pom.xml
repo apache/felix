@@ -25,6 +25,9 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>bundle</packaging>
+    <properties>
+        <asm.version>5.0.2</asm.version>
+    </properties>
     <artifactId>org.apache.felix.ipojo.api</artifactId>
     <version>1.11.3-SNAPSHOT</version>
     <name>Apache Felix iPOJO API</name>
@@ -60,9 +63,9 @@
                         <Export-Package>
                             org.apache.felix.ipojo.api,
                             org.apache.felix.ipojo.api.composite,
-                            org.objectweb.asm.commons;version=3.3.1;-split-package:=merge-last,
-                            org.objectweb.asm;version=3.3.1;-split-package:=merge-last,
-                            org.objectweb.asm.signature;version=3.3.1;-split-package:=merge-last
+                            org.objectweb.asm.commons;version=${asm.version};-split-package:=merge-last,
+                            org.objectweb.asm;version=${asm.version};-split-package:=merge-last,
+                            org.objectweb.asm.signature;version=${asm.version};-split-package:=merge-last
                         </Export-Package>
                         <Private-Package>
                             org.objectweb.asm.commons,

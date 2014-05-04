@@ -92,12 +92,12 @@
             <version>1.11.3-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>asm</groupId>
+            <groupId>org.ow2.asm</groupId>
             <artifactId>asm-all</artifactId>
-            <version>3.3.1</version>
+            <version>5.0.2</version>
             <exclusions>
                 <exclusion>
-                    <groupId>asm</groupId>
+                    <groupId>org.ow2.asm</groupId>
                     <artifactId>asm-tree</artifactId>
                 </exclusion>
             </exclusions>
@@ -204,7 +204,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-ipojo-plugin</artifactId>
-                <version>1.11.1</version>
+                <version>1.11.3-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <goals>

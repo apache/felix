@@ -20,8 +20,6 @@
 package org.apache.felix.ipojo.runtime.core.test.declaration;
 
 import org.apache.felix.ipojo.IPojoFactory;
-//import org.apache.felix.ipojo.api.PrimitiveComponentType;
-//import org.apache.felix.ipojo.api.Service;
 import org.apache.felix.ipojo.extender.DeclarationBuilderService;
 import org.apache.felix.ipojo.extender.DeclarationHandle;
 import org.apache.felix.ipojo.extender.ExtensionDeclaration;
@@ -36,12 +34,7 @@ import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
 import static java.lang.String.format;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.List;
+import static junit.framework.Assert.*;
 
 public class TestDeclarationBuilderService extends Common {
 
@@ -70,7 +63,11 @@ public class TestDeclarationBuilderService extends Common {
         assertFalse(handle.getStatus().isBound());
         handle.publish();
 
-        osgiHelper.waitForService(HelloService.class, null, 1000);
+        // This test has been already ssen as failed.
+        HelloService hs = osgiHelper.waitForService(HelloService.class, "(factory.name=org.apache.felix.ipojo.runtime" +
+                ".core.test.components.FrenchHelloService)", 1000);
+        assertNotNull(hs);
+        System.out.println("Status: " + handle.getStatus().isBound());
 
         assertTrue(handle.getStatus().isBound());
         handle.retract();
