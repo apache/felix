@@ -71,7 +71,8 @@
                             org.objectweb.asm.commons,
                             org.objectweb.asm.signature,
                             org.objectweb.asm,
-                            org.objectweb.asm.tree,
+                            org.objectweb.asm.tree*,
+                            org.objectweb.asm.util,
                             org.apache.felix.ipojo.manipulation*,
                             org.apache.felix.ipojo.manipulator*
                         </Private-Package>
@@ -123,11 +124,6 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
             <version>1.11.3-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>asm</groupId>
-            <artifactId>asm-all</artifactId>
-            <version>3.3.1</version>
         </dependency>
     </dependencies>
 </project>
