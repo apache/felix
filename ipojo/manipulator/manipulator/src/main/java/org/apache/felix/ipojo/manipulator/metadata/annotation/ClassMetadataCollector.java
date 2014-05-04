@@ -23,11 +23,7 @@ import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.BindingRegistry;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.*;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -35,7 +31,7 @@ import org.objectweb.asm.tree.MethodNode;
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ClassMetadataCollector extends EmptyVisitor {
+public class ClassMetadataCollector extends ClassVisitor {
 
     /**
      * Binding's registry.
@@ -62,6 +58,7 @@ public class ClassMetadataCollector extends EmptyVisitor {
     private Element instanceMetadata;
 
     public ClassMetadataCollector(BindingRegistry registry, Reporter reporter) {
+        super(Opcodes.ASM5);
         this.registry = registry;
         this.reporter = reporter;
         node = new ClassNode();
@@ -69,6 +66,7 @@ public class ClassMetadataCollector extends EmptyVisitor {
 
     /**
      * Build metadata. May be {@literal null} if no "component type" was found.
+     *
      * @return Build metadata. May be {@literal null} if no "component type" was found.
      */
     public Element getComponentMetadata() {
@@ -77,6 +75,7 @@ public class ClassMetadataCollector extends EmptyVisitor {
 
     /**
      * Build instance metadata. May be {@literal null} if no "component type" was found.
+     *
      * @return Build metadata. May be {@literal null} if no "component type" was found.
      */
     public Element getInstanceMetadata() {
@@ -92,10 +91,11 @@ public class ClassMetadataCollector extends EmptyVisitor {
     /**
      * Visit class annotations.
      * This method detects @component and @provides annotations.
-     * @param desc : annotation descriptor.
+     *
+     * @param desc    : annotation descriptor.
      * @param visible : is the annotation visible at runtime.
      * @return the annotation visitor.
-     * @see org.objectweb.asm.ClassAdapter#visitAnnotation(java.lang.String, boolean)
+     * @see org.objectweb.asm.ClassVisitor#visitAnnotation(java.lang.String, boolean)
      */
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
 
@@ -110,13 +110,15 @@ public class ClassMetadataCollector extends EmptyVisitor {
     /**
      * Visit a field.
      * Call the field collector visitor.
-     * @param access : field access.
-     * @param name : field name
-     * @param desc : field descriptor
+     *
+     * @param access    : field access.
+     * @param name      : field name
+     * @param desc      : field descriptor
      * @param signature : field signature
-     * @param value : field value (static field only)
+     * @param value     : field value (static field only)
      * @return the field visitor.
-     * @see org.objectweb.asm.ClassAdapter#visitField(int, java.lang.String, java.lang.String, java.lang.String, java.lang.Object)
+     * @see org.objectweb.asm.ClassVisitor#visitField(int, java.lang.String, java.lang.String, java.lang.String,
+     * java.lang.Object)
      */
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
         return new FieldMetadataCollector(workbench, new FieldNode(access, name, desc, signature, value));
@@ -125,13 +127,14 @@ public class ClassMetadataCollector extends EmptyVisitor {
     /**
      * Visit a method.
      * Call the method collector visitor.
-     * @param access : method access
-     * @param name : method name
-     * @param desc : method descriptor
-     * @param signature : method signature
+     *
+     * @param access     : method access
+     * @param name       : method name
+     * @param desc       : method descriptor
+     * @param signature  : method signature
      * @param exceptions : method exceptions
      * @return the Method Visitor.
-     * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
+     * @see org.objectweb.asm.ClassVisitor#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
      */
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         return new MethodMetadataCollector(workbench, new MethodNode(access, name, desc, signature, exceptions), reporter);
@@ -139,7 +142,8 @@ public class ClassMetadataCollector extends EmptyVisitor {
 
     /**
      * End of the visit : compute final elements.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+     *
+     * @see org.objectweb.asm.ClassVisitor#visitEnd()
      */
     @Override
     public void visitEnd() {
@@ -153,8 +157,9 @@ public class ClassMetadataCollector extends EmptyVisitor {
                     // That means that there is a missing 'component type' annotation
 
                     reporter.warn("Class %s has not been marked as a component type (no @Component, @Handler, " +
-                                          "...). It will be ignored by the iPOJO manipulator.",
-                                  workbench.getType().getClassName());
+                                    "...). It will be ignored by the iPOJO manipulator.",
+                            workbench.getType().getClassName()
+                    );
                     return;
                 } // else: no root and no elements
                 return;
@@ -165,7 +170,7 @@ public class ClassMetadataCollector extends EmptyVisitor {
 
             // If we have an instance declared and the component metadata has a name, we update the component's attribute
             // of the instance (https://issues.apache.org/jira/browse/FELIX-4052).
-            if (componentMetadata != null  && componentMetadata.containsAttribute("name")  && instanceMetadata != null) {
+            if (componentMetadata != null && componentMetadata.containsAttribute("name") && instanceMetadata != null) {
                 // Update the component attribute
                 instanceMetadata.addAttribute(new Attribute("component", componentMetadata.getAttribute("name")));
             }

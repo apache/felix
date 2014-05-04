@@ -224,12 +224,12 @@ public class InnerClassAdapterTest {
         boolean found = false;
         Constructor cst = null;
         Constructor[] csts = cl.getDeclaredConstructors();
-        for (int i = 0; i < csts.length; i++) {
-            System.out.println(Arrays.asList(csts[i].getParameterTypes()));
-            if (csts[i].getParameterTypes().length == 1 &&
-                    csts[i].getParameterTypes()[0].equals(InstanceManager.class)) {
+        for (Constructor cst2 : csts) {
+            System.out.println(Arrays.asList(cst2.getParameterTypes()));
+            if (cst2.getParameterTypes().length == 1 &&
+                    cst2.getParameterTypes()[0].equals(InstanceManager.class)) {
                 found = true;
-                cst = csts[i];
+                cst = cst2;
             }
         }
         Assert.assertTrue(found);

@@ -39,9 +39,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>asm</groupId>
+      <groupId>org.ow2.asm</groupId>
       <artifactId>asm-all</artifactId>
-      <version>3.3.1</version>
+      <version>5.0.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.felix</groupId>

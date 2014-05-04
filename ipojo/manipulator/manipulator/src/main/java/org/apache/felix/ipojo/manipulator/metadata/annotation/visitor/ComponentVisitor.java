@@ -24,14 +24,14 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Parse the @Component annotation.
  * @see org.apache.felix.ipojo.annotations.Component
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ComponentVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class ComponentVisitor extends AnnotationVisitor {
 
     private Reporter reporter;
 
@@ -45,6 +45,7 @@ public class ComponentVisitor extends EmptyVisitor implements AnnotationVisitor 
     private ComponentWorkbench workbench;
 
     public ComponentVisitor(ComponentWorkbench workbench, Reporter reporter) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
         this.reporter = reporter;
     }
@@ -53,7 +54,7 @@ public class ComponentVisitor extends EmptyVisitor implements AnnotationVisitor 
      * Visit @Component annotation attribute.
      * @param name attribute name
      * @param value attribute value
-     * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+     * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
      */
     public void visit(String name, Object value) {
         if (name.equals("public_factory")  || name.equals("publicFactory")) {
@@ -115,7 +116,7 @@ public class ComponentVisitor extends EmptyVisitor implements AnnotationVisitor 
     /**
      * End of the visit.
      * Append to the "component" element computed attribute.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+     * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
      */
     public void visitEnd() {
 

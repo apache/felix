@@ -215,6 +215,12 @@
             <artifactId>tinybundles-ipojo</artifactId>
             <version>0.3.0</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>asm</groupId>
+                    <artifactId>asm-all</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

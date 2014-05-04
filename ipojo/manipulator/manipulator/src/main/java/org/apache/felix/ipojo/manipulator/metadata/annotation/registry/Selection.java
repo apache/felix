@@ -30,7 +30,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MemberNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.lang.annotation.ElementType;
@@ -47,7 +46,9 @@ public class Selection {
     private BindingRegistry registry;
     private ComponentWorkbench workbench;
     private Reporter reporter;
-    private MemberNode node;
+    private FieldNode field;
+    private MethodNode method;
+    private ClassNode clazz;
     private int index = BindingContext.NO_INDEX;
     private String annotation;
     private ElementType elementType = null;
@@ -61,21 +62,21 @@ public class Selection {
 
     public Selection field(FieldVisitor visitor, FieldNode node) {
         this.visitor = visitor;
-        this.node = node;
+        this.field = node;
         this.elementType = ElementType.FIELD;
         return this;
     }
 
     public Selection method(MethodVisitor visitor, MethodNode node) {
         this.visitor = visitor;
-        this.node = node;
+        this.method = node;
         this.elementType = ElementType.METHOD;
         return this;
     }
 
     public Selection type(ClassVisitor visitor, ClassNode node) {
         this.visitor = visitor;
-        this.node = node;
+        this.clazz = node;
         this.elementType = ElementType.TYPE;
         return this;
     }
@@ -83,7 +84,7 @@ public class Selection {
     public Selection parameter(MethodVisitor visitor, MethodNode node, int index) {
         this.visitor = visitor;
         this.index = index;
-        this.node = node;
+        this.method = node;
         this.elementType = ElementType.PARAMETER;
         return this;
     }
@@ -110,8 +111,21 @@ public class Selection {
     }
 
     private List<AnnotationVisitor> list() {
+        BindingContext context;
 
-        BindingContext context = new BindingContext(workbench, reporter, Type.getType(annotation), node, elementType, index, visitor);
+        if (elementType == ElementType.FIELD) {
+            context = new BindingContext(workbench, reporter, Type.getType(annotation), field,
+                    elementType, index, visitor);
+        } else if (elementType == ElementType.TYPE) {
+            context = new BindingContext(workbench, reporter, Type.getType(annotation), clazz,
+                    elementType, index, visitor);
+        } else {
+            // Parameter of method.
+            context = new BindingContext(workbench, reporter, Type.getType(annotation), method,
+                    elementType, index, visitor);
+        }
+
+
         List<Binding> predicates = registry.getBindings(annotation);
 
         List<AnnotationVisitor> visitors = new ArrayList<AnnotationVisitor>();

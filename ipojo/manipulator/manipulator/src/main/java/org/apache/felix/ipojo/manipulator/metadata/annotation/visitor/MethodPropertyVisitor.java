@@ -22,14 +22,14 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.Opcodes;
 
 import static org.apache.felix.ipojo.manipulator.metadata.annotation.visitor.util.Names.computeEffectiveMethodName;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class MethodPropertyVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class MethodPropertyVisitor extends AnnotationVisitor {
 
     /**
      * Parent element.
@@ -73,6 +73,7 @@ public class MethodPropertyVisitor extends EmptyVisitor implements AnnotationVis
      * @param method : attached method.
      */
     public MethodPropertyVisitor(Element parent, String method) {
+        super(Opcodes.ASM5);
         m_parent = parent;
         m_method = method;
     }
@@ -82,7 +83,7 @@ public class MethodPropertyVisitor extends EmptyVisitor implements AnnotationVis
      *
      * @param name : annotation name
      * @param value : annotation value
-     * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+     * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
      */
     public void visit(String name, Object value) {
         if (name.equals("name")) {
@@ -110,7 +111,7 @@ public class MethodPropertyVisitor extends EmptyVisitor implements AnnotationVis
      * End of the visit.
      * Append the computed element to the element element.
      *
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+     * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
      */
     public void visitEnd() {
         Element prop = visitEndCommon();

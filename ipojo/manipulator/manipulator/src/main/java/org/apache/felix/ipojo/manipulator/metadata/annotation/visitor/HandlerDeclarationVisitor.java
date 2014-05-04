@@ -24,7 +24,7 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.Opcodes;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -40,7 +40,7 @@ import java.io.InputStream;
  * @see org.apache.felix.ipojo.annotations.HandlerDeclaration
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class HandlerDeclarationVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class HandlerDeclarationVisitor extends AnnotationVisitor {
 
     /**
      * XML accepted by the handler.
@@ -53,6 +53,7 @@ public class HandlerDeclarationVisitor extends EmptyVisitor implements Annotatio
     private Reporter reporter;
 
     public HandlerDeclarationVisitor(ComponentWorkbench workbench, DocumentBuilder builder, Reporter reporter) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
         this.builder = builder;
         this.reporter = reporter;
@@ -62,7 +63,7 @@ public class HandlerDeclarationVisitor extends EmptyVisitor implements Annotatio
      * Parses the value attribute.
      * @param name 'value'
      * @param value the value
-     * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+     * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
      */
     public void visit(String name, Object value) {
         // there is only a 'value' attribute
@@ -72,7 +73,7 @@ public class HandlerDeclarationVisitor extends EmptyVisitor implements Annotatio
     /**
      * End of the visit.
      * Builds the XML document.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+     * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
      */
     public void visitEnd() {
         // The value is an XML document

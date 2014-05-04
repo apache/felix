@@ -33,7 +33,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <asm.version>3.3.1</asm.version>
+    <asm.version>5.0.2</asm.version>
     <metadata.version>1.6.0</metadata.version>
   </properties>
 
@@ -50,12 +50,12 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>asm</groupId>
+        <groupId>org.ow2.asm</groupId>
         <artifactId>asm-all</artifactId>
         <version>${asm.version}</version>
         <exclusions>
           <exclusion>
-            <groupId>asm</groupId>
+            <groupId>org.ow2.asm</groupId>
             <artifactId>asm-tree</artifactId>
           </exclusion>
         </exclusions>

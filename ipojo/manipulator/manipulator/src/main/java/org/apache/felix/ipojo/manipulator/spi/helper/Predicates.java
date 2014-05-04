@@ -198,18 +198,18 @@ public class Predicates {
         public Predicate named(final String expected) {
             return new Predicate() {
                 public boolean matches(BindingContext context) {
-                    if (context.getNode() instanceof FieldNode) {
-                        FieldNode field = (FieldNode) context.getNode();
+                    if (context.getFieldNode() != null) {
+                        FieldNode field = context.getFieldNode();
                         return field.name.equals(expected);
                     }
 
-                    if (context.getNode() instanceof MethodNode) {
-                        MethodNode method = (MethodNode) context.getNode();
+                    if (context.getMethodNode() != null) {
+                        MethodNode method = context.getMethodNode();
                         return method.name.equals(expected);
                     }
 
-                    if (context.getNode() instanceof ClassNode) {
-                        ClassNode clazz = (ClassNode) context.getNode();
+                    if (context.getClassNode() != null) {
+                        ClassNode clazz = context.getClassNode();
                         return clazz.name.equals(expected);
                     }
 

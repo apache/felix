@@ -22,7 +22,7 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation.visitor;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Parses a Property or ServiceProperty annotation.
@@ -30,7 +30,7 @@ import org.objectweb.asm.commons.EmptyVisitor;
  * @see org.apache.felix.ipojo.annotations.Property
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class FieldPropertyVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class FieldPropertyVisitor extends AnnotationVisitor {
 
     /**
      * Parent element element.
@@ -82,6 +82,7 @@ public class FieldPropertyVisitor extends EmptyVisitor implements AnnotationVisi
      * @param field : field name.
      */
     public FieldPropertyVisitor(String field, Element parent) {
+        super(Opcodes.ASM5);
         m_parent = parent;
         m_field = field;
     }

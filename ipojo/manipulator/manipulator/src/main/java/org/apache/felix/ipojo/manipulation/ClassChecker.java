@@ -19,23 +19,17 @@
 
 package org.apache.felix.ipojo.manipulation;
 
-import java.util.*;
+import org.objectweb.asm.*;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.EmptyVisitor;
+import java.util.*;
 
 /**
  * Checks that a POJO is already manipulated or not.
  * Moreover it allows to get manipulation data about this class.
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes {
+public class ClassChecker extends ClassVisitor implements Opcodes {
 
     /**
      * True if the class is already manipulated.
@@ -73,30 +67,29 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     private Map<String, List<MethodDescriptor>> m_inners = new LinkedHashMap<String, List<MethodDescriptor>>();
 
     /**
-     * <code>true</code> if the class supports annotations.
-     * This enables the analysis of the code to find and moves annotations.
-     */
-    private boolean m_supportAnnotation = false;
-
-    /**
      * Class Version.
      * Used to determine the frame format.
      */
     private int m_classVersion;
 
+    public ClassChecker() {
+        super(Opcodes.ASM5);
+    }
+
     /**
      * Check if the _cm field already exists.
      * Update the field list.
-     * @param access : access of the field
-     * @param name : name of the field
-     * @param desc : description of the field
+     *
+     * @param access    : access of the field
+     * @param name      : name of the field
+     * @param desc      : description of the field
      * @param signature : signature of the field
-     * @param value : value of the field (for static field only)
+     * @param value     : value of the field (for static field only)
      * @return the field visitor
      * @see org.objectweb.asm.ClassVisitor#visitField(int, java.lang.String, java.lang.String, java.lang.String, java.lang.Object)
      */
     public FieldVisitor visitField(int access, String name, String desc,
-            String signature, Object value) {
+                                   String signature, Object value) {
         if (name.equals(MethodCreator.IM_FIELD)
                 && desc.equals("Lorg/apache/felix/ipojo/InstanceManager;")) {
             m_isAlreadyManipulated = true;
@@ -137,16 +130,17 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     /**
      * Add the inner class to the list of inner class to manipulate.
      * The method checks that the inner class is really owned by the implementation class.
-     * @param name inner class qualified name
+     *
+     * @param name      inner class qualified name
      * @param outerName outer class name (may be null for anonymous class)
      * @param innerName inner class simple (i.e. short) name
-     * @param access inner class visibility
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitInnerClass(java.lang.String, java.lang.String, java.lang.String, int)
+     * @param access    inner class visibility
+     * @see org.objectweb.asm.ClassVisitor#visitInnerClass(java.lang.String, java.lang.String, java.lang.String, int)
      */
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
-        if (m_className.equals(outerName)  || outerName == null) { // Anonymous classes does not have an outer class.
+        if (m_className.equals(outerName) || outerName == null) { // Anonymous classes does not have an outer class.
             // Do not include inner static class
-            if (! ((access & ACC_STATIC) == ACC_STATIC)) {
+            if (!((access & ACC_STATIC) == ACC_STATIC)) {
                 m_inners.put(name, new ArrayList<MethodDescriptor>());
             }
         }
@@ -155,6 +149,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
     /**
      * Check if the class was already manipulated.
+     *
      * @return true if the class is already manipulated.
      */
     public boolean isAlreadyManipulated() {
@@ -163,6 +158,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
     /**
      * Gets the extracted class version
+     *
      * @return the class version.
      */
     public int getClassVersion() {
@@ -172,21 +168,21 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     /**
      * Visit the class.
      * Update the implemented interface list.
-     * @param version : version of the class
-     * @param access : access of the class
-     * @param name : name of the class
-     * @param signature : signature of the class
-     * @param superName : super class of the class
+     *
+     * @param version    : version of the class
+     * @param access     : access of the class
+     * @param name       : name of the class
+     * @param signature  : signature of the class
+     * @param superName  : super class of the class
      * @param interfaces : implemented interfaces.
      * @see org.objectweb.asm.ClassVisitor#visit(int, int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
      */
     public void visit(int version, int access, String name, String signature,
-            String superName, String[] interfaces) {
+                      String superName, String[] interfaces) {
 
         m_classVersion = version;
-        m_supportAnnotation = version > V1_4 && version < V1_1;
 
-        if (! superName.equals("java/lang/Object")) {
+        if (!superName.equals("java/lang/Object")) {
             m_superClass = superName.replace('/', '.');
         }
 
@@ -202,16 +198,17 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     /**
      * Visit a method.
      * Update the method list (except if it init or clinit.
-     * @param  access - the method's access flags (see Opcodes). This parameter also indicates if the method is synthetic and/or deprecated.
-     * @param name - the method's name.
-     * @param desc - the method's descriptor (see Type).
-     * @param signature - the method's signature. May be null if the method parameters, return type and exceptions do not use generic types.
+     *
+     * @param access     - the method's access flags (see Opcodes). This parameter also indicates if the method is synthetic and/or deprecated.
+     * @param name       - the method's name.
+     * @param desc       - the method's descriptor (see Type).
+     * @param signature  - the method's signature. May be null if the method parameters, return type and exceptions do not use generic types.
      * @param exceptions - the internal names of the method's exception classes (see getInternalName). May be null.
      * @return nothing.
      * @see org.objectweb.asm.ClassVisitor#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
      */
     public MethodVisitor visitMethod(int access, String name, String desc,
-            String signature, String[] exceptions) {
+                                     String signature, String[] exceptions) {
         if (!name.equals("<clinit>")) {
 
             if (name.equals("<init>")) {
@@ -287,6 +284,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
     /**
      * Get collected interfaces.
+     *
      * @return the interfaces implemented by the component class.
      */
     public List<String> getInterfaces() {
@@ -295,6 +293,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
     /**
      * Get collected fields.
+     *
      * @return the field map [field_name, type].
      */
     public Map<String, String> getFields() {
@@ -303,6 +302,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
     /**
      * Get collected methods.
+     *
      * @return the method list of [method, signature].
      */
     public List<MethodDescriptor> getMethods() {
@@ -330,9 +330,10 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      * This class creates an {@link AnnotationDescriptor}
      * if an annotation is found during the visit.
      * It also collects local variables definition.
-     *  @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+     *
+     * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
      */
-    private final class MethodInfoCollector extends EmptyVisitor {
+    private final class MethodInfoCollector extends MethodVisitor {
         /**
          * The method descriptor of the visited method.
          */
@@ -340,9 +341,11 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * Creates an annotation collector.
+         *
          * @param md the method descriptor of the visited method.
          */
         private MethodInfoCollector(MethodDescriptor md) {
+            super(Opcodes.ASM5);
             m_method = md;
         }
 
@@ -352,21 +355,22 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * creates the {@link AnnotationDescriptor} corresponding to this annotation
          * to visit this annotation. This {@link AnnotationDescriptor} is added to
          * the {@link MethodDescriptor} of the visited method.
-         * @param name the name of the annotation
+         *
+         * @param name    the name of the annotation
          * @param visible is the annotation visible at runtime
          * @return the {@link AnnotationDescriptor} to visit this annotation or
          * <code>null</code> if the annotation is not visible.
-         * @see org.objectweb.asm.commons.EmptyVisitor#visitAnnotation(java.lang.String, boolean)
+         * @see org.objectweb.asm.MethodVisitor#visitAnnotation(java.lang.String, boolean)
          */
         public AnnotationVisitor visitAnnotation(String name, boolean visible) {
             if (visible) {
-                AnnotationDescriptor ann = new AnnotationDescriptor(name, visible);
+                AnnotationDescriptor ann = new AnnotationDescriptor(name, true);
                 m_method.addAnnotation(ann);
                 return ann;
             }
             return null;
         }
-        
+
         public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
             m_method.addLocalVariable(name, desc, signature, index);
         }
@@ -376,9 +380,9 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         }
 
         public AnnotationVisitor visitParameterAnnotation(int id,
-                String name, boolean visible) {
+                                                          String name, boolean visible) {
             if (visible) {
-                AnnotationDescriptor ann = new AnnotationDescriptor(name, visible);
+                AnnotationDescriptor ann = new AnnotationDescriptor(name, true);
                 m_method.addParameterAnnotation(id, ann);
                 return ann;
             }
@@ -387,13 +391,12 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
              * It is harmless to keep injected parameter annotations on original constructor
              * for correct property resolution in case of re-manipulation
              */
-            if(m_method.getName().equals("$init"))
-            {
-            	AnnotationDescriptor ann = new AnnotationDescriptor(name, visible);
+            if (m_method.getName().equals("$init")) {
+                AnnotationDescriptor ann = new AnnotationDescriptor(name, false);
                 m_method.addParameterAnnotation(id, ann);
                 return ann;
             }
-            
+
             return null;
         }
 
@@ -407,9 +410,10 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      * {@link AnnotationVisitor} in order to create the copy.
      * This class contains a <code>visit</code> method re-injecting the
      * annotation in the generated method.
+     *
      * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
      */
-    public class AnnotationDescriptor implements AnnotationVisitor {
+    public class AnnotationDescriptor extends AnnotationVisitor {
         /**
          * The name of the annotation.
          */
@@ -447,10 +451,12 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         /**
          * Creates an annotation descriptor.
          * This constructor is used for 'root' annotations.
-         * @param name the name of the  annotation
+         *
+         * @param name    the name of the  annotation
          * @param visible the visibility of the annotation at runtime
          */
         public AnnotationDescriptor(String name, boolean visible) {
+            super(Opcodes.ASM5);
             m_name = name;
             m_visible = visible;
         }
@@ -458,10 +464,12 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         /**
          * Creates an annotation descriptor.
          * This constructor is used for nested annotations.
+         *
          * @param name the name of the  annotation
          * @param desc the descriptor of the annotation
          */
         public AnnotationDescriptor(String name, String desc) {
+            super(Opcodes.ASM5);
             m_name = name;
             m_visible = true;
             m_desc = desc;
@@ -470,6 +478,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * Visits a simple attribute.
+         *
          * @param arg0 the attribute name
          * @param arg1 the attribute value
          * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
@@ -481,6 +490,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * Visits a nested annotation.
+         *
          * @param arg0 the attribute name
          * @param arg1 the annotation descriptor
          * @return the annotation visitor parsing the nested annotation
@@ -495,6 +505,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * Visits an array attribute.
+         *
          * @param arg0 the name of the attribute
          * @return the annotation visitor parsing the content of the array,
          * uses a specific {@link ArrayAttribute} to parse this array
@@ -509,13 +520,16 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * End of the visit.
+         *
          * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
          */
-        public void visitEnd() { }
+        public void visitEnd() {
+        }
 
 
         /**
          * Visits an enumeration attribute.
+         *
          * @param arg0 the attribute name
          * @param arg1 the enumeration descriptor
          * @param arg2 the attribute value
@@ -530,21 +544,22 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * into the destination method.
          * This method recreate the annotations itself and any other
          * attributes.
+         *
          * @param mv the method visitor visiting the destination method.
          */
         public void visitAnnotation(MethodVisitor mv) {
             AnnotationVisitor av = mv.visitAnnotation(m_name, m_visible);
-            for (int i = 0; i < m_simples.size(); i++) {
-                m_simples.get(i).visit(av);
+            for (SimpleAttribute simple : m_simples) {
+                simple.visit(av);
             }
-            for (int i = 0; i < m_enums.size(); i++) {
-                m_enums.get(i).visit(av);
+            for (EnumAttribute en : m_enums) {
+                en.visit(av);
             }
-            for (int i = 0; i < m_nested.size(); i++) {
-                m_nested.get(i).visit(av);
+            for (AnnotationDescriptor nested : m_nested) {
+                nested.visit(av);
             }
-            for (int i = 0; i < m_arrays.size(); i++) {
-                m_arrays.get(i).visit(av);
+            for (ArrayAttribute array : m_arrays) {
+                array.visit(av);
             }
             av.visitEnd();
         }
@@ -554,22 +569,23 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * into the destination method.
          * This method recreate the annotations itself and any other
          * attributes.
+         *
          * @param id the paramter id
          * @param mv the method visitor visiting the destination method.
          */
         public void visitParameterAnnotation(int id, MethodVisitor mv) {
             AnnotationVisitor av = mv.visitParameterAnnotation(id, m_name, m_visible);
-            for (int i = 0; i < m_simples.size(); i++) {
-                m_simples.get(i).visit(av);
+            for (SimpleAttribute simple : m_simples) {
+                simple.visit(av);
             }
-            for (int i = 0; i < m_enums.size(); i++) {
-                m_enums.get(i).visit(av);
+            for (EnumAttribute en : m_enums) {
+                en.visit(av);
             }
-            for (int i = 0; i < m_nested.size(); i++) {
-                m_nested.get(i).visit(av);
+            for (AnnotationDescriptor nested : m_nested) {
+                nested.visit(av);
             }
-            for (int i = 0; i < m_arrays.size(); i++) {
-                m_arrays.get(i).visit(av);
+            for (ArrayAttribute array : m_arrays) {
+                array.visit(av);
             }
             av.visitEnd();
         }
@@ -578,22 +594,23 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * Method allowing to recreate the visited (stored) annotation
          * into the destination annotation. This method is used only
          * for nested annotation.
+         *
          * @param mv the annotation visitor to populate with the stored
-         * annotation
+         *           annotation
          */
         public void visit(AnnotationVisitor mv) {
             AnnotationVisitor av = mv.visitAnnotation(m_name, m_desc);
-            for (int i = 0; i < m_simples.size(); i++) {
-                m_simples.get(i).visit(av);
+            for (SimpleAttribute simple : m_simples) {
+                simple.visit(av);
             }
-            for (int i = 0; i < m_enums.size(); i++) {
-                m_enums.get(i).visit(av);
+            for (EnumAttribute enu : m_enums) {
+                enu.visit(av);
             }
-            for (int i = 0; i < m_nested.size(); i++) {
-                m_nested.get(i).visit(av);
+            for (AnnotationDescriptor nested : m_nested) {
+                nested.visit(av);
             }
-            for (int i = 0; i < m_arrays.size(); i++) {
-                m_arrays.get(i).visit(av);
+            for (ArrayAttribute array : m_arrays) {
+                array.visit(av);
             }
             av.visitEnd();
         }
@@ -605,9 +622,10 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      * Describes an array attribute.
      * This class is able to visit an annotation array attribute, and to
      * recreate this array on another annotation.
+     *
      * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
      */
-    public class ArrayAttribute implements AnnotationVisitor {
+    public class ArrayAttribute extends AnnotationVisitor {
         /**
          * The name of the attribute.
          */
@@ -619,15 +637,18 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * Creates an array attribute.
+         *
          * @param name the name of the attribute.
          */
         public ArrayAttribute(String name) {
+            super(Opcodes.ASM5);
             m_name = name;
         }
 
         /**
          * Visits the content of the array. This method is called for
          * simple values.
+         *
          * @param arg0 <code>null</code>
          * @param arg1 the value
          * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
@@ -639,6 +660,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         /**
          * Visits the content of the array. This method is called for
          * nested annotations (annotations contained in the array).
+         *
          * @param arg0 <code>null</code>
          * @param arg1 the annotation descriptor
          * @return an {@link AnnotationDescriptor} which creates a copy of
@@ -654,6 +676,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
         /**
          * Visits the content of the array. This method is called for
          * nested arrays (arrays contained in the array).
+         *
          * @param arg0 <code>null</code>
          * @return an {@link AnnotationVisitor} which creates a copy of
          * the contained array.
@@ -667,13 +690,16 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * End of the array attribute visit.
+         *
          * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
          */
-        public void visitEnd() {  }
+        public void visitEnd() {
+        }
 
         /**
          * Visits the content of the array. This method is called for
          * enumeration values.
+         *
          * @param arg0 <code>null</code>
          * @param arg1 the enumeration descriptor
          * @param arg2 the value
@@ -688,13 +714,13 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
          * Recreates the visited array attribute. This method
          * handle the generation of the object embedded in the
          * array.
+         *
          * @param av the annotation visitor on which the array attribute
-         * needs to be injected.
+         *           needs to be injected.
          */
         public void visit(AnnotationVisitor av) {
             AnnotationVisitor content = av.visitArray(m_name);
-            for (int i = 0; i < m_content.size(); i++) {
-                Object component = m_content.get(i);
+            for (Object component : m_content) {
                 if (component instanceof AnnotationDescriptor) {
                     ((AnnotationDescriptor) component).visit(content);
                 } else if (component instanceof EnumAttribute) {
@@ -714,6 +740,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      * Describes a simple attribute.
      * This class is able to visit an annotation simple attribute, and to
      * recreate this attribute on another annotation.
+     *
      * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
      */
     public static final class SimpleAttribute {
@@ -728,7 +755,8 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * Creates a simple attribute.
-         * @param name the name of the attribute
+         *
+         * @param name   the name of the attribute
          * @param object the value of the attribute
          */
         private SimpleAttribute(String name, Object object) {
@@ -738,8 +766,9 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * Recreates the attribute on the given annotation.
+         *
          * @param visitor the visitor on which the attribute needs
-         * to be injected.
+         *                to be injected.
          */
         public void visit(AnnotationVisitor visitor) {
             visitor.visit(m_name, m_value);
@@ -751,6 +780,7 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
      * value.
      * This class is able to visit an annotation enumeration attribute, and to
      * recreate this attribute on another annotation.
+     *
      * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
      */
     public static final class EnumAttribute {
@@ -769,8 +799,9 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * Creates a enumeration attribute.
-         * @param name the name of the attribute.
-         * @param desc the descriptor of the {@link Enum}
+         *
+         * @param name  the name of the attribute.
+         * @param desc  the descriptor of the {@link Enum}
          * @param value the enumerated value
          */
         private EnumAttribute(String name, String desc, String value) {
@@ -781,8 +812,9 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
 
         /**
          * Recreates the attribute on the given annotation.
+         *
          * @param visitor the visitor on which the attribute needs
-         * to be injected.
+         *                to be injected.
          */
         public void visit(AnnotationVisitor visitor) {
             visitor.visitEnum(m_name, m_desc, m_value);
@@ -794,15 +826,19 @@ public class ClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes 
     /**
      * Class required to detect inner classes assigned to static field and thus must not be manipulated (FELIX-4347).
      * If an inner class is assigned to a static field, it must not be manipulated.
-     *
+     * <p/>
      * However notice that this is only useful when AspectJ is used, because aspectJ is changing the 'staticity' of
      * the inner class.
      */
-    private class InnerClassAssignedToStaticFieldDetector extends EmptyVisitor implements MethodVisitor {
+    private class InnerClassAssignedToStaticFieldDetector extends MethodVisitor {
+
+        public InnerClassAssignedToStaticFieldDetector() {
+            super(Opcodes.ASM5);
+        }
 
         @Override
         public void visitTypeInsn(int opcode, String type) {
-            if (opcode == NEW  && m_inners.containsKey(type)) {
+            if (opcode == NEW && m_inners.containsKey(type)) {
                 m_inners.remove(type);
             }
         }

@@ -23,15 +23,16 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.EmptyVisitor;
 
 /**
  * Parse the @Provides annotation.
- * @see org.apache.felix.ipojo.annotations.Provides
+ *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ * @see org.apache.felix.ipojo.annotations.Provides
  */
-public class ProvidesVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class ProvidesVisitor extends AnnotationVisitor {
 
     private ComponentWorkbench workbench;
 
@@ -41,14 +42,16 @@ public class ProvidesVisitor extends EmptyVisitor implements AnnotationVisitor {
     private Element m_prov = new Element("provides", "");
 
     public ProvidesVisitor(ComponentWorkbench workbench) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
     }
 
     /**
      * Visit @provides annotation attributes.
-     * @param name : annotation attribute name
+     *
+     * @param name  : annotation attribute name
      * @param value : annotation attribute value
-     * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+     * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
      */
     public void visit(String name, Object value) {
         if (name.equals("factory")) { // Should be deprecated
@@ -61,9 +64,10 @@ public class ProvidesVisitor extends EmptyVisitor implements AnnotationVisitor {
 
     /**
      * Visit specifications array.
+     *
      * @param name : attribute name
      * @return a visitor visiting each element of the array.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitArray(java.lang.String)
+     * @see org.objectweb.asm.AnnotationVisitor#visitArray(java.lang.String)
      */
     public AnnotationVisitor visitArray(String name) {
         if (name.equals("specifications")) {
@@ -71,7 +75,7 @@ public class ProvidesVisitor extends EmptyVisitor implements AnnotationVisitor {
         } else if (name.equals("properties")) {
             // Create a new simple visitor to visit the nested ServiceProperty annotations
             // Collected properties are collected in m_prov
-            return new EmptyVisitor() {
+            return new AnnotationVisitor(Opcodes.ASM5) {
                 public AnnotationVisitor visitAnnotation(String ignored, String desc) {
                     return new FieldPropertyVisitor(m_prov);
                 }
@@ -84,24 +88,31 @@ public class ProvidesVisitor extends EmptyVisitor implements AnnotationVisitor {
     /**
      * End of the visit.
      * Append to the element element the computed "provides" element.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+     *
+     * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
      */
     public void visitEnd() {
         workbench.getIds().put("provides", m_prov);
         workbench.getElements().put(m_prov, null);
     }
 
-    private class InterfaceArrayVisitor extends EmptyVisitor {
+    private class InterfaceArrayVisitor extends AnnotationVisitor {
         /**
          * List of parsed interface.
          */
         private String m_itfs;
 
+
+        public InterfaceArrayVisitor() {
+            super(Opcodes.ASM5);
+        }
+
         /**
          * Visit one element of the array.
+         *
          * @param arg0 : null
          * @param arg1 : element value.
-         * @see org.objectweb.asm.commons.EmptyVisitor#visit(java.lang.String, java.lang.Object)
+         * @see org.objectweb.asm.AnnotationVisitor#visit(java.lang.String, java.lang.Object)
          */
         public void visit(String arg0, Object arg1) {
             if (m_itfs == null) {
@@ -114,7 +125,8 @@ public class ProvidesVisitor extends EmptyVisitor implements AnnotationVisitor {
         /**
          * End of the array visit.
          * Add the attribute to 'provides' element.
-         * @see org.objectweb.asm.commons.EmptyVisitor#visitEnd()
+         *
+         * @see org.objectweb.asm.AnnotationVisitor#visitEnd()
          */
         public void visitEnd() {
             m_prov.addAttribute(new Attribute("specifications", m_itfs + "}"));

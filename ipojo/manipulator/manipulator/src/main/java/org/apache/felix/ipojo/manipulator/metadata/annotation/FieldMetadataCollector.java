@@ -22,13 +22,13 @@ package org.apache.felix.ipojo.manipulator.metadata.annotation;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.BindingRegistry;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.FieldNode;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class FieldMetadataCollector extends EmptyVisitor implements FieldVisitor {
+public class FieldMetadataCollector extends FieldVisitor {
 
     /**
      * Binding's registry.
@@ -46,6 +46,7 @@ public class FieldMetadataCollector extends EmptyVisitor implements FieldVisitor
     private FieldNode node;
 
     public FieldMetadataCollector(ComponentWorkbench workbench, FieldNode node) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
         this.node = node;
         this.registry = workbench.getBindingRegistry();

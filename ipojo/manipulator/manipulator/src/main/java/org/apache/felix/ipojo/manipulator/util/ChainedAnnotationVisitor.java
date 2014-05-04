@@ -19,20 +19,24 @@
 
 package org.apache.felix.ipojo.manipulator.util;
 
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Opcodes;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.felix.ipojo.manipulator.metadata.annotation.model.discovery.ChainedAnnotationDiscovery;
-import org.objectweb.asm.AnnotationVisitor;
 
 /**
 * User: guillaume
 * Date: 10/07/13
 * Time: 16:43
 */
-public class ChainedAnnotationVisitor implements AnnotationVisitor {
+public class ChainedAnnotationVisitor extends AnnotationVisitor {
 
     private List<AnnotationVisitor> m_visitors = new ArrayList<AnnotationVisitor>();
+
+    public ChainedAnnotationVisitor() {
+        super(Opcodes.ASM5);
+    }
 
     public List<AnnotationVisitor> getVisitors() {
         return m_visitors;

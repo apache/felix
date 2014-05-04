@@ -23,7 +23,6 @@ import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.tree.LocalVariableNode;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +35,7 @@ import java.util.Set;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class InnerClassAdapter extends ClassAdapter implements Opcodes {
+public class InnerClassAdapter extends ClassVisitor implements Opcodes {
 
     /**
      * The manipulator having manipulated the outer class.
@@ -67,13 +66,13 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
      * Creates the inner class adapter.
      *
      * @param name      the inner class name (internal name)
-     * @param arg0       parent class visitor
+     * @param visitor       parent class visitor
      * @param outerClassName outer class (implementation class)
      * @param manipulator the manipulator having manipulated the outer class.
      */
-    public InnerClassAdapter(String name, ClassVisitor arg0, String outerClassName,
+    public InnerClassAdapter(String name, ClassVisitor visitor, String outerClassName,
                              Manipulator manipulator) {
-        super(arg0);
+        super(Opcodes.ASM5, visitor);
         m_name = name;
         m_simpleName = m_name.substring(m_name.indexOf("$") + 1);
         m_outer = outerClassName;
@@ -87,6 +86,7 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
         // not set of set to true.
         int theVersion = version;
         String downgrade = System.getProperty("ipojo.downgrade.classes");
+        //TODO FRAME HACK HERE
         if ((downgrade == null  || "true".equals(downgrade))  && version == Opcodes.V1_7) {
             theVersion = Opcodes.V1_6;
         }
@@ -103,7 +103,8 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
      * @param signature  method signature
      * @param exceptions list of exceptions thrown by the method
      * @return a code adapter manipulating field accesses
-     * @see org.objectweb.asm.ClassAdapter#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
+     * @see org.objectweb.asm.ClassVisitor#visitMethod(int, java.lang.String, java.lang.String, java.lang.String,
+     * java.lang.String[])
      */
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         // Do nothing on static methods, should not happen in non-static inner classes.
@@ -209,7 +210,7 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
 
         // Compute result and exception stack location
         int result = -1;
-        int exception = -1;
+        int exception;
 
         //int arguments = mv.newLocal(Type.getType((new Object[0]).getClass()));
 
@@ -235,7 +236,7 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
 
         mv.visitVarInsn(ALOAD, 0);
         mv.loadArgs();
-        mv.visitMethodInsn(INVOKESPECIAL, m_name, MethodCreator.PREFIX + name, desc);
+        mv.visitMethodInsn(INVOKESPECIAL, m_name, MethodCreator.PREFIX + name, desc, false);
         mv.visitInsn(returnType.getOpcode(IRETURN));
 
         // end of the non intercepted method invocation.
@@ -249,13 +250,13 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
         mv.visitLdcInsn(getMethodId(name, desc));
         mv.loadArgArray();
         mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.ENTRY,
-                "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)V");
+                "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)V", false);
 
         mv.visitVarInsn(ALOAD, 0);
 
         // Do not allow argument modification : just reload arguments.
         mv.loadArgs();
-        mv.visitMethodInsn(INVOKESPECIAL, m_name, MethodCreator.PREFIX + name, desc);
+        mv.visitMethodInsn(INVOKESPECIAL, m_name, MethodCreator.PREFIX + name, desc, false);
 
         if (returnType.getSort() != Type.VOID) {
             mv.visitVarInsn(returnType.getOpcode(ISTORE), result);
@@ -272,7 +273,8 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
         } else {
             mv.visitInsn(ACONST_NULL);
         }
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.EXIT, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager",
+                MethodCreator.EXIT, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)V", false);
 
         mv.visitLabel(l1);
         Label l7 = new Label();
@@ -286,7 +288,8 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
         mv.visitVarInsn(ALOAD, 0);
         mv.visitLdcInsn(getMethodId(name, desc));
         mv.visitVarInsn(ALOAD, exception);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.ERROR, "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Throwable;)V");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "org/apache/felix/ipojo/InstanceManager", MethodCreator.ERROR,
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Throwable;)V", false);
         mv.visitVarInsn(ALOAD, exception);
         mv.visitInsn(ATHROW);
 
@@ -305,20 +308,16 @@ public class InnerClassAdapter extends ClassAdapter implements Opcodes {
 
         // Move annotations
         if (annotations != null) {
-            for (int i = 0; i < annotations.size(); i++) {
-                ClassChecker.AnnotationDescriptor ad = annotations.get(i);
+            for (ClassChecker.AnnotationDescriptor ad : annotations) {
                 ad.visitAnnotation(mv);
             }
         }
 
         // Move parameter annotations
         if (paramAnnotations != null  && ! paramAnnotations.isEmpty()) {
-            Iterator<Integer> ids = paramAnnotations.keySet().iterator();
-            while(ids.hasNext()) {
-                Integer id = ids.next();
+            for (Integer id : paramAnnotations.keySet()) {
                 List<ClassChecker.AnnotationDescriptor> ads = paramAnnotations.get(id);
-                for (int i = 0; i < ads.size(); i++) {
-                    ClassChecker.AnnotationDescriptor ad = ads.get(i);
+                for (ClassChecker.AnnotationDescriptor ad : ads) {
                     ad.visitParameterAnnotation(id, mv);
                 }
             }

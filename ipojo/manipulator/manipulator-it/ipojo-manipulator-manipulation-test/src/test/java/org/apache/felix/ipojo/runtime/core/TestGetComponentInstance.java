@@ -28,11 +28,14 @@ import org.junit.Test;
 import org.osgi.framework.ServiceReference;
 import org.ow2.chameleon.testing.helpers.BaseTest;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.*;
 
 /**
@@ -45,7 +48,7 @@ public class TestGetComponentInstance extends BaseTest {
      * Check the getComponentInstance method.
      */
     @Test
-    public void testGetComponentInstance() {
+    public void testGetComponentInstance() throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException {
         String factName = "Manipulation-FooProviderType-1";
         String compName = "FooProvider-1";
         ServiceReference ref = null;
@@ -75,9 +78,17 @@ public class TestGetComponentInstance extends BaseTest {
 
         // Cast to POJO
         Pojo pojo = (Pojo) fs;
+        Field im = fs.getClass().getDeclaredField("__IM");
+        assertNotNull(im);
+        im.setAccessible(true);
+        assertNotNull(im.get(fs));
+
+        Method method = fs.getClass().getMethod("getComponentInstance");
+        assertNotNull(method);
 
         // GetComponentInstance
         ComponentInstance instance = pojo.getComponentInstance();
+        assertNotNull(instance);
         assertEquals("Check component instance name", instance.getInstanceName(), compName);
         assertEquals("Check component factory name", instance.getFactory().getName(), factName);
         assertNotNull("Instance description not null", instance.getInstanceDescription());

@@ -19,19 +19,22 @@
 
 package org.apache.felix.ipojo.manipulator.metadata.annotation.model.parser.replay;
 
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Opcodes;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.objectweb.asm.AnnotationVisitor;
-
 /**
-* User: guillaume
-* Date: 30/05/13
-* Time: 17:22
-*/
-public class AnnotationRecorder implements AnnotationVisitor, Replay {
+ * Record annotation to be replayed later.
+ */
+public class AnnotationRecorder extends AnnotationVisitor implements Replay {
 
     private List<Replay> m_replays = new ArrayList<Replay>();
+
+    public AnnotationRecorder() {
+        super(Opcodes.ASM5);
+    }
 
     public void visit(final String name, final Object value) {
         m_replays.add(new Visit(name, value));

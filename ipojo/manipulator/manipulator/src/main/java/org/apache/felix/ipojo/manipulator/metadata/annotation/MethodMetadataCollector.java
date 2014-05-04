@@ -23,23 +23,18 @@ import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.registry.BindingRegistry;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class MethodMetadataCollector extends EmptyVisitor implements MethodVisitor {
+public class MethodMetadataCollector extends MethodVisitor {
 
     /**
      * Binding's registry.
      */
     private BindingRegistry registry;
-
-    /**
-     * Output informations.
-     */
-    private Reporter reporter;
 
     /**
      * The workbench currently in use.
@@ -52,8 +47,8 @@ public class MethodMetadataCollector extends EmptyVisitor implements MethodVisit
     private MethodNode node;
 
     public MethodMetadataCollector(ComponentWorkbench workbench, MethodNode node, Reporter reporter) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
-        this.reporter = reporter;
         this.node = node;
         this.registry = workbench.getBindingRegistry();
     }
@@ -61,13 +56,12 @@ public class MethodMetadataCollector extends EmptyVisitor implements MethodVisit
     /**
      * Visit method annotations.
      *
-     * @param desc : annotation name.
+     * @param desc    : annotation name.
      * @param visible : is the annotation visible at runtime.
      * @return the visitor paring the visited annotation.
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitAnnotation(java.lang.String, boolean)
+     * @see org.objectweb.asm.MethodVisitor#visitAnnotation(java.lang.String, boolean)
      */
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-
         // Return the visitor to be executed (may be null)
         return registry.selection(workbench)
                 .method(this, node)
@@ -79,7 +73,7 @@ public class MethodMetadataCollector extends EmptyVisitor implements MethodVisit
     /**
      * Visit a parameter annotation.
      *
-     * @see org.objectweb.asm.commons.EmptyVisitor#visitParameterAnnotation(int, java.lang.String, boolean)
+     * @see org.objectweb.asm.MethodVisitor#visitParameterAnnotation(int, java.lang.String, boolean)
      */
     public AnnotationVisitor visitParameterAnnotation(int index,
                                                       String desc,
@@ -96,7 +90,6 @@ public class MethodMetadataCollector extends EmptyVisitor implements MethodVisit
         }
         return super.visitParameterAnnotation(index, desc, visible);
     }
-
 
 
 }

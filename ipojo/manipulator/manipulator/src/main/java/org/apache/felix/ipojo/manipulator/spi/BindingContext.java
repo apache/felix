@@ -22,7 +22,9 @@ package org.apache.felix.ipojo.manipulator.spi;
 import org.apache.felix.ipojo.manipulator.Reporter;
 import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.MemberNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.lang.annotation.ElementType;
 
@@ -37,24 +39,58 @@ public class BindingContext {
      *
      */
     private ComponentWorkbench workbench;
-    private MemberNode node;
+    private FieldNode field;
+    private MethodNode method;
+    private ClassNode clazz;
     private ElementType elementType;
     private int parameterIndex;
     private Reporter reporter;
     private Type annotationType;
     private Object visitor;
 
+
     public BindingContext(final ComponentWorkbench workbench,
                           final Reporter reporter,
                           final Type annotationType,
-                          final MemberNode node,
+                          final FieldNode node,
                           final ElementType elementType,
                           final int parameterIndex,
                           final Object visitor) {
+        this(workbench, reporter, annotationType, elementType, parameterIndex, visitor);
+        this.field = node;
+    }
+
+    public BindingContext(final ComponentWorkbench workbench,
+                          final Reporter reporter,
+                          final Type annotationType,
+                          final MethodNode node,
+                          final ElementType elementType,
+                          final int parameterIndex,
+                          final Object visitor) {
+        this(workbench, reporter, annotationType, elementType, parameterIndex, visitor);
+        this.method = node;
+    }
+
+    public BindingContext(final ComponentWorkbench workbench,
+                          final Reporter reporter,
+                          final Type annotationType,
+                          final ClassNode node,
+                          final ElementType elementType,
+                          final int parameterIndex,
+                          final Object visitor) {
+        this(workbench, reporter, annotationType, elementType, parameterIndex, visitor);
+        this.clazz = node;
+    }
+
+    private BindingContext(final ComponentWorkbench workbench,
+                           final Reporter reporter,
+                           final Type annotationType,
+                           final ElementType elementType,
+                           final int parameterIndex,
+                           final Object visitor) {
         this.workbench = workbench;
         this.reporter = reporter;
         this.annotationType = annotationType;
-        this.node = node;
         this.elementType = elementType;
         this.parameterIndex = parameterIndex;
         this.visitor = visitor;
@@ -64,8 +100,16 @@ public class BindingContext {
         return workbench;
     }
 
-    public MemberNode getNode() {
-        return node;
+    public FieldNode getFieldNode() {
+        return field;
+    }
+
+    public MethodNode getMethodNode() {
+        return method;
+    }
+
+    public ClassNode getClassNode() {
+        return clazz;
     }
 
     public ElementType getElementType() {

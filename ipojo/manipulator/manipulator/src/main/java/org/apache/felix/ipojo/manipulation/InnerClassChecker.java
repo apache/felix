@@ -19,22 +19,22 @@
 
 package org.apache.felix.ipojo.manipulation;
 
-import org.objectweb.asm.*;
-import org.objectweb.asm.commons.EmptyVisitor;
-
-import java.util.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Analyze an inner class.
  * This visit collects the methods from the inner class.
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class InnerClassChecker extends EmptyVisitor implements ClassVisitor, Opcodes {
+public class InnerClassChecker extends ClassVisitor implements Opcodes {
 
     private final String m_name;
     private final Manipulator m_manipulator;
 
     public InnerClassChecker(String name, Manipulator manipulator) {
+        super(Opcodes.ASM5);
         m_name = name;
         m_manipulator = manipulator;
     }

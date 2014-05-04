@@ -19,19 +19,16 @@
 
 package org.apache.felix.ipojo.manipulation;
 
+import junit.framework.TestCase;
+import org.apache.felix.ipojo.manipulator.util.Streams;
+import org.objectweb.asm.*;
+import org.osgi.framework.BundleContext;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.TestCase;
-import org.apache.felix.ipojo.manipulator.util.Streams;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.EmptyVisitor;
-import org.osgi.framework.BundleContext;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -94,7 +91,7 @@ public class ClassCheckerTestCase extends TestCase {
         assertEquals(1, annotations.size());
         ClassChecker.AnnotationDescriptor annotationDescriptor = annotations.get(0);
         MethodVisitor mv = mock(MethodVisitor.class);
-        when(mv.visitAnnotation(desc, true)).thenReturn(new EmptyVisitor());
+        when(mv.visitAnnotation(desc, true)).thenReturn(new AnnotationVisitor(Opcodes.ASM5) {});
         annotationDescriptor.visitAnnotation(mv);
     }
 

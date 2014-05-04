@@ -18,43 +18,49 @@
   under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-  <parent>
-    <groupId>org.apache.felix</groupId>
-    <artifactId>org.apache.felix.ipojo.runtime.core-it</artifactId>
-    <version>1.11.3-SNAPSHOT</version>
-  </parent>
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.ipojo.runtime.core-it</artifactId>
+        <version>1.11.3-SNAPSHOT</version>
+    </parent>
 
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>ipojo-core-declaration-test</artifactId>
+    <artifactId>ipojo-core-declaration-test</artifactId>
 
-  <name>${project.artifactId}</name>
+    <name>${project.artifactId}</name>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.ipojo.api</artifactId>
-      <version>1.11.3-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>org.osgi.core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.osgi</groupId>
-          <artifactId>org.osgi.core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>org.apache.felix.ipojo</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>asm</groupId>
-          <artifactId>asm-all</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-  </dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-all</artifactId>
+            <version>5.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo.api</artifactId>
+            <version>1.11.3-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.osgi</groupId>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.ipojo</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>org.apache.felix.ipojo.composite</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
 </project>

@@ -23,7 +23,7 @@ import org.apache.felix.ipojo.manipulator.metadata.annotation.ComponentWorkbench
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Parse @Validate and @Invalidate annotations.
@@ -31,7 +31,7 @@ import org.objectweb.asm.commons.EmptyVisitor;
  * @see org.apache.felix.ipojo.annotations.Invalidate
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class LifecycleVisitor extends EmptyVisitor implements AnnotationVisitor {
+public class LifecycleVisitor extends AnnotationVisitor {
 
     public static enum Transition {
         VALIDATE, INVALIDATE
@@ -42,6 +42,7 @@ public class LifecycleVisitor extends EmptyVisitor implements AnnotationVisitor 
     private Transition transition;
 
     public LifecycleVisitor(ComponentWorkbench workbench, String name, Transition transition) {
+        super(Opcodes.ASM5);
         this.workbench = workbench;
         this.name = name;
         this.transition = transition;
