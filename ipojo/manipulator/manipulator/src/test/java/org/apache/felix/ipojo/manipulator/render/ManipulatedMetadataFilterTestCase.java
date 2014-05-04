@@ -22,7 +22,7 @@ package org.apache.felix.ipojo.manipulator.render;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.apache.felix.ipojo.InstanceManager;
-import org.apache.felix.ipojo.manipulation.MethodCreator;
+import org.apache.felix.ipojo.manipulation.ClassManipulator;
 import org.apache.felix.ipojo.metadata.Attribute;
 import org.apache.felix.ipojo.metadata.Element;
 
@@ -37,7 +37,7 @@ public class ManipulatedMetadataFilterTestCase extends TestCase {
 
     public void testFilterPrefixedMethod() throws Exception {
         Element main = new Element("test", null);
-        main.addAttribute(new Attribute("name", MethodCreator.PREFIX + "PropertyName"));
+        main.addAttribute(new Attribute("name", ClassManipulator.PREFIX + "PropertyName"));
 
         Assert.assertTrue(filter.accept(main));
     }
