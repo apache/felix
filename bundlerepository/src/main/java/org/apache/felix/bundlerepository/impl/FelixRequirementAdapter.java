@@ -79,8 +79,8 @@ public class FelixRequirementAdapter implements Requirement
          * (3) objectClass capitalised
          * (4) The namespaces must be translated.
          */
-        String filter = requirement.getFilter().replaceAll("\\(mandatory\\:\\<\\*[^\\)]*\\)", "")
-                .replaceAll("\\(service\\=[^\\)]*\\)", "").replaceAll("objectclass", "objectClass");
+        String filter = requirement.getFilter().replaceAll("\\(mandatory\\:\\<\\*[^\\)]*\\)", "").
+                replaceAll("objectclass", "objectClass");
 
         for (String ns : NamespaceTranslator.getTranslatedFelixNamespaces())
         {

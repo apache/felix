@@ -36,6 +36,7 @@ public class FelixRequirementAdapterTest extends TestCase
         assertFilter("(package=x.y.z)", "(osgi.wiring.package=x.y.z)");
         // TODO should this be symbolicname?
         assertFilter("( bundle = abc  )", "(osgi.wiring.bundle= abc  )");
+        assertFilter("(service=xyz)", "(osgi.service=xyz)");
         assertFilter("(|(bundle=x)(&(bundle=y)(fragment=z)))",
                 "(|(osgi.wiring.bundle=x)(&(osgi.wiring.bundle=y)(osgi.wiring.host=z)))");
     }
