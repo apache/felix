@@ -123,7 +123,16 @@
                 org.apache.felix.bundlerepository.impl.*,
                 org.apache.felix.utils.*
             </Private-Package>
-            <Import-Package>!javax.xml.parsers,!org.xml.sax,org.osgi.service.log;resolution:=optional,org.osgi.service.obr;resolution:=optional,javax.xml.stream;resolution:=optional,*</Import-Package>
+            <!-- The org.osgi.service.repository;resolution:=mandatory seems strange below, but otherwise the maven-bundle-plugin
+                 will make that import optional, which we don't want... -->
+            <Import-Package>
+                !javax.xml.parsers,
+                !org.xml.sax,
+                org.osgi.service.repository;resolution:=mandatory,
+                org.osgi.service.log;resolution:=optional,
+                org.osgi.service.obr;resolution:=optional,
+                javax.xml.stream;resolution:=optional,
+                *</Import-Package>
             <DynamicImport-Package>org.apache.felix.shell</DynamicImport-Package>
             <Bundle-Activator>${project.artifactId}.impl.Activator</Bundle-Activator>
             <Bundle-DocURL>http://felix.apache.org/site/apache-felix-osgi-bundle-repository.html</Bundle-DocURL>
