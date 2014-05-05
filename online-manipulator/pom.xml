@@ -132,7 +132,8 @@
                             org.objectweb.asm,
                             org.objectweb.asm.commons,
                             org.objectweb.asm.signature,
-                            org.objectweb.asm.tree,
+                            org.objectweb.asm.tree*,
+                            org.objectweb.asm.util,
                             org.apache.felix.ipojo.online.manipulator
                         </Private-Package>
                         <Import-Package>!sun.io, org.osgi.framework;version=1.3, *
