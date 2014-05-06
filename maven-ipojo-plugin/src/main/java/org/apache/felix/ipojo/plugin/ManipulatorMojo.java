@@ -18,19 +18,22 @@
  */
 package org.apache.felix.ipojo.plugin;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.felix.ipojo.manipulator.Pojoization;
 import org.apache.felix.ipojo.manipulator.Reporter;
+import org.apache.felix.ipojo.manipulator.util.Classpath;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Packages an OSGi jar "bundle" as an "iPOJO bundle".
@@ -39,7 +42,7 @@ import org.apache.maven.project.MavenProjectHelper;
  * @version $Rev$, $Date$
  * @goal ipojo-bundle
  * @phase package
- * @requiresDependencyResolution runtime
+ * @requiresDependencyResolution test
  * @description manipulate an OSGi bundle jar to build an iPOJO bundle
  * @threadSafe
  */
@@ -64,6 +67,7 @@ public class ManipulatorMojo extends AbstractMojo {
 
     /**
      * Location of the metadata file or iPOJO metadata configuration.
+     *
      * @parameter alias="metadata"
      */
     private String m_metadata;
@@ -93,6 +97,7 @@ public class ManipulatorMojo extends AbstractMojo {
 
     /**
      * Used for attaching new artifacts.
+     *
      * @component
      * @required
      */
@@ -100,18 +105,21 @@ public class ManipulatorMojo extends AbstractMojo {
 
     /**
      * Project types which this plugin supports.
+     *
      * @parameter
      */
     private List<String> m_supportedProjectTypes = Arrays.asList(new String[]{"bundle", "jar", "war"});
 
     /**
      * Ignore annotations parameter.
+     *
      * @parameter alias="ignoreAnnotations" default-value="false"
      */
     private boolean m_ignoreAnnotations;
 
     /**
      * Ignore embedded XSD parameter.
+     *
      * @parameter alias="IgnoreEmbeddedSchemas" default-value="false"
      */
     private boolean m_ignoreEmbeddedXSD;
@@ -122,6 +130,7 @@ public class ManipulatorMojo extends AbstractMojo {
 
     /**
      * Execute method : this method launches the pojoization.
+     *
      * @throws MojoExecutionException : an exception occurs during the manipulation.
      * @see org.apache.maven.plugin.AbstractMojo#execute()
      */
@@ -143,6 +152,22 @@ public class ManipulatorMojo extends AbstractMojo {
         File metadata = null; // Metadata File or directory containing the metadata files.
         InputStream is = null; //Use if contained in the configuration
 
+        // Create the ClassPath and classloader.
+        Set<Artifact> artifacts = m_project.getArtifacts();
+        Set<String> urls = new LinkedHashSet<String>();
+        File classes = new File(m_project.getBasedir(), "target/classes");
+        if (classes.isDirectory()) {
+            urls.add(classes.getAbsolutePath());
+        }
+        for (Artifact artifact : artifacts) {
+            File file = artifact.getFile();
+            if (file != null && file.isFile()) {
+                urls.add(file.getAbsolutePath());
+            }
+        }
+        getLog().debug("Compute classpath: " + urls);
+        Classpath classpath = new Classpath(urls);
+
         if (isXML()) {
             is = new ByteArrayInputStream(m_metadata.getBytes());
         } else {
@@ -156,7 +181,7 @@ public class ManipulatorMojo extends AbstractMojo {
                 } else {
                     // Else check target/classes/metadata.xml
                     File meta = new File(m_outputDirectory + File.separator + "metadata.xml");
-                    if (! meta.exists()) {
+                    if (!meta.exists()) {
                         // If it still does not exist, try ./metadata.xml
                         meta = new File(m_project.getBasedir() + File.separator + "metadata.xml");
                     }
@@ -171,7 +196,7 @@ public class ManipulatorMojo extends AbstractMojo {
             } else {
                 // metadata path set.
                 File m = new File(m_project.getBasedir(), m_metadata);
-                if (! m.exists()) {
+                if (!m.exists()) {
                     throw new MojoExecutionException("The metadata file does not exist : " + m.getAbsolutePath());
                 }
                 metadata = m;
@@ -198,16 +223,16 @@ public class ManipulatorMojo extends AbstractMojo {
         if (m_inputClassifier == null) {
             in = m_project.getArtifact().getFile();
             getLog().info("Input Bundle File : " + in.getAbsolutePath());
-            if (! in.exists()) {
+            if (!in.exists()) {
                 throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
             }
         } else {
             // Look from attached artifacts.
             @SuppressWarnings("unchecked")
             List<Artifact> attached = m_project.getAttachedArtifacts();
-            for (int i = 0; in == null  && attached != null  && i < attached.size(); i++) {
+            for (int i = 0; in == null && attached != null && i < attached.size(); i++) {
                 Artifact artifact = attached.get(i);
-                if (artifact.hasClassifier()  && m_inputClassifier.equals(artifact.getClassifier())) {
+                if (artifact.hasClassifier() && m_inputClassifier.equals(artifact.getClassifier())) {
                     in = artifact.getFile();
                 }
             }
@@ -218,7 +243,7 @@ public class ManipulatorMojo extends AbstractMojo {
             }
 
             getLog().info("Input Bundle File : " + in.getAbsolutePath());
-            if (! in.exists()) {
+            if (!in.exists()) {
                 throw new MojoExecutionException("The specified bundle file does not exist : " + in.getAbsolutePath());
             }
         }
@@ -227,18 +252,22 @@ public class ManipulatorMojo extends AbstractMojo {
 
         Reporter reporter = new MavenReporter(getLog());
         Pojoization pojo = new Pojoization(reporter);
-        if (m_ignoreAnnotations) { pojo.disableAnnotationProcessing(); }
-        if (!m_ignoreEmbeddedXSD) { pojo.setUseLocalXSD(); }
+        if (m_ignoreAnnotations) {
+            pojo.disableAnnotationProcessing();
+        }
+        if (!m_ignoreEmbeddedXSD) {
+            pojo.setUseLocalXSD();
+        }
 
         // Executes the pojoization.
         if (is == null) {
             if (metadata == null) { // No metadata.
-                pojo.pojoization(in, out, (File) null); // Only annotations
+                pojo.pojoization(in, out, (File) null, classpath.createClassLoader()); // Only annotations
             } else {
-                pojo.pojoization(in, out, metadata); // Metadata set
+                pojo.pojoization(in, out, metadata, classpath.createClassLoader()); // Metadata set
             }
-        } else  { // In-Pom metadata.
-            pojo.pojoization(in, out, is);
+        } else { // In-Pom metadata.
+            pojo.pojoization(in, out, is, classpath.createClassLoader());
         }
 
         for (int i = 0; i < reporter.getWarnings().size(); i++) {
@@ -255,7 +284,7 @@ public class ManipulatorMojo extends AbstractMojo {
         } else {
             // Usual behavior
             if (in.delete()) {
-                if (! out.renameTo(in)) {
+                if (!out.renameTo(in)) {
                     getLog().warn("Cannot rename the manipulated jar file");
                 }
             } else {
@@ -276,7 +305,6 @@ public class ManipulatorMojo extends AbstractMojo {
             getLog().info("Set the Sax driver to org.apache.xerces.parsers.SAXParser");
             System.setProperty("org.xml.sax.driver", "org.apache.xerces.parsers.SAXParser");
         }
-
     }
 
 }
