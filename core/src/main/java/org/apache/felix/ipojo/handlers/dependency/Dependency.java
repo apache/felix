@@ -55,7 +55,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
      */
     private final String m_exception;
     /**
-     * Is the Nullable pattern enable?
+     * Is the Nullable pattern enabled?
      */
     private final boolean m_supportNullable;
     /**
@@ -419,6 +419,12 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
     private Object createNullableObject() {
         // To load the proxy we use the POJO class loader. Indeed, this classloader imports iPOJO (so can access to Nullable) and has
         // access to the service specification.
+        if ( ! getSpecification().isInterface()) {
+            getHandler().getLogger().log(Log.INFO, "Cannot create the nullable object for " + getSpecification()
+                    .getName() + " - the specification is not an interface");
+            return null;
+        }
+
         try {
             ClassLoader cl = new NullableClassLoader(
                     getHandler().getInstanceManager().getClazz().getClassLoader(),
@@ -483,7 +489,7 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
 
                     if (type == null || type.equals(DependencyHandler.SMART_PROXY)) {
                         SmartProxyFactory proxyFactory = new SmartProxyFactory(this.getClass().getClassLoader());
-                        m_proxyObject = proxyFactory.getProxy(getSpecification(), this);
+                        m_proxyObject = proxyFactory.getProxy(this);
                     } else {
                         DynamicProxyFactory proxyFactory = new DynamicProxyFactory();
                         m_proxyObject = proxyFactory.getProxy(getSpecification());
@@ -1106,11 +1112,10 @@ public class Dependency extends DependencyModel implements FieldInterceptor, Met
          * Create a proxy object for the given specification. The proxy
          * uses the given dependency to get the service object.
          *
-         * @param spec the service specification (interface)
          * @param dep  the dependency used to get the service
          * @return the proxy object.
          */
-        public Object getProxy(Class spec, Dependency dep) {
+        public Object getProxy(Dependency dep) {
             try {
                 Class clazz = getProxyClass(getSpecification());
                 Constructor constructor = clazz.getConstructor(
