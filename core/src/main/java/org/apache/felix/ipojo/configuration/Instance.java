@@ -86,6 +86,9 @@ public class Instance {
     }
 
     public Instance named(String name) {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("The instance name cannot be null or empty");
+        }
         this.name = name;
         return this;
     }
@@ -101,7 +104,7 @@ public class Instance {
 
     public Instance nameIfUnnamed(String name) {
         if (this.name == null) {
-            this.name = name;
+            named(name);
         }
         return this;
     }
@@ -123,7 +126,7 @@ public class Instance {
         }
     }
 
-    public static class FluentMap<K,T> extends LinkedHashMap<K, T> {
+    public static class FluentMap<K, T> extends LinkedHashMap<K, T> {
 
         public FluentMap() {
             super(new LinkedHashMap<K, T>());
@@ -163,10 +166,18 @@ public class Instance {
         private T value;
 
         Property(String name) {
+            if (name == null || name.isEmpty()) {
+                throw new IllegalArgumentException("The property name cannot be null or empty");
+            }
             this.name = name;
         }
 
         public Instance setto(T value) {
+            if ("instance.name".endsWith(name)) {
+                if (value == null || value.toString().isEmpty()) {
+                    throw new IllegalArgumentException("The instance name cannot be null or empty");
+                }
+            }
             this.value = value;
             return Instance.this;
         }
