@@ -106,7 +106,7 @@
               org.objectweb.asm.util;-split-package:=merge-first,
               org.objectweb.asm;-split-package:=merge-first,
               org.objectweb.asm.commons;-split-package:=merge-first,
-              org.objectweb.asm.tree;-split-package:=merge-first,
+              org.objectweb.asm.tree*;-split-package:=merge-first,
               org.apache.xerces.parsers, org.apache.xerces.xni*,
               org.apache.xerces.impl*, org.apache.xerces.util.*,
               org.apache.xerces.dom.*, org.apache.xerces.dom3.*,
