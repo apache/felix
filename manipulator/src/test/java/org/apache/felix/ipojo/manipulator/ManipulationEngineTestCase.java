@@ -54,7 +54,7 @@ public class ManipulationEngineTestCase extends TestCase {
     private ManipulationResultVisitor result;
 
     @InjectMocks
-    private ManipulationEngine engine = new ManipulationEngine();
+    private ManipulationEngine engine = new ManipulationEngine(this.getClass().getClassLoader());
 
 
     @Override

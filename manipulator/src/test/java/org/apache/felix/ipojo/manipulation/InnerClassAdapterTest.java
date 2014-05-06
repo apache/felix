@@ -203,7 +203,7 @@ public class InnerClassAdapterTest {
 
     @Test
     public void testManipulatingTheInner() throws Exception {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         String className = "test.PojoWithInner";
         byte[] origin = ManipulatorTest.getBytesFromFile(new File(baseClassDirectory + className.replace(".",
                 "/") + ".class"));
@@ -260,7 +260,7 @@ public class InnerClassAdapterTest {
 
     @Test
     public void testInnerClasses() throws IOException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         String className = "test.inner.ComponentWithInnerClasses";
         ManipulatedClassLoader classloader = manipulate(className, manipulator);
 
@@ -287,11 +287,11 @@ public class InnerClassAdapterTest {
     @Test
     public void testDoubleManipulation() throws IOException, ClassNotFoundException, NoSuchMethodException,
             IllegalAccessException, InvocationTargetException, InstantiationException {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         String className = "test.inner.ComponentWithInnerClasses";
         ManipulatedClassLoader classloader = manipulate(className, manipulator);
 
-        manipulator = new Manipulator();
+        manipulator = new Manipulator(this.getClass().getClassLoader());
         classloader = manipulate(className, manipulator, classloader);
 
         Class clazz = classloader.findClass(className);
@@ -316,7 +316,7 @@ public class InnerClassAdapterTest {
     @Test
     public void testThatManipulationMetadataContainsTheInnerClasses() throws IOException, ClassNotFoundException,
             NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         String className = "test.inner.ComponentWithInnerClasses";
         manipulate(className, manipulator);
 
@@ -343,7 +343,7 @@ public class InnerClassAdapterTest {
     @Test
     public void testThatTheClassContainsTheFlagsForTheInnerMethods() throws IOException, ClassNotFoundException,
             NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         String className = "test.inner.ComponentWithInnerClasses";
         ManipulatedClassLoader classLoader = manipulate(className, manipulator);
 
@@ -361,7 +361,7 @@ public class InnerClassAdapterTest {
 
     @Test
     public void testThatStaticInnerClassesAreNotManipulated() throws Exception {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         String className = "test.inner.ComponentWithInnerClasses";
         ManipulatedClassLoader classLoader = manipulate(className, manipulator);
 
@@ -377,7 +377,7 @@ public class InnerClassAdapterTest {
 
     @Test
     public void testThatAnonymousClassDeclaredInStaticFieldsAreNotManipulated() throws Exception {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         String className = "test.inner.ComponentWithInnerClasses";
         ManipulatedClassLoader classLoader = manipulate(className, manipulator);
 

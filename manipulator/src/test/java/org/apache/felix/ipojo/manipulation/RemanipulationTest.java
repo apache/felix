@@ -60,7 +60,7 @@ public class RemanipulationTest extends TestCase {
         AnnotationMetadataProvider provider = new AnnotationMetadataProvider(store, reporter);
         List<Element> originalMetadata = provider.getMetadatas();
         // 1.2 Manipulation
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         manipulator.prepare(origin);
         byte[] clazz = manipulator.manipulate(origin);
         Element originalManipulationMetadata = manipulator.getManipulationMetadata();
@@ -78,7 +78,7 @@ public class RemanipulationTest extends TestCase {
         provider = new AnnotationMetadataProvider(store, reporter);
         List<Element> metadataAfterOneManipulation = provider.getMetadatas();
         // 2.2 Manipulation
-        manipulator = new Manipulator();
+        manipulator = new Manipulator(this.getClass().getClassLoader());
         manipulator.prepare(clazz);
         byte[] clazz2 = manipulator.manipulate(clazz);
         Element manipulationMetadataAfterSecondManipulation = manipulator.getManipulationMetadata();
@@ -96,7 +96,7 @@ public class RemanipulationTest extends TestCase {
         provider = new AnnotationMetadataProvider(store, reporter);
         List<Element> metadataAfterTwoManipulation = provider.getMetadatas();
         // 3.2 Manipulation
-        manipulator = new Manipulator();
+        manipulator = new Manipulator(this.getClass().getClassLoader());
         manipulator.prepare(clazz2);
         byte[] clazz3 = manipulator.manipulate(clazz2);
         Element manipulationMetadataAfterThirdManipulation = manipulator.getManipulationMetadata();
