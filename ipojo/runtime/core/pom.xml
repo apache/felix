@@ -186,7 +186,7 @@
                             org.apache.felix.ipojo.handlers.configuration; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.context; version="${ipojo.package.version}",
                             org.apache.felix.ipojo.dependency.interceptors; version="${ipojo.package.version}",
-                            org.apache.felix.ipojo.annotations; version="${ipojo.package.version},
+                            org.apache.felix.ipojo.annotations; version="${ipojo.package.version}",
                             <!-- Compendium packages -->
                             org.osgi.service.cm; version=1.3,
                             org.osgi.service.log; version=1.3
