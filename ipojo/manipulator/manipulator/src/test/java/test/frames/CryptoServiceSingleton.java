@@ -88,7 +88,11 @@ public class CryptoServiceSingleton {
             KeySpec spec = new PBEKeySpec(privateKey.toCharArray(), raw, iterationCount, keySize);
             SecretKeyFactory factory = SecretKeyFactory.getInstance(PBKDF_2_WITH_HMAC_SHA_1);
             return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), AES_ECB_ALGORITHM);
-        } catch (DecoderException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (DecoderException e) {
+            throw new IllegalStateException(e);
+        } catch ( NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        } catch (InvalidKeySpecException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -172,8 +176,7 @@ public class CryptoServiceSingleton {
             Cipher cipher = Cipher.getInstance(AES_CBC_ALGORITHM);
             cipher.init(encryptMode, generatedKey, new IvParameterSpec(raw));
             return cipher.doFinal(message);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | DecoderException | InvalidKeyException |
-                InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+        } catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }
@@ -266,8 +269,7 @@ public class CryptoServiceSingleton {
             Cipher cipher = Cipher.getInstance(AES_ECB_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
             return Hex.encodeHexString(cipher.doFinal(value.getBytes(UTF_8)));
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException |
-                InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+        } catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }
@@ -298,8 +300,7 @@ public class CryptoServiceSingleton {
             Cipher cipher = Cipher.getInstance(AES_ECB_ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, skeySpec);
             return new String(cipher.doFinal(Hex.decodeHex(value.toCharArray())), UTF_8);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException |
-                InvalidKeyException | BadPaddingException | IllegalBlockSizeException | DecoderException e) {
+        } catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }
