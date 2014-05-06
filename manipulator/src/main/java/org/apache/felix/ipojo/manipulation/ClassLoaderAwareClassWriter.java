@@ -19,29 +19,30 @@
 
 package org.apache.felix.ipojo.manipulation;
 
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
 /**
- * An extension of {@link org.objectweb.asm.ClassWriter} that doe snot trigger class loading to compute the common super
- * class. It generally returns Object.
+ * An extension of {@link org.objectweb.asm.ClassWriter} that uses a specific classloader to load classes.
  */
-public class NoClassLoaderClassWriter extends ClassWriter {
+public class ClassLoaderAwareClassWriter extends ClassWriter {
 
     private static final String OBJECT_INTERNAL_NAME = "java/lang/Object";
+    private final String className;
+    private final String superClass;
+    private final ClassLoader classLoader;
 
-    public NoClassLoaderClassWriter(ClassReader reader, int flags) {
-        super(reader, flags);
-    }
-
-    public NoClassLoaderClassWriter(int flags) {
+    public ClassLoaderAwareClassWriter(int flags, String className, String superClass, ClassLoader loader) {
         super(flags);
+        this.className = className;
+        this.superClass = superClass;
+        this.classLoader = loader;
     }
 
     /**
      * Implements the common super class lookup to be a bit more permissive. First we check is type1 == type2,
      * because in this case, the lookup is done. Then, if one of the class is Object,
      * returns object. If both checks failed, it returns Object.
+     *
      * @param type1 the first class
      * @param type2 the second class
      * @return the common super class
@@ -58,8 +59,34 @@ public class NoClassLoaderClassWriter extends ClassWriter {
             return OBJECT_INTERNAL_NAME;
         }
 
-        // We shunt the rest of the process.
-        return OBJECT_INTERNAL_NAME;
+        // If either of these class names are the current class then we can short
+        // circuit to the superclass (which we already know)
+        if (type1.equals(className.replace(".", "/")) && superClass != null) {
+            return getCommonSuperClass(superClass.replace(".", "/"), type2);
+        } else if (type2.equals(className.replace(".", "/")) && superClass != null)
+            return getCommonSuperClass(type1, superClass.replace(".", "/"));
+
+        Class<?> c, d;
+        try {
+            c = classLoader.loadClass(type1.replace('/', '.'));
+            d = classLoader.loadClass(type2.replace('/', '.'));
+        } catch (Exception e) {
+            throw new RuntimeException(e.toString());
+        }
+        if (c.isAssignableFrom(d)) {
+            return type1;
+        }
+        if (d.isAssignableFrom(c)) {
+            return type2;
+        }
+        if (c.isInterface() || d.isInterface()) {
+            return "java/lang/Object";
+        } else {
+            do {
+                c = c.getSuperclass();
+            } while (!c.isAssignableFrom(d));
+            return c.getName().replace('.', '/');
+        }
     }
 }
 
