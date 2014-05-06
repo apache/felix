@@ -448,7 +448,16 @@ public class PrimitiveComponentType extends ComponentType {
      * @return the manipulated class
      */
     private byte[] manipulate() {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(new ClassLoader() {
+            @Override
+            public Class<?> loadClass(String name) throws ClassNotFoundException {
+                try {
+                    return m_context.getBundle().loadClass(name);
+                } catch (ClassNotFoundException e) {
+                    return this.getClass().getClassLoader().loadClass(name);
+                }
+            }
+        });
         try {
             byte[] array = getClassByteArray();
 

@@ -212,10 +212,11 @@ public class IPOJOURLHandler extends AbstractURLStreamHandlerService {
             composite.addMetadataProvider(provider);
         }
 
+        ClassLoader classloader = new BridgeClassLoader(original, m_context);
         // Pojoization
         Pojoization pojoizator = new Pojoization(createModuleProvider());
         try {
-            pojoizator.pojoization(store, composite, createVisitor(store, reporter));
+            pojoizator.pojoization(store, composite, createVisitor(store, reporter), classloader);
         } catch (Exception e) {
             if (!pojoizator.getErrors().isEmpty()) {
                 throw new IOException("Errors occurred during the manipulation : " + pojoizator.getErrors(), e);
