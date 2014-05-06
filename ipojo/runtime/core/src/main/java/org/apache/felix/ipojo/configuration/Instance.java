@@ -86,7 +86,7 @@ public class Instance {
     }
 
     public Instance named(String name) {
-        if (name == null || name.isEmpty()) {
+        if (name == null || name.length() == 0) {
             throw new IllegalArgumentException("The instance name cannot be null or empty");
         }
         this.name = name;
@@ -166,7 +166,7 @@ public class Instance {
         private T value;
 
         Property(String name) {
-            if (name == null || name.isEmpty()) {
+            if (name == null || name.length() == 0) {
                 throw new IllegalArgumentException("The property name cannot be null or empty");
             }
             this.name = name;
@@ -174,7 +174,7 @@ public class Instance {
 
         public Instance setto(T value) {
             if ("instance.name".endsWith(name)) {
-                if (value == null || value.toString().isEmpty()) {
+                if (value == null || value.toString().length() == 0) {
                     throw new IllegalArgumentException("The instance name cannot be null or empty");
                 }
             }
