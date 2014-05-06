@@ -52,4 +52,51 @@ public class InstanceDSLTest extends TestCase {
         String cn = ConfigurationProcessor.getClassNameFromResource("/org/apache/felix/ipojo/Pojo.class");
         Assert.assertEquals(cn, "org.apache.felix.ipojo.Pojo");
     }
+
+    /**
+     * Test for FELIX-4490.
+     */
+    public void testInstanceNameNotNullOrEmpty() {
+        try {
+            instance().named(null);
+            Assert.fail("Exception expected");
+        } catch (IllegalArgumentException e) {
+            // OK
+        }
+
+        try {
+            instance().named("");
+            Assert.fail("Exception expected");
+        } catch (IllegalArgumentException e) {
+            // OK
+        }
+
+        try {
+            instance().nameIfUnnamed(null);
+            Assert.fail("Exception expected");
+        } catch (IllegalArgumentException e) {
+            // OK
+        }
+
+        try {
+            instance().nameIfUnnamed("");
+            Assert.fail("Exception expected");
+        } catch (IllegalArgumentException e) {
+            // OK
+        }
+
+        try {
+            instance().with("instance.name").setto(null);
+            Assert.fail("Exception expected");
+        } catch (IllegalArgumentException e) {
+            // OK
+        }
+
+        try {
+            instance().with("instance.name").setto("");
+            Assert.fail("Exception expected");
+        } catch (IllegalArgumentException e) {
+            // OK
+        }
+    }
 }
