@@ -131,4 +131,32 @@ public class BindingContext {
     public Object getVisitor() {
         return visitor;
     }
+
+    /**
+     * This method is just to support the compatibility with the previous version. It returns an ASM node of the
+     * member on which the annotation is 'attached'. The type of the node depends on this element. It can be a {@link
+     * org.objectweb.asm.tree.FieldNode}, a {@link org.objectweb.asm.tree.MethodNode} or a
+     * {@link org.objectweb.asm.tree.ClassNode}. It actually checks the current node and returns the first set ones
+     * in this order: field, method, class.
+     * <p/>
+     * The type of the returned object can be determined using the {@link #getElementType} method. However it is
+     * recommended to use one of the following method: {@link #getFieldNode()}, {@link #getMethodNode()}  or
+     * {@link #getClassNode()}.
+     *
+     * @return the node.
+     * @deprecated
+     */
+    public Object getNode() {
+        if (field != null) {
+            return field;
+        }
+        if (method != null) {
+            return method;
+        }
+        if (clazz != null) {
+            return clazz;
+        }
+        // No node ?
+        return null;
+    }
 }
