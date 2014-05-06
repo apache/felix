@@ -38,6 +38,10 @@ import java.util.*;
  */
 public class Manipulator {
     /**
+     * A classloader used to compute frames.
+     */
+    private final ClassLoader m_classLoader;
+    /**
      * Store the visited fields : [name of the field, type of the field].
      */
     private Map<String, String> m_fields;
@@ -76,6 +80,11 @@ public class Manipulator {
      * The manipulated class name.
      */
     private String m_className;
+
+    public Manipulator(ClassLoader loader) {
+        // No classloader set, use current one.
+        m_classLoader = loader;
+    }
 
     /**
      * Checks the given bytecode, determines if the class was already manipulated, and collect the metadata about the
@@ -119,7 +128,8 @@ public class Manipulator {
         if (!m_alreadyManipulated) {
             InputStream is2 = new ByteArrayInputStream(origin);
             ClassReader reader = new ClassReader(is2);
-            ClassWriter writer = new NoClassLoaderClassWriter(ClassWriter.COMPUTE_FRAMES);
+            ClassWriter writer = new ClassLoaderAwareClassWriter(ClassWriter.COMPUTE_FRAMES, m_className, m_superClass,
+                    m_classLoader);
             ClassManipulator process = new ClassManipulator(new CheckClassAdapter(writer, false), this);
             if (m_version >= Opcodes.V1_6) {
                 reader.accept(process, ClassReader.EXPAND_FRAMES);
@@ -262,7 +272,7 @@ public class Manipulator {
             InputStream is1 = new ByteArrayInputStream(bytecode);
 
             ClassReader cr = new ClassReader(is1);
-            ClassWriter cw = new NoClassLoaderClassWriter(ClassWriter.COMPUTE_FRAMES);
+            ClassWriter cw = new ClassLoaderAwareClassWriter(ClassWriter.COMPUTE_FRAMES, inner, null, m_classLoader);
             InnerClassAdapter adapter = new InnerClassAdapter(inner, cw, m_className, this);
             if (m_version >= Opcodes.V1_6) {
                 cr.accept(adapter, ClassReader.EXPAND_FRAMES);
