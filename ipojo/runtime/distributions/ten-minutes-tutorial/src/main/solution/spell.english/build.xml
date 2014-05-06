@@ -68,6 +68,7 @@
 		
 		<ipojo
 				input="${output.dir}/${ant.project.name}.jar"
+                classpathref="classpath"
 		/>
 	</target>
 
