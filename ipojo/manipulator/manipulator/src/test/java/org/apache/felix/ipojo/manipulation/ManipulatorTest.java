@@ -38,7 +38,7 @@ import org.objectweb.asm.util.CheckClassAdapter;
 public class ManipulatorTest extends TestCase {
 
     public void testClusterDaemon() throws Exception {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         byte[] origin = getBytesFromFile(new File("target/test-classes/test/ClusterDaemon.class"));
         manipulator.prepare(origin);
         byte[] clazz = manipulator.manipulate(origin);
@@ -63,8 +63,41 @@ public class ManipulatorTest extends TestCase {
 
     }
 
+    public void testCrypto() throws Exception {
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
+        byte[] origin = getBytesFromFile(new File("target/test-classes/test/frames/CryptoServiceSingleton.class"));
+        manipulator.prepare(origin);
+        byte[] clazz = manipulator.manipulate(origin);
+
+        ManipulatedClassLoader classloader = new ManipulatedClassLoader("test.frames.CryptoServiceSingleton", clazz);
+
+        //Assert.assertNotNull(manipulator.getManipulationMetadata());
+
+        //System.out.println(manipulator.getManipulationMetadata());
+
+
+        ClassReader reader = new ClassReader(clazz);
+        CheckClassAdapter.verify(reader, false, new PrintWriter(new File("/tmp/class_dump")));
+
+        Class cl = classloader.findClass("test.frames.CryptoServiceSingleton");
+        Assert.assertNotNull(cl);
+
+        Object instance = cl.newInstance();
+
+        Method method = cl.getMethod("encryptAESWithCBC", String.class, String.class);
+        final String salt = "0000000000000000";
+        String result = (String) method.invoke(instance, "hello", salt);
+        assertNotNull(result);
+
+        // The manipulation add stuff to the class.
+        //Assert.assertTrue(clazz.length > getBytesFromFile(new File("target/test-classes/test/ClusterDaemon.class")).length);
+
+        //Assert.assertNotNull(cl.newInstance());
+
+    }
+
     public void testManipulatingTheSimplePojo() throws Exception {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         byte[] origin = getBytesFromFile(new File("target/test-classes/test/SimplePojo.class"));
         manipulator.prepare(origin);
         byte[] clazz = manipulator.manipulate(origin);
@@ -117,7 +150,7 @@ public class ManipulatorTest extends TestCase {
     }
 
     public void testManipulatingTheNonSunPOJO() throws Exception {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         byte[] origin = getBytesFromFile(new File("target/test-classes/test/NonSunClass.class"));
         manipulator.prepare(origin);
         byte[] clazz = manipulator.manipulate(origin);
@@ -160,7 +193,7 @@ public class ManipulatorTest extends TestCase {
     }
 
     public void testManipulatingChild() throws Exception {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         byte[] origin = getBytesFromFile(new File("target/test-classes/test/Child.class"));
         manipulator.prepare(origin);
         byte[] clazz = manipulator.manipulate(origin);
@@ -209,7 +242,7 @@ public class ManipulatorTest extends TestCase {
     }
 
     public void testManipulatingWithConstructorModification() throws Exception {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         byte[] origin = getBytesFromFile(new File("target/test-classes/test/Child.class"));
         manipulator.prepare(origin);
         byte[] clazz = manipulator.manipulate(origin);
@@ -276,7 +309,7 @@ public class ManipulatorTest extends TestCase {
 
 
     public void testManipulatingWithNoValidConstructor() throws Exception {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         byte[] origin = getBytesFromFile(new File("target/test-classes/test/NoValidConstructor.class"));
         manipulator.prepare(origin);
         byte[] clazz = manipulator.manipulate(origin);
@@ -315,7 +348,7 @@ public class ManipulatorTest extends TestCase {
     }
 
      public void testConstructor() throws Exception {
-        Manipulator manipulator = new Manipulator();
+         Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
          byte[] origin = getBytesFromFile(new File("target/test-classes/test/ConstructorCheck.class"));
          manipulator.prepare(origin);
          byte[] clazz = manipulator.manipulate(origin);
@@ -344,7 +377,7 @@ public class ManipulatorTest extends TestCase {
      * https://issues.apache.org/jira/browse/FELIX-3621
      */
     public void testManipulatingDoubleArray() throws Exception {
-        Manipulator manipulator = new Manipulator();
+        Manipulator manipulator = new Manipulator(this.getClass().getClassLoader());
         byte[] origin = getBytesFromFile(new File("target/test-classes/test/DoubleArray.class"));
         manipulator.prepare(origin);
         byte[] clazz = manipulator.manipulate(origin);
