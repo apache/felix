@@ -18,18 +18,19 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-  <parent>
-    <groupId>org.apache.felix</groupId>
-    <artifactId>org.apache.felix.ipojo.manipulator.manipulator-it</artifactId>
-    <version>1.11.3-SNAPSHOT</version>
-  </parent>
+    <parent>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.ipojo.manipulator.manipulator-it</artifactId>
+        <version>1.12.0-SNAPSHOT</version>
+    </parent>
 
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>ipojo-online-manipulator-test</artifactId>
+    <artifactId>ipojo-online-manipulator-test</artifactId>
 
-  <name>Apache Felix iPOJO Manipulator ~ Online IT</name>
+    <name>Apache Felix iPOJO Manipulator ~ Online IT</name>
 
 </project>

@@ -27,7 +27,7 @@
   </parent>
 
   <artifactId>bnd-ipojo-plugin</artifactId>
-  <version>1.11.3-SNAPSHOT</version>
+  <version>1.12.0-SNAPSHOT</version>
   <name>Apache Felix iPOJO Bnd Plugin</name>
 
   <dependencies>

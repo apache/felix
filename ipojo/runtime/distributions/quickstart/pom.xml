@@ -33,7 +33,7 @@
 
     <name>Apache Felix iPOJO - Distribution - Quickstart</name>
     <artifactId>org.apache.felix.ipojo.distribution.quickstart</artifactId>
-    <version>1.11.3-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
 
     <properties>
         <!-- Felix version -->
