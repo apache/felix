@@ -102,7 +102,11 @@ public class UriUtilsTest
     {
         assertEquals(null, removeDotSegments(null));
         assertEquals("", removeDotSegments(""));
+        assertEquals("", removeDotSegments("."));
+        assertEquals("", removeDotSegments(".."));
         assertEquals("/", removeDotSegments("/"));
+        assertEquals("/", removeDotSegments("/."));
+        assertEquals("", removeDotSegments("/.."));
         assertEquals("foo", removeDotSegments("./foo"));
         assertEquals("/bar/", removeDotSegments("./foo/../bar/"));
         assertEquals("foo", removeDotSegments("../foo"));
@@ -111,9 +115,25 @@ public class UriUtilsTest
         assertEquals("/foo/bar", removeDotSegments("/foo/./bar"));
         assertEquals("/bar", removeDotSegments("/foo/../bar"));
         assertEquals("/bar", removeDotSegments("/foo/./../bar"));
+        assertEquals("/foo/bar", removeDotSegments("/foo/././bar"));
+        assertEquals("/qux", removeDotSegments("/foo/bar/../../qux"));
+        assertEquals("/foo/qux/quu", removeDotSegments("/foo/bar/../qux/././quu"));
         assertEquals("/bar//", removeDotSegments("/foo/./../bar//"));
         assertEquals("/", removeDotSegments("/foo/../bar/.."));
         assertEquals("/foo/quu", removeDotSegments("/foo/bar/qux/./../../quu"));
         assertEquals("mid/6", removeDotSegments("mid/content=5/../6"));
+        assertEquals("//bar/qux/file.ext", removeDotSegments("foo/.././/bar/qux/file.ext"));
+        // weird cases
+        assertEquals("..foo", removeDotSegments("..foo"));
+        assertEquals("foo..", removeDotSegments("foo.."));
+        assertEquals("foo.", removeDotSegments("foo."));
+        assertEquals("/.foo", removeDotSegments("/.foo"));
+        assertEquals("/..foo", removeDotSegments("/..foo"));        
+
+        // FELIX-4440
+        assertEquals("foo.bar", removeDotSegments("foo.bar"));
+        assertEquals("/test.jsp", removeDotSegments("/test.jsp"));
+        assertEquals("http://foo/bar./qux.quu", removeDotSegments("http://foo/bar./qux.quu"));
+        assertEquals("http://foo/bar.qux/quu", removeDotSegments("http://foo/bar.qux/quu"));
     }
 }
