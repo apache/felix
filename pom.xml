@@ -55,7 +55,8 @@
                             org.apache.felix.http.jetty.internal.JettyActivator
                         </Bundle-Activator>
                         <Export-Package>
-        					org.eclipse.jetty.*;-split-package:=merge-first;version=${version;===;${jetty.version}}
+        					org.eclipse.jetty.*;-split-package:=merge-first;version=${version;===;${jetty.version}},
+                            org.apache.felix.http.jetty
                         </Export-Package>
                         <Private-Package>
                             org.apache.felix.http.base.*,
@@ -81,6 +82,12 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>1.50.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

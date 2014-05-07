@@ -101,7 +101,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     private EventDispatcher eventDispatcher;
     private MBeanServerTracker mbeanServerTracker;
     private BundleTracker bundleTracker;
-    private ServiceTracker serviceTracker;
+    private ServiceTracker eventAdmintTracker;
+    private ServiceTracker connectorTracker;
     private EventAdmin eventAdmin;
 
     public JettyService(BundleContext context, DispatcherServlet dispatcher, EventDispatcher eventDispatcher, HttpServiceController controller)
@@ -132,8 +133,8 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         props.put(Constants.SERVICE_PID, PID);
         this.configServiceReg = this.context.registerService(ManagedService.class.getName(), new JettyManagedService(this), props);
 
-        this.serviceTracker = new ServiceTracker(this.context, EventAdmin.class.getName(), this);
-        this.serviceTracker.open();
+        this.eventAdmintTracker = new ServiceTracker(this.context, EventAdmin.class.getName(), this);
+        this.eventAdmintTracker.open();
 
         this.bundleTracker = new BundleTracker(this.context, Bundle.ACTIVE | Bundle.STARTING, this);
         this.bundleTracker.open();
@@ -151,10 +152,10 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             this.bundleTracker.close();
             this.bundleTracker = null;
         }
-        if (this.serviceTracker != null)
+        if (this.eventAdmintTracker != null)
         {
-            this.serviceTracker.close();
-            this.serviceTracker = null;
+            this.eventAdmintTracker.close();
+            this.eventAdmintTracker = null;
         }
 
         // FELIX-4422: stop Jetty synchronously...
@@ -205,6 +206,11 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
     {
         if (this.server != null)
         {
+            if (this.connectorTracker != null)
+            {
+                this.connectorTracker.close();
+                this.connectorTracker = null;
+            }
             try
             {
                 this.server.stop();
@@ -267,6 +273,9 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             {
                 message.append(" HTTPS:").append(this.config.getHttpsPort());
             }
+
+            this.connectorTracker = new ConnectorFactoryTracker(this.context, this.server);
+            this.connectorTracker.open();
 
             if (this.server.getConnectors() != null && this.server.getConnectors().length > 0)
             {
