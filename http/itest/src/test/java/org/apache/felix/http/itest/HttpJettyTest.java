@@ -32,15 +32,19 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
+import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -389,6 +393,39 @@ public class HttpJettyTest extends BaseIntegrationTest
         unregister(servlet);
 
         assertTrue(destroyLatch.await(5, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Tests that initialization parameters are properly passed.
+     */
+    @Test
+    public void testInitParametersOk() throws Exception
+    {
+        final CountDownLatch initLatch = new CountDownLatch(1);
+
+        Servlet servlet = new HttpServlet()
+        {
+            @Override
+            public void init(ServletConfig config) throws ServletException
+            {
+                String value1 = config.getInitParameter("key1");
+                String value2 = config.getInitParameter("key2");
+                if ("value1".equals(value1) && "value2".equals(value2))
+                {
+                    initLatch.countDown();
+                }
+            }
+        };
+
+        Dictionary params = new Hashtable();
+        params.put("key1", "value1");
+        params.put("key2", "value2");
+
+        getHttpService().registerServlet("/initTest", servlet, params, null);
+
+        assertTrue(initLatch.await(5, TimeUnit.SECONDS));
+
+        unregister(servlet);
     }
 
     @Test

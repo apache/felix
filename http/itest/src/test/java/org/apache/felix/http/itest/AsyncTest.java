@@ -47,7 +47,7 @@ public class AsyncTest extends BaseIntegrationTest
     /**
      * Tests that we can use an asynchronous servlet (introduced in Servlet 3.0 spec).
      */
-//    @Test
+    @Test
     public void testAsyncServletOk() throws Exception
     {
         CountDownLatch initLatch = new CountDownLatch(1);
