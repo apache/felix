@@ -27,7 +27,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.apache.felix.ipojo.runtime.core-it</artifactId>
-    <version>1.11.3-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
     <name>Apache Felix iPOJO Runtime Project ~ Core Integration Tests</name>
     <packaging>pom</packaging>
 
@@ -42,7 +42,7 @@
         <equinox.version>3.9.1.v20130814-1242</equinox.version>
         <knoperflerfish.version>7.0.1</knoperflerfish.version>
 
-        <manipulator.version>1.11.3-SNAPSHOT</manipulator.version>
+        <manipulator.version>1.12.0-SNAPSHOT</manipulator.version>
     </properties>
 
     <modules>
@@ -232,7 +232,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>1.11.3-SNAPSHOT</version>
+            <version>1.12.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>

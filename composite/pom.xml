@@ -27,10 +27,10 @@
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO Composite</name>
     <artifactId>org.apache.felix.ipojo.composite</artifactId>
-    <version>1.11.3-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
 
     <properties>
-        <ipojo.package.version>1.11.0</ipojo.package.version>
+        <ipojo.package.version>1.12.0</ipojo.package.version>
     </properties>
 
     <description>
@@ -49,12 +49,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.manipulator</artifactId>
-            <version>1.11.3-SNAPSHOT</version>
+            <version>1.12.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo</artifactId>
-            <version>1.11.3-SNAPSHOT</version>
+            <version>1.12.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>

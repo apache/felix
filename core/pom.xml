@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO</name>
     <artifactId>org.apache.felix.ipojo</artifactId>
-    <version>1.11.3-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
 
     <properties>
         <!--
@@ -49,9 +49,13 @@
 
            1.11.2:
            * add the InstanceBundleContextAware interface
+
+           1.12.0:
+           * change in the manipulator (frame / java 8 support). Despite it's not really an API change, it breaks
+           the compatibility.
         -->
-        <ipojo.package.version>1.11.2</ipojo.package.version>
-        <ipojo.extender.version>1.11.2</ipojo.extender.version>
+        <ipojo.package.version>1.12.0</ipojo.package.version>
+        <ipojo.extender.version>1.12.0</ipojo.extender.version>
     </properties>
 
     <description>
@@ -89,7 +93,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>1.11.3-SNAPSHOT</version>
+            <version>1.12.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
@@ -204,7 +208,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-ipojo-plugin</artifactId>
-                <version>1.11.3-SNAPSHOT</version>
+                <version>1.12.0-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <goals>
