@@ -33,7 +33,9 @@ import java.nio.charset.CodingErrorAction;
  */
 public class UriUtils
 {
-    private static final String SLASH = "/";
+    private static final String SLASH_STR = "/";
+    private static final char DOT = '.';
+    private static final char SLASH = '/';
 
     /**
      * Concatenates two paths keeping their respective path-parts into consideration.
@@ -82,9 +84,9 @@ public class UriUtils
             // need a slash?
         }
 
-        if (endsWith(sb, SLASH))
+        if (endsWith(sb, SLASH_STR))
         {
-            if (path2.startsWith(SLASH))
+            if (path2.startsWith(SLASH_STR))
             {
                 sb.append(path2.substring(1));
             }
@@ -95,13 +97,13 @@ public class UriUtils
         }
         else
         {
-            if (path2.startsWith(SLASH))
+            if (path2.startsWith(SLASH_STR))
             {
                 sb.append(path2);
             }
             else if (sb.length() > 0 && !isEmpty(path2))
             {
-                sb.append(SLASH).append(path2);
+                sb.append(SLASH_STR).append(path2);
             }
             else
             {
@@ -203,73 +205,106 @@ public class UriUtils
 
         StringBuilder scratch = new StringBuilder(path);
         StringBuilder sb = new StringBuilder();
-        char ch, la = 0, laa = 0;
+        char l, la = 0, laa = 0, laaa = 0;
 
         while (scratch.length() > 0)
         {
-            int len = scratch.length();
-            ch = scratch.charAt(0);
-            if (ch == '.')
-            {
-                if (len > 1)
-                {
-                    la = scratch.charAt(1);
-                }
-                if (la == '.' && (len > 2))
-                {
-                    laa = scratch.charAt(2);
-                }
+            l = la(scratch, 0);
+            la = la(scratch, 1);
+            laa = la(scratch, 2);
 
-                if (la == '/' || laa == '/')
+            if (l == DOT)
+            {
+                if (la == 0)
                 {
-                    // Step A: remove '../' or './' from input...
-                    scratch.delete(0, (laa == '/') ? 3 : 2);
-                    la = laa = 0;
+                    // (D) found '.' at the end of the URL
+                    break;
+                }
+                else if (la == DOT && laa == SLASH)
+                {
+                    // (A) found '../', remove it from the input...
+                    scratch.delete(0, 3);
                     continue;
                 }
-                else
+                else if (la == DOT && laa == 0)
                 {
-                    // Step D: remove '..' or '.' from input...
-                    scratch.delete(0, (laa == '/') ? 2 : 1);
-                    la = laa = 0;
+                    // (D) found '..' at the end of the URL
+                    break;
+                }
+                else if (la == SLASH)
+                {
+                    // (A) found './', remove it from the input...
+                    scratch.delete(0, 2);
                     continue;
                 }
             }
-            else if (ch == '/')
+            else if (l == SLASH && la == DOT)
             {
-                if (len > 1)
+                if (laa == SLASH)
                 {
-                    la = scratch.charAt(1);
+                    // (B) found '/./', remove the leading '/.'...
+                    scratch.delete(0, 2);
+                    continue;
                 }
-                if (la == '.' && (len > 2))
+                else if (laa == 0)
                 {
-                    laa = scratch.charAt(2);
+                    // (B) found '/.' as last part of the URL
+                    sb.append(SLASH);
+                    // we're done...
+                    break;
                 }
+                else if (laa == DOT)
+                {
+                    laaa = la(scratch, 3);
+                    if (laaa == SLASH)
+                    {
+                        // (C) found '/../', remove the '/..' part from the input...
+                        scratch.delete(0, 3);
 
-                if (la == '.' && laa == '.')
-                {
-                    // Step C: remove '/../' or '/..' from input...
-                    char laaa = (len > 3) ? scratch.charAt(3) : 0;
-                    int lastSegment = sb.lastIndexOf(SLASH);
-                    scratch.replace(0, laaa == '/' ? 4 : 3, "/");
-                    sb.setLength(Math.max(0, lastSegment));
-                    la = laa = 0;
-                    continue;
-                }
-                if ((la == '.' && laa == '/') || (la == '.' && laa != '/'))
-                {
-                    // Step B: remove '/./' or '/.' from input...
-                    scratch.replace(0, laa == '/' ? 3 : 2, "/");
-                    la = laa = 0;
-                    continue;
+                        // go back one segment in the output, including the last '/'...
+                        sb.setLength(lb(sb, 0));
+                        continue;
+                    }
+                    else if (laaa == 0)
+                    {
+                        // (C) found '/..' as last part of the URL, go back one segment in the output, excluding the last '/'...
+                        sb.setLength(lb(sb, -1));
+                        // we're done...
+                        break;
+                    }
                 }
             }
 
-            sb.append(ch);
-            scratch.delete(0, 1);
+            // (E) Copy everything up to (but not including) the next '/'...
+            do
+            {
+                sb.append(l);
+                scratch.delete(0, 1);
+                l = la(scratch, 0);
+            }
+            while (l != SLASH && l != 0);
         }
 
         return sb.toString();
+    }
+
+    private static char la(CharSequence sb, int idx)
+    {
+        if (sb.length() > idx)
+        {
+            return sb.charAt(idx);
+        }
+        return 0;
+    }
+
+    private static int lb(CharSequence sb, int offset)
+    {
+        int pos = sb.length() - 1 - offset;
+        while (pos > 0 && sb.charAt(pos + offset) != SLASH)
+        {
+            pos--;
+        }
+        return pos;
     }
 
     private static String decode(ByteBuffer bb, CharsetDecoder decoder)
