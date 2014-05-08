@@ -82,7 +82,12 @@ public class MetaAnnotationBindingRegistry extends CompletableBindingRegistry {
             bytes = m_store.read(type.getInternalName().concat(".class"));
         } catch (IOException e) {
             // Annotation type cannot be read
-            m_reporter.trace("Could not read bytecode for @%s", type.getClassName());
+            m_reporter.trace("Could not read bytecode for @%s.", type.getClassName());
+            return emptyList();
+        } catch (IllegalStateException e) {
+            m_reporter.trace("Could not read bytecode for @%s because the bundle is not in a state allowing read " +
+                            "operations.",
+                    type.getClassName());
             return emptyList();
         }
         AnnotationParser parser = new AnnotationParser();
