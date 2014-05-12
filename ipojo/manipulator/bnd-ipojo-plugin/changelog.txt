@@ -1,3 +1,16 @@
+Changes from the 1.11.2 to 1.12.0
+---------------------------------
+
+** Improvement
+    * [FELIX-4482] - Use scope=provided for OSGi APIs dependencies
+
+** New Feature
+    * [FELIX-4476] - Java 8 Support
+
+** Sub-task
+    * [FELIX-4508] - Update to ASM 5.0.2
+    * [FELIX-4509] - Change the frame computation strategy
+
 Changes from the 1.11.1 to 1.11.2
 ---------------------------------
 
