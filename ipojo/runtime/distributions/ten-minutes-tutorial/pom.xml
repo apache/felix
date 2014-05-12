@@ -38,7 +38,7 @@
     <description>This project builds the 10 minutes tutorial package</description>
 
     <properties>
-        <ipojo.ant.version>${project.version}</ipojo.ant.version>
+        <ipojo.manipulator.version>1.12.0</ipojo.manipulator.version>
         <bnd.version>1.50.0</bnd.version>
     </properties>
 
@@ -223,7 +223,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.ant</artifactId>
-            <version>${ipojo.ant.version}</version>
+            <version>${ipojo.manipulator.version}</version>
         </dependency>
         <dependency>
             <groupId>biz.aQute</groupId>
@@ -250,7 +250,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>${ipojo.ant.version}</version>
+            <version>${ipojo.manipulator.version}</version>
         </dependency>
     </dependencies>
 </project>
