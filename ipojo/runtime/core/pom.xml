@@ -27,7 +27,7 @@
     <packaging>bundle</packaging>
     <name>Apache Felix iPOJO</name>
     <artifactId>org.apache.felix.ipojo</artifactId>
-    <version>1.12.0-SNAPSHOT</version>
+    <version>1.12.0</version>
 
     <properties>
         <!--
@@ -93,7 +93,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.ipojo.annotations</artifactId>
-            <version>1.12.0-SNAPSHOT</version>
+            <version>1.12.0</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
@@ -208,7 +208,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-ipojo-plugin</artifactId>
-                <version>1.12.0-SNAPSHOT</version>
+                <version>1.12.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -274,4 +274,10 @@
             </plugin>
         </plugins>
     </build>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.12.0/org.apache.felix.ipojo</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/felix/releases/org.apache.felix.ipojo.runtime-project-1.12.0/org.apache.felix.ipojo</developerConnection>
+    <url>http://svn.apache.org/viewvc/felix/releases/?root=Apache-SVN/org.apache.felix.ipojo.runtime-project-1.12.0/org.apache.felix.ipojo</url>
+  </scm>
 </project>
