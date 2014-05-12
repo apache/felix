@@ -224,8 +224,7 @@
             if you are using a release version, be aware that this may introduce test failures as you should
             update this version to the same version as the manipulator
             -->
-            <!--<version>1.11.1</version>-->
-            <version>${project.version}</version>
+            <version>1.11.2</version>
             <scope>provided</scope>
         </dependency>
 
