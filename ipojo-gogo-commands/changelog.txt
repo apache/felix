@@ -1,3 +1,22 @@
+Changes from 1.11.2 to 1.12.0
+-----------------------------
+
+** Bug
+    * [FELIX-4464] - Wrong configuration admin package import / export clause
+    * [FELIX-4488] - Attempt to create nullable object for non-interface service
+
+** Improvement
+    * [FELIX-4482] - Use scope=provided for OSGi APIs dependencies
+    * [FELIX-4490] - IPOJO allows "instance.name" property to be an empty String
+
+** New Feature
+    * [FELIX-4476] - Java 8 Support
+
+** Sub-task
+    * [FELIX-4508] - Update to ASM 5.0.2
+    * [FELIX-4509] - Change the frame computation strategy
+    * [FELIX-4510] - Support lambda expression
+
 Changes from 1.11.1 to 1.11.2
 -----------------------------
 
