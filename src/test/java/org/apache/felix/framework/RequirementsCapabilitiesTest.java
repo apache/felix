@@ -192,6 +192,30 @@ public class RequirementsCapabilitiesTest extends TestCase
         assertCapsEquals(expectedFWCap, bwpCaps2.get(0));
     }
 
+    public void testIdentityCapabilityFrameworkExtension() throws Exception
+    {
+        String femf = "Bundle-SymbolicName: fram.ext\n"
+                + "Bundle-Version: 1.2.3.test\n"
+                + "Fragment-Host: system.bundle; extension:=framework\n"
+                + "Bundle-ManifestVersion: 2\n"
+                + "Export-Package: org.foo.bar;version=\"2.0.0\"\n";
+        File feFile = createBundle(femf);
+
+        Bundle fe = felix.getBundleContext().installBundle(feFile.toURI().toASCIIString());
+
+        BundleRevision fbr = fe.adapt(BundleRevision.class);
+
+        List<Capability> feCaps = fbr.getCapabilities("osgi.identity");
+        assertEquals(1, feCaps.size());
+        Map<String, Object> expectedFEAttrs = new HashMap<String, Object>();
+        expectedFEAttrs.put("osgi.identity", "fram.ext");
+        expectedFEAttrs.put("type", "osgi.fragment");
+        expectedFEAttrs.put("version", Version.parseVersion("1.2.3.test"));
+        Capability expectedFICap = new TestCapability("osgi.identity",
+                expectedFEAttrs, Collections.<String, String>emptyMap());
+        assertCapsEquals(expectedFICap, feCaps.get(0));
+    }
+
     private File createBundle(String manifest) throws IOException
     {
         File f = File.createTempFile("felix-bundle", ".jar", tempDir);
