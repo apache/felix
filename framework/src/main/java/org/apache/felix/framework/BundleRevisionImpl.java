@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.SecureAction;
@@ -126,7 +127,7 @@ public class BundleRevisionImpl implements BundleRevision, Resource
         // system bundle directly later on.
         m_manifestVersion = mp.getManifestVersion();
         m_version = mp.getBundleVersion();
-        m_declaredCaps = mp.isExtension() ? Collections.EMPTY_LIST : mp.getCapabilities();
+        m_declaredCaps = mp.getCapabilities();
         m_declaredReqs = mp.getRequirements();
         m_declaredNativeLibs = mp.getLibraries();
         m_declaredActivationPolicy = mp.getActivationPolicy();
