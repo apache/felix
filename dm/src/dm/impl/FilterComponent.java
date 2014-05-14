@@ -21,6 +21,7 @@ package dm.impl;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -269,8 +270,13 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     }
 
     @Override
-    public SerialExecutor getExecutor() {
+    public Executor getExecutor() {
         return m_component.getExecutor();
+    }
+    
+    public Component setExecutor(Executor executor) {
+        m_component.setExecutor(executor);
+        return this;
     }
 
     @Override
