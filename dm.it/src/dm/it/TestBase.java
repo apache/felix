@@ -3,6 +3,7 @@ package dm.it;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Hashtable;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -15,6 +16,8 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
+
+import dm.DependencyManager;
 
 /**
  * Base class for all integration tests.
@@ -67,6 +70,30 @@ public abstract class TestBase extends TestCase implements LogService, Framework
                 try {
                     found = true;
                     b.stop();
+                } catch (BundleException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        if (!found) {
+            throw new IllegalStateException("bundle " + symbolicName + " not found");
+        }
+    }
+
+    /**
+     * Helper method used to start a given bundle.
+     * 
+     * @param symbolicName
+     *            the symbolic name of the bundle to be started.
+     */
+    protected void startBundle(String symbolicName) {
+        // Stop the test.annotation bundle
+        boolean found = false;
+        for (Bundle b : context.getBundles()) {
+            if (b.getSymbolicName().equals(symbolicName)) {
+                try {
+                    found = true;
+                    b.start();
                 } catch (BundleException e) {
                     e.printStackTrace();
                 }
