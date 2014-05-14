@@ -98,29 +98,29 @@ public class ComponentTest {
 				e.step(2);
 				c.add(d);
 				d.add(new EventImpl());
-				c.add(d2);
+				c.add(d2); // not available, the start method won't be called
 			}
 			void start() {
 				System.out.println("start");
-				e.step();
+				e.step(4);
 			}
 			void stop() {
 				System.out.println("stop");
-				e.step();
+				e.step(6);
 			}
 			void destroy() {
 				System.out.println("destroy");
-				e.step(9);
+				e.step(7);
 			}
 		});
 		e.step(1);
 		c.start();
-		e.step(5);
+		e.step(3);
 		d2.add(new EventImpl());
-		e.step(7);
+		e.step(5);
 		d.remove(new EventImpl());
 		c.stop();
-		e.step(10);
+		e.step(8);
 	}
 
 	@Test
@@ -218,7 +218,7 @@ public class ComponentTest {
 		d.setRequired(true);
 		ComponentStateListener l = new ComponentStateListener() {
 			@Override
-			public void changed(ComponentState state) {
+			public void changed(Component c, ComponentState state) {
 				// make the dependency unavailable
 				d.remove(new EventImpl());
 			}
