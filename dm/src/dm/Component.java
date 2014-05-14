@@ -1,6 +1,7 @@
 package dm;
 
 import java.util.Dictionary;
+import java.util.concurrent.Executor;
 
 import org.osgi.framework.ServiceRegistration;
 
@@ -31,4 +32,5 @@ public interface Component {
 	public Component setComposition(String getMethod);
 	public DependencyManager getDependencyManager();
 	public ComponentDeclaration getComponentDeclaration();
+	public Component setExecutor(Executor executor);
 }
