@@ -226,7 +226,7 @@ public class ResourceAdapterDependencyAddAndRemoveTest2 extends TestBase {
         }
 
         @Override
-        public void changed(ComponentState state) {
+        public void changed(Component c, ComponentState state) {
             switch (state) {
             case INACTIVE:
                 System.out.println("INACTIVE");

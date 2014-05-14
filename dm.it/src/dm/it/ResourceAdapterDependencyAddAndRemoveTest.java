@@ -233,7 +233,7 @@ public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
             this.m_ensure = e;
         }
         
-        public void changed(ComponentState state) {
+        public void changed(Component c, ComponentState state) {
             debug("ComponentStateListenerImpl.changed: state=%s", state);
             switch (state) {
             case INACTIVE:
