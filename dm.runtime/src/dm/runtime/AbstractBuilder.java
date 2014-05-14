@@ -96,7 +96,7 @@ public abstract class AbstractBuilder
 
         if (registered != null || unregistered != null)
         {
-            c.add(new RegistrationListener(registered, unregistered, c));
+            c.add(new RegistrationListener(registered, unregistered));
         }
     }
 
@@ -125,17 +125,15 @@ public abstract class AbstractBuilder
     {
         private final String m_registered;
         private final String m_unregistered;
-        private final Component m_component;
         private volatile boolean m_isRegistered;
 
-        RegistrationListener(String registered, String unregistered, Component c)
+        RegistrationListener(String registered, String unregistered)
         {
             m_registered = registered;
             m_unregistered = unregistered;
-            m_component = c;
         }
 
-        public void changed(ComponentState state)
+        public void changed(Component c, ComponentState state)
         {
             boolean wasRegistered = m_isRegistered;
             switch (state)
@@ -146,13 +144,13 @@ public abstract class AbstractBuilder
                     if (!wasRegistered && m_registered != null)
                     {
                         // The component has registered a service: notify all component instances
-                        Object[] componentInstances = m_component.getInstances();
+                        Object[] componentInstances = c.getInstances();
                         for (Object instance : componentInstances)
                         {
                             try
                             {
                                 Class[][] signatures = new Class[][] { { ServiceRegistration.class }, {} };
-                                Object[][] params = new Object[][] { { m_component.getServiceRegistration() }, {} };
+                                Object[][] params = new Object[][] { { c.getServiceRegistration() }, {} };
                                 InvocationUtil.invokeCallbackMethod(instance, m_registered, signatures, params);
                             }
                             catch (Throwable t)
@@ -169,7 +167,7 @@ public abstract class AbstractBuilder
                     m_isRegistered = false;
                     if (wasRegistered && m_unregistered != null)
                     {
-                        Object[] componentInstances = m_component.getInstances();
+                        Object[] componentInstances = c.getInstances();
                         for (Object instance : componentInstances)
                         {
                             try
