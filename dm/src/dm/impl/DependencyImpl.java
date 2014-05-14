@@ -39,7 +39,6 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 	
 	public DependencyImpl(DependencyImpl<T> prototype) {
 		m_component = prototype.m_component;
-		m_available = prototype.m_available;
 		m_instanceBound = prototype.m_instanceBound;
 		m_required = prototype.m_required;
 		m_add = prototype.m_add;
@@ -271,7 +270,7 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
         return null;
     }
     
-    protected boolean isStarted() {
+    public boolean isStarted() {
     	return m_isStarted;
     }
 
