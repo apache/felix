@@ -94,7 +94,7 @@ public class ServiceRaceTest extends TestBase {
         final ComponentStateListener listener = new ComponentStateListener() {
             private volatile Dictionary m_conf;
 
-            public void changed(ComponentState state) {
+            public void changed(Component c, ComponentState state) {
                 if (state == ComponentState.WAITING_FOR_REQUIRED && m_conf == null) {
                     m_conf = new Hashtable();
                     m_conf.put("foo", "bar");
