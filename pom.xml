@@ -90,6 +90,16 @@
    <version>3.0.10</version>
   </dependency>
   <dependency>
+   <groupId>org.apache.maven.doxia</groupId>
+   <artifactId>doxia-sink-api</artifactId>
+   <version>1.0</version>
+  </dependency>
+  <dependency>
+   <groupId>org.apache.maven.doxia</groupId>
+   <artifactId>doxia-site-renderer</artifactId>
+   <version>1.0</version>
+  </dependency>
+  <dependency>
    <groupId>org.apache.maven.shared</groupId>
    <artifactId>maven-plugin-testing-harness</artifactId>
    <version>1.1</version>
