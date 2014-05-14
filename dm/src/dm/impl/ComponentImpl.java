@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.osgi.framework.BundleContext;
@@ -44,7 +45,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 					new Class[] { ServiceRegistration.class },
 					new DefaultNullObject());
     private static final Class[] VOID = new Class[] {};
-	private final SerialExecutor m_executor = new SerialExecutor(new Logger(null));
+	private volatile Executor m_executor = new SerialExecutor(new Logger(null));
 	private ComponentState m_state = ComponentState.INACTIVE;
 	private final CopyOnWriteArrayList<DependencyContext> m_dependencies = new CopyOnWriteArrayList<>();
 	private final List<ComponentStateListener> m_listeners = new CopyOnWriteArrayList<>();
@@ -79,6 +80,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	private volatile Object m_compositionManager;
 	private volatile String m_compositionManagerGetMethod;
 	private volatile Object m_compositionManagerInstance;
+    private boolean m_handlingChange;
 
     static class SCDImpl implements ComponentDependencyDeclaration {
         private final String m_name;
@@ -123,8 +125,13 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         m_id = m_idGenerator.getAndIncrement();
     }
 
-	public SerialExecutor getExecutor() {
+	public Executor getExecutor() {
 		return m_executor;
+	}
+	
+	public Component setExecutor(Executor executor) {
+	    m_executor = executor;
+	    return this;
 	}
 	
 	@Override
@@ -259,7 +266,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     @Override
     public void handleRemoved(DependencyContext dc, Event e) {
         Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
-        dc.setAvailable(!(dependencyEvents.contains(e) && dependencyEvents.size() == 1));
+        int size = dependencyEvents.size();
+        if (dependencyEvents.contains(e)) {
+            size --; // the dependency is currently registered and is about to be removed.
+        }
+        dc.setAvailable(size > 0);
         handleChange();
         
         // Now, really remove the dependency event, because next, we'll possibly invoke updateInstance, which will
@@ -312,14 +323,29 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
 
     private void handleChange() {
-        ComponentState oldState;
-        ComponentState newState;
-        do {
-            oldState = m_state;
-            newState = calculateNewState(oldState);
-            m_state = newState;
+        // At this point, our component is starting, stopping, or a dependency is being added/changed/removed. 
+        // So, we have to calculate a new state change for this component.
+        // Now, if we decide to call the component's init method, then at this point, if the component adds
+        // some additional instance-bound (and *available*) dependencies, then this will trigger a recursive call to 
+        // our handleChange method, which we are currently executing. Since this would mess around with the execution of 
+        // our current handleChange method execution , we are using a special "m_handlingChange" flag, which avoids this 
+        // kind of problem. 
+        
+        if (! m_handlingChange) {
+            try {
+                m_handlingChange = true;
+                ComponentState oldState;
+                ComponentState newState;
+                do {
+                    oldState = m_state;
+                    newState = calculateNewState(oldState);
+                    m_state = newState;
+                }
+                while (performTransition(oldState, newState));
+            } finally {
+                m_handlingChange = false;
+            }
         }
-        while (performTransition(oldState, newState));
     }
     
 	/** Based on the current state, calculate the new state. */
@@ -367,11 +393,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			instantiateComponent();
 			invokeAddRequiredDependencies();
 			invokeAutoConfigDependencies();
-			ComponentState stateBeforeCallingInit = m_state;
-	        invoke(m_callbackInit); // may change current state if some available dependencies are added !
-	        if (stateBeforeCallingInit == m_state) {
-	            notifyListeners(newState); // init did not change current state, we can notify about this new state
-	        }
+	        invoke(m_callbackInit); 
+	        notifyListeners(newState);
 			return true;
 		}
 		if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.TRACKING_OPTIONAL) {
@@ -569,7 +592,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                     m_componentInstance = createInstance((Class) m_componentDefinition);
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
+                    m_logger.log(Logger.LOG_ERROR, "Could not instantiate class " + m_componentDefinition, e);
                 }
             }
             else {
@@ -749,12 +772,12 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
 	private void notifyListeners(ComponentState state) {
 		for (ComponentStateListener l : m_listeners) {
-			l.changed(state);
+			l.changed(this, state);
 		}
 	}
 	
 	private void notifyListener(ComponentStateListener l, ComponentState state) {
-	    l.changed(state);
+	    l.changed(this, state);
 	}
 
 	public boolean isAvailable() {
