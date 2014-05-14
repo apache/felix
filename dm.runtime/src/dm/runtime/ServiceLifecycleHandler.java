@@ -96,9 +96,8 @@ public class ServiceLifecycleHandler
     private final String m_destroy;
     private final MetaData m_srvMeta;
     private final List<MetaData> m_depsMeta;
-    private final List<Dependency> m_namedDeps = new ArrayList<Dependency>();
+    private final List<Dependency> m_instanceBoundDeps = new ArrayList<>();
     private final Bundle m_bundle;
-    private volatile ToggleServiceDependency m_toggle;
     private final static Object SYNC = new Object();
 
     /**
@@ -154,28 +153,16 @@ public class ServiceLifecycleHandler
             Log.instance().debug("Setting up a lifecycle controller for service %s", serviceInstance);
             String componentName = serviceInstance.getClass().getName();
             // Create a toggle service, used to start/stop our service.
-            m_toggle = new ToggleServiceDependency();
+            ToggleServiceDependency toggle = new ToggleServiceDependency();
             AtomicBoolean startFlag = new AtomicBoolean(false);
-            // Add the toggle to the service (we'll remove it from our destroy emthod).
-            c.add(m_toggle);
+            // Add the toggle to the service.
+            m_instanceBoundDeps.add(toggle);
             // Inject the runnable that will start our service, when invoked.
-            setField(serviceInstance, starter, Runnable.class, new ComponentStarter(componentName, m_toggle, startFlag));
+            setField(serviceInstance, starter, Runnable.class, new ComponentStarter(componentName, toggle, startFlag));
             if (stopper != null) {
                 // Inject the runnable that will stop our service, when invoked.
-                setField(serviceInstance, stopper, Runnable.class, new ComponentStopper(componentName, m_toggle, startFlag));
+                setField(serviceInstance, stopper, Runnable.class, new ComponentStopper(componentName, toggle, startFlag));
             }
-        }
-
-        // Before invoking an optional init method, we have to handle an edge case (FELIX-4050), where
-        // init may add dependencies using the API and also return a map for configuring some
-        // named dependencies. We have to add a hidden toggle dependency in the component, which we'll 
-        // active *after* the init method is called, and possibly *after* named dependencies are configured.
-        
-        ToggleServiceDependency initToggle = null;
-        if (m_init != null) 
-        {
-            initToggle = new ToggleServiceDependency();
-            c.add(initToggle); 
         }
         
         // Invoke component and all composites init methods, and for each one, check if a dependency
@@ -226,25 +213,17 @@ public class ServiceLifecycleHandler
                 Log.instance().info("ServiceLifecycleHandler.init: adding dependency %s into service %s",
                                    dependency, m_srvMeta);
                 Dependency d = depBuilder.build(m_bundle, dm);
-                m_namedDeps.add(d);
+                m_instanceBoundDeps.add(d);
             }            
         }
         
         // Add all extra dependencies in one shot, in order to calculate state changes for all dependencies at a time.
-        if (m_namedDeps.size() > 0) 
+        if (m_instanceBoundDeps.size() > 0) 
         {
             Log.instance().info("ServiceLifecycleHandler.init: adding extra/named dependencies %s",
-                                m_namedDeps);
-            c.add(m_namedDeps.toArray(new Dependency[m_namedDeps.size()]));
-        }
-        
-        // init method fully handled, and all possible named dependencies have been configured. Now, activate the 
-        // hidden toggle, and then remove it from the component, because we don't need it anymore.
-        if (initToggle != null) 
-        {
-            initToggle.activate(true);
-            //c.remove(initToggle);
-        }
+                                m_instanceBoundDeps);
+            c.add(m_instanceBoundDeps.toArray(new Dependency[m_instanceBoundDeps.size()]));
+        }     
     }
 
     /**
@@ -313,13 +292,10 @@ public class ServiceLifecycleHandler
         throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
         // Clear named dependencies eventuall returned by our service init callback. 
-        m_namedDeps.clear();
-        if (m_toggle != null)
-        {
-            // If we created a toggle for our service, just remove it from the service.
-            service.remove(m_toggle);
-            m_toggle = null;
+        for (Dependency d : m_instanceBoundDeps) {
+            service.remove(d);
         }
+        m_instanceBoundDeps.clear();
         callbackComposites(service, m_destroy);
     }
 
