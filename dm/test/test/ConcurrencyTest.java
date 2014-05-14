@@ -38,7 +38,7 @@ public class ConcurrencyTest {
 		};
 		ComponentStateListener l = new ComponentStateListener() {
 			@Override
-			public void changed(ComponentState state) {
+			public void changed(Component component, ComponentState state) {
 				try {
 				    c.remove(this);
 				    // launch a second thread interacting with our ComponentImpl and block this thread until the
