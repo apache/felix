@@ -80,7 +80,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	private volatile Object m_compositionManager;
 	private volatile String m_compositionManagerGetMethod;
 	private volatile Object m_compositionManagerInstance;
-    private boolean m_handlingChange;
 
     static class SCDImpl implements ComponentDependencyDeclaration {
         private final String m_name;
@@ -323,29 +322,14 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
 
     private void handleChange() {
-        // At this point, our component is starting, stopping, or a dependency is being added/changed/removed. 
-        // So, we have to calculate a new state change for this component.
-        // Now, if we decide to call the component's init method, then at this point, if the component adds
-        // some additional instance-bound (and *available*) dependencies, then this will trigger a recursive call to 
-        // our handleChange method, which we are currently executing. Since this would mess around with the execution of 
-        // our current handleChange method execution , we are using a special "m_handlingChange" flag, which avoids this 
-        // kind of problem. 
-        
-        if (! m_handlingChange) {
-            try {
-                m_handlingChange = true;
-                ComponentState oldState;
-                ComponentState newState;
-                do {
-                    oldState = m_state;
-                    newState = calculateNewState(oldState);
-                    m_state = newState;
-                }
-                while (performTransition(oldState, newState));
-            } finally {
-                m_handlingChange = false;
-            }
+        ComponentState oldState;
+        ComponentState newState;
+        do {
+            oldState = m_state;
+            newState = calculateNewState(oldState);
+            m_state = newState;
         }
+        while (performTransition(oldState, newState));
     }
     
 	/** Based on the current state, calculate the new state. */
@@ -393,8 +377,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			instantiateComponent();
 			invokeAddRequiredDependencies();
 			invokeAutoConfigDependencies();
+			ComponentState stateBeforeCallingInit = m_state;
 	        invoke(m_callbackInit); 
-	        notifyListeners(newState);
+	        if (stateBeforeCallingInit == m_state) {
+	            notifyListeners(newState); // init did not change current state, we can notify about this new state
+	        }
 			return true;
 		}
 		if (oldState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED && newState == ComponentState.TRACKING_OPTIONAL) {
