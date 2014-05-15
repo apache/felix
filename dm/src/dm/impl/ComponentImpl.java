@@ -129,6 +129,11 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 	
 	public Component setExecutor(Executor executor) {
+	    // TODO. This method is used when the user want to provide a custom executor (for example, one from an actor
+	    // library, or a queuing library like hawtdispatch "Serial Queues". However, we still have to decorate the executor
+	    // with one which detects reentrant scheduling (in DM4, tasks scheduled internally from within DM4 must be executed
+	    // immediately (inline execution). To ensure this, the custom executor could be decorated with one, which could use
+	    // a thread local with a flag telling if the current thread is already being executed from within DM4.
 	    m_executor = executor;
 	    return this;
 	}
