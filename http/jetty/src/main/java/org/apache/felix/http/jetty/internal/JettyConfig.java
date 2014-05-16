@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.felix.http.base.internal.logger.SystemLogger;
@@ -518,20 +519,41 @@ public final class JettyConfig
         return value;
     }
 
+    /**
+     * Get the property value as a string array.
+     * Empty values are filtered out - if the resulting array is empty
+     * the default value is returned.
+     */
     private String[] getStringArrayProperty(String name, String[] defValue)
     {
         Object value = getProperty(name);
         if (value instanceof String)
         {
-            return new String[] { (String) value };
+            final String stringVal = ((String) value).trim();
+            if ( stringVal.length() > 0 )
+            {
+                return new String[] { stringVal };
+            }
         }
         else if (value instanceof String[])
         {
-            return (String[]) value;
+            final String[] stringArr = (String[]) value;
+            final List<String> list = new ArrayList<String>();
+            for(final String stringVal : stringArr)
+            {
+                if ( stringVal.trim().length() > 0 )
+                {
+                    list.add(stringVal.trim());
+                }
+            }
+            if ( list.size() > 0 )
+            {
+                return list.toArray(new String[list.size()]);
+            }
         }
         else if (value instanceof Collection)
         {
-            ArrayList<String> conv = new ArrayList<String>();
+            final ArrayList<String> conv = new ArrayList<String>();
             for (Iterator<?> vi = ((Collection<?>) value).iterator(); vi.hasNext();)
             {
                 Object object = vi.next();
@@ -540,12 +562,12 @@ public final class JettyConfig
                     conv.add(String.valueOf(object));
                 }
             }
-            return conv.toArray(new String[conv.size()]);
+            if ( conv.size() > 0 )
+            {
+                return conv.toArray(new String[conv.size()]);
+            }
         }
-        else
-        {
-            return defValue;
-        }
+        return defValue;
     }
 
     private int parseInt(String value, int dflt)
