@@ -497,7 +497,7 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
 				public void run() {
 				    invokeSwap(m_swap, reference, service, newReference, newService);
 				}
-			}, false);
+			});
 		} else {
 			addedService(newReference, newService);
 			removedService(reference, service);

@@ -341,39 +341,28 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         return (String) m_autoConfigInstance.get(clazz);
     }
 
-    private void handleChange() {
-    	// At this point, our component is starting, or a dependency is being added/changed/removed. 
-    	// So, we have to calculate a new state change for this component.
-    	// Now, if we decide to call the component's init method, then at this point, if the component adds
-    	// some additional instance-bound (and *available*) dependencies, then this will trigger a recursive call to 
-    	// our handleChange method, which we are currently executing. Since this would mess around with the execution of 
-    	// our current handleChange method execution, we are using a special "m_handlingChange" flag, which avoids this 
-    	// kind of problem.
-    	if (! m_handlingChange) {
-    		if (debug) {
-    			System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleChange");
-    		}
-    	    try {
-    	        m_handlingChange = true;
-    	        ComponentState oldState;
-    	        ComponentState newState;
-    	        do {
-    	            oldState = m_state;
-    	            newState = calculateNewState(oldState);
-    	        	if (debug) {
-    	        		System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " " + oldState + " -> " + newState);
-    	        	}
-    	            m_state = newState;
-    	        }
-    	        while (performTransition(oldState, newState));
-    	    } finally {
-    	        m_handlingChange = false;
-    	        if (debug) {
-    	        	System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " end handling change.");
-    	        }
-    	    }
-    	}
-    }
+	private void handleChange() {
+		if (debug) {
+			System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleChange");
+		}
+		try {
+			ComponentState oldState;
+			ComponentState newState;
+			do {
+				oldState = m_state;
+				newState = calculateNewState(oldState);
+				if (debug) {
+					System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " " + oldState
+							+ " -> " + newState);
+				}
+				m_state = newState;
+			} while (performTransition(oldState, newState));
+		} finally {
+			if (debug) {
+				System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " end handling change.");
+			}
+		}
+	}
     
 	/** Based on the current state, calculate the new state. */
 	private ComponentState calculateNewState(ComponentState currentState) {
