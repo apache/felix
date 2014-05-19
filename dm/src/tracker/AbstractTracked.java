@@ -21,6 +21,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import dm.impl.SerialExecutor;
+
 /**
  * Abstract class to track items. If a Tracker is reused (closed then reopened),
  * then a new AbstractTracked object is used. This class acts a map of tracked
@@ -94,6 +96,8 @@ abstract class AbstractTracked {
 	 * @GuardedBy this
 	 */
 	private final LinkedList	initial;
+	
+	private SerialExecutor m_executor = new SerialExecutor(null); 
 
 	/**
 	 * AbstractTracked constructor.
@@ -180,15 +184,20 @@ abstract class AbstractTracked {
 					continue; /* skip this item */
 				}
 				adding.add(item);
+				final AbstractCustomizerActionSet actionSet = trackAdding(item, null);
+				m_executor.schedule(new Runnable() {
+
+					@Override
+					public void run() {
+						actionSet.execute();
+						
+					}
+					
+				});
 			}
 			if (DEBUG) {
 				System.out.println("AbstractTracked.trackInitial: " + item); //$NON-NLS-1$
 			}
-			trackAdding(item, null).execute(); /*
-									 * Begin tracking it. We call trackAdding
-									 * since we have already put the item in the
-									 * adding list.
-									 */
 		}
 	}
 
@@ -428,6 +437,14 @@ abstract class AbstractTracked {
 	 */
 	int getTrackingCount() {
 		return trackingCount;
+	}
+	
+	/**
+	 * Returns the serial executor used by this tracked.
+	 * @return
+	 */
+	SerialExecutor getExecutor() {
+		return m_executor;
 	}
 
 	/**

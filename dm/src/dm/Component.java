@@ -33,4 +33,8 @@ public interface Component {
 	public DependencyManager getDependencyManager();
 	public ComponentDeclaration getComponentDeclaration();
 	public Component setExecutor(Executor executor);
+	
+	// TODO ASPECTS: Methods added for debugging AspectRaceTest, but we might just leave the 'debug' features in there.
+	public Executor getExecutor();
+	public void setDebug(String string);
 }

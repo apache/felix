@@ -20,4 +20,7 @@ public interface ServiceDependency extends Dependency, ComponentDependencyDeclar
     public ServiceDependency setDefaultImplementation(Object implementation);
     public ServiceDependency setPropagate(boolean propagate);
     public ServiceDependency setPropagate(Object instance, String method);
+    
+    // TODO ASPECTS: Added debug option. Decide whether we might just leave it in.
+    public void setDebug(String debugKey);
 }

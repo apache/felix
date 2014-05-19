@@ -29,7 +29,6 @@ import org.osgi.framework.ServiceRegistration;
 import dm.Component;
 import dm.ComponentDeclaration;
 import dm.ComponentDependencyDeclaration;
-import dm.ComponentState;
 import dm.ComponentStateListener;
 import dm.Dependency;
 import dm.DependencyManager;
@@ -311,4 +310,11 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     public ComponentDeclaration getComponentDeclaration() {
         return this;
     }
+
+    // TODO: Remove..
+	@Override
+	public void setDebug(String string) {
+		// TODO Auto-generated method stub
+		
+	}
 }

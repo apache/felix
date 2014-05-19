@@ -22,7 +22,7 @@ import dm.Component;
 import dm.DependencyManager;
 
 
-public class AspectServiceDependencyTest extends TestBase {
+public class AspectServiceDependencyWithSwapCallbackTest extends TestBase {
     public void testServiceRegistrationAndConsumption() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
@@ -31,7 +31,7 @@ public class AspectServiceDependencyTest extends TestBase {
         Component sp = m.createComponent().setImplementation(new ServiceProvider(e)).setInterface(ServiceInterface.class.getName(), null);
         Component sc = m.createComponent().setImplementation(new ServiceConsumer(e)).add(m.createServiceDependency()
         		.setService(ServiceInterface.class)
-        		.setCallbacks("add", "remove")
+        		.setCallbacks("add", null, "remove", "swap")
         		.setRequired(true));
         Component asp = m.createAspectService(ServiceInterface.class, null, 100)
         		.setImplementation(ServiceProviderAspect.class);
@@ -43,7 +43,7 @@ public class AspectServiceDependencyTest extends TestBase {
         m.remove(sp);
         
         // ensure we executed all steps inside the component instance
-        e.step(8);
+        e.step(7);
     }
     
     static interface ServiceInterface {
@@ -79,7 +79,7 @@ public class AspectServiceDependencyTest extends TestBase {
     static class ServiceConsumer {
         private volatile ServiceInterface m_service;
         private final Ensure m_ensure;
-        private int addCount = 0;
+        private int swapCount = 0;
 
         public ServiceConsumer(Ensure e) {
             m_ensure = e;
@@ -91,27 +91,29 @@ public class AspectServiceDependencyTest extends TestBase {
         }
         
         public void destroy() {
-            m_ensure.step(7);
+            m_ensure.step(6);
         }
         
         public void add(ServiceInterface service) {
         	m_service = service;
-        	switch (addCount) {
-        		case 0: m_ensure.step(1);
+        	m_ensure.step(1);
+        }
+        
+        public void remove(ServiceInterface service) {
+        	m_service = null;
+        }
+        
+        public void swap(ServiceInterface previous, ServiceInterface current) {
+        	switch (swapCount) {
+        		case 0: m_ensure.step(4);
         				break;
-        		case 1: m_ensure.step(4);
-        				// aspect had been added
-        				m_service.invoke("consumer.add");
-        				break;
-        		case 2: m_ensure.step(6);
+        		case 1: m_ensure.step(5);
         				break;
         		default:
         	}
-        	addCount ++;
+        	m_service = current;
+        	swapCount ++;
         }
-        public void remove(ServiceInterface service) {
-        	m_service = null;
-        }    
     }
 
 }

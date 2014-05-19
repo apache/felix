@@ -64,6 +64,15 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     private final long m_id;
     private static AtomicLong m_idGenerator = new AtomicLong();
     private final Map<DependencyContext, ConcurrentSkipListSet<Event>> m_dependencyEvents = new HashMap<>();
+    
+    private boolean debug = false;
+    private String debugKey;
+    
+    public void setDebug(String debugKey) {
+    	System.out.println("*" + debugKey + " set debug");
+    	this.debugKey = debugKey;
+    	this.debug = true;
+    }
 
     // configuration (static)
     private volatile String m_callbackInit;
@@ -80,6 +89,8 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	private volatile Object m_compositionManager;
 	private volatile String m_compositionManagerGetMethod;
 	private volatile Object m_compositionManagerInstance;
+	
+	private boolean m_handlingChange;
 
     static class SCDImpl implements ComponentDependencyDeclaration {
         private final String m_name;
@@ -217,6 +228,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 
 	@Override
 	public void handleAdded(DependencyContext dc, Event e) {
+		if (debug) {
+			System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleAdded " + e);
+		}
+
 	    Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
 	    dependencyEvents.add(e);
 	    dc.setAvailable(true);
@@ -327,14 +342,37 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
 
     private void handleChange() {
-        ComponentState oldState;
-        ComponentState newState;
-        do {
-            oldState = m_state;
-            newState = calculateNewState(oldState);
-            m_state = newState;
-        }
-        while (performTransition(oldState, newState));
+    	// At this point, our component is starting, or a dependency is being added/changed/removed. 
+    	// So, we have to calculate a new state change for this component.
+    	// Now, if we decide to call the component's init method, then at this point, if the component adds
+    	// some additional instance-bound (and *available*) dependencies, then this will trigger a recursive call to 
+    	// our handleChange method, which we are currently executing. Since this would mess around with the execution of 
+    	// our current handleChange method execution, we are using a special "m_handlingChange" flag, which avoids this 
+    	// kind of problem.
+    	if (! m_handlingChange) {
+    		if (debug) {
+    			System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " handleChange");
+    		}
+    	    try {
+    	        m_handlingChange = true;
+    	        ComponentState oldState;
+    	        ComponentState newState;
+    	        do {
+    	            oldState = m_state;
+    	            newState = calculateNewState(oldState);
+    	        	if (debug) {
+    	        		System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " " + oldState + " -> " + newState);
+    	        	}
+    	            m_state = newState;
+    	        }
+    	        while (performTransition(oldState, newState));
+    	    } finally {
+    	        m_handlingChange = false;
+    	        if (debug) {
+    	        	System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " end handling change.");
+    	        }
+    	    }
+    	}
     }
     
 	/** Based on the current state, calculate the new state. */
@@ -379,6 +417,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			return true;
 		}
 		if (oldState == ComponentState.WAITING_FOR_REQUIRED && newState == ComponentState.INSTANTIATED_AND_WAITING_FOR_REQUIRED) {
+			if (debug) {
+				System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " instantiate!");
+			}
 			instantiateComponent();
 			invokeAddRequiredDependencies();
 			invokeAutoConfigDependencies();
@@ -470,6 +511,9 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     
     private void startDependencies(List<DependencyContext> dependencies) {
         // Start first optional dependencies first.
+    	if (debug) {
+    		System.out.println("*" + debugKey + " T" + Thread.currentThread().getId() + " startDependencies.");
+    	}
         List<DependencyContext> requiredDeps = new ArrayList();
         for (DependencyContext d : dependencies) {
             if (d.isRequired()) {
@@ -1103,5 +1147,13 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     
     public ComponentDeclaration getComponentDeclaration() {
         return this;
+    }
+    
+    @Override
+    public String toString() {
+    	if (debug) {
+    		System.out.println(debugKey);
+    	}
+    	return super.toString();
     }
 }

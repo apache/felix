@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.BundleContext;
@@ -140,6 +141,14 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 	 * track all aspects or just the highest ranked ones.
 	 */
     public boolean m_trackAllAspects;
+    
+    private boolean debug = false;
+    private String debugKey;
+    
+    public void setDebug(String debugKey) {
+    	this.debug = true;
+    	this.debugKey = debugKey;
+    }
 
 	/**
 	 * Create a <code>ServiceTracker</code> on the specified
@@ -338,6 +347,9 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
      *         longer valid.
      */
 	public void open(boolean trackAllServices, boolean trackAllAspects) {
+		if (debug) {
+			System.out.println("[ServiceTracker] " + debugKey + " T" + Thread.currentThread().getId() + " open");
+		}
 		final Tracked t;
 		synchronized (this) {
 			if (tracked != null) {
@@ -370,7 +382,12 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 						}
 					}
 					/* set tracked with the initial references */
-					t.setInitial(references); 
+					t.setInitial(references);
+					
+					// only actually schedules the actions for execution within this synchronized block,
+					// but do the actual execution afterwards.
+					t.trackInitial(); 
+
 				}
 				catch (InvalidSyntaxException e) {
 					throw new RuntimeException(
@@ -381,7 +398,8 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			tracked = t;
 		}
 		/* Call tracked outside of synchronized region */
-		t.trackInitial(); /* process the initial references */
+		// just trigger the executor
+		t.getExecutor().execute();
 	}
 
 	/**
@@ -1101,12 +1119,12 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		 * @param event <code>ServiceEvent</code> object from the framework.
 		 */
 		public void serviceChanged(final ServiceEvent event) {
-		    if (m_trackAllAspects) {
-		        serviceChangedIncludeAspects(event);
-		    }
-		    else {
-		        serviceChangedHideAspects(event);
-		    }
+			if (m_trackAllAspects) {
+				serviceChangedIncludeAspects(event);
+			}
+			else {
+				serviceChangedHideAspects(event);
+			}
 		}
 		
         public void serviceChangedIncludeAspects(final ServiceEvent event) {
@@ -1118,6 +1136,9 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
                 return;
             }
             final ServiceReference reference = event.getServiceReference();
+			if (debug) {
+				System.out.println("[ServiceTracker] " + debugKey + " T" + Thread.currentThread().getId() + " [serviceChangedIncludeAspects] " + reference.getProperty("service.ranking"));
+			}            
             if (DEBUG) {
                 System.out
                         .println("ServiceTracker.Tracked.serviceChanged["
@@ -1166,8 +1187,11 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
         private boolean isModifiedEndmatchSupported() {
         	return listenerFilter != null;
         }
+        
+        private AtomicInteger step = new AtomicInteger();
 		
 		public void serviceChangedHideAspects(final ServiceEvent event) {
+			int n = step.getAndIncrement();
 			/*
 			 * Check if we had a delayed call (which could happen when we
 			 * close).
@@ -1178,85 +1202,107 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			final ServiceReference reference = event.getServiceReference();
 			if (DEBUG) {
 				System.out
-						.println("ServiceTracker.Tracked.serviceChanged["
+						.println(n + " ServiceTracker.Tracked.serviceChanged["
 						+ event.getType() + "]: " + reference);  
 			}
 
 			long sid = ServiceUtil.getServiceId(reference);
-			switch (event.getType()) {
-				case ServiceEvent.REGISTERED :
-				case ServiceEvent.MODIFIED :
-				    ServiceReference higherRankedReference = null;
-				    ServiceReference lowerRankedReference = null;
-				    ServiceReference highestTrackedReference = highestTrackedCache(sid);
-				    if (highestTrackedReference != null) {
-				        int ranking = ServiceUtil.getRanking(reference);
-				        int highestTrackedRanking = ServiceUtil.getRanking(highestTrackedReference);
-				        if (ranking > highestTrackedRanking) {
-				            // found a higher ranked one!
-				            if (DEBUG) {
-				                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a higher ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(highestTrackedReference));
-				            }
-				            higherRankedReference = highestTrackedReference;
-				        }
-				        else if (ranking < highestTrackedRanking) {
-				            // found lower ranked one!
-                            if (DEBUG) {
-                                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a lower ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(highestTrackedReference));
-                            }
-				            lowerRankedReference = highestTrackedReference;
-				        }
-				    }
-				    
-					if (isModifiedEndmatchSupported()) { // either registered or modified
-					    registerOrUpdate(event, reference, higherRankedReference, lowerRankedReference);
-					}
-					else { // service listener added without filter
-						if (filter.match(reference)) {
-	                        registerOrUpdate(event, reference, higherRankedReference, lowerRankedReference);
+			AbstractCustomizerActionSet actionSet = null;
+			synchronized(this) {
+				switch (event.getType()) {
+					case ServiceEvent.REGISTERED :
+					case ServiceEvent.MODIFIED :
+					    ServiceReference higherRankedReference = null;
+					    ServiceReference lowerRankedReference = null;
+					    ServiceReference highestTrackedReference = highestTrackedCache(sid);
+					    if (highestTrackedReference != null) {
+					        int ranking = ServiceUtil.getRanking(reference);
+					        int highestTrackedRanking = ServiceUtil.getRanking(highestTrackedReference);
+					        if (ranking > highestTrackedRanking) {
+					            // found a higher ranked one!
+					            if (DEBUG) {
+					                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a higher ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(highestTrackedReference));
+					            }
+					            higherRankedReference = highestTrackedReference;
+					        }
+					        else if (ranking < highestTrackedRanking) {
+					            // found lower ranked one!
+	                            if (DEBUG) {
+	                                System.out.println("ServiceTracker.Tracked.serviceChanged[" + event.getType() + "]: Found a lower ranked aspect: " + ServiceUtil.toString(reference) + " vs " + ServiceUtil.toString(highestTrackedReference));
+	                            }
+					            lowerRankedReference = highestTrackedReference;
+					        }
+					    }
+						if (isModifiedEndmatchSupported()) { // either registered or modified
+							actionSet = registerOrUpdate(event, reference, higherRankedReference, lowerRankedReference);
 						}
-						else {
-		                    unregister(event, reference, sid);
+						else { // service listener added without filter
+							if (filter.match(reference)) {
+		                        actionSet = registerOrUpdate(event, reference, higherRankedReference, lowerRankedReference);
+							}
+							else {
+			                    actionSet = unregister(event, reference, sid);
+							}
 						}
-					}
-					break;
-                case 8 /* ServiceEvent.MODIFIED_ENDMATCH */ : // handle as unregister
-				case ServiceEvent.UNREGISTERING :
-					unregister(event, reference, sid);
-					/*
-					 * If the customizer throws an unchecked exception, it is
-					 * safe to let it propagate
-					 */
-					break;
-			}
-		}
+						break;
+	                case 8 /* ServiceEvent.MODIFIED_ENDMATCH */ : // handle as unregister
+					case ServiceEvent.UNREGISTERING :
+						actionSet = unregister(event, reference, sid);
+						/*
+						 * If the customizer throws an unchecked exception, it is
+						 * safe to let it propagate
+						 */
+						break;
+				}
+				// schedule the actionset for execution. We'll use a serial executor to prevent the actions to
+				// be performed out of order.
+				final AbstractCustomizerActionSet commandActionSet = actionSet;
+				getExecutor().schedule(new Runnable() {
 
-		private void registerOrUpdate(final ServiceEvent event,
+					@Override
+					public void run() {
+						commandActionSet.execute();
+					}
+					
+				});
+			}
+			getExecutor().execute();
+		}
+		
+		private AbstractCustomizerActionSet registerOrUpdate(final ServiceEvent event,
 				final ServiceReference reference, ServiceReference higher,
 				ServiceReference lower) {
+			if (debug) {
+//				System.out.println("[ServiceTracker] " + debugKey + " T" + Thread.currentThread().getId() + " [registerOrUpdate] lower: " + lower + ", higher: " + higher);
+			}
+			AbstractCustomizerActionSet actionSet = null;
 			if (lower != null) {
 			    hide(reference);
 			}
 			else {
-				AbstractCustomizerActionSet actionSet = track(reference, event);
+				actionSet = track(reference, event);
 		        if (higher != null) {
 	                actionSet.appendActionSet(untrack(higher, null));
 	                hide(higher);
 			    }
-		        actionSet.execute();
 			}
 			/*
 			 * If the customizer throws an unchecked exception, it
 			 * is safe to let it propagate
 			 */
+			return actionSet;
 		}
 
-		private void unregister(final ServiceEvent event,
+		private AbstractCustomizerActionSet unregister(final ServiceEvent event,
 				final ServiceReference reference, long sid) {
+			if (debug) {
+				System.out.println("[ServiceTracker] " + debugKey + " T" + Thread.currentThread().getId() + " [unregister] " + reference.getProperty("service.ranking"));
+			}
+			AbstractCustomizerActionSet actionSet = null;
 			ServiceReference ht = highestTrackedCache(sid);
 			if (reference.equals(ht)) {
 		        ServiceReference hh = highestHiddenCache(sid);
-		        AbstractCustomizerActionSet actionSet = null;
+		        
 		        if (hh != null) {
 		            unhide(hh);
 		            actionSet = track(hh, null);
@@ -1266,11 +1312,11 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 		        } else {
 		        	actionSet.appendActionSet(untrack(reference, event));
 		        }
-		        actionSet.execute();
 			}
 			else {
 			    unhide(reference);
 			}
+			return actionSet;
 		}
 		
 		
@@ -1360,14 +1406,49 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			// This actions set deliberately postpones invocation of the customizer methods to be able to combine added and removed
 			// into a single swap call.
 			return new AbstractCustomizerActionSet() {
+				
+				@Override
+				public void addCustomizerAdded(Object item, Object related,
+						Object object) {
+					if (debug) {
+//						System.out.println("[ServiceTracker] " + debugKey + " T" + Thread.currentThread().getId() + " addCustomizerAdded " + object);
+					}
+					super.addCustomizerAdded(item, related, object);
+				}
+				
+				@Override
+				public void addCustomizerModified(Object item, Object related,
+						Object object) {
+					if (debug) {
+//						System.out.println("[ServiceTracker] " + debugKey + " T" + Thread.currentThread().getId() + " addCustomizerModified " + object);
+					}					
+					super.addCustomizerModified(item, related, object);
+				}
+				
+				@Override
+				public void addCustomizerRemoved(Object item, Object related,
+						Object object) {
+					if (debug) {
+//						System.out.println("[ServiceTracker] " + debugKey + " T" + Thread.currentThread().getId() + " addCustomizerRemoved " + object);
+					}					
+					super.addCustomizerRemoved(item, related, object);
+				}
+				
 				@Override
 				void execute() {
 					// inspect the actions and check whether we should perform a swap
 					List<CustomizerAction> actions = getActions();
+					if (actions.size() > 2) {
+						throw new IllegalStateException("Unexpected action count: " + actions.size());
+					}
 					if (actions.size() == 2 && actions.get(0).getType() == Type.ADDED && actions.get(1).getType() == Type.REMOVED) {
 						// ignore related
 						// item = ServiceReference
 						// object = service
+						debug("swapped");
+						if (debug) {
+							System.out.println("[ServiceTracker] " + debugKey + " T" + Thread.currentThread().getId() + " swapping " + actions.get(1).getObject() + " with " + actions.get(0).getObject());
+						}
 						customizer.swappedService((ServiceReference)actions.get(1).getItem(), actions.get(1).getObject(), (ServiceReference)actions.get(0).getItem(), actions.get(0).getObject());
 					} else {
 						// just sequentially call the customizer methods
@@ -1375,12 +1456,21 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 							try {
 								switch (action.getType()) {
 									case ADDED: 
+										debug(Thread.currentThread().getId() + " added");
+										if (debug) {
+											System.out.println("[ServiceTracker] " + debugKey + " T" + Thread.currentThread().getId() + " adding " + action.getObject());
+										}
 										customizerAdded(action.getItem(), action.getRelated(), action.getObject());
 										break;
 									case MODIFIED:
+										debug("modified");
 										customizerModified(action.getItem(), action.getRelated(), action.getObject());
 										break;
 									case REMOVED:
+										debug("removed");
+										if (debug) {
+											System.out.println("[ServiceTracker] " + debugKey + " T" + Thread.currentThread().getId() + " removing " + action.getObject());
+										}
 										customizerRemoved(action.getItem(), action.getRelated(), action.getObject());
 								}
 							} catch (Exception e) {
@@ -1392,6 +1482,12 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 			};
 		}
 
+	}
+	
+	private void debug(String message) {
+		if (customizer.toString().equals("ServiceDependency[interface dm.it.AspectRaceTest$S (&(!(org.apache.felix.dependencymanager.aspect=*))(id=1))]")) {
+//			System.out.println(message);
+		}
 	}
 
 	/**

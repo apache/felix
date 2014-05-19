@@ -3,6 +3,7 @@ package dm.impl;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.osgi.service.log.LogService;
 import tracker.ServiceTracker;
 import tracker.ServiceTrackerCustomizer;
 import dm.Component;
+import dm.ComponentDeclaration;
 import dm.ServiceDependency;
 import dm.context.DependencyContext;
 import dm.context.Event;
@@ -33,6 +35,13 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
     private volatile Object m_defaultImplementation;
     private volatile Object m_defaultImplementationInstance;
     private volatile Object m_nullObject;
+    private boolean debug = false;
+    private String debugKey;
+    
+    public void setDebug(String debugKey) {
+    	this.debugKey = debugKey;
+    	this.debug = true;
+    }
 
     /**
      * Entry to wrap service properties behind a Map.
@@ -193,6 +202,9 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
             } else {
                 throw new IllegalStateException("Could not create tracker for dependency, no service name specified.");
             }
+            if (debug) {
+            	m_tracker.setDebug(debugKey);
+            }
             m_tracker.open();
         }
 	}
@@ -214,6 +226,9 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
 
 	@Override
 	public void addedService(ServiceReference reference, Object service) {
+		if (debug) {
+			System.out.println(debugKey + " addedService");
+		}
 		add(new ServiceEventImpl(reference, service));
 	}
 
@@ -228,9 +243,9 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
 	}
 	
 	@Override
-	public void invoke(String method, Event e) {
+	public void invoke(String method, Event e, Object[] instances) {
 		ServiceEventImpl se = (ServiceEventImpl) e;
-		m_component.invokeCallbackMethod(getInstances(), method,
+		m_component.invokeCallbackMethod(instances, method,
 		    new Class[][]{
             {Component.class, ServiceReference.class, m_trackedServiceName},
             {Component.class, ServiceReference.class, Object.class}, 
@@ -263,6 +278,10 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
             {},
             {new ServicePropertiesMap(se.getReference()), se.getService()}}
 		);
+	}
+	
+	public void invoke(String method, Event e) {
+		invoke(method, e, getInstances());
 	}
 	
 	@Override
@@ -425,15 +444,63 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
         return m_defaultImplementationInstance;
     }
 
+    public void invokeSwap(String swapMethod, ServiceReference previousReference, Object previous,
+			ServiceReference currentReference, Object current) {
+    	try {
+    		invokeSwap(swapMethod, previousReference, previous, currentReference, current, getInstances());
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    }
+    
+    public void invokeSwap(String swapMethod, ServiceReference previousReference, Object previous,
+			ServiceReference currentReference, Object current, Object[] instances) {
+    	if (debug) {
+    		System.out.println("invoke swap: " + swapMethod + " on component " + m_component + ", instances: " + Arrays.toString(instances) + " - " + ((ComponentDeclaration)m_component).getState());
+    	}
+    	try {
+		m_component.invokeCallbackMethod(instances, swapMethod,
+				new Class[][]{
+            		{m_trackedServiceName, m_trackedServiceName}, 
+            		{Object.class, Object.class},
+            		{ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName},
+            		{ServiceReference.class, Object.class, ServiceReference.class, Object.class},
+            		{Component.class, m_trackedServiceName, m_trackedServiceName}, 
+            		{Component.class, Object.class, Object.class},
+            		{Component.class, ServiceReference.class, m_trackedServiceName, ServiceReference.class, m_trackedServiceName},
+            		{Component.class, ServiceReference.class, Object.class, ServiceReference.class, Object.class}}, 
+	            
+            	new Object[][]{
+                    {previous, current}, 
+                    {previous, current}, 
+                    {previousReference, previous, currentReference, current},
+                    {previousReference, previous, currentReference, current}, {m_component, previous, current},
+                    {m_component, previous, current}, {m_component, previousReference, previous, currentReference, current},
+                    {m_component, previousReference, previous, currentReference, current}}
+			);
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+	}
+
 	@Override
-	public void swappedService(ServiceReference reference, Object service,
-			ServiceReference newReference, Object newService) {
-		System.out.println("### SWAPPED");
+	public void swappedService(final ServiceReference reference, final Object service,
+			final ServiceReference newReference, final Object newService) {
 		if (m_swap != null) {
-			// TODO: invoke swap callback
+			// it's will not trigger a state change, but the actual swap should be scheduled to prevent things
+			// getting out of order.
+			// TODO ASPECTS: Check the relation with the component lifecycle. When not adding the 'false' to the execute,
+			// the swap is sometimes performed before the actual initial component.added has been completed. This
+			// is due to prevention of re-entrant execution issues as described in ComponentImpl.handleChange()
+			((SerialExecutor)m_component.getExecutor()).execute(new Runnable() {
+				@Override
+				public void run() {
+				    invokeSwap(m_swap, reference, service, newReference, newService);
+				}
+			}, false);
 		} else {
 			addedService(newReference, newService);
-			removedService(newReference, newService);
+			removedService(reference, service);
 		}
 	}
 

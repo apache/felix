@@ -23,8 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import dm.PropertyMetaData;
 import org.osgi.service.metatype.AttributeDefinition;
+
+import dm.PropertyMetaData;
 
 /**
  * DependencyManager PropertyMetaData Implementation. This class describes meta informations regarding

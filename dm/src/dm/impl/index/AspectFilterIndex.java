@@ -29,16 +29,18 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 
-import dm.*;
-import dm.impl.ServiceUtil;
-import tracker.*;
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+
+import tracker.ServiceTracker;
+import tracker.ServiceTrackerCustomizer;
+import dm.DependencyManager;
+import dm.FilterIndex;
+import dm.impl.ServiceUtil;
 
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>

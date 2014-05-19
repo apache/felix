@@ -20,12 +20,9 @@ package dm.impl.index.multiproperty;
 
 import java.util.Set;
 import java.util.TreeSet;
-
 /**
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-import java.util.Set;
-import java.util.TreeSet;
 
 public class Property {
 	boolean m_negate;

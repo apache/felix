@@ -22,7 +22,7 @@ import dm.Component;
 import dm.DependencyManager;
 
 
-public class AspectServiceDependencyTest extends TestBase {
+public class AspectWithCallbacksServiceDependencyTest extends TestBase {
     public void testServiceRegistrationAndConsumption() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
@@ -33,7 +33,7 @@ public class AspectServiceDependencyTest extends TestBase {
         		.setService(ServiceInterface.class)
         		.setCallbacks("add", "remove")
         		.setRequired(true));
-        Component asp = m.createAspectService(ServiceInterface.class, null, 100)
+        Component asp = m.createAspectService(ServiceInterface.class, null, 100, "add", null, "remove", "swap")
         		.setImplementation(ServiceProviderAspect.class);
         m.add(sp);
         m.add(sc);
@@ -73,6 +73,18 @@ public class AspectServiceDependencyTest extends TestBase {
 		@Override
 		public void invoke(String caller) {
 			m_service.invoke("aspect." + caller);
+		}
+		
+		public void add(ServiceInterface service) {
+			m_service = service;
+		}
+		
+		public void remove(ServiceInterface service) {
+			m_service = null;
+		}
+		
+		public void swap(ServiceInterface previous, ServiceInterface current) {
+			m_service = current;
 		}
     }
 

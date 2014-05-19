@@ -90,7 +90,52 @@ public class SerialExecutor implements Executor {
             command.run();
         }
         catch (Throwable t) {
-            m_logger.log(LogService.LOG_ERROR, "Error processing tasks", t);
+        	if (m_logger != null) {
+        		m_logger.log(LogService.LOG_ERROR, "Error processing tasks", t);
+        	}
         }
     }
+
+    // TODO ASPECTS: Review. Added methods for separately scheduling and executing tasks
+    // on the SerialExecutor. This is used in the ServiceTracker which must ensure
+    // customizer callback methods are executed in the correct order.
+    
+    
+	public void schedule(Runnable runnable) {
+		synchronized (this) {
+			m_queue.add(runnable);
+		}
+	}
+
+	public void execute() {
+		Runnable next = null;
+		synchronized (this) {
+			if (m_runningThread == null || m_runningThread == Thread.currentThread()) {
+				// It's our turn
+				if (!m_queue.isEmpty()) {
+					next = m_queue.get(0);
+					m_runningThread = Thread.currentThread();
+				} else {
+					return;
+				}
+			} else {
+				return;
+			}
+		} 
+        while (next != null) {
+            runTask(next);
+            synchronized (this) {
+                m_queue.remove(0); // The first element is the one we have just executed
+                next = m_queue.isEmpty() ? null : (Runnable) m_queue.get(0);
+                if (next == null) {
+                    m_runningThread = null;
+                }
+            }
+        }
+	}
+	
+	@Override
+	public String toString() {
+		return "[Executor: queue size: " + m_queue.size() + "]";
+	}
 }

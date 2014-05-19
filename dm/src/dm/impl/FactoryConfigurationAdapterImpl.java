@@ -5,7 +5,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.List;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -14,7 +13,6 @@ import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
 
 import dm.Component;
-import dm.ComponentStateListener;
 import dm.Dependency;
 import dm.DependencyManager;
 import dm.PropertyMetaData;

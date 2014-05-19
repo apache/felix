@@ -32,12 +32,13 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 
 import dm.context.ComponentContext;
-import dm.impl.FactoryConfigurationAdapterImpl;
 import dm.impl.AdapterServiceImpl;
+import dm.impl.AspectServiceImpl;
 import dm.impl.BundleAdapterImpl;
 import dm.impl.BundleDependencyImpl;
 import dm.impl.ComponentImpl;
 import dm.impl.ConfigurationDependencyImpl;
+import dm.impl.FactoryConfigurationAdapterImpl;
 import dm.impl.Logger;
 import dm.impl.ResourceAdapterImpl;
 import dm.impl.ResourceDependencyImpl;
@@ -222,24 +223,20 @@ public class DependencyManager {
         return m_components;
     }
 
-    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
-        // TODO
-        return null;
+    public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String autoConfig) {
+        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, autoConfig, null, null, null, null);
     }
     
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking) {
-        // TODO
-        return null;
+        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, null, null, null, null);
     }
     
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove) {
-        // TODO
-        return null;
+        return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, add, change, remove, null);
     }
     
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove, String swap) {
-        // TODO
-        return null;	
+    	return new AspectServiceImpl(this, serviceInterface, serviceFilter, ranking, null, add, change, remove, swap);    
     }
 
     public void clear() {

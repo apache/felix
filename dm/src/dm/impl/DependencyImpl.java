@@ -203,9 +203,13 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
         }
 	}
 
-	public void invoke(String method, Event e) {
+	public void invoke(String method, Event e, Object[] instances) {
 		// specific for this type of dependency
-		m_component.invokeCallbackMethod(getInstances(), method, new Class[][] {{}}, new Object[][] {{}});
+		m_component.invokeCallbackMethod(instances, method, new Class[][] {{}}, new Object[][] {{}});
+	}
+	
+	public void invoke(String method, Event e) {
+		invoke(method, e, getInstances());
 	}
 	
 	public T setRequired(boolean required) {
@@ -283,6 +287,10 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 	public Dictionary getProperties() {
 		// specific for this type of dependency
 		return null;
+	}
+	
+	public ComponentContext getComponentContext() {
+		return m_component;
 	}
 	
     protected void ensureNotActive() {

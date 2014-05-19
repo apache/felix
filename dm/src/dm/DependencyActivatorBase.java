@@ -18,9 +18,10 @@
  */
 package dm;
 
-import dm.impl.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+
+import dm.impl.Logger;
 
 /**
  * Base bundle activator class. Subclass this activator if you want to use dependency

@@ -8,6 +8,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
+import dm.DependencyActivatorBase;
 import dm.ServiceDependency;
 
 /**

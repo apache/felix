@@ -32,8 +32,6 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
-import dm.PropertyMetaData;
-import dm.impl.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationException;
@@ -42,6 +40,9 @@ import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.log.LogService;
 import org.osgi.service.metatype.MetaTypeProvider;
 import org.osgi.service.metatype.ObjectClassDefinition;
+
+import dm.PropertyMetaData;
+import dm.impl.Logger;
 
 /**
  * When a ConfigurationDepdendency is configured with properties metadata, we provide
