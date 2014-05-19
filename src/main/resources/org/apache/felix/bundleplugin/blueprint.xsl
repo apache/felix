@@ -68,7 +68,7 @@
 			</xsl:text>
 		</xsl:for-each>
 
-        <xsl:for-each select="//bp:service">
+        <xsl:for-each select="//bp:service[@interface or bp:interfaces/bp:value]">
             <xsl:choose>
                 <xsl:when test="@interface">
                     <xsl:value-of select="concat('Export-Service:', @interface)" />
@@ -76,7 +76,13 @@
                 <xsl:otherwise>
                     <xsl:choose>
                         <xsl:when test="bp:interfaces/bp:value/text()">
-                            <xsl:value-of select="concat('Export-Service:', bp:interfaces/bp:value/text())" />
+                            <xsl:value-of select="'Export-Service:'" />
+                            <xsl:for-each select="bp:interfaces/bp:value/text()">
+                                <xsl:value-of select="."/>
+                                <xsl:if test="position() != last()">
+                                    <xsl:value-of select="';'" />
+                                </xsl:if>
+                            </xsl:for-each>
                         </xsl:when>
                     </xsl:choose>
                 </xsl:otherwise>

@@ -448,6 +448,11 @@ public class BundlePlugin extends AbstractMojo
     {
         properties.putAll( getDefaultProperties( currentProject ) );
         properties.putAll( transformDirectives( originalInstructions ) );
+        if (properties.getProperty("Bundle-Activator") != null
+                && properties.getProperty("Bundle-Activator").isEmpty())
+        {
+            properties.remove("Bundle-Activator");
+        }
 
         Builder builder = new Builder();
         synchronized ( BundlePlugin.class ) // protect setBase...getBndLastModified which uses static DateFormat 
@@ -1261,7 +1266,9 @@ public class BundlePlugin extends AbstractMojo
         properties.put( "classifier", classifier == null ? "" : classifier );
 
         // Add default plugins
-        header( properties, Analyzer.PLUGIN, BlueprintPlugin.class.getName() + "," + SpringXMLType.class.getName() );
+        header( properties, Analyzer.PLUGIN, ScrPlugin.class.getName() + ","
+                                           + BlueprintPlugin.class.getName() + ","
+                                           + SpringXMLType.class.getName() );
 
         return properties;
     }

@@ -28,8 +28,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
+import aQute.libg.generics.Create;
 import junit.framework.TestCase;
 
+import org.apache.felix.utils.manifest.Clause;
+import org.apache.felix.utils.manifest.Parser;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.osgi.framework.Constants;
@@ -81,6 +84,7 @@ public class BlueprintComponentTest extends TestCase
         plugin.setOutputDirectory( new File( "target/tmp/basedir/target/classes" ) );
 
         Map instructions = new HashMap();
+        instructions.put( "service_mode", "service" );
         instructions.put( "Test", "Foo" );
 
         instructions.put( "nsh_interface", "foo.bar.Namespace" );
@@ -99,7 +103,11 @@ public class BlueprintComponentTest extends TestCase
         assertNotNull( impSvc );
 
         String impPkg = manifest.getMainAttributes().getValue( Constants.IMPORT_PACKAGE );
-        List<String> pkgs = Arrays.asList( impPkg.split( "," ) );
+        List<String> pkgs = Create.list();
+        for (Clause clause : Parser.parseHeader(impPkg))
+        {
+            pkgs.add(clause.getName());
+        }
         for ( int i = 1; i <= 13; i++ )
         {
             assertTrue( pkgs.contains( "p" + i ) );

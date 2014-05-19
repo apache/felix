@@ -26,8 +26,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +42,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import aQute.bnd.header.Attrs;
 import aQute.bnd.service.AnalyzerPlugin;
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Descriptors.PackageRef;
@@ -48,6 +52,12 @@ import aQute.bnd.osgi.Resource;
 import aQute.libg.generics.Create;
 import aQute.libg.qtokens.QuotedTokenizer;
 import aQute.service.reporter.Reporter;
+import org.apache.felix.utils.manifest.Attribute;
+import org.apache.felix.utils.manifest.Clause;
+import org.apache.felix.utils.manifest.Directive;
+import org.osgi.framework.Constants;
+
+import static org.apache.felix.utils.manifest.Parser.parseHeader;
 
 
 public class BlueprintPlugin implements AnalyzerPlugin
@@ -67,6 +77,11 @@ public class BlueprintPlugin implements AnalyzerPlugin
 
     public boolean analyzeJar( Analyzer analyzer ) throws Exception
     {
+        String mode = analyzer.getProperty("service_mode");
+        if (mode == null) {
+            mode = "generic";
+        }
+
         transformer.setParameter( "nsh_interface",
             analyzer.getProperty( "nsh_interface" ) != null ? analyzer.getProperty( "nsh_interface" ) : "" );
         transformer.setParameter( "nsh_namespace",
@@ -114,7 +129,9 @@ public class BlueprintPlugin implements AnalyzerPlugin
 		}
 
         // Group and analyze
-        Map<String, Set<Attribute>> hdrs = Create.map();
+        Set<String> caps = Create.set();
+        Set<String> reqs = Create.set();
+        Map<String, Set<Clause>> hdrs = Create.map();
         for ( String str : headers )
         {
             int idx = str.indexOf( ':' );
@@ -126,21 +143,137 @@ public class BlueprintPlugin implements AnalyzerPlugin
             }
             String h = str.substring( 0, idx ).trim();
             String v = str.substring( idx + 1 ).trim();
-            Set<Attribute> att = hdrs.get( h );
-            if ( att == null )
+            Clause[] hc = parseHeader(v);
+            // Convert generic caps/reqs
+            if ("Import-Service".equals(h))
             {
-                att = new TreeSet<Attribute>();
-                hdrs.put( h, att );
+                if (!"service".equals(mode))
+                {
+                    Clause clause = hc[0];
+                    String multiple = clause.getDirective("multiple");
+                    String avail = clause.getDirective("availability");
+                    String filter = clause.getAttribute("filter");
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("osgi.service;effective:=active;");
+                    if ("optional".equals(avail)) {
+                        sb.append("resolution:=optional;");
+                    }
+                    if ("true".equals(multiple)) {
+                        sb.append("cardinality:=multiple;");
+                    }
+                    if (filter == null) {
+                        filter = "(" + Constants.OBJECTCLASS + "=" + clause.getName() + ")";
+                    } else if (!filter.startsWith("(") && !filter.endsWith(")")) {
+                        filter = "(&(" + Constants.OBJECTCLASS + "=" + clause.getName() + ")(" + filter + "))";
+                    } else {
+                        filter = "(&(" + Constants.OBJECTCLASS + "=" + clause.getName() + ")" + filter + ")";
+                    }
+                    sb.append("filter:=\"").append(filter).append("\"");
+                    reqs.add(sb.toString());
+                }
+                else if (!"generic".equals(mode))
+                {
+                    Set<Clause> clauses = hdrs.get(h);
+                    if (clauses == null) {
+                        clauses = new HashSet<Clause>();
+                        hdrs.put(h, clauses);
+                    }
+                    clauses.addAll(Arrays.asList(hc));
+                }
             }
-            att.addAll( parseHeader( v, null ) );
+            else if ("Export-Service".equals(h))
+            {
+                if (!"service".equals(mode))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("osgi.service;effective:=active;objectClass");
+                    if (hc.length > 1) {
+                        sb.append(":List<String>=\"");
+                    } else {
+                        sb.append("=\"");
+                    }
+                    for (int i = 0; i < hc.length; i++)
+                    {
+                        if (i > 0)
+                        {
+                            sb.append(",");
+                        }
+                        sb.append(hc[i].getName());
+                    }
+                    sb.append("\"");
+                    for (int i = 0; i < hc[0].getAttributes().length; i++)
+                    {
+                        sb.append(";");
+                        sb.append(hc[0].getAttributes()[i].getName());
+                        sb.append("=\"");
+                        sb.append(hc[0].getAttributes()[i].getValue());
+                        sb.append("\"");
+                    }
+                    caps.add(sb.toString());
+                }
+                else if (!"generic".equals(mode))
+                {
+                    Set<Clause> clauses = hdrs.get(h);
+                    if (clauses == null) {
+                        clauses = new HashSet<Clause>();
+                        hdrs.put(h, clauses);
+                    }
+                    clauses.addAll(Arrays.asList(hc));
+                }
+            }
+            else
+            {
+                Set<Clause> clauses = hdrs.get(h);
+                if (clauses == null)
+                {
+                    clauses = new HashSet<Clause>();
+                    hdrs.put(h, clauses);
+                }
+                clauses.addAll(Arrays.asList( hc ) );
+            }
+        }
+        if (!caps.isEmpty())
+        {
+            StringBuilder sb = new StringBuilder();
+            String header = analyzer.getProperty("Provide-Capability");
+            if (header != null)
+            {
+                sb.append(header);
+            }
+            for (String cap : caps) {
+                if (sb.length() > 0) {
+                    sb.append(",");
+                }
+                sb.append(cap);
+            }
+            System.err.println("Provide-Capability: " + sb.toString());
+            analyzer.setProperty("Provide-Capability", sb.toString());
+        }
+        if (!reqs.isEmpty())
+        {
+            StringBuilder sb = new StringBuilder();
+            String header = analyzer.getProperty("Require-Capability");
+            if (header != null)
+            {
+                sb.append(header);
+            }
+            for (String req : reqs) {
+                if (sb.length() > 0) {
+                    sb.append(",");
+                }
+                sb.append(req);
+            }
+            System.err.println("Require-Capability: " + sb.toString());
+            analyzer.setProperty("Require-Capability", sb.toString());
         }
         // Merge
         for ( String header : hdrs.keySet() )
         {
             if ( "Import-Class".equals( header ) || "Import-Package".equals( header ) )
             {
-                Set<Attribute> newAttr = hdrs.get( header );
-                for ( Attribute a : newAttr )
+                Set<Clause> newAttr = hdrs.get(header);
+                for ( Clause a : newAttr )
                 {
                     String pkg = a.getName();
                     if ( "Import-Class".equals( header ) )
@@ -158,50 +291,34 @@ public class BlueprintPlugin implements AnalyzerPlugin
                     PackageRef pkgRef = analyzer.getPackageRef( pkg );
                     if ( !analyzer.getReferred().containsKey( pkgRef ) )
                     {
-                        analyzer.getReferred().put( pkgRef ).putAll( a.getProperties() );
+                        Attrs attrs = analyzer.getReferred().put(pkgRef);
+                        for (Attribute attribute : a.getAttributes())
+                        {
+                            attrs.put(attribute.getName(), attribute.getValue());
+                        }
                     }
                 }
             }
             else
             {
-                Set<Attribute> orgAttr = parseHeader( analyzer.getProperty( header ), null );
-                Set<Attribute> newAttr = hdrs.get( header );
-                for ( Iterator<Attribute> it = newAttr.iterator(); it.hasNext(); )
+                Set<String> merge = Create.set();
+                for (Clause clause : parseHeader(analyzer.getProperty(header)))
                 {
-                    Attribute a = it.next();
-                    for ( Attribute b : orgAttr )
-                    {
-                        if ( b.getName().equals( a.getName() ) )
-                        {
-                            it.remove();
-                            break;
-                        }
-                    }
+                    merge.add(clause.toString());
                 }
-                orgAttr.addAll( newAttr );
-                // Rebuild from orgAttr
+                for (Clause clause : hdrs.get(header))
+                {
+                    merge.add(clause.toString());
+                }
                 StringBuilder sb = new StringBuilder();
-                for ( Attribute a : orgAttr )
+                for (String clause : merge)
                 {
                     if ( sb.length() > 0 )
                     {
                         sb.append( "," );
                     }
-                    sb.append( a.getName() );
-                    for ( Map.Entry<String, String> prop : a.getProperties().entrySet() )
-                    {
-                        sb.append( ';' ).append( prop.getKey() ).append( "=" );
-                        if ( prop.getValue().matches( "[0-9a-zA-Z_-]+" ) )
-                        {
-                            sb.append( prop.getValue() );
-                        }
-                        else
-                        {
-                            sb.append( "\"" );
-                            sb.append( prop.getValue().replace( "\"", "\\\"" ) );
-                            sb.append( "\"" );
-                        }
-                    }
+                    sb.append(clause);
+
                 }
                 analyzer.setProperty( header, sb.toString() );
             }
@@ -272,152 +389,6 @@ public class BlueprintPlugin implements AnalyzerPlugin
         TransformerFactory tf = TransformerFactory.newInstance();
         javax.xml.transform.Source source = new StreamSource( url.openStream() );
         return tf.newTransformer( source );
-    }
-
-    public static class Attribute implements Comparable<Attribute>
-    {
-        private final String name;
-        private final Map<String, String> properties;
-
-
-        public Attribute( String name, Map<String, String> properties )
-        {
-            this.name = name;
-            this.properties = properties;
-        }
-
-
-        public String getName()
-        {
-            return name;
-        }
-
-
-        public Map<String, String> getProperties()
-        {
-            return properties;
-        }
-
-
-        public int compareTo( Attribute a )
-        {
-            int c = name.compareTo( a.name );
-            if ( c == 0 )
-            {
-                c = properties.equals( a.properties ) ? 0 : properties.size() < a.properties.size() ? -1 : properties
-                    .hashCode() < a.properties.hashCode() ? -1 : +1;
-            }
-            return c;
-        }
-
-
-        @Override
-        public boolean equals( Object o )
-        {
-            if ( this == o )
-                return true;
-            if ( o == null || getClass() != o.getClass() )
-                return false;
-
-            Attribute attribute = ( Attribute ) o;
-
-            if ( name != null ? !name.equals( attribute.name ) : attribute.name != null )
-                return false;
-            if ( properties != null ? !properties.equals( attribute.properties ) : attribute.properties != null )
-                return false;
-
-            return true;
-        }
-
-
-        @Override
-        public int hashCode()
-        {
-            int result = name != null ? name.hashCode() : 0;
-            result = 31 * result + ( properties != null ? properties.hashCode() : 0 );
-            return result;
-        }
-    }
-
-
-    public static Set<Attribute> parseHeader( String value, Reporter logger )
-    {
-        if ( ( value == null ) || ( value.trim().length() == 0 ) )
-        {
-            return new TreeSet<Attribute>();
-        }
-        Set<Attribute> result = new TreeSet<Attribute>();
-        QuotedTokenizer qt = new QuotedTokenizer( value, ";=," );
-        char del = '\0';
-        do
-        {
-            boolean hadAttribute = false;
-            Map<String, String> clause = Create.map();
-            List<String> aliases = Create.list();
-            String name = qt.nextToken( ",;" );
-
-            del = qt.getSeparator();
-            if ( ( name == null ) || ( name.length() == 0 ) )
-            {
-                if ( ( logger != null ) && ( logger.isPedantic() ) )
-                {
-                    logger
-                        .warning( "Empty clause, usually caused by repeating a comma without any name field or by having "
-                            + "spaces after the backslash of a property file: " + value );
-                }
-
-                if ( name != null )
-                    continue;
-                break;
-            }
-            name = name.trim();
-
-            aliases.add( name );
-            String advalue;
-            while ( del == ';' )
-            {
-                String adname = qt.nextToken();
-                if ( ( del = qt.getSeparator() ) != '=' )
-                {
-                    if ( ( hadAttribute ) && ( logger != null ) )
-                    {
-                        logger.error( "Header contains name field after attribute or directive: " + adname + " from "
-                            + value + ". Name fields must be consecutive, separated by a ';' like a;b;c;x=3;y=4" );
-                    }
-
-                    if ( ( adname != null ) && ( adname.length() > 0 ) )
-                        aliases.add( adname.trim() );
-                }
-                else
-                {
-                    advalue = qt.nextToken();
-                    if ( ( clause.containsKey( adname ) ) && ( logger != null ) && ( logger.isPedantic() ) )
-                    {
-                        logger.warning( "Duplicate attribute/directive name " + adname + " in " + value
-                            + ". This attribute/directive will be ignored" );
-                    }
-
-                    if ( advalue == null )
-                    {
-                        if ( logger != null )
-                        {
-                            logger.error( "No value after '=' sign for attribute " + adname );
-                        }
-                        advalue = "";
-                    }
-                    clause.put( adname.trim(), advalue.trim() );
-                    del = qt.getSeparator();
-                    hadAttribute = true;
-                }
-            }
-
-            for ( String clauseName : aliases )
-            {
-                result.add( new Attribute( clauseName, clause ) );
-            }
-        }
-        while ( del == ',' );
-        return result;
     }
 
 }
