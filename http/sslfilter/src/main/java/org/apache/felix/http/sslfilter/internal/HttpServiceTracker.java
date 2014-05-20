@@ -18,15 +18,24 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.servlet.ServletException;
 
 import org.apache.felix.http.api.ExtHttpService;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -35,13 +44,56 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class HttpServiceTracker extends ServiceTracker
 {
-    private final Map<ServiceReference, SslFilter> filters;
+    private final ConcurrentMap<ServiceReference, SslFilter> filters;
 
+    private ServiceRegistration configReceiver;
+
+    @SuppressWarnings("serial")
     public HttpServiceTracker(BundleContext context)
     {
         super(context, ExtHttpService.class.getName(), null);
 
-        this.filters = new HashMap<ServiceReference, SslFilter>();
+        this.filters = new ConcurrentHashMap<ServiceReference, SslFilter>();
+    }
+
+    @Override
+    public void open(boolean trackAllServices)
+    {
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(Constants.SERVICE_PID, SslFilter.PID);
+
+        this.configReceiver = super.context.registerService(ManagedService.class.getName(), new ServiceFactory()
+        {
+            public Object getService(Bundle bundle, ServiceRegistration registration)
+            {
+                return new ManagedService()
+                {
+                    public void updated(@SuppressWarnings("rawtypes") Dictionary properties) throws ConfigurationException
+                    {
+                        configureFilters(properties);
+                    }
+                };
+            }
+            
+            public void ungetService(Bundle bundle, ServiceRegistration registration, Object service)
+            {
+                // Nop
+            }
+        }, props);
+
+        super.open(trackAllServices);
+    }
+
+    @Override
+    public void close()
+    {
+        super.close();
+
+        if (this.configReceiver != null)
+        {
+            this.configReceiver.unregister();
+            this.configReceiver = null;
+        }
     }
 
     public Object addingService(ServiceReference reference)
@@ -54,7 +106,7 @@ public class HttpServiceTracker extends ServiceTracker
             {
                 service.registerFilter(filter, ".*", new Hashtable(), 0, null);
 
-                this.filters.put(reference, filter);
+                this.filters.putIfAbsent(reference, filter);
 
                 SystemLogger.log(LogService.LOG_DEBUG, "SSL filter registered...");
             }
@@ -69,7 +121,7 @@ public class HttpServiceTracker extends ServiceTracker
 
     public void removedService(ServiceReference reference, Object service)
     {
-        SslFilter filter = (SslFilter) this.filters.remove(reference);
+        SslFilter filter = this.filters.remove(reference);
         if (filter != null)
         {
             ((ExtHttpService) service).unregisterFilter(filter);
@@ -78,5 +130,14 @@ public class HttpServiceTracker extends ServiceTracker
         }
 
         super.removedService(reference, service);
+    }
+
+    void configureFilters(@SuppressWarnings("rawtypes") final Dictionary properties) throws ConfigurationException
+    {
+        List<SslFilter> filters = new ArrayList<SslFilter>(this.filters.values());
+        for (SslFilter sslFilter : filters)
+        {
+            sslFilter.configure(properties);
+        }
     }
 }
