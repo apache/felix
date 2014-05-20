@@ -20,6 +20,7 @@ package org.apache.felix.http.sslfilter.internal;
 
 import java.io.IOException;
 import java.security.cert.CertificateException;
+import java.util.Dictionary;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -29,33 +30,45 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.log.LogService;
 
 public class SslFilter implements Filter
 {
-    // request header indicating an SSL endpoint proxy
-    private static final String X_FORWARD_SSL_HEADER = "X-Forwarded-SSL";
+    public static final String PID = "org.apache.felix.http.sslfilter.SslFilter";
 
-    // value indicating an SSL endpoint proxy
-    private static final String X_FORWARD_SSL_VALUE = "on";
+    private static final String DEFAULT_SSL_HEADER = "X-Forwarded-SSL";
+    private static final String DEFAULT_SSL_VALUE = "on";
+    private static final String DEFAULT_CERT_HEADER = "X-Forwarded-SSL-Certificate";
 
-    // request header indicating an SSL client certificate (if available)
-    private static final String X_FORWARD_SSL_CERTIFICATE_HEADER = "X-Forwarded-SSL-Certificate";
+    private static final String PROP_SSL_HEADER = "ssl-forward.header";
+    private static final String PROP_SSL_VALUE = "ssl-forward.value";
+    private static final String PROP_SSL_CERT_KEY = "ssl-forward-cert.header";
 
-    public void init(FilterConfig config)
+    private volatile ConfigHolder config;
+
+    SslFilter()
     {
-        // No explicit initialization needed...
+        this.config = new ConfigHolder(DEFAULT_SSL_HEADER, DEFAULT_SSL_VALUE, DEFAULT_CERT_HEADER);
+    }
+
+    public void destroy()
+    {
+        // No explicit destroy needed...
     }
 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException
     {
+        final ConfigHolder cfg = this.config;
+
         HttpServletRequest httpReq = (HttpServletRequest) req;
-        if (X_FORWARD_SSL_VALUE.equalsIgnoreCase(httpReq.getHeader(X_FORWARD_SSL_HEADER)))
+        if (cfg.sslValue.equalsIgnoreCase(httpReq.getHeader(cfg.sslHeader)))
         {
             try
             {
-                // In case this fails, we fall back to the original HTTP request, which is better than nothing...
-                httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(X_FORWARD_SSL_CERTIFICATE_HEADER));
+                // In case this fails, we fall back to the original HTTP
+                // request, which is better than nothing...
+                httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(cfg.certHeader));
             }
             catch (CertificateException e)
             {
@@ -78,8 +91,65 @@ public class SslFilter implements Filter
         }
     }
 
-    public void destroy()
+    public void init(FilterConfig config)
     {
-        // No explicit destroy needed...
+        // make sure there is some configuration
+    }
+
+    void configure(@SuppressWarnings("rawtypes") final Dictionary properties) throws ConfigurationException
+    {
+        String certHeader = DEFAULT_CERT_HEADER;
+        String sslHeader = DEFAULT_SSL_HEADER;
+        String sslValue = DEFAULT_SSL_VALUE;
+
+        if (properties != null)
+        {
+            certHeader = getOptionalString(properties, PROP_SSL_CERT_KEY);
+            sslHeader = getMandatoryString(properties, PROP_SSL_HEADER);
+            sslValue = getMandatoryString(properties, PROP_SSL_VALUE);
+        }
+
+        this.config = new ConfigHolder(sslHeader, sslValue, certHeader);
+
+        SystemLogger.log(LogService.LOG_INFO, "SSL filter (re)configured with: " + "SSL forward header = '" + sslHeader + "'; SSL forward value = '" + sslValue + "'; SSL certificate header = '"
+            + certHeader + "'.");
+    }
+
+    private String getOptionalString(@SuppressWarnings("rawtypes") Dictionary properties, String key) throws ConfigurationException
+    {
+        Object raw = properties.get(key);
+        if (raw == null || "".equals(((String) raw).trim()))
+        {
+            return null;
+        }
+        if (!(raw instanceof String))
+        {
+            throw new ConfigurationException(key, "invalid value");
+        }
+        return ((String) raw).trim();
+    }
+
+    private String getMandatoryString(@SuppressWarnings("rawtypes") Dictionary properties, String key) throws ConfigurationException
+    {
+        String value = getOptionalString(properties, key);
+        if (value == null)
+        {
+            throw new ConfigurationException(key, "missing value");
+        }
+        return value;
+    }
+
+    static class ConfigHolder
+    {
+        final String certHeader;
+        final String sslHeader;
+        final String sslValue;
+
+        public ConfigHolder(String sslHeader, String sslValue, String certHeader)
+        {
+            this.sslHeader = sslHeader;
+            this.sslValue = sslValue;
+            this.certHeader = certHeader;
+        }
     }
 }
