@@ -53,7 +53,7 @@
         </xsl:for-each>
 
         <xsl:for-each select="//scr:component/reference">
-            <xsl:value-of select="'Require-Capability: osgi.service;effective:=active; '" />
+            <xsl:value-of select="'Require-Capability: osgi.service;effective:=active;'" />
             <xsl:choose>
                 <xsl:when test="@cardinality = '0..1' or @cardinality = '0..n'">
                     <xsl:value-of select="'resolution:=optional;'" />

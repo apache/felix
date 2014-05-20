@@ -55,6 +55,15 @@
      <target>1.5</target>
     </configuration>
    </plugin>
+   <plugin>
+    <groupId>org.apache.rat</groupId>
+    <artifactId>apache-rat-plugin</artifactId>
+    <configuration>
+     <excludes>
+      <exclude>**/*.mf</exclude>
+     </excludes>
+    </configuration>
+   </plugin>
   </plugins>
  </build>
 
