@@ -453,6 +453,24 @@ public class BundlePlugin extends AbstractMojo
         {
             properties.remove("Bundle-Activator");
         }
+        if (properties.containsKey("-disable-plugin"))
+        {
+            String[] disabled = properties.remove("-disable-plugin").toString().replaceAll(" ", "").split(",");
+            String[] enabled = properties.getProperty(Analyzer.PLUGIN, "").replaceAll(" ", "").split(",");
+            Set<String> plugin = new LinkedHashSet<String>();
+            plugin.addAll(Arrays.asList(enabled));
+            plugin.removeAll(Arrays.asList(disabled));
+            StringBuilder sb = new StringBuilder();
+            for (String s : plugin)
+            {
+                if (sb.length() > 0)
+                {
+                    sb.append(",");
+                }
+                sb.append(sb);
+            }
+            properties.setProperty(Analyzer.PLUGIN, sb.toString());
+        }
 
         Builder builder = new Builder();
         synchronized ( BundlePlugin.class ) // protect setBase...getBndLastModified which uses static DateFormat 
