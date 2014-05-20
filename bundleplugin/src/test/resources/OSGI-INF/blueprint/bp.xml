@@ -54,6 +54,7 @@
     <service>
         <interfaces>
             <value>p7.Foo</value>
+            <value>p14.Foo</value>
         </interfaces>
         <bean class="p8.Foo">
             <argument type="p9.Foo[][]"><null/></argument>

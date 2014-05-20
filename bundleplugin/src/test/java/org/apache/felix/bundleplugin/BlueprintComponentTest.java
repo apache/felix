@@ -28,6 +28,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
+import aQute.bnd.osgi.Analyzer;
+import aQute.bnd.osgi.Jar;
+import aQute.bnd.osgi.Verifier;
 import aQute.libg.generics.Create;
 import junit.framework.TestCase;
 
@@ -43,7 +46,17 @@ import aQute.bnd.osgi.Builder;
 public class BlueprintComponentTest extends TestCase
 {
 
-    public void testBlueprint() throws Exception
+    public void testBlueprintServices() throws Exception
+    {
+        test( "services" );
+    }
+
+    public void testBlueprintGeneric() throws Exception
+    {
+        test( "generic" );
+    }
+
+    protected void test(String mode) throws Exception
     {
         MavenProjectStub project = new MavenProjectStub()
         {
@@ -84,7 +97,7 @@ public class BlueprintComponentTest extends TestCase
         plugin.setOutputDirectory( new File( "target/tmp/basedir/target/classes" ) );
 
         Map instructions = new HashMap();
-        instructions.put( "service_mode", "service" );
+        instructions.put( "service_mode", mode );
         instructions.put( "Test", "Foo" );
 
         instructions.put( "nsh_interface", "foo.bar.Namespace" );
@@ -108,10 +121,24 @@ public class BlueprintComponentTest extends TestCase
         {
             pkgs.add(clause.getName());
         }
-        for ( int i = 1; i <= 13; i++ )
+        for ( int i = 1; i <= 14; i++ )
         {
             assertTrue( pkgs.contains( "p" + i ) );
         }
+
+        new Verifier(builder).verify();
+    }
+
+    public void testAnalyzer() throws Exception
+    {
+        Analyzer analyzer = new Analyzer();
+        Manifest manifest = new Manifest();
+        manifest.read(getClass().getResourceAsStream("/test.mf"));
+        Jar jar = new Jar("name");
+        jar.setManifest(manifest);
+        analyzer.setJar(jar);
+        analyzer.analyze();
+        new Verifier(analyzer).verify();
     }
 
 }

@@ -247,7 +247,6 @@ public class BlueprintPlugin implements AnalyzerPlugin
                 }
                 sb.append(cap);
             }
-            System.err.println("Provide-Capability: " + sb.toString());
             analyzer.setProperty("Provide-Capability", sb.toString());
         }
         if (!reqs.isEmpty())
@@ -264,7 +263,6 @@ public class BlueprintPlugin implements AnalyzerPlugin
                 }
                 sb.append(req);
             }
-            System.err.println("Require-Capability: " + sb.toString());
             analyzer.setProperty("Require-Capability", sb.toString());
         }
         // Merge
