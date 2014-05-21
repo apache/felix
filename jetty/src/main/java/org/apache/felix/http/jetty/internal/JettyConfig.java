@@ -124,6 +124,9 @@ public final class JettyConfig
     /** Felix specific property to configure the included cipher suites. */
     public static final String FELIX_JETTY_INCLUDED_SUITES = "org.apache.felix.https.jetty.ciphersuites.included";
 
+    /** Felix specific property to specify whether a server header should be sent (defaults to true) */
+    public static final String FELIX_JETTY_SEND_SERVER_HEADER = "org.apache.felix.http.jetty.sendServerHeader";
+
     private static String validateContextPath(String ctxPath)
     {
         // undefined, empty, or root context path
@@ -333,6 +336,11 @@ public final class JettyConfig
     public boolean isUseHttpNio()
     {
         return getBooleanProperty(FELIX_HTTP_NIO, true);
+    }
+
+    public boolean isSendServerHeader()
+    {
+        return getBooleanProperty(FELIX_JETTY_SEND_SERVER_HEADER, true);
     }
 
     /**
