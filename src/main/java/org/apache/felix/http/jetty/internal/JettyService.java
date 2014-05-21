@@ -239,6 +239,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
 
             // HTTP/1.1 requires Date header if possible (it is)
             this.server.setSendDateHeader(true);
+            this.server.setSendServerVersion(this.config.isSendServerHeader());
 
             this.server.addBean(new HashLoginService("OSGi HTTP Service Realm"));
 
@@ -746,6 +747,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         }
     }
 
+    @Override
     public void lifeCycleStarted(LifeCycle event)
     {
         for (Deployment deployment : this.deployments.values())
@@ -759,6 +761,7 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
         }
     }
 
+    @Override
     public void lifeCycleStopping(LifeCycle event)
     {
         for (Deployment deployment : this.deployments.values())
