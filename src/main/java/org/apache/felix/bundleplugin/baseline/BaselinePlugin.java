@@ -163,18 +163,21 @@ public final class BaselinePlugin
             }
 
             xmlWriter.startElement( "attributes" );
-            for ( Entry<String, String> attribute : attributes.entrySet() )
+            if (attributes != null)
             {
-                String attributeName = attribute.getKey();
-                if ( ':' == attributeName.charAt( attributeName.length() - 1 ) )
+                for (Entry<String, String> attribute : attributes.entrySet())
                 {
-                    attributeName = attributeName.substring( 0, attributeName.length() - 1 );
-                }
-                String attributeValue = attribute.getValue();
+                    String attributeName = attribute.getKey();
+                    if (':' == attributeName.charAt(attributeName.length() - 1))
+                    {
+                        attributeName = attributeName.substring(0, attributeName.length() - 1);
+                    }
+                    String attributeValue = attribute.getValue();
 
-                xmlWriter.startElement( attributeName );
-                xmlWriter.writeText( attributeValue );
-                xmlWriter.endElement();
+                    xmlWriter.startElement(attributeName);
+                    xmlWriter.writeText(attributeValue);
+                    xmlWriter.endElement();
+                }
             }
             xmlWriter.endElement();
         }
