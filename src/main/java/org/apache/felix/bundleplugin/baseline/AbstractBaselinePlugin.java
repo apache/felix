@@ -145,12 +145,25 @@ abstract class AbstractBaselinePlugin
      */
     private String[] filters;
 
+    /**
+     * Project types which this plugin supports.
+     *
+     * @parameter
+     */
+    protected List supportedProjectTypes = Arrays.asList( new String[] { "jar", "bundle" } );
+
     public final void execute()
         throws MojoExecutionException, MojoFailureException
     {
         if ( skip )
         {
             getLog().info( "Skipping Baseline execution" );
+            return;
+        }
+
+        if ( !supportedProjectTypes.contains( project.getArtifact().getType() ) )
+        {
+            getLog().info("Skipping Baseline (project type " + project.getArtifact().getType() + " not supported)");
             return;
         }
 
