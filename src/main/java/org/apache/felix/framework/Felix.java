@@ -64,10 +64,12 @@ import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.launch.Framework;
+import org.osgi.framework.namespace.HostNamespace;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleRevisions;
+import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.packageadmin.ExportedPackage;
@@ -3747,22 +3749,40 @@ public class Felix extends BundleImpl implements Framework
                 // newest to oldest. We assume that the first revision found to
                 // be exporting the package is the provider of the package,
                 // which makes sense since it must have been resolved first.
-                List<BundleRevision> revisions =
+                List<BundleRevision> originRevisions =
                     bundle.adapt(BundleRevisions.class).getRevisions();
-                for (int i = revisions.size() - 1; i >= 0; i--)
+                for (int i = originRevisions.size() - 1; i >= 0; i--)
                 {
-                    BundleRevision br = revisions.get(i);
-                    List<BundleCapability> caps = (br.getWiring() == null)
-                        ? br.getDeclaredCapabilities(null)
-                        : br.getWiring().getCapabilities(null);
-                    for (BundleCapability cap : caps)
+                    BundleRevision originBr = originRevisions.get(i);
+                    List<BundleRevision> revisions = Collections.singletonList(originBr);
+
+                    if ((originBr.getTypes() & BundleRevision.TYPE_FRAGMENT) != 0)
                     {
-                        if (cap.getNamespace().equals(req.getNamespace())
-                            && CapabilitySet.matches(cap, req.getFilter()))
+                        // If it's a fragment, find the revisions of the attached
+                        // bundle(s) and work with those instead. Note that fragments
+                        // can be attached to multiple hosts...
+                        revisions = new ArrayList<BundleRevision>();
+
+                        for (BundleWire bw : originBr.getWiring().getRequiredWires(HostNamespace.HOST_NAMESPACE))
                         {
-                            pkgs.add(
-                                new ExportedPackageImpl(
-                                    this, (BundleImpl) bundle, br, cap));
+                            revisions.add(bw.getProviderWiring().getRevision());
+                        }
+                    }
+
+                    for (BundleRevision br : revisions)
+                    {
+                        List<BundleCapability> caps = (br.getWiring() == null)
+                            ? br.getDeclaredCapabilities(null)
+                            : br.getWiring().getCapabilities(null);
+                        for (BundleCapability cap : caps)
+                        {
+                            if (cap.getNamespace().equals(req.getNamespace())
+                                && CapabilitySet.matches(cap, req.getFilter()))
+                            {
+                                pkgs.add(
+                                    new ExportedPackageImpl(
+                                        this, (BundleImpl) br.getBundle(), br, cap));
+                            }
                         }
                     }
                 }
