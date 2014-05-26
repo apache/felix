@@ -18,6 +18,9 @@
  */
 package org.apache.felix.http.sslfilter.internal;
 
+import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_SSL;
+import static org.apache.felix.http.sslfilter.internal.SslFilterConstants.HDR_X_FORWARDED_SSL_CERTIFICATE;
+
 import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.util.Dictionary;
@@ -29,17 +32,19 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.log.LogService;
 
+@SuppressWarnings("rawtypes")
 public class SslFilter implements Filter
 {
     public static final String PID = "org.apache.felix.http.sslfilter.SslFilter";
 
-    private static final String DEFAULT_SSL_HEADER = "X-Forwarded-SSL";
+    private static final String DEFAULT_SSL_HEADER = HDR_X_FORWARDED_SSL;
     private static final String DEFAULT_SSL_VALUE = "on";
-    private static final String DEFAULT_CERT_HEADER = "X-Forwarded-SSL-Certificate";
+    private static final String DEFAULT_CERT_HEADER = HDR_X_FORWARDED_SSL_CERTIFICATE;
 
     private static final String PROP_SSL_HEADER = "ssl-forward.header";
     private static final String PROP_SSL_VALUE = "ssl-forward.value";
@@ -62,12 +67,14 @@ public class SslFilter implements Filter
         final ConfigHolder cfg = this.config;
 
         HttpServletRequest httpReq = (HttpServletRequest) req;
+        HttpServletResponse httpResp = (HttpServletResponse) res;
+
         if (cfg.sslValue.equalsIgnoreCase(httpReq.getHeader(cfg.sslHeader)))
         {
             try
             {
-                // In case this fails, we fall back to the original HTTP
-                // request, which is better than nothing...
+                httpResp = new SslFilterResponse(httpResp, httpReq);
+                // In case this fails, we fall back to the original HTTP request, which is better than nothing...
                 httpReq = new SslFilterRequest(httpReq, httpReq.getHeader(cfg.certHeader));
             }
             catch (CertificateException e)
@@ -76,11 +83,10 @@ public class SslFilter implements Filter
             }
         }
 
-        // forward the request making sure any certificate is removed
-        // again after the request processing gets back here
+        // forward the request making sure any certificate is removed again after the request processing gets back here
         try
         {
-            chain.doFilter(httpReq, res);
+            chain.doFilter(httpReq, httpResp);
         }
         finally
         {
@@ -96,7 +102,7 @@ public class SslFilter implements Filter
         // make sure there is some configuration
     }
 
-    void configure(@SuppressWarnings("rawtypes") final Dictionary properties) throws ConfigurationException
+    void configure(Dictionary properties) throws ConfigurationException
     {
         String certHeader = DEFAULT_CERT_HEADER;
         String sslHeader = DEFAULT_SSL_HEADER;
@@ -115,7 +121,7 @@ public class SslFilter implements Filter
             + certHeader + "'.");
     }
 
-    private String getOptionalString(@SuppressWarnings("rawtypes") Dictionary properties, String key) throws ConfigurationException
+    private String getOptionalString(Dictionary properties, String key) throws ConfigurationException
     {
         Object raw = properties.get(key);
         if (raw == null || "".equals(((String) raw).trim()))
@@ -129,7 +135,7 @@ public class SslFilter implements Filter
         return ((String) raw).trim();
     }
 
-    private String getMandatoryString(@SuppressWarnings("rawtypes") Dictionary properties, String key) throws ConfigurationException
+    private String getMandatoryString(Dictionary properties, String key) throws ConfigurationException
     {
         String value = getOptionalString(properties, key);
         if (value == null)
