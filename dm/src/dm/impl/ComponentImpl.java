@@ -329,12 +329,10 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
                 if (dc.isRequired()) {
                     dc.invokeSwap(event, newEvent);
                 }
-                updateInstance(dc);
             }
             break;
         case TRACKING_OPTIONAL:
             dc.invokeSwap(event, newEvent);
-            updateInstance(dc);
             break;
         default:
         }
