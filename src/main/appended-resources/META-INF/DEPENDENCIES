@@ -5,11 +5,6 @@ The OSGi Alliance (http://www.osgi.org/).
 Copyright (c) OSGi Alliance (2000, 2012).
 Licensed under the Apache License 2.0. 
 
-This product includes software developed at
-Sun Microsystems, Inc.
-Copyright (c) 1994-2000.
-Licensed under a BSD license.
-
 II. Used Third-Party Software
 
 This product uses software developed at
@@ -19,4 +14,3 @@ Licensed under the Apache License 2.0.
 
 III. License Summary
 - Apache License 2.0
-- BSD License

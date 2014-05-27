@@ -19,11 +19,10 @@
 package org.apache.felix.eventadmin.impl.tasks;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.felix.eventadmin.impl.handler.EventHandlerProxy;
 import org.osgi.service.event.Event;
 
 /**
@@ -43,7 +42,7 @@ public class AsyncDeliverTasks
     private final SyncDeliverTasks m_deliver_task;
 
     /** A map of running threads currently delivering async events. */
-    private final Map m_running_threads = new HashMap();
+    private final Map<Long, TaskExecuter> m_running_threads = new ConcurrentHashMap<Long, TaskExecuter>();
 
     /**
      * The constructor of the class that will use the asynchronous.
@@ -65,7 +64,7 @@ public class AsyncDeliverTasks
      * @param tasks The event handler dispatch tasks to execute
      *
      */
-    public void execute(final Collection tasks, final Event event)
+    public void execute(final Collection<EventHandlerProxy> tasks, final Event event)
     {
         /*
         final Iterator i = tasks.iterator();
@@ -85,67 +84,94 @@ public class AsyncDeliverTasks
         }
         if ( hasOrdered )
         {*/
-            final Thread currentThread = Thread.currentThread();
-            TaskExecuter executer = null;
-            synchronized (m_running_threads )
+            final TaskInfo info = new TaskInfo(tasks, event);
+            final Long currentThreadId = Thread.currentThread().getId();
+            TaskExecuter executer = m_running_threads.get(currentThreadId);
+            if ( executer == null )
             {
-                final TaskExecuter runningExecutor = (TaskExecuter)m_running_threads.get(currentThread);
-                if ( runningExecutor != null )
-                {
-                    runningExecutor.add(tasks, event);
-                }
-                else
-                {
-                    executer = new TaskExecuter( tasks, event, currentThread );
-                    m_running_threads.put(currentThread, executer);
-                }
+                executer = new TaskExecuter();
+                m_running_threads.put(currentThreadId, executer);
             }
-            if ( executer != null )
+            synchronized ( executer )
             {
-                m_pool.executeTask(executer);
+                executer.add(info);
+                if ( !executer.isActive() )
+                {
+                    executer.setSyncDeliverTasks(m_deliver_task);
+                    m_pool.executeTask(executer);
+                }
             }
         //}
     }
 
-    private final class TaskExecuter implements Runnable
+    private final static class TaskInfo {
+        public final Collection<EventHandlerProxy> tasks;
+        public final Event event;
+
+        public TaskInfo next;
+
+        public TaskInfo(final Collection<EventHandlerProxy> tasks, final Event event) {
+            this.tasks = tasks;
+            this.event = event;
+        }
+    }
+
+    private final static class TaskExecuter implements Runnable
     {
-        private final List m_tasks = new LinkedList();
+        private volatile TaskInfo first;
+        private volatile TaskInfo last;
 
-        private final Object m_key;
+        private volatile SyncDeliverTasks m_deliver_task;
 
-        public TaskExecuter(final Collection tasks, final Event event, final Object key)
+        public boolean isActive()
         {
-            m_key = key;
-            m_tasks.add(new Object[] {tasks, event});
+            return this.m_deliver_task != null;
         }
 
+        public void setSyncDeliverTasks(final SyncDeliverTasks syncDeliverTasks)
+        {
+            this.m_deliver_task = syncDeliverTasks;
+        }
+
+        @Override
         public void run()
         {
             boolean running;
             do
             {
-                Object[] tasks = null;
-                synchronized ( m_tasks )
+                TaskInfo info = null;
+                synchronized ( this )
                 {
-                    tasks = (Object[]) m_tasks.remove(0);
+                    info = first;
+                    first = info.next;
+                    if ( first == null )
+                    {
+                        last = null;
+                    }
                 }
-                m_deliver_task.execute((Collection)tasks[0], (Event)tasks[1], true);
-                synchronized ( m_running_threads )
+                m_deliver_task.execute(info.tasks, info.event, true);
+                synchronized ( this )
                 {
-                    running = m_tasks.size() > 0;
+                    running = first != null;
                     if ( !running )
                     {
-                        m_running_threads.remove(m_key);
+                        this.m_deliver_task = null;
                     }
                 }
             } while ( running );
         }
 
-        public void add(final Collection tasks, final Event event)
+        public void add(final TaskInfo info)
         {
-            synchronized ( m_tasks )
+            if ( first == null )
             {
-                m_tasks.add(new Object[] {tasks, event});
+                first = info;
+                last = info;
+            }
+            else
+            {
+                last.next = info;
+                last = info;
             }
         }
     }

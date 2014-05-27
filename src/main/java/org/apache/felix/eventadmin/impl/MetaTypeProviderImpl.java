@@ -24,7 +24,9 @@ import java.util.Dictionary;
 
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
-import org.osgi.service.metatype.*;
+import org.osgi.service.metatype.AttributeDefinition;
+import org.osgi.service.metatype.MetaTypeProvider;
+import org.osgi.service.metatype.ObjectClassDefinition;
 
 /**
  * The optional meta type provider for the event admin config.
@@ -58,7 +60,8 @@ public class MetaTypeProviderImpl
     /**
      * @see org.osgi.service.cm.ManagedService#updated(java.util.Dictionary)
      */
-    public void updated(Dictionary properties) throws ConfigurationException
+    @Override
+    public void updated(Dictionary<String, ?> properties) throws ConfigurationException
     {
         m_delegatee.updated(properties);
     }
@@ -66,6 +69,7 @@ public class MetaTypeProviderImpl
     /**
      * @see org.osgi.service.metatype.MetaTypeProvider#getLocales()
      */
+    @Override
     public String[] getLocales()
     {
         return null;
@@ -74,6 +78,7 @@ public class MetaTypeProviderImpl
     /**
      * @see org.osgi.service.metatype.MetaTypeProvider#getObjectClassDefinition(java.lang.String, java.lang.String)
      */
+    @Override
     public ObjectClassDefinition getObjectClassDefinition( String id, String locale )
     {
         if ( !Configuration.PID.equals( id ) )
@@ -83,7 +88,7 @@ public class MetaTypeProviderImpl
 
         if ( ocd == null )
         {
-            final ArrayList adList = new ArrayList();
+            final ArrayList<AttributeDefinition> adList = new ArrayList<AttributeDefinition>();
 
             adList.add( new AttributeDefinitionImpl( Configuration.PROP_THREAD_POOL_SIZE, "Thread Pool Size",
                 "The size of the thread pool. The default value is 10. Increase in case of a large amount " +
@@ -119,28 +124,32 @@ public class MetaTypeProviderImpl
             ocd = new ObjectClassDefinition()
             {
 
-                private final AttributeDefinition[] attrs = ( AttributeDefinition[] ) adList
+                private final AttributeDefinition[] attrs = adList
                     .toArray( new AttributeDefinition[adList.size()] );
 
 
+                @Override
                 public String getName()
                 {
                     return "Apache Felix Event Admin Implementation";
                 }
 
 
+                @Override
                 public InputStream getIcon( int arg0 )
                 {
                     return null;
                 }
 
 
+                @Override
                 public String getID()
                 {
                     return Configuration.PID;
                 }
 
 
+                @Override
                 public String getDescription()
                 {
                     return "Configuration for the Apache Felix Event Admin Implementation." +
@@ -148,6 +157,7 @@ public class MetaTypeProviderImpl
                 }
 
 
+                @Override
                 public AttributeDefinition[] getAttributeDefinitions( int filter )
                 {
                     return ( filter == OPTIONAL ) ? null : attrs;
@@ -198,54 +208,63 @@ public class MetaTypeProviderImpl
         }
 
 
+        @Override
         public int getCardinality()
         {
             return cardinality;
         }
 
 
+        @Override
         public String[] getDefaultValue()
         {
             return defaultValues;
         }
 
 
+        @Override
         public String getDescription()
         {
             return description;
         }
 
 
+        @Override
         public String getID()
         {
             return id;
         }
 
 
+        @Override
         public String getName()
         {
             return name;
         }
 
 
+        @Override
         public String[] getOptionLabels()
         {
             return optionLabels;
         }
 
 
+        @Override
         public String[] getOptionValues()
         {
             return optionValues;
         }
 
 
+        @Override
         public int getType()
         {
             return type;
         }
 
 
+        @Override
         public String validate( String arg0 )
         {
             return null;

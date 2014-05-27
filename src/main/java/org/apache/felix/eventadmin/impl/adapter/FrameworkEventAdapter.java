@@ -52,6 +52,7 @@ public class FrameworkEventAdapter extends AbstractAdapter implements FrameworkL
         context.addFrameworkListener(this);
     }
 
+    @Override
     public void destroy(BundleContext context) {
         context.removeFrameworkListener(this);
     }
@@ -62,9 +63,10 @@ public class FrameworkEventAdapter extends AbstractAdapter implements FrameworkL
      *
      * @param event The event to adapt.
      */
+    @Override
     public void frameworkEvent(final FrameworkEvent event)
     {
-        final Dictionary properties = new Hashtable();
+        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         properties.put(EventConstants.EVENT, event);
 

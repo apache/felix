@@ -50,6 +50,7 @@ public class BundleEventAdapter extends AbstractAdapter implements BundleListene
         context.addBundleListener(this);
     }
 
+    @Override
     public void destroy(BundleContext context) {
         context.removeBundleListener(this);
     }
@@ -60,9 +61,10 @@ public class BundleEventAdapter extends AbstractAdapter implements BundleListene
      *
      * @param event The event to adapt.
      */
+    @Override
     public void bundleChanged(final BundleEvent event)
     {
-        final Dictionary properties = new Hashtable();
+        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         properties.put(EventConstants.EVENT, event);
 

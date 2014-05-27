@@ -1,6 +1,18 @@
+Changes from 1.3.2 to 1.3.4
+---------------------------
+** Improvement
+    * [FELIX-3511] - Use java.concurrent from Java 6
+    * [FELIX-4316] - Packages imported dynamically should also be imported statically with an optional flag
+
+
+Changes from 1.3.0 to 1.3.2
+---------------------------
+** Bug
+    * [FELIX-3689] - Event admin requires org.osgi.util.tracker in version 1.5
+    
+
 Changes from 1.2.14 to 1.3.0
 ----------------------------
-
 ** Bug
     * [FELIX-3121] - Add back the manifest header indicating the provided service
     * [FELIX-3451] - EventAdmin ignoring filters for handler which are registered for all (*) topics 
@@ -13,7 +25,6 @@ Changes from 1.2.14 to 1.3.0
     
 Changes from 1.2.12 to 1.2.14
 -----------------------------
-
 ** Bug
     * [FELIX-2997] - java.lang.NullPointerException during shutdown while sending events
     * [FELIX-3002] - Embed the OBR specific information for the EventAdmin bundle in the manifest
@@ -26,14 +37,12 @@ Changes from 1.2.12 to 1.2.14
 
 Changes from 1.2.10 to 1.2.12
 -----------------------------
-
 ** Bug
     * [FELIX-2915] - Potential deadlock on shutdown
 
 
 Changes from 1.2.8 to 1.2.10
 ----------------------------
-
 ** Bug
     * [FELIX-2836] - Async threads should be daemon threads
 
@@ -43,21 +52,18 @@ Changes from 1.2.8 to 1.2.10
 
 Changes from 1.2.6 to 1.2.8
 ---------------------------
-
 ** Improvement
     * [FELIX-2655] - allow event admin log level to be configurable
 
 
 Changes from 1.2.4 to 1.2.6
 ---------------------------
-
 ** Bug
     * [FELIX-2608] - Threads should be daemon threads
 
 
 Changes from 1.2.2 to 1.2.4
 ---------------------------
-
 ** Bug
     * [FELIX-2582] - Event admin requires config admin packages
     * [FELIX-2431] - EventAdmin service unregistered but not registered again on ConfigAdmin startup
@@ -69,7 +75,6 @@ Changes from 1.2.2 to 1.2.4
 
 Changes from 1.0.0 to 1.2.2
 ---------------------------
-
 ** Bug
     * [FELIX-2089] - IllegalStateException thrown by LogWrapper if logging after bundle stop
 

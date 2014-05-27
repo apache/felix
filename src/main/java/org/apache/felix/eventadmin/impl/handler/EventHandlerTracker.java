@@ -18,7 +18,14 @@
  */
 package org.apache.felix.eventadmin.impl.handler;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -31,20 +38,20 @@ import org.osgi.util.tracker.ServiceTracker;
  *
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class EventHandlerTracker extends ServiceTracker {
+public class EventHandlerTracker extends ServiceTracker<EventHandler, EventHandlerProxy> {
 
     /** The proxies in this list match all events. */
-	private volatile List matchingAllEvents;
+	private volatile List<EventHandlerProxy> matchingAllEvents;
 
     /** This is a map for exact topic matches. The key is the topic,
      * the value is a list of proxies.
      */
-    private volatile Map matchingTopic;
+    private volatile Map<String, List<EventHandlerProxy>> matchingTopic;
 
 	/** This is a map for wildcard topics. The key is the prefix of the topic,
 	 * the value is a list of proxies
 	 */
-	private volatile Map matchingPrefixTopic;
+	private volatile Map<String, List<EventHandlerProxy>> matchingPrefixTopic;
 
 
 	/** The context for the proxies. */
@@ -54,9 +61,9 @@ public class EventHandlerTracker extends ServiceTracker {
 		super(context, EventHandler.class.getName(), null);
 
 		// we start with empty collections
-		this.matchingAllEvents = new ArrayList();
-		this.matchingTopic = new HashMap();
-		this.matchingPrefixTopic = new HashMap();
+		this.matchingAllEvents = new ArrayList<EventHandlerProxy>();
+		this.matchingTopic = new HashMap<String, List<EventHandlerProxy>>();
+		this.matchingPrefixTopic = new HashMap<String, List<EventHandlerProxy>>();
 	}
 
     /**
@@ -102,7 +109,8 @@ public class EventHandlerTracker extends ServiceTracker {
     /**
 	 * @see org.osgi.util.tracker.ServiceTracker#addingService(org.osgi.framework.ServiceReference)
 	 */
-	public Object addingService(final ServiceReference reference) {
+	@Override
+    public EventHandlerProxy addingService(final ServiceReference reference) {
 		final EventHandlerProxy proxy = new EventHandlerProxy(this.handlerContext, reference);
 		if ( proxy.update() ) {
 			this.put(proxy);
@@ -113,8 +121,8 @@ public class EventHandlerTracker extends ServiceTracker {
 	/**
 	 * @see org.osgi.util.tracker.ServiceTracker#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
 	 */
-	public void modifiedService(final ServiceReference reference, final Object service) {
-	    final EventHandlerProxy proxy = (EventHandlerProxy)service;
+	@Override
+    public void modifiedService(final ServiceReference reference, final EventHandlerProxy proxy) {
 	    this.remove(proxy);
 	    if ( proxy.update() ) {
             this.put(proxy);
@@ -124,22 +132,22 @@ public class EventHandlerTracker extends ServiceTracker {
 	/**
 	 * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
 	 */
-	public void removedService(ServiceReference reference, Object service) {
-        final EventHandlerProxy proxy = (EventHandlerProxy)service;
+	@Override
+    public void removedService(final ServiceReference reference, final EventHandlerProxy proxy) {
         this.remove(proxy);
         proxy.dispose();
 	}
 
-	private void updateMap(final Map proxyListMap, final String key, final EventHandlerProxy proxy, final boolean add) {
-        List proxies = (List)proxyListMap.get(key);
+	private void updateMap(final Map<String, List<EventHandlerProxy>> proxyListMap, final String key, final EventHandlerProxy proxy, final boolean add) {
+        List<EventHandlerProxy> proxies = proxyListMap.get(key);
         if (proxies == null) {
             if ( !add )
             {
                 return;
             }
-            proxies = new ArrayList();
+            proxies = new ArrayList<EventHandlerProxy>();
         } else {
-            proxies = new ArrayList(proxies);
+            proxies = new ArrayList<EventHandlerProxy>(proxies);
         }
         if ( add )
         {
@@ -169,14 +177,14 @@ public class EventHandlerTracker extends ServiceTracker {
 		final String[] topics = proxy.getTopics();
 		if ( topics == null )
 		{
-		    final List newMatchingAllEvents = new ArrayList(this.matchingAllEvents);
+		    final List<EventHandlerProxy> newMatchingAllEvents = new ArrayList<EventHandlerProxy>(this.matchingAllEvents);
 		    newMatchingAllEvents.add(proxy);
 		    this.matchingAllEvents = newMatchingAllEvents;
 		}
 		else
 		{
-		    Map newMatchingTopic = null;
-		    Map newMatchingPrefixTopic = null;
+		    Map<String, List<EventHandlerProxy>> newMatchingTopic = null;
+		    Map<String, List<EventHandlerProxy>> newMatchingPrefixTopic = null;
     		for(int i = 0; i < topics.length; i++) {
     			final String topic = topics[i];
 
@@ -185,7 +193,7 @@ public class EventHandlerTracker extends ServiceTracker {
                     // prefix topic: we remove the /*
     			    if ( newMatchingPrefixTopic == null )
     			    {
-    			        newMatchingPrefixTopic = new HashMap(this.matchingPrefixTopic);
+    			        newMatchingPrefixTopic = new HashMap<String, List<EventHandlerProxy>>(this.matchingPrefixTopic);
     			    }
 
     				final String prefix = topic.substring(0, topic.length() - 2);
@@ -196,7 +204,7 @@ public class EventHandlerTracker extends ServiceTracker {
     			    // exact match
                     if ( newMatchingTopic == null )
                     {
-                        newMatchingTopic = new HashMap(this.matchingTopic);
+                        newMatchingTopic = new HashMap<String, List<EventHandlerProxy>>(this.matchingTopic);
                     }
 
                     this.updateMap(newMatchingTopic, topic, proxy, true);
@@ -223,12 +231,12 @@ public class EventHandlerTracker extends ServiceTracker {
         final String[] topics = proxy.getTopics();
         if ( topics == null )
         {
-            final List newMatchingAllEvents = new ArrayList(this.matchingAllEvents);
+            final List<EventHandlerProxy> newMatchingAllEvents = new ArrayList<EventHandlerProxy>(this.matchingAllEvents);
             newMatchingAllEvents.remove(proxy);
             this.matchingAllEvents = newMatchingAllEvents;
         } else {
-            Map newMatchingTopic = null;
-            Map newMatchingPrefixTopic = null;
+            Map<String, List<EventHandlerProxy>> newMatchingTopic = null;
+            Map<String, List<EventHandlerProxy>> newMatchingPrefixTopic = null;
             for(int i = 0; i < topics.length; i++) {
                 final String topic = topics[i];
 
@@ -237,7 +245,7 @@ public class EventHandlerTracker extends ServiceTracker {
                     // prefix topic: we remove the /*
                     if ( newMatchingPrefixTopic == null )
                     {
-                        newMatchingPrefixTopic = new HashMap(this.matchingPrefixTopic);
+                        newMatchingPrefixTopic = new HashMap<String, List<EventHandlerProxy>>(this.matchingPrefixTopic);
                     }
 
                     final String prefix = topic.substring(0, topic.length() - 2);
@@ -248,7 +256,7 @@ public class EventHandlerTracker extends ServiceTracker {
                     // exact match
                     if ( newMatchingTopic == null )
                     {
-                        newMatchingTopic = new HashMap(this.matchingTopic);
+                        newMatchingTopic = new HashMap<String, List<EventHandlerProxy>>(this.matchingTopic);
                     }
 
                     this.updateMap(newMatchingTopic, topic, proxy, false);
@@ -271,10 +279,10 @@ public class EventHandlerTracker extends ServiceTracker {
 	 * @param event The event topic
 	 * @return All handlers for the event
 	 */
-	public Collection getHandlers(final Event event) {
+	public Collection<EventHandlerProxy> getHandlers(final Event event) {
 	    final String topic = event.getTopic();
 
-		final Set handlers = new HashSet();
+		final Set<EventHandlerProxy> handlers = new HashSet<EventHandlerProxy>();
 
 		// Add all handlers matching everything
 		handlers.addAll(this.matchingAllEvents);
@@ -286,7 +294,7 @@ public class EventHandlerTracker extends ServiceTracker {
 			while (pos != -1)
 			{
 			    final String prefix = topic.substring(0, pos);
-				List proxies = (List)this.matchingPrefixTopic.get(prefix);
+				List<EventHandlerProxy> proxies = this.matchingPrefixTopic.get(prefix);
 				if (proxies != null)
 				{
 					handlers.addAll(proxies);
@@ -297,15 +305,15 @@ public class EventHandlerTracker extends ServiceTracker {
 		}
 
 		// Add the handlers for matching topic names
-		List proxies = (List)this.matchingTopic.get(topic);
+		List<EventHandlerProxy> proxies = this.matchingTopic.get(topic);
 		if (proxies != null) {
 			handlers.addAll(proxies);
 		}
 
 		// now check permission and filters
-		final Iterator i = handlers.iterator();
+		final Iterator<EventHandlerProxy> i = handlers.iterator();
 		while ( i.hasNext() ) {
-		    final EventHandlerProxy proxy = (EventHandlerProxy) i.next();
+		    final EventHandlerProxy proxy = i.next();
 		    if ( !proxy.canDeliver(event) ) {
 		        i.remove();
 		    }
@@ -332,6 +340,7 @@ public class EventHandlerTracker extends ServiceTracker {
         {
             m_packageName = name;
         }
+        @Override
         public boolean match(String className)
         {
             final int pos = className.lastIndexOf('.');
@@ -348,6 +357,7 @@ public class EventHandlerTracker extends ServiceTracker {
         {
             m_packageName = name + '.';
         }
+        @Override
         public boolean match(String className)
         {
             final int pos = className.lastIndexOf('.');
@@ -364,6 +374,7 @@ public class EventHandlerTracker extends ServiceTracker {
         {
             m_className = name;
         }
+        @Override
         public boolean match(String className)
         {
             return m_className.equals(className);
