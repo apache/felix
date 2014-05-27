@@ -155,7 +155,7 @@ public class AspectRaceTest extends TestBase {
 		}
 
 		public String toString() {
-			return "SAspect[" + m_id + ", " + m_rank + ", " + m_step + "], " + m_next.toString();
+			return "SAspect[" + m_id + ", " + m_rank + ", " + m_step + "], " + ((m_next != null) ? m_next.toString() : "null");
 		}
 	}
 
@@ -195,7 +195,7 @@ public class AspectRaceTest extends TestBase {
 								SAspect sa = new SAspect(serviceId, rank);
 								Component aspect = m_dm.createAspectService(
 										S.class, "(id=" + serviceId + ")",
-										rank, "added", "removed", null, "swap")
+										rank, "added", null, "removed", "swap")
 										.setImplementation(sa);
 								m_aspects.add(aspect);
 								m_dm.add(aspect);

@@ -280,7 +280,7 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
 		);
 	}
 	
-	public void invoke(String method, Event e) {
+    public void invoke(String method, Event e) {
 		invoke(method, e, getInstances());
 	}
 	
@@ -444,15 +444,13 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
         return m_defaultImplementationInstance;
     }
 
-    public void invokeSwap(String swapMethod, ServiceReference previousReference, Object previous,
-			ServiceReference currentReference, Object current) {
-    	try {
-    		invokeSwap(swapMethod, previousReference, previous, currentReference, current, getInstances());
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    	}
+    @Override   
+    public void invokeSwap(Event event, Event newEvent) {
+        ServiceEventImpl oldE = (ServiceEventImpl) event;
+        ServiceEventImpl newE = (ServiceEventImpl) newEvent;
+        invokeSwap(m_swap, oldE.getReference(), oldE.getService(), newE.getReference(), newE.getService(), getInstances());
     }
-    
+
     public void invokeSwap(String swapMethod, ServiceReference previousReference, Object previous,
 			ServiceReference currentReference, Object current, Object[] instances) {
     	if (debug) {
@@ -479,7 +477,7 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
                     {m_component, previousReference, previous, currentReference, current}}
 			);
     	} catch (Exception e) {
-    		e.printStackTrace();
+            m_logger.log(Logger.LOG_ERROR, "Could not invoke swap callback", e);
     	}
 	}
 
@@ -487,21 +485,14 @@ public class ServiceDependencyImpl extends DependencyImpl<ServiceDependency> imp
 	public void swappedService(final ServiceReference reference, final Object service,
 			final ServiceReference newReference, final Object newService) {
 		if (m_swap != null) {
-			// it's will not trigger a state change, but the actual swap should be scheduled to prevent things
-			// getting out of order.
-			// TODO ASPECTS: Check the relation with the component lifecycle. When not adding the 'false' to the execute,
-			// the swap is sometimes performed before the actual initial component.added has been completed. This
-			// is due to prevention of re-entrant execution issues as described in ComponentImpl.handleChange()
-			((SerialExecutor)m_component.getExecutor()).execute(new Runnable() {
-				@Override
-				public void run() {
-				    invokeSwap(m_swap, reference, service, newReference, newService);
-				}
-			});
+			// it will not trigger a state change, but the actual swap should be scheduled to prevent things
+			// getting out of order.		    		    
+		    // We delegate the swap handling to the ComponentImpl, which is the class responsible for state management.
+		    // The ComponentImpl will first check if the component is in the proper state so the swap method can be invoked.		    
+		    swap(new ServiceEventImpl(reference, service), new ServiceEventImpl(newReference, newService));
 		} else {
 			addedService(newReference, newService);
 			removedService(reference, service);
 		}
 	}
-
 }

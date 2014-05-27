@@ -90,8 +90,6 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	private volatile String m_compositionManagerGetMethod;
 	private volatile Object m_compositionManagerInstance;
 	
-	private boolean m_handlingChange;
-
     static class SCDImpl implements ComponentDependencyDeclaration {
         private final String m_name;
         private final int m_state;
@@ -314,7 +312,36 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
         default:
         }
     }
-	       
+
+    public void handleSwapped(DependencyContext dc, Event event, Event newEvent) {
+        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
+        int size = dependencyEvents.size();
+        
+        dependencyEvents.remove(event);
+        dependencyEvents.add(newEvent);
+                
+        // Depending on the state, we possible have to invoke the callbacks and update the component instance.        
+        switch (m_state) {
+        case WAITING_FOR_REQUIRED:
+            // No need to swap, we don't have yet injected anything
+            break;
+        case INSTANTIATED_AND_WAITING_FOR_REQUIRED:
+            // Only swap *non* instance-bound dependencies
+            if (!dc.isInstanceBound()) {
+                if (dc.isRequired()) {
+                    dc.invokeSwap(event, newEvent);
+                }
+                updateInstance(dc);
+            }
+            break;
+        case TRACKING_OPTIONAL:
+            dc.invokeSwap(event, newEvent);
+            updateInstance(dc);
+            break;
+        default:
+        }
+    }
+    
     @Override
     public Event getDependencyEvent(DependencyContext dc) {
         ConcurrentSkipListSet<Event> events = m_dependencyEvents.get(dc);

@@ -298,6 +298,10 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         m_component.handleRemoved(dc, e);
     }
 
+    public void handleSwapped(DependencyContext dc, Event event, Event newEvent) {
+        m_component.handleSwapped(dc, event, newEvent);
+    }
+    
     @Override
     public Object[] getInstances() {
         return m_component.getInstances();

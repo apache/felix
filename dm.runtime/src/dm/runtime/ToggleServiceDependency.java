@@ -100,6 +100,9 @@ public class ToggleServiceDependency implements Dependency, ComponentDependencyD
     @Override
     public void invokeRemove(Event e) {
     }
+    
+    public void invokeSwap(Event event, Event newEvent) {        
+    }
 
     @Override
     public void add(final Event e) {

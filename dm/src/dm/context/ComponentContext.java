@@ -12,6 +12,7 @@ public interface ComponentContext {
     public void handleAdded(DependencyContext dc, Event e);
     public void handleChanged(DependencyContext dc, Event e);
     public void handleRemoved(DependencyContext dc, Event e);
+    public void handleSwapped(DependencyContext dc, Event event, Event newEvent);
     public List<DependencyContext> getDependencies(); // for testing only...
     public void invokeCallbackMethod(Object[] instances, String methodName, Class<?>[][] signatures, Object[][] parameters);
     public Object[] getInstances();

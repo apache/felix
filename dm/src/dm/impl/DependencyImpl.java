@@ -65,6 +65,7 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 			}
 		});
 	}
+	
 	public void change(final Event e) {
 		// since this method can be invoked by anyone from any thread, we need to
 		// pass on the event to a runnable that we execute using the component's
@@ -93,7 +94,23 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 		});
 	}
 
-	@Override
+    public void swap(final Event event, final Event newEvent) {
+        // since this method can be invoked by anyone from any thread, we need to
+        // pass on the event to a runnable that we execute using the component's
+        // executor
+        m_component.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    m_component.handleSwapped(DependencyImpl.this, event, newEvent);  
+                } finally {
+                    event.close(m_context);
+                }
+            }
+        });
+    }
+
+    @Override
 	public void add(ComponentContext component) {
 		m_component = component;
 	}
@@ -194,6 +211,12 @@ public class DependencyImpl<T extends Dependency> implements Dependency, Depende
 		    invoke(m_remove, e);
 		}
 	}
+    
+    @Override   
+    public void invokeSwap(Event event, Event newEvent) {
+        // Has to be implemented by sub classes
+        throw new IllegalStateException("This method must be implemented by the class " + getClass().getName());
+    }
 	
 	public Object[] getInstances() {
         if (m_callbackInstance == null) {
