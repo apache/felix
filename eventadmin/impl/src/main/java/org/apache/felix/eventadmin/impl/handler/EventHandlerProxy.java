@@ -123,11 +123,12 @@ public class EventHandlerProxy {
         }
         else if (topicObj instanceof Collection)
         {
-            final Collection col = (Collection)topicObj;
+            @SuppressWarnings("unchecked")
+            final Collection<Object> col = (Collection<Object>)topicObj;
             final String[] values = new String[col.size()];
             int index = 0;
             // check if one value matches '*'
-            final Iterator i = col.iterator();
+            final Iterator<Object> i = col.iterator();
             boolean matchAll = false;
             while ( i.hasNext() )
             {
@@ -212,7 +213,9 @@ public class EventHandlerProxy {
         Object delivery = reference.getProperty(EventConstants.EVENT_DELIVERY);
         if ( delivery instanceof Collection )
         {
-            delivery = ((Collection)delivery).toArray(new String[((Collection)delivery).size()]);
+            @SuppressWarnings("unchecked")
+            final Collection<String> col = (Collection<String>)delivery;
+            delivery = col.toArray(new String[col.size()]);
         }
         if ( delivery instanceof String )
         {

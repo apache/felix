@@ -20,11 +20,11 @@ package org.apache.felix.eventadmin.impl.tasks;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.felix.eventadmin.impl.handler.EventHandlerProxy;
 import org.osgi.service.event.Event;
 
-import EDU.oswego.cs.dl.util.concurrent.TimeoutException;
 
 /**
  * This class does the actual work of the synchronous event delivery.
@@ -101,15 +101,15 @@ public class SyncDeliverTasks
      * @param tasks The event handler dispatch tasks to execute
      *
      */
-    public void execute(final Collection tasks, final Event event, final boolean filterAsyncUnordered)
+    public void execute(final Collection<EventHandlerProxy> tasks, final Event event, final boolean filterAsyncUnordered)
     {
         final Thread sleepingThread = Thread.currentThread();
         final SyncThread syncThread = sleepingThread instanceof SyncThread ? (SyncThread)sleepingThread : null;
 
-        final Iterator i = tasks.iterator();
+        final Iterator<EventHandlerProxy> i = tasks.iterator();
         while ( i.hasNext() )
         {
-            final EventHandlerProxy task = (EventHandlerProxy)i.next();
+            final EventHandlerProxy task = i.next();
 //            if ( !filterAsyncUnordered || task.isAsyncOrderedDelivery() )
 //            {
                 if ( !useTimeout(task) )
@@ -134,6 +134,7 @@ public class SyncDeliverTasks
                     final Rendezvous timerBarrier = new Rendezvous();
                     this.pool.executeTask(new Runnable()
                     {
+                        @Override
                         public void run()
                         {
                             try
