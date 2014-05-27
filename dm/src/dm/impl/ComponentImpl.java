@@ -314,9 +314,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
     }
 
     public void handleSwapped(DependencyContext dc, Event event, Event newEvent) {
-        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);
-        int size = dependencyEvents.size();
-        
+        Set<Event> dependencyEvents = m_dependencyEvents.get(dc);        
         dependencyEvents.remove(event);
         dependencyEvents.add(newEvent);
                 
