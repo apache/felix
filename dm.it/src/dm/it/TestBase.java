@@ -26,6 +26,10 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     // Default OSGI log service level.
     protected final static int LOG_LEVEL = LogService.LOG_WARNING;
     
+    // By default, we clear all dependendency managers when a test is done. Overriden by runtime tests, 
+    // where we must not clear managers created by the runtime itself.
+    protected final boolean m_autoClearDependencyManagers;
+    
     // Flag used to check if some errors have been logged during the execution of a given test.
     private volatile boolean m_errorsLogged;
 
@@ -33,7 +37,15 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     protected ServiceRegistration logService;
     
     protected BundleContext context;
+    
+    public TestBase() {
+        this(true);
+    }
        
+    public TestBase(boolean autoClearDependencyManagers) {
+        m_autoClearDependencyManagers = autoClearDependencyManagers;
+    }
+    
     public void setUp() throws Exception {
     	warn("Setting up test " + getClass().getName());
     	context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
@@ -45,6 +57,17 @@ public abstract class TestBase extends TestCase implements LogService, Framework
     	warn("Tearing down test " + getClass().getName());
     	logService.unregister();
     	context.removeFrameworkListener(this);
+    	if (m_autoClearDependencyManagers) {
+    	    clearAllManagers();
+    	}
+    }
+    
+    protected void clearAllManagers() {
+        // clear all dependency managers
+        List<DependencyManager> list = DependencyManager.getDependencyManagers();
+        for (DependencyManager m : list) {
+            m.clear();
+        }    
     }
 
     /**
