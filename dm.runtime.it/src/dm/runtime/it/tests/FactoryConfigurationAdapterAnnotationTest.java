@@ -35,6 +35,11 @@ import dm.runtime.it.components.FactoryConfigurationAdapterAnnotation.ServicePro
  * is created from Config Admin.
  */
 public class FactoryConfigurationAdapterAnnotationTest extends TestBase {
+    
+    public FactoryConfigurationAdapterAnnotationTest() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+
     private final static int MAXWAIT = 10000;
 
     public void testFactoryConfigurationAdapterAnnotation() throws Throwable {

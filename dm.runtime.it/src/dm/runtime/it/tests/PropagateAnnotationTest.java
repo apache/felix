@@ -28,6 +28,11 @@ import dm.runtime.it.components.PropagateAnnotation;
  * Use case: Verify that dependency "propagate" option is properly propagating properties to provided service.
  */
 public class PropagateAnnotationTest extends TestBase {
+    
+    public PropagateAnnotationTest() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+
     public void testServiceDependencyPropagate() {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, PropagateAnnotation.ENSURE);

@@ -30,6 +30,11 @@ import dm.runtime.it.components.ExtraServiceProperties;
  * Use case: Verify the a Service may provide its service properties dynamically from its start method.
  */
 public class ExtraServicePropertiesTest extends TestBase {
+    
+    public ExtraServicePropertiesTest() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+
     /**
      * Tests if a Service can provide its service properties from its start method.
      */

@@ -30,6 +30,11 @@ import dm.runtime.it.components.AspectLifecycleWithDynamicProxyAnnotation.Servic
  * (init/start/stop/destroy methods).
  */
 public class AspectLifecycleWithDynamicProxyAnnotationTest extends TestBase {
+    
+    public AspectLifecycleWithDynamicProxyAnnotationTest() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+
     public void testAnnotatedAspect() {
         Ensure e = new Ensure();
         // Provide the Sequencer server to the ServiceProvider service

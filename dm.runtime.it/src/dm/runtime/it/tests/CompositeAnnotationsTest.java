@@ -30,6 +30,11 @@ import dm.runtime.it.components.CompositeAnnotations.Dependency2;
  * Use case: Verify Composite annotated services.
  */
 public class CompositeAnnotationsTest extends TestBase {
+    
+    public CompositeAnnotationsTest() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+
     public void testComposite() {
         Ensure e = new Ensure();
         ServiceRegistration sr1 = register(e, C1.ENSURE);

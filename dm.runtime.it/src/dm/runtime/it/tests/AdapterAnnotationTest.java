@@ -32,6 +32,11 @@ import dm.runtime.it.components.AdapterAnnotation.S2Impl;
  * Use case: Verify Aspect Annotations usage.
  */
 public class AdapterAnnotationTest extends TestBase {
+    
+    public AdapterAnnotationTest() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+    
     /**
      * Check if an adapter gets injected with its adaptee using default auto config mode.
      * @throws Throwable 

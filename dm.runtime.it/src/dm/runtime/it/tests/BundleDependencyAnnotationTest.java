@@ -30,6 +30,11 @@ import dm.runtime.it.components.Utils;
  * Use case: Verify Bundle Dependency annotations usage.
  */
 public class BundleDependencyAnnotationTest extends TestBase {
+    
+    public BundleDependencyAnnotationTest() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+
     /**
      * Tests a simple Consumer, which has a BundleDependency over the dependency manager bundle.
      */

@@ -32,6 +32,11 @@ import dm.runtime.it.components.AspectAnnotation.ServiceProvider;
  * Use case: Verify Aspect Annotations usage.
  */
 public class AspectAnnotationTest extends TestBase {
+ 
+    public AspectAnnotationTest() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+
     public void testAspectChain() throws Throwable {
         Ensure e = new Ensure();
         // Activate service consumer

@@ -32,6 +32,11 @@ import dm.it.TestBase;
 import dm.runtime.it.components.ServiceFactoryAnnotation;
 
 public class ServiceFactoryAnnotationTest extends TestBase {
+    
+    public ServiceFactoryAnnotationTest() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+
     private final Ensure m_ensure = new Ensure();
 
     public void testServiceFactory() {

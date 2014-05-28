@@ -31,7 +31,12 @@ import dm.runtime.it.components.TemporalAnnotations;
  * Use case: Verify Temporal Service dependency Annotations usage.
  */
 public class TemporalAnnotationsTest extends TestBase {
-    public void testTemporalServiceDependency() {
+    
+   public TemporalAnnotationsTest() { 
+       super(false); /* don't autoclear managers when one test is done */ 
+   }
+
+   public void testTemporalServiceDependency() {
         Ensure ensure = new Ensure();
         ServiceRegistration ensureReg = register(ensure, TemporalAnnotations.ENSURE);
         Dictionary props = new Hashtable() {

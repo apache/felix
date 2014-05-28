@@ -29,6 +29,11 @@ import dm.runtime.it.components.Felix4357;
  * defined with @Property annotation.
  */
 public class Felix4357Test extends TestBase {
+    
+    public Felix4357Test() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+
     public void testPropertiesWithTypes() {
         Ensure e = new Ensure();
         ServiceRegistration sr = register(e, Felix4357.ENSURE);

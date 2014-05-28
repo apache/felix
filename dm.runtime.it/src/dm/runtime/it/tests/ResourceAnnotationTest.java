@@ -28,6 +28,11 @@ import dm.runtime.it.components.ResourceAnnotation;
  * Use case: Verify Bundle Dependency annotations usage.
  */
 public class ResourceAnnotationTest extends TestBase {
+    
+    public ResourceAnnotationTest() { 
+        super(false); /* don't autoclear managers when one test is done */ 
+    }
+
     /**
      * Tests a simple ResourceConsumer
      * @param context
