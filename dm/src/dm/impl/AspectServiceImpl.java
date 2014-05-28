@@ -21,7 +21,9 @@ package dm.impl;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.osgi.framework.Constants;
@@ -122,7 +124,7 @@ public class AspectServiceImpl extends FilterComponent {
             
             ServiceDependency aspectDependency = (ServiceDependencyImpl) 
                     m_manager.createServiceDependency().setService(m_aspectInterface, createAspectFilter(ref)).setRequired(true);
-            aspectDependency.setDebug("aspect " + m_ranking);
+            //aspectDependency.setDebug("aspect " + m_ranking);
 
             aspectDependency.setCallbacks(new CallbackProxy(aspectDependency, ref), 
                             m_add != null ? "addAspect" : null, 
@@ -145,7 +147,7 @@ public class AspectServiceImpl extends FilterComponent {
                 .setCallbacks(m_callbackObject, m_init, m_start, m_stop, m_destroy) // if not set, no effect
                 .add(aspectDependency);
             
-            service.setDebug("aspectimpl-" + m_ranking);
+            //service.setDebug("aspectimpl-" + m_ranking);
             
             configureAutoConfigState(service, m_component);
             
@@ -158,7 +160,25 @@ public class AspectServiceImpl extends FilterComponent {
             }
             return service;                
         }
-		
+        
+        /**
+         * Modify some specific aspect service properties.
+         */
+		@Override
+        public void setServiceProperties(Dictionary props) {
+            Map<Object, Component> services = super.getServices();
+            Iterator it = services.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry entry = (Map.Entry) it.next();
+                ServiceReference originalServiceRef = (ServiceReference) entry.getKey();
+                Component c = (Component) entry.getValue();
+                // m_serviceProperties is already set to the new service properties; and the getServiceProperties will
+                // merge m_serviceProperties with the original service properties.
+                Dictionary newProps = getServiceProperties(originalServiceRef);                
+                c.setServiceProperties(newProps);
+            }
+        }
+                
         private String[] getServiceInterfaces() {
             List<String> serviceNames = new ArrayList<>();
             // Of course, we provide the aspect interface.
