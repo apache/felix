@@ -476,13 +476,26 @@ class Candidates
                                     break;
                             }
                         }
+                        if (candidates.isEmpty())
+                        {
+                            if (Util.isOptional(dependent))
+                            {
+                                clearCandidates(dependent);
+                            }
+                            else
+                            {
+                                String msg = "Unable to resolve " + dependent.getResource()
+                                        + ": missing requirement " + dependent;
+                                throw new ResolutionException(msg, null, Collections.singleton(dependent));
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    private boolean isSubstituted(Capability substitutableCap, Map<Capability, Integer> substituteStatuses) throws ResolutionException
+    private boolean isSubstituted(Capability substitutableCap, Map<Capability, Integer> substituteStatuses)
     {
         Integer substituteState = substituteStatuses.get(substitutableCap);
         if (substituteState == null)
