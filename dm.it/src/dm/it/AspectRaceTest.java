@@ -53,7 +53,7 @@ public class AspectRaceTest extends TestBase {
 			m_dm.add(c);
 
 			for (int loop = 1; loop <= ITERATIONS; loop++) {
-				System.out.println("\niteration: " + loop);
+				//System.out.println("\niteration: " + loop);
 				// Perform concurrent injections of "S" service and S aspects
 				// into the Controller component;
 				debug("Iteration: " + loop);
@@ -131,7 +131,7 @@ public class AspectRaceTest extends TestBase {
 		}
 
 		public synchronized void added(S s) {
-			 System.out.println(Thread.currentThread().getId() + " ARTA aspect added " + m_rank + ": " + s );
+			//System.out.println(Thread.currentThread().getId() + " ARTA aspect added " + m_rank + ": " + s );
 			if (m_next != null) {
 				fail("Adding while expected swap... " + m_rank);
 			}
@@ -139,12 +139,12 @@ public class AspectRaceTest extends TestBase {
 		}
 
 		public synchronized void swap(S oldS, S newS) {
-			 System.out.println(Thread.currentThread().getId() + " ARTA aspect swap " + m_rank + ": " + oldS + " with " + newS);
+			//System.out.println(Thread.currentThread().getId() + " ARTA aspect swap " + m_rank + ": " + oldS + " with " + newS);
 			m_next = newS;
 		}
 		
 		public synchronized void removed(S s) {
-			System.out.println(Thread.currentThread().getId() + " ARTA aspect removed " + m_rank + ": " + s );
+			//System.out.println(Thread.currentThread().getId() + " ARTA aspect removed " + m_rank + ": " + s );
 			m_next = null;
 		}
 
