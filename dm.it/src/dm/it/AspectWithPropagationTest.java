@@ -33,7 +33,7 @@ public class AspectWithPropagationTest extends TestBase {
      * - Create S service
      * - Create some S Aspects
      * - Create a Client, depending on S (actually, on the top-level S aspect)
-     * - Client has a "change" callack in order to track S service properties modifications.
+     * - Client has a "change" callback in order to track S service properties modifications.
      * - First, invoke Client.invoke(): all S aspects, and finally original S service must be invoked orderly.
      * - Modify S original service properties, and check if all aspects, and the client has been orderly called in their "change" callback.
      * - Modify the First lowest ranked aspect (rank=1), and check if all aspects, and client have been orderly called in their "change" callback.
@@ -139,9 +139,7 @@ public class AspectWithPropagationTest extends TestBase {
             check.put("a" + i, null); // we must not inherit from lower ranks, only from the top-level aspect.
         }
         check.put("a" + ASPECTS, "v" + ASPECTS + "-Modified");
-        
-        // TODO: Commented, review
-//        checkServiceProperties(check, clientImpl.getServiceProperties());
+        checkServiceProperties(check, clientImpl.getServiceProperties());
 
         // Clear all components.
         m_changeStep = null;
