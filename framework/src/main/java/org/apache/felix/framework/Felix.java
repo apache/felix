@@ -4537,11 +4537,7 @@ public class Felix extends BundleImpl implements Framework
             new StringBuffer(
                 props.getProperty(
                     FelixConstants.FELIX_VERSION_PROPERTY, "0.0.0"));
-        if (sb.toString().indexOf("-") >= 0)
-        {
-            sb.setCharAt(sb.toString().indexOf("-"), '.');
-        }
-        String toRet = sb.toString();
+        String toRet = cleanMavenVersion(sb);
         if (toRet.indexOf("${pom") >= 0)
         {
             return "0.0.0";
@@ -4550,6 +4546,40 @@ public class Felix extends BundleImpl implements Framework
         {
             return toRet;
         }
+    }
+
+    /**
+     * The main purpose of this method is to turn a.b.c-SNAPSHOT into a.b.c.SNAPSHOT
+     * it can also deal with a.b-SNAPSHOT and turns it into a.b.0.SNAPSHOT and
+     * will leave the dash in a.b.c.something-else, as it's valid in that last example.
+     * In short this method attempts to map a Maven version to an OSGi version as well
+     * as possible.
+     * @param sb The version to be cleaned
+     * @return The cleaned version
+     */
+    private static String cleanMavenVersion(StringBuffer sb)
+    {
+        int dots = 0;
+        for (int i = 0; i < sb.length(); i++)
+        {
+            switch (sb.charAt(i))
+            {
+                case '.':
+                    dots++;
+                    break;
+                case '-':
+                    if (dots < 3)
+                    {
+                        sb.setCharAt(i, '.');
+                        for (int j = dots; j < 2; j++)
+                        {
+                            sb.insert(i, ".0");
+                        }
+                    }
+                    break;
+            }
+        }
+        return sb.toString();
     }
 
     //
