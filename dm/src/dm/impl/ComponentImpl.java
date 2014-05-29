@@ -148,7 +148,7 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 	}
 	
 	@Override
-	public Component add(final Dependency[] dependencies) {
+	public Component add(final Dependency ... dependencies) {
 		getExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
