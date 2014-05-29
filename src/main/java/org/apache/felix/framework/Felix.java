@@ -1940,7 +1940,7 @@ public class Felix extends BundleImpl implements Framework
                     "Cannot start bundle " + bundle + " because its start level is "
                     + bundleLevel
                     + ", which is greater than the framework's start level of "
-                    + m_activeStartLevel + ".");
+                    + m_activeStartLevel + ".", BundleException.START_TRANSIENT_ERROR);
             }
             else if (bundleLevel > m_targetStartLevel)
             {
@@ -1969,7 +1969,7 @@ public class Felix extends BundleImpl implements Framework
                             "Cannot start bundle " + bundle + " because its start level is "
                             + bundleLevel
                             + ", which is greater than the framework's start level of "
-                            + m_activeStartLevel + ".");
+                            + m_activeStartLevel + ".", BundleException.START_TRANSIENT_ERROR);
                     }
 
                     // If the start level bundle queue is not empty, then we know
