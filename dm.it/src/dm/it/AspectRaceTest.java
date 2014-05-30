@@ -20,9 +20,9 @@ public class AspectRaceTest extends TestBase {
 	volatile ExecutorService m_serviceExec;
 	volatile ExecutorService m_aspectExec;
 	volatile DependencyManager m_dm;
-	final static int SERVICES = 1; // 3;
-	final static int ASPECTS_PER_SERVICE = 2;
-	final static int ITERATIONS = 3000; // 3000;
+	final static int SERVICES = 3;
+	final static int ASPECTS_PER_SERVICE = 3;
+	final static int ITERATIONS = 3000;
 
 	public void testConcurrentAspects() {
 		try {
