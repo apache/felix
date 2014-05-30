@@ -20,7 +20,6 @@ public interface Component {
     public Component setAutoConfig(Class<?> clazz, boolean autoConfig);
     public Component setAutoConfig(Class<?> clazz, String instanceName);
     public ServiceRegistration getServiceRegistration();
-    public Object getService(); // TODO do we really need this method (getInstances[0] returns the main component instance) ?
     public Object[] getInstances();
     public Dictionary getServiceProperties();
     public Component setServiceProperties(Dictionary<?,?> serviceProperties);
@@ -32,9 +31,6 @@ public interface Component {
 	public Component setComposition(String getMethod);
 	public DependencyManager getDependencyManager();
 	public ComponentDeclaration getComponentDeclaration();
-	public Component setExecutor(Executor executor);
 	
-	// TODO ASPECTS: Methods added for debugging AspectRaceTest, but we might just leave the 'debug' features in there.
-	public Executor getExecutor();
-	public void setDebug(String string);
+	public void setDebug(String label);
 }

@@ -72,11 +72,13 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
                 return this;
             }
         }
-        // Ok, the list contains no required dependencies: add optionals dependencies in already instantiated
-        // services.
-        AbstractDecorator ad = (AbstractDecorator) m_component.getService();
-        if (ad != null) {
-            ad.addDependency(dependencies);
+        // Ok, the list contains no required dependencies: add optionals dependencies in already instantiated services.
+        Object[] instances = m_component.getInstances();
+        if (instances.length > 0) {
+            AbstractDecorator ad = (AbstractDecorator) instances[0];
+            if (ad != null) {
+                ad.addDependency(dependencies);
+            }
         }
         return this;
     }
@@ -84,19 +86,18 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     public Component add(ComponentStateListener listener) {
         m_stateListeners.add(listener);
         // Add the listener to all already instantiated services.
-        AbstractDecorator ad = (AbstractDecorator) m_component.getService();
-        if (ad != null) {
-            ad.addStateListener(listener);
+        Object[] instances = m_component.getInstances();
+        if (instances.length > 0) {
+            AbstractDecorator ad = (AbstractDecorator) instances[0];
+            if (ad != null) {
+                ad.addStateListener(listener);
+            }
         }
         return this;
     }
 
     public List<DependencyContext> getDependencies() {
         return m_component.getDependencies();
-    }
-
-    public Object getService() {
-        return m_component.getService();
     }
 
     public String getClassName() {
@@ -118,10 +119,12 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         // we have nothing to do.
         if (!((DependencyContext) dependency).isRequired())
         {
-            AbstractDecorator ad = (AbstractDecorator) m_component.getService();
-            if (ad != null)
-            {
-                ad.removeDependency(dependency);
+            Object[] instances = m_component.getInstances();
+            if (instances.length > 0) {
+                AbstractDecorator ad = (AbstractDecorator) instances[0];
+                if (ad != null) {
+                    ad.removeDependency(dependency);
+                }
             }
         }
         return this;
@@ -130,9 +133,12 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
     public Component remove(ComponentStateListener listener) {
         m_stateListeners.remove(listener);
         // Remove the listener from all already instantiated services.
-        AbstractDecorator ad = (AbstractDecorator) m_component.getService();
-        if (ad != null) {
-            ad.removeStateListener(listener);
+        Object[] instances = m_component.getInstances();
+        if (instances.length > 0) {
+            AbstractDecorator ad = (AbstractDecorator) instances[0];
+            if (ad != null) {
+                ad.removeStateListener(listener);
+            }
         }
         return this;
     }
@@ -202,9 +208,12 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         }
         // Set the properties to all already instantiated services.
         if (serviceProperties != null) {
-            AbstractDecorator ad = (AbstractDecorator) m_component.getService();
-            if (ad != null) {
-                ad.setServiceProperties(serviceProperties);
+            Object[] instances = m_component.getInstances();
+            if (instances.length > 0) {
+                AbstractDecorator ad = (AbstractDecorator) instances[0];
+                if (ad != null) {
+                    ad.setServiceProperties(serviceProperties);
+                }
             }
         }
         return this;
@@ -273,11 +282,6 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         return m_component.getExecutor();
     }
     
-    public Component setExecutor(Executor executor) {
-        m_component.setExecutor(executor);
-        return this;
-    }
-
     @Override
     public boolean isAvailable() {
         return m_component.isAvailable();

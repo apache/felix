@@ -141,7 +141,7 @@ public class FactoryConfigurationAdapterImpl extends FilterComponent {
         public void updateService(Object[] properties) {
             Dictionary cmSettings = (Dictionary) properties[0];
             Component service = (Component) properties[1];
-            Object impl = service.getService();
+            Object impl = service.getInstances()[0];
            
             try {
                 InvocationUtil.invokeCallbackMethod(impl, m_update, 

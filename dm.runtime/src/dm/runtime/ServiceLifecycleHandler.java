@@ -136,7 +136,7 @@ public class ServiceLifecycleHandler
     public void init(Component c)
         throws Exception
     {
-        Object serviceInstance = c.getService();
+        Object serviceInstance = c.getInstances()[0];
         DependencyManager dm = c.getDependencyManager();
 
         // Check if a lifecycle controller is defined for this service. If true, then 
