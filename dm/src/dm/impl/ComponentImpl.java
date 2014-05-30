@@ -176,10 +176,14 @@ public class ComponentImpl implements Component, ComponentContext, ComponentDecl
 			@Override
 			public void run() {
 				DependencyContext dc = (DependencyContext) d;
+				// First remove this dependency from the dependency list
+                m_dependencies.remove(d);
+                // Now we can stop the dependency (our component won't be deactivated, it will only be unbound with
+                // the removed dependency).
 				if (!(m_state == ComponentState.INACTIVE)) {
 					dc.stop();
 				}
-				m_dependencies.remove(d);
+				// Finally, cleanup the dependency events.
                 m_dependencyEvents.remove(d);
 				dc.remove(ComponentImpl.this);
 				handleChange();
