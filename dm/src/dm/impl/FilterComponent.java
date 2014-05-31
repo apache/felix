@@ -319,10 +319,8 @@ public class FilterComponent implements Component, ComponentContext, ComponentDe
         return this;
     }
 
-    // TODO: Remove..
 	@Override
-	public void setDebug(String string) {
-		// TODO Auto-generated method stub
-		
+	public void setDebug(String label) {
+		m_component.setDebug(label);
 	}
 }
