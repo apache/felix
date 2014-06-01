@@ -21,6 +21,7 @@ package dm.runtime.it.components;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.ServiceRegistration;
 
 import dm.annotation.api.Component;
@@ -32,7 +33,6 @@ import dm.annotation.api.Registered;
 import dm.annotation.api.ServiceDependency;
 import dm.annotation.api.Start;
 import dm.annotation.api.Stop;
-import dm.it.Ensure;
 
 public class CompositeAnnotations {
     public interface C1Service {

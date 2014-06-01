@@ -23,11 +23,11 @@ import java.util.Hashtable;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.itest.Ensure;
+import org.apache.felix.dm.itest.TestBase;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
-import dm.it.Ensure;
-import dm.it.TestBase;
 import dm.runtime.it.components.FactoryConfigurationAdapterAnnotation.ServiceProvider;
 
 /**

@@ -21,6 +21,7 @@ package dm.runtime.it.components;
 import java.util.Map;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.BundleContext;
 
 import dm.annotation.api.AdapterService;
@@ -30,7 +31,6 @@ import dm.annotation.api.Property;
 import dm.annotation.api.ServiceDependency;
 import dm.annotation.api.Start;
 import dm.annotation.api.Stop;
-import dm.it.Ensure;
 
 public class AdapterAnnotation {
     public interface S1 {

@@ -22,6 +22,7 @@ import java.util.Dictionary;
 import java.util.Map;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.BundleContext;
 
 import dm.annotation.api.Component;
@@ -32,7 +33,6 @@ import dm.annotation.api.Registered;
 import dm.annotation.api.ServiceDependency;
 import dm.annotation.api.Start;
 import dm.annotation.api.Stop;
-import dm.it.Ensure;
 
 public class FactoryConfigurationAdapterAnnotation {
     public interface ServiceInterface {

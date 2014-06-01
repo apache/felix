@@ -20,6 +20,7 @@ package dm.runtime.it.components;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
@@ -27,7 +28,6 @@ import dm.annotation.api.Component;
 import dm.annotation.api.Property;
 import dm.annotation.api.Registered;
 import dm.annotation.api.ServiceDependency;
-import dm.it.Ensure;
 
 /**
  * Checks support of primitive types for @Property annotation.

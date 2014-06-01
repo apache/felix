@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.felix.dm.itest.Ensure;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -35,7 +36,6 @@ import dm.annotation.api.Property;
 import dm.annotation.api.ServiceDependency;
 import dm.annotation.api.Start;
 import dm.annotation.api.Stop;
-import dm.it.Ensure;
 
 /**
  * Test a FactoryConfigurationAdapterService which provides its interface using a @ServiceLifecycle.

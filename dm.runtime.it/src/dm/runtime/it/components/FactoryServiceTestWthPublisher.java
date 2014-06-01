@@ -24,13 +24,14 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.dm.itest.Ensure;
+
 import dm.annotation.api.Component;
 import dm.annotation.api.Init;
 import dm.annotation.api.LifecycleController;
 import dm.annotation.api.Property;
 import dm.annotation.api.ServiceDependency;
 import dm.annotation.api.Start;
-import dm.it.Ensure;
 
 /**
  * A Service instantiated from a FactorySet, and which registers/unregisters its service,

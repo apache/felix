@@ -18,8 +18,9 @@
  */
 package dm.runtime.it.components;
 
+import org.apache.felix.dm.itest.Ensure;
+
 import dm.annotation.api.*;
-import dm.it.Ensure;
 
 public class AspectLifecycleAnnotation {
     public interface ServiceInterface {

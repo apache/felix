@@ -21,6 +21,7 @@ package dm.runtime.it.components;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.Bundle;
 
 import dm.annotation.api.BundleAdapterService;
@@ -30,7 +31,6 @@ import dm.annotation.api.LifecycleController;
 import dm.annotation.api.Property;
 import dm.annotation.api.ServiceDependency;
 import dm.annotation.api.Start;
-import dm.it.Ensure;
 
 /**
  * Test a BundleAdapterService which provides its interface using a @ServiceLifecycle.

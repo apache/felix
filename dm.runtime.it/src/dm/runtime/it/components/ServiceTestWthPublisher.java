@@ -21,13 +21,14 @@ package dm.runtime.it.components;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.dm.itest.Ensure;
+
 import dm.annotation.api.Component;
 import dm.annotation.api.Init;
 import dm.annotation.api.LifecycleController;
 import dm.annotation.api.Property;
 import dm.annotation.api.ServiceDependency;
 import dm.annotation.api.Start;
-import dm.it.Ensure;
 
 /**
  * A Service that just registers/unregisters its service, using the @ServiceLifecycle annotation.

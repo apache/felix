@@ -19,6 +19,7 @@
 package dm.runtime.it.components;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
@@ -33,7 +34,6 @@ import dm.annotation.api.ServiceDependency;
 import dm.annotation.api.Start;
 import dm.annotation.api.Stop;
 import dm.annotation.api.Unregistered;
-import dm.it.Ensure;
 
 public class SimpleAnnotations {
     /**

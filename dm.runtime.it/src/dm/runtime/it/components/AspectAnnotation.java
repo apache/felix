@@ -19,9 +19,9 @@
 package dm.runtime.it.components;
 
 import dm.annotation.api.*;
-import dm.it.Ensure;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 

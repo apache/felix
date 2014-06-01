@@ -21,6 +21,8 @@ package dm.runtime.it.components;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.dm.itest.Ensure;
+
 import dm.annotation.api.AdapterService;
 import dm.annotation.api.Component;
 import dm.annotation.api.Init;
@@ -28,7 +30,6 @@ import dm.annotation.api.LifecycleController;
 import dm.annotation.api.Property;
 import dm.annotation.api.ServiceDependency;
 import dm.annotation.api.Start;
-import dm.it.Ensure;
 
 /**
  * Test an AdapterService which provides its interface using a @ServiceLifecycle.

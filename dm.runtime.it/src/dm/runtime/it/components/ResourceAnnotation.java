@@ -28,6 +28,7 @@ import junit.framework.Assert;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;
+import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
@@ -42,7 +43,6 @@ import dm.annotation.api.ResourceDependency;
 import dm.annotation.api.ServiceDependency;
 import dm.annotation.api.Start;
 import dm.annotation.api.Stop;
-import dm.it.Ensure;
 
 public class ResourceAnnotation {
     public final static String ENSURE_RESOURCE = "ResourceAnnotation.resource";

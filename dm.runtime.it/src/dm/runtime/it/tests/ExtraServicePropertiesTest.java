@@ -18,10 +18,10 @@
  */
 package dm.runtime.it.tests;
 
+import org.apache.felix.dm.itest.Ensure;
+import org.apache.felix.dm.itest.TestBase;
 import org.osgi.framework.ServiceRegistration;
 
-import dm.it.Ensure;
-import dm.it.TestBase;
 import dm.runtime.it.components.ExtraAdapterServiceProperties;
 import dm.runtime.it.components.ExtraFactoryServiceProperties;
 import dm.runtime.it.components.ExtraServiceProperties;
