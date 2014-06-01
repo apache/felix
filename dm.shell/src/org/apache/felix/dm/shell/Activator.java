@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package dm.shell;
+package org.apache.felix.dm.shell;
 
 import java.util.Hashtable;
 

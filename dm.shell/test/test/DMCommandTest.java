@@ -36,8 +36,8 @@ import javax.crypto.Cipher;
 
 import dm.Component;
 import dm.DependencyManager;
-import dm.shell.DMCommand;
 
+import org.apache.felix.dm.shell.DMCommand;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
