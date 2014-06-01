@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package dm.runtime;
+package org.apache.felix.dm.runtime;
 
 import java.lang.reflect.Array;
 import java.util.Dictionary;

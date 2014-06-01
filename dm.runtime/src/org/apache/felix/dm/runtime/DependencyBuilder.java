@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package dm.runtime;
+package org.apache.felix.dm.runtime;
 
 import org.apache.felix.dm.BundleDependency;
 import org.apache.felix.dm.ConfigurationDependency;

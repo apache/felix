@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package dm.runtime;
+package org.apache.felix.dm.runtime;
 
 import java.util.Dictionary;
 import java.util.List;
@@ -26,14 +26,14 @@ import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 
 /**
- * Class used to build a bundle adapter service using metadata found from DependencyManager runtime
- * meta-inf descriptor.
+ * Builded called when the JSON parser find an adapter service descriptor.
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
-public class BundleAdapterServiceBuilder extends AbstractBuilder
+public class AdapterServiceBuilder extends AbstractBuilder
 {
-    private final static String TYPE = "BundleAdapterService";
+    /** The type attribute specified in the JSON descriptor */
+    private final static String TYPE = "AdapterService";
 
     @Override
     public String getType()
@@ -42,17 +42,47 @@ public class BundleAdapterServiceBuilder extends AbstractBuilder
     }
 
     @Override
-    public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm) 
+    public void build(MetaData srvMeta, List<MetaData> depsMeta, Bundle b, DependencyManager dm)
         throws Exception
     {
-        int stateMask = srvMeta.getInt(Params.stateMask, Bundle.INSTALLED | Bundle.RESOLVED | Bundle.ACTIVE);
-        String filter = srvMeta.getString(Params.filter, null);
         Class<?> adapterImplClass = b.loadClass(srvMeta.getString(Params.impl));
         String[] provides = srvMeta.getStrings(Params.provides, null);
-        Dictionary<String, Object> properties = srvMeta.getDictionary(Params.properties, null);
-        boolean propagate = "true".equals(srvMeta.getString(Params.propagate, "false"));
-        Component c = dm.createBundleAdapterService(stateMask, filter, propagate);
-        c.setInterface(provides, properties);
+        Dictionary<String, Object> adapterProperties = srvMeta.getDictionary(Params.properties, null);
+        Class<?> adapteeService = b.loadClass(srvMeta.getString(Params.adapteeService));
+        String adapteeFilter = srvMeta.getString(Params.adapteeFilter, null);   
+        String field = srvMeta.getString(Params.field, null);
+        String added = srvMeta.getString(Params.added, null);
+        String changed = srvMeta.getString(Params.changed, null);
+        String removed = srvMeta.getString(Params.removed, null);
+        String swap = srvMeta.getString(Params.swap, null);
+
+        if (field != null && (added != null || changed != null || removed != null || swap != null))
+        {
+            throw new IllegalArgumentException("autoconfig field " + field + " can't be defined with both added/changed/removed/swap calllbacks");
+        }
+        
+        Component c;
+        
+        if (field != null)
+        {
+            c = dm.createAdapterService(adapteeService, adapteeFilter, field);
+        }
+        else
+        {
+            if (added != null || changed != null || removed != null || swap != null)
+            {
+                c = dm.createAdapterService(adapteeService, adapteeFilter, added, changed, removed, swap);
+
+            }
+            else
+            {
+                c = dm.createAdapterService(adapteeService, adapteeFilter);
+            }
+        }
+        
+        setCommonServiceParams(c, srvMeta);
+        c.setInterface(provides, adapterProperties);
+        
         String factoryMethod = srvMeta.getString(Params.factoryMethod, null);
         if (factoryMethod == null)
         {
@@ -62,8 +92,6 @@ public class BundleAdapterServiceBuilder extends AbstractBuilder
         {
             c.setFactory(adapterImplClass, factoryMethod);
         }
-
-        setCommonServiceParams(c, srvMeta);
         c.setComposition(srvMeta.getString(Params.composition, null));
         ServiceLifecycleHandler lfcleHandler = new ServiceLifecycleHandler(c, b, dm, srvMeta, depsMeta);
         // The dependencies will be plugged by our lifecycle handler.
@@ -71,5 +99,5 @@ public class BundleAdapterServiceBuilder extends AbstractBuilder
         // Adds dependencies (except named dependencies, which are managed by the lifecycle handler).
         addUnamedDependencies(b, dm, c, srvMeta, depsMeta);
         dm.add(c);
-    }    
+    }
 }
