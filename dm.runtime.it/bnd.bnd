@@ -24,4 +24,4 @@
 -runvm:-ea
 -sub: \
 	*.bnd
--plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;path:=${workspace}/dm.annotations/generated/dm.annotations.jar
+-plugin: org.apache.felix.dm.annotation.plugin.bnd.AnnotationPlugin;log=debug;path:=${workspace}/org.apache.felix.dm.annotation/generated/org.apache.felix.dm.annotation.jar
