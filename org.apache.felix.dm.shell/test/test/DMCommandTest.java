@@ -34,9 +34,8 @@ import java.util.Properties;
 
 import javax.crypto.Cipher;
 
-import dm.Component;
-import dm.DependencyManager;
-
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.shell.DMCommand;
 import org.junit.After;
 import org.junit.Before;

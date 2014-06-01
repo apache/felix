@@ -31,6 +31,10 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentDeclaration;
+import org.apache.felix.dm.ComponentDependencyDeclaration;
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.felix.service.command.Descriptor;
 import org.apache.felix.service.command.Parameter;
@@ -39,11 +43,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
-
-import dm.Component;
-import dm.ComponentDeclaration;
-import dm.ComponentDependencyDeclaration;
-import dm.DependencyManager;
 
 /**
  * Shell command for showing all services and dependencies that are managed

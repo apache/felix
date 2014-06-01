@@ -1,6 +1,6 @@
 -buildpath: \
 	osgi.core;version=4.2,\
-	dm;version=latest,\
+	org.apache.felix.dm;version=latest,\
 	org.apache.felix.gogo.runtime;version=0.10,\
 	org.mockito.mockito-all,\
 	osgi.cmpn
