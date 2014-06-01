@@ -21,18 +21,17 @@ package dm.runtime.it.components;
 import static dm.runtime.it.components.Utils.DM_BSN;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.annotation.api.BundleAdapterService;
+import org.apache.felix.dm.annotation.api.BundleDependency;
+import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.Inject;
+import org.apache.felix.dm.annotation.api.Property;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Start;
+import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-
-import dm.annotation.api.BundleAdapterService;
-import dm.annotation.api.BundleDependency;
-import dm.annotation.api.Component;
-import dm.annotation.api.Inject;
-import dm.annotation.api.Property;
-import dm.annotation.api.ServiceDependency;
-import dm.annotation.api.Start;
-import dm.annotation.api.Stop;
 
 public class BundleDependencyAnnotation {
     public static final String ENSURE_CONSUMER = "BundleDependencyAnnotation.consumer";

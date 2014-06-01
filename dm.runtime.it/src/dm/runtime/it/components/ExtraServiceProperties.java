@@ -21,12 +21,11 @@ package dm.runtime.it.components;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.Property;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.itest.Ensure;
-
-import dm.annotation.api.Component;
-import dm.annotation.api.Property;
-import dm.annotation.api.ServiceDependency;
-import dm.annotation.api.Start;
 
 /**
  * This test validates that a basic Service may specify some extra service properties

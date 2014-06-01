@@ -22,17 +22,16 @@ import java.util.Dictionary;
 import java.util.Map;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
+import org.apache.felix.dm.annotation.api.Inject;
+import org.apache.felix.dm.annotation.api.Property;
+import org.apache.felix.dm.annotation.api.Registered;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Start;
+import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.BundleContext;
-
-import dm.annotation.api.Component;
-import dm.annotation.api.FactoryConfigurationAdapterService;
-import dm.annotation.api.Inject;
-import dm.annotation.api.Property;
-import dm.annotation.api.Registered;
-import dm.annotation.api.ServiceDependency;
-import dm.annotation.api.Start;
-import dm.annotation.api.Stop;
 
 public class FactoryConfigurationAdapterAnnotation {
     public interface ServiceInterface {

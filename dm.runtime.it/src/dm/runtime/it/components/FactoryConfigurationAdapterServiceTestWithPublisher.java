@@ -24,18 +24,17 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.FactoryConfigurationAdapterService;
+import org.apache.felix.dm.annotation.api.Init;
+import org.apache.felix.dm.annotation.api.LifecycleController;
+import org.apache.felix.dm.annotation.api.Property;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Start;
+import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.Ensure;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-
-import dm.annotation.api.Component;
-import dm.annotation.api.FactoryConfigurationAdapterService;
-import dm.annotation.api.Init;
-import dm.annotation.api.LifecycleController;
-import dm.annotation.api.Property;
-import dm.annotation.api.ServiceDependency;
-import dm.annotation.api.Start;
-import dm.annotation.api.Stop;
 
 /**
  * Test a FactoryConfigurationAdapterService which provides its interface using a @ServiceLifecycle.

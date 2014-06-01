@@ -28,21 +28,20 @@ import junit.framework.Assert;
 import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ResourceHandler;
 import org.apache.felix.dm.ResourceUtil;
+import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.Destroy;
+import org.apache.felix.dm.annotation.api.Init;
+import org.apache.felix.dm.annotation.api.Inject;
+import org.apache.felix.dm.annotation.api.Property;
+import org.apache.felix.dm.annotation.api.ResourceAdapterService;
+import org.apache.felix.dm.annotation.api.ResourceDependency;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Start;
+import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.Ensure;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
-
-import dm.annotation.api.Component;
-import dm.annotation.api.Destroy;
-import dm.annotation.api.Init;
-import dm.annotation.api.Inject;
-import dm.annotation.api.Property;
-import dm.annotation.api.ResourceAdapterService;
-import dm.annotation.api.ResourceDependency;
-import dm.annotation.api.ServiceDependency;
-import dm.annotation.api.Start;
-import dm.annotation.api.Stop;
 
 public class ResourceAnnotation {
     public final static String ENSURE_RESOURCE = "ResourceAnnotation.resource";

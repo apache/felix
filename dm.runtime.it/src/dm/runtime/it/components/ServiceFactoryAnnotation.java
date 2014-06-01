@@ -22,15 +22,15 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.Init;
+import org.apache.felix.dm.annotation.api.Property;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Start;
+import org.apache.felix.dm.annotation.api.Stop;
 import org.apache.felix.dm.itest.Ensure;
 
 import junit.framework.Assert;
-import dm.annotation.api.Component;
-import dm.annotation.api.Init;
-import dm.annotation.api.Property;
-import dm.annotation.api.ServiceDependency;
-import dm.annotation.api.Start;
-import dm.annotation.api.Stop;
 
 public class ServiceFactoryAnnotation {
     public final static String FACTORY = "ServiceFactoryAnnotation.Factory";

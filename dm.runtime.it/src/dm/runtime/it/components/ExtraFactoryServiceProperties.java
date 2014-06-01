@@ -24,12 +24,11 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.dm.annotation.api.Component;
+import org.apache.felix.dm.annotation.api.Property;
+import org.apache.felix.dm.annotation.api.ServiceDependency;
+import org.apache.felix.dm.annotation.api.Start;
 import org.apache.felix.dm.itest.Ensure;
-
-import dm.annotation.api.Component;
-import dm.annotation.api.Property;
-import dm.annotation.api.ServiceDependency;
-import dm.annotation.api.Start;
 
 public class ExtraFactoryServiceProperties {
     public final static String FACTORYSET = "ExtraFactoryServiceProperties.FACTORYSET";

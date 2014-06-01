@@ -22,9 +22,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import org.apache.felix.dm.annotation.api.*;
 import org.apache.felix.dm.itest.Ensure;
-
-import dm.annotation.api.*;
 
 public class AspectLifecycleWithDynamicProxyAnnotation {
     public interface ServiceInterface {

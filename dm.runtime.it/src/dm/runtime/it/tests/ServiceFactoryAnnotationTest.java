@@ -24,11 +24,11 @@ import java.util.Set;
 import junit.framework.Assert;
 
 import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.itest.Ensure;
 import org.apache.felix.dm.itest.TestBase;
 import org.osgi.framework.ServiceRegistration;
 
-import dm.annotation.api.Component;
 import dm.runtime.it.components.ServiceFactoryAnnotation;
 
 public class ServiceFactoryAnnotationTest extends TestBase {
