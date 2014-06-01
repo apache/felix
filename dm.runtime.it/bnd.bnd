@@ -3,9 +3,9 @@
 	osgi.cmpn,\
 	org.mockito.mockito-all,\
 	org.apache.felix.dm;version=latest,\
-	dm.annotations;version=latest,\
 	junit.osgi;version=3.8,\
-	org.apache.felix.dm.itest.api;version=latest
+	org.apache.felix.dm.itest.api;version=latest,\
+	org.apache.felix.dm.annotation;version=latest
 -runbundles:  \
 	org.mockito.mockito-all,\
 	org.apache.felix.dm;version=latest,\
