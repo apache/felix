@@ -21,10 +21,9 @@ package dm.runtime;
 import java.util.Dictionary;
 import java.util.List;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
-
-import dm.Component;
-import dm.DependencyManager;
 
 /**
  * Builded called when the JSON parser find an adapter service descriptor.

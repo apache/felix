@@ -21,10 +21,9 @@ package dm.runtime;
 import java.util.Dictionary;
 import java.util.List;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
-
-import dm.Component;
-import dm.DependencyManager;
 
 /**
  * Class used to build a factory configuration adapter service using metadata found from DependencyManager runtime

@@ -24,10 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.dm.DependencyManager;
 import org.json.JSONObject;
 import org.osgi.framework.Bundle;
-
-import dm.DependencyManager;
 
 /**
  * This class parses files generated in META-INF/*.dm by the DependencyManager bnd plugin.

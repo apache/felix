@@ -20,9 +20,9 @@ package dm.runtime.it.components;
 
 import java.util.Map;
 
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 
-import dm.DependencyManager;
 import dm.annotation.api.AdapterService;
 import dm.annotation.api.Component;
 import dm.annotation.api.Inject;
@@ -87,8 +87,8 @@ public class AdapterAnnotation {
         DependencyManager m_dmNotInjected;
 
         @Inject
-        volatile dm.Component m_component;
-        dm.Component m_componentNotInjected;
+        volatile org.apache.felix.dm.Component m_component;
+        org.apache.felix.dm.Component m_componentNotInjected;
 
         public void run3() {
             checkInjectedFields();

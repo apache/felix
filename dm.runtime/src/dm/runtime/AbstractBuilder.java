@@ -20,15 +20,14 @@ package dm.runtime;
 
 import java.util.List;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentState;
+import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-
-import dm.Component;
-import dm.ComponentState;
-import dm.ComponentStateListener;
-import dm.Dependency;
-import dm.DependencyManager;
 
 /**
  * Base class for all kind of DM component builders (for Component, Aspect, Adapters ...).

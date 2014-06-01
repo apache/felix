@@ -18,14 +18,13 @@
  */
 package dm.runtime;
 
+import org.apache.felix.dm.BundleDependency;
+import org.apache.felix.dm.ConfigurationDependency;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ResourceDependency;
+import org.apache.felix.dm.ServiceDependency;
 import org.osgi.framework.Bundle;
-
-import dm.BundleDependency;
-import dm.ConfigurationDependency;
-import dm.Dependency;
-import dm.DependencyManager;
-import dm.ResourceDependency;
-import dm.ServiceDependency;
 
 /**
  * Class used to build a concrete dependency from meta data.

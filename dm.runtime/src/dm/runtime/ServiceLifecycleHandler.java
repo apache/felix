@@ -30,11 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
-
-import dm.Component;
-import dm.Dependency;
-import dm.DependencyManager;
 
 /**
  * Allow Services to configure dynamically their dependency filters from their init() method.

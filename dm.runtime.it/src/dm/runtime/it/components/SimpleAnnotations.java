@@ -18,11 +18,11 @@
  */
 package dm.runtime.it.components;
 
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
-import dm.DependencyManager;
 import dm.annotation.api.Component;
 import dm.annotation.api.Destroy;
 import dm.annotation.api.Init;
@@ -128,8 +128,8 @@ public class SimpleAnnotations {
         DependencyManager _dmNotInjected;
 
         @Inject
-        volatile dm.Component _component;
-        dm.Component _componentNotInjected;
+        volatile org.apache.felix.dm.Component _component;
+        org.apache.felix.dm.Component _componentNotInjected;
 
         @Start
         protected void start() {

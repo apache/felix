@@ -20,10 +20,10 @@ package dm.runtime.it.components;
 
 import static dm.runtime.it.components.Utils.DM_BSN;
 
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
-import dm.DependencyManager;
 import dm.annotation.api.BundleAdapterService;
 import dm.annotation.api.BundleDependency;
 import dm.annotation.api.Component;
@@ -122,8 +122,8 @@ public class BundleDependencyAnnotation {
         DependencyManager m_dmNotInjected;
 
         @Inject
-        volatile dm.Component m_component;
-        dm.Component m_componentNotInjected;
+        volatile org.apache.felix.dm.Component m_component;
+        org.apache.felix.dm.Component m_componentNotInjected;
 
         @Start
         void start() {

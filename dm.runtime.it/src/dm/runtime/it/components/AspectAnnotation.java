@@ -18,10 +18,10 @@
  */
 package dm.runtime.it.components;
 
-import dm.DependencyManager;
 import dm.annotation.api.*;
 import dm.it.Ensure;
 
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -74,8 +74,8 @@ public class AspectAnnotation {
         DependencyManager m_dmNotInjected;
 
         @Inject
-        volatile dm.Component  m_component;
-        dm.Component m_componentNotInjected;
+        volatile org.apache.felix.dm.Component  m_component;
+        org.apache.felix.dm.Component m_componentNotInjected;
 
         @Init
         void init() {

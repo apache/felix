@@ -23,10 +23,9 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
-
-import dm.Component;
-import dm.DependencyManager;
 
 /**
  * Builds a DependencyManager Component.

@@ -27,11 +27,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
-
-import dm.Component;
-import dm.Dependency;
-import dm.DependencyManager;
 
 /**
  * This class implements a <code>java.util.Set</code> which acts as a service factory.

@@ -21,15 +21,14 @@ package dm.runtime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyActivatorBase;
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ServiceDependency;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
-
-import dm.Component;
-import dm.DependencyActivatorBase;
-import dm.DependencyManager;
-import dm.ServiceDependency;
 
 /*
  * This is the Activator for our DependencyManager Component Runtime.

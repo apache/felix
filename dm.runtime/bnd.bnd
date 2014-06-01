@@ -5,6 +5,6 @@ Private-Package: \
 -buildpath: \
 	osgi.core;version=4.2,\
 	osgi.cmpn;version=4.2,\
-	dm;version=latest,\
+	org.apache.felix.dm;version=latest,\
 	de.twentyeleven.skysail.org.json-osgi;version=20080701.0
 Bundle-Activator:dm.runtime.Activator

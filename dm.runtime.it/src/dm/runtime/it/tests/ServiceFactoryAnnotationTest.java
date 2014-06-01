@@ -23,9 +23,9 @@ import java.util.Set;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.ServiceRegistration;
 
-import dm.DependencyManager;
 import dm.annotation.api.Component;
 import dm.it.Ensure;
 import dm.it.TestBase;

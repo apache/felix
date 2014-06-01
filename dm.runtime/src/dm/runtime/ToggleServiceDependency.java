@@ -20,13 +20,12 @@ package dm.runtime;
 
 import java.util.Dictionary;
 
+import org.apache.felix.dm.ComponentDependencyDeclaration;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.context.ComponentContext;
+import org.apache.felix.dm.context.DependencyContext;
+import org.apache.felix.dm.context.Event;
 import org.osgi.framework.BundleContext;
-
-import dm.ComponentDependencyDeclaration;
-import dm.Dependency;
-import dm.context.ComponentContext;
-import dm.context.DependencyContext;
-import dm.context.Event;
 
 /**
  * This is a custom DependencyManager Dependency, allowing to take control of
