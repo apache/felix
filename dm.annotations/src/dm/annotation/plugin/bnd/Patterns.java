@@ -47,12 +47,10 @@ public class Patterns
     public final static Pattern BUNDLE_CONTEXT = Pattern.compile("Lorg/osgi/framework/BundleContext;");
 
     // Pattern used to parse a field whose type is DependencyManager
-    // TODO change package name
-    public final static Pattern DEPENDENCY_MANAGER = Pattern.compile("Ldm.DependencyManager;");
+    public final static Pattern DEPENDENCY_MANAGER = Pattern.compile("Lorg.apache.felix.dm.DependencyManager;");
     
     // Pattern used to parse a field whose type is Component
-    // TODO change package name
-    public final static Pattern COMPONENT = Pattern.compile("Ldm.Component;");
+    public final static Pattern COMPONENT = Pattern.compile("Lorg.apache.felix.dm.Component;");
 
     /**
      * Parses a class.
