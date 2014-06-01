@@ -2,4 +2,4 @@ Bundle-Version:0.0.0.${tstamp}
 Test-Cases: \
 	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
 Export-Package: \
-	dm.runtime.it.components
+	org.apache.felix.dm.runtime.itest.components

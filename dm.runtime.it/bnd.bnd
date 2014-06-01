@@ -13,8 +13,8 @@
 	org.apache.felix.metatype;version=1.0.4,\
 	osgi.cmpn;version=4.3.0,\
 	org.apache.felix.gogo.runtime;version=0.10.0,\
-	dm.runtime.it.components;version=latest,\
-	dm.runtime.it.tests;version=latest,\
+	org.apache.felix.dm.runtime.itest.components;version=latest,\
+	org.apache.felix.dm.runtime.itest.tests;version=latest,\
 	org.apache.felix.dm.itest.api;version=latest,\
 	org.apache.felix.dm.runtime;version=latest
 -runee:JavaSE-1.6

@@ -1,2 +1,2 @@
 Private-Package: \
-	dm.runtime.it.tests
+	org.apache.felix.dm.runtime.itest.tests
