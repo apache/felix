@@ -19,7 +19,7 @@
 package dm.runtime.it.components;
 
 public class Utils {
-    public static final String DM_BSN = "dm"; // FIXME replace by org.apache.felix.dependencymanager
+    public static final String DM_BSN = "org.apache.felix.dm"; // FIXME replace by org.apache.felix.dependencymanager
     public static final String DM_RUNTIME_IT_COMPONENTS_BSN = "dm.runtime.it.components"; // FIXME replace by proper package
 
     public static void schedule(final Runnable task, final long n) {
