@@ -3,15 +3,14 @@ package test;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.impl.ComponentImpl;
+import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
+import org.apache.felix.dm.impl.DependencyImpl;
+import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Test;
 import org.osgi.service.cm.ConfigurationException;
-
-import dm.Component;
-import dm.Dependency;
-import dm.impl.ComponentImpl;
-import dm.impl.ConfigurationDependencyImpl;
-import dm.impl.DependencyImpl;
-import dm.impl.EventImpl;
 
 public class ConfigurationTest extends TestBase {
     @Test

@@ -6,19 +6,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentState;
+import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.context.Event;
+import org.apache.felix.dm.impl.ComponentImpl;
+import org.apache.felix.dm.impl.ConfigurationDependencyImpl;
+import org.apache.felix.dm.impl.DependencyImpl;
+import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Assert;
 import org.junit.Test;
 import org.osgi.service.cm.ConfigurationException;
-
-import dm.Component;
-import dm.ComponentState;
-import dm.ComponentStateListener;
-import dm.Dependency;
-import dm.context.Event;
-import dm.impl.ComponentImpl;
-import dm.impl.ConfigurationDependencyImpl;
-import dm.impl.DependencyImpl;
-import dm.impl.EventImpl;
 
 /**
  * This test class simulates a client having many dependencies being registered/unregistered concurrently.

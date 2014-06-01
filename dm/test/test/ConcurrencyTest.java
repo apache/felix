@@ -5,16 +5,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentState;
+import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.impl.ComponentImpl;
+import org.apache.felix.dm.impl.DependencyImpl;
+import org.apache.felix.dm.impl.EventImpl;
 import org.junit.Assert;
 import org.junit.Test;
-
-import dm.Component;
-import dm.ComponentState;
-import dm.ComponentStateListener;
-import dm.Dependency;
-import dm.impl.ComponentImpl;
-import dm.impl.DependencyImpl;
-import dm.impl.EventImpl;
 
 public class ConcurrencyTest {
 	

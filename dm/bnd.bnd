@@ -2,12 +2,12 @@
 	osgi.core;version=4.2,\
 	org.mockito.mockito-all
 Private-Package: \
-	dm.impl,\
-	dm.impl.index,\
-	dm.impl.index.multiproperty,\
-	dm.impl.metatype
+	org.apache.felix.dm.impl,\
+	org.apache.felix.dm.impl.index,\
+	org.apache.felix.dm.impl.index.multiproperty,\
+	org.apache.felix.dm.impl.metatype
 Export-Package: \
-	dm,\
-	tracker,\
-	dm.context
+	org.apache.felix.dm,\
+	org.apache.felix.dm.tracker,\
+	org.apache.felix.dm.context
 Import-Package: !org.junit,!org.mockito.*,*

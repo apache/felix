@@ -1,8 +1,0 @@
-package dm;
-
-public enum ComponentState {
-	INACTIVE, 
-	WAITING_FOR_REQUIRED, 
-	INSTANTIATED_AND_WAITING_FOR_REQUIRED, 
-	TRACKING_OPTIONAL
-}
