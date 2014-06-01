@@ -1,0 +1,5 @@
+Bundle-Version:0.0.0.${tstamp}
+Test-Cases: \
+	${classes;CONCRETE;EXTENDS;junit.framework.TestCase}
+Export-Package: \
+	org.apache.felix.dm.itest
