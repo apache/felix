@@ -5,11 +5,10 @@ import java.util.Properties;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-
-import dm.Component;
-import dm.DependencyManager;
 
 public class AspectBaseTest extends TestBase {    
 

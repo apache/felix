@@ -6,12 +6,11 @@ import java.util.Properties;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-
-import dm.Component;
-import dm.Dependency;
-import dm.DependencyManager;
 
 /**
  * One consumer, Three providers. The Consumer has two required dependency on provider1, provider2, and one 

@@ -18,8 +18,8 @@
  */
 package dm.it;
 
-import dm.Component;
-import dm.DependencyManager;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 
 public class FELIX2078_ServiceDependencyTest extends TestBase {
     public void testRequiredServiceRegistrationAndConsumption() {

@@ -4,9 +4,10 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
+
 import junit.framework.Assert;
-import dm.Component;
-import dm.DependencyManager;
 
 public class ComponentTest extends TestBase {
     private final Ensure m_ensure = new Ensure();

@@ -26,11 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
-import dm.Component;
-import dm.DependencyManager;
 import junit.framework.Assert;
 
 /**

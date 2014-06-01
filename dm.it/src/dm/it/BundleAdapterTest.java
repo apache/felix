@@ -2,10 +2,9 @@ package dm.it;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
-
-import dm.Component;
-import dm.DependencyManager;
 
 // TODO add more tests
 public class BundleAdapterTest extends TestBase {

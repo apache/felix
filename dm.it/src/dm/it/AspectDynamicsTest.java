@@ -1,6 +1,6 @@
 package dm.it;
-import dm.Component;
-import dm.DependencyManager;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 
 public class AspectDynamicsTest extends TestBase {
 

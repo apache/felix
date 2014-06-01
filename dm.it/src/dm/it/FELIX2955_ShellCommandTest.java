@@ -23,12 +23,11 @@ import java.io.PrintStream;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.osgi.framework.Bundle;
-
-import dm.Component;
-import dm.DependencyManager;
 
 public class FELIX2955_ShellCommandTest extends TestBase {
     private long m_myBundleId;

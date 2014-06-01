@@ -21,9 +21,10 @@ package dm.it;
 import java.util.Arrays;
 import java.util.List;
 
-import dm.Component;
-import dm.DependencyManager;
-import dm.ServiceDependency;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ServiceDependency;
+
 import junit.framework.Assert;
 
 /**

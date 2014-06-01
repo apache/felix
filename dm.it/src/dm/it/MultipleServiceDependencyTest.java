@@ -20,10 +20,9 @@ package dm.it;
 
 import java.util.Properties;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Constants;
-
-import dm.Component;
-import dm.DependencyManager;
 
 public class MultipleServiceDependencyTest extends TestBase {
    public void testMultipleServiceRegistrationAndConsumption() {

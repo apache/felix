@@ -4,11 +4,10 @@ import java.util.List;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-
-import dm.Component;
-import dm.DependencyManager;
 
 public class AspectWhiteboardTest extends TestBase {
 

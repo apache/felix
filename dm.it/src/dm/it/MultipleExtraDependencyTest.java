@@ -20,8 +20,8 @@ package dm.it;
 
 import java.util.Hashtable;
 
-import dm.Component;
-import dm.DependencyManager;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 
 /**
  * Test which validates multi-dependencies combination.

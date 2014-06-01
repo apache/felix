@@ -22,10 +22,9 @@ package dm.it;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
-
-import dm.DependencyManager;
 
 public class FELIX3057_EmptyServiceReferenceArray extends TestBase {
     public void testWithoutIndex() throws Exception {

@@ -22,12 +22,11 @@ import java.util.Hashtable;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.tracker.ServiceTracker;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-
-import dm.DependencyManager;
-import tracker.ServiceTracker;
 
 public class ServiceTrackerTest extends TestBase {
     public void testPlainServiceTracker() {

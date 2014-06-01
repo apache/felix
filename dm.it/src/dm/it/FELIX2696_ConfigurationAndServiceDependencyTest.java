@@ -24,13 +24,12 @@ import java.util.Hashtable;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
-
-import dm.Component;
-import dm.DependencyManager;
 
 
 public class FELIX2696_ConfigurationAndServiceDependencyTest extends TestBase {

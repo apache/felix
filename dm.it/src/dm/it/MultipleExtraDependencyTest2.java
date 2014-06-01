@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
-import dm.Component;
-import dm.Dependency;
-import dm.DependencyManager;
-import dm.ServiceDependency;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ServiceDependency;
 
 
 

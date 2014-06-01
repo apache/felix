@@ -8,10 +8,9 @@ import java.util.Properties;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.service.cm.ConfigurationAdmin;
-
-import dm.Component;
-import dm.DependencyManager;
 
 public class FactoryConfigurationAdapterTest extends TestBase
 {

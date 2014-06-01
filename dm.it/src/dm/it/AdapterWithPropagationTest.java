@@ -22,8 +22,9 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 
-import dm.Component;
-import dm.DependencyManager;
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
+
 import junit.framework.Assert;
 
 /**

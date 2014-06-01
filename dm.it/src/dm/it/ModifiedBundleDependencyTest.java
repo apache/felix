@@ -2,11 +2,10 @@ package dm.it;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-
-import dm.Component;
-import dm.DependencyManager;
 
 /**
  * Test for FELIX-4334 issue.

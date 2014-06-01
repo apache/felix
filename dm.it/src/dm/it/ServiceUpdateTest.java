@@ -11,15 +11,14 @@ import java.util.Properties;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ResourceHandler;
+import org.apache.felix.dm.ResourceUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-
-import dm.Component;
-import dm.DependencyManager;
-import dm.ResourceHandler;
-import dm.ResourceUtil;
 
 public class ServiceUpdateTest extends TestBase {
     public void testServiceUpdate() throws Exception {

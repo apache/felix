@@ -1,9 +1,8 @@
 package dm.it.testbundle;
 
+import org.apache.felix.dm.DependencyActivatorBase;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
-
-import dm.DependencyActivatorBase;
-import dm.DependencyManager;
 
 public class Activator extends DependencyActivatorBase {
     @Override

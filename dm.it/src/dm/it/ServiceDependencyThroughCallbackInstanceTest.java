@@ -20,9 +20,8 @@ package dm.it;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.BundleContext;
-
-import dm.DependencyManager;
 
 public class ServiceDependencyThroughCallbackInstanceTest extends TestBase {
     public void testServiceWithCallbacksAndOneDependency() {

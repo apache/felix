@@ -22,10 +22,9 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.ServiceReference;
-
-import dm.Component;
-import dm.DependencyManager;
 
 /**
  * Validates ServiceDependency service properties propagation.

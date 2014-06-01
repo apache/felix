@@ -20,11 +20,10 @@ package dm.it;
 
 import java.util.List;
 
+import org.apache.felix.dm.DependencyManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-
-import dm.DependencyManager;
 
 /**
  * OSGi service utilities (copied from dependency manager implementation).

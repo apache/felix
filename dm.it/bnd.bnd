@@ -1,5 +1,5 @@
 -runbundles:  \
-	dm;version=latest,\
+	org.apache.felix.dm;version=latest,\
 	org.apache.felix.metatype;version=1.0.4,\
 	org.mockito.mockito-all;version=1.9.0,\
 	junit.osgi,\
@@ -10,13 +10,14 @@
 -runee:JavaSE-1.7
 -runvm:-ea
 -runfw:org.apache.felix.framework
--buildpath: \
+-buildpath:  \
 	osgi.core;version='[4.2,5)',\
 	osgi.cmpn,\
 	org.mockito.mockito-all,\
-	dm;version=latest,\
 	junit.osgi;version=3.8,\
-	org.apache.felix.gogo.runtime;version=0.10
+	org.apache.felix.gogo.runtime;version=0.10,\
+	org.apache.felix.dm;version=latest,\
+	org.apache.felix.dm.shell;version=latest
 -runsystempackages: \
 	sun.reflect
 -sub: \

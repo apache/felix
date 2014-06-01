@@ -1,9 +1,10 @@
 package dm.it;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ServiceDependency;
+
 import junit.framework.Assert;
-import dm.Component;
-import dm.DependencyManager;
-import dm.ServiceDependency;
 
 public class TemporalServiceDependencyTest extends TestBase {
     public void testServiceConsumptionAndIntermittentAvailability() {

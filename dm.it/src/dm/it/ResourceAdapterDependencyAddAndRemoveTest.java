@@ -8,18 +8,17 @@ import java.util.Map.Entry;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ComponentState;
+import org.apache.felix.dm.ComponentStateListener;
+import org.apache.felix.dm.Dependency;
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ResourceHandler;
+import org.apache.felix.dm.ResourceUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-
-import dm.Component;
-import dm.ComponentState;
-import dm.ComponentStateListener;
-import dm.Dependency;
-import dm.DependencyManager;
-import dm.ResourceHandler;
-import dm.ResourceUtil;
 
 public class ResourceAdapterDependencyAddAndRemoveTest extends TestBase {
     public void testBasicResourceAdapter() throws Exception {

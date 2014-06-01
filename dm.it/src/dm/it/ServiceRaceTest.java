@@ -11,14 +11,13 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
+import org.apache.felix.dm.Component;
+import org.apache.felix.dm.ConfigurationDependency;
+import org.apache.felix.dm.DependencyManager;
+import org.apache.felix.dm.ServiceDependency;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationException;
-
-import dm.Component;
-import dm.ConfigurationDependency;
-import dm.DependencyManager;
-import dm.ServiceDependency;
 
 
 /**
