@@ -94,8 +94,6 @@ public class SerialExecutor implements Executor {
     private void runTasks(Thread currentRunninghread) {
         do {
             try {
-                // We do a memory barrier in order to ensure consistent per-thread memory visibility.
-                // Only one thread at a time is running this method, so there is no possible contention.
                 Runnable task;
                 ConcurrentLinkedQueue<Runnable> tasks = m_tasks;
 
