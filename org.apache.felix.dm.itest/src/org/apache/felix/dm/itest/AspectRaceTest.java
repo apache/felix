@@ -26,7 +26,7 @@ public class AspectRaceTest extends TestBase {
 	public void testConcurrentAspects() {
 		try {
 			warn("starting aspect race test");
-			int cores = Math.max(4, Runtime.getRuntime().availableProcessors());
+			int cores = Math.max(10, Runtime.getRuntime().availableProcessors());
 			// Used to inject S services
 			m_serviceExec = Executors.newFixedThreadPool(cores);
 			// Used to inject S Aspects
