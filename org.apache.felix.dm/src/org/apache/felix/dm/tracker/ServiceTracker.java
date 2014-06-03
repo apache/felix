@@ -1256,14 +1256,16 @@ public class ServiceTracker implements ServiceTrackerCustomizer {
 				// schedule the actionset for execution. We'll use a serial executor to prevent the actions to
 				// be performed out of order.
 				final AbstractCustomizerActionSet commandActionSet = actionSet;
-				getExecutor().schedule(new Runnable() {
+				if (commandActionSet != null) {
+                    getExecutor().schedule(new Runnable() {
 
-					@Override
-					public void run() {
-						commandActionSet.execute();
-					}
-					
-				});
+                        @Override
+                        public void run() {
+                            commandActionSet.execute();
+                        }
+
+                    });
+				}
 			}
 			getExecutor().execute();
 		}
