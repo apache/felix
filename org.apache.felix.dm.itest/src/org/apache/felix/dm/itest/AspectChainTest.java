@@ -21,6 +21,7 @@ public class AspectChainTest extends TestBase {
         m.add(sa3);
         m.add(sa1);
         e.step();
+        e.waitForStep(5,  5000);
         
         m.remove(sa3);
         m.remove(sa2);
