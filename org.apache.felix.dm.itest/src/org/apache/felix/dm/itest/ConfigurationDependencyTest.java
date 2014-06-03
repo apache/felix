@@ -34,12 +34,14 @@ import org.osgi.service.cm.ManagedService;
 
 
 public class ConfigurationDependencyTest extends TestBase {
+    final static String PID = "ConfigurationDependencyTest.pid";
+    
     public void testComponentWithRequiredConfigurationAndServicePropertyPropagation() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
-        Component s1 = m.createComponent().setImplementation(new ConfigurationConsumer(e)).setInterface(Runnable.class.getName(), null).add(m.createConfigurationDependency().setPid("test").setPropagate(true));
+        Component s1 = m.createComponent().setImplementation(new ConfigurationConsumer(e)).setInterface(Runnable.class.getName(), null).add(m.createConfigurationDependency().setPid(PID).setPropagate(true));
         Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
         Component s3 = m.createComponent().setImplementation(new ConfiguredServiceConsumer(e)).add(m.createServiceDependency().setService(Runnable.class, ("(testkey=testvalue)")).setRequired(true));
         m.add(s1);
@@ -59,7 +61,7 @@ public class ConfigurationDependencyTest extends TestBase {
         // helper class that ensures certain steps get executed in sequence
         Ensure e = new Ensure();
         // create a service provider and consumer
-        Component s1 = m.createComponent().setImplementation(new ConfigurationConsumer2(e)).setInterface(Runnable.class.getName(), null).add(m.createConfigurationDependency().setPid("test").setPropagate(true));
+        Component s1 = m.createComponent().setImplementation(new ConfigurationConsumer2(e)).setInterface(Runnable.class.getName(), null).add(m.createConfigurationDependency().setPid(PID).setPropagate(true));
         Component s2 = m.createComponent().setImplementation(new ConfigurationCreator(e)).add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
         Component s3 = m.createComponent().setImplementation(new ConfiguredServiceConsumer(e)).add(m.createServiceDependency().setService(Runnable.class, ("(testkey=testvalue)")).setRequired(true));
         m.add(s1);
@@ -88,7 +90,7 @@ public class ConfigurationDependencyTest extends TestBase {
                 warn("ConfigurationCreator.init");
             	Assert.assertNotNull(m_ca);
                 m_ensure.step(1);
-                m_conf = m_ca.getConfiguration("test", null);
+                m_conf = m_ca.getConfiguration(PID, null);
                 Hashtable props = new Properties();
                 props.put("testkey", "testvalue");
                 m_conf.update(props);

@@ -33,6 +33,8 @@ import org.osgi.service.cm.ManagedService;
 
 
 public class FELIX2696_ConfigurationAndServiceDependencyTest extends TestBase {
+    final static String PID = "FELIX2696_ConfigurationAndServiceDependencyTest.pid";
+
     public void testComponentWithRequiredConfigurationAndServicePropertyPropagation() {
         DependencyManager m = new DependencyManager(context);
         // helper class that ensures certain steps get executed in sequence
@@ -41,7 +43,7 @@ public class FELIX2696_ConfigurationAndServiceDependencyTest extends TestBase {
         Component s1 = m.createComponent()
             .setImplementation(new ConfigurationConsumer(e))
             .add(m.createServiceDependency().setService(ServiceInterface.class).setRequired(true))
-            .add(m.createConfigurationDependency().setPid("test"));
+            .add(m.createConfigurationDependency().setPid(PID));
         Component s2 = m.createComponent()
             .setImplementation(new ConfigurationCreator(e))
             .add(m.createServiceDependency().setService(ConfigurationAdmin.class).setRequired(true));
@@ -77,7 +79,7 @@ public class FELIX2696_ConfigurationAndServiceDependencyTest extends TestBase {
 
         public void init() {
             try {
-                m_conf = m_ca.getConfiguration("test", null);
+                m_conf = m_ca.getConfiguration(PID, null);
                 Hashtable props = new Hashtable();
                 props.put("testkey", "testvalue");
                 m_conf.update(props);
