@@ -19,7 +19,7 @@ import org.osgi.service.log.LogService;
  * Safe publication is ensured  because we are using a ConcurrentLinkedQueue.
  * (see [1], chapter 3.5.3 (Safe publication idioms). 
  * 
- * [1] http://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html#volatile
+ * [1] Java Concurrency In Practice, Addison Wesley
  * 
  * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
  */
