@@ -189,8 +189,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @see DependencyManager#createAspectService(Class, String, int, String)
      */
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String attributeName) {
-        // TODO
-        return null;
+        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, attributeName);
     }
     
     /**
@@ -200,8 +199,7 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @see DependencyManager#createAspectService(Class, String, int)
      */
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking) {
-        // TODO
-        return null;
+        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking);
     }
     
     /**
@@ -211,13 +209,17 @@ public abstract class DependencyActivatorBase implements BundleActivator {
      * @see DependencyManager#createAspectService(Class, String, int, String, String, String)
      */
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove) {
-        // TODO
-        return null;
+        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, add, change, remove);
     }
 
+    /**
+     * Creates a new aspect service.
+     * 
+     * @return the aspect service
+     * @see DependencyManager#createAspectService(Class, String, int, String, String, String, String)
+     */
     public Component createAspectService(Class serviceInterface, String serviceFilter, int ranking, String add, String change, String remove, String swap) {    
-        // TODO
-        return null;
+        return m_manager.createAspectService(serviceInterface, serviceFilter, ranking, add, change, remove, swap);
     }
     	
     /**
