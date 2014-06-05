@@ -21,6 +21,11 @@ package org.apache.felix.dm.tracker;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Actions which can be performed on a given customizer interface.
+ * 
+ * @author <a href="mailto:dev@felix.apache.org">Felix Project Team</a>
+ */
 public abstract class AbstractCustomizerActionSet {
 
 	enum Type { ADDED, MODIFIED, REMOVED };
