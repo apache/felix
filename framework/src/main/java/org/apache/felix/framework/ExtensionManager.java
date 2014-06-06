@@ -91,30 +91,38 @@ class ExtensionManager extends URLStreamHandler implements Content
     static
     {
         // pre-init the url sub-system as otherwise we don't work on gnu/classpath
-        ExtensionManager extensionManager = new ExtensionManager();
-        try
+        ExtensionManager extensionManager = null;
+
+        if (!"true".equalsIgnoreCase(Felix.m_secureAction.getSystemProperty(
+            FelixConstants.FELIX_EXTENSIONS_DISABLE, "false")))
         {
-            (new URL("http://felix.extensions:9/")).openConnection();
-        }
-        catch (Throwable t)
-        {
-            // This doesn't matter much - we only need the above to init the url subsystem
+            try
+            {
+                (new URL("http://felix.extensions:9/")).openConnection();
+            }
+            catch (Throwable t)
+            {
+                // This doesn't matter much - we only need the above to init the url subsystem
+            }
+
+            // We use the secure action of Felix to add a new instance to the parent
+            // classloader.
+            try
+            {
+                extensionManager = new ExtensionManager();
+
+                Felix.m_secureAction.addURLToURLClassLoader(Felix.m_secureAction.createURL(
+                    Felix.m_secureAction.createURL(null, "http:", extensionManager),
+                    "http://felix.extensions:9/", extensionManager),
+                    Felix.class.getClassLoader());
+            }
+            catch (Throwable ex)
+            {
+                // extension bundles will not be supported.
+                extensionManager = null;
+            }
         }
 
-        // We use the secure action of Felix to add a new instance to the parent
-        // classloader.
-        try
-        {
-            Felix.m_secureAction.addURLToURLClassLoader(Felix.m_secureAction.createURL(
-                Felix.m_secureAction.createURL(null, "http:", extensionManager),
-                "http://felix.extensions:9/", extensionManager),
-                Felix.class.getClassLoader());
-        }
-        catch (Throwable ex)
-        {
-            // extension bundles will not be supported.
-            extensionManager = null;
-        }
         m_extensionManager = extensionManager;
     }
 
