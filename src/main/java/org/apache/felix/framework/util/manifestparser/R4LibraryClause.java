@@ -68,10 +68,11 @@ public class R4LibraryClause
     private static final String OS_WINDOWS_XP = "windowsxp";
     private static final String OS_WIN_32 = "win32";
 
-    /* Storing the OS names in a map as this is quicker to look up.
+    /* Storing the OS names in a map as this is quicker to look up than a list.
      */
     private static final Map<String, String> NORMALIZED_OS_NAMES;
-    static {
+    static
+    {
         Map<String, String> m = new HashMap<String, String>();
         m.put(OS_AIX, "");
         m.put(OS_DIGITALUNIX, "");
