@@ -18,15 +18,93 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.felix.framework.util.VersionRange;
-import org.osgi.framework.*;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.Version;
 
 public class R4LibraryClause
 {
+    private static final String OS_AIX = "aix";
+    private static final String OS_DIGITALUNIX = "digitalunix";
+    private static final String OS_HPUX = "hpux";
+    private static final String OS_IRIX = "irix";
+    private static final String OS_LINUX = "linux";
+    private static final String OS_MACOS = "macos";
+    private static final String OS_NETBSD = "netbsd";
+    private static final String OS_NETWARE = "netware";
+    private static final String OS_OPENBSD = "openbsd";
+    private static final String OS_OS2 = "os2";
+    private static final String OS_QNX = "qnx";
+    private static final String OS_SOLARIS = "solaris";
+    private static final String OS_SUNOS = "sunos";
+    private static final String OS_VXWORKS = "vxworks";
+    private static final String OS_WINDOWS_2000 = "windows2000";
+    private static final String OS_WINDOWS_2003 = "windows2003";
+    private static final String OS_WINDOWS_7 = "windows7";
+    private static final String OS_WINDOWS_8 = "windows8";
+    private static final String OS_WINDOWS_9 = "windows9";
+    private static final String OS_WINDOWS_95 = "windows95";
+    private static final String OS_WINDOWS_98 = "windows98";
+    private static final String OS_WINDOWS_CE = "windowsce";
+    private static final String OS_WINDOWS_NT = "windowsnt";
+    private static final String OS_WINDOWS_SERVER_2008 = "windowsserver2008";
+    private static final String OS_WINDOWS_SERVER_2012 = "windowsserver2012";
+    private static final String OS_WINDOWS_VISTA = "windowsvista";
+    private static final String OS_WINDOWS_XP = "windowsxp";
+    private static final String OS_WIN_32 = "win32";
+
+    /* Storing the OS names in a map as this is quicker to look up.
+     */
+    private static final Map<String, String> NORMALIZED_OS_NAMES;
+    static {
+        Map<String, String> m = new HashMap<String, String>();
+        m.put(OS_AIX, "");
+        m.put(OS_DIGITALUNIX, "");
+        m.put(OS_HPUX, "");
+        m.put(OS_IRIX, "");
+        m.put(OS_LINUX, "");
+        m.put(OS_MACOS, "");
+        m.put(OS_NETBSD, "");
+        m.put(OS_NETWARE, "");
+        m.put(OS_OPENBSD, "");
+        m.put(OS_OS2, "");
+        m.put(OS_QNX, "");
+        m.put(OS_SOLARIS, "");
+        m.put(OS_SUNOS, "");
+        m.put(OS_VXWORKS, "");
+        m.put(OS_WINDOWS_2000, "");
+        m.put(OS_WINDOWS_2003, "");
+        m.put(OS_WINDOWS_7, "");
+        m.put(OS_WINDOWS_8, "");
+        m.put(OS_WINDOWS_9, "");
+        m.put(OS_WINDOWS_95, "");
+        m.put(OS_WINDOWS_98, "");
+        m.put(OS_WINDOWS_CE, "");
+        m.put(OS_WINDOWS_NT, "");
+        m.put(OS_WINDOWS_SERVER_2008, "");
+        m.put(OS_WINDOWS_SERVER_2012, "");
+        m.put(OS_WINDOWS_VISTA, "");
+        m.put(OS_WINDOWS_XP, "");
+        m.put(OS_WIN_32, "");
+
+        NORMALIZED_OS_NAMES = Collections.unmodifiableMap(m);
+    }
+
     private final String[] m_libraryEntries;
     private final String[] m_osnames;
     private final String[] m_processors;
@@ -134,12 +212,12 @@ public class R4LibraryClause
 
     private boolean checkOSNames(String currentOSName, String[] osnames)
     {
-        boolean win32 = currentOSName.startsWith("win") && !currentOSName.equals("windowsce");
+        boolean win32 = currentOSName.startsWith("win") && !currentOSName.equals(OS_WINDOWS_CE);
 
         for (int i = 0; (osnames != null) && (i < osnames.length); i++)
         {
             if (osnames[i].equals(currentOSName) ||
-                ("win32".equals(osnames[i]) && win32))
+                (OS_WIN_32.equals(osnames[i]) && win32))
             {
                 return true;
             }
@@ -340,6 +418,12 @@ public class R4LibraryClause
 
     public static String normalizeOSName(String value)
     {
+        if (NORMALIZED_OS_NAMES.containsKey(value))
+        {
+            // Already normalized
+            return value;
+        }
+
         value = value.toLowerCase();
 
         if (value.startsWith("win"))
@@ -347,117 +431,117 @@ public class R4LibraryClause
             String os = "win";
             if (value.indexOf("32") >= 0 || value.indexOf("*") >= 0)
             {
-                os = "win32";
+                os = OS_WIN_32;
             }
             else if (value.indexOf("95") >= 0)
             {
-                os = "windows95";
+                os = OS_WINDOWS_95;
             }
             else if (value.indexOf("98") >= 0)
             {
-                os = "windows98";
+                os = OS_WINDOWS_98;
             }
             else if (value.indexOf("nt") >= 0)
             {
-                os = "windowsnt";
+                os = OS_WINDOWS_NT;
             }
             else if (value.indexOf("2000") >= 0)
             {
-                os = "windows2000";
+                os = OS_WINDOWS_2000;
             }
             else if (value.indexOf("2003") >= 0)
             {
-                os = "windows2003";
+                os = OS_WINDOWS_2003;
             }
             else if (value.indexOf("2008") >= 0)
             {
-                os = "windowsserver2008";
+                os = OS_WINDOWS_SERVER_2008;
             }
             else if (value.indexOf("2012") >= 0)
             {
-                os = "windowsserver2012";
+                os = OS_WINDOWS_SERVER_2012;
             }
             else if (value.indexOf("xp") >= 0)
             {
-                os = "windowsxp";
+                os = OS_WINDOWS_XP;
             }
             else if (value.indexOf("ce") >= 0)
             {
-                os = "windowsce";
+                os = OS_WINDOWS_CE;
             }
             else if (value.indexOf("vista") >= 0)
             {
-                os = "windowsvista";
+                os = OS_WINDOWS_VISTA;
             }
             else if ((value.indexOf(" 7") >= 0) || value.equals("win7"))
             {
-                os = "windows7";
+                os = OS_WINDOWS_7;
             }
             else if ((value.indexOf(" 8") >= 0) || value.equals("win8"))
             {
-                os = "windows8";
+                os = OS_WINDOWS_8;
             }
             else if ((value.indexOf(" 9") >= 0) || value.equals("win9"))
             {
-                os = "windows9";
+                os = OS_WINDOWS_9;
             }
             return os;
         }
-        else if (value.startsWith("linux"))
+        else if (value.startsWith(OS_LINUX))
         {
-            return "linux";
+            return OS_LINUX;
         }
-        else if (value.startsWith("aix"))
+        else if (value.startsWith(OS_AIX))
         {
-            return "aix";
+            return OS_AIX;
         }
-        else if (value.startsWith("digitalunix"))
+        else if (value.startsWith(OS_DIGITALUNIX))
         {
-            return "digitalunix";
+            return OS_DIGITALUNIX;
         }
-        else if (value.startsWith("hpux"))
+        else if (value.startsWith(OS_HPUX))
         {
-            return "hpux";
+            return OS_HPUX;
         }
-        else if (value.startsWith("irix"))
+        else if (value.startsWith(OS_IRIX))
         {
-            return "irix";
+            return OS_IRIX;
         }
-        else if (value.startsWith("macos") || value.startsWith("mac os"))
+        else if (value.startsWith(OS_MACOS) || value.startsWith("mac os"))
         {
-            return "macos";
+            return OS_MACOS;
         }
-        else if (value.startsWith("netware"))
+        else if (value.startsWith(OS_NETWARE))
         {
-            return "netware";
+            return OS_NETWARE;
         }
-        else if (value.startsWith("openbsd"))
+        else if (value.startsWith(OS_OPENBSD))
         {
-            return "openbsd";
+            return OS_OPENBSD;
         }
-        else if (value.startsWith("netbsd"))
+        else if (value.startsWith(OS_NETBSD))
         {
-            return "netbsd";
+            return OS_NETBSD;
         }
-        else if (value.startsWith("os2") || value.startsWith("os/2"))
+        else if (value.startsWith(OS_OS2) || value.startsWith("os/2"))
         {
-            return "os2";
+            return OS_OS2;
         }
-        else if (value.startsWith("qnx") || value.startsWith("procnto"))
+        else if (value.startsWith(OS_QNX) || value.startsWith("procnto"))
         {
-            return "qnx";
+            return OS_QNX;
         }
-        else if (value.startsWith("solaris"))
+        else if (value.startsWith(OS_SOLARIS))
         {
-            return "solaris";
+            return OS_SOLARIS;
         }
-        else if (value.startsWith("sunos"))
+        else if (value.startsWith(OS_SUNOS))
         {
-            return "sunos";
+            return OS_SUNOS;
         }
-        else if (value.startsWith("vxworks"))
+        else if (value.startsWith(OS_VXWORKS))
         {
-            return "vxworks";
+            return OS_VXWORKS;
         }
         return value;
     }
