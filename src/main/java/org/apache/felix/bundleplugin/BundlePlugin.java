@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
@@ -223,6 +224,11 @@ public class BundlePlugin extends AbstractMojo
      */
     private MavenSession m_mavenSession;
 
+    /**
+     * @parameter
+     */
+    private boolean niceManifest = false;
+
     private static final String MAVEN_SYMBOLICNAME = "maven-symbolicname";
     private static final String MAVEN_RESOURCES = "{maven-resources}";
     private static final String LOCAL_PACKAGES = "{local-packages}";
@@ -419,7 +425,15 @@ public class BundlePlugin extends AbstractMojo
                 try
                 {
                     Manifest manifest = builder.getJar().getManifest();
-                    ManifestPlugin.writeManifest( manifest, outputFile );
+                    FileOutputStream fos = new FileOutputStream( outputFile );
+                    try
+                    {
+                        ManifestWriter.outputManifest( manifest, fos, niceManifest );
+                    }
+                    finally
+                    {
+                        fos.close();
+                    }
                 }
                 catch ( IOException e )
                 {
@@ -660,13 +674,13 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
-    protected static StringBuilder dumpManifest( Manifest manifest, StringBuilder buf )
+    protected StringBuilder dumpManifest( Manifest manifest, StringBuilder buf )
     {
         try
         {
             buf.append( "#-----------------------------------------------------------------------" + NL );
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            Jar.writeManifest( manifest, out ); // manifest encoding is UTF8
+            ManifestWriter.outputManifest( manifest, out, false ); // manifest encoding is UTF8
             buf.append( out.toString( "UTF8" ) );
             buf.append( "#-----------------------------------------------------------------------" + NL );
         }
