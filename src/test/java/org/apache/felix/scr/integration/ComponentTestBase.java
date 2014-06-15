@@ -127,6 +127,8 @@ public abstract class ComponentTestBase
 
     protected static boolean NONSTANDARD_COMPONENT_FACTORY_BEHAVIOR = false;
     protected volatile Log log;
+
+	protected static String[] ignoredWarnings; //null unless you need it.
     
     //set to true to only get last 1000 lines of log.
     protected static boolean restrictedLogging;
@@ -186,7 +188,7 @@ public abstract class ComponentTestBase
     @Before
     public void setUp() throws BundleException
     {
-        log = new Log(restrictedLogging);
+        log = new Log(restrictedLogging, ignoredWarnings);
         log.start();
         bundleContext.addFrameworkListener( log );
         bundleContext.registerService( LogService.class.getName(), log, null );
@@ -253,16 +255,16 @@ public abstract class ComponentTestBase
         {
         	TestCase.fail("no ServiceComponentRuntime");
         }
-        	ComponentDescriptionDTO cd = scr.getComponentDescriptionDTO(bundle, name);
-        	Collection<ComponentConfigurationDTO> ccs = scr.getComponentConfigurationDTOs(cd);
-        	if (expected != -1)
+        ComponentDescriptionDTO cd = scr.getComponentDescriptionDTO(b, name);
+        Collection<ComponentConfigurationDTO> ccs = scr.getComponentConfigurationDTOs(cd);
+        if (expected != -1)
+        {
+        	for (ComponentConfigurationDTO cc: ccs)
         	{
-        		for (ComponentConfigurationDTO cc: ccs)
-        		{
-        	    	Assert.assertEquals( "for ComponentConfiguration name: " + cc.description.name + " properties" + cc.properties + "Expected state " + STATES.get(expected) + " but was " + STATES.get(cc.state), expected, cc.state);        			
-        		}
+        		Assert.assertEquals( "for ComponentConfiguration name: " + cc.description.name + " properties" + cc.properties + "Expected state " + STATES.get(expected) + " but was " + STATES.get(cc.state), expected, cc.state);        			
         	}
-        	return ccs;
+        }
+        return ccs;
     }
     
     protected Collection<ComponentConfigurationDTO> findComponentConfigurationsByName( String name, int expected )
@@ -895,6 +897,7 @@ public abstract class ComponentTestBase
         private volatile Thread m_logThread;
         private volatile PrintStream m_realOut;
         private volatile PrintStream m_realErr;
+        private String[] ignoredWarnings;
 
         protected Throwable firstFrameworkThrowable;
 
@@ -902,9 +905,10 @@ public abstract class ComponentTestBase
         private final String[] log = new String[1000];
         private int i = 0;
 
-        public Log( boolean restrictedLogging )
+        public Log( boolean restrictedLogging, String[] ignoredWarnings )
         {
             this.restrictedLogging = restrictedLogging;
+            this.ignoredWarnings = ignoredWarnings;
         }
 
         public void start()
@@ -971,7 +975,7 @@ public abstract class ComponentTestBase
                     entry = m_logQueue.take();
                     if ( entry.getLevel() <= 2 )
                     {
-                        if ( m_warnings.size() < 1024 )
+                        if ( m_warnings.size() < 1024 && acceptWarning( entry.getMessage() ) )
                         {
                             m_warnings.add( entry.getMessage() );
                         }
@@ -1017,7 +1021,19 @@ public abstract class ComponentTestBase
 
         // ------------- FrameworkListener -----------------------------------------------------------
 
-        public void frameworkEvent( final FrameworkEvent event )
+        private boolean acceptWarning(String message) {
+        	if ( ignoredWarnings != null )
+        	{
+				for (String ignore : ignoredWarnings) {
+					if (message.contains(ignore)) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+
+		public void frameworkEvent( final FrameworkEvent event )
         {
             int eventType = event.getType();
             String msg = getFrameworkEventMessage( eventType );

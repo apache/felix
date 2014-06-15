@@ -14,7 +14,7 @@
 		name='org.apache.felix.scr.integration.components.Felix4188Component-2' activate='start' deactivate='stop'>
         <implementation class="org.apache.felix.scr.integration.components.felix4188.Felix4188Component" />
         <service>
-            <provide>org.apache.felix.scr.integration.components.felix4188.Felix4188Component</provide>
+            <provide interface="org.apache.felix.scr.integration.components.felix4188.Felix4188Component"/>
         </service>
 	</scr:component>
 </components>
