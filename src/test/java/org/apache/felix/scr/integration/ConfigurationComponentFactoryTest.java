@@ -82,7 +82,7 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
 
         // modify the configuration
         Configuration config = getConfigurationAdmin().getConfiguration( factoryConfigPid );
-        Dictionary props = config.getProperties();
+        Dictionary<String, Object> props = config.getProperties();
         props.put( PROP_NAME, PROP_NAME_FACTORY );
         config.update( props );
         delay();
@@ -98,12 +98,9 @@ public class ConfigurationComponentFactoryTest extends ComponentTestBase
         disableAndCheck(componentname);
         delay();
 
-        // factory is disabled and so is the instance
-        // enabled the factory
-        getConfigurationsDisabledThenEnable(componentname, 0, -1);
+        // enabled the factory, factory configuration results in component instance
+        getConfigurationsDisabledThenEnable(componentname, 1, ComponentConfigurationDTO.ACTIVE);
 
-        // check registered components
-        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);
 
         // delete the configuration
         getConfigurationAdmin().getConfiguration( factoryConfigPid ).delete();
