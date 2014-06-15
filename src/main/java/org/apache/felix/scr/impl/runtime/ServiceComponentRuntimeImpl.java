@@ -133,6 +133,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 
 	private BoundReferenceDTO[] refManagersToDTO(List<? extends ReferenceManager<?, ?>> referenceManagers) {
 		BoundReferenceDTO[] dtos = new BoundReferenceDTO[referenceManagers.size()];
+		int i = 0;
 		for (ReferenceManager<?, ?> ref: referenceManagers)
 		{
 			BoundReferenceDTO dto = new BoundReferenceDTO();
@@ -140,12 +141,13 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 			dto.target = ref.getTarget();
 			List<ServiceReference<?>> serviceRefs = ref.getServiceReferences();
 			ServiceReferenceDTO[] srDTOs = new ServiceReferenceDTO[serviceRefs.size()];
-			int i = 0;
+			int j = 0;
 			for (ServiceReference<?> serviceRef: serviceRefs)
 			{
-				srDTOs[i++] = serviceReferenceToDTO(serviceRef);
+				srDTOs[j++] = serviceReferenceToDTO(serviceRef);
 			}
 			dto.serviceReferences = srDTOs;
+			dtos[i++] = dto;
 		}
 		return dtos;
 	}
@@ -209,7 +211,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 			dto.target = r.getTarget();
 			dto.unbind = r.getUnbind();
 			dto.updated = r.getUpdated();
-			dtos[i] = dto;
+			dtos[i++] = dto;
 		}
 		return dtos;
 	}

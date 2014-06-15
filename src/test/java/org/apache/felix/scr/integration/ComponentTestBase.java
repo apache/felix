@@ -60,6 +60,8 @@ import javax.inject.Inject;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
+import org.apache.felix.scr.impl.ScrCommand;
+import org.apache.felix.scr.impl.config.ScrConfiguration;
 import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.After;
 import org.junit.Before;
@@ -683,131 +685,27 @@ public abstract class ComponentTestBase
     public void testDescription()
     {
         PrintStream out = System.out;
-        info( out );
+        info( new PrintWriter(out) );
+    }
+    
+    private static class InfoWriter extends ScrCommand
+    {
+
+        protected InfoWriter(ServiceComponentRuntime scrService)
+        {
+            super(null, scrService, null);
+        }
+        
     }
 
-    void info( PrintStream out )
+    void info( PrintWriter out )
     {
-//        Component[] components = getComponentDescriptions();
-//        if ( components == null )
-//        {
-//            return;
-//        }
-//
-//        for ( int j = 0; j < components.length; j++ )
-//        {
-//            Component component = components[j];
-//            out.print( "ID: " );
-//            out.println( component.getId() );
-//            out.print( "Name: " );
-//            out.println( component.getName() );
-//            out.print( "Bundle: " );
-//            out.println( component.getBundle().getSymbolicName() + " (" + component.getBundle().getBundleId() + ")" );
-//            out.print( "State: " );
-//            out.println( toStateString( component.getState() ) );
-//            out.print( "Default State: " );
-//            out.println( component.isDefaultEnabled() ? "enabled" : "disabled" );
-//            out.print( "Activation: " );
-//            out.println( component.isImmediate() ? "immediate" : "delayed" );
-//
-//            // DS 1.1 new features
-//            out.print( "Configuration Policy: " );
-//            out.println( component.getConfigurationPolicy() );
-//            out.print( "Activate Method: " );
-//            out.print( component.getActivate() );
-//            if ( component.isActivateDeclared() )
-//            {
-//                out.print( " (declared in the descriptor)" );
-//            }
-//            out.println();
-//            out.print( "Deactivate Method: " );
-//            out.print( component.getDeactivate() );
-//            if ( component.isDeactivateDeclared() )
-//            {
-//                out.print( " (declared in the descriptor)" );
-//            }
-//            out.println();
-//            out.print( "Modified Method: " );
-//            if ( component.getModified() != null )
-//            {
-//                out.print( component.getModified() );
-//            }
-//            else
-//            {
-//                out.print( "-" );
-//            }
-//            out.println();
-//
-//            if ( component.getFactory() != null )
-//            {
-//                out.print( "Factory: " );
-//                out.println( component.getFactory() );
-//            }
-//
-//            String[] services = component.getServices();
-//            if ( services != null )
-//            {
-//                out.print( "Services: " );
-//                out.println( services[0] );
-//                for ( int i = 1; i < services.length; i++ )
-//                {
-//                    out.print( "          " );
-//                    out.println( services[i] );
-//                }
-//                out.print( "Service Scope: " );
-//                out.println( component.getServiceScope() );
-//            }
-//
-//            Reference[] refs = component.getReferences();
-//            if ( refs != null )
-//            {
-//                for ( int i = 0; i < refs.length; i++ )
-//                {
-//                    out.print( "Reference: " );
-//                    out.println( refs[i].getName() );
-//                    out.print( "    Satisfied: " );
-//                    out.println( refs[i].isSatisfied() ? "satisfied" : "unsatisfied" );
-//                    out.print( "    Service Name: " );
-//                    out.println( refs[i].getServiceName() );
-//                    if ( refs[i].getTarget() != null )
-//                    {
-//                        out.print( "    Target Filter: " );
-//                        out.println( refs[i].getTarget() );
-//                    }
-//                    out.print( "    Multiple: " );
-//                    out.println( refs[i].isMultiple() ? "multiple" : "single" );
-//                    out.print( "    Optional: " );
-//                    out.println( refs[i].isOptional() ? "optional" : "mandatory" );
-//                    out.print( "    Policy: " );
-//                    out.println( refs[i].isStatic() ? "static" : "dynamic" );
-//                    out.print( "    Policy option: " );
-//                    out.println( refs[i].isReluctant() ? "reluctant" : "greedy" );
-//                }
-//            }
-//
-//            Dictionary props = component.getProperties();
-//            if ( props != null )
-//            {
-//                out.println( "Properties:" );
-//                TreeSet keys = new TreeSet( Collections.list( props.keys() ) );
-//                for ( Iterator ki = keys.iterator(); ki.hasNext(); )
-//                {
-//                    Object key = ki.next();
-//                    out.print( "    " );
-//                    out.print( key );
-//                    out.print( " = " );
-//
-//                    Object prop = props.get( key );
-//                    if ( prop.getClass().isArray() )
-//                    {
-//                        prop = Arrays.asList( ( Object[] ) prop );
-//                    }
-//                    out.print( prop );
-//
-//                    out.println();
-//                }
-//            }
-//        }
+        ServiceComponentRuntime scr = scrTracker.getService();
+        if ( scr == null )
+        {
+            TestCase.fail("no ServiceComponentRuntime");
+        }
+        new InfoWriter(scr).list(null, out);
     }
     
     protected boolean isAtLeastR5() 
