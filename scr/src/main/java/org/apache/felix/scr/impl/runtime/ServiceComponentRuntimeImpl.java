@@ -2,6 +2,7 @@ package org.apache.felix.scr.impl.runtime;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -56,14 +57,24 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 		return result;
 	}
 
-	public ComponentDescriptionDTO getComponentDescriptionDTO(Bundle bundle,
-			String name) {
+	public ComponentDescriptionDTO getComponentDescriptionDTO(Bundle bundle, String name) {
 		ComponentHolder<?> holder = componentRegistry.getComponentHolder(bundle, name);
-		return holderToDescription(holder);
+		if ( holder != null )
+		{
+			return holderToDescription(holder);
+		}
+		else 
+		{
+			return null;
+		}
 	}
 
 	public Collection<ComponentConfigurationDTO> getComponentConfigurationDTOs(
 			ComponentDescriptionDTO description) {
+		if ( description == null)
+		{
+			return Collections.emptyList();
+		}
 		ComponentHolder<?> holder = getHolderFromDescription( description);
 		//Get a fully filled out valid description DTO
 		description = holderToDescription(holder);
@@ -130,7 +141,7 @@ public class ServiceComponentRuntimeImpl implements ServiceComponentRuntime {
 		return dto;
 	}
 
-	private ComponentHolder getHolderFromDescription(
+	private ComponentHolder<?> getHolderFromDescription(
 			ComponentDescriptionDTO description) {
 		if (description.bundle == null)
 		{
