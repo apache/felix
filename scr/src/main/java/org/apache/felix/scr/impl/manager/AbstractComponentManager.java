@@ -703,7 +703,7 @@ public abstract class AbstractComponentManager<S> implements Component, SimpleLo
         return m_componentMetadata.getConfigurationPolicy();
     }
 
-    public String getConfigurationPid()
+    public List<String> getConfigurationPid()
     {
         return m_componentMetadata.getConfigurationPid();
     }

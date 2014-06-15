@@ -20,6 +20,7 @@ package org.apache.felix.scr.impl.config;
 
 
 import java.util.Dictionary;
+import java.util.List;
 
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.impl.BundleComponentActivator;
@@ -66,34 +67,35 @@ public interface ComponentHolder<S>
 
     /**
      * Configure a component with configuration from the given PID.
-     *
-     * @param pid The PID of the configuration used to configure the component.
+     * @param targetedPid Targeted PID for the configuration
+     * @param factoryTargetedPid TODO
      * @param props the property dictionary from the configuration.
      * @param changeCount change count of the configuration, or R4 imitation.
-     * @param targetedPid Targeted PID for the configuration
+     *
      * @return true if a new component is created for a factory PID, false if an existing factory pid configuration is updated or 
      * we have no factory pid
      */
-    boolean configurationUpdated( String pid, Dictionary<String, Object> props, long changeCount, TargetedPID targetedPid );
+    boolean configurationUpdated( TargetedPID targetedPid, TargetedPID factoryTargetedPid, Dictionary<String, Object> props, long changeCount );
     
     /**
      * Change count (or fake R4 imitation)
      * @param pid PID of the component we are interested in.
      * @return the last change count from a configurationUpdated call for the given pid.
      */
-    long getChangeCount( String pid );
+    long getChangeCount( TargetedPID pid );
     
     /**
      * Returns the targeted PID used to configure this component
      * @param pid a targetedPID containing the service pid for the component desired (the rest of the targeted pid is ignored)
+     * @param factoryPid TODO
      * @return the complete targeted pid actually used to configure the comonent.
      */
-    TargetedPID getConfigurationTargetedPID(TargetedPID pid);
+    TargetedPID getConfigurationTargetedPID(TargetedPID pid, TargetedPID factoryPid);
 
     /**
      * Returns all <code>Component</code> instances held by this holder.
      */
-    Component[] getComponents();
+    List<? extends Component> getComponents();
 
     /**
      * Enables all components of this holder and if satisifed activates

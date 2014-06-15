@@ -27,6 +27,7 @@ import junit.framework.TestCase;
 
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+import org.apache.felix.scr.impl.metadata.XmlHandler;
 import org.apache.felix.scr.impl.metadata.instances.AcceptMethod;
 import org.apache.felix.scr.impl.metadata.instances.BaseObject;
 import org.apache.felix.scr.impl.metadata.instances.Level1Object;
@@ -263,13 +264,7 @@ public class ActivateMethodTest extends TestCase
      */
     private void checkMethod( BaseObject obj, String methodName, String methodDesc )
     {
-        ComponentMetadata metadata = new ComponentMetadata( 0 )
-        {
-            public boolean isDS11()
-            {
-                return true;
-            }
-        };
+        ComponentMetadata metadata = newMetadata();
         SingleComponentManager icm = new SingleComponentManager( null, null, metadata, new ComponentMethods() );
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), true, false );
         am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), null, icm );
@@ -278,6 +273,15 @@ public class ActivateMethodTest extends TestCase
         assertEquals( methodName, m.getName() );
         assertEquals( methodDesc, obj.getCalledMethod() );
     }
+
+
+	private ComponentMetadata newMetadata() {
+		ComponentMetadata metadata = new ComponentMetadata( XmlHandler.DS_VERSION_1_1 );
+        metadata.setName("foo");
+        metadata.setImplementationClassName(Object.class.getName());
+        metadata.validate(null);
+		return metadata;
+	}
 
 
     /**
@@ -291,13 +295,7 @@ public class ActivateMethodTest extends TestCase
      */
     private void ensureMethodNotFoundMethod( BaseObject obj, String methodName )
     {
-        ComponentMetadata metadata = new ComponentMetadata( 0 )
-        {
-            public boolean isDS11()
-            {
-                return true;
-            }
-        };
+        ComponentMetadata metadata = newMetadata();
         SingleComponentManager icm = new SingleComponentManager( null, null, metadata, new ComponentMethods() );
         ActivateMethod am = new ActivateMethod( methodName, methodName != null, obj.getClass(), true, false );
         am.invoke( obj, new ActivateMethod.ActivatorParameter( m_ctx, -1 ), null, icm );
