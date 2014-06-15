@@ -79,6 +79,8 @@ public class Activator extends AbstractExtender
     
     private ServiceRegistration<ServiceComponentRuntime> m_runtime_reg;
 
+    private ScrCommand m_scrCommand;
+
     public Activator() {
         m_configuration = new ScrConfiguration( this );
         setSynchronous(true);
@@ -156,10 +158,8 @@ public class Activator extends AbstractExtender
 
         super.doStart();
 
-        //TODO register runtime.  Possibly register obsolete stuff too.
-        // register the Gogo and old Shell commands
-//        ScrCommand scrCommand = ScrCommand.register(m_context, m_componentRegistry, m_configuration);
-//        m_configuration.setScrCommand( scrCommand );
+        m_scrCommand = ScrCommand.register(m_context, runtime, m_configuration);
+        m_configuration.setScrCommand( m_scrCommand );
     }
     
     public void stop(BundleContext context) throws Exception
@@ -180,6 +180,11 @@ public class Activator extends AbstractExtender
         // stop tracking
         super.doStop();
 
+        if (m_scrCommand !=  null)
+        {
+            m_scrCommand.unregister();
+            m_scrCommand = null;
+        }
     	if (m_runtime_reg != null)
     	{
 			m_runtime_reg.unregister();

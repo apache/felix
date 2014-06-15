@@ -236,6 +236,11 @@ public class ScrConfiguration
     {
         return stopTimeout;
     }
+    
+    public boolean globalExtender()
+    {
+        return globalExtender;
+    }
 
     private boolean getDefaultFactoryEnabled()
     {
