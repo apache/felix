@@ -770,7 +770,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
                     if ( !getTracker().isEmpty() )
                     {
                         AtomicInteger trackingCount2 = new AtomicInteger();
-                        SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true,
+                        SortedMap<ServiceReference<T>, RefPair<T>> tracked = getTracker().getTracked( true, //TODO true here looks odd.
                                 trackingCount2 );
                         nextRefPair = tracked.values().iterator().next();
                     }
