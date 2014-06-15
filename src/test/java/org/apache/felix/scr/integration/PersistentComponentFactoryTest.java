@@ -19,35 +19,30 @@
 package org.apache.felix.scr.integration;
 
 
-import java.io.IOException;
-import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.apache.felix.scr.Component;
 import org.apache.felix.scr.integration.components.SimpleComponent;
+import org.apache.felix.scr.integration.components.SimpleService;
 import org.apache.felix.scr.integration.components.SimpleServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.component.ComponentFactory;
 import org.osgi.service.component.ComponentInstance;
+import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.log.LogService;
 
 
 @RunWith(JUnit4TestRunner.class)
 public class PersistentComponentFactoryTest extends ComponentTestBase
 {
-
-    private static final String PROP_NAME_FACTORY = ComponentTestBase.PROP_NAME + ".factory";
 
     static
     {
@@ -62,70 +57,21 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         final String componentname = "factory.component";
         final String componentfactory = "factory.component.factory";
 
-        final Component component = findComponentDescriptorByName( componentname );
+        getConfigurationsDisabledThenEnable(componentname, 0, -1);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
-        TestCase.assertNotNull( refs );
-        TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
-        TestCase.assertNotNull( factory );
-
-        Hashtable<String, String> props = new Hashtable<String, String>();
-        props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
-        final ComponentInstance instance = factory.newInstance( props );
-        TestCase.assertNotNull( instance );
-
-        TestCase.assertNotNull( instance.getInstance() );
-        TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
-        TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
-
-        final Map<?, ?> instanceMap = ( Map<?, ?> ) getFieldValue( component, "m_componentInstances" );
-        TestCase.assertNotNull( instanceMap );
-        TestCase.assertEquals( 1, instanceMap.size() );
-
-        final Object instanceManager = getComponentManagerFromExtComponentInstance( instance );
-        TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
+        final ComponentInstance instance = createFactoryComponentInstance(componentfactory);
 
         // check registered components
-        final Component[] allFactoryComponents = findComponentConfigurationsByName( componentname, -1 );
-        TestCase.assertNotNull( allFactoryComponents );
-        TestCase.assertEquals( 2, allFactoryComponents.length );
-        for ( int i = 0; i < allFactoryComponents.length; i++ )
-        {
-            final Component c = allFactoryComponents[i];
-            if ( c.getId() == component.getId() )
-            {
-                TestCase.assertEquals( Component.STATE_FACTORY, c.getState() );
-            }
-            else if ( c.getId() == SimpleComponent.INSTANCE.m_id )
-            {
-                TestCase.assertEquals( Component.STATE_ACTIVE, c.getState() );
-            }
-            else
-            {
-                TestCase.fail( "Unexpected Component " + c );
-            }
-        }
+        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);
 
         instance.dispose();
         TestCase.assertNull( SimpleComponent.INSTANCE );
         TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
+        
+        checkConfigurationCount(componentname, 0, ComponentConfigurationDTO.ACTIVE);
 
-        TestCase.assertEquals( 0, instanceMap.size() );
-        TestCase.assertFalse( instanceMap.containsValue( instanceManager ) );
     }
 
 
@@ -137,59 +83,25 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         final String componentname = "factory.component";
         final String componentfactory = "factory.component.factory";
 
-        final Component component = findComponentDescriptorByName( componentname );
+        getConfigurationsDisabledThenEnable(componentname, 0, -1);
 
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        component.enable();
-        delay();
+        final ComponentInstance instance = createFactoryComponentInstance(componentfactory);
 
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
-        TestCase.assertNotNull( refs );
-        TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
-        TestCase.assertNotNull( factory );
-
-        Hashtable<String, String> props = new Hashtable<String, String>();
-        props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
-        final ComponentInstance instance = factory.newInstance( props );
-        TestCase.assertNotNull( instance );
-
-        TestCase.assertNotNull( instance.getInstance() );
-        TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
-        TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
-
-        final Map<?, ?> instanceMap = ( Map<?, ?> ) getFieldValue( component, "m_componentInstances" );
-        TestCase.assertNotNull( instanceMap );
-        TestCase.assertEquals( 1, instanceMap.size() );
-
-        final Object instanceManager = getComponentManagerFromExtComponentInstance( instance );
-        TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
+        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);
 
         // disable the factory
-        component.disable();
+        disableAndCheck(componentname);
         delay();
 
         // factory is disabled but the instance is still alive
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
         TestCase.assertNotNull( SimpleComponent.INSTANCE );
-        TestCase.assertEquals( 1, instanceMap.size() );
-        TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
 
         instance.dispose();
         TestCase.assertNull( SimpleComponent.INSTANCE );
         TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
 
-        TestCase.assertEquals( 0, instanceMap.size() );
-        TestCase.assertFalse( instanceMap.containsValue( instanceManager ) );
     }
 
 
@@ -199,37 +111,19 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         final String componentname = "factory.component";
         final String componentfactory = "factory.component.factory";
 
-        final Component component = findComponentDescriptorByName( componentname );
-
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        getConfigurationsDisabledThenEnable(componentname, 0, -1);
         TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
-        TestCase.assertNotNull( refs );
-        TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
-        TestCase.assertNotNull( factory );
 
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
         props.put( SimpleComponent.PROP_ACTIVATE_FAILURE, "Requested Failure" );
+        final ComponentFactory factory = getComponentFactory(componentfactory);
+
         final ComponentInstance instance = factory.newInstance( props );
         TestCase.assertNotNull( instance );
 
-        final Map<?, ?> instanceMap = ( Map<?, ?> ) getFieldValue( component, "m_componentInstances" );
-        TestCase.assertNotNull( instanceMap );
-        TestCase.assertEquals( 1, instanceMap.size() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
+
+        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.SATISFIED);
     }
 
 
@@ -243,47 +137,23 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         deleteConfig( componentname );
         delay();
 
-        final Component component = findComponentDescriptorByName( componentname );
-
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+        getConfigurationsDisabledThenEnable(componentname, 0, -1);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // At this point, since we don't have created the configuration, then the ComponentFactory
         // should not be available.
         
-        ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
-        TestCase.assertNull( refs );
+        checkNoFactory(componentfactory);
         
         // supply configuration now and ensure active
         configure( componentname );
         delay();        
 
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        checkConfigurationCount(componentname, 0, ComponentConfigurationDTO.ACTIVE);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // get the component factory service
-        refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
-        TestCase.assertNotNull( refs );
-        TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
-        TestCase.assertNotNull( factory );
-
-        // create an instance
-        Hashtable<String, String> props = new Hashtable<String, String>();
-        props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
-        final ComponentInstance instance = factory.newInstance( props );
-        TestCase.assertNotNull( instance );
+        final ComponentInstance instance = createFactoryComponentInstance(componentfactory);
 
         final Object instanceObject = instance.getInstance();
         TestCase.assertNotNull( instanceObject );
@@ -291,17 +161,12 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
         TestCase.assertEquals( PROP_NAME, SimpleComponent.INSTANCE.getProperty( PROP_NAME ) );                        
 
-        final Map<?, ?> instanceMap = ( Map<?, ?> ) getFieldValue( component, "m_componentInstances" );
-        TestCase.assertNotNull( instanceMap );
-        TestCase.assertEquals( 1, instanceMap.size() );
-
-        final Object instanceManager = getComponentManagerFromExtComponentInstance( instance );
-        TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
+        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);
 
         // delete config, ensure factory is not active anymore and component instance not changed
         deleteConfig( componentname );
         delay();
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, component.getState() );
+        checkNoFactory(componentfactory);
 
         TestCase.assertNotNull( instance.getInstance() );
         TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
@@ -314,9 +179,9 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
 
         // with removal of the factory, the created instance should also be removed
-        TestCase.assertEquals( 0, instanceMap.size() );
-        TestCase.assertFalse( instanceMap.containsValue( instanceManager ) );
+        checkConfigurationCount(componentname, 0, ComponentConfigurationDTO.ACTIVE);
     }
+
 
     @Test
     public void test_component_factory_reference() throws InvalidSyntaxException
@@ -326,93 +191,40 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
 
         SimpleServiceImpl.create( bundleContext, "ignored" ).setFilterProperty( "ignored" );
 
-        final Component component = findComponentDescriptorByName( componentname );
-
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        component.enable();
-        delay();
-
-        // missing reference, persistent -> created anyway
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
+        getConfigurationsDisabledThenEnable(componentname, 0, -1);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
         // register a service : filterprop=match
         SimpleServiceImpl match = SimpleServiceImpl.create( bundleContext, "required" ).setFilterProperty( "required" );
         delay();
 
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
-        TestCase.assertNotNull( refs );
-        TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
-        TestCase.assertNotNull( factory );
-
-        // non-overwrite filterprop
-        Hashtable<String, String> props = new Hashtable<String, String>();
-        props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
-        final ComponentInstance instance = factory.newInstance( props );
-        TestCase.assertNotNull( instance );
-
-        TestCase.assertNotNull( instance.getInstance() );
-        TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
-        TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
+        final ComponentInstance instance = createFactoryComponentInstance(componentfactory);
         TestCase.assertEquals( 1, SimpleComponent.INSTANCE.m_multiRef.size() );
         TestCase.assertTrue( SimpleComponent.INSTANCE.m_multiRef.contains( match ) );
 
-        final Map<?, ?> instanceMap = ( Map<?, ?> ) getFieldValue( component, "m_componentInstances" );
-        TestCase.assertNotNull( instanceMap );
-        TestCase.assertEquals( 1, instanceMap.size() );
-
-        final Object instanceManager = getComponentManagerFromExtComponentInstance( instance );
-        TestCase.assertTrue( instanceMap.containsValue( instanceManager ) );
-
         // check registered components
-        final Component[] allFactoryComponents = findComponentConfigurationsByName( componentname, -1 );
-        TestCase.assertNotNull( allFactoryComponents );
-        TestCase.assertEquals( 2, allFactoryComponents.length );
-        for ( int i = 0; i < allFactoryComponents.length; i++ )
-        {
-            final Component c = allFactoryComponents[i];
-            if ( c.getId() == component.getId() )
-            {
-                TestCase.assertEquals( Component.STATE_FACTORY, c.getState() );
-            }
-            else if ( c.getId() == SimpleComponent.INSTANCE.m_id )
-            {
-                TestCase.assertEquals( Component.STATE_ACTIVE, c.getState() );
-            }
-            else
-            {
-                TestCase.fail( "Unexpected Component " + c );
-            }
-        }
+        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);
 
         instance.dispose();
         TestCase.assertNull( SimpleComponent.INSTANCE );
         TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
+        checkConfigurationCount(componentname, 0, ComponentConfigurationDTO.ACTIVE);
 
-        TestCase.assertEquals( 0, instanceMap.size() );
-        TestCase.assertFalse( instanceMap.containsValue( instanceManager ) );
 
         // overwritten filterprop
         Hashtable<String, String> propsNonMatch = new Hashtable<String, String>();
         propsNonMatch.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
         propsNonMatch.put( "ref.target", "(filterprop=nomatch)" );
-        final ComponentInstance instanceNonMatch = factory.newInstance( propsNonMatch ); //works even without required dependency
+        ComponentFactory factory = getComponentFactory(componentfactory);
+        final ComponentInstance instanceNonMatch = factory.newInstance( propsNonMatch );//works even without required reference
+        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.UNSATISFIED);
 
         final SimpleServiceImpl noMatch = SimpleServiceImpl.create( bundleContext, "nomatch" ).setFilterProperty(
             "nomatch" );
         delay();
 
-        TestCase.assertNotNull( instanceNonMatch );
 
         TestCase.assertNotNull( instanceNonMatch.getInstance() );
         TestCase.assertEquals( SimpleComponent.INSTANCE, instanceNonMatch.getInstance() );
@@ -422,75 +234,20 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         TestCase.assertTrue( SimpleComponent.INSTANCE.m_multiRef.contains( noMatch ) );
 
         // check registered components
-        final Component[] allFactoryComponents2 = findComponentConfigurationsByName( componentname, -1 );
-        TestCase.assertNotNull( allFactoryComponents2 );
-        TestCase.assertEquals( 2, allFactoryComponents2.length );
-        for ( int i = 0; i < allFactoryComponents2.length; i++ )
-        {
-            final Component c = allFactoryComponents2[i];
-            if ( c.getId() == component.getId() )
-            {
-                TestCase.assertEquals( Component.STATE_FACTORY, c.getState() );
-            }
-            else if ( c.getId() == SimpleComponent.INSTANCE.m_id )
-            {
-                TestCase.assertEquals( Component.STATE_ACTIVE, c.getState() );
-            }
-            else
-            {
-                TestCase.fail( "Unexpected Component " + c + " id: " + c.getId() + " current: " + SimpleComponent.INSTANCE.m_id );
-            }
-        }
+        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);
 
         match.getRegistration().unregister();
         delay();
 
-        // check registered components (ComponentFactory aint no longer)
-        final Component[] allFactoryComponents3 = findComponentConfigurationsByName( componentname, -1 );
-        TestCase.assertNotNull( allFactoryComponents3 );
-        TestCase.assertEquals( 2, allFactoryComponents3.length );
-        long lastId = SimpleComponent.INSTANCE.m_id;
-        for ( int i = 0; i < allFactoryComponents3.length; i++ )
-        {
-            final Component c = allFactoryComponents3[i];
-            if ( c.getId() == component.getId() )
-            {
-                TestCase.assertEquals( Component.STATE_UNSATISFIED, c.getState() );
-            }
-            else if ( c.getId() == lastId )
-            {
-                TestCase.assertEquals( Component.STATE_ACTIVE, c.getState() );
-            }
-            else
-            {
-                TestCase.fail( "Unexpected Component " + c );
-            }
-        }
+        // check registered components (ComponentFactory is still present)
+        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.ACTIVE);
 
         //it has already been deactivated.... this should cause an exception?
         noMatch.getRegistration().unregister();
         delay();
 
         // check registered components (ComponentFactory is still present)
-        final Component[] allFactoryComponents4 = findComponentConfigurationsByName( componentname, -1 );
-        TestCase.assertNotNull( allFactoryComponents4 );
-        TestCase.assertEquals( 2, allFactoryComponents4.length );
-        for ( int i = 0; i < allFactoryComponents4.length; i++ )
-        {
-            final Component c = allFactoryComponents4[i];
-            if ( c.getId() == component.getId() )
-            {
-                TestCase.assertEquals( Component.STATE_UNSATISFIED, c.getState() );
-            }
-            else if ( c.getId() == lastId )
-            {
-                TestCase.assertEquals( Component.STATE_UNSATISFIED, c.getState() );
-            }
-            else
-            {
-                TestCase.fail( "Unexpected Component " + c );
-            }
-        }
+        checkConfigurationCount(componentname, 1, ComponentConfigurationDTO.UNSATISFIED);
 
         // deactivated due to unsatisfied reference
         TestCase.assertNull( instanceNonMatch.getInstance() );
@@ -507,71 +264,38 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
     {
         //set up the component that refers to the service the factory will create.
         final String referringComponentName = "ComponentReferringToFactoryObject";
-        final Component referringComponent = findComponentDescriptorByName( referringComponentName );
-        TestCase.assertNotNull( referringComponent );
-        referringComponent.enable();
-        delay();
-
-        //make sure it's unsatisfied (service is not yet available
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, referringComponent.getState() );
-
+        getConfigurationsDisabledThenEnable(referringComponentName, 1, ComponentConfigurationDTO.UNSATISFIED);
 
         final String componentname = "factory.component.referred";
         final String componentfactory = "factory.component.factory.referred";
 
-        final Component component = findComponentDescriptorByName( componentname );
-
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
+        getConfigurationsDisabledThenEnable(componentname, 0, -1);
         TestCase.assertNull( SimpleComponent.INSTANCE );
 
-        component.enable();
-        delay();
-
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
-        TestCase.assertNotNull( refs );
-        TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
-        TestCase.assertNotNull( factory );
-
-        // create the factory instance
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put( "service.pid", "myFactoryInstance" );
+        final ComponentFactory factory = getComponentFactory(componentfactory);
+
         final ComponentInstance instance = factory.newInstance( props );
         TestCase.assertNotNull( instance );
 
         TestCase.assertNotNull( instance.getInstance() );
-
+        TestCase.assertTrue( instance.getInstance() instanceof SimpleService );
         //The referring service should now be active
-        TestCase.assertEquals( Component.STATE_ACTIVE, referringComponent.getState() );
+        checkConfigurationCount(referringComponentName, 1, ComponentConfigurationDTO.ACTIVE);
 
         instance.dispose();
         TestCase.assertNull( instance.getInstance() ); // SCR 112.12.6.2
 
         //make sure it's unsatisfied (service is no longer available)
-        TestCase.assertEquals( Component.STATE_UNSATISFIED, referringComponent.getState() );
+        checkConfigurationCount(referringComponentName, 1, ComponentConfigurationDTO.UNSATISFIED);
     }
 
     @Test
     public void test_component_factory_with_target_filters() throws InvalidSyntaxException
     {
         final String componentfactory = "factory.component.reference.targetfilter";
-        final Component component = findComponentDescriptorByName( componentfactory );
-
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        component.enable();
-        delay();
+        getConfigurationsDisabledThenEnable(componentfactory, 0, -1);
 
         SimpleServiceImpl s1 = SimpleServiceImpl.create(bundleContext, "service1");
         SimpleServiceImpl s2 = SimpleServiceImpl.create(bundleContext, "service2");
@@ -580,25 +304,12 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         configure( componentfactory );
         delay();        
 
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
         
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
-        TestCase.assertNotNull( refs );
-        TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
-        TestCase.assertNotNull( factory );
-
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
         props.put("ref.target", "(value=service2)");
-        final ComponentInstance instance = factory.newInstance( props );
-        TestCase.assertNotNull( instance );
-
-        TestCase.assertNotNull( instance.getInstance() );
-        TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
-        TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
+        final ComponentInstance instance = createFactoryComponentInstance(componentfactory, props);
 
         log.log(LogService.LOG_WARNING, "Bound Services: " +  SimpleComponent.INSTANCE.m_multiRef);
         TestCase.assertFalse( SimpleComponent.INSTANCE.m_multiRef.contains( s1 ) );
@@ -616,17 +327,7 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
     public void test_component_factory_set_bundle_location_null() throws Exception
     {
         final String componentfactory = "factory.component.reference.targetfilter";
-        final Component component = findComponentDescriptorByName( componentfactory );
-
-        TestCase.assertNotNull( component );
-        TestCase.assertFalse( component.isDefaultEnabled() );
-
-        TestCase.assertEquals( Component.STATE_DISABLED, component.getState() );
-        TestCase.assertNull( SimpleComponent.INSTANCE );
-
-        component.enable();
-        delay();
-
+        getConfigurationsDisabledThenEnable(componentfactory, 0, -1);
         SimpleServiceImpl s1 = SimpleServiceImpl.create(bundleContext, "service1");
 
         ConfigurationAdmin ca = getConfigurationAdmin();
@@ -642,23 +343,11 @@ public class PersistentComponentFactoryTest extends ComponentTestBase
         configure( componentfactory );
         delay();        
 
-        TestCase.assertEquals( Component.STATE_FACTORY, component.getState() );
         TestCase.assertNull( SimpleComponent.INSTANCE );
         
-        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
-            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
-        TestCase.assertNotNull( refs );
-        TestCase.assertEquals( 1, refs.length );
-        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
-        TestCase.assertNotNull( factory );
+        final ComponentFactory factory = getComponentFactory(componentfactory);
         
         s1.drop();
     }
     
-    private Object getComponentManagerFromExtComponentInstance( Object extIinstance )
-    {
-        return getFieldValue( extIinstance, "cm");
-    }
-
-
 }

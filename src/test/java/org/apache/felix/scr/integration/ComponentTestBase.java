@@ -60,6 +60,7 @@ import javax.inject.Inject;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
+import org.apache.felix.scr.integration.components.SimpleComponent;
 import org.junit.After;
 import org.junit.Before;
 import org.ops4j.pax.exam.CoreOptions;
@@ -77,6 +78,9 @@ import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.component.ComponentFactory;
+import org.osgi.service.component.ComponentInstance;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentConfigurationDTO;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
@@ -131,6 +135,8 @@ public abstract class ComponentTestBase
     protected static boolean restrictedLogging;
     
     protected static String felixCaVersion = System.getProperty( "felix.ca.version" );
+
+    protected static final String PROP_NAME_FACTORY = ComponentTestBase.PROP_NAME + ".factory";
 
 
     static
@@ -532,6 +538,55 @@ public abstract class ComponentTestBase
             TestCase.fail( "Failed deleting configurations " + factoryPid + ": " + ioe.toString() );
         }
     }
+    
+    //component factory test helper methods
+    protected ComponentFactory getComponentFactory(final String componentfactory)
+        throws InvalidSyntaxException
+    {
+        final ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
+        TestCase.assertNotNull( refs );
+        TestCase.assertEquals( 1, refs.length );
+        final ComponentFactory factory = ( ComponentFactory ) bundleContext.getService( refs[0] );
+        TestCase.assertNotNull( factory );
+        return factory;
+    }
+
+
+    protected void checkNoFactory(final String componentfactory)
+        throws InvalidSyntaxException
+    {
+        ServiceReference[] refs = bundleContext.getServiceReferences( ComponentFactory.class.getName(), "("
+            + ComponentConstants.COMPONENT_FACTORY + "=" + componentfactory + ")" );
+        TestCase.assertNull( refs );
+    }
+
+    protected ComponentInstance createFactoryComponentInstance(final String componentfactory)
+        throws InvalidSyntaxException
+    {
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put( PROP_NAME_FACTORY, PROP_NAME_FACTORY );
+
+        return createFactoryComponentInstance(componentfactory, props);
+    }
+
+
+    protected ComponentInstance createFactoryComponentInstance(
+        final String componentfactory, Hashtable<String, String> props)
+        throws InvalidSyntaxException
+    {
+        final ComponentFactory factory = getComponentFactory(componentfactory);
+
+        final ComponentInstance instance = factory.newInstance( props );
+        TestCase.assertNotNull( instance );
+
+        TestCase.assertNotNull( instance.getInstance() );
+        TestCase.assertEquals( SimpleComponent.INSTANCE, instance.getInstance() );
+        TestCase.assertEquals( PROP_NAME_FACTORY, SimpleComponent.INSTANCE.getProperty( PROP_NAME_FACTORY ) );
+        return instance;
+    }
+
+
 
 
     protected static Class<?> getType( Object object, String desiredName )
