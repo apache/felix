@@ -413,12 +413,6 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
     }
 
 
-    public boolean hasConfiguration()
-    {
-        return m_configurationProperties != null;
-    }
-
-
     void registerComponentId()
     {
         super.registerComponentId();
@@ -541,10 +535,11 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
      * @param configuration The configuration properties for the component from
      *                      the Configuration Admin Service or <code>null</code> if there is
      *                      no configuration or if the configuration has just been deleted.
+     * @param configurationDeleted TODO
      * @param changeCount Change count for the configuration
      * @param targetedPID TargetedPID for the configuration
      */
-    public void reconfigure( Map<String, Object> configuration )
+    public void reconfigure( Map<String, Object> configuration, boolean configurationDeleted )
     {
 //        if ( targetedPID == null || !targetedPID.equals( m_targetedPID ) )
 //        {
@@ -576,10 +571,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         // store the properties
         m_configurationProperties = configuration;
 
-        reconfigure();
+        reconfigure(configurationDeleted);
     }
 
-    void reconfigure()
+    void reconfigure(boolean configurationDeleted)
     {
         CountDownLatch enableLatch = enableLatchWait();
         try
@@ -598,17 +593,17 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                 return;
             }
 
-            //TODO should be handled in Holder, not here
-            // if the configuration has been deleted but configuration is required
-            // this component must be deactivated
-            if ( m_configurationProperties == null && getComponentMetadata().isConfigurationRequired() )
-            {
-                //deactivate and remove service listeners
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, false );
-                //do not reset targets as that will reinstall the service listeners which may activate the component.
-                //when a configuration arrives the properties will get set based on the new configuration.
-                return;
-            }
+//            //TODO should be handled in Holder, not here
+//            // if the configuration has been deleted but configuration is required
+//            // this component must be deactivated
+//            if ( m_configurationProperties == null && getComponentMetadata().isConfigurationRequired() )
+//            {
+//                //deactivate and remove service listeners
+//                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, false );
+//                //do not reset targets as that will reinstall the service listeners which may activate the component.
+//                //when a configuration arrives the properties will get set based on the new configuration.
+//                return;
+//            }
 
             // unsatisfied component and non-ignored configuration may change targets
             // to satisfy references
@@ -625,7 +620,7 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
                     return;
                 }
 
-                if ( !modify() )
+                if ( !modify(configurationDeleted) )
                 {
                     // SCR 112.7.1 - deactivate if configuration is deleted or no modified method declared
                     log( LogService.LOG_DEBUG, "Deactivating and Activating to reconfigure from configuration", null );
@@ -661,11 +656,11 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
     }
 
-    private boolean modify()
+    private boolean modify(boolean configurationDeleted)
     {
     	//0 SCR 112.7.1 If configuration is deleted, and version is < 1.3 and no flag set, then deactivate unconditionally.
     	// For version 1.3 and later, or with a flag, more sensible behavior is allowed.
-    	if ( m_configurationProperties == null && !getComponentMetadata().isDeleteCallsModify()){
+    	if ( configurationDeleted && !getComponentMetadata().isDeleteCallsModify()){
     		return false;
     	}
     	
