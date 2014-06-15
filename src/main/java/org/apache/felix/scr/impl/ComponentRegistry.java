@@ -373,7 +373,7 @@ public class ComponentRegistry implements ServiceListener
     {
         Activator.log(LogService.LOG_DEBUG, null, 
                 "Registering component with pid {0} for bundle {1}",
-                new Object[] {componentHolder.getComponentMetadata().getConfigurationPid(),key.getBundleId()},
+                new Object[] {componentHolder.getComponentMetadata().getConfigurationPid(), key.getBundleId()},
                 null);
         synchronized ( m_componentHoldersByName )
         {
@@ -551,28 +551,7 @@ public class ComponentRegistry implements ServiceListener
      */
     public ComponentHolder createComponentHolder( BundleComponentActivator activator, ComponentMetadata metadata )
     {
-        ComponentHolder holder = null;//TODO not null
-
-        if (metadata.isFactory())
-        {
-            // 112.2.4 SCR must register a Component Factory
-            // service on behalf of the component
-            // as soon as the component factory is satisfied
-            if ( !metadata.isObsoleteFactoryComponentFactory() )
-            {
-//TODO                holder = new ComponentFactoryImpl(this );
-            }
-            else
-            {
-//TODO                holder = new ConfigurationComponentFactoryImpl(activator );
-            }
-        }
-        else
-        {
-            holder = new ConfigurableComponentHolder(activator, metadata);
-        }
-
-        return holder;
+        return new ConfigurableComponentHolder(activator, metadata);
     }
 
 

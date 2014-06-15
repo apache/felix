@@ -35,6 +35,8 @@ import org.apache.felix.scr.impl.TargetedPID;
 import org.apache.felix.scr.impl.helper.ComponentMethods;
 import org.apache.felix.scr.impl.helper.SimpleLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;
+import org.apache.felix.scr.impl.manager.ComponentFactoryImpl;
+import org.apache.felix.scr.impl.manager.ConfigurationComponentFactoryImpl;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.ServiceFactoryComponentManager;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
@@ -153,13 +155,20 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
         this.m_enabled = false;
     }
 
-    protected SingleComponentManager<S> createComponentManager()
+    protected AbstractComponentManager<S> createComponentManager()
     {
 
-        SingleComponentManager<S> manager;
+        AbstractComponentManager<S> manager;
         if ( m_componentMetadata.isFactory() )
         {
-            throw new IllegalArgumentException( "Cannot create component factory for " + m_componentMetadata.getName() );
+            if ( !m_componentMetadata.isObsoleteFactoryComponentFactory() )
+            {
+                manager = new ComponentFactoryImpl<S>(this );
+            }
+            else
+            {
+                manager = new ConfigurationComponentFactoryImpl<S>(this );
+            }
         }
         else if ( m_componentMetadata.getServiceScope() == Scope.bundle )
         {
@@ -598,7 +607,7 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
                 else
                 {
                     for (String pid: m_factoryConfigurations.keySet()) {
-                        SingleComponentManager<S> scm = createComponentManager();
+                        AbstractComponentManager<S> scm = createComponentManager();
                         m_components.put(pid, scm);
                         scm.reconfigure( mergeProperties( pid ), false);
                         cms.add( scm );
@@ -731,29 +740,34 @@ public class ConfigurableComponentHolder<S> implements ComponentHolder<S>, Compo
      */
     List<AbstractComponentManager<S>> getComponentManagers( final boolean clear )
     {
-        List<AbstractComponentManager<S>> cm;
+        List<AbstractComponentManager<S>> cms;
         if ( m_components.isEmpty() )
         {
             if ( m_singleComponent != null)
             {
-                cm = Collections.singletonList(m_singleComponent);
+                cms = new ArrayList<AbstractComponentManager<S>>();
+                m_singleComponent.getComponentManagers(cms);
             }
             else 
             {
-                cm = Collections.emptyList();
+                cms = Collections.emptyList();
             }
         }
 
         else
         {
-            cm = new ArrayList<AbstractComponentManager<S>>(m_components.values());
+            cms = new ArrayList<AbstractComponentManager<S>>();
+            for (AbstractComponentManager<S> cm: m_components.values())
+            {
+                cm.getComponentManagers(cms);
+            }
         }
         if ( clear )
         {
             m_components.clear();
             m_singleComponent = null;
         }
-        return cm;
+        return cms;
     }
 
     public boolean isLogEnabled( int level )

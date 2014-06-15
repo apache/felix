@@ -96,7 +96,7 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     {
         super( container, new ComponentMethods() );
         m_componentInstances = new IdentityHashMap<SingleComponentManager<S>, SingleComponentManager<S>>();
-        m_configuration = new Hashtable<String, Object>();
+        m_configuration = new HashMap<String, Object>();
     }
 
 
@@ -333,125 +333,125 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
     }
 
 
-    //---------- ComponentHolder interface
-
-    public void configurationDeleted( TargetedPID pid, TargetedPID factoryPid )
-    {
-        m_targetedPID = null;
-        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
-        {
-            log( LogService.LOG_DEBUG, "Handling configuration removal", null );
-
-            m_changeCount = -1;
-            // nothing to do if there is no configuration currently known.
-            if ( !m_hasConfiguration )
-            {
-                log( LogService.LOG_DEBUG, "ignoring configuration removal: not currently configured", null );
-                return;
-            }
-
-            // So far, we were configured: clear the current configuration.
-            m_hasConfiguration = false;
-            m_configuration = new Hashtable<String, Object>();
-
-            log( LogService.LOG_DEBUG, "Current component factory state={0}", new Object[] {getState()}, null );
-
-            // And deactivate if we are not currently disposed and if configuration is required
-            if ( ( getState() & STATE_DISPOSED ) == 0 && getComponentMetadata().isConfigurationRequired() )
-            {
-                log( LogService.LOG_DEBUG, "Deactivating component factory (required configuration has gone)", null );
-                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, false );
-            }
-        }
-        else
-        {
-            // 112.7 Factory Configuration not allowed for factory component
-            log( LogService.LOG_ERROR, "Component Factory cannot be configured by factory configuration", null );
-        }
-    }
-
-
-    public boolean configurationUpdated( TargetedPID pid, TargetedPID factoryPid, Dictionary<String, Object> configuration, long changeCount )
-    {
-    	//TODO this needs somehow to be the same code as in ConfigurableComponentHolder.
-        if ( m_targetedPID != null && !m_targetedPID.equals( pid ))
-        {
-            log( LogService.LOG_ERROR, "ImmediateComponentHolder unexpected change in targetedPID from {0} to {1}",
-                    new Object[] {m_targetedPID, pid}, null);
-            throw new IllegalStateException("Unexpected targetedPID change");
-        }
-        m_targetedPID = pid;
-        if ( configuration != null )
-        {
-            if ( changeCount <= m_changeCount )
-            {
-                log( LogService.LOG_DEBUG,
-                        "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
-                        new Object[] { getComponentMetadata().getConfigurationPid(), m_changeCount, changeCount }, null );
-                return false;
-            }
-            m_changeCount = changeCount;
-        }
-        else 
-        {
-            m_changeCount = -1;
-        }
-        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
-        {
-            log( LogService.LOG_DEBUG, "Configuration PID updated for Component Factory", null );
-
-            // Ignore the configuration if our policy is 'ignore'
-            if ( getComponentMetadata().isConfigurationIgnored() )
-            {
-                return false;
-            }
-
-            // Store the config admin configuration
-//            m_configuration = configuration;
-
-            // We are now configured from config admin.
-            m_hasConfiguration = true;
-
-            log( LogService.LOG_DEBUG, "Current ComponentFactory state={0}", new Object[]
-                    {getState()}, null );
-
-            // If we are active, but if some config target filters don't match anymore
-            // any required references, then deactivate.
-            if ( getState() == STATE_FACTORY )
-            {
-                log( LogService.LOG_DEBUG, "Verifying if Active Component Factory is still satisfied", null );
-
-                // First update target filters.
-                updateTargets( getProperties() );
-
-                // Next, verify dependencies
-                if ( !verifyDependencyManagers() )
-                {
-                    log( LogService.LOG_DEBUG,
-                            "Component Factory target filters not satisfied anymore: deactivating", null );
-                    deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
-                    return false;
-                }
-            }
-
-            // Unsatisfied component and required configuration may change targets
-            // to satisfy references.
-            if ( getState() == STATE_UNSATISFIED && getComponentMetadata().isConfigurationRequired() )
-            {
-                // try to activate our component factory, if all dependnecies are satisfied
-                log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
-                // First update target filters.
-                updateTargets( getProperties() );
-                activateInternal( getTrackingCount().get() );
-            }
-        }
-        else
-        {
-            // 112.7 Factory Configuration not allowed for factory component
-            log( LogService.LOG_ERROR, "Component Factory cannot be configured by factory configuration", null );
-        }
-        return false;
-    }
+//    //---------- ComponentHolder interface
+//
+//    public void configurationDeleted( TargetedPID pid, TargetedPID factoryPid )
+//    {
+//        m_targetedPID = null;
+//        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
+//        {
+//            log( LogService.LOG_DEBUG, "Handling configuration removal", null );
+//
+//            m_changeCount = -1;
+//            // nothing to do if there is no configuration currently known.
+//            if ( !m_hasConfiguration )
+//            {
+//                log( LogService.LOG_DEBUG, "ignoring configuration removal: not currently configured", null );
+//                return;
+//            }
+//
+//            // So far, we were configured: clear the current configuration.
+//            m_hasConfiguration = false;
+//            m_configuration = new Hashtable<String, Object>();
+//
+//            log( LogService.LOG_DEBUG, "Current component factory state={0}", new Object[] {getState()}, null );
+//
+//            // And deactivate if we are not currently disposed and if configuration is required
+//            if ( ( getState() & STATE_DISPOSED ) == 0 && getComponentMetadata().isConfigurationRequired() )
+//            {
+//                log( LogService.LOG_DEBUG, "Deactivating component factory (required configuration has gone)", null );
+//                deactivateInternal( ComponentConstants.DEACTIVATION_REASON_CONFIGURATION_DELETED, true, false );
+//            }
+//        }
+//        else
+//        {
+//            // 112.7 Factory Configuration not allowed for factory component
+//            log( LogService.LOG_ERROR, "Component Factory cannot be configured by factory configuration", null );
+//        }
+//    }
+//
+//
+//    public boolean configurationUpdated( TargetedPID pid, TargetedPID factoryPid, Dictionary<String, Object> configuration, long changeCount )
+//    {
+//    	//TODO this needs somehow to be the same code as in ConfigurableComponentHolder.
+//        if ( m_targetedPID != null && !m_targetedPID.equals( pid ))
+//        {
+//            log( LogService.LOG_ERROR, "ImmediateComponentHolder unexpected change in targetedPID from {0} to {1}",
+//                    new Object[] {m_targetedPID, pid}, null);
+//            throw new IllegalStateException("Unexpected targetedPID change");
+//        }
+//        m_targetedPID = pid;
+//        if ( configuration != null )
+//        {
+//            if ( changeCount <= m_changeCount )
+//            {
+//                log( LogService.LOG_DEBUG,
+//                        "ImmediateComponentHolder out of order configuration updated for pid {0} with existing count {1}, new count {2}",
+//                        new Object[] { getComponentMetadata().getConfigurationPid(), m_changeCount, changeCount }, null );
+//                return false;
+//            }
+//            m_changeCount = changeCount;
+//        }
+//        else 
+//        {
+//            m_changeCount = -1;
+//        }
+//        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
+//        {
+//            log( LogService.LOG_DEBUG, "Configuration PID updated for Component Factory", null );
+//
+//            // Ignore the configuration if our policy is 'ignore'
+//            if ( getComponentMetadata().isConfigurationIgnored() )
+//            {
+//                return false;
+//            }
+//
+//            // Store the config admin configuration
+////            m_configuration = configuration;
+//
+//            // We are now configured from config admin.
+//            m_hasConfiguration = true;
+//
+//            log( LogService.LOG_DEBUG, "Current ComponentFactory state={0}", new Object[]
+//                    {getState()}, null );
+//
+//            // If we are active, but if some config target filters don't match anymore
+//            // any required references, then deactivate.
+//            if ( getState() == STATE_FACTORY )
+//            {
+//                log( LogService.LOG_DEBUG, "Verifying if Active Component Factory is still satisfied", null );
+//
+//                // First update target filters.
+//                updateTargets( getProperties() );
+//
+//                // Next, verify dependencies
+//                if ( !verifyDependencyManagers() )
+//                {
+//                    log( LogService.LOG_DEBUG,
+//                            "Component Factory target filters not satisfied anymore: deactivating", null );
+//                    deactivateInternal( ComponentConstants.DEACTIVATION_REASON_REFERENCE, false, false );
+//                    return false;
+//                }
+//            }
+//
+//            // Unsatisfied component and required configuration may change targets
+//            // to satisfy references.
+//            if ( getState() == STATE_UNSATISFIED && getComponentMetadata().isConfigurationRequired() )
+//            {
+//                // try to activate our component factory, if all dependnecies are satisfied
+//                log( LogService.LOG_DEBUG, "Attempting to activate unsatisfied component", null );
+//                // First update target filters.
+//                updateTargets( getProperties() );
+//                activateInternal( getTrackingCount().get() );
+//            }
+//        }
+//        else
+//        {
+//            // 112.7 Factory Configuration not allowed for factory component
+//            log( LogService.LOG_ERROR, "Component Factory cannot be configured by factory configuration", null );
+//        }
+//        return false;
+//    }
 
 
     public synchronized long getChangeCount( TargetedPID pid, TargetedPID targetedPid)
@@ -560,10 +560,28 @@ public class ComponentFactoryImpl<S> extends AbstractComponentManager<S> impleme
 
 
 	@Override
-	public void reconfigure(Map<String, Object> value, boolean b) {
-		// TODO Auto-generated method stub
-		
+	public void reconfigure(Map<String, Object> configuration, boolean configurationDeleted) {
+		m_configuration = configuration;
+		List<SingleComponentManager<S>> cms;
+		synchronized (m_componentInstances)
+        {
+            cms = new ArrayList<SingleComponentManager<S>>(m_componentInstances.keySet());
+        }
+		for (SingleComponentManager<S> cm: cms)
+		{
+		    cm.reconfigure( configuration, configurationDeleted);
+		}
 	}
+
+
+    @Override
+    public void getComponentManagers(List<AbstractComponentManager<S>> cms)
+    {
+        synchronized (m_componentInstances)
+        {
+            cms.addAll(m_componentInstances.keySet());
+        }
+    }
 
 
 }

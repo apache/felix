@@ -115,77 +115,77 @@ public class ConfigurationComponentFactoryImpl<S> extends ComponentFactoryImpl<S
 
     //---------- ComponentHolder interface
 
-    public void configurationDeleted( TargetedPID pid, TargetedPID factoryPid )
-    {
-        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
-        {
-            super.configurationDeleted( pid, factoryPid );
-        }
-        else
-        {
-            SingleComponentManager<S> cm;
-            synchronized ( m_configuredServices )
-            {
-                cm = m_configuredServices.remove( pid );
-            }
-
-            if ( cm != null )
-            {
-                log( LogService.LOG_DEBUG, "Disposing component after configuration deletion", null );
-
-                cm.dispose();
-            }
-        }
-    }
-
-
-    public boolean configurationUpdated( TargetedPID targetedPid, TargetedPID factoryTargetedPid, Dictionary<String, Object> configuration, long changeCount )
-    {
-    	return false;
+//    public void configurationDeleted( TargetedPID pid, TargetedPID factoryPid )
+//    {
 //        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
 //        {
-//            return super.configurationUpdated( targetedPid, factoryTargetedPid, configuration, changeCount );
+//            super.configurationDeleted( pid, factoryPid );
 //        }
-//        else   //non-spec backwards compatible
+//        else
 //        {
 //            SingleComponentManager<S> cm;
 //            synchronized ( m_configuredServices )
 //            {
-//                cm = m_configuredServices.get( pid );
+//                cm = m_configuredServices.remove( pid );
 //            }
 //
-//            if ( cm == null )
+//            if ( cm != null )
 //            {
-//                // create a new instance with the current configuration
-//                cm = createConfigurationComponentManager();
+//                log( LogService.LOG_DEBUG, "Disposing component after configuration deletion", null );
 //
-//                // this should not call component reactivation because it is
-//                // not active yet
-//                cm.reconfigure( configuration, changeCount, m_targetedPID );
-//
-//                // enable asynchronously if components are already enabled
-//                if ( getState() == STATE_FACTORY )
-//                {
-//                    cm.enable( false );
-//                }
-//
-//                synchronized ( m_configuredServices )
-//                {
-//                    // keep a reference for future updates
-//                    m_configuredServices.put( pid, cm );
-//                }
-//                return true;
-//
-//            }
-//            else
-//            {
-//                // update the configuration as if called as ManagedService
-//                cm.reconfigure( configuration, changeCount, m_targetedPID );
-//                return false;
+//                cm.dispose();
 //            }
 //        }
-    }
-
+//    }
+//
+//
+//    public boolean configurationUpdated( TargetedPID targetedPid, TargetedPID factoryTargetedPid, Dictionary<String, Object> configuration, long changeCount )
+//    {
+//    	return false;
+////        if ( pid.equals( getComponentMetadata().getConfigurationPid() ) )
+////        {
+////            return super.configurationUpdated( targetedPid, factoryTargetedPid, configuration, changeCount );
+////        }
+////        else   //non-spec backwards compatible
+////        {
+////            SingleComponentManager<S> cm;
+////            synchronized ( m_configuredServices )
+////            {
+////                cm = m_configuredServices.get( pid );
+////            }
+////
+////            if ( cm == null )
+////            {
+////                // create a new instance with the current configuration
+////                cm = createConfigurationComponentManager();
+////
+////                // this should not call component reactivation because it is
+////                // not active yet
+////                cm.reconfigure( configuration, changeCount, m_targetedPID );
+////
+////                // enable asynchronously if components are already enabled
+////                if ( getState() == STATE_FACTORY )
+////                {
+////                    cm.enable( false );
+////                }
+////
+////                synchronized ( m_configuredServices )
+////                {
+////                    // keep a reference for future updates
+////                    m_configuredServices.put( pid, cm );
+////                }
+////                return true;
+////
+////            }
+////            else
+////            {
+////                // update the configuration as if called as ManagedService
+////                cm.reconfigure( configuration, changeCount, m_targetedPID );
+////                return false;
+////            }
+////        }
+//    }
+//
 
     public List<? extends ComponentManager<S>> getComponents()
     {
