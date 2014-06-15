@@ -54,6 +54,7 @@ import org.apache.felix.scr.impl.metadata.ServiceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata.Scope;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -997,9 +998,16 @@ public abstract class AbstractComponentManager<S> implements SimpleLogger, Compo
                 return null;
             }
             final Dictionary<String, Object> serviceProperties = getServiceProperties();
-            ServiceRegistration<S> serviceRegistration = ( ServiceRegistration<S> ) bundleContext
-                    .registerService( services, getService(), serviceProperties );
-            return serviceRegistration;
+            try {
+				ServiceRegistration<S> serviceRegistration = (ServiceRegistration<S>) bundleContext
+						.registerService(services, getService(),
+								serviceProperties);
+				return serviceRegistration;
+			} catch (ServiceException e) {
+				log(LogService.LOG_ERROR, "Unexpected error registering component service with properties {0}", 
+						new Object[] {serviceProperties}, e);
+				return null;
+			}
         }
 
         @Override

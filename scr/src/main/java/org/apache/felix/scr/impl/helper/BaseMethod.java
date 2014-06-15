@@ -221,23 +221,23 @@ abstract class BaseMethod
     private MethodResult invokeMethod( final Object componentInstance, final Object rawParameter, SimpleLogger logger )
         throws InvocationTargetException
     {
-        logger.log( LogService.LOG_DEBUG, "invoking {0}: {1}", new Object[]
-            { getMethodNamePrefix(), getMethodName() }, null );
         try
         {
             if ( componentInstance != null )
             {
                 final Object[] params = getParameters(m_method, rawParameter);
+                logger.log( LogService.LOG_DEBUG, "invoking {0}: {1}: parameters {2}", new Object[]
+                        { getMethodNamePrefix(), getMethodName(), Arrays.asList( params ) }, null );
                 Object result = m_method.invoke(componentInstance, params);
-                logger.log( LogService.LOG_DEBUG, "invoked {0}: {1}: parameters {2}", new Object[]
-                    { getMethodNamePrefix(), getMethodName(), Arrays.asList( params ) }, null );
+                logger.log( LogService.LOG_DEBUG, "invoked {0}: {1}", new Object[]
+                    { getMethodNamePrefix(), getMethodName() }, null );
                 return new MethodResult((m_method.getReturnType() != Void.TYPE), (Map) result);
             }
             else
             {
-                logger.log( LogService.LOG_WARNING, "Method {0} cannot be called on null object",
+                logger.log( LogService.LOG_WARNING, "Method {0}: {1} cannot be called on null object",
                     new Object[]
-                        { getMethodName() }, null );
+                        { getMethodNamePrefix(), getMethodName() }, null );
             }
         }
         catch ( IllegalStateException ise )
